@@ -40,6 +40,14 @@ function playCosmicTone() {
 function startApp() {
     const name = document.getElementById('user-name').value;
     if(!name) return alert("請留名號");
+
+    // --- 護持提醒邏輯 ---
+    if (db.name && db.name !== name) {
+        const confirmChange = confirm(`此法寶目前由「${db.name}」護持，您確定要將名號更改為「${name}」嗎？\n(資糧將會接續計算)`);
+        if (!confirmChange) return; // 按下取消就不進入
+    }
+    // ------------------
+
     db.name = name;
     
     // 每日次數重置邏輯
@@ -185,6 +193,7 @@ function createDust(count) {
     }
 }
 updateUI();
+
 
 
 

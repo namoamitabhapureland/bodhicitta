@@ -114,9 +114,8 @@ function updateClock() {
     // 金色流動計算
     const totalDays = db.points / 100;
     const dayPercent = (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds() + now.getMilliseconds()/1000) / 86400;
-    const totalPureYears = (totalDays + dayPercent) * 100;
-    
     const totalPureYears = db.points + dayPercent;
+    const years = Math.floor(totalPureYears);
     const fraction = (totalPureYears - years).toFixed(4).substring(1); // 取得 .XXXX 部分
     
     // 強制顯化金色 (透過 JS 直接控制確保不被覆蓋)
@@ -184,4 +183,5 @@ function createDust(count) {
     }
 }
 updateUI();
+
 

@@ -193,6 +193,9 @@ function createDust(count) {
     }
 }
 updateUI();
+function openLib() {
+    document.getElementById('lib-modal').style.display = 'flex';
+}
 
 
 

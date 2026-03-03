@@ -116,7 +116,7 @@ function updateClock() {
     const dayPercent = (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds() + now.getMilliseconds()/1000) / 86400;
     const totalPureYears = (totalDays + dayPercent) * 100;
     
-    const years = Math.floor(totalPureYears);
+    const totalPureYears = db.points + dayPercent;
     const fraction = (totalPureYears - years).toFixed(4).substring(1); // 取得 .XXXX 部分
     
     // 強制顯化金色 (透過 JS 直接控制確保不被覆蓋)
@@ -184,3 +184,4 @@ function createDust(count) {
     }
 }
 updateUI();
+

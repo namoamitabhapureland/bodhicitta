@@ -12,6 +12,14 @@ const rankConfig = [
     { day: 100, label: "不退轉", icon: "🪷" }
 ];
 
+function speak(t, r) { 
+    window.speechSynthesis.cancel();
+    // 解決電腦版多音字 Bug
+    const m = new SpeechSynthesisUtterance(t.replace(/阿/g, '喔'));
+    m.lang = 'zh-TW'; m.rate = r;
+    window.speechSynthesis.speak(m);
+}
+
 function playCosmicTone() {
     try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -22,16 +30,6 @@ function playCosmicTone() {
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); setTimeout(() => osc.stop(), 2000);
     } catch(e) {}
-}
-
-function speak(t, r) { 
-    window.speechSynthesis.cancel();
-    // 關鍵修正：針對電腦版將「阿」替換為正確讀音導引
-    let correctText = t.replace(/阿/g, '喔');
-    const m = new SpeechSynthesisUtterance(correctText);
-    m.text = t; // 保留原始文字用於顯示或部分引擎
-    m.lang = 'zh-TW'; m.rate = r;
-    window.speechSynthesis.speak(m);
 }
 
 function startApp() {
@@ -77,7 +75,7 @@ function renderTasks() {
         const card = document.createElement('div');
         card.className = `task-card ${isDone?'completed':''}`;
         card.innerHTML = `
-            <div class="task-num">${i+1}</div>
+            <div style="position:absolute; top:5px; left:8px; font-size:0.7rem; color:var(--gold); opacity:0.6;">${i+1}</div>
             <div style="font-size:0.85rem; color:var(--gold); text-align:center; padding:0 5px;">${t}</div>
             <div class="task-bar"><div class="task-fill" style="width:${isDone?'100%':'0%'}"></div></div>
         `;

@@ -112,18 +112,20 @@ function updateClock() {
     document.getElementById('earth-time').innerText = now.toLocaleTimeString();
     
     // 金色流動計算
-    const totalDays = db.points / 100;
     const dayPercent = (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds() + now.getMilliseconds()/1000) / 86400;
+    
+    // 公式：整數部分是 db.points (資糧)，小數部分隨時間跳動
     const totalPureYears = db.points + dayPercent;
     const years = Math.floor(totalPureYears);
-    const fraction = (totalPureYears - years).toFixed(4).substring(1); // 取得 .XXXX 部分
+    const fraction = (totalPureYears - years).toFixed(4).substring(1); 
     
-    // 強制顯化金色 (透過 JS 直接控制確保不被覆蓋)
+    // 強制顯化金色
     const pureEl = document.getElementById('pure-time');
-    pureEl.style.color = "var(--gold)";
-    pureEl.innerText = `${years} 年${fraction}`;
+    if (pureEl) {
+        pureEl.style.color = "var(--gold)";
+        pureEl.innerText = `${years} 年${fraction}`;
+    }
 }
-
 // 提高更新頻率至 50ms 以實現流動感
 setInterval(updateClock, 50);
 
@@ -183,5 +185,6 @@ function createDust(count) {
     }
 }
 updateUI();
+
 
 

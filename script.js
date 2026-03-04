@@ -1,202 +1,107 @@
-// 基礎資料庫
-let db = JSON.parse(localStorage.getItem('PX_V14.3')) || { name: "", totalNian: 0, points: 0, dailyTasks: [], todayCount: 0, lastDate: new Date().toLocaleDateString() };
-const tasks = ["普賢十大願修行", "五戒十善持守", "親近供養三寶", "財布施與法布施修行", "興建塔廟造像功德", "供養護持三寶資糧", "每日定課誦經念佛", "受持清淨八關齋戒", "分享傳遞佛法善知識", "一念至誠普皆回向"];
+<script>
+    let db = JSON.parse(localStorage.getItem('PX_V14.3')) || { 
+        name: "", totalNian: 0, points: 0, dailyTasks: [], todayCount: 0, lastDate: new Date().toLocaleDateString() 
+    };
+    const tasks = ["普賢十大願修行", "五戒十善持守", "親近供養三寶", "財布施與法布施", "興建塔廟造像", "供養護持三寶", "每日定課誦經", "受持清淨八關齋戒", "分享法寶善知識", "一念至誠普皆回向"];
+    let nianCount = 0;
 
-const sutras = [
-    "大自在神通。無量清淨。等無差別。",
-    "一塵中有塵數剎。一一剎有難思佛。",
-    "以此大願。隨順趣入。成就菩提。",
-    "不取眾相。復於諸法實相。不生執著。"
-];
-
-let nianCount = 0;
-let audioCtx = null;
-
-// 色彩與位階配置
-const rankConfig = [
-    { day: 0,   label: "初信位", color: "#06b6d4", icon: "✨" },
-    { day: 20,  label: "二信位", color: "#22c55e", icon: "🌱" },
-    { day: 40,  label: "三信位", color: "#3b82f6", icon: "🌿" },
-    { day: 60,  label: "四信位", color: "#f59e0b", icon: "🍀" },
-    { day: 80,  label: "五信位", color: "#f8fafc", icon: "🌹" },
-    { day: 100, label: "不退轉", color: "#d4af37", icon: "🪷" }
-];
-
-function playCosmicTone() {
-    try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(432, audioCtx.currentTime); 
-        gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        setTimeout(() => osc.stop(), 20000);
-    } catch(e) { console.log("Audio logic skipped"); }
-}
-
-function startApp() {
-    const name = document.getElementById('user-name').value;
-    if(!name) return alert("請留名號");
-
-    // --- 護持提醒邏輯 ---
-    if (db.name && db.name !== name) {
-        const confirmChange = confirm(`此法寶目前由「${db.name}」護持，您確定要將名號更改為「${name}」嗎？\n(資糧將會接續計算)`);
-        if (!confirmChange) return; // 按下取消就不進入
+    // 1. 換日與換時區檢查 (裝置時間為準)
+    function checkNewDay() {
+        const today = new Date().toLocaleDateString();
+        if (db.lastDate !== today) {
+            db.todayCount = 0;
+            db.dailyTasks = [];
+            db.lastDate = today;
+            save();
+        }
     }
-    // ------------------
 
-    db.name = name;
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('earth-time').innerText = "娑婆：" + now.toLocaleTimeString();
+        const dayPercent = (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds() + now.getMilliseconds()/1000) / 86400;
+        const total = db.points + dayPercent;
+        document.getElementById('pure-time').innerText = `${Math.floor(total)} 年${(dayPercent).toFixed(4).substring(1)}`;
+    }
+    setInterval(updateClock, 50);
+
+    // 2. 名號換人警告邏輯
+    function startApp() {
+        const inputName = document.getElementById('user-name').value;
+        if(!inputName) return alert("請留名號");
+        
+        if (db.name && db.name !== inputName) {
+            if(!confirm(`此法寶目前由「${db.name}」護持，確定要更改為「${inputName}」嗎？\n(資料將會續接，請謹慎決定)`)) return;
+        }
+        
+        db.name = inputName;
+        db.todayCount++; 
+        checkNewDay();
+        save();
+        showScreen(2); updateUI();
+        speak("以此大願，隨順趣入", 0.8);
+    }
+
+    // 3. 十念閃爍與回向儀軌
+    function handleNian() {
+        if (nianCount < 10) {
+            nianCount++; db.totalNian++;
+            document.getElementById('nian-word').innerText = "南無阿彌陀佛";
+            // 閃爍光芒
+            document.getElementById('big-seed').style.filter = "drop-shadow(0 0 50px white)";
+            setTimeout(()=> {
+                document.getElementById('nian-word').innerText="";
+                document.getElementById('big-seed').style.filter = "drop-shadow(0 0 15px var(--solid-gold))";
+            }, 400);
+            
+            speak("南無阿彌陀佛", 0.75);
+            document.getElementById('progress-ring').style.strokeDashoffset = 691 - (nianCount * 69.1);
+            document.getElementById('nian-num').innerText = nianCount + " / 10";
+            
+            if(nianCount === 10) { 
+                db.points += 2; 
+                setTimeout(()=> document.getElementById('dedi-modal').style.display='flex', 800); 
+            }
+        }
+    }
+
+    function confirmDedi() {
+        document.getElementById('dedi-modal').style.display='none';
+        showScreen(3);
+    }
+
+    function renderTasks() {
+        const container = document.getElementById('task-list'); container.innerHTML = "";
+        tasks.forEach((t, i) => {
+            const isDone = db.dailyTasks.includes(i);
+            const card = document.createElement('div'); 
+            card.className = `task-card ${isDone?'completed':''}`;
+            card.innerHTML = `<div style="color:var(--gold); font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">${t}</div>`;
+            if(!isDone) card.onclick = () => { 
+                db.dailyTasks.push(i); db.points += 10; renderTasks(); updateUI(); speak(t+"圓滿", 0.8); 
+            };
+            container.appendChild(card);
+        });
+    }
+
+    // 資料安全保護 (絕不刪除 db 的其他欄位)
+    function save() { localStorage.setItem('PX_V14.3', JSON.stringify(db)); }
+    function showScreen(n) { document.querySelectorAll('.container').forEach(c => c.classList.remove('active')); document.getElementById('screen-'+n).classList.add('active'); if(n===3) renderTasks(); }
+    function updateUI() {
+        document.getElementById('total-count').innerText = db.totalNian;
+        document.getElementById('today-count').innerText = db.todayCount;
+        let totalDays = db.points / 100;
+        document.getElementById('streak-val').innerText = totalDays.toFixed(1);
+        document.getElementById('streak-bar').style.width = Math.min(totalDays, 100) + '%';
+        const rank = totalDays >= 100 ? {l:"不退轉", i:"🪷", c:"#d4af37"} : (totalDays >= 20 ? {l:"二信位", i:"🌱", c:"#22c55e"} : {l:"初信位", i:"✨", c:"#06b6d4"});
+        document.getElementById('rank-title').innerText = rank.l;
+        document.getElementById('display-name').innerText = db.name || "行者";
+        document.getElementById('mini-seed').innerText = rank.i;
+        document.getElementById('big-seed').innerText = rank.i;
+    }
     
-    // 每日次數重置邏輯
-    const today = new Date().toLocaleDateString();
-    if (db.lastDate !== today) {
-        db.todayCount = 0;
-        db.lastDate = today;
-    }
-    db.todayCount++;
-    save();
-
-    const quote = sutras[Math.floor(Math.random() * sutras.length)];
-    speak(quote, 0.8);
-    playCosmicTone();
-    showScreen(2);
+    // 初始化載入
+    checkNewDay();
+    if(db.name) document.getElementById('user-name').value = db.name;
     updateUI();
-}
-
-function updateUI() {
-    document.getElementById('total-count').innerText = db.totalNian;
-    let totalDays = db.points / 100;
-    document.getElementById('streak-val').innerText = totalDays.toFixed(1);
-    document.getElementById('streak-bar').style.width = Math.min(totalDays, 100) + '%';
-    
-    const seed = document.getElementById('big-seed');
-    let growthScale = 1 + (db.points / 5000); 
-    seed.style.transform = `scale(${growthScale})`;
-
-    let glow = 15 + (db.dailyTasks.length * 5);
-    seed.style.filter = `drop-shadow(0 0 ${glow}px var(--gold))`;
-
-    const current = [...rankConfig].reverse().find(r => totalDays >= r.day) || rankConfig[0];
-    document.documentElement.style.setProperty('--theme-color', current.color);
-    document.getElementById('rank-title').innerText = current.label;
-    document.getElementById('display-name').innerText = db.name || "行者";
-    document.getElementById('today-count').innerText = db.todayCount;
-    document.getElementById('mini-seed').innerText = current.icon;
-    seed.innerText = current.icon;
-    document.getElementById('growth-lv').innerText = totalDays >= 100 ? "極樂蓮開" : current.label;
-}
-
-function handleNian() {
-    if (nianCount < 10) {
-        nianCount++; db.totalNian++;
-        // 增加為「南無阿彌陀佛」
-        document.getElementById('nian-word').innerText = "南無阿彌陀佛";
-        setTimeout(()=> document.getElementById('nian-word').innerText="", 500);
-        
-        // 校正發音：南無阿彌陀佛 (稍微放慢 rate 確保 A/ㄚ 音清晰)
-        speak("南無阿彌陀佛", 0.75);
-        
-        updateNianCircle();
-        createDust(20);
-        if(nianCount===10) setTimeout(()=>document.getElementById('bodhi-layer').style.display='flex', 800);
-    }
-}
-
-function speak(t, r) { 
-    window.speechSynthesis.cancel();
-    const m = new SpeechSynthesisUtterance(t);
-    m.lang='zh-TW'; 
-    m.rate=r; 
-    window.speechSynthesis.speak(m);
-}
-
-// 毫秒金色流動時鐘
-function updateClock() {
-    const now = new Date();
-    
-    // 1. 驅動娑婆時間 (恢復舊有標籤功能)
-    const earthTimeEl = document.getElementById('earth-time');
-    if (earthTimeEl) {
-        earthTimeEl.innerText = "娑婆：" + now.toLocaleTimeString();
-    }
-    
-    // 2. 驅動極樂累積 (保留毫秒流動感)
-    const dayPercent = (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds() + now.getMilliseconds()/1000) / 86400;
-    const pureEl = document.getElementById('pure-time');
-    if (pureEl) {
-        const totalPureYears = db.points + dayPercent;
-        const years = Math.floor(totalPureYears);
-        const fraction = (totalPureYears - years).toFixed(4).substring(1); 
-        pureEl.innerText = `${years} 年${fraction}`;
-    }
-}
-// 提高更新頻率至 50ms 以實現流動感
-setInterval(updateClock, 50);
-
-// 其餘備份、還原、任務、存檔功能完整保留 (PX_V14.3)
-function save() { localStorage.setItem('PX_V14.3', JSON.stringify(db)); }
-function showScreen(n) { 
-    document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
-    document.getElementById('screen-'+n).classList.add('active'); 
-    if(n===3) renderTasks();
-}
-function confirmBodhi() { document.getElementById('bodhi-layer').style.display='none'; showScreen(3); }
-function updateNianCircle() { 
-    document.getElementById('nian-progress').style.strokeDashoffset = 754 - (nianCount*75.4); 
-    document.getElementById('nian-num').innerText = nianCount+" / 10"; 
-}
-function renderTasks() {
-    const container = document.getElementById('task-list');
-    container.innerHTML = "";
-    tasks.forEach((t, i) => {
-        const isDone = db.dailyTasks.includes(i);
-        const card = document.createElement('div');
-        card.className = `task-card ${isDone?'completed':''}`;
-        card.innerHTML = `<div style="font-size:1rem; color:var(--gold);">${t}</div><div class="task-bar"><div class="task-fill" style="width:${isDone?'100%':'0%'}"></div></div>`;
-        if(!isDone) card.onclick = () => { 
-            db.dailyTasks.push(i); db.points+=10; 
-            renderTasks(); updateUI(); createDust(30); speak(t+"圓滿", 0.8); 
-        };
-        container.appendChild(card);
-    });
-}
-function goHome() { nianCount=0; updateNianCircle(); showScreen(1); updateUI(); }
-function finishSession() { save(); alert("今日修行資糧已封存"); goHome(); }
-function exportProgress() { 
-    const blob = new Blob([JSON.stringify(db)], {type: 'application/json'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = `${db.name}_修行備份.json`; a.click();
-}
-function importProgress(i) {
-    const reader = new FileReader();
-    reader.onload = (e) => { db = JSON.parse(e.target.result); save(); location.reload(); };
-    reader.readAsText(i.files[0]);
-}
-function createDust(count) {
-    const layer = document.getElementById('gold-dust-layer');
-    const seed = document.getElementById('big-seed');
-    const rect = seed.getBoundingClientRect();
-    for(let i=0; i<count; i++){
-        const d = document.createElement('div'); d.className = 'dust';
-        d.style.width = d.style.height = (Math.random()*4+1)+'px';
-        d.style.background = 'var(--gold)';
-        d.style.left = (rect.left + rect.width/2)+'px';
-        d.style.top = (rect.top + rect.height/2)+'px';
-        layer.appendChild(d);
-        const a = Math.random()*Math.PI*2, dist = Math.random()*150+50;
-        d.animate([{transform:'scale(1)',opacity:1},{transform:`translate(${Math.cos(a)*dist}px,${Math.sin(a)*dist}px) scale(0)`,opacity:0}], 1200);
-        setTimeout(()=>d.remove(), 1200);
-    }
-}
-updateUI();
-function openLib() {
-    document.getElementById('lib-modal').style.display = 'flex';
-}
-
-
-
-
-
+</script>

@@ -272,22 +272,21 @@
     }
 
 function updateUI() {
-    try {
-        // 1. 更新基礎數值
-        if(document.getElementById('total-count')) document.getElementById('total-count').innerText = db.totalNian.toLocaleString();
-        if(document.getElementById('today-count')) document.getElementById('today-count').innerText = db.todayCount;
+        // 1. 同步基礎數值
+        document.getElementById('total-count').innerText = db.totalNian.toLocaleString();
+        document.getElementById('today-count').innerText = db.todayCount;
         
-        // 2. 更新進度條與位次
+        // 2. 計算六信位進度
         let totalDays = (db.points || 0) / 100;
-        if(document.getElementById('streak-val')) document.getElementById('streak-val').innerText = totalDays.toFixed(1);
-        if(document.getElementById('streak-bar')) document.getElementById('streak-bar').style.width = Math.min(totalDays, 100) + '%';
+        document.getElementById('streak-val').innerText = totalDays.toFixed(1);
+        document.getElementById('streak-bar').style.width = Math.min(totalDays, 100) + '%';
         
+        // 3. 位階判定邏輯
         const rank = totalDays >= 100 ? {l:"六信位・不退轉", i:"🪷", c:"#d4af37"} : 
                     (totalDays >= 80 ? {l:"五信位", i:"🎋", c:"#fbbf24"} : 
                     (totalDays >= 60 ? {l:"四信位", i:"🍀", c:"#34d399"} : 
                     (totalDays >= 40 ? {l:"三信位", i:"🌿", c:"#a3e635"} : 
-                    (totalDays >= 20 ? {l:"二信位", i:"🌱", c:"#22c55e"} : 
-                    {l:"初信位", i:"✨", c:"#06b6d4"}))));
+                    (totalDays >= 20 ? {l:"二信位", i:"🌱", c:"#22c55e"} : {l:"初信位", i:"✨", c:"#06b6d4"}))));
         
         const rtEl = document.getElementById('rank-title');
         if(rtEl) {
@@ -295,35 +294,34 @@ function updateUI() {
             rtEl.style.color = rank.c;
         }
         
-        if(document.getElementById('display-name')) document.getElementById('display-name').innerText = db.name || "妙依";
-        if(document.getElementById('mini-seed')) document.getElementById('mini-seed').innerText = rank.i;
-        if(document.getElementById('big-seed')) document.getElementById('big-seed').innerText = rank.i;
+        // 4. 更新名字與圖示
+        document.getElementById('display-name').innerText = db.name || "妙依";
+        document.getElementById('mini-seed').innerText = rank.i;
+        document.getElementById('big-seed').innerText = rank.i;
 
-        // 3. --- 🎖️ 功德勳章顯化系統 ---
+        // 5. --- 🎖️ 功德勳章顯化區 (10念起顯) ---
         const n = db.totalNian || 0;
-        let medal = {i: "", t: "", c: "transparent"};
-
-        if (n >= 100000000) medal = {i:"☀️", t:"[圓滿覺心]", c:"#d4af37"};
-        else if (n >= 10000000) medal = {i:"👑", t:"[無生法忍]", c:"#a855f7"};
-        else if (n >= 1000000) medal = {i:"💎", t:"[寶蓮成就]", c:"#3b82f6"};
-        else if (n >= 500000) medal = {i:"🪷", t:"[入流守護]", c:"#f43f5e"};
-        else if (n >= 100000) medal = {i:"🏆", t:"[淨念相繼]", c:"#fbbf24"};
-        else if (n >= 10000) medal = {i:"🎖️", t:"[梵音初顯]", c:"#60a5fa"};
-        else if (n >= 5000) medal = {i:"🏅", t:"[心口相應]", c:"#22c55e"};
-        else if (n >= 500) medal = {i:"🎖️", t:"[一念清淨]", c:"#06b6d4"};
-        else if (n >= 10) medal = {i:"🎖️", t:"[初發心]", c:"#94a3b8"};
-        else medal = {i:"✨", t:"[願心萌芽]", c:"#888"};
-
         const mz = document.getElementById('medal-zone');
         if (mz) {
-            mz.innerHTML = `<span style="font-size:1.4rem">${medal.i}</span> <span style="color:${medal.c}; text-shadow: 0 0 8px ${medal.c}88;">${medal.t}</span>`;
-            mz.style.opacity = "1";
-        }
-    } catch (e) {
-        console.error("UI 更新出錯:", e);
-    }
-}
+            if (n >= 10) {
+                let medal = {i: "🎖️", t: "[初發心]", c: "#94a3b8"};
+                if (n >= 100000000) medal = {i:"☀️", t:"[圓滿覺心]", c:"#d4af37"};
+                else if (n >= 10000000) medal = {i:"👑", t:"[無生法忍]", c:"#a855f7"};
+                else if (n >= 1000000) medal = {i:"💎", t:"[寶蓮成就]", c:"#3b82f6"};
+                else if (n >= 500000) medal = {i:"🪷", t:"[入流守護]", c:"#f43f5e"};
+                else if (n >= 100000) medal = {i:"🏆", t:"[淨念相繼]", c:"#fbbf24"};
+                else if (n >= 10000) medal = {i:"🎖️", t:"[梵音初顯]", c:"#60a5fa"};
+                else if (n >= 5000) medal = {i:"🏅", t:"[心口相應]", c:"#22c55e"};
+                else if (n >= 500) medal = {i:"🎖️", t:"[一念清淨]", c:"#06b6d4"};
 
+                mz.innerHTML = `<span style="font-size:1.4rem">${medal.i}</span> <span style="color:${medal.c}; text-shadow: 0 0 8px ${medal.c}88;">${medal.t}</span>`;
+                mz.style.display = "flex";
+            } else {
+                mz.innerHTML = "";
+                mz.style.display = "none";
+            }
+        }
+    } // <--- 🌟 這是一個完整的結束，後面不要再多任何大括號
 
         titleEl.style.color = rank.c; // 補足：讓階位文字隨等級亮燈
         
@@ -346,6 +344,7 @@ function updateUI() {
 </script>
 </body>
 </html>
+
 
 
 

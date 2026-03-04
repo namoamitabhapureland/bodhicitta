@@ -177,7 +177,7 @@
 </div>
 
 <script>
-    // 統一版本號為 PX_V15.0，確保數據讀取一致
+    // 統一版本號為 PX_V15.0，確保數據一致性
     let db = JSON.parse(localStorage.getItem('PX_V15.0')) || { 
         name: "", totalNian: 0, points: 0, dailyTasks: [], todayCount: 0, lastDate: new Date().toLocaleDateString() 
     };
@@ -206,6 +206,10 @@
     function startApp() {
         const nameInput = document.getElementById('user-name').value.trim();
         if(!nameInput) return alert("請留名號");
+        // 安全檢查：防止換人時覆蓋進度
+        if (db.name && db.name !== nameInput) {
+            if(!confirm(`⚠️ 注意：目前的紀錄屬於「${db.name}」，確定要切換名號嗎？`)) return;
+        }
         db.name = nameInput; db.todayCount++; checkNewDay(); save();
         showScreen(2); updateUI();
         speak("以此大願，隨順趣入", 0.8);
@@ -255,7 +259,6 @@
         document.getElementById('total-count').innerText = total.toLocaleString();
         document.getElementById('today-count').innerText = db.todayCount;
         
-        // 完整的晉升階梯表
         let medal = "";
         if (total >= 100000000) medal = "【圓滿成佛】";
         else if (total >= 10000000) medal = "【預知時至】";
@@ -275,8 +278,10 @@
         }
 
         let totalDays = (db.points || 0) / 100;
-        document.getElementById('streak-val').innerText = totalDays.toFixed(1);
-        document.getElementById('streak-bar').style.width = Math.min(totalDays, 100) + '%';
+        const valEl = document.getElementById('streak-val');
+        const barEl = document.getElementById('streak-bar');
+        if(valEl) valEl.innerText = totalDays.toFixed(1);
+        if(barEl) barEl.style.width = Math.min(totalDays, 100) + '%';
         
         let rank;
         if (totalDays >= 100) rank = {l: "六信位・不退轉", i: "🪷", c: "#d4af37"};

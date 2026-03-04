@@ -271,68 +271,66 @@
         m.lang='zh-TW'; m.rate=r; window.speechSynthesis.speak(m);
     }
 function updateUI() {
-    try {
-        // 1. 同步基礎數據
-        const n = db.totalNian || 0;
-        const totalEl = document.getElementById('total-count');
-        const todayEl = document.getElementById('today-count');
-        if (totalEl) totalEl.innerText = n.toLocaleString();
-        if (todayEl) todayEl.innerText = db.todayCount || 0;
-        
-        // 2. 更新進度與位次
-        let totalPoints = db.points || 0;
-        let totalDays = totalPoints / 100;
-        const streakValEl = document.getElementById('streak-val');
-        const streakBarEl = document.getElementById('streak-bar');
-        if (streakValEl) streakValEl.innerText = totalDays.toFixed(1);
-        if (streakBarEl) streakBarEl.style.width = Math.min(totalDays, 100) + '%';
-        
-        const rank = totalDays >= 100 ? {l:"六信位・不退轉", i:"🪷", c:"#d4af37"} : 
-                    (totalDays >= 80 ? {l:"五信位", i:"🎋", c:"#fbbf24"} : 
-                    (totalDays >= 60 ? {l:"四信位", i:"🍀", c:"#34d399"} : 
-                    (totalDays >= 40 ? {l:"三信位", i:"🌿", c:"#a3e635"} : 
-                    (totalDays >= 20 ? {l:"二信位", i:"🌱", c:"#22c55e"} : {l:"初信位", i:"✨", c:"#06b6d4"}))));
-        
-        const rtEl = document.getElementById('rank-title');
-        if (rtEl) {
-            rtEl.innerText = rank.l;
-            rtEl.style.color = rank.c;
-        }
-        
-        // 3. 找回消失的名字「妙依」
-        const nameEl = document.getElementById('display-name');
-        if (nameEl) nameEl.innerText = db.name || "妙依";
-        
-        const msEl = document.getElementById('mini-seed');
-        const bsEl = document.getElementById('big-seed');
-        if (msEl) msEl.innerText = rank.i;
-        if (bsEl) bsEl.innerText = rank.i;
-
-        // 4. 🎖️ 功德勳章顯化區 (10念即顯)
-        const mz = document.getElementById('medal-zone');
-        if (mz) {
-            if (n >= 10) {
-                let medal = {i: "🎖️", t: "[初發心]", c: "#94a3b8"};
-                if (n >= 100000000) medal = {i:"☀️", t:"[圓滿覺心]", c:"#d4af37"};
-                else if (n >= 10000000) medal = {i:"👑", t:"[無生法忍]", c:"#a855f7"};
-                else if (n >= 1000000) medal = {i:"💎", t:"[寶蓮成就]", c:"#3b82f6"};
-                else if (n >= 500000) medal = {i:"🪷", t:"[入流守護]", c:"#f43f5e"};
-                else if (n >= 100000) medal = {i:"🏆", t:"[淨念相繼]", c:"#fbbf24"};
-                else if (n >= 10000) medal = {i:"🎖️", t:"[梵音初顯]", c:"#60a5fa"};
-                else if (n >= 5000) medal = {i:"🏅", t:"[心口相應]", c:"#22c55e"};
-                else if (n >= 500) medal = {i:"🎖️", t:"[一念清淨]", c:"#06b6d4"};
-
-                mz.innerHTML = `<span style="font-size:1.4rem">${medal.i}</span> <span style="color:${medal.c}">${medal.t}</span>`;
-                mz.style.display = "flex";
-            } else {
-                mz.innerHTML = "";
-                mz.style.display = "none";
+        try {
+            // 1. 同步基礎數值 (一生累積與今日對頻)
+            const n = db.totalNian || 0;
+            const tcEl = document.getElementById('total-count');
+            const tcyEl = document.getElementById('today-count');
+            if (tcEl) tcEl.innerText = n.toLocaleString();
+            if (tcyEl) tcyEl.innerText = db.todayCount || 0;
+            
+            // 2. 更新進度條與位次判定
+            let totalPoints = db.points || 0;
+            let totalDays = totalPoints / 100;
+            const svEl = document.getElementById('streak-val');
+            const sbEl = document.getElementById('streak-bar');
+            if (svEl) svEl.innerText = totalDays.toFixed(1);
+            if (sbEl) sbEl.style.width = Math.min(totalDays, 100) + '%';
+            
+            // 位階邏輯
+            const rank = totalDays >= 100 ? {l:"六信位・不退轉", i:"🪷", c:"#d4af37"} : 
+                        (totalDays >= 80 ? {l:"五信位", i:"🎋", c:"#fbbf24"} : 
+                        (totalDays >= 60 ? {l:"四信位", i:"🍀", c:"#34d399"} : 
+                        (totalDays >= 40 ? {l:"三信位", i:"🌿", c:"#a3e635"} : 
+                        (totalDays >= 20 ? {l:"二信位", i:"🌱", c:"#22c55e"} : {l:"初信位", i:"✨", c:"#06b6d4"}))));
+            
+            const rtEl = document.getElementById('rank-title');
+            if (rtEl) {
+                rtEl.innerText = rank.l;
+                rtEl.style.color = rank.c;
             }
+            
+            // 3. 更新名字與圖示 (找回消失的妙依)
+            const dnEl = document.getElementById('display-name');
+            if (dnEl) dnEl.innerText = db.name || "妙依";
+            if (document.getElementById('mini-seed')) document.getElementById('mini-seed').innerText = rank.i;
+            if (document.getElementById('big-seed')) document.getElementById('big-seed').innerText = rank.i;
+
+            // 4. --- 🎖️ 功德勳章顯化區 (10念起顯) ---
+            const mz = document.getElementById('medal-zone');
+            if (mz) {
+                if (n >= 10) {
+                    let medal = {i: "🎖️", t: "[初發心]", c: "#94a3b8"};
+                    if (n >= 100000000) medal = {i:"☀️", t:"[圓滿覺心]", c:"#d4af37"};
+                    else if (n >= 10000000) medal = {i:"👑", t:"[無生法忍]", c:"#a855f7"};
+                    else if (n >= 1000000) medal = {i:"💎", t:"[寶蓮成就]", c:"#3b82f6"};
+                    else if (n >= 500000) medal = {i:"🪷", t:"[入流守護]", c:"#f43f5e"};
+                    else if (n >= 100000) medal = {i:"🏆", t:"[淨念相繼]", c:"#fbbf24"};
+                    else if (n >= 10000) medal = {i:"🎖️", t:"[梵音初顯]", c:"#60a5fa"};
+                    else if (n >= 5000) medal = {i:"🏅", t:"[心口相應]", c:"#22c55e"};
+                    else if (n >= 500) medal = {i:"🎖️", t:"[一念清淨]", c:"#06b6d4"};
+
+                    mz.innerHTML = `<span style="font-size:1.4rem">${medal.i}</span> <span style="color:${medal.c}; text-shadow: 0 0 8px ${medal.c}88;">${medal.t}</span>`;
+                    mz.style.display = "flex";
+                } else {
+                    mz.innerHTML = "";
+                    mz.style.display = "none";
+                }
+            }
+        } catch (e) {
+            console.error("UI渲染中斷，正在自動復原...");
         }
-    } catch (e) {
-        console.error("UI渲染異常:", e);
     }
-}
     function save() { localStorage.setItem('PX_V14.3', JSON.stringify(db)); }
     function showScreen(n) { document.querySelectorAll('.container').forEach(c => c.style.display = 'none'); document.getElementById('screen-'+n).style.display = 'flex'; if(n===3) renderTasks(); window.scrollTo(0,0); }
     function confirmDedi() { document.getElementById('dedi-modal').style.display='none'; showScreen(3); }
@@ -347,6 +345,7 @@ function updateUI() {
 </script>
 </body>
 </html>
+
 
 
 

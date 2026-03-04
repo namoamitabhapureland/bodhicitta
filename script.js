@@ -116,21 +116,20 @@ function speak(t, r) {
 // 毫秒金色流動時鐘
 function updateClock() {
     const now = new Date();
-    // 娑婆時間顯示
-    document.getElementById('earth-time').innerText = now.toLocaleTimeString();
     
-    // 金色流動計算
+    // 1. 驅動娑婆時間 (恢復舊有標籤功能)
+    const earthTimeEl = document.getElementById('earth-time');
+    if (earthTimeEl) {
+        earthTimeEl.innerText = "娑婆：" + now.toLocaleTimeString();
+    }
+    
+    // 2. 驅動極樂累積 (保留毫秒流動感)
     const dayPercent = (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds() + now.getMilliseconds()/1000) / 86400;
-    
-    // 公式：整數部分是 db.points (資糧)，小數部分隨時間跳動
-    const totalPureYears = db.points + dayPercent;
-    const years = Math.floor(totalPureYears);
-    const fraction = (totalPureYears - years).toFixed(4).substring(1); 
-    
-    // 強制顯化金色
     const pureEl = document.getElementById('pure-time');
     if (pureEl) {
-        pureEl.style.color = "var(--gold)";
+        const totalPureYears = db.points + dayPercent;
+        const years = Math.floor(totalPureYears);
+        const fraction = (totalPureYears - years).toFixed(4).substring(1); 
         pureEl.innerText = `${years} 年${fraction}`;
     }
 }
@@ -196,6 +195,7 @@ updateUI();
 function openLib() {
     document.getElementById('lib-modal').style.display = 'flex';
 }
+
 
 
 

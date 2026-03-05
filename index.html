@@ -177,9 +177,15 @@
 </div>
 
 <script>
-    // 統一版本號為 PX_V15.0，確保數據一致性
+    // 1. 數據接軌：嘗試讀取所有可能的老版本，確保功德不丟失
+    let oldData = JSON.parse(localStorage.getItem('PX_V14.3')) || JSON.parse(localStorage.getItem('PX_V14.4')) || {};
     let db = JSON.parse(localStorage.getItem('PX_V15.0')) || { 
-        name: "", totalNian: 0, points: 0, dailyTasks: [], todayCount: 0, lastDate: new Date().toLocaleDateString() 
+        name: oldData.name || "", 
+        totalNian: oldData.totalNian || 0, 
+        points: oldData.points || 0, 
+        dailyTasks: [], 
+        todayCount: 0, 
+        lastDate: new Date().toLocaleDateString() 
     };
     
     const tasks = ["普賢十大願修行", "五戒十善持守", "出家護法持戒", "財布施與法布施", "興建塔廟造像", "供養護持三寶", "每日定課誦經", "受持清淨八關齋戒", "分享法寶善知識", "一念至誠普皆回向"];
@@ -206,10 +212,11 @@
     function startApp() {
         const nameInput = document.getElementById('user-name').value.trim();
         if(!nameInput) return alert("請留名號");
-        // 安全檢查：防止換人時覆蓋進度
-        if (db.name && db.name !== nameInput) {
-            if(!confirm(`⚠️ 注意：目前的紀錄屬於「${db.name}」，確定要切換名號嗎？`)) return;
-        }
+        
+        // 【修正】解決三星無聲：在用戶點擊按鈕時先啟動一個空白語音
+        const silent = new SpeechSynthesisUtterance("");
+        window.speechSynthesis.speak(silent);
+
         db.name = nameInput; db.todayCount++; checkNewDay(); save();
         showScreen(2); updateUI();
         speak("以此大願，隨順趣入", 0.8);
@@ -259,6 +266,7 @@
         document.getElementById('total-count').innerText = total.toLocaleString();
         document.getElementById('today-count').innerText = db.todayCount;
         
+        // 【階梯確認】一億聲晉升邏輯
         let medal = "";
         if (total >= 100000000) medal = "【圓滿成佛】";
         else if (total >= 10000000) medal = "【預知時至】";
@@ -271,18 +279,11 @@
         else if (total >= 10) medal = "【十念圓滿】";
         
         const medalEl = document.getElementById('title-medal');
-        if(medalEl) {
-            medalEl.innerText = medal;
-            medalEl.style.color = "var(--gold)";
-            medalEl.style.marginLeft = "5px";
-        }
+        if(medalEl) { medalEl.innerText = medal; }
 
         let totalDays = (db.points || 0) / 100;
-        const valEl = document.getElementById('streak-val');
-        const barEl = document.getElementById('streak-bar');
-        if(valEl) valEl.innerText = totalDays.toFixed(1);
-        if(barEl) barEl.style.width = Math.min(totalDays, 100) + '%';
         
+        // 【未來骨架預留】明天我們再來細修這部分的 1000 日邏輯
         let rank;
         if (totalDays >= 100) rank = {l: "六信位・不退轉", i: "🪷", c: "#d4af37"};
         else if (totalDays >= 80) rank = {l: "五信位", i: "🎋", c: "#fbbf24"};
@@ -291,15 +292,13 @@
         else if (totalDays >= 20) rank = {l: "二信位", i: "🌱", c: "#22c55e"};
         else rank = {l: "初信位", i: "✨", c: "#06b6d4"};
 
-        const titleEl = document.getElementById('rank-title');
-        if(titleEl) {
-            titleEl.innerText = rank.l;
-            titleEl.style.color = rank.c;
-        }
-        
+        document.getElementById('rank-title').innerText = rank.l;
+        document.getElementById('rank-title').style.color = rank.c;
         document.getElementById('display-name').innerText = db.name || "行者";
         document.getElementById('mini-seed').innerText = rank.i;
         document.getElementById('big-seed').innerText = rank.i;
+        document.getElementById('streak-val').innerText = totalDays.toFixed(1);
+        document.getElementById('streak-bar').style.width = Math.min(totalDays, 100) + '%';
     }
 
     function save() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
@@ -314,5 +313,7 @@
     if(db.name) document.getElementById('user-name').value = db.name;
     updateUI();
 </script>
+    
 </body>
 </html>
+

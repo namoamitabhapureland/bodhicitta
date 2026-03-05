@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>普賢行願 OS - 圓滿擴張版</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <style>
         :root { 
             --bg: #000; 
@@ -70,11 +72,13 @@
 
         .container { width: 92%; max-width: 450px; display: none; flex-direction: column; align-items: center; padding: 20px 0; }
         .active { display: flex; }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); backdrop-filter: blur(15px); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); backdrop-filter: blur(15px); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; overflow-y: auto; }
         #home-btn { position: fixed; bottom: 25px; right: 25px; border: 1.2px solid var(--gold); color: var(--gold); background: #000; padding: 10px 22px; border-radius: 25px; z-index: 1000; font-size: 0.85rem; font-weight: bold; cursor: pointer; }
+        .music-item { width:100%; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border: 1px solid #333; }
     </style>
 </head>
 <body>
+
 <div class="time-monitor">
     <div class="mon-left">
         <div id="mini-seed" style="font-size: 1.8rem;">✨</div>
@@ -92,7 +96,7 @@
     </div>
 </div>
 
-<div id="guide-btn" style="position: fixed; bottom: 25px; left: 25px; border: 1.2px solid var(--cyan); color: var(--cyan); background: #000; padding: 10px 18px; border-radius: 25px; z-index: 1000; font-size: 0.75rem; font-weight: bold; cursor: pointer;" onclick="alert('修行指南：這裡將記載程式運作、晉升邏輯與成佛要領')">GUIDE</div>    
+<div id="guide-btn" style="position: fixed; bottom: 25px; left: 25px; border: 1.2px solid var(--cyan); color: var(--cyan); background: #000; padding: 10px 18px; border-radius: 25px; z-index: 1000; font-size: 0.75rem; font-weight: bold; cursor: pointer;" onclick="showGuide()">GUIDE</div>    
 <div id="home-btn" onclick="goHome()">HOME</div>
 
 <div id="screen-1" class="container active">
@@ -102,7 +106,7 @@
     <div style="color:var(--gold); font-size: 1.1rem; margin-bottom:8px;">一生累積：<span id="total-count">0</span> 聲</div>
     <div id="today-info" style="color:var(--cyan); font-size:0.9rem; margin-bottom:15px; letter-spacing: 1px;">今日對頻：<span id="today-count">0</span> 次</div>
     <div style="width:100%; height:8px; background:#1a1a1a; border-radius:4px; overflow:hidden; border: 0.5px solid #333;"><div id="streak-bar" style="height:100%; background: linear-gradient(90deg, var(--solid-gold), var(--gold)); width:0%; transition:1.2s;"></div></div>
-    <div style="font-size:0.8rem; margin:12px 0 35px; color:#888;">百日進度：<span id="streak-val">0.0</span> / 100</div>
+    <div style="font-size:0.8rem; margin:12px 0 35px; color:#888;">當前進度：<span id="streak-val">0.0</span> / 100</div>
 
     <button class="btn-main" onclick="startApp()">啟動與阿彌陀佛對頻</button>
     <div style="display:flex; gap:12px; width:100%;">
@@ -135,16 +139,8 @@
 </div>
 
 <div id="screen-4" class="container">
-    <textarea id="dedi-box" placeholder="願以此功德..." style="width:100%; height:280px; background:#050505; border:1.8px solid var(--gold); border-radius:22px; color:#eee; padding:22px; outline:none; font-size:1.15rem; line-height:1.7;"></textarea>
+    <textarea id="dedi-box" style="width:100%; height:280px; background:#050505; border:1.8px solid var(--gold); border-radius:22px; color:#eee; padding:22px; outline:none; font-size:1.15rem; line-height:1.7;">願以此功德，普及於一切。我等與眾生，皆共成佛道。</textarea>
     <button class="btn-main" onclick="finishSession()">封存今日資糧</button>
-</div>
-
-<div id="dedi-modal" class="modal">
-    <div style="width:88%; max-width:380px; padding:35px; border:2px solid var(--gold); background:#000; border-radius:30px; text-align:center;">
-        <h2 style="color:var(--gold); margin-top:0; letter-spacing: 3px;">願以此功德</h2>
-        <p style="line-height:2.2; color:#eee; font-size:1.25rem; margin: 30px 0;">普及於一切<br>我等與眾生<br>皆共成佛道</p>
-        <button class="btn-main" onclick="confirmDedi()">進入修行資糧</button>
-    </div>
 </div>
 
 <div id="lib-modal" class="modal">
@@ -168,35 +164,34 @@
 
 <div id="music-modal" class="modal">
     <div style="width:92%; max-width:400px; padding:30px; border:1.8px solid var(--gold); background:#000; border-radius:30px; text-align:center;">
-        <h3 style="color:var(--gold); border-bottom:1px solid #333; padding-bottom:15px; margin-bottom:20px; letter-spacing:2px;">佛樂欣賞</h3>
-        <div id="music-list-container" style="display:flex; flex-direction:column; gap:12px; margin-bottom:25px;">
-            <button class="btn-main" style="font-size:0.9rem; padding:12px;" onclick="window.open('https://www.youtube.com/@Ami-PureLand')">✨ 我的修行頻道</button>
+        <h3 style="color:var(--gold); border-bottom:1px solid #333; padding-bottom:15px; margin-bottom:20px; letter-spacing:2px;">修行音樂分享</h3>
+        <button class="btn-main" style="margin-top:0;" onclick="window.open('https://www.youtube.com/@Ami-PureLand')">✨ 我的修行頻道</button>
+        <div style="border-top:1px solid #333; margin:15px 0; padding-top:15px;">
+            <input type="text" id="music-url" placeholder="貼上 YouTube 網址" style="width:100%; padding:12px; background:#111; border:1px solid #444; color:white; border-radius:8px; margin-bottom:10px;">
+            <button class="btn-main" style="font-size:0.85rem; padding:10px;" onclick="addMusic()">加入我的分享清單</button>
         </div>
+        <div id="custom-music-list" style="text-align:left; max-height:180px; overflow-y:auto; margin-bottom:15px;"></div>
         <button class="btn-main" style="background:#222 !important;" onclick="document.getElementById('music-modal').style.display='none'">返回修行位</button>
     </div>
 </div>
 
 <script>
-    // 1. 數據接軌：嘗試讀取所有可能的老版本，確保功德不丟失
-    let oldData = JSON.parse(localStorage.getItem('PX_V14.3')) || JSON.parse(localStorage.getItem('PX_V14.4')) || {};
-    let db = JSON.parse(localStorage.getItem('PX_V15.0')) || { 
+    // 1. 數據接軌與修正
+    let oldData = JSON.parse(localStorage.getItem('PX_V15.0')) || JSON.parse(localStorage.getItem('PX_V14.3')) || {};
+    let db = JSON.parse(localStorage.getItem('PX_V16.0')) || { 
         name: oldData.name || "", 
         totalNian: oldData.totalNian || 0, 
         points: oldData.points || 0, 
         dailyTasks: [], 
         todayCount: 0, 
-        lastDate: new Date().toLocaleDateString() 
+        lastDate: new Date().toLocaleDateString(),
+        customMusic: oldData.customMusic || []
     };
     
     const tasks = ["普賢十大願修行", "五戒十善持守", "出家護法持戒", "財布施與法布施", "興建塔廟造像", "供養護持三寶", "每日定課誦經", "受持清淨八關齋戒", "分享法寶善知識", "一念至誠普皆回向"];
     let nianCount = 0;
 
-    function checkNewDay() {
-        const today = new Date().toLocaleDateString();
-        if (db.lastDate !== today) {
-            db.todayCount = 0; db.dailyTasks = []; db.lastDate = today; save();
-        }
-    }
+    function save() { localStorage.setItem('PX_V16.0', JSON.stringify(db)); }
 
     function updateClock() {
         const now = new Date();
@@ -212,12 +207,9 @@
     function startApp() {
         const nameInput = document.getElementById('user-name').value.trim();
         if(!nameInput) return alert("請留名號");
-        
-        // 【修正】解決三星無聲：在用戶點擊按鈕時先啟動一個空白語音
-        const silent = new SpeechSynthesisUtterance("");
-        window.speechSynthesis.speak(silent);
-
-        db.name = nameInput; db.todayCount++; checkNewDay(); save();
+        // 三星語音喚醒
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+        db.name = nameInput; save();
         showScreen(2); updateUI();
         speak("以此大願，隨順趣入", 0.8);
     }
@@ -226,33 +218,14 @@
         if (nianCount < 10) {
             nianCount++; db.totalNian++;
             document.getElementById('nian-word').innerText = "南無阿彌陀佛";
-            document.getElementById('big-seed').style.filter = "drop-shadow(0 0 50px white)";
-            setTimeout(()=> {
-                document.getElementById('nian-word').innerText="";
-                document.getElementById('big-seed').style.filter = "drop-shadow(0 0 15px var(--solid-gold))";
-            }, 300);
             speak("南無阿彌陀佛", 0.75);
             document.getElementById('progress-ring').style.strokeDashoffset = 691 - (nianCount * 69.1);
             document.getElementById('nian-num').innerText = nianCount + " / 10";
             if(nianCount === 10) { 
                 db.points += 2; save();
-                setTimeout(()=> document.getElementById('dedi-modal').style.display='flex', 800); 
+                setTimeout(()=> { showScreen(3); }, 800); 
             }
         }
-    }
-
-    function renderTasks() {
-        const container = document.getElementById('task-list'); container.innerHTML = "";
-        tasks.forEach((t, i) => {
-            const isDone = db.dailyTasks.includes(i);
-            const card = document.createElement('div'); 
-            card.className = `task-card ${isDone?'completed':''}`;
-            card.innerHTML = `<span class="task-text">${t}</span>`;
-            if(!isDone) card.onclick = () => { 
-                db.dailyTasks.push(i); db.points += 10; save(); renderTasks(); updateUI(); speak(t+"圓滿", 0.8); 
-            };
-            container.appendChild(card);
-        });
     }
 
     function speak(t, r) {
@@ -266,54 +239,71 @@
         document.getElementById('total-count').innerText = total.toLocaleString();
         document.getElementById('today-count').innerText = db.todayCount;
         
-        // 【階梯確認】一億聲晉升邏輯
         let medal = "";
         if (total >= 100000000) medal = "【圓滿成佛】";
         else if (total >= 10000000) medal = "【預知時至】";
         else if (total >= 1000000) medal = "【阿鞞跋致】";
-        else if (total >= 500000) medal = "【不退轉菩薩】";
-        else if (total >= 100000) medal = "【蓮池海會】";
-        else if (total >= 10000) medal = "【信願具足】";
-        else if (total >= 5000) medal = "【淨念相繼】";
         else if (total >= 500) medal = "【一念清淨】";
         else if (total >= 10) medal = "【十念圓滿】";
-        
-        const medalEl = document.getElementById('title-medal');
-        if(medalEl) { medalEl.innerText = medal; }
+        document.getElementById('title-medal').innerText = medal;
 
         let totalDays = (db.points || 0) / 100;
-        
-        // 【未來骨架預留】明天我們再來細修這部分的 1000 日邏輯
         let rank;
-        if (totalDays >= 100) rank = {l: "六信位・不退轉", i: "🪷", c: "#d4af37"};
-        else if (totalDays >= 80) rank = {l: "五信位", i: "🎋", c: "#fbbf24"};
-        else if (totalDays >= 60) rank = {l: "四信位", i: "🍀", c: "#34d399"};
-        else if (totalDays >= 40) rank = {l: "三信位", i: "🌿", c: "#a3e635"};
-        else if (totalDays >= 20) rank = {l: "二信位", i: "🌱", c: "#22c55e"};
+        if (totalDays >= 1000) rank = {l: "初住位", i: "🪷", c: "#d4af37"};
+        else if (totalDays >= 100) rank = {l: "六信位", i: "🌱", c: "#22c55e"};
         else rank = {l: "初信位", i: "✨", c: "#06b6d4"};
 
         document.getElementById('rank-title').innerText = rank.l;
         document.getElementById('rank-title').style.color = rank.c;
         document.getElementById('display-name').innerText = db.name || "行者";
         document.getElementById('mini-seed').innerText = rank.i;
-        document.getElementById('big-seed').innerText = rank.i;
         document.getElementById('streak-val').innerText = totalDays.toFixed(1);
         document.getElementById('streak-bar').style.width = Math.min(totalDays, 100) + '%';
+        
+        renderMusicList();
     }
 
-    function save() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
+    function addMusic() {
+        const url = document.getElementById('music-url').value;
+        if(url && url.includes('http')) {
+            db.customMusic.push(url);
+            document.getElementById('music-url').value = '';
+            save(); renderMusicList();
+        }
+    }
+
+    function renderMusicList() {
+        const list = document.getElementById('custom-music-list');
+        list.innerHTML = db.customMusic.map((u, i) => `
+            <div class="music-item">
+                <a href="${u}" target="_blank" style="color:var(--cyan); font-size:0.8rem; text-decoration:none;">🎵 修行分享 ${i+1}</a>
+                <span style="color:#444;" onclick="deleteMusic(${i})">❌</span>
+            </div>
+        `).join('');
+    }
+
+    function deleteMusic(i) { db.customMusic.splice(i, 1); save(); renderMusicList(); }
+
+    function renderTasks() {
+        const container = document.getElementById('task-list'); container.innerHTML = "";
+        tasks.forEach((t, i) => {
+            const isDone = db.dailyTasks.includes(i);
+            const card = document.createElement('div'); 
+            card.className = `task-card ${isDone?'completed':''}`;
+            card.innerHTML = `<span class="task-text">${t}</span>`;
+            if(!isDone) card.onclick = () => { db.dailyTasks.push(i); db.points += 10; save(); renderTasks(); updateUI(); speak(t+"圓滿", 0.8); };
+            container.appendChild(card);
+        });
+    }
+
+    function showGuide() { alert("【修行指南】\n1. 點擊啟動喚醒聲音。\n2. 每日完成資糧任務可獲得進度點。\n3. 音樂分享會永久保存在您的裝置中。"); }
     function showScreen(n) { document.querySelectorAll('.container').forEach(c => c.style.display = 'none'); document.getElementById('screen-'+n).style.display = 'flex'; if(n===3) renderTasks(); window.scrollTo(0,0); }
-    function confirmDedi() { document.getElementById('dedi-modal').style.display='none'; showScreen(3); }
-    function goHome() { nianCount=0; document.getElementById('progress-ring').style.strokeDashoffset=691; document.getElementById('nian-num').innerText="0 / 10"; showScreen(1); updateUI(); }
-    function finishSession() { save(); alert("今日修行資糧已封存"); goHome(); }
+    function goHome() { nianCount=0; document.getElementById('progress-ring').style.strokeDashoffset=691; showScreen(1); updateUI(); }
+    function finishSession() { save(); alert("功德封存"); goHome(); }
     function exportProgress() { const blob = new Blob([JSON.stringify(db)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `修行備份_${db.name}.json`; a.click(); }
     function importProgress(i) { const reader = new FileReader(); reader.onload = (e) => { try { db = JSON.parse(e.target.result); save(); location.reload(); } catch(err){alert("格式錯誤");} }; reader.readAsText(i.files[0]); }
-    
-    checkNewDay();
-    if(db.name) document.getElementById('user-name').value = db.name;
+
     updateUI();
 </script>
-    
 </body>
 </html>
-

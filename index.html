@@ -67,14 +67,20 @@
             filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.5));
             transition: 0.5s;
         }
-        
-        /* 增加圖案適配 - 調整大小確保不擋住文字 */
-        #big-seed svg { width: 140px; height: 140px; }
-        #mini-seed svg { width: 38px; height: 38px; }
+       
+  
+              /* 聖像放大並增加深度感 */
+        #big-seed svg { 
+            width: 175px; 
+            height: 175px; 
+            filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.3));
+            transition: all 0.5s ease;
+        }
+        #mini-seed svg { width: 42px; height: 42px; }
 
         @keyframes seed-breath {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.85; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4)); }
-            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; filter: drop-shadow(0 0 40px rgba(243, 229, 171, 0.9)); }
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.9; }
+            50% { transform: translate(-50%, -50%) scale(1.03); opacity: 1; }
         }
 
         .container { width: 92%; max-width: 450px; display: none; flex-direction: column; align-items: center; padding: 20px 0; }
@@ -291,21 +297,48 @@
         });
     }
 
-/* --- 【金剛護法繪圖引擎】 --- */
-function getLotusSVG(rankType) {
+/* --- 【金剛護法繪圖引擎：佛號加成版】 --- */
+function getLotusSVG(rankType, nianCount = 0) {
     const gold = "#f3e5ab";
     const darkGold = "#d4af37";
-    let svgHead = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                   <defs><radialGradient id="goldGrad"><stop offset="0%" stop-color="${gold}"/><stop offset="100%" stop-color="${darkGold}"/></radialGradient></defs>`;
-    let content = "";
-    switch(rankType) {
-        case '信': content = `<circle cx="50" cy="50" r="10" fill="url(#goldGrad)"><animate attributeName="r" values="8;12;8" dur="3s" repeatCount="indefinite" /></circle>`; break;
-        case '住': content = `<rect x="45" y="20" width="10" height="60" rx="5" fill="url(#goldGrad)" /><rect x="20" y="45" width="60" height="10" rx="5" fill="url(#goldGrad)" />`; break;
-        case '行': content = `<path d="M50 20 Q65 50 50 80 Q35 50 50 20 M20 50 Q50 65 80 50 Q50 35 20 50" fill="none" stroke="url(#goldGrad)" stroke-width="4" stroke-linecap="round"/>`; break;
-        case '迴': content = `<g fill="url(#goldGrad)" opacity="0.9"><path d="M50 10 Q60 40 50 50 Q40 40 50 10" transform="rotate(0 50 50)"/><path d="M50 10 Q60 40 50 50 Q40 40 50 10" transform="rotate(45 50 50)"/><path d="M50 10 Q60 40 50 50 Q40 40 50 10" transform="rotate(90 50 50)"/><path d="M50 10 Q60 40 50 50 Q40 40 50 10" transform="rotate(135 50 50)"/><path d="M50 10 Q60 40 50 50 Q40 40 50 10" transform="rotate(180 50 50)"/><path d="M50 10 Q60 40 50 50 Q40 40 50 10" transform="rotate(225 50 50)"/><path d="M50 10 Q60 40 50 50 Q40 40 50 10" transform="rotate(270 50 50)"/><path d="M50 10 Q60 40 50 50 Q40 40 50 10" transform="rotate(315 50 50)"/></g>`; break;
-        case '地': content = `<circle cx="50" cy="50" r="15" fill="url(#goldGrad)" /><g stroke="url(#goldGrad)" stroke-width="2">${Array.from({length:12}).map((_,i)=>`<line x1="50" y1="50" x2="50" y2="10" transform="rotate(${i*30} 50 50)" />`).join('')}</g>`; break;
+    
+    // 佛號願力光場計算
+    let haloRadius = 0;
+    let haloOpacity = 0;
+    let rayContent = "";
+
+    if (nianCount >= 500) { haloRadius = 15; haloOpacity = 0.2; }
+    if (nianCount >= 10000) { haloRadius = 25; haloOpacity = 0.4; }
+    if (nianCount >= 1000000) { 
+        haloRadius = 35; haloOpacity = 0.6; 
+        // 增加八功德水放射光束
+        rayContent = `<g stroke="${gold}" stroke-width="0.3" opacity="0.5">
+            ${Array.from({length:8}).map((_,i)=>`<line x1="50" y1="50" x2="50" y2="10" transform="rotate(${i*45} 50 50)" />`).join('')}
+        </g>`;
     }
-    return svgHead + content + `</svg>`;
+    if (nianCount >= 100000000) { haloRadius = 45; haloOpacity = 0.8; }
+
+    let svgHead = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                   <defs>
+                    <radialGradient id="goldGrad"><stop offset="0%" stop-color="${gold}"/><stop offset="100%" stop-color="${darkGold}"/></radialGradient>
+                    <radialGradient id="haloGrad"><stop offset="0%" stop-color="${gold}" stop-opacity="${haloOpacity}"/><stop offset="100%" stop-color="${darkGold}" stop-opacity="0"/></radialGradient>
+                   </defs>`;
+    
+    // 背景光暈層 (佛號成就)
+    let halo = `<circle cx="50" cy="50" r="${haloRadius}" fill="url(#haloGrad)">
+                  <animate attributeName="r" values="${haloRadius};${haloRadius+3};${haloRadius}" dur="5s" repeatCount="indefinite" />
+                </circle>${rayContent}`;
+
+    let content = "";
+    // 位階圖騰層 (資糧進度)
+    switch(rankType) {
+        case '信': content = `<circle cx="50" cy="50" r="12" fill="url(#goldGrad)"><animate attributeName="r" values="11;13;11" dur="3s" repeatCount="indefinite" /></circle>`; break;
+        case '住': content = `<rect x="46" y="20" width="8" height="60" rx="4" fill="url(#goldGrad)" /><rect x="20" y="46" width="60" height="8" rx="4" fill="url(#goldGrad)" />`; break;
+        case '行': content = `<path d="M50 20 Q65 50 50 80 Q35 50 50 20 M20 50 Q50 65 80 50 Q50 35 20 50" fill="none" stroke="url(#goldGrad)" stroke-width="5" stroke-linecap="round"/>`; break;
+        case '迴': content = `<g fill="url(#goldGrad)" opacity="0.9">${[0,45,90,135,180,225,270,315].map(r=>`<path d="M50 15 Q60 40 50 50 Q40 40 50 15" transform="rotate(${r} 50 50)"/>`).join('')}</g>`; break;
+        case '地': content = `<circle cx="50" cy="50" r="15" fill="url(#goldGrad)" /><g stroke="url(#goldGrad)" stroke-width="2.5">${Array.from({length:12}).map((_,i)=>`<line x1="50" y1="50" x2="50" y2="10" transform="rotate(${i*30} 50 50)" />`).join('')}</g>`; break;
+    }
+    return svgHead + halo + content + `</svg>`;
 }
 
     function updateUI() {
@@ -332,26 +365,27 @@ function getLotusSVG(rankType) {
         let currentDays = points / 100; 
         let rank, threshold, base, label;
 
-        if (currentDays >= 1000000) { 
-            rank = {l: "初地菩薩・歡喜地", i: getLotusSVG('地'), c: "#ffffff"};
+               if (currentDays >= 1000000) { 
+            rank = {l: "初地菩薩・歡喜地", i: getLotusSVG('地', total), c: "#ffffff"};
             base = 1000000; threshold = 2000000; label = "百萬日進度";
         } else if (currentDays >= 100000) { 
             let lv = Math.max(1, Math.floor(currentDays / 100000));
-            rank = {l: ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][Math.min(9, lv-1)] + "迴向位", i: getLotusSVG('迴'), c: "#f472b6"};
+            rank = {l: ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][Math.min(9, lv-1)] + "迴向位", i: getLotusSVG('迴', total), c: "#f472b6"};
             base = lv * 100000; threshold = (lv + 1) * 100000; label = "十萬日進度";
         } else if (currentDays >= 10000) { 
             let lv = Math.max(1, Math.floor(currentDays / 10000));
-            rank = {l: ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][Math.min(9, lv-1)] + "行位", i: getLotusSVG('行'), c: "#60a5fa"};
+            rank = {l: ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][Math.min(9, lv-1)] + "行位", i: getLotusSVG('行', total), c: "#60a5fa"};
             base = lv * 10000; threshold = (lv + 1) * 10000; label = "萬日進度";
         } else if (currentDays >= 1000) { 
             let lv = Math.max(1, Math.floor(currentDays / 1000));
-            rank = {l: ["初住", "二住", "三住", "四住", "五住", "六住", "七住", "八住", "九住", "十住"][Math.min(9, lv-1)] + "位", i: getLotusSVG('住'), c: "#ffffff"};
+            rank = {l: ["初住", "二住", "三住", "四住", "五住", "六住", "七住", "八住", "九住", "十住"][Math.min(9, lv-1)] + "位", i: getLotusSVG('住', total), c: "#ffffff"};
             base = lv * 1000; threshold = (lv + 1) * 1000; label = "千日進度";
         } else { 
             let lv = Math.floor(currentDays / 100) + 1;
-            rank = {l: ["初信位", "二信位", "三信位", "四信位", "五信位", "六信位", "七信位", "八信位", "九信位", "十信位"][Math.min(9, lv-1)], i: getLotusSVG('信'), c: "#06b6d4"};
+            rank = {l: ["初信位", "二信位", "三信位", "四信位", "五信位", "六信位", "七信位", "八信位", "九信位", "十信位"][Math.min(9, lv-1)], i: getLotusSVG('信', total), c: "#06b6d4"};
             base = (lv - 1) * 100; threshold = lv * 100; label = "百日進度";
         }
+
 
         const titleEl = document.getElementById('rank-title');
         if(titleEl) { titleEl.innerText = rank.l; titleEl.style.color = rank.c; }

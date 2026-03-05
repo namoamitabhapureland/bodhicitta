@@ -250,13 +250,13 @@
         m.lang='zh-TW'; m.rate=r; window.speechSynthesis.speak(m);
     }
 
-       function updateUI() {
+    function updateUI() {
         const total = db.totalNian || 0;
         const points = db.points || 0;
         document.getElementById('total-count').innerText = total.toLocaleString();
         document.getElementById('today-count').innerText = db.todayCount;
         
-        // --- 1. 念佛聲數勳章 (100% 保留穩定版) ---
+        // 1. 聲數勳章 (嚴格守住 100% 穩定版)
         let medal = "";
         if (total >= 100000000) medal = "【圓滿成佛】";
         else if (total >= 10000000) medal = "【預知時至】";
@@ -269,43 +269,38 @@
         else if (total >= 10) medal = "【十念圓滿】";
         
         const medalEl = document.getElementById('title-medal');
-        if(medalEl) {
-            medalEl.innerText = medal;
-            medalEl.style.color = "var(--gold)";
-            medalEl.style.marginLeft = "5px";
-        }
+        if(medalEl) medalEl.innerText = medal;
 
-        // --- 2. 萬日法界進化邏輯 (核心修正) ---
-        let rank, threshold, base, label, currentDays;
-        currentDays = points / 10; // 10分=1日，保留小數點
+        // 2. 萬日法界邏輯 (嚴格對齊母本：100分=1日)
+        let currentDays = points / 100; 
+        let rank, threshold, base, label;
 
-        if (points >= 11111000) { // 111萬日以上 ➔ 初地 (百萬日級)
+        // 依照母本：百、千、萬、十萬、百萬 階梯邏輯
+        if (currentDays >= 1000000) { // 地地位階 (百萬日)
             rank = {l: "初地菩薩・歡喜地", i: "☀️", c: "#ffffff"};
-            base = 1111000; threshold = 2111000; label = "百萬日進度";
-        } else if (points >= 1111000) { // 11萬日以上 ➔ 迴向位 (十萬日級)
-            let lv = Math.floor((currentDays - 111000) / 100000) + 1;
-            const hxs = ["", "初迴向", "二迴向", "三迴向", "四迴向", "五迴向", "六迴向", "七迴向", "八迴向", "九迴向", "十迴向"];
-            rank = {l: hxs[lv] + "位", i: "🕉️", c: "#f472b6"};
-            base = (lv - 1) * 100000 + 111000; threshold = lv * 100000 + 111000; label = "十萬日進度";
-        } else if (points >= 111000) { // 1.1萬日以上 ➔ 行位 (萬日級)
-            let lv = Math.floor((currentDays - 11000) / 10000) + 1;
-            const xings = ["", "初行位", "二行位", "三行位", "四行位", "五行位", "六行位", "七行位", "八行位", "九行位", "十行位"];
-            rank = {l: xings[lv], i: "💠", c: "#60a5fa"};
-            base = (lv - 1) * 10000 + 11000; threshold = lv * 10000 + 11000; label = "萬日進度";
-        } else if (points >= 11000) { // 1100日以上 ➔ 住位 (千日級)
-            let lv = Math.floor((currentDays - 1100) / 1000) + 1;
-            const zhus = ["", "初住・發心", "二住・治地", "三住・修行", "四住・生貴", "五住・具足", "六住・正心", "七住・不退", "八住・童真", "九住・法王子", "十住・灌頂"];
-            rank = {l: zhus[lv] + "位", i: "☸️", c: "#ffffff"};
-            base = (lv - 1) * 1000 + 1100; threshold = lv * 1000 + 1100; label = "千日進度";
-        } else { // 1100日以內 ➔ 信位 (百日級，100%對齊您舊邏輯)
+            base = 1000000; threshold = 2000000; label = "百萬日進度";
+        } else if (currentDays >= 100000) { // 迴向位 (十萬日)
+            let lv = Math.max(1, Math.floor(currentDays / 100000));
+            rank = {l: ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][Math.min(9, lv-1)] + "迴向位", i: "💎", c: "#f472b6"};
+            base = lv * 100000; threshold = (lv + 1) * 100000; label = "十萬日進度";
+        } else if (currentDays >= 10000) { // 行位 (萬日)
+            let lv = Math.max(1, Math.floor(currentDays / 10000));
+            rank = {l: ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][Math.min(9, lv-1)] + "行位", i: "🌊", c: "#60a5fa"};
+            base = lv * 10000; threshold = (lv + 1) * 10000; label = "萬日進度";
+        } else if (currentDays >= 1000) { // 住位 (千日)
+            let lv = Math.max(1, Math.floor(currentDays / 1000));
+            const zhus = ["初住", "二住", "三住", "四住", "五住", "六住", "七住", "八住", "九住", "十住"];
+            rank = {l: zhus[Math.min(9, lv-1)] + "位", i: "☸️", c: "#ffffff"};
+            base = lv * 1000; threshold = (lv + 1) * 1000; label = "千日進度";
+        } else { // 信位 (百日)
             let lv = Math.floor(currentDays / 100) + 1;
             lv = Math.min(10, lv);
-            const xins = ["", "初信位", "二信位", "三信位", "四信位", "五信位", "六信位", "七信位", "八信位", "九信位", "十信位"];
-            rank = {l: (lv === 6 ? "六信位・不退轉" : xins[lv]), i: (currentDays >= 50 ? "🪷" : "✨"), c: (currentDays >= 50 ? "#d4af37" : "#06b6d4")};
+            const xins = ["初信位", "二信位", "三信位", "四信位", "五信位", "六信位", "七信位", "八信位", "九信位", "十信位"];
+            rank = {l: xins[lv-1], i: "✨", c: "#06b6d4"};
             base = (lv - 1) * 100; threshold = lv * 100; label = "百日進度";
         }
 
-        // --- 3. UI 介面更新 ---
+        // 3. UI 介面更新
         const titleEl = document.getElementById('rank-title');
         if(titleEl) {
             titleEl.innerText = rank.l;
@@ -315,17 +310,18 @@
         document.getElementById('mini-seed').innerText = rank.i;
         document.getElementById('big-seed').innerText = rank.i;
 
-        // --- 4. 進度條計算 (保持小數點顯示) ---
+        // 4. 進度條計算 (100點資糧 = 1.0日)
         let progress = ((currentDays - base) / (threshold - base)) * 100;
         document.getElementById('streak-val').innerText = currentDays.toFixed(1);
         document.getElementById('streak-bar').style.width = Math.min(progress, 100) + '%';
         
-        // 動態更新下方標籤文字 (例如：百日進度 -> 千日進度)
+        // 確保下方顯示的 label (如：百日進度) 隨位階動態改變
         const labelContainer = document.querySelector('#screen-1 div[style*="color:#888"]');
         if(labelContainer) {
             labelContainer.innerHTML = `${label}：<span id="streak-val">${currentDays.toFixed(1)}</span> / ${threshold}`;
         }
     }
+  
 
 
     function save() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }

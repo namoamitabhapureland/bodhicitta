@@ -168,18 +168,26 @@
 
 <div id="music-modal" class="modal">
     <div style="width:92%; max-width:400px; padding:30px; border:1.8px solid var(--gold); background:#000; border-radius:30px; text-align:center;">
-        <h3 style="color:var(--gold); border-bottom:1px solid #333; padding-bottom:15px; margin-bottom:20px; letter-spacing:2px;">佛樂欣賞</h3>
-        <div id="music-list-container" style="display:flex; flex-direction:column; gap:12px; margin-bottom:25px;">
-            <button class="btn-main" style="font-size:0.9rem; padding:12px;" onclick="window.open('https://www.youtube.com/@Ami-PureLand')">✨ 我的修行頻道</button>
+        <h3 style="color:var(--gold); margin-bottom:20px; letter-spacing:2px;">修行音樂分享</h3>
+        
+        <button class="btn-main" onclick="window.open('https://www.youtube.com/@Ami-PureLand')">✨ 我的修行頻道</button>
+        
+        <div style="border-top:1px solid #333; margin:15px 0; padding-top:15px;">
+            <input type="text" id="music-url" placeholder="貼上 YouTube 網址" style="width:100%; padding:12px; background:#111; border:1px solid #444; color:white; border-radius:8px; margin-bottom:10px; outline:none;">
+            <button class="btn-main" style="font-size:0.85rem;" onclick="addMusic()">+ 加入我的分享清單</button>
         </div>
-        <button class="btn-main" style="background:#222 !important;" onclick="document.getElementById('music-modal').style.display='none'">返回修行位</button>
+        
+        <div id="custom-music-list" style="text-align:left; max-height:180px; overflow-y:auto; margin-bottom:15px; scrollbar-width: none;"></div>
+        
+        <button class="btn-main" style="background:#222 !important; border-color:#444;" onclick="document.getElementById('music-modal').style.display='none'">返回修行位</button>
     </div>
 </div>
 
 <script>
     // 統一版本號為 PX_V15.0，確保數據讀取一致
-    let db = JSON.parse(localStorage.getItem('PX_V15.0')) || { 
-        name: "", totalNian: 0, points: 0, dailyTasks: [], todayCount: 0, lastDate: new Date().toLocaleDateString() 
+     let db = JSON.parse(localStorage.getItem('PX_V15.0')) || { 
+        name: "", totalNian: 0, points: 0, dailyTasks: [], todayCount: 0, lastDate: new Date().toLocaleDateString(),
+        musicList: [] // 預先開闢法寶空間
     };
     
     const tasks = ["普賢十大願修行", "五戒十善持守", "出家護法持戒", "財布施與法布施", "興建塔廟造像", "供養護持三寶", "每日定課誦經", "受持清淨八關齋戒", "分享法寶善知識", "一念至誠普皆回向"];
@@ -265,6 +273,52 @@
         const m = new SpeechSynthesisUtterance(t.replace(/阿/g, 'ㄚ'));
         m.lang='zh-TW'; m.rate=r; window.speechSynthesis.speak(m);
     }
+
+    // 1. 確保 db 裡有 musicList 空間
+    if (!db.musicList) db.musicList = [];
+
+    // 2. 加入音樂的函數
+    function addMusic() {
+        const urlInput = document.getElementById('music-url');
+        const url = urlInput.value.trim();
+        if (url) {
+            db.musicList.push(url);
+            save(); // 存入 localStorage
+            urlInput.value = ""; // 清空輸入框
+            renderMusicList(); // 重新整理畫面
+        }
+    }
+
+    // 3. 移除音樂的函數 (使用您要求的 - 號)
+    function removeMusic(index) {
+        db.musicList.splice(index, 1);
+        save();
+        renderMusicList();
+    }
+
+    // 4. 渲染(顯示)清單的函數
+    function renderMusicList() {
+        const listContainer = document.getElementById('custom-music-list');
+        if(!listContainer) return;
+        listContainer.innerHTML = "";
+        
+        db.musicList.forEach((url, index) => {
+            const item = document.createElement('div');
+            item.style = "display:flex; justify-content:space-between; align-items:center; padding:12px 5px; border-bottom:1px solid #222; font-size:0.85rem;";
+            
+            // 縮短網址顯示，保持莊嚴
+            const displayUrl = url.length > 25 ? url.substring(0, 22) + "..." : url;
+            
+            item.innerHTML = `
+                <span style="color:var(--cyan); cursor:pointer; flex:1;" onclick="window.open('${url}')">🎵 ${displayUrl}</span>
+                <span style="color:#666; cursor:pointer; padding:5px 15px; font-weight:bold; font-size:1.2rem;" onclick="removeMusic(${index})">-</span>
+            `;
+            listContainer.appendChild(item);
+        });
+    }
+
+    // 5. 初始化：頁面載入時先執行一次渲染
+    renderMusicList();
 
     function updateUI() {
         const total = db.totalNian || 0;

@@ -270,38 +270,47 @@ function initLotus() {
     }
 }
 
-    function handleNian() {
-        if (nianCount < 10) {
-            nianCount++; db.totalNian++;
-            document.getElementById('nian-word').innerText = "南無阿彌陀佛";
-            document.getElementById('big-seed').style.filter = "drop-shadow(0 0 50px white)";
-            setTimeout(()=> {
-                document.getElementById('nian-word').innerText="";
-                document.getElementById('big-seed').style.filter = "drop-shadow(0 0 15px var(--solid-gold))";
-            }, 300);
-            speak("南無阿彌陀佛", 0.75);
-            document.getElementById('progress-ring').style.strokeDashoffset = 691 - (nianCount * 69.1);
-            document.getElementById('nian-num').innerText = nianCount + " / 10";
-            if(nianCount === 10) { 
-                db.points += 2; save();
-                setTimeout(()=> document.getElementById('dedi-modal').style.display='flex', 800); 
-            }
+   function handleNian() {
+    if (nianCount < 10) {
+        nianCount++; 
+        db.totalNian++;
+        
+        // 1. 顯示佛號與震動效果
+        document.getElementById('nian-word').innerText = "南無阿彌陀佛";
+        document.getElementById('big-seed').style.filter = "drop-shadow(0 0 50px white)";
+        setTimeout(()=> {
+            document.getElementById('nian-word').innerText="";
+            document.getElementById('big-seed').style.filter = "drop-shadow(0 0 15px var(--solid-gold))";
+        }, 300);
+        
+        speak("南無阿彌陀佛", 0.75);
+        
+        // 2. 更新數字與外圈進度
+        document.getElementById('progress-ring').style.strokeDashoffset = 691 - (nianCount * 69.1);
+        document.getElementById('nian-num').innerText = nianCount + " / 10";
+
+        // 3. 【關鍵：點亮並長出花瓣】
+        const p = document.getElementById('petal-' + (nianCount-1));
+        if(p) {
+            // 從極小、透明，變為飽滿、金色
+            p.setAttribute("fill", "var(--gold)");
+            p.style.opacity = "1";
+            p.style.filter = "drop-shadow(0 0 8px var(--solid-gold))";
+            
+            // 使用 transform 實作生長感：從中心 (50,50) 放大
+            const angle = (nianCount-1) * 36;
+            p.style.transformOrigin = "50px 50px"; 
+            // 這裡先縮小再放大，模擬彈性綻放
+            p.style.transform = `rotate(${angle}deg) scale(1.1)`;
+        }
+
+        if(nianCount === 10) { 
+            db.points += 2; 
+            save();
+            setTimeout(()=> document.getElementById('dedi-modal').style.display='flex', 800); 
         }
     }
-
-    function renderTasks() {
-        const container = document.getElementById('task-list'); container.innerHTML = "";
-        tasks.forEach((t, i) => {
-            const isDone = db.dailyTasks.includes(i);
-            const card = document.createElement('div'); 
-            card.className = `task-card ${isDone?'completed':''}`;
-            card.innerHTML = `<span class="task-text">${t}</span>`;
-            if(!isDone) card.onclick = () => { 
-                db.dailyTasks.push(i); db.points += 10; save(); renderTasks(); updateUI(); speak(t+"圓滿", 0.8); 
-            };
-            container.appendChild(card);
-        });
-    }
+}
 
    function speak(t, r) {
     if (!window.speechSynthesis) return;
@@ -469,7 +478,26 @@ function getLotusSVG(rankType, nianCount = 0) {
     function save() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
     function showScreen(n) { document.querySelectorAll('.container').forEach(c => c.style.display = 'none'); document.getElementById('screen-'+n).style.display = 'flex'; if(n===3) renderTasks(); window.scrollTo(0,0); }
     function confirmDedi() { document.getElementById('dedi-modal').style.display='none'; showScreen(3); }
-    function goHome() { nianCount=0; document.getElementById('progress-ring').style.strokeDashoffset=691; document.getElementById('nian-num').innerText="0 / 10"; showScreen(1); updateUI(); }
+  function goHome() { 
+    nianCount = 0; 
+    document.getElementById('progress-ring').style.strokeDashoffset = 691; 
+    document.getElementById('nian-num').innerText = "0 / 10"; 
+    
+    // 重置所有花瓣狀態
+    for (let i = 0; i < 10; i++) {
+        const p = document.getElementById('petal-' + i);
+        if(p) {
+            p.setAttribute("fill", "rgba(255,255,255,0.05)");
+            p.style.opacity = "0.3";
+            p.style.filter = "none";
+            p.style.transform = `rotate(${i * 36}deg) scale(1)`;
+        }
+    }
+    
+    showScreen(1); 
+    updateUI(); 
+}
+
     function finishSession() { save(); alert("今日修行資糧已封存"); goHome(); }
     function exportProgress() { const blob = new Blob([JSON.stringify(db)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `修行備份_${db.name}.json`; a.click(); }
     function importProgress(i) { const reader = new FileReader(); reader.onload = (e) => { try { db = JSON.parse(e.target.result); save(); location.reload(); } catch(err){alert("格式錯誤");} }; reader.readAsText(i.files[0]); }

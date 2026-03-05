@@ -138,11 +138,14 @@
 
 <div id="screen-2" class="container">
     <div class="circle-wrap">
-        <svg width="240" height="240" style="transform: rotate(-90deg);">
-            <circle cx="120" cy="120" r="110" stroke="#111" stroke-width="12" fill="none"></circle>
-            <circle id="progress-ring" cx="120" cy="120" r="110" stroke="var(--gold)" stroke-width="12" fill="none" stroke-dasharray="691" stroke-dashoffset="691" stroke-linecap="round" style="transition:0.5s; filter: drop-shadow(0 0 10px var(--solid-gold));"></circle>
+        <svg width="240" height="240" viewBox="0 0 100 100" style="position:absolute; top:0; left:0;">
+            <circle cx="50" cy="50" r="48" stroke="#111" stroke-width="2" fill="none"></circle>
+            <g id="lotus-petals"></g>
         </svg>
-        <div id="big-seed" onclick="handleNian()">✨</div>
+        <svg width="240" height="240" style="transform: rotate(-90deg); position:absolute; top:0; left:0; pointer-events:none;">
+            <circle id="progress-ring" cx="120" cy="120" r="110" stroke="var(--gold)" stroke-width="4" fill="none" stroke-dasharray="691" stroke-dashoffset="691" stroke-linecap="round" style="transition:0.5s; opacity:0.3;"></circle>
+        </svg>
+        <div id="big-seed" onclick="handleNian()" style="z-index: 10;">✨</div>
     </div>
     <div id="nian-num" style="font-size:3.2rem; font-weight:bold; font-family: monospace;">0 / 10</div>
     <div id="nian-word" style="font-size:2.2rem; color:var(--gold); height:3.5rem; margin-top:15px; font-weight:bold; letter-spacing: 2px;"></div>
@@ -248,24 +251,41 @@
         speak("一心專念，發菩提心", 0.8);
     }
 
-    function handleNian() {
+       function handleNian() {
         if (nianCount < 10) {
-            nianCount++; db.totalNian++;
+            nianCount++; 
+            db.totalNian++;
             document.getElementById('nian-word').innerText = "南無阿彌陀佛";
             document.getElementById('big-seed').style.filter = "drop-shadow(0 0 50px white)";
+            
             setTimeout(()=> {
                 document.getElementById('nian-word').innerText="";
                 document.getElementById('big-seed').style.filter = "drop-shadow(0 0 15px var(--solid-gold))";
             }, 300);
+            
             speak("南無阿彌陀佛", 0.75);
             document.getElementById('progress-ring').style.strokeDashoffset = 691 - (nianCount * 69.1);
             document.getElementById('nian-num').innerText = nianCount + " / 10";
+
+            // --- 點亮金粉蓮花瓣 ---
+            const p = document.getElementById('petal-' + (nianCount-1));
+            if(p) {
+                p.setAttribute("fill", "url(#goldGrad)"); 
+                p.style.filter = "drop-shadow(0 0 15px #d4af37) brightness(1.8)";
+                p.style.transformOrigin = "50% 50%";
+                p.style.transform = `rotate(${ (nianCount-1) * 36 }deg) scale(1.05)`;
+                p.style.opacity = "1";
+            }
+
+            // --- 滿十聲邏輯 ---
             if(nianCount === 10) { 
-                db.points += 2; save();
+                db.points += 2; 
+                save();
                 setTimeout(()=> document.getElementById('dedi-modal').style.display='flex', 800); 
             }
         }
-    }
+    } // <-- 這裡必須要有一個結尾大括號
+
 
     function renderTasks() {
         const container = document.getElementById('task-list'); container.innerHTML = "";
@@ -443,6 +463,51 @@ function getLotusSVG(rankType, nianCount = 0) {
             labelContainer.innerHTML = `${label}：<span id="streak-val">${currentDays.toFixed(1)}</span> / ${threshold}`;
         }
     }
+
+       function initLotus() {
+        const group = document.getElementById('lotus-petals');
+        if(!group) return;
+        group.innerHTML = "";
+        for (let i = 0; i < 10; i++) {
+            const angle = i * 36;
+            const petal = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            petal.setAttribute("d", "M50 48 Q55 35 50 15 Q45 35 50 48");
+            petal.setAttribute("transform", `rotate(${angle} 50 50)`);
+            petal.setAttribute("fill", "rgba(255,255,255,0.05)"); 
+            petal.setAttribute("stroke", "rgba(243,229,171,0.1)");
+            petal.setAttribute("id", `petal-${i}`);
+            petal.style.transition = "all 0.5s ease";
+            group.appendChild(petal);
+        }
+    }
+
+    // 重新定義核心跳轉邏輯，確保每次進入 Screen 2 都會重置蓮花
+    function goHome() { 
+        nianCount = 0; 
+        const ring = document.getElementById('progress-ring');
+        if(ring) ring.style.strokeDashoffset = 691; 
+        document.getElementById('nian-num').innerText = "0 / 10"; 
+        showScreen(1); 
+        updateUI(); 
+    }
+
+    // 在 startApp 的邏輯結尾加上 initLotus() 即可
+    // 找到您原有的 startApp 函數，在結尾的 showScreen(2) 後面加上 initLotus();
+
+
+    // 修正原本的 goHome，讓它重置蓮花
+    const originalGoHome = goHome;
+    goHome = function() {
+        originalGoHome();
+        initLotus();
+    };
+    
+    // 修正原本的 startApp，啟動時初始化蓮花
+    const originalStartApp = startApp;
+    startApp = function() {
+        originalStartApp();
+        initLotus();
+    };
 
     function save() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
     function showScreen(n) { document.querySelectorAll('.container').forEach(c => c.style.display = 'none'); document.getElementById('screen-'+n).style.display = 'flex'; if(n===3) renderTasks(); window.scrollTo(0,0); }

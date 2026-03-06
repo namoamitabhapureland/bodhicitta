@@ -84,7 +84,7 @@
             filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.3));
             transition: all 0.5s ease;
         }
-        #mini-seed svg { width: 42px; height: 42px; }
+        #mini-seed svg { width: 42px; height: 42px; transition: transform 0.2s; } /* 增加過渡動畫 */
 
         @keyframes seed-breath {
             0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.9; }
@@ -151,7 +151,7 @@
 <body>
 
 <div class="time-monitor">
-    <div class="mon-left">
+    <div class="mon-left" onclick="touchAvatar()" style="cursor:pointer;">
         <div id="mini-seed" style="display:flex; align-items:center; justify-content:center; width:42px; height:42px;">✨</div>
         <div style="display:flex; flex-direction:column; overflow:hidden;">
             <div style="display:flex; align-items:center; gap:5px;">
@@ -392,6 +392,28 @@ function playUniverseFrequency() {
         speak("都攝六根一心專念，發無上菩提心", 0.8);
     }
 
+    // ✨ 互動法語甘露 (點擊左上角頭像觸發)
+    function touchAvatar() {
+        const quotes = [
+            "一稱南無佛，皆已成佛道。",
+            "心如工畫師，能畫諸世間。",
+            "應無所住，而生其心。",
+            "凡所有相，皆是虛妄。",
+            "一切有為法，如夢幻泡影。",
+            "念佛方能消宿業，竭誠自可轉凡心。"
+        ];
+        const randomQ = quotes[Math.floor(Math.random() * quotes.length)];
+        
+        // 觸覺與視覺回饋
+        if (navigator.vibrate) navigator.vibrate(20);
+        const miniSeed = document.getElementById('mini-seed');
+        miniSeed.style.transform = "scale(1.2)";
+        setTimeout(() => miniSeed.style.transform = "scale(1)", 200);
+        
+        // 語音開示
+        speak(randomQ, 0.85);
+    }
+
     function triggerLevelUpEffect(rankName, svgHtml) {
         const overlay = document.getElementById('level-up-overlay');
         const textEl = document.getElementById('level-up-text');
@@ -506,94 +528,52 @@ function playUniverseFrequency() {
         });
     }
 
-/* --- ✨ 升級版：菩提蓮華化生引擎 (支援養成變化) --- */
-function getLotusSVG(rankType, nianCount = 0, lv = 1) {
+/* --- ✨ 究極美學版：菩提蓮華雙軌引擎 --- */
+function getLotusSVG(rankType, nianCount = 0) {
     const gold = "#f3e5ab";
     const darkGold = "#d4af37";
+    const water = "#06b6d4"; // 淨水藍
     
-    let haloRadius = 0;
-    let haloOpacity = 0;
-    let rayContent = "";
+    let defs = `<defs>
+        <radialGradient id="goldGrad"><stop offset="0%" stop-color="${gold}"/><stop offset="100%" stop-color="${darkGold}"/></radialGradient>
+        <radialGradient id="bgGlow"><stop offset="0%" stop-color="${darkGold}" stop-opacity="0.3"/><stop offset="100%" stop-color="${darkGold}" stop-opacity="0"/></radialGradient>
+    </defs>`;
 
-    if (nianCount >= 10) { haloRadius = 25; haloOpacity = 0.4; }
+    // 🌟 外圍軌道：菩薩位階 (依天數 Rank 決定底座與背光)
+    let bgContent = `<circle cx="50" cy="50" r="40" fill="url(#bgGlow)"><animate attributeName="r" values="38;42;38" dur="4s" repeatCount="indefinite"/></circle>`;
     
-    if (nianCount >= 500) { 
-        haloRadius = 40; haloOpacity = 0.6;
-        rayContent = `<g stroke="${gold}" stroke-width="1.8" stroke-linecap="round" opacity="0.8">
-            ${Array.from({length:8}).map((_,i)=>`<line x1="50" y1="50" x2="50" y2="12" transform="rotate(${i*45} 50 50)" />`).join('')}
-        </g>`;
-    }
-    
-    if (nianCount >= 10000) { 
-        haloRadius = 48; haloOpacity = 0.8;
-        rayContent += `<g stroke="${gold}" stroke-width="0.6" opacity="0.5">
-            ${Array.from({length:24}).map((_,i)=>`<line x1="50" y1="50" x2="50" y2="5" transform="rotate(${i*15} 50 50)" />`).join('')}
-        </g>`;
-    }
-
-    if (nianCount >= 1000000) {
-        rayContent += `<circle cx="50" cy="50" r="46" fill="none" stroke="${gold}" stroke-width="0.8" stroke-dasharray="3,5" opacity="0.7">
-            <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="15s" repeatCount="indefinite" />
-        </circle>`;
-    }
-
-    let svgHead = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                   <defs>
-                    <radialGradient id="goldGrad"><stop offset="0%" stop-color="${gold}"/><stop offset="100%" stop-color="${darkGold}"/></radialGradient>
-                    <radialGradient id="haloGrad">
-                        <stop offset="0%" stop-color="${gold}" stop-opacity="${haloOpacity}"/>
-                        <stop offset="60%" stop-color="${darkGold}" stop-opacity="${haloOpacity * 0.5}"/>
-                        <stop offset="100%" stop-color="${darkGold}" stop-opacity="0"/>
-                    </radialGradient>
-                   </defs>`;
-    
-    let halo = `<circle cx="50" cy="50" r="${haloRadius}" fill="url(#haloGrad)">
-                  <animate attributeName="r" values="${haloRadius};${haloRadius + 6};${haloRadius}" dur="2.5s" repeatCount="indefinite" />
-                </circle>${rayContent}`;
-
-    let content = "";
-    
-    // ✨ 核心養成邏輯：根據等級 (lv) 變化圖形
     switch(rankType) {
         case '信': 
-            if (lv <= 2) {
-                // 1. 菩提金種 (初信、二信)
-                content = `<path d="M50 30 Q65 70 50 85 Q35 70 50 30" fill="url(#goldGrad)" stroke="white" stroke-width="1.2" filter="drop-shadow(0 0 8px ${darkGold})"><animateTransform attributeName="transform" type="scale" values="1;1.05;1" dur="3s" repeatCount="indefinite" transform-origin="50 50"/></path>`;
-            } else if (lv <= 4) {
-                // 2. 扎根抽芽 (三信、四信)
-                content = `<path d="M50 40 Q60 70 50 80 Q40 70 50 40" fill="url(#goldGrad)" stroke="white" stroke-width="1"/>
-                           <path d="M50 75 Q70 60 80 45 Q65 55 50 75" fill="none" stroke="url(#goldGrad)" stroke-width="3" stroke-linecap="round"/>
-                           <path d="M50 75 Q30 60 20 45 Q35 55 50 75" fill="none" stroke="url(#goldGrad)" stroke-width="3" stroke-linecap="round"/>`;
-            } else if (lv <= 6) {
-                // 3. 含苞待放 (五信、六信)
-                content = `<path d="M50 25 C65 50 60 80 50 85 C40 80 35 50 50 25" fill="url(#goldGrad)" stroke="white" stroke-width="1.5" filter="drop-shadow(0 0 10px ${darkGold})"/>
-                           <path d="M50 80 Q75 70 85 50 C70 65 60 75 50 80" fill="rgba(243,229,171,0.5)" />
-                           <path d="M50 80 Q25 70 15 50 C30 65 40 75 50 80" fill="rgba(243,229,171,0.5)" />`;
-            } else if (lv <= 8) {
-                // 4. 初綻微香 (七信、八信)
-                content = `<g transform="translate(0, 5)">
-                           <path d="M50 30 C65 55 55 75 50 80 C45 75 35 55 50 30" fill="url(#goldGrad)" stroke="white" stroke-width="1"/>
-                           <path d="M50 80 C70 75 85 55 90 40 C75 50 60 65 50 80" fill="url(#goldGrad)" stroke="white" stroke-width="1"/>
-                           <path d="M50 80 C30 75 15 55 10 40 C25 50 40 65 50 80" fill="url(#goldGrad)" stroke="white" stroke-width="1"/>
-                           </g>`;
-            } else {
-                // 5. 蓮華盛放 (九信、十信)
-                content = `<g transform="translate(0, 5)">
-                           <path d="M50 25 C65 45 55 65 50 70 C45 65 35 45 50 25" fill="url(#goldGrad)" stroke="white" stroke-width="1" filter="drop-shadow(0 0 8px white)"/>
-                           <path d="M50 70 C70 65 85 45 90 35 C75 45 60 55 50 70" fill="url(#goldGrad)" stroke="white" stroke-width="1"/>
-                           <path d="M50 70 C30 65 15 45 10 35 C25 45 40 55 50 70" fill="url(#goldGrad)" stroke="white" stroke-width="1"/>
-                           <path d="M50 70 C75 75 95 65 95 65 C80 75 65 80 50 70" fill="url(#goldGrad)" stroke="white" stroke-width="1"/>
-                           <path d="M50 70 C25 75 5 65 5 65 C20 75 35 80 50 70" fill="url(#goldGrad)" stroke="white" stroke-width="1"/>
-                           <circle cx="50" cy="60" r="6" fill="white" filter="drop-shadow(0 0 10px #fff)"/>
-                           </g>`;
-            }
+            bgContent += `<ellipse cx="50" cy="75" rx="30" ry="8" fill="none" stroke="${water}" stroke-width="1.5" opacity="0.5"><animate attributeName="rx" values="20;35;20" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.8;0;0.8" dur="3s" repeatCount="indefinite"/></ellipse>
+                          <ellipse cx="50" cy="75" rx="15" ry="4" fill="none" stroke="${water}" stroke-width="1" opacity="0.8"/>`; 
             break;
-        case '住': content = `<rect x="45" y="20" width="10" height="60" rx="5" fill="url(#goldGrad)" stroke="white" stroke-width="0.8" /><rect x="20" y="45" width="60" height="10" rx="5" fill="url(#goldGrad)" stroke="white" stroke-width="0.8" />`; break;
-        case '行': content = `<path d="M50 12 Q72 50 50 88 Q28 50 50 12 M12 50 Q50 72 88 50 Q50 28 12 50" fill="none" stroke="url(#goldGrad)" stroke-width="6.5" stroke-linecap="round" filter="drop-shadow(0 0 8px ${gold})"/>`; break;
-        case '迴': content = `<g fill="url(#goldGrad)" opacity="1" filter="drop-shadow(0 0 5px white)">${[0,45,90,135,180,225,270,315].map(r=>`<path d="M50 10 Q64 40 50 50 Q36 40 50 10" transform="rotate(${r} 50 50)"/>`).join('')}</g>`; break;
-        case '地': content = `<circle cx="50" cy="50" r="18" fill="url(#goldGrad)" stroke="white" stroke-width="1.2" /><g stroke="url(#goldGrad)" stroke-width="3.5">${Array.from({length:12}).map((_,i)=>`<line x1="50" y1="50" x2="50" y2="6" transform="rotate(${i*30} 50 50)" />`).join('')}</g>`; break;
+        case '住': 
+            bgContent += `<rect x="25" y="65" width="50" height="12" rx="2" fill="none" stroke="url(#goldGrad)" stroke-width="1.5"/><rect x="30" y="68" width="40" height="6" fill="url(#goldGrad)" opacity="0.3"/><line x1="20" y1="71" x2="80" y2="71" stroke="url(#goldGrad)" stroke-width="1"/>`; 
+            break;
+        case '行': 
+            bgContent += `<g stroke="url(#goldGrad)" stroke-width="1.2" opacity="0.6">${[...Array(12)].map((_,i) => `<line x1="50" y1="50" x2="50" y2="15" transform="rotate(${i*30} 50 50)"/>`).join('')}</g>`; 
+            break;
+        case '迴': 
+            bgContent += `<g stroke="url(#goldGrad)" stroke-width="1.5" opacity="0.7"><circle cx="50" cy="50" r="32" fill="none"/><circle cx="50" cy="50" r="26" fill="none" stroke-dasharray="4 4"/>${[...Array(8)].map((_,i) => `<line x1="50" y1="50" x2="50" y2="18" transform="rotate(${i*45} 50 50)"/>`).join('')}<animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="25s" repeatCount="indefinite"/></g>`; 
+            break;
+        case '地': 
+            bgContent += `<g stroke="url(#goldGrad)" stroke-width="0.8" opacity="0.8"><circle cx="50" cy="50" r="38" fill="none"/><circle cx="50" cy="50" r="33" fill="none" stroke-dasharray="2 6"/>${[...Array(24)].map((_,i) => `<path d="M50 50 Q 60 30 50 12 Q 40 30 50 50" fill="rgba(212,175,55,0.08)" transform="rotate(${i*15} 50 50)"/>`).join('')}<animateTransform attributeName="transform" type="rotate" from="360 50 50" to="0 50 50" dur="40s" repeatCount="indefinite"/></g>`; 
+            break;
     }
-    return svgHead + halo + content + `</svg>`;
+
+    // 🌸 中心軌道：菩提蓮華 (依念佛總數 NianCount 決定生長)
+    let lotusContent = "";
+    if (nianCount < 1000) {
+        lotusContent = `<path d="M50 35 Q 60 65 50 72 Q 40 65 50 35" fill="url(#goldGrad)" filter="drop-shadow(0 0 5px ${gold})"><animateTransform attributeName="transform" type="scale" values="1;1.05;1" dur="2s" repeatCount="indefinite" transform-origin="50 55"/></path>`;
+    } else if (nianCount < 10000) {
+        lotusContent = `<path d="M50 35 Q 55 60 50 72 Q 45 60 50 35" fill="url(#goldGrad)"/><path d="M50 68 Q 68 52 72 40 Q 62 52 50 64" fill="none" stroke="url(#goldGrad)" stroke-width="2.5" stroke-linecap="round"/><path d="M50 68 Q 32 52 28 40 Q 38 52 50 64" fill="none" stroke="url(#goldGrad)" stroke-width="2.5" stroke-linecap="round"/>`;
+    } else if (nianCount < 100000) {
+        lotusContent = `<path d="M50 25 C 65 45 60 68 50 72 C 40 68 35 45 50 25" fill="url(#goldGrad)" filter="drop-shadow(0 0 6px ${gold})"/><path d="M50 70 Q 68 58 72 40 C 62 52 55 62 50 70" fill="rgba(243,229,171,0.7)"/><path d="M50 70 Q 32 58 28 40 C 38 52 45 62 50 70" fill="rgba(243,229,171,0.7)"/>`;
+    } else {
+        lotusContent = `<g transform="translate(0, -3)" filter="drop-shadow(0 0 8px ${gold})"><path d="M50 28 C 65 45 58 70 50 75 C 42 70 35 45 50 28" fill="url(#goldGrad)"/><path d="M50 72 C 75 65 85 45 88 35 C 75 48 62 60 50 72" fill="url(#goldGrad)"/><path d="M50 72 C 25 65 15 45 12 35 C 25 48 38 60 50 72" fill="url(#goldGrad)"/><path d="M50 72 C 80 80 92 68 95 62 C 80 72 65 75 50 72" fill="url(#goldGrad)"/><path d="M50 72 C 20 80 8 68 5 62 C 20 72 35 75 50 72" fill="url(#goldGrad)"/><circle cx="50" cy="62" r="4" fill="#fff" filter="drop-shadow(0 0 6px #fff)"/></g>`;
+    }
+
+    return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">${defs}${bgContent}${lotusContent}</svg>`;
 }
 
     function updateUI() {
@@ -619,31 +599,31 @@ function getLotusSVG(rankType, nianCount = 0, lv = 1) {
         let currentDays = points / 100; 
         let rank, threshold, base, label;
 
-        // ✨ 傳遞 lv 變數給 getLotusSVG，讓圖騰知道該畫哪個階段
         if (currentDays >= 1000000) { 
             let lv = Math.max(1, Math.floor(currentDays / 1000000));
             let rankNames = ["初地", "二地", "三地", "四地", "五地", "六地", "七地", "八地", "九地", "十地"];
             let index = Math.min(9, lv - 1);
-            rank = {l: rankNames[index] + "菩薩", i: getLotusSVG('地', total, lv), c: "#ffffff"};
+            // ✨ 已修正：不再傳遞無用的 lv 參數，只需傳遞 rankType 與 total
+            rank = {l: rankNames[index] + "菩薩", i: getLotusSVG('地', total), c: "#ffffff"};
             base = lv * 1000000; threshold = (lv + 1) * 1000000; label = "百萬日進度";
         } else if (currentDays >= 100000) { 
             let lv = Math.max(1, Math.floor(currentDays / 100000));
-            rank = {l: ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][Math.min(9, lv-1)] + "迴向位", i: getLotusSVG('迴', total, lv), c: "#f472b6"};
+            rank = {l: ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][Math.min(9, lv-1)] + "迴向位", i: getLotusSVG('迴', total), c: "#f472b6"};
             base = lv * 100000; threshold = (lv + 1) * 100000; label = "十萬日進度";
         } else if (currentDays >= 10000) { 
             let lv = Math.max(1, Math.floor(currentDays / 10000));
-            rank = {l: ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][Math.min(9, lv-1)] + "行位", i: getLotusSVG('行', total, lv), c: "#60a5fa"};
+            rank = {l: ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][Math.min(9, lv-1)] + "行位", i: getLotusSVG('行', total), c: "#60a5fa"};
             base = lv * 10000; threshold = (lv + 1) * 10000; label = "萬日進度";
         } else if (currentDays >= 1000) { 
             let lv = Math.max(1, Math.floor(currentDays / 1000));
-            rank = {l: ["初住", "二住", "三住", "四住", "五住", "六住", "七住", "八住", "九住", "十住"][Math.min(9, lv-1)] + "位", i: getLotusSVG('住', total, lv), c: "#ffffff"};
+            rank = {l: ["初住", "二住", "三住", "四住", "五住", "六住", "七住", "八住", "九住", "十住"][Math.min(9, lv-1)] + "位", i: getLotusSVG('住', total), c: "#ffffff"};
             base = lv * 1000; threshold = (lv + 1) * 1000; label = "千日進度";
         } else { 
             let lv = Math.floor(currentDays / 100) + 1; 
             let index = Math.min(9, lv - 1);
             rank = {
                 l: ["初信位", "二信位", "三信位", "四信位", "五信位", "六信位", "七信位", "八信位", "九信位", "十信位"][index], 
-                i: getLotusSVG('信', total, lv), 
+                i: getLotusSVG('信', total), 
                 c: "#06b6d4"
             };
             base = (lv - 1) * 100; 

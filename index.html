@@ -100,8 +100,6 @@
 </head>
 <body>
 
-<audio id="bg-music" loop src="https://cdn.pixabay.com/audio/2022/03/10/audio_c369792070.mp3"></audio>
-
 <div class="time-monitor">
     <div class="mon-left">
         <div id="mini-seed" style="display:flex; align-items:center; justify-content:center; width:42px; height:42px;">✨</div>
@@ -210,6 +208,33 @@
 </div>
 
 <script>
+// 生成 432Hz 宇宙頻率的引擎
+let audioCtx, oscillator, gainNode;
+
+function playUniverseFrequency() {
+    try {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            oscillator = audioCtx.createOscillator();
+            gainNode = audioCtx.createGain();
+
+            oscillator.type = 'sine'; // 正弦波，最純淨的聲音
+            oscillator.frequency.setValueAtTime(432, audioCtx.currentTime); 
+            
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 2); // 2秒內緩緩升起，音量極輕
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start();
+        } else if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    } catch (e) {
+        console.log("音頻引擎啟動受阻");
+    }
+}
+
     let db = JSON.parse(localStorage.getItem('PX_V15.0')) || { 
         name: "", totalNian: 0, points: 0, dailyTasks: [], todayCount: 0, lastDate: new Date().toLocaleDateString(),
         musicList: [] 
@@ -236,28 +261,31 @@
     }
     setInterval(updateClock, 50);
 
-    function startApp() {
-        const nameInput = document.getElementById('user-name').value.trim();
-        if(!nameInput) return alert("請留名號");
-        // 保留換名字警告邏輯
-        if (db.name && db.name !== nameInput) {
-            if(!confirm(`⚠️ 注意：目前的紀錄屬於「${db.name}」，確定要切換名號嗎？`)) return;
-        }
-        const silent = new SpeechSynthesisUtterance("");
-        window.speechSynthesis.speak(silent);
-        db.name = nameInput; 
-        db.todayCount++; 
-        checkNewDay(); 
-        save();
-
-const bgMusic = document.getElementById('bg-music');
-bgMusic.volume = 0.4; // 設定音量為 40%，避免干擾念佛聲
-bgMusic.play().catch(e => console.log("音訊啟動受阻:", e));
-
-        showScreen(2); 
-        updateUI();
-        speak("都攝六根一心專念，發無上菩提心", 0.8);
+ function startApp() {
+    const nameInput = document.getElementById('user-name').value.trim();
+    if(!nameInput) return alert("請留名號");
+    
+    // 保留換名字警告邏輯
+    if (db.name && db.name !== nameInput) {
+        if(!confirm(`⚠️ 注意：目前的紀錄屬於「${db.name}」，確定要切換名號嗎？`)) return;
     }
+    
+    const silent = new SpeechSynthesisUtterance("");
+    window.speechSynthesis.speak(silent);
+    db.name = nameInput; 
+    db.todayCount++; 
+    checkNewDay(); 
+    save();
+
+    // --- 改動開始：換成內建頻率引擎 ---
+    playUniverseFrequency(); 
+    // --- 改動結束 ---
+
+    showScreen(2); 
+    updateUI();
+    speak("都攝六根一心專念，發無上菩提心", 0.8);
+}
+
 
     function handleNian() {
         if (nianCount < 10) {

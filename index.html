@@ -11,7 +11,7 @@
     
     <link rel="manifest" href="data:application/json,{'name':'普賢行願OS','short_name':'普賢OS','start_url':'.','display':'standalone','background_color':'#000000','theme_color':'#d4af37'}">
 
-    <title>普賢行願 OS - 圓滿擴張版</title>
+    <title>普賢行願 OS - 圓滿擴張版 2.0</title>
     <style>
         :root { 
             --bg: #000; 
@@ -119,6 +119,8 @@
             border-radius: 50px;
             background: rgba(243, 229, 171, 0.05);
             box-shadow: inset 0 0 15px rgba(212, 175, 55, 0.1);
+            position: relative; /* ✨ 2.0 新增 */
+            z-index: 20; /* ✨ 2.0 新增 */
         }
 
         @keyframes goldRipple {
@@ -146,6 +148,35 @@
             filter: drop-shadow(0 0 30px var(--solid-gold));
             transform: scale(0.5); opacity: 0; transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+
+        /* ✨ 2.0 新增：音量滑桿樣式 */
+        .vol-slider-wrap { width: 100%; display: flex; align-items: center; gap: 15px; margin-top: 5px; padding: 0 10px; color: var(--gold); font-size: 0.85rem; }
+        input[type=range] { flex: 1; accent-color: var(--solid-gold); height: 4px; background: #333; outline: none; border-radius: 4px; }
+        
+        /* ✨ 2.0 新增：透明手指引導 */
+        #finger-hint {
+            position: absolute; top: 60%; left: 50%; font-size: 3rem; 
+            transform: translate(-50%, 0); animation: tap-hint 1.5s infinite; 
+            pointer-events: none; opacity: 0.8; z-index: 30; 
+            filter: drop-shadow(0 0 10px rgba(243, 229, 171, 0.6));
+        }
+        @keyframes tap-hint { 
+            0% { transform: translate(-50%, 0) scale(1); opacity: 0.8; } 
+            50% { transform: translate(-50%, -20px) scale(0.9); opacity: 1; } 
+            100% { transform: translate(-50%, 0) scale(1); opacity: 0; } 
+        }
+
+        /* ✨ 2.0 新增：軌道光點 */
+        .orbit-container { position: absolute; top: 0; left: 0; width: 240px; height: 240px; border-radius: 50%; pointer-events: none; opacity: 0;}
+        #orbit-dot { position: absolute; width: 10px; height: 10px; background: #fff; border-radius: 50%; top: -5px; left: 115px; box-shadow: 0 0 15px #fff, 0 0 30px var(--gold); }
+        .orbit-anim { animation: orbit-spin 2s linear forwards; opacity: 1; }
+        @keyframes orbit-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ✨ 2.0 新增：金粉粒子與曼陀羅華特效 */
+        .gold-dust { position: fixed; background: var(--gold); border-radius: 50%; pointer-events: none; animation: dust-fall 1.2s ease-out forwards; z-index: 40; filter: drop-shadow(0 0 4px var(--solid-gold)); }
+        @keyframes dust-fall { 0% { opacity: 1; transform: scale(1) translate(0,0); } 100% { opacity: 0; transform: scale(0) translate(var(--dx), var(--dy)); } }
+        .flower-petal { position: fixed; top: -50px; pointer-events: none; animation: flower-fall linear forwards; z-index: 9999; }
+        @keyframes flower-fall { 0% { transform: translateY(0) rotate(0deg) scale(0.8); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(110vh) rotate(360deg) scale(1.2); opacity: 0; } }
     </style>
 </head>
 <body>
@@ -172,8 +203,15 @@
         <input type="text" id="user-name" placeholder="請留名號" style="width:100%; background:transparent; border:none; color:var(--gold); text-align:center; font-size:1.25rem; outline:none; padding:18px; font-weight: bold;">
     </div>
     <div style="color:var(--gold); font-size: 1.1rem; margin-bottom:8px;">累積念佛：<span id="total-count">0</span> 聲</div>
-    <div id="today-info" style="color:var(--cyan); font-size:0.9rem; margin-bottom:15px; letter-spacing: 1px;">今日對頻：<span id="today-count">0</span> 次</div>
-    <div style="width:100%; height:8px; background:#1a1a1a; border-radius:4px; overflow:hidden; border: 0.5px solid #333;"><div id="streak-bar" style="height:100%; background: linear-gradient(90deg, var(--solid-gold), var(--gold)); width:0%; transition:1.2s;"></div></div>
+    <div id="today-info" style="color:var(--cyan); font-size:0.9rem; margin-bottom:5px; letter-spacing: 1px;">今日對頻：<span id="today-count">0</span> 次</div>
+    
+    <div class="vol-slider-wrap">
+        <span style="font-size:1.2rem;">🔉</span>
+        <input type="range" id="vol-slider" min="0" max="100" value="5" oninput="changeVolume(this.value)">
+        <span id="vol-display">5%</span>
+    </div>
+
+    <div style="width:100%; height:8px; background:#1a1a1a; border-radius:4px; overflow:hidden; border: 0.5px solid #333; margin-top: 15px;"><div id="streak-bar" style="height:100%; background: linear-gradient(90deg, var(--solid-gold), var(--gold)); width:0%; transition:1.2s;"></div></div>
     <div id="label-container" style="font-size:0.8rem; margin:12px 0 35px; color:#888;">百日進度：<span id="streak-val">0.0</span> / 100</div>
 
     <button class="btn-main" onclick="startApp()">啟動與阿彌陀佛對頻</button>
@@ -197,14 +235,21 @@
         <svg width="240" height="240" style="transform: rotate(-90deg); position:absolute; top:0; left:0; pointer-events:none;">
             <circle id="progress-ring" cx="120" cy="120" r="110" stroke="var(--gold)" stroke-width="4" fill="none" stroke-dasharray="691" stroke-dashoffset="691" stroke-linecap="round" style="transition:0.5s; opacity:0.3;"></circle>
         </svg>
-        <div id="big-seed" onclick="handleNian()" style="z-index: 10;">✨</div>
+        
+        <div id="orbit-wrap" class="orbit-container">
+            <div id="orbit-dot"></div>
+        </div>
+
+        <div id="big-seed" onclick="handleNian(event)" style="z-index: 10;">✨</div>
+        
+        <div id="finger-hint">👆</div>
     </div>
 
     <div id="nian-num-wrap">
         <div id="nian-num" style="font-size:3.2rem; font-weight:bold; font-family: monospace;">0 / 10</div>
     </div>
 
-    <div id="nian-word" style="font-size:2.2rem; color:var(--gold); height:3.5rem; margin-top:15px; font-weight:bold; letter-spacing: 2px;"></div>
+    <div id="nian-word" style="font-size:2.2rem; color:var(--gold); height:3.5rem; margin-top:15px; font-weight:bold; letter-spacing: 2px; opacity: 0; transition: opacity 0.5s;"></div>
 
     <div style="display:flex; gap:15px; margin-top:20px;">
         <div class="gold-btn" onclick="document.getElementById('guide-modal').style.display='flex'">GUIDE</div>
@@ -317,6 +362,15 @@
 
 <script>
 let audioCtx, oscillator, gainNode;
+let globalVolume = 0.05; // ✨ 2.0 新增：預設音量降低為 5%
+
+function changeVolume(val) {
+    globalVolume = val / 100;
+    document.getElementById('vol-display').innerText = val + "%";
+    if (gainNode) {
+        gainNode.gain.setValueAtTime(globalVolume, audioCtx.currentTime);
+    }
+}
 
 function playUniverseFrequency() {
     try {
@@ -328,10 +382,8 @@ function playUniverseFrequency() {
             oscillator.type = 'sine'; 
             oscillator.frequency.setValueAtTime(432, audioCtx.currentTime); 
 
-            const myVolume = 0.3; 
-
             gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(myVolume, audioCtx.currentTime + 2); 
+            gainNode.gain.linearRampToValueAtTime(globalVolume, audioCtx.currentTime + 2); 
 
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
@@ -378,8 +430,14 @@ function playUniverseFrequency() {
             if(!confirm(`⚠️ 注意：目前的紀錄屬於「${db.name}」，確定要切換名號嗎？`)) return;
         }
         
-        const silent = new SpeechSynthesisUtterance("");
-        window.speechSynthesis.speak(silent);
+        // ✨ 2.0 新增：針對安卓系統的強效語音喚醒
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+            let silentWake = new SpeechSynthesisUtterance("");
+            silentWake.volume = 0;
+            window.speechSynthesis.speak(silentWake);
+        }
+
         db.name = nameInput; 
         db.todayCount++; 
         checkNewDay(); 
@@ -390,6 +448,9 @@ function playUniverseFrequency() {
         showScreen(2); 
         updateUI();
         speak("都攝六根一心專念，發無上菩提心", 0.8);
+        
+        // ✨ 2.0 新增：恢復引導手指顯示（供再次重啟時使用）
+        document.getElementById('finger-hint').style.display = 'block';
     }
 
     // ✨ 互動法語甘露 (點擊左上角頭像觸發)
@@ -446,18 +507,77 @@ function playUniverseFrequency() {
         }, 3500);
     }
 
-    function handleNian() {
+    // ✨ 2.0 新增：金粉粒子特效函數
+    function createGoldDust(x, y) {
+        for(let i=0; i<12; i++) {
+            let dust = document.createElement('div');
+            dust.className = 'gold-dust';
+            // 以手指點擊位置為中心
+            dust.style.left = x + 'px';
+            dust.style.top = y + 'px';
+            dust.style.width = Math.random() * 4 + 2 + 'px';
+            dust.style.height = dust.style.width;
+            // 隨機散射方向
+            dust.style.setProperty('--dx', (Math.random() - 0.5) * 120 + 'px');
+            dust.style.setProperty('--dy', (Math.random() - 0.5) * 120 + 'px');
+            document.body.appendChild(dust);
+            // 動畫結束後清除
+            setTimeout(() => dust.remove(), 1200);
+        }
+    }
+
+    // ✨ 2.0 新增：曼陀羅華白花特效函數
+    function flowerRain() {
+        for(let i=0; i<25; i++) {
+            setTimeout(() => {
+                let flower = document.createElement('div');
+                flower.className = 'flower-petal';
+                flower.style.left = Math.random() * 100 + 'vw';
+                flower.style.animationDuration = (Math.random() * 3 + 4) + 's';
+                // 使用純代碼畫出白色帶點金光的聖潔花瓣
+                flower.innerHTML = `<svg width="24" height="24" viewBox="0 0 100 100"><path d="M50 0 C 80 40 80 60 50 100 C 20 60 20 40 50 0" fill="rgba(255,255,255,0.9)" stroke="#f3e5ab" stroke-width="1.5" filter="drop-shadow(0 0 5px #fff)"/></svg>`;
+                document.body.appendChild(flower);
+                setTimeout(() => flower.remove(), 8000);
+            }, Math.random() * 2500); // 隨機延遲掉落，形成花雨層次
+        }
+    }
+
+    // ✨ 2.0 升級：融合煉心對頻機制的 handleNian
+    function handleNian(event) {
         if (nianCount < 10) {
             if (navigator.vibrate) navigator.vibrate(15);
+            
+            // 隱藏透明引導手指 (第一次點擊即消失)
+            document.getElementById('finger-hint').style.display = 'none';
+
+            // 觸發軌道光點繞行一圈 (2秒)，強迫行者等待
+            const orbit = document.getElementById('orbit-wrap');
+            orbit.classList.remove('orbit-anim');
+            void orbit.offsetWidth; // 觸發重繪 (Reflow)
+            orbit.classList.add('orbit-anim');
+
+            // 每次點擊都給予金粉回饋，增加修行互動法喜
+            if (event && event.clientX) {
+                createGoldDust(event.clientX, event.clientY);
+            }
 
             nianCount++; db.totalNian++;
-            document.getElementById('nian-word').innerText = "南無阿彌陀佛";
+            
+            // ✨ 控制對頻文字顯示邏輯 (第一念隱藏，第二念起顯現)
+            const nianWord = document.getElementById('nian-word');
+            if (nianCount >= 2) {
+                nianWord.style.opacity = "1";
+                nianWord.innerText = "南無阿彌陀佛";
+            }
+            
             document.getElementById('big-seed').style.filter = "drop-shadow(0 0 50px white)";
             setTimeout(()=> {
-                document.getElementById('nian-word').innerText="";
+                if(nianCount >= 2) nianWord.style.opacity = "0.5"; // 呼吸感變淡
                 document.getElementById('big-seed').style.filter = "drop-shadow(0 0 15px var(--solid-gold))";
-            }, 300);
+            }, 500);
+
             speak("南無阿彌陀佛", 0.75);
+            
             document.getElementById('progress-ring').style.strokeDashoffset = 691 - (nianCount * 69.1);
             document.getElementById('nian-num').innerText = nianCount + " / 10";
             
@@ -472,11 +592,14 @@ function playUniverseFrequency() {
 
                 db.points += 2; save();
                 
+                // ✨ 圓滿十念，降下曼陀羅華
+                flowerRain();
+
                 const bigSeed = document.getElementById('big-seed');
                 bigSeed.classList.add('ripple-effect');
                 setTimeout(() => bigSeed.classList.remove('ripple-effect'), 1000);
 
-                setTimeout(()=> document.getElementById('dedi-modal').style.display='flex', 1200); 
+                setTimeout(()=> document.getElementById('dedi-modal').style.display='flex', 2500); // 稍微延遲讓花雨飄落
             }
         }
     }
@@ -498,7 +621,12 @@ function playUniverseFrequency() {
     function speak(t, r) {
         if (!window.speechSynthesis) return;
         window.speechSynthesis.cancel(); 
-        const m = new SpeechSynthesisUtterance(t.replace(/阿/g, 'ㄚ'));
+        
+        // ✨ 2.0 新增：安卓相容性語音修正
+        let isAndroid = /Android/i.test(navigator.userAgent);
+        let textToSpeak = isAndroid ? t : t.replace(/阿/g, 'ㄚ');
+        
+        const m = new SpeechSynthesisUtterance(textToSpeak);
         m.lang = 'zh-TW'; 
         m.rate = r || 0.8; 
         m.pitch = 1.0; 
@@ -603,7 +731,6 @@ function getLotusSVG(rankType, nianCount = 0) {
             let lv = Math.max(1, Math.floor(currentDays / 1000000));
             let rankNames = ["初地", "二地", "三地", "四地", "五地", "六地", "七地", "八地", "九地", "十地"];
             let index = Math.min(9, lv - 1);
-            // ✨ 已修正：不再傳遞無用的 lv 參數，只需傳遞 rankType 與 total
             rank = {l: rankNames[index] + "菩薩", i: getLotusSVG('地', total), c: "#ffffff"};
             base = lv * 1000000; threshold = (lv + 1) * 1000000; label = "百萬日進度";
         } else if (currentDays >= 100000) { 
@@ -686,7 +813,14 @@ function getLotusSVG(rankType, nianCount = 0) {
     function save() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
     function showScreen(n) { document.querySelectorAll('.container').forEach(c => c.style.display = 'none'); document.getElementById('screen-'+n).style.display = 'flex'; if(n===3) renderTasks(); window.scrollTo(0,0); }
     function confirmDedi() { document.getElementById('dedi-modal').style.display='none'; showScreen(3); }
-    function goHome() { nianCount=0; document.getElementById('progress-ring').style.strokeDashoffset=691; document.getElementById('nian-num').innerText="0 / 10"; showScreen(1); updateUI(); }
+    function goHome() { 
+        nianCount=0; 
+        document.getElementById('progress-ring').style.strokeDashoffset=691; 
+        document.getElementById('nian-num').innerText="0 / 10"; 
+        document.getElementById('nian-word').style.opacity = "0"; // 回首頁時隱藏佛號
+        showScreen(1); 
+        updateUI(); 
+    }
     function finishSession() { save(); alert("今日修行資糧已封存"); goHome(); }
     function exportProgress() { const blob = new Blob([JSON.stringify(db)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `修行備份_${db.name}.json`; a.click(); }
     function importProgress(i) { const reader = new FileReader(); reader.onload = (e) => { try { db = JSON.parse(e.target.result); save(); location.reload(); } catch(err){alert("格式錯誤");} }; reader.readAsText(i.files[0]); }

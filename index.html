@@ -11,7 +11,7 @@
     
     <link rel="manifest" href="data:application/json,{'name':'普賢行願OS','short_name':'普賢OS','start_url':'.','display':'standalone','background_color':'#000000','theme_color':'#d4af37'}">
 
-    <title>普賢行願 OS - 圓滿擴張版 2.3</title>
+    <title>普賢行願 OS - 圓滿擴張版 2.4</title>
     <style>
         :root { 
             --bg: #000; 
@@ -184,7 +184,6 @@
         .zen-q { color: var(--gold); font-weight: bold; font-size: 1.05rem; margin-bottom: 8px; letter-spacing: 1px; }
         .zen-a { color: #bbb; font-size: 0.95rem; line-height: 1.8; text-align: justify; }
 
-        /* ✨ 2.3 新增：功德林網格與卡片美學 */
         .merit-forest-wrap { width: 100%; border-top: 1px solid rgba(6,182,212,0.3); padding-top: 20px; margin-top: 15px; }
         .merit-title { color: var(--cyan); text-align: center; font-size: 1.1rem; letter-spacing: 3px; margin-bottom: 15px; font-weight: bold; }
         
@@ -205,6 +204,31 @@
         }
         .merit-btn:active { background: rgba(212,175,55,0.15); transform: translateY(2px); }
         .merit-icon { width: 32px; height: 32px; filter: drop-shadow(0 0 5px rgba(212,175,55,0.4)); }
+
+        /* ✨ 2.4 新增：大迴向虛空化境特效 */
+        .dedi-dissolve {
+            color: transparent !important; /* 文字本體變透明 */
+            text-shadow: 0 0 15px rgba(243, 229, 171, 0.9), 0 -30px 30px rgba(243, 229, 171, 0) !important; /* 化為金色霧氣並向上飄 */
+            border-color: transparent !important; /* 外框消失 */
+            background: transparent !important;
+            box-shadow: none !important;
+            transition: all 3s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+        
+        /* 迴向願力昇華粒子 */
+        .void-dust {
+            position: fixed;
+            background: var(--gold);
+            border-radius: 50%;
+            pointer-events: none;
+            filter: drop-shadow(0 0 8px var(--solid-gold));
+            animation: float-up-void 3.5s ease-out forwards;
+            z-index: 50;
+        }
+        @keyframes float-up-void {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(var(--vx), var(--vy)) scale(0); }
+        }
     </style>
 </head>
 <body>
@@ -328,8 +352,9 @@
 </div>
 
 <div id="screen-4" class="container">
-    <textarea id="dedi-box" placeholder="迴向極樂國與一真法界" style="width:100%; height:280px; background:#050505; border:1.8px solid var(--gold); border-radius:22px; color:#eee; padding:22px; outline:none; font-size:1.15rem; line-height:1.7;"></textarea>
-    <button class="btn-main" onclick="finishSession()">封存今日資糧</button>
+    <textarea id="dedi-box" placeholder="請輸入迴向、懺悔或發願文...&#10;&#10;願以此功德，莊嚴佛淨土。&#10;上報四重恩，下濟三途苦。&#10;若有見聞者，悉發菩提心。&#10;盡此一報身，同生極樂國。" style="width:100%; height:280px; background:#050505; border:1.8px solid var(--gold); border-radius:22px; color:#eee; padding:22px; outline:none; font-size:1.1rem; line-height:1.8; transition: opacity 0.5s;"></textarea>
+    
+    <button id="dedi-btn" class="btn-main" style="margin-top: 25px; letter-spacing: 2px;" onclick="startDedicationEffect()">化入虛空 ． 圓滿迴向</button>
 </div>
 
 <div id="dedi-modal" class="modal">
@@ -472,7 +497,6 @@ function playUniverseFrequency() {
     let perfectHits = 0;
     let lastClickTime = 0;
 
-    // ✨ 2.3 法露庫
     const dewQuotes = [
         "一稱南無佛，皆已成佛道。",
         "心如工畫師，能畫諸世間。",
@@ -539,11 +563,11 @@ function playUniverseFrequency() {
         speak("都攝六根一心專念，發無上菩提心", 0.8);
         
         document.getElementById('guide-ripple').style.display = 'block';
-        refreshDew(); // 啟動時刷新法露
+        refreshDew(); 
     }
 
     function touchAvatar() {
-        refreshDew(); // 點擊頭像除了發聲也刷新第三頁的法露
+        refreshDew(); 
         if (navigator.vibrate) navigator.vibrate(20);
         const miniSeed = document.getElementById('mini-seed');
         miniSeed.style.transform = "scale(1.2)";
@@ -849,7 +873,7 @@ function getLotusSVG(rankType, nianCount = 0) {
             };
             base = (lv - 1) * 100; 
             threshold = lv * 100; 
-            label = "信位進階 (十日一階)";
+            label = "信位進度 (十日一階)";
         }
 
         const titleEl = document.getElementById('rank-title');
@@ -906,6 +930,7 @@ function getLotusSVG(rankType, nianCount = 0) {
     function save() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
     function showScreen(n) { document.querySelectorAll('.container').forEach(c => c.style.display = 'none'); document.getElementById('screen-'+n).style.display = 'flex'; if(n===3) renderTasks(); window.scrollTo(0,0); }
     function confirmDedi() { document.getElementById('dedi-modal').style.display='none'; showScreen(3); }
+    
     function goHome() { 
         nianCount=0; 
         perfectHits=0; 
@@ -915,7 +940,61 @@ function getLotusSVG(rankType, nianCount = 0) {
         showScreen(1); 
         updateUI(); 
     }
-    function finishSession() { save(); alert("今日修行資糧已封存"); goHome(); }
+
+    // ✨ 2.4 核心：大迴向虛空化境特效
+    function startDedicationEffect() {
+        const box = document.getElementById('dedi-box');
+        const btn = document.getElementById('dedi-btn');
+        
+        // 隱藏按鈕，避免重複點擊
+        btn.style.opacity = '0';
+        btn.style.pointerEvents = 'none';
+
+        // 觸發文字光暈化與消散
+        box.classList.add('dedi-dissolve');
+
+        // 生成虛空迴向光粉 (模擬字體化為星塵)
+        const rect = box.getBoundingClientRect();
+        // 確保在有寬高的範圍內生成
+        if (rect.width > 0) {
+            for(let i=0; i<60; i++) {
+                let dust = document.createElement('div');
+                dust.className = 'void-dust';
+                // 隨機散布在文字框範圍內
+                dust.style.left = rect.left + Math.random() * rect.width + 'px';
+                dust.style.top = rect.top + Math.random() * rect.height + 'px';
+                
+                let size = Math.random() * 4 + 2;
+                dust.style.width = size + 'px';
+                dust.style.height = size + 'px';
+                
+                // 設定粒子向上飄升的軌跡
+                dust.style.setProperty('--vx', (Math.random() - 0.5) * 150 + 'px');
+                dust.style.setProperty('--vy', -(Math.random() * 250 + 100) + 'px'); 
+                
+                document.body.appendChild(dust);
+                setTimeout(() => dust.remove(), 3500);
+            }
+        }
+
+        // 播報圓滿法音
+        speak("迴向法界，同生極樂", 0.7);
+
+        // 等待動畫結束後，無聲封存並回首頁
+        setTimeout(() => {
+            save();
+            
+            // 復原 DOM 狀態供下次使用
+            box.classList.remove('dedi-dissolve');
+            box.value = ""; 
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
+            
+            // 拔除原本冷硬的 alert，直接優雅回首頁
+            goHome(); 
+        }, 3500); // 與 CSS 動畫時間同步
+    }
+
     function exportProgress() { const blob = new Blob([JSON.stringify(db)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `修行備份_${db.name}.json`; a.click(); }
     function importProgress(i) { const reader = new FileReader(); reader.onload = (e) => { try { db = JSON.parse(e.target.result); save(); location.reload(); } catch(err){alert("格式錯誤");} }; reader.readAsText(i.files[0]); }
     

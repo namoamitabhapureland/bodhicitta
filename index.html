@@ -759,35 +759,69 @@ function playBell() {
         }
     }
 
-        function flowerRain(level) {
-        let count = level === 3 ? 36 : (level === 2 ? 18 : Math.floor(Math.random() * 5) + 3);
-        for(let i=0; i<count; i++) {
+            function flowerRain(level) {
+        // 1. ✨ 漫天金剛沙 (光塵粒子) - 融合大迴向的亮粉感
+        let dustCount = level === 3 ? 60 : (level === 2 ? 30 : 10);
+        for(let i = 0; i < dustCount; i++) {
+            setTimeout(() => {
+                let dust = document.createElement('div'); 
+                dust.style.position = 'fixed';
+                dust.style.background = 'var(--gold)';
+                dust.style.borderRadius = '50%';
+                dust.style.pointerEvents = 'none';
+                dust.style.filter = 'drop-shadow(0 0 8px var(--solid-gold))';
+                dust.style.zIndex = "1400"; // 在文字下方
+                dust.style.left = Math.random() * 100 + 'vw'; 
+                dust.style.top = '-20px'; 
+                let size = Math.random() * 3 + 1.5; // 細緻的粉塵大小
+                dust.style.width = size + 'px'; dust.style.height = size + 'px';
+                
+                // 動態注入飄落與閃爍動畫
+                dust.animate([
+                    { opacity: 0, transform: `translate(0, 0) scale(0.5)` },
+                    { opacity: 0.8, transform: `translate(${(Math.random() - 0.5) * 100}px, 40vh) scale(1.2)` },
+                    { opacity: 0, transform: `translate(${(Math.random() - 0.5) * 200}px, 110vh) scale(0)` }
+                ], {
+                    duration: Math.random() * 4000 + 4000, // 緩慢飄落
+                    easing: 'ease-in-out',
+                    fill: 'forwards'
+                });
+
+                document.body.appendChild(dust); 
+                setTimeout(() => dust.remove(), 8500);
+            }, Math.random() * 1800);
+        }
+
+        // 2. 🌸 琉璃蓮瓣 (立體花瓣) - 點綴於金剛沙之中
+        let petalCount = level === 3 ? 24 : (level === 2 ? 12 : Math.floor(Math.random() * 3) + 2);
+        for(let i = 0; i < petalCount; i++) {
             setTimeout(() => {
                 let flower = document.createElement('div'); flower.className = 'flower-petal';
-                let size = level === 3 ? (Math.random() * 20 + 20) : (Math.random() * 12 + 12);
+                let size = level === 3 ? (Math.random() * 18 + 12) : (Math.random() * 12 + 8);
                 flower.style.width = size + 'px'; flower.style.height = size + 'px';
                 flower.style.left = Math.random() * 95 + 'vw';
-                flower.style.animationDuration = (Math.random() * 5 + 6) + 's';
-                flower.style.zIndex = "1500"; // 確保在文字下方，但在背景上方
+                flower.style.animationDuration = (Math.random() * 6 + 5) + 's';
+                flower.style.zIndex = "1500"; 
                 
                 let goldCenter = level === 3 ? '#d4af37' : '#f3e5ab';
                 let petalColor = level === 3 ? 'rgba(243,229,171,0.85)' : 'rgba(255,255,255,0.7)';
                 
-                // 引入高階貝茲曲線與漸層，打造琉璃金屬花瓣
                 flower.innerHTML = `
                 <svg viewBox="0 0 100 100">
                     <defs>
-                        <linearGradient id="petalGrad${i}" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <linearGradient id="fallGrad${i}" x1="0%" y1="0%" x2="0%" y2="100%">
                             <stop offset="0%" stop-color="${petalColor}" stop-opacity="0.9"/>
-                            <stop offset="100%" stop-color="${goldCenter}" stop-opacity="0.3"/>
+                            <stop offset="100%" stop-color="${goldCenter}" stop-opacity="0.2"/>
                         </linearGradient>
                     </defs>
-                    <path d="M50 10 C 70 30, 80 60, 50 90 C 20 60, 30 30, 50 10" fill="url(#petalGrad${i})" filter="drop-shadow(0 0 4px rgba(212,175,55,0.4))"/>
+                    <path d="M50 10 C 65 30, 75 60, 50 85 C 25 60, 35 30, 50 10" fill="url(#fallGrad${i})" filter="drop-shadow(0 0 4px rgba(212,175,55,0.6))"/>
                 </svg>`;
-                document.body.appendChild(flower); setTimeout(() => flower.remove(), 11000);
+                document.body.appendChild(flower); 
+                setTimeout(() => flower.remove(), 11000);
             }, Math.random() * 2500);
         }
     }
+
 
 
     function handleNian(event) {
@@ -1021,18 +1055,24 @@ function getLotusSVG(rankType, nianCount = 0) {
         db.currentRank = rank.l; 
     }
 
-        function initLotus() {
+            function initLotus() {
         const group = document.getElementById('lotus-petals'); if(!group) return; group.innerHTML = "";
+        
         for (let i = 0; i < 10; i++) {
             const angle = i * 36; 
             const petal = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            // 改用高階 C 曲線，根部向外推，造就中心留白的虛空蓮座
-            petal.setAttribute("d", "M50 32 C 62 25, 65 12, 50 2 C 35 12, 38 25, 50 32"); 
+            
+            // 【纖長立體瓣型】重新計算 C 曲線：根部微收於 Y=35，尖端挺拔於 Y=2
+            petal.setAttribute("d", "M50 35 C 56 25, 54 8, 50 2 C 46 8, 44 25, 50 35"); 
             petal.setAttribute("transform", `rotate(${angle} 50 50)`);
-            petal.setAttribute("fill", "rgba(255,255,255,0.03)"); 
-            petal.setAttribute("stroke", "rgba(243,229,171,0.15)");
+            
+            // 初始狀態為極度透明的琉璃質感，帶有微弱的金色邊緣光
+            petal.setAttribute("fill", "rgba(255,255,255,0.02)"); 
+            petal.setAttribute("stroke", "rgba(243,229,171,0.2)");
             petal.setAttribute("stroke-width", "0.5");
             petal.setAttribute("id", `petal-${i}`); 
+            
+            // 讓花瓣亮起時有如果凍般柔軟的過渡動畫
             petal.style.transition = "all 0.8s cubic-bezier(0.25, 0.1, 0.25, 1)"; 
             group.appendChild(petal);
         }

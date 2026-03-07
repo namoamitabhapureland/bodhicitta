@@ -623,7 +623,7 @@ function playBell() {
     } catch (e) {}
 }
 
-    let db;
+        let db;
     try {
         db = JSON.parse(localStorage.getItem('PX_V15.0'));
         if (!db || typeof db !== 'object') db = null;
@@ -634,9 +634,13 @@ function playBell() {
     if (!db) {
         db = { 
             name: "", totalNian: 0, points: 0, dailyTasks: [], todayCount: 0, lastDate: new Date().toLocaleDateString(),
-            musicList: [], currentRank: "" 
+            musicList: [], currentRank: "", streakDays: 0, lastNianDate: "" 
         };
     }
+    
+    // 系統無縫升級：為舊存檔補上「連續十念」追蹤欄位
+    if (db.streakDays === undefined) db.streakDays = 0;
+    if (db.lastNianDate === undefined) db.lastNianDate = "";
     
     const tasks = ["行普賢菩薩願", "五戒十善持守", "出家護法持戒", "財布施或法布施", "興建塔或造像", "供養護持三寶", "讀經書信因果", "受持八關齋戒", "分享正法或善知識", "發菩提心十念迴向"];
     let nianCount = 0;
@@ -656,25 +660,15 @@ function playBell() {
     };
 
     const dewQuotes = [
-        "一稱南無佛，皆已成佛道。",
-        "心如工畫師，能畫諸世間。",
-        "應無所住，而生其心。",
-        "凡所有相，皆是虛妄。",
-        "一切有為法，如夢幻泡影。",
-        "念佛方能消宿業，竭誠自可轉凡心。",
-        "信為道源功德母，長養一切諸善法。",
-        "不假方便，自得心開。",
-        "都攝六根，淨念相繼。",
-        "一念相應一念佛，念念相應念念佛。", 
+        "一稱南無佛，皆已成佛道。", "心如工畫師，能畫諸世間。", "應無所住，而生其心。",
+        "凡所有相，皆是虛妄。", "一切有為法，如夢幻泡影。", "念佛方能消宿業，竭誠自可轉凡心。",
+        "信為道源功德母，長養一切諸善法。", "不假方便，自得心開。", "都攝六根，淨念相繼。",
+        "一念相應一念佛，念念相應念念佛。"
     ];
 
     function refreshDew() {
-        const textEl = document.getElementById('dew-text');
-        textEl.style.opacity = 0;
-        setTimeout(() => {
-            textEl.innerText = dewQuotes[Math.floor(Math.random() * dewQuotes.length)];
-            textEl.style.opacity = 1;
-        }, 300);
+        const textEl = document.getElementById('dew-text'); textEl.style.opacity = 0;
+        setTimeout(() => { textEl.innerText = dewQuotes[Math.floor(Math.random() * dewQuotes.length)]; textEl.style.opacity = 1; }, 300);
     }
 
     function checkNewDay() {
@@ -682,14 +676,22 @@ function playBell() {
         if (db.lastDate !== today) {
             db.todayCount = 0; db.dailyTasks = []; db.lastDate = today; save();
         }
+        
+        // 嚴格判定：若超過一天未完成十念 (中斷)，連續天數歸零
+        if (db.lastNianDate) {
+            let last = new Date(db.lastNianDate).setHours(0,0,0,0);
+            let now = new Date(today).setHours(0,0,0,0);
+            if (now - last > 86400000) { db.streakDays = 0; save(); }
+        }
+
         let d = new Date();
         let mmdd = String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         if (festivalMap[mmdd]) {
             let banner = document.getElementById('festival-banner');
-            banner.innerText = `🙏 今日 ${festivalMap[mmdd]}，宜齋戒念佛 ✨`;
-            banner.style.display = 'block';
+            banner.innerText = `🙏 今日 ${festivalMap[mmdd]}，宜齋戒念佛 ✨`; banner.style.display = 'block';
         }
     }
+
 
     function updateClock() {
         const now = new Date();
@@ -826,7 +828,7 @@ function playBell() {
 
 
 
-        function handleNian(event) {
+            function handleNian(event) {
         if (nianCount < 10) {
             if (navigator.vibrate) navigator.vibrate(15);
             document.getElementById('guide-ripple').style.display = 'none';
@@ -852,20 +854,40 @@ function playBell() {
             document.getElementById('nian-num').innerText = nianCount + " / 10";
             const p = document.getElementById('petal-' + (nianCount-1));
             
-            // 花瓣點亮時，填滿真金漸層並散發光暈
             if(p) { p.setAttribute("fill", "var(--gold)"); p.style.filter = "drop-shadow(0 0 10px var(--solid-gold))"; }
             
             if(nianCount === 10) { 
                 if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
-                db.points += 2; save();
+                db.points += 2; 
+
+                // ✨ 十日淨念不中斷：佛力托底贈 1000 點
+                const todayStr = new Date().toLocaleDateString();
+                let isStreakAwarded = false;
+                let streakMsg = "";
+                // 確保今天還沒領過連續天數
+                if (db.lastNianDate !== todayStr) {
+                    db.streakDays = (db.streakDays || 0) + 1;
+                    db.lastNianDate = todayStr; // 記錄今天已完成十念
+                    
+                    if (db.streakDays > 0 && db.streakDays % 10 === 0) {
+                        db.points += 1000;
+                        isStreakAwarded = true;
+                        if (db.streakDays === 10) {
+                            streakMsg = "【初心圓滿 ． 佛力加被】\n\n十日初發心，淨念不退轉！蒙佛慈悲護念，特賜 1000 點菩提資糧，助行者道業大步增上！";
+                        } else {
+                            streakMsg = `【淨念相繼 ． 資糧灌注】\n\n您已連續 ${db.streakDays} 日與佛對頻，恆心感動法界，系統再次匯入 1000 點殊勝資糧！`;
+                        }
+                    }
+                }
+                save(); // 儲存點數與連續天數
                 
-                // 🌟 無量光加持特效：9次完美 或 8% 機率觸發
+                // 🌟 無量光加持特效
                 if (perfectHits >= 9 || Math.random() < 0.08) {
                     let infiniteLight = document.createElement('div');
                     infiniteLight.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(243,229,171,0.9) 40%, rgba(212,175,55,0.8) 100%); z-index:9999; pointer-events:none; opacity:1; transition: opacity 4s cubic-bezier(0.25, 0.1, 0.25, 1); mix-blend-mode: screen;";
                     document.body.appendChild(infiniteLight);
-                    setTimeout(() => speak("無量光佛，護佑安康", 0.8), 800); // 隨光芒播報法語
-                    setTimeout(() => { infiniteLight.style.opacity = '0'; }, 100); // 啟動緩慢消散
+                    setTimeout(() => speak("無量光佛，護佑安康", 0.8), 800); 
+                    setTimeout(() => { infiniteLight.style.opacity = '0'; }, 100); 
                     setTimeout(() => infiniteLight.remove(), 4500);
                 }
 
@@ -874,9 +896,16 @@ function playBell() {
                 }
                 const bigSeed = document.getElementById('big-seed');
                 bigSeed.classList.add('ripple-effect'); setTimeout(() => bigSeed.classList.remove('ripple-effect'), 1000);
-                setTimeout(()=> document.getElementById('dedi-modal').style.display='flex', 2500); 
+                
+                // 延遲跳出獎勵與迴向視窗
+                setTimeout(()=> {
+                    if (isStreakAwarded) alert(streakMsg);
+                    document.getElementById('dedi-modal').style.display='flex';
+                }, 2500); 
             }
         }
+    }
+
     }
 
 
@@ -1072,17 +1101,16 @@ function getLotusSVG(rankType, nianCount = 0) {
         db.currentRank = rank.l; 
     }
 
-                function initLotus() {
+                    function initLotus() {
         const group = document.getElementById('lotus-petals'); if(!group) return; group.innerHTML = "";
         for (let i = 0; i < 10; i++) {
             const angle = i * 36; 
             const petal = document.createElementNS("http://www.w3.org/2000/svg", "path");
             
-            // 花瓣大幅加寬 (C 75 25, 65 5...)，形成左右交疊的厚實瓣型
-            petal.setAttribute("d", "M50 35 C 75 25, 65 5, 50 2 C 35 5, 25 25, 50 35"); 
+            // ✨ 修長化微調：中段收緊至 60/40，尖端拉長至 Y=0
+            petal.setAttribute("d", "M50 35 C 60 20, 56 5, 50 0 C 44 5, 40 20, 50 35"); 
             petal.setAttribute("transform", `rotate(${angle} 50 50)`);
             
-            // 預設為極微弱的真金底色，並加上耀眼的金屬描邊
             petal.setAttribute("fill", "rgba(243, 229, 171, 0.05)"); 
             petal.setAttribute("stroke", "var(--solid-gold)"); 
             petal.setAttribute("stroke-width", "0.8");
@@ -1092,6 +1120,7 @@ function getLotusSVG(rankType, nianCount = 0) {
             group.appendChild(petal);
         }
     }
+
 
 
 

@@ -1075,30 +1075,55 @@ function getLotusSVG(rankType, nianCount = 0) {
 }
 
 
-    function updateUI() {
+        function updateUI() {
         const total = db.totalNian || 0; const points = db.points || 0;
         document.getElementById('total-count').innerText = total.toLocaleString();
         document.getElementById('today-count').innerText = db.todayCount;
         let medal = "";
         if (total >= 100000000) medal = "【圓滿成佛】"; else if (total >= 10000000) medal = "【念佛三昧】"; else if (total >= 1000000) medal = "【無相念佛】"; else if (total >= 500000) medal = "【不退轉菩薩】"; else if (total >= 100000) medal = "【蓮池海會】"; else if (total >= 10000) medal = "【信願具足】"; else if (total >= 5000) medal = "【淨念相繼】"; else if (total >= 500) medal = "【一念清淨】"; else if (total >= 10) medal = "【十念圓滿】";
         const medalEl = document.getElementById('title-medal'); if(medalEl) medalEl.innerText = medal;
-        let currentDays = points / 100; let rank, threshold, base, label;
-        if (currentDays >= 1000000) { let lv = Math.max(1, Math.floor(currentDays / 1000000)); rank = {l: ["初地", "二地", "三地", "四地", "五地", "六地", "七地", "八地", "九地", "十地"][Math.min(9, lv - 1)] + "菩薩", i: getLotusSVG('地', total), c: "#ffffff"}; base = lv * 1000000; threshold = (lv + 1) * 1000000; label = "百萬日進度";
-        } else if (currentDays >= 100000) { let lv = Math.max(1, Math.floor(currentDays / 100000)); rank = {l: ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][Math.min(9, lv-1)] + "迴向位", i: getLotusSVG('迴', total), c: "#f472b6"}; base = lv * 100000; threshold = (lv + 1) * 100000; label = "十萬日進度";
-        } else if (currentDays >= 10000) { let lv = Math.max(1, Math.floor(currentDays / 10000)); rank = {l: ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][Math.min(9, lv-1)] + "行位", i: getLotusSVG('行', total), c: "var(--cyan)"}; base = lv * 10000; threshold = (lv + 1) * 10000; label = "萬日進度";
-        } else if (currentDays >= 1000) { let lv = Math.max(1, Math.floor(currentDays / 1000)); rank = {l: ["初住", "二住", "三住", "四住", "五住", "六住", "七住", "八住", "九住", "十住"][Math.min(9, lv-1)] + "位", i: getLotusSVG('住', total), c: "#ffffff"}; base = lv * 1000; threshold = (lv + 1) * 1000; label = "千日進度";
-        } else { let lv = Math.floor(currentDays / 100) + 1; rank = { l: ["初信位", "二信位", "三信位", "四信位", "五信位", "六信位", "七信位", "八信位", "九信位", "十信位"][Math.min(9, lv - 1)], i: getLotusSVG('信', total), c: "var(--cyan)" }; base = (lv - 1) * 100; threshold = lv * 100; label = "信位進度 (十日一階)"; }
+        
+        let currentDays = points / 100; // 1 娑婆日 = 100 點
+        let rank, threshold, base, label;
+        
+        // ✨ 大智精算：華嚴大乘五十階位宇宙公式 (解決空窗與升級 Bug)
+        if (currentDays >= 111100) { 
+            let lv = Math.min(10, Math.floor((currentDays - 111100) / 100000) + 1); 
+            rank = {l: ["初地", "二地", "三地", "四地", "五地", "六地", "七地", "八地", "九地", "十地"][lv - 1] + "菩薩", i: getLotusSVG('地', total), c: "#ffffff"}; 
+            base = 111100 + (lv - 1) * 100000; threshold = 111100 + lv * 100000; label = "十萬日一階 (地位)";
+        } else if (currentDays >= 11100) { 
+            let lv = Math.floor((currentDays - 11100) / 10000) + 1; 
+            rank = {l: ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][lv - 1] + "迴向位", i: getLotusSVG('迴', total), c: "#f472b6"}; 
+            base = 11100 + (lv - 1) * 10000; threshold = 11100 + lv * 10000; label = "萬日一階 (迴向位)";
+        } else if (currentDays >= 1100) { 
+            let lv = Math.floor((currentDays - 1100) / 1000) + 1; 
+            rank = {l: ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][lv - 1] + "行位", i: getLotusSVG('行', total), c: "var(--cyan)"}; 
+            base = 1100 + (lv - 1) * 1000; threshold = 1100 + lv * 1000; label = "千日一階 (行位)";
+        } else if (currentDays >= 100) { 
+            let lv = Math.floor((currentDays - 100) / 100) + 1; 
+            rank = {l: ["初住", "二住", "三住", "四住", "五住", "六住", "七住", "八住", "九住", "十住"][lv - 1] + "位", i: getLotusSVG('住', total), c: "#ffffff"}; 
+            base = 100 + (lv - 1) * 100; threshold = 100 + lv * 100; label = "百日一階 (住位)";
+        } else { 
+            // 🐛 修復此處：信位是「每 10 日一階」，公式改為 currentDays / 10
+            let lv = Math.min(10, Math.floor(currentDays / 10) + 1); 
+            rank = { l: ["初信位", "二信位", "三信位", "四信位", "五信位", "六信位", "七信位", "八信位", "九信位", "十信位"][lv - 1], i: getLotusSVG('信', total), c: "var(--cyan)" }; 
+            base = (lv - 1) * 10; threshold = lv * 10; label = "信位進度 (十日一階)"; 
+        }
+
         const titleEl = document.getElementById('rank-title'); if(titleEl) { titleEl.innerText = rank.l; titleEl.style.color = rank.c; }
         document.getElementById('display-name').innerText = db.name || "行者";
         document.getElementById('mini-seed').innerHTML = rank.i; document.getElementById('big-seed').innerHTML = rank.i;
+        
         let progress = ((currentDays - base) / (threshold - base)) * 100;
         document.getElementById('streak-val').innerText = currentDays.toFixed(1);
         document.getElementById('streak-bar').style.width = Math.min(progress, 100) + '%';
         const labelContainer = document.getElementById('label-container');
         if(labelContainer) { labelContainer.innerHTML = `${label}：<span id="streak-val">${currentDays.toFixed(1)}</span> / ${threshold}`; }
+        
         if (db.currentRank && db.currentRank !== rank.l) { triggerLevelUpEffect(rank.l, rank.i); }
         db.currentRank = rank.l; 
     }
+
 
                     function initLotus() {
         const group = document.getElementById('lotus-petals'); if(!group) return; group.innerHTML = "";

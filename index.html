@@ -380,9 +380,15 @@
 </div>
 
 <div id="screen-3" class="container">
-    <h3 style="color:var(--gold); margin-bottom:20px; border-bottom:1.5px solid var(--gold); width:100%; text-align:center; padding-bottom:12px; letter-spacing: 2px;">今日修行資糧</h3>
+    <h3 style="color:var(--gold); margin-bottom:10px; border-bottom:1.5px solid var(--gold); width:100%; text-align:center; padding-bottom:12px; letter-spacing: 2px;">今日修行資糧</h3>
+    
+    <div style="color:#888; font-size:0.8rem; line-height:1.6; text-align:center; margin-bottom:20px; padding:0 10px; letter-spacing: 1px;">
+        每項行持圓滿皆化為 <span style="color:var(--cyan);">10 點菩提資糧</span><br>
+        <span style="font-size:0.7rem; color:#666;">(若不慎誤觸，可再次點擊取消，每日子時重置)</span>
+    </div>
     
     <div id="task-list" style="width:100%;"></div>
+
     
     <div class="merit-forest-wrap">
         <div class="merit-title">【 功德林 】</div>
@@ -908,16 +914,32 @@ function playBell() {
 
 
 
-    function renderTasks() {
+        function renderTasks() {
         const container = document.getElementById('task-list'); container.innerHTML = "";
         tasks.forEach((t, i) => {
             const isDone = db.dailyTasks.includes(i);
             const card = document.createElement('div'); card.className = `task-card ${isDone?'completed':''}`;
             card.innerHTML = `<span class="task-text">${t}</span>`;
-            if(!isDone) card.onclick = () => { db.dailyTasks.push(i); db.points += 10; save(); renderTasks(); updateUI(); speak(t+"圓滿", 0.8); };
+            
+            if(!isDone) {
+                // 尚未圓滿：點擊增加資糧
+                card.onclick = () => { 
+                    db.dailyTasks.push(i); db.points += 10; save(); renderTasks(); updateUI(); speak(t+"圓滿", 0.8); 
+                };
+            } else {
+                // ✨ 已經圓滿：再次點擊可「取消回復」
+                card.onclick = () => { 
+                    // 從陣列中移除該任務
+                    db.dailyTasks = db.dailyTasks.filter(taskId => taskId !== i);
+                    // 扣除 10 點 (使用 Math.max 確保分數絕對不會低於 0)
+                    db.points = Math.max(0, db.points - 10);
+                    save(); renderTasks(); updateUI(); 
+                };
+            }
             container.appendChild(card);
         });
     }
+
 
     function speak(t, r) {
         if (!window.speechSynthesis) return; window.speechSynthesis.cancel(); 

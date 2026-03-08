@@ -41,7 +41,7 @@
             z-index: 2;
         }
 
-        /* 底盤：香水海與線條 (向外消融) */
+        /* 底盤：香水海與線條 */
         #lotus-ocean {
             position: absolute; top: 50%; left: 50%;
             width: 250vw; height: 250vw; max-width: 1600px; max-height: 1600px;
@@ -56,21 +56,21 @@
             filter: drop-shadow(0 0 15px rgba(212,175,55,0.2));
         }
 
-        /* ✨ 核心：更大的 3D 千葉蓮花 */
+        /* ✨ 核心：向外擴散的 3D 千葉蓮花 */
         #standing-lotus {
             position: absolute; top: 50%; left: 50%;
             transform-style: preserve-3d;
             z-index: 5;
         }
 
+        /* 重新定義花瓣大小，讓它能鋪展在十重海上 */
         .petal-3d {
             position: absolute;
-            bottom: 0; left: -30px;
-            width: 60px; height: 150px; /* 拉長花瓣 */
+            bottom: 0; left: -60px; /* 置中 */
+            width: 120px; height: 320px; /* 加大花瓣以擴散出去 */
             transform-origin: bottom center; 
             transform-style: preserve-3d;
-            /* 讓外層花瓣的陰影也隨著透明度減弱 */
-            filter: drop-shadow(0 0 10px rgba(212,175,55,0.3));
+            filter: drop-shadow(0 0 10px rgba(212,175,55,0.2));
         }
         .petal-svg { width: 100%; height: 100%; overflow: visible; }
 
@@ -86,7 +86,6 @@
 
         .light-beam {
             position: absolute; top: 0; bottom: 0; width: 2px;
-            /* 光柱上下端也漸層至完全透明 */
             background: linear-gradient(to top, transparent 0%, rgba(212,175,55,1) 25%, rgba(255,255,255,0.9) 50%, rgba(139,168,156,0.8) 75%, transparent 100%);
             box-shadow: 0 0 20px rgba(212,175,55,0.8), 0 0 40px rgba(255,255,255,0.4); z-index: 1;
         }
@@ -152,7 +151,7 @@
                     <linearGradient id="fade-grad" x1="0%" y1="100%" x2="0%" y2="0%">
                         <stop offset="0%" stop-color="rgba(212,175,55, 0.7)" />
                         <stop offset="40%" stop-color="rgba(243,229,171, 0.3)" />
-                        <stop offset="90%" stop-color="transparent" />
+                        <stop offset="85%" stop-color="transparent" />
                     </linearGradient>
                     <linearGradient id="gold-grad" x1="0%" y1="100%" x2="0%" y2="0%">
                         <stop offset="0%" stop-color="rgba(212,175,55, 0.9)" />
@@ -196,16 +195,16 @@
         const cyan = "rgba(139,168,156,";
 
         // ==========================================
-        // 1. 生成向外消融的線條 (十重海 + 幾何曼陀羅)
+        // ✨ 1. 精確生成「十個圓圈」的十重香水海
         // ==========================================
         const oceanRings = document.getElementById('ocean-rings');
         const geometricMandala = document.getElementById('geometric-mandala');
 
-        // 十重海 (擴張為 12 圈，最外圈完全透明)
-        for(let i = 1; i <= 12; i++) {
-            let radius = i * 11; 
-            // 完美漸層遞減：當 i=12 時，opacity 為 0 (完全消失)
-            let opacity = Math.max(0, 1 - (i * (1/12))); 
+        // 明確執行 10 次迴圈，產生 10 個向外擴張的圓環
+        for(let i = 1; i <= 10; i++) {
+            let radius = i * 9.5; 
+            // 透明度漸減，但保證最外圈 (i=10) 仍有 0.2 的透明度，不會完全消失
+            let opacity = 1 - (i * 0.08); 
             
             let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             circle.setAttribute("cx", "100"); circle.setAttribute("cy", "100"); circle.setAttribute("r", radius);
@@ -216,10 +215,10 @@
             oceanRings.appendChild(circle);
         }
 
-        // 幾何曼陀羅 (同樣套用向外消融的透明度)
+        // 幾何曼陀羅 (作為地磚)
         function drawGeometricLayer(radius, count, colorStr) {
             let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            g.setAttribute("stroke", colorStr); g.setAttribute("fill", "none"); g.setAttribute("stroke-width", "0.5");
+            g.setAttribute("stroke", colorStr); g.setAttribute("fill", "none"); g.setAttribute("stroke-width", "0.4");
             for(let j=0; j<count; j++) {
                 let angle = (360 / count) * j;
                 let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -229,41 +228,41 @@
             }
             return g;
         }
-        geometricMandala.appendChild(drawGeometricLayer(110, 16, `${cyan}0.15)`)); // 最外圈，極淡
-        geometricMandala.appendChild(drawGeometricLayer(70, 12, `${gold}0.3)`));
-        geometricMandala.appendChild(drawGeometricLayer(35, 8, `${gold}0.5)`));  // 內圈，較濃
+        geometricMandala.appendChild(drawGeometricLayer(85, 12, `${cyan}0.2)`));
+        geometricMandala.appendChild(drawGeometricLayer(50, 8, `${gold}0.3)`));
 
 
         // ==========================================
-        // ✨ 2. 生成更大、更多瓣、尖端消融的 3D 蓮花
+        // ✨ 2. 生成「向外平鋪擴散」的 3D 蓮花
         // ==========================================
         const standingLotus = document.getElementById('standing-lotus');
         
         function create3DPetal(angle, tiltX, gradientId, scale, strokeOpacity) {
             let petal = document.createElement('div');
             petal.className = 'petal-3d';
+            // 【關鍵修正】：tiltX 越接近 0，花瓣就越平躺在星盤上！
             petal.style.transform = `rotateZ(${angle}deg) rotateX(${tiltX}deg) scale(${scale})`;
             
-            // 花瓣邊線也套用透明度，讓尖端融合得更自然
+            // 重新描繪適合平鋪的花瓣形狀
             petal.innerHTML = `
-                <svg viewBox="0 0 60 150" class="petal-svg">
-                    <path d="M 30 150 C 30 150, 0 100, 0 50 C 0 20, 30 0, 30 0 C 30 0, 60 20, 60 50 C 60 100, 30 150, 30 150 Z" 
+                <svg viewBox="0 0 120 320" class="petal-svg">
+                    <path d="M 60 320 C 60 320, 0 180, 0 80 C 0 30, 60 0, 60 0 C 60 0, 120 30, 120 80 C 120 180, 60 320, 60 320 Z" 
                           fill="url(#${gradientId})" stroke="rgba(212,175,55,${strokeOpacity})" stroke-width="1.2"/>
                 </svg>`;
             return petal;
         }
 
-        // 🌸 外層：16 片極大花瓣 (幾乎平躺，尖端完全透明消散)
+        // 🌸 外層：16 片巨大花瓣 (tiltX: -2，幾乎完全平貼在十重海上，向外擴散)
         for(let i=0; i<16; i++) {
-            standingLotus.appendChild(create3DPetal(i * 22.5, -80, 'fade-grad', 1.7, 0.3));
+            standingLotus.appendChild(create3DPetal(i * 22.5, -2, 'fade-grad', 1.4, 0.15));
         }
-        // 🌸 中層：12 片黃金花瓣 (傾斜度中等)
+        // 🌸 中層：12 片黃金花瓣 (tiltX: -8，微微翹起)
         for(let i=0; i<12; i++) {
-            standingLotus.appendChild(create3DPetal((i * 30) + 15, -55, 'gold-grad', 1.2, 0.6));
+            standingLotus.appendChild(create3DPetal((i * 30) + 15, -8, 'gold-grad', 1.0, 0.4));
         }
-        // 🌸 內層：8 片青金花瓣 (向上收攏包裹光柱)
+        // 🌸 內層：8 片青金花瓣 (tiltX: -20，稍微托住中心光柱)
         for(let i=0; i<8; i++) {
-            standingLotus.appendChild(create3DPetal((i * 45) + 22.5, -30, 'cyan-grad', 0.85, 0.9));
+            standingLotus.appendChild(create3DPetal((i * 45) + 22.5, -20, 'cyan-grad', 0.65, 0.7));
         }
 
 

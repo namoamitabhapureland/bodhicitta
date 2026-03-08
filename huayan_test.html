@@ -58,7 +58,7 @@
             position: absolute; z-index: 1;
         }
 
-        /* ✨ 核心 3D 蓮花容器 */
+        /* ✨ 核心 3D 蓮花容器 (將 V4 重構為向下平舖) */
         #standing-lotus {
             position: absolute; top: 50%; left: 50%;
             transform-style: preserve-3d;
@@ -66,10 +66,11 @@
         }
         .petal-3d {
             position: absolute; bottom: 0; left: -60px;
-            width: 120px; height: 320px; 
+            width: 120px; 
+            /* height 由 JS 動態控制以實現越裡面越短 */
             transform-origin: bottom center; 
             transform-style: preserve-3d;
-            filter: drop-shadow(0 0 12px rgba(212,175,55,0.3));
+            filter: drop-shadow(0 0 10px rgba(212,175,55,0.2));
         }
         .petal-svg { width: 100%; height: 100%; overflow: visible; }
 
@@ -165,13 +166,13 @@
                     </linearGradient>
                     <linearGradient id="gold-grad" x1="0%" y1="100%" x2="0%" y2="0%">
                         <stop offset="0%" stop-color="rgba(212,175,55, 0.9)" />
-                        <stop offset="60%" stop-color="rgba(255,255,255, 0.5)" />
-                        <stop offset="100%" stop-color="rgba(212,175,55, 0.1)" />
+                        <stop offset="60%" stop-color="rgba(255,255,255, 0.4)" />
+                        <stop offset="100%" stop-color="transparent" />
                     </linearGradient>
                     <linearGradient id="cyan-grad" x1="0%" y1="100%" x2="0%" y2="0%">
                         <stop offset="0%" stop-color="rgba(139,168,156, 0.9)" />
                         <stop offset="50%" stop-color="rgba(212,175,55, 0.6)" />
-                        <stop offset="100%" stop-color="rgba(139,168,156, 0.1)" />
+                        <stop offset="100%" stop-color="rgba(255,255,255, 0.1)" />
                     </linearGradient>
                 </defs>
                 <g id="ocean-rings"></g>
@@ -218,7 +219,7 @@
         const cyan = "rgba(139,168,156,";
 
         // ==========================================
-        // 1. 底層：十重海、曼陀羅、✨十個海洋光點 (V7完美地基)
+        // 1. 底層：十重海、曼陀羅、十個海洋光點
         // ==========================================
         const oceanRings = document.getElementById('ocean-rings');
         const geometricMandala = document.getElementById('geometric-mandala');
@@ -274,33 +275,48 @@
 
 
         // ==========================================
-        // ✨ 2. 核心：結合 V7 廣大平鋪 ＋ V4 立體向上包覆
+        // ✨ 2. ✨ ✨ 核心 3D 蓮花 (重構核心：自然綻放、平舖、越裡面越小)
         // ==========================================
         const standingLotus = document.getElementById('standing-lotus');
         
-        function create3DPetal(angle, tiltX, gradientId, scale, strokeOpacity) {
+        // 修改函數：動態接受高度 (h) 參數
+        function create3DPetal(angle, tiltX, gradientId, w, h, strokeOpacity) {
             let petal = document.createElement('div');
             petal.className = 'petal-3d';
-            petal.style.transform = `rotateZ(${angle}deg) rotateX(${tiltX}deg) scale(${scale})`;
+            // 【關鍵 3D 魔法】：tiltX 越接近 0，花瓣就越平躺！
+            petal.style.transform = `rotateZ(${angle}deg) rotateX(${tiltX}deg)`;
+            
+            // 動態設置寬度和高度
+            petal.style.width = `${w}px`;
+            petal.style.height = `${h}px`;
+            petal.style.left = `-${w/2}px`; // 置中修正
+            
             petal.innerHTML = `
-                <svg viewBox="0 0 120 320" class="petal-svg">
+                <svg viewBox="0 0 120 320" class="petal-svg" preserveAspectRatio="none">
                     <path d="M 60 320 C 60 320, 0 180, 0 80 C 0 30, 60 0, 60 0 C 60 0, 120 30, 120 80 C 120 180, 60 320, 60 320 Z" 
-                          fill="url(#${gradientId})" stroke="rgba(212,175,55,${strokeOpacity})" stroke-width="1.5"/>
+                          fill="url(#${gradientId})" stroke="rgba(212,175,55,${strokeOpacity})" stroke-width="1.2"/>
                 </svg>`;
             return petal;
         }
 
-        // 🌸 最外層 (保留 V7 特色)：16 片向外平鋪、消融於虛空的廣大花瓣 (tiltX: -2)
+        // 🌸 遵照如來指引：徹底平舖綻放，且「外層最大、最長；內層最小、最短」
+
+        // 🌸 外層 (原本消散層)：16 片極大、極長的花瓣 (tiltX: -1，幾乎平躺在十重海上)
+        // 寬度: 150px, 高度: 380px (最長)
         for(let i=0; i<16; i++) {
-            standingLotus.appendChild(create3DPetal(i * 22.5, -2, 'fade-grad', 1.4, 0.15));
+            standingLotus.appendChild(create3DPetal(i * 22.5, -1, 'fade-grad', 150, 380, 0.1));
         }
-        // 🌸 中層 (重現 V4 靈魂)：8 片強烈向上彎曲的真金花瓣 (tiltX: -65，如花苞般立體)
-        for(let i=0; i<8; i++) {
-            standingLotus.appendChild(create3DPetal(i * 45, -65, 'gold-grad', 0.8, 0.6));
+        
+        // 🌸 中層 (原 V4)：12 片黃金花瓣 (tiltX: -6，微微翹起)
+        // 寬度: 110px, 高度: 280px (中等)
+        for(let i=0; i<12; i++) {
+            standingLotus.appendChild(create3DPetal((i * 30) + 15, -6, 'gold-grad', 110, 280, 0.4));
         }
-        // 🌸 內層 (重現 V4 靈魂)：8 片緊密包覆光柱的琉璃青花瓣 (tiltX: -35)
+        
+        // 🌸 內層 (原 V4 中心)：8 片青金花瓣 (tiltX: -15，稍微翹起接引中央)
+        // 寬度: 70px, 高度: 180px (最短、最小，完美符合自然邏輯！)
         for(let i=0; i<8; i++) {
-            standingLotus.appendChild(create3DPetal((i * 45) + 22.5, -35, 'cyan-grad', 0.6, 0.8));
+            standingLotus.appendChild(create3DPetal((i * 45) + 22.5, -15, 'cyan-grad', 70, 180, 0.7));
         }
 
 

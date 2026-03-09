@@ -46,7 +46,6 @@
             filter: drop-shadow(0 0 15px rgba(212,175,55,0.15)); z-index: 1;
         }
 
-        /* ✨ 十海生命力：幅度翻倍至 4.0，光暈極大化 ✨ */
         .ocean-dot-animated {
             transform-origin: center;
             animation: ocean-breathe 6s infinite alternate ease-in-out;
@@ -93,7 +92,6 @@
 
         .tier-dot { position: absolute; border-radius: 50%; cursor: pointer; transition: all 0.4s ease; transform-style: preserve-3d; pointer-events: auto; }
 
-        /* ✨ 13層光點：超大範圍爆發，主導視覺 ✨ */
         .tier-13-disk {
             border: 2px solid rgba(212,175,55,0.8) !important; background-color: rgba(212,175,55,0.2) !important;
             box-shadow: 0 0 20px rgba(212,175,55,0.3), inset 0 0 15px rgba(212,175,55,0.2);
@@ -113,6 +111,12 @@
             color: var(--solid-gold); font-size: 1.15rem; font-weight: bold; letter-spacing: 2px;
             text-shadow: 0 0 10px #000, 0 0 15px rgba(243,229,171,0.8); 
             transform-origin: left center; pointer-events: auto; cursor: pointer; will-change: transform;
+        }
+
+        /* ✨ 降維打擊：將星塵粒子獨立到純 2D 空間，徹底避開蘋果 3D 切割 Bug ✨ */
+        #stardust-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 90; overflow: hidden;
         }
 
         #touch-guide-elegant {
@@ -154,6 +158,8 @@
 <body>
 
     <div class="vairocana-light"></div>
+    
+    <div id="stardust-overlay"></div>
 
     <div id="touch-guide-elegant">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -371,7 +377,7 @@
         }
 
         // ==========================================
-        // 4. 滑動觸控與 ✨ 陣眼銀河星塵引擎 ✨
+        // 4. 滑動觸控與 ✨ 無切割的 2D 星塵引擎 ✨
         // ==========================================
         let universe = document.getElementById('universe-container');
         let lotusOcean = document.getElementById('lotus-ocean');
@@ -380,7 +386,7 @@
         let currentTilt = 75; let currentSpin = 0;    
 
         function spawnStardust() {
-            if (Math.random() > 0.08) return; // 偶爾飄散，保持空靈不雜亂
+            if (Math.random() > 0.08) return; 
             let dust = document.createElement('div');
             dust.style.position = 'absolute';
             dust.style.width = (Math.random() * 2.5 + 1) + 'px';
@@ -388,20 +394,24 @@
             dust.style.background = Math.random() > 0.5 ? 'var(--gold)' : 'var(--cyan)';
             dust.style.borderRadius = '50%';
             dust.style.boxShadow = `0 0 8px ${dust.style.background}`;
-            dust.style.left = (Math.random() * 60 - 30) + 'px'; // 在陣眼周圍擴散
-            dust.style.top = (Math.random() * 60 - 30) + 'px';
+            
+            // ✨ 降維打擊：在純平面的防護罩中定位，不受 3D 空間切割影響 ✨
+            let dx = Math.random() * 80 - 40;
+            let dy = Math.random() * 30 - 15;
+            dust.style.left = `calc(50% + ${dx}px)`; 
+            dust.style.top = `calc(65% + ${dy}px)`;
             dust.style.opacity = 0;
-            dust.style.pointerEvents = 'none';
             
-            document.getElementById('world-tower').appendChild(dust);
+            document.getElementById('stardust-overlay').appendChild(dust);
             
-            let height = Math.random() * 300 + 150; // 向上飄升的高度 (沿著神針)
+            let height = Math.random() * 250 + 100; 
             let duration = Math.random() * 4000 + 4000;
             
+            // 單純的 Y 軸向上飄移
             dust.animate([
-                { opacity: 0, transform: `translateZ(0px) scale(0.5)` },
-                { opacity: 0.8, transform: `translateZ(${height * 0.4}px) scale(1.5)` },
-                { opacity: 0, transform: `translateZ(${height}px) scale(0)` }
+                { opacity: 0, transform: `translateY(0px) scale(0.5)` },
+                { opacity: 0.8, transform: `translateY(-${height * 0.4}px) scale(1.5)` },
+                { opacity: 0, transform: `translateY(-${height}px) scale(0)` }
             ], { duration: duration, easing: 'ease-in-out', fill: 'forwards' });
             
             setTimeout(() => dust.remove(), duration);
@@ -411,8 +421,13 @@
             if(!isDragging) {
                 currentSpin -= 0.05;
                 lotusOcean.style.transform = `rotateZ(${currentSpin}deg)`;
+                
+                // ✨ 追蹤歸位：讓 13 層的文字永遠轉向面對鏡頭，不再變成一條線 ✨
+                for(let i=0; i<labels.length; i++) {
+                    labels[i].style.transform = `rotateX(-90deg) rotateY(${-currentSpin}deg)`;
+                }
             }
-            spawnStardust(); // 啟動星塵流轉
+            spawnStardust(); 
             requestAnimationFrame(animateUniverse);
         }
         animateUniverse();
@@ -434,6 +449,11 @@
 
             currentSpin += deltaX * 0.4;
             lotusOcean.style.transform = `rotateZ(${currentSpin}deg)`;
+            
+            // 手動拖曳時，文字也要即時追蹤面向鏡頭
+            for(let i=0; i<labels.length; i++) {
+                labels[i].style.transform = `rotateX(-90deg) rotateY(${-currentSpin}deg)`;
+            }
 
             currentTilt -= deltaY * 0.15;
             if (currentTilt > 85) currentTilt = 85; if (currentTilt < 45) currentTilt = 45; 

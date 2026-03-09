@@ -30,19 +30,31 @@
             100% { opacity: 1; transform: scale(1.1); filter: drop-shadow(0 0 80px rgba(255,255,255,0.2)); }
         }
 
+        /* ✨ 蘋果效能解放：加入 will-change 讓瀏覽器預先分配 GPU 資源 ✨ */
         #universe-container {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             transform-style: preserve-3d; transform: rotateX(75deg) scale(0.85); 
-            transition: transform 0.1s ease-out; z-index: 2;
+            z-index: 2; will-change: transform;
         }
 
         #lotus-ocean {
-            position: absolute; top: 65%; left: 50%; width: 0; height: 0; transform-style: preserve-3d;
+            position: absolute; top: 65%; left: 50%; width: 0; height: 0; 
+            transform-style: preserve-3d; will-change: transform;
         }
 
         .svg-glow {
             position: absolute; width: 1200px; height: 1200px; left: -600px; top: -600px; 
             filter: drop-shadow(0 0 15px rgba(212,175,55,0.2)); z-index: 1;
+        }
+
+        /* ✨ 十海生命力呼吸動畫 (@keyframes) ✨ */
+        .ocean-dot-animated {
+            transform-origin: center;
+            animation: ocean-breathe 6s infinite alternate ease-in-out;
+        }
+        @keyframes ocean-breathe {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1.4); opacity: 1; }
         }
 
         #standing-lotus {
@@ -93,7 +105,7 @@
             position: absolute; left: 25px; top: -10px; width: 220px;
             color: rgba(243,229,171,0.9); font-size: 1.1rem; font-weight: bold; letter-spacing: 2px;
             text-shadow: 0 0 10px #000, 0 0 15px rgba(212,175,55,0.6); transform-origin: left center; transform: rotateX(-90deg); 
-            pointer-events: auto; cursor: pointer;
+            pointer-events: auto; cursor: pointer; will-change: transform;
         }
 
         #main-guide-btn {
@@ -166,7 +178,8 @@
             <span class="highlight-text">◆ 4-7 層 (薰修)：</span>聽聞法音，發起慈悲，念佛對頻。<br>
             <span class="highlight-text">◆ 8-10 層 (純化)：</span>心念自在，清淨離垢，圓滿信位。<br>
             <span class="highlight-text">◆ 第 13 層 (跨越)：</span><span style="color:#fff;">娑婆與極樂</span>之交界。彌陀淨土乃諸佛為眾生設立之不退轉「中繼站」。<br>
-            <span class="highlight-text">◆ 14-20 層 (回歸)：</span>自加持入大自在，最終回歸普賢無盡行願之「一真法界」。<br>
+            <span class="highlight-text">◆ 14-20 層 (回歸)：</span>自加持入大自在，最終回歸普賢無盡行願之「一真法界」。<br><br>
+            <span style="color:var(--cyan); font-style:italic;">【華藏觀想 ． 宏微無礙】<br>凡眼所見皆微觀，覺心所契方宏觀。螢幕上之一點光，若以微觀視之小如光子，若以宏觀視之，即是周遍法界之無量光。心包太虛，量周沙界。</span>
         </p>
     </div>
 
@@ -205,23 +218,34 @@
             '255,250,220', '170,250,230', '255,215,170', '200,210,255', '240,255,210'
         ];
 
+        // ✨ 十海點與動畫賦予 ✨
         for(let i = 0; i < 10; i++) {
-            // ✨ 核心修復：減去 90度 (Math.PI / 2)，讓 SVG 與 CSS 3D 蓮花的 0度軸線完美重合！ ✨
+            // 精準校正 90度 (Math.PI / 2)，讓點完美對齊 CSS 花瓣尖端
             let angle = (Math.PI * 2 / 10) * i - (Math.PI / 2);
             let radius = 85.5; 
             let cx = 100 + Math.cos(angle) * radius; let cy = 100 + Math.sin(angle) * radius;
             
             let cRGB = tenOceanColors[i];
+            
+            // 創建一個群組 (g) 來裝載每個點和光暈，並賦予動畫 class
+            let dotGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            dotGroup.classList.add("ocean-dot-animated");
+            // 設定變形原點在圓心
+            dotGroup.style.transformOrigin = `${cx}px ${cy}px`;
+            // 加入微小的時間差，讓呼吸像海浪般此起彼落
+            dotGroup.style.animationDelay = `${i * 0.3}s`;
 
             let glow = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             glow.setAttribute("cx", cx); glow.setAttribute("cy", cy); glow.setAttribute("r", "4.5");
             glow.setAttribute("fill", `rgba(${cRGB},0.2)`); glow.setAttribute("stroke", `rgba(${cRGB},0.6)`); glow.setAttribute("stroke-width", "0.5");
-            oceanDots.appendChild(glow);
+            dotGroup.appendChild(glow);
 
             let dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             dot.setAttribute("cx", cx); dot.setAttribute("cy", cy); dot.setAttribute("r", "1.5");
             dot.setAttribute("fill", "#fff"); dot.setAttribute("filter", `drop-shadow(0 0 5px rgba(${cRGB},0.9))`);
-            oceanDots.appendChild(dot);
+            dotGroup.appendChild(dot);
+            
+            oceanDots.appendChild(dotGroup);
         }
 
         function drawGeometricLayer(radius, count, colorStr, fillStr) {
@@ -241,7 +265,7 @@
 
 
         // ==========================================
-        // ✨ 2. 完美對齊的 10大瓣 3D 蓮花 ✨
+        // ✨ 2. 完美對齊的 20片 大基座立體蓮花 ✨
         // ==========================================
         const standingLotus = document.getElementById('standing-lotus');
         
@@ -275,12 +299,12 @@
             return petal;
         }
 
-        // 🌸 外層：精準 10 片 (加寬為 180px，與 10 海點 1:1 絕對對齊)
-        for(let i=0; i<10; i++) standingLotus.appendChild(create3DPetal(i * 36, -12, 'fade-grad', 180, 380, 0.15));
-        // 🌸 中層：10 片 (交錯 18度)
-        for(let i=0; i<10; i++) standingLotus.appendChild(create3DPetal((i * 36) + 18, -32, 'gold-grad', 110, 260, 0.4));
-        // 🌸 內層：10 片 (同向對齊 0度，緊包光柱)
-        for(let i=0; i<10; i++)  standingLotus.appendChild(create3DPetal((i * 36), -55, 'cyan-grad', 70, 170, 0.7));
+        // 🌸 外層：20 片大花瓣 (每 18 度，10 顆海點將精準落在每兩片的一片尖端上！)
+        for(let i=0; i<20; i++) standingLotus.appendChild(create3DPetal(i * 18, -12, 'fade-grad', 140, 360, 0.15));
+        // 🌸 中層：10 片
+        for(let i=0; i<10; i++) standingLotus.appendChild(create3DPetal(i * 36, -32, 'gold-grad', 110, 260, 0.4));
+        // 🌸 內層：10 片
+        for(let i=0; i<10; i++)  standingLotus.appendChild(create3DPetal((i * 36) + 18, -55, 'cyan-grad', 70, 170, 0.7));
 
 
         // ==========================================
@@ -345,21 +369,27 @@
         }
 
         // ==========================================
-        // 4. 滑動觸控 
+        // ✨ 4. 蘋果極致滑順的硬體加速旋轉引擎 ✨
         // ==========================================
         let universe = document.getElementById('universe-container');
         let lotusOcean = document.getElementById('lotus-ocean');
+        let labels = document.querySelectorAll('.tier-label');
         let isDragging = false; let startX, startY;
         let currentTilt = 75; let currentSpin = 0;    
 
-        setInterval(() => {
+        // 捨棄 setInterval，改用現代化的 requestAnimationFrame 達到 60FPS！
+        function animateUniverse() {
             if(!isDragging) {
                 currentSpin -= 0.05;
                 lotusOcean.style.transform = `rotateZ(${currentSpin}deg)`;
-                let labels = document.querySelectorAll('.tier-label');
-                labels.forEach(label => { label.style.transform = `rotateX(-90deg) rotateY(${-currentSpin}deg)`; });
+                // 讓文字反向抵銷自轉，永遠正對鏡頭
+                for(let i=0; i<labels.length; i++) {
+                    labels[i].style.transform = `rotateX(-90deg) rotateY(${-currentSpin}deg)`;
+                }
             }
-        }, 30);
+            requestAnimationFrame(animateUniverse);
+        }
+        animateUniverse(); // 啟動滑順引擎
 
         document.addEventListener('pointerdown', (e) => {
             isDragging = true;
@@ -378,11 +408,14 @@
             currentSpin += deltaX * 0.4;
             lotusOcean.style.transform = `rotateZ(${currentSpin}deg)`;
             
-            let labels = document.querySelectorAll('.tier-label');
-            labels.forEach(label => { label.style.transform = `rotateX(-90deg) rotateY(${-currentSpin}deg)`; });
+            for(let i=0; i<labels.length; i++) {
+                labels[i].style.transform = `rotateX(-90deg) rotateY(${-currentSpin}deg)`;
+            }
 
             currentTilt -= deltaY * 0.15;
             if (currentTilt > 85) currentTilt = 85; if (currentTilt < 45) currentTilt = 45; 
+            
+            // 手指滑動時才更新仰角
             universe.style.transform = `rotateX(${currentTilt}deg) scale(0.85)`;
 
             startX = x; startY = y;

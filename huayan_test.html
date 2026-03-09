@@ -55,13 +55,14 @@
             100% { transform: scale(4.0); opacity: 0.9; filter: drop-shadow(0 0 20px rgba(255,255,255,0.9)); }
         }
 
+        /* 香水海文字：不再變形放大，靜靜發光 */
         .sea-label {
             font-size: 6px; fill: rgba(243,229,171,0.9);
             letter-spacing: 3px; font-weight: bold;
             text-shadow: 0 0 8px #000, 0 0 10px rgba(212,175,55,0.9);
-            animation: text-pulse 6s infinite alternate ease-in-out;
+            animation: text-pulse 4s infinite alternate ease-in-out;
         }
-        @keyframes text-pulse { 0% { opacity: 0.3; } 100% { opacity: 1; } }
+        @keyframes text-pulse { 0% { opacity: 0.4; } 100% { opacity: 1; filter: drop-shadow(0 0 5px var(--gold)); } }
 
         #standing-lotus {
             position: absolute; top: 0; left: 0; transform-style: preserve-3d; z-index: 2;
@@ -106,27 +107,25 @@
             100% { transform: scale(3.6); box-shadow: 0 0 60px var(--solid-gold), 0 0 30px #fff; background: #ffe; } 
         }
 
-        /* ✨ 13層文字：與導覽按鈕樣式完全統一，加入 flex 佈局對齊箭頭 ✨ */
+        /* ✨ 13層文字重構：字距收攝、大小對齊、箭頭居前 ✨ */
         .tier-label {
-            position: absolute; left: 25px; top: -10px; width: 280px;
-            color: var(--gold); /* 同步按鈕顏色 */
-            font-size: 1.05rem; /* 同步按鈕字體大小 */
+            position: absolute; left: 20px; top: -12px; width: 280px;
+            color: var(--gold); 
+            font-size: 1.05rem; /* 與下方按鈕 100% 同步 */
             font-weight: bold; 
-            letter-spacing: 5px; /* 同步按鈕字距 */
+            letter-spacing: 3px; /* 收攝字距，防跑版 */
             text-shadow: 0 0 10px #000, 0 0 15px rgba(243,229,171,0.5); 
             transform-origin: left center; pointer-events: auto; cursor: pointer; will-change: transform;
-            display: flex; align-items: center; /* 讓文字與箭頭完美置中對齊 */
+            display: flex; align-items: center; white-space: nowrap; /* 強制不換行 */
         }
-
-        /* ✨ 極簡優雅的金剛箭頭動畫 ✨ */
         .tier-arrow {
-            margin-left: 2px;
+            margin-right: 6px; /* 箭頭與文字的距離 */
+            font-size: 1.1rem;
             animation: arrow-breathe 2.5s infinite alternate ease-in-out;
-            opacity: 0.8;
         }
         @keyframes arrow-breathe {
-            0% { transform: translateX(0px); opacity: 0.4; }
-            100% { transform: translateX(6px); opacity: 1; filter: drop-shadow(0 0 5px var(--solid-gold)); }
+            0% { transform: translateX(0px); opacity: 0.6; text-shadow: 0 0 5px var(--gold); }
+            100% { transform: translateX(4px); opacity: 1; text-shadow: 0 0 15px var(--solid-gold); }
         }
 
         /* 純 2D 星塵防護罩 */
@@ -271,16 +270,18 @@
             dot.setAttribute("cx", cx); dot.setAttribute("cy", cy); dot.setAttribute("r", "1.5");
             dot.setAttribute("fill", "#fff");
             dotGroup.appendChild(dot);
-
-            if(i === 0) {
-                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", cx + 6); text.setAttribute("y", cy + 2);
-                text.setAttribute("class", "sea-label");
-                text.textContent = "香水海";
-                dotGroup.appendChild(text);
-            }
             
             oceanDots.appendChild(dotGroup);
+
+            // ✨ 將香水海文字徹底抽離動畫群組，獨立掛載，永不跑版 ✨
+            if(i === 0) {
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                // 座標微調以對齊第一顆圓點
+                text.setAttribute("x", cx + 8); text.setAttribute("y", cy + 4);
+                text.setAttribute("class", "sea-label");
+                text.textContent = "香水海";
+                oceanDots.appendChild(text); 
+            }
         }
 
         function drawGeometricLayer(radius, count, colorStr, fillStr) {
@@ -380,11 +381,8 @@
             if(data.is13) {
                 let label = document.createElement('div');
                 label.className = 'tier-label';
-                // ✨ 加入了極簡、纖細的 SVG 箭頭，帶來高級的指引感 ✨
-                label.innerHTML = `第十三層：娑婆 / 極樂 
-                <svg class="tier-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>`;
+                // ✨ 將實心箭頭放在最前方，並去除多餘空格 ✨
+                label.innerHTML = `<span class="tier-arrow">➨</span> 第十三層：娑婆/極樂`;
                 tierGroup.appendChild(label); 
                 
                 dot.onclick = () => { document.getElementById('info-card').style.display = 'block'; if (navigator.vibrate) navigator.vibrate([30, 50, 30]); };
@@ -397,7 +395,7 @@
         }
 
         // ==========================================
-        // 4. 滑動觸控與 ✨ 沉靜版星塵引擎 (極度緩慢、深沉) ✨
+        // 4. 滑動觸控與星塵引擎
         // ==========================================
         let universe = document.getElementById('universe-container');
         let lotusOcean = document.getElementById('lotus-ocean');
@@ -406,7 +404,6 @@
         let currentTilt = 75; let currentSpin = 0;    
 
         function spawnStardust() {
-            // 降低機率，保持留白的虛空感
             if (Math.random() > 0.08) return; 
             let dust = document.createElement('div');
             dust.style.position = 'absolute';
@@ -425,7 +422,6 @@
             document.getElementById('stardust-overlay').appendChild(dust);
             
             let height = Math.random() * 500 + 250; 
-            // ✨ 減速奧義：時間拉長至 10~22 秒，極致沉穩 ✨
             let duration = Math.random() * 12000 + 10000; 
             
             dust.animate([

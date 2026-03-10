@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>系統 ． 法界回饋</title>
+    <title>系統 ． 法界回饋 (華嚴攀升版)</title>
     <style>
+        :root {
+            --gold: #f3e5ab;
+            --solid-gold: #d4af37;
+        }
         body {
             margin: 0; padding: 0; height: 100vh; overflow: hidden;
             background: #000; color: #fff;
@@ -15,17 +19,18 @@
         #ctrl-btn {
             position: absolute; z-index: 9999;
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
-            padding: 15px 40px; border: 1px solid #d4af37; border-radius: 40px;
-            color: #f3e5ab; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+            padding: 15px 40px; border: 1px solid var(--solid-gold); border-radius: 40px;
+            color: var(--gold); background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
             font-size: 1.1rem; letter-spacing: 5px; cursor: pointer; transition: 0.3s;
         }
 
-        /* ======= 1. 入夢明點 (超大黏合光暈) ======= */
+        /* ======= 1. 入夢明點 (改為真金核心，完美黏合) ======= */
         #meditation-dot {
             position: absolute;
-            width: 12px; height: 12px; background: #fff; border-radius: 50%;
-            /* 💡 加大、加厚四層光暈，絕對明顯且一體 */
-            box-shadow: 0 0 20px #fff, 0 0 50px rgba(243,229,171,1), 0 0 100px rgba(212,175,55,0.9), 0 0 150px rgba(212,175,55,0.5);
+            width: 12px; height: 12px; 
+            background: var(--gold); /* 💡 核心改為金色，消除白色斷層 */
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--gold), 0 0 40px var(--solid-gold), 0 0 80px rgba(212,175,55,0.8), 0 0 120px rgba(212,175,55,0.4);
             opacity: 0; transform: scale(0.5);
             transition: opacity 2s ease;
             z-index: 10;
@@ -34,7 +39,7 @@
         .breathing { animation: dot-breath 4s infinite alternate ease-in-out; }
         @keyframes dot-breath {
             0% { transform: scale(0.6); filter: brightness(0.7); }
-            100% { transform: scale(1.3); filter: brightness(1.3); }
+            100% { transform: scale(1.4); filter: brightness(1.3); }
         }
 
         /* ======= 2. 彌陀無量光 ======= */
@@ -57,18 +62,26 @@
             will-change: transform, opacity;
         }
 
-        /* ======= 4. 行菩提心 (1 - 華嚴定海神針) ======= */
+        /* ======= 4. 行菩提心 (1 - 華嚴二十重塔) ======= */
         #pillar-1 {
             position: absolute;
-            /* 配合 0 的大小 (40vmin 高度)，但稍微拉長一點展現挺拔 */
             width: 4px; height: 50vmin; 
-            /* 移植自華嚴代碼的真金琉璃漸層 */
-            background: linear-gradient(to bottom, rgba(255,255,255,0.9) 0%, rgba(212,175,55,0.9) 40%, rgba(139,168,156,0.6) 100%);
-            box-shadow: 0 0 30px rgba(212,175,55,0.8), inset 0 0 10px rgba(255,255,255,0.8);
+            /* 能量由下往上：深沉琉璃 -> 耀眼真金 -> 純白頂端 */
+            background: linear-gradient(to top, rgba(139,168,156,0.3) 0%, rgba(212,175,55,0.8) 60%, rgba(255,255,255,1) 100%);
+            box-shadow: 0 0 20px rgba(212,175,55,0.5);
             border-radius: 2px;
             opacity: 0; transform: scale(0.5);
             z-index: 15;
             will-change: transform, opacity;
+            /* 準備容納 20 顆華嚴星點 */
+        }
+
+        .tier-dot {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            width: 5px; height: 5px; border-radius: 50%;
+            background: rgba(243,229,171,0.3);
+            box-shadow: 0 0 5px rgba(212,175,55,0.5);
+            transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
         }
     </style>
 </head>
@@ -84,15 +97,40 @@
     <script>
         const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-        // 💡 獨立寫成心跳模組，方便 0 和 1 共用 (5下心跳)
-        async function playHeartbeat(element, baseScale, peakScale) {
-            for(let i = 0; i < 5; i++) {
-                element.style.transition = 'transform 0.15s ease-out';
-                element.style.transform = `scale(${peakScale})`;
-                await sleep(150);
-                element.style.transition = 'transform 0.3s ease-in';
-                element.style.transform = `scale(${baseScale})`;
-                await sleep(400); // 每次心跳間隔
+        // 生成華嚴二十重世界的星點 (由下往上排列)
+        function initHuaYenTiers() {
+            const pillar = document.getElementById('pillar-1');
+            pillar.innerHTML = ''; // 清空
+            for(let i = 0; i < 20; i++) {
+                let d = document.createElement('div');
+                d.className = 'tier-dot';
+                // i=0 是底層 (100%)，i=19 是頂層 (0%)
+                let pos = 100 - (i * (100 / 19));
+                d.style.top = `calc(${pos}% - 2.5px)`;
+                pillar.appendChild(d);
+            }
+        }
+
+        // 💡 全新的 1 能量攀升動畫 (緩慢、莊嚴)
+        async function surgeEnergy() {
+            const dots = document.querySelectorAll('.tier-dot');
+            for(let i = 0; i < 20; i++) {
+                let d = dots[i]; // 從底部開始
+                
+                // 點亮並放大 (能量衝擊)
+                d.style.background = '#fff';
+                d.style.boxShadow = '0 0 20px #fff, 0 0 40px #d4af37';
+                d.style.transform = 'translateX(-50%) scale(3.5)';
+                
+                // 餘波收攝 (留下一點放大的金光餘暉)
+                setTimeout(() => {
+                    d.style.transform = 'translateX(-50%) scale(1.5)';
+                    d.style.background = '#f3e5ab';
+                    d.style.boxShadow = '0 0 15px #d4af37';
+                }, 500);
+                
+                // 每一層間隔 200 毫秒，20 層大約需要 4 秒鐘的攀升時間 (不趕)
+                await sleep(200); 
             }
         }
 
@@ -102,6 +140,8 @@
             const light = document.getElementById('infinite-light');
             const ring = document.getElementById('ring-0');
             const pillar = document.getElementById('pillar-1');
+
+            initHuaYenTiers(); // 初始化 20 層點
 
             // 狀態重置
             btn.style.display = 'none';
@@ -113,7 +153,7 @@
             // --- 1. 極黑沉澱 ---
             await sleep(2000);
 
-            // --- 2. 巨大光暈明點浮現並呼吸 ---
+            // --- 2. 💡 改良版：金黃色一體光暈明點浮現 ---
             dot.style.opacity = '1';
             dot.classList.add('breathing');
             await sleep(6000); 
@@ -123,20 +163,25 @@
             light.style.opacity = '1';
             await sleep(3000); 
 
-            // ==========================================
-            //       【 0 的演化 (空性) 】
-            // ==========================================
+            // --- 4. 空性之 0 演化 ---
             light.style.opacity = '0';
             dot.style.opacity = '0';
             
             ring.style.transition = 'transform 4.5s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 3s ease';
             ring.style.opacity = '1';
             ring.style.transform = 'scale(1.5)';
-            await sleep(4500); // 等待放大
+            await sleep(4500); 
 
-            // 💡 0 跳動 5 下
-            await playHeartbeat(ring, 1.5, 1.6);
-            await sleep(800); // 餘韻
+            // 0 跳動 5 下
+            for(let i = 0; i < 5; i++) {
+                ring.style.transition = 'transform 0.15s ease-out';
+                ring.style.transform = 'scale(1.6)';
+                await sleep(150);
+                ring.style.transition = 'transform 0.3s ease-in';
+                ring.style.transform = 'scale(1.5)';
+                await sleep(400);
+            }
+            await sleep(800); 
 
             // 0 極速收攝淡出
             ring.style.transition = 'transform 3s cubic-bezier(0.5, 0, 0.8, 0.2), opacity 2.5s ease';
@@ -144,20 +189,17 @@
             ring.style.opacity = '0';
             await sleep(3500); // 留白黑暗
 
-            // ==========================================
-            //       【 1 的演化 (定海神針/行菩提) 】
-            // ==========================================
-            // 💡 1 如同 0 的出場方式，從中心浮現並放大
+            // --- 5. 💡 華嚴行菩提 (1) 演化 ---
             pillar.style.transition = 'transform 4.5s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 3s ease';
             pillar.style.opacity = '1';
             pillar.style.transform = 'scale(1.5)';
-            await sleep(4500); // 等待放大
+            await sleep(3000); // 讓柱子先浮現出來
 
-            // 💡 1 同樣跳動 5 下
-            await playHeartbeat(pillar, 1.5, 1.6);
-            await sleep(800); // 餘韻
+            // 💡 啟動從 1 到 20 的能量攀升動畫 (約 4 秒鐘的莊嚴過程)
+            await surgeEnergy();
+            await sleep(1500); // 攀升到頂後，餘韻留白
 
-            // --- 結束測試 (停在 1 的畫面，等候您的下一步) ---
+            // --- 結束測試 (停在 1 點亮後的畫面，等候您的下一步) ---
             btn.innerText = "重播此階段";
             btn.style.display = 'block';
         }

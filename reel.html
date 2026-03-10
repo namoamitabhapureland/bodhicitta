@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>華藏調頻 ‧ 三轉法輪</title>
+    <style>
+        :root { --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c; --bg-deep: #050505; }
+        body { margin: 0; padding: 0; height: 100vh; background: var(--bg-deep); color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: "PingFang TC", "Microsoft JhengHei", serif; overflow: hidden; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        /* ======= 法輪本體 ======= */
+        #wheel-container { position: relative; width: 300px; height: 300px; cursor: pointer; filter: drop-shadow(0 0 15px rgba(212,175,55,0.3)); transition: filter 0.3s; }
+        #wheel-container:active { filter: drop-shadow(0 0 30px rgba(243,229,171,0.8)); }
+        
+        #dharma-wheel { width: 100%; height: 100%; transform-origin: center; transition: transform 2.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        
+        /* 轉動時的發光效果 */
+        .spinning-glow { animation: wheel-glow 2.5s ease-out; }
+        @keyframes wheel-glow {
+            0% { filter: drop-shadow(0 0 50px var(--solid-gold)); }
+            100% { filter: drop-shadow(0 0 10px rgba(212,175,55,0.3)); }
+        }
+
+        /* ======= 文字引導區 ======= */
+        #instruction-text { margin-top: 40px; font-size: 1.2rem; color: var(--gold); letter-spacing: 5px; text-align: center; height: 60px; transition: opacity 0.5s; text-shadow: 0 0 10px rgba(212,175,55,0.5); }
+        .sub-text { font-size: 0.85rem; color: var(--cyan); letter-spacing: 2px; margin-top: 8px; opacity: 0.8; }
+
+        /* ======= 碾摧無明的塵埃 ======= */
+        .dust-particle { position: absolute; background: rgba(50,50,50,0.8); border-radius: 50%; pointer-events: none; z-index: 10; }
+
+        /* ======= 調頻結果卡片 (籤) ======= */
+        #result-card {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -45%) scale(0.9);
+            width: 85%; max-width: 350px; background: rgba(10,10,10,0.95);
+            border: 1px solid var(--solid-gold); border-radius: 12px;
+            box-shadow: 0 0 40px rgba(212,175,55,0.4), inset 0 0 20px rgba(212,175,55,0.1);
+            padding: 30px 25px; opacity: 0; pointer-events: none; transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex; flex-direction: column; align-items: center; text-align: center; z-index: 100;
+        }
+        #result-card.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+        
+        .card-title { color: var(--gold); font-size: 1.3rem; letter-spacing: 4px; margin-bottom: 15px; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 10px; width: 100%; }
+        .card-content { color: #ddd; font-size: 0.95rem; line-height: 1.8; text-align: justify; letter-spacing: 1px; }
+        .card-action { margin-top: 20px; color: var(--cyan); font-weight: bold; letter-spacing: 2px; }
+        
+        /* 關閉按鈕 */
+        #close-btn { margin-top: 25px; padding: 10px 30px; background: transparent; border: 1px solid var(--cyan); color: var(--cyan); border-radius: 20px; cursor: pointer; letter-spacing: 2px; transition: 0.3s; }
+        #close-btn:active { background: var(--cyan); color: #000; }
+    </style>
+</head>
+<body>
+
+    <div id="wheel-container" onclick="spinWheel()">
+        <svg id="dharma-wheel" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#f3e5ab" />
+                    <stop offset="50%" stop-color="#d4af37" />
+                    <stop offset="100%" stop-color="#b8860b" />
+                </linearGradient>
+            </defs>
+            <circle cx="100" cy="100" r="90" fill="none" stroke="url(#gold-grad)" stroke-width="6" />
+            <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(212,175,55,0.4)" stroke-width="1" />
+            <circle cx="100" cy="100" r="25" fill="none" stroke="url(#gold-grad)" stroke-width="4" />
+            <circle cx="100" cy="100" r="12" fill="url(#gold-grad)" />
+            
+            <g stroke="url(#gold-grad)" stroke-width="4" stroke-linecap="round">
+                <line x1="100" y1="25" x2="100" y2="90" />
+                <line x1="100" y1="175" x2="100" y2="110" />
+                <line x1="25" y1="100" x2="90" y2="100" />
+                <line x1="175" y1="100" x2="110" y2="100" />
+                <line x1="47" y1="47" x2="82" y2="82" />
+                <line x1="153" y1="153" x2="118" y2="118" />
+                <line x1="47" y1="153" x2="82" y2="118" />
+                <line x1="153" y1="47" x2="118" y2="82" />
+            </g>
+        </svg>
+    </div>
+
+    <div id="instruction-text">
+        <div id="main-text">輕觸法輪 ‧ 啟動調頻</div>
+        <div id="sub-text" class="sub-text">今日尚未轉動</div>
+    </div>
+
+    <div id="result-card">
+        <div class="card-title">今日法界觀照</div>
+        <div class="card-content" id="card-desc">
+            </div>
+        <div class="card-action" id="card-action">
+            </div>
+        <button id="close-btn" onclick="closeCard()">收攝心念</button>
+    </div>
+
+    <script>
+        let currentTurn = 0;
+        let isSpinning = false;
+        let currentRotation = 0;
+
+        const mainText = document.getElementById('main-text');
+        const subText = document.getElementById('sub-text');
+        const wheel = document.getElementById('dharma-wheel');
+        const container = document.getElementById('wheel-container');
+        const resultCard = document.getElementById('result-card');
+
+        // 模擬題庫 (普世價值 X 佛法行動)
+        const dharmaPrescriptions = [
+            {
+                desc: "法界之鏡顯示，您的心場今日或許緊抓著某個『必須如此』的執念，這讓頻率落入了耗能狀態。",
+                action: "【今日處方】抱怨前深呼吸三次。放過別人，就是放過自己。"
+            },
+            {
+                desc: "隨喜您的狀態！今日您的心頻突破了勇氣線。生活中的小摩擦，現在在您眼裡都不過是漣漪。",
+                action: "【今日處方】主動且不求回報地幫助一個人，傳遞這份正向動能。"
+            },
+            {
+                desc: "您的心頻與華藏世界的『清淨』高度共振。您會發現今天看什麼都很順眼，內在有一股無條件的喜悅。",
+                action: "【今日處方】請勿獨享寧靜。在心中默默祝願一位有隔閡的人，一念迴向即是法界。"
+            }
+        ];
+
+        function createDust() {
+            // 產生碾摧無明的視覺效果 (黑灰色粒子向外飛散)
+            for(let i=0; i<8; i++) {
+                let dust = document.createElement('div');
+                dust.className = 'dust-particle';
+                let size = Math.random() * 6 + 2;
+                dust.style.width = size + 'px'; dust.style.height = size + 'px';
+                dust.style.left = '50%'; dust.style.top = '50%';
+                container.appendChild(dust);
+                
+                let angle = Math.random() * Math.PI * 2;
+                let distance = Math.random() * 100 + 150;
+                
+                dust.animate([
+                    { transform: 'translate(-50%, -50%) scale(1)', opacity: 0.8 },
+                    { transform: `translate(calc(-50% + ${Math.cos(angle)*distance}px), calc(-50% + ${Math.sin(angle)*distance}px)) scale(0)`, opacity: 0 }
+                ], { duration: 1000 + Math.random()*1000, easing: 'ease-out' }).onfinish = () => dust.remove();
+            }
+        }
+
+        async function spinWheel() {
+            if(isSpinning || currentTurn >= 3) return;
+            isSpinning = true;
+            currentTurn++;
+
+            // 碾摧無明特效
+            createDust();
+            wheel.classList.remove('spinning-glow');
+            void wheel.offsetWidth; // 觸發重繪
+            wheel.classList.add('spinning-glow');
+
+            // 依據次第給予不同的旋轉圈數與文字
+            if(currentTurn === 1) {
+                currentRotation += 720 + Math.random() * 180; // 轉 2 圈多
+                mainText.innerText = "初轉 ‧ 阿含";
+                subText.innerText = "碾摧無明不善，建立基石";
+            } else if (currentTurn === 2) {
+                currentRotation += 1080 + Math.random() * 180; // 轉 3 圈多
+                mainText.innerText = "二轉 ‧ 般若";
+                subText.innerText = "照見五蘊皆空，破除法執";
+            } else if (currentTurn === 3) {
+                currentRotation += 1440 + Math.random() * 180; // 轉 4 圈多
+                mainText.innerText = "三轉 ‧ 唯識";
+                subText.innerText = "三乘歸一，法界共振";
+            }
+
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+            // 等待旋轉動畫結束 (2.5秒)
+            await new Promise(r => setTimeout(r, 2500));
+            isSpinning = false;
+
+            if(currentTurn === 3) {
+                await new Promise(r => setTimeout(r, 500)); // 停頓一下再出籤
+                showPrescription();
+            }
+        }
+
+        function showPrescription() {
+            // 隨機抽取題庫
+            const randomIndex = Math.floor(Math.random() * dharmaPrescriptions.length);
+            const data = dharmaPrescriptions[randomIndex];
+            
+            document.getElementById('card-desc').innerText = data.desc;
+            document.getElementById('card-action').innerText = data.action;
+            
+            container.style.transition = 'opacity 1s, filter 1s';
+            container.style.opacity = '0.2';
+            container.style.filter = 'blur(5px)';
+            mainText.style.opacity = '0';
+            subText.style.opacity = '0';
+
+            resultCard.classList.add('show');
+        }
+
+        function closeCard() {
+            resultCard.classList.remove('show');
+            container.style.opacity = '1';
+            container.style.filter = 'drop-shadow(0 0 15px rgba(212,175,55,0.3))';
+            
+            // 復原文字狀態，並提示明日再來
+            setTimeout(() => {
+                mainText.innerText = "今日調頻圓滿";
+                subText.innerText = "安住當下，明日再轉";
+                mainText.style.opacity = '1';
+                subText.style.opacity = '1';
+            }, 500);
+        }
+    </script>
+</body>
+</html>

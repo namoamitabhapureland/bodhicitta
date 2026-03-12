@@ -1,0 +1,437 @@
+沒錯 你覺得這兩個該如何 會不會太多代碼
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>華藏調頻 ‧ 轉法輪樞紐</title>
+    <style>
+        /* ✨ 大智已將 --cyan 換成明亮玉石色 (#9fdfc8)，徹底解決暗沉問題 ✨ */
+        :root { --gold: #f3e5ab; --solid-gold: #d4af37; --gold-dark: #b8860b; --cyan: #9fdfc8; --bg-deep: #020202; }
+        body { margin: 0; padding: 0; height: 100vh; background: var(--bg-deep); color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: "PingFang TC", "Microsoft JhengHei", serif; overflow: hidden; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        /* ✨ 換頁黑幕 ✨ */
+        #page-curtain { position: fixed; inset: 0; background: #000; z-index: 999999; pointer-events: none; transition: opacity 0.8s ease-in-out; opacity: 1; }
+
+        /* ✨ 左右對稱：高級玻璃金框導航按鈕 ✨ */
+        .top-nav-btn {
+            position: absolute; top: 20px; 
+            background: rgba(0, 0, 0, 0.6); /* 透明黑底 */
+            border: 1px solid rgba(212,175,55,0.6); /* 統一實線金框 */
+            color: var(--gold); /* 統一明亮金字 */
+            padding: 8px 16px; border-radius: 25px; font-size: 0.85rem; font-weight: bold; letter-spacing: 1px; 
+            display: flex; align-items: center; gap: 6px; z-index: 100; cursor: pointer; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8), inset 0 0 10px rgba(212,175,55,0.15); 
+            backdrop-filter: blur(10px); transition: 0.3s;
+        }
+        .top-nav-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.25); border-color: var(--solid-gold); box-shadow: 0 0 20px rgba(212,175,55,0.5); }
+        
+        #back-btn { left: 20px; }
+        #huayan-btn { right: 20px; }
+        .mini-earth { width: 16px; height: 16px; filter: drop-shadow(0 0 4px rgba(243,229,171,0.5)); }
+
+        /* ======= 法輪本體 ======= */
+        #wheel-container { position: relative; width: 340px; height: 340px; cursor: pointer; filter: drop-shadow(0 0 15px rgba(212,175,55,0.25)); transition: filter 0.3s ease, opacity 1s, transform 1s; }
+        #wheel-container:active { filter: drop-shadow(0 0 35px rgba(243,229,171,0.7)); }
+        #dharma-wheel { width: 100%; height: 100%; transform-origin: center; transition: transform 2.8s cubic-bezier(0.1, 0.9, 0.2, 1); will-change: transform; }
+        .spinning-glow { animation: wheel-glow 2.8s ease-out; }
+        @keyframes wheel-glow { 0% { filter: drop-shadow(0 0 70px var(--solid-gold)) brightness(1.2); } 100% { filter: drop-shadow(0 0 15px rgba(212,175,55,0.25)); brightness(1); } }
+
+        /* ======= 文字引導區 ======= */
+        #instruction-text { margin-top: 40px; font-size: 1.15rem; color: var(--gold); letter-spacing: 5px; text-align: center; height: 65px; transition: opacity 0.5s; text-shadow: 0 0 10px rgba(212,175,55,0.5); }
+        .sub-text { font-size: 0.85rem; color: var(--cyan); letter-spacing: 2px; margin-top: 8px; opacity: 0.8; }
+
+        /* ======= 結果區排版 ======= */
+        #result-layout { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 94%; max-width: 420px; display: flex; align-items: stretch; justify-content: center; gap: 12px; opacity: 0; pointer-events: none; transition: opacity 1.5s ease; z-index: 100; }
+        #result-layout.show { opacity: 1; pointer-events: auto; }
+
+        /* 金剛能量法棒 */
+        #energy-bar-wrap { height: 320px; width: 75px; position: relative; display: flex; justify-content: center; flex-shrink: 0; }
+        .floating-score { position: absolute; left: 62px; color: #fff; font-size: 0.85rem; font-weight: bold; letter-spacing: 1px; text-shadow: 0 0 10px var(--solid-gold); transition: top 2s cubic-bezier(0.2, 0.8, 0.2, 1), color 1s; white-space: nowrap; }
+
+        /* 心理學籤詩卡片 */
+        #hwkins-card { flex: 1; min-width: 0; background: rgba(8,8,8,0.96); border-radius: 16px; padding: 25px 15px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 1s; max-height: 80vh; overflow-y: auto; scrollbar-width: none; }
+        .hwkins-title { font-size: clamp(1rem, 4vw, 1.15rem); letter-spacing: 3px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; width: 100%; font-weight: bold; }
+        .hwkins-desc { color: #ddd; font-size: clamp(0.85rem, 3.5vw, 0.95rem); line-height: 1.6; text-align: justify; margin-bottom: 15px; word-wrap: break-word; }
+        .hwkins-action { font-weight: bold; letter-spacing: 1px; font-size: clamp(0.85rem, 3.5vw, 0.9rem); padding: 12px 10px; background: rgba(255,255,255,0.05); border-radius: 8px; width: 100%; text-align: left; word-wrap: break-word; }
+        
+        #close-btn { margin-top: 15px; padding: 10px 25px; background: transparent; border: 1px solid var(--cyan); color: var(--cyan); border-radius: 25px; cursor: pointer; letter-spacing: 3px; font-size: 0.85rem; transition: 0.3s; flex-shrink: 0; }
+        #close-btn:active { background: var(--cyan); color: #000; box-shadow: 0 0 15px var(--cyan); }
+
+        /* 擋客法語 */
+        #wheel-blocked-msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--gold); font-size: 1.2rem; letter-spacing: 4px; line-height: 2.5; text-align: center; opacity: 0; transition: 1.5s; text-shadow: 0 0 15px var(--solid-gold); pointer-events: none; display: none; }
+
+        /* 碎片動畫層 */
+        #fragment-theater { position: fixed; inset: 0; background: #000; z-index: 99999; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 1s ease; pointer-events: none; }
+        .frag-zen-text { position: absolute; top: 50%; width: 100%; text-align: center; color: var(--gold); font-size: 1.3rem; letter-spacing: 6px; opacity: 0; transition: opacity 3s; text-shadow: 0 0 20px var(--solid-gold); transform: translateY(-50%); }
+        .f-bodhi { position: absolute; width: 12px; height: 12px; background: var(--gold); border-radius: 50%; opacity: 0; transform: scale(0.5); }
+        .f-ring { position: absolute; width: 40vmin; height: 40vmin; border-radius: 50%; border: 2px solid rgba(243,229,171,0.8); box-shadow: 0 0 75px rgba(212,175,55,0.7), inset 0 0 45px rgba(212,175,55,0.5); opacity: 0; transform: scale(0.5); }
+        .f-pillar { position: absolute; width: 6px; height: 50vmin; background: linear-gradient(to top, rgba(255,255,255,0.6) 0%, rgba(212,175,55,1) 40%, rgba(100,50,0,0.9) 100%); box-shadow: 0 0 50px var(--solid-gold); opacity: 0; transform: scale(0.5); }
+    </style>
+</head>
+<body>
+
+   <div id="page-curtain"></div>
+
+    <div id="back-btn" class="top-nav-btn" onclick="navigateTo('index_en.html?screen=3')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Return to Pure Land
+    </div>
+
+    <div id="huayan-btn" class="top-nav-btn" onclick="navigateTo('huayan_en.html')">
+        Avatamsaka World
+        <svg class="mini-earth" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <radialGradient id="earth-glow" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#f3e5ab" stop-opacity="0.6"/><stop offset="100%" stop-color="#000000" stop-opacity="0.8"/></radialGradient>
+                <linearGradient id="earth-lines" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f3e5ab"/><stop offset="100%" stop-color="#d4af37"/></linearGradient>
+            </defs>
+            <circle cx="12" cy="12" r="10" fill="url(#earth-glow)" stroke="url(#earth-lines)" stroke-width="1.5"/>
+            <ellipse cx="12" cy="12" rx="4.5" ry="10" fill="none" stroke="url(#earth-lines)" stroke-width="1" opacity="0.75" transform="rotate(30 12 12)"/>
+            <ellipse cx="12" cy="12" rx="10" ry="4.5" fill="none" stroke="url(#earth-lines)" stroke-width="1" opacity="0.75" transform="rotate(-30 12 12)"/>
+        </svg>
+    </div>
+
+    <div id="wheel-container" onclick="triggerSpin()">
+        <svg id="dharma-wheel" viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#f3e5ab" /><stop offset="50%" stop-color="#d4af37" /><stop offset="100%" stop-color="#b8860b" />
+                </linearGradient>
+                <pattern id="petal-pattern" patternUnits="userSpaceOnUse" width="12" height="24">
+                    <path d="M 6 0 C 10 6, 10 18, 6 24 C 2 18, 2 6, 6 0 Z" fill="none" stroke="rgba(243,229,171,0.4)" stroke-width="0.5"/>
+                </pattern>
+            </defs>
+            <circle cx="140" cy="140" r="130" fill="rgba(212,175,55,0.02)" />
+            <g id="spokes-layer" transform="translate(140,140)"></g>
+            <circle cx="140" cy="140" r="110" fill="none" stroke="url(#gold-grad)" stroke-width="5" />
+            <circle cx="140" cy="140" r="98" fill="none" stroke="rgba(212,175,55,0.5)" stroke-width="1.5" />
+            <g id="outer-bumps" transform="translate(140,140)"></g>
+            <circle cx="140" cy="140" r="34" fill="var(--bg-deep)" stroke="url(#gold-grad)" stroke-width="4" />
+            <g id="center-mandala" transform="translate(140,140)"></g>
+            <circle cx="140" cy="140" r="12" fill="url(#gold-grad)" />
+        </svg>
+    </div>
+
+    <div id="instruction-text">
+        <div id="main-text">Tap the Wheel ‧ Begin Tuning</div>
+        <div id="sub-text" class="sub-text">Crush ignorance, transform the mind</div>
+    </div>
+
+    <div id="wheel-blocked-msg">Today's karmic conditions are fulfilled.<br>The Bodhi Mind shines eternally.<br>Please abide in the present and return tomorrow.</div>
+
+    <div id="result-layout">
+        <div id="energy-bar-wrap">
+            <svg viewBox="0 0 60 320" style="width:100%; height:100%; filter: drop-shadow(0 0 10px rgba(212,175,55,0.2));">
+                <path d="M 15 285 Q 30 310 45 285 L 38 270 L 22 270 Z" fill="url(#gold-grad)" />
+                <path d="M 22 270 Q 30 260 38 270 Z" fill="#020202" />
+                <path d="M 15 35 Q 30 10 45 35 L 38 50 L 22 50 Z" fill="url(#gold-grad)" />
+                <path d="M 22 50 Q 30 60 38 50 Z" fill="#020202" />
+                <rect x="25" y="50" width="10" height="220" fill="rgba(255,255,255,0.05)" stroke="rgba(212,175,55,0.3)" stroke-width="0.5" rx="2" />
+                <rect id="bar-fill" x="26" y="269" width="8" height="0" fill="rgba(160,40,40,0.9)" rx="1" style="transition: all 2s cubic-bezier(0.2, 0.8, 0.2, 1);" />
+            </svg>
+            <div id="float-score" class="floating-score" style="top: 260px;">0 Hz</div>
+        </div>
+
+        <div id="hwkins-card">
+            <div class="hwkins-title" id="hc-title">Today's Insight</div>
+            <div class="hwkins-desc" id="hc-desc"></div>
+            <div class="hwkins-action" id="hc-action"></div>
+            <button id="close-btn" onclick="resetWheel()">Collect the Mind</button>
+        </div>
+    </div>
+
+    <div id="fragment-theater">
+        <div id="f-bodhi" class="f-bodhi"></div>
+        <div id="f-ring" class="f-ring"></div>
+        <div id="f-pillar" class="f-pillar"></div>
+        <div id="f-text" class="frag-zen-text"></div>
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+        
+        window.onload = () => {
+            document.getElementById('page-curtain').style.opacity = '0';
+            buildWheelSVG();
+            checkDailyStatus();
+        };
+
+        function navigateTo(url) {
+            document.getElementById('page-curtain').style.opacity = '1';
+            setTimeout(() => { window.location.href = url; }, 800);
+        }
+
+        let db;
+        try { db = JSON.parse(localStorage.getItem('PX_V15.0')); } catch(e) {}
+        if (!db || typeof db !== 'object') db = {}; 
+        if (db.hwkinsEnergyTotal === undefined) db.hwkinsEnergyTotal = 0;
+        if (db.dailyWheelCount === undefined) db.dailyWheelCount = 0;
+        if (db.lastWheelDate === undefined) db.lastWheelDate = "";
+        
+        function save() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
+
+        function checkDailyStatus() {
+            const today = new Date().toLocaleDateString();
+            if (db.lastWheelDate !== today) {
+                db.dailyWheelCount = 0; db.lastWheelDate = today; save();
+            }
+            if (db.dailyWheelCount >= 1) {
+                document.getElementById('wheel-container').style.display = 'none';
+                document.getElementById('instruction-text').style.display = 'none';
+                document.getElementById('wheel-blocked-msg').style.display = 'block';
+                setTimeout(()=> { document.getElementById('wheel-blocked-msg').style.opacity = '1'; }, 100);
+            }
+        }
+
+        let audioCtx;
+        function initAudio() {
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+        }
+        function playTick() {
+            if(!audioCtx) return;
+            let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(120, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.08);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+        }
+
+        function buildWheelSVG() {
+            const svgNS = "http://www.w3.org/2000/svg";
+            const spokesG = document.getElementById('spokes-layer'); spokesG.innerHTML="";
+            for(let i=0; i<8; i++) {
+                const g = document.createElementNS(svgNS, "g"); g.setAttribute("transform", `rotate(${(360/8)*i})`);
+                const beam = document.createElementNS(svgNS, "rect"); beam.setAttribute("x", "-7"); beam.setAttribute("y", "-110"); beam.setAttribute("width", "14"); beam.setAttribute("height", "76"); beam.setAttribute("fill", "url(#gold-grad)"); beam.setAttribute("rx", "3"); 
+                const pattern = document.createElementNS(svgNS, "rect"); pattern.setAttribute("x", "-7"); pattern.setAttribute("y", "-110"); pattern.setAttribute("width", "14"); pattern.setAttribute("height", "76"); pattern.setAttribute("fill", "url(#petal-pattern)");
+                g.appendChild(beam); g.appendChild(pattern); spokesG.appendChild(g);
+            }
+            const bumpsG = document.getElementById('outer-bumps'); bumpsG.innerHTML="";
+            for(let i=0; i<8; i++) {
+                const g = document.createElementNS(svgNS, "g"); g.setAttribute("transform", `rotate(${(360/8)*i}) translate(0, -110)`);
+                const orn = document.createElementNS(svgNS, "path"); orn.setAttribute("fill", "url(#gold-grad)");
+                if(i % 2 === 0) orn.setAttribute("d", "M -18,0 C -18,-8 -12,-10 -8,-7 C -5,-16 5,-16 8,-7 C 12,-10 18,-8 18,0 Z"); else orn.setAttribute("d", "M -14,0 C -14,-10 -6,-15 0,-16 C 6,-15 14,-10 14,0 Z");
+                g.appendChild(orn); bumpsG.appendChild(g);
+            }
+            const centerG = document.getElementById('center-mandala'); centerG.innerHTML="";
+            for(let j=0; j<8; j++) {
+                const path = document.createElementNS(svgNS, "path"); path.setAttribute("d", `M0 -26 C 13 -17.8, 13 7.8, 0 26 C -13 7.8, -13 -17.8, 0 -26`);
+                path.setAttribute("transform", `rotate(${(360/8)*j})`); path.setAttribute("stroke", "rgba(212,175,55,0.7)"); path.setAttribute("fill", "rgba(243,229,171,0.15)"); centerG.appendChild(path);
+            }
+        }
+
+               // ✨ English Version: Hawkins Energy x Dharma Insights (80 items) ✨
+        const hwkinsDB = [
+            // ==========================================
+            // 【Tier 1: 0 - 200 Hz】 
+            // ==========================================
+            { 
+                min: 0, max: 200, color: "rgba(160, 40, 40, 0.9)", border: "#ff4d4d", 
+                contents: [
+                    { desc: "The mirror of the Dharma Realm reflects a subtle fluctuation. At some moment today, your subconscious might give rise to unnoticed impatience or worry. This could be an excellent opportunity for mindful awareness.", action: "[Today's Prescription] When emotions surge, try taking three deep breaths and wait five seconds before speaking. Letting others go might be a chance to let yourself go." },
+                    { desc: "The system detects that your mental frequency seems to be carrying some pressure. The brain might be fearing a future that hasn't happened yet, which silently depletes your vital energy.", action: "[Today's Prescription] When feeling anxious, try gently pulling your attention back to 'the step beneath your feet'. See if you can solely focus on the small task currently at hand." },
+                    { desc: "Today, your subconscious might hide a trace of comparison or unfairness toward external things. From the Dharma perspective, this might be an illusory cloud temporarily obscuring your clarity.", action: "[Today's Prescription] Try to find one tiny thing in your heart that you 'currently possess and are grateful for'. Anchoring your mind here might disperse the clouds." },
+                    { desc: "The Dharma mirror flickers, reminding you that your mental field today might easily rub against your surroundings. A trivial matter could trigger your inner defense mechanisms.", action: "[Today's Prescription] If you encounter displeasing people or things today, try reciting the Buddha's name three times silently, drink warm water, and temporarily leave the scene. This might prevent negative karma from forming." },
+                    { desc: "Today, you might feel somewhat exhausted or powerless, mentally or physically. Forcing yourself to endure might sometimes cause your frequency to continue dropping.", action: "[Today's Prescription] Allow yourself to 'temporarily do nothing' today. Find a moment to close your eyes and rest for ten minutes, treating it as pure letting go." },
+                    { desc: "The energy meter shows you might be feeling remorse over a past regret or mistake today. This invisible weight might be dragging your frequency down.", action: "[Today's Prescription] Try saying to yourself in the mirror: 'I am willing to try to forgive you.' The past mind is unattainable; perhaps you just need to choose anew from this moment." },
+                    { desc: "Your frequency seems mixed with a trace of desire to control others or excessive expectations. Seeking but not obtaining might be the source of suffering.", action: "[Today's Prescription] Practice 'non-interference' today. When seeing others do things differently than you, try observing quietly without intervening, and see what changes." },
+                    { desc: "The system detects a hidden sense of grievance. You might feel you've given a lot but seemingly haven't received the expected return or recognition.", action: "[Today's Prescription] Patriarch Bodhidharma said: 'There is truly no merit.' Try viewing today's contributions as your natural duty. Letting go of the expectation for return might make your mind freer." },
+                    { desc: "Today, your mind seems easily caught in the obsession of 'proving myself right'. This might form an invisible wall, blocking the flow of good karmic affinities.", action: "[Today's Prescription] If a disagreement arises today, try thinking: 'They might have their reasons too.' Gently lowering your ego might open up a vast sky." },
+                    { desc: "Your energy field appears somewhat scattered or apathetic. This could be a temporary loss of passion for life or a self-protection mechanism after over-depletion.", action: "[Today's Prescription] Try touching a bit of nature. Touch a leaf, look at the sky, or brew yourself a cup of hot tea. Minor sensory experiences might awaken your awareness." },
+                    { desc: "The system observes that your body or breathing carries slight tension today. This might be your subconscious resisting certain unknown changes.", action: "[Today's Prescription] Take two minutes to scan your body from head to toe. Send your breath gently to tight areas; you might find relief." },
+                    { desc: "The Dharma mirror shows a sense of 'scarcity' implicit in your frequency. This easily makes one feel that time, money, or love is never enough.", action: "[Today's Prescription] Try sincerely praising a friend's virtue today. Through 'giving' praise, you might break the illusion of inner scarcity." },
+                    { desc: "Your mind today seems prone to repeatedly chewing over a past memory. This might trap your energy in the past, preventing it from flowing into the present.", action: "[Today's Prescription] While washing hands or showering, visualize the pure water washing away these stale thoughts. As the water flows away, attachments might follow." },
+                    { desc: "Today, you might feel agitated by excessive information or external noises. This is the system reminding you: your internal memory might be full.", action: "[Today's Prescription] If possible, try turning off your phone's internet for an hour. Giving yourself a pure 'information fast' might reset your mental frequency." },
+                    { desc: "Your frequency might be giving rise to a 'victim' grievance, feeling the environment or others are unfair to you.", action: "[Today's Prescription] Try shifting your focus from 'why did they do this to me' to 'what can I do for myself now'. Reclaiming your power of choice might bring your strength back." },
+                    { desc: "The Dharma light flickers; you seem to have high self-criticism today. This self-blame might be invisibly draining your spiritual light.", action: "[Today's Prescription] Try treating yourself like a wounded child. Tell yourself: 'Even if imperfect, I am willing to try accepting myself as I am right now.'" },
+                    { desc: "Your defensiveness seems heavy today, potentially interpreting others' unintentional words as attacks.", action: "[Today's Prescription] Before counterattacking or defending, try counting to three silently. This three-second blank space might help you see it was just an innocent projection." },
+                    { desc: "The system detects an energy of procrastination or avoidance. Facing tasks you should do, you might feel a wave of heaviness and powerlessness.", action: "[Today's Prescription] Try telling yourself: 'I will just do this for five minutes.' Lowering the activation threshold might dissipate the heaviness once you take the first step." },
+                    { desc: "Your frequency seems trapped in a 'black or white' dualistic opposition. It's either right or wrong, which might make you feel isolated.", action: "[Today's Prescription] Try looking for the 'grey areas' of things today. Seeing the difficulties behind the opposing side might slightly loosen your tight mental field." },
+                    { desc: "You might feel ignored by your surroundings today. This sense of loss might stem from a habit of seeking external validation.", action: "[Today's Prescription] Try becoming your own lamp-lighter. Do one small but happy thing for yourself today (like eating a favorite snack), without relying on external attention." }
+                ]
+            },
+            
+            // ==========================================
+            // 【Tier 2: 201 - 400 Hz】
+            // ==========================================
+            { 
+                min: 201, max: 400, color: "rgba(210, 120, 30, 0.9)", border: "#ffa64d", 
+                contents: [
+                    { desc: "The mirror of the Dharma Realm shows your mental field is quite open today, with a great chance to exhibit the courage and flexibility to accept all things. Energy is shifting from negative to positive.", action: "[Today's Prescription] Try to proactively and unconditionally help someone today, or sincerely praise someone nearby. This might pass on this positive momentum." },                    
+                    { desc: "The Dharma mirror reflects that you possess excellent capacity for 'learning and absorbing' today. An empty-cup mentality is steadily raising your frequency.", action: "[Today's Prescription] Try reading a piece of Dharma text or knowledge you haven't encountered before. Staying open might bring unexpected flashes of insight." },
+                    { desc: "Your frequency carries a softness of 'willingness to lower your ego'. This flexibility might help you avoid many unnecessary conflicts.", action: "[Today's Prescription] If you encounter a situation where you'd normally insist on your view, try saying: 'Your suggestion might also be good, let's try it.' Experience the expansiveness of stepping back." },
+                    { desc: "Today, you seem better able to view surrounding disturbances objectively. This 'non-sticking' rationality is a very precious moat.", action: "[Today's Prescription] Maintain this clarity. If someone tries to dump emotional garbage on you, try being just a listener. Do not absorb their negative energy, nor rush to give advice." },
+                    { desc: "The system detects that you seem to have developed new acceptance toward a long-troubling problem. Non-resistance might be the beginning of transformation.", action: "[Today's Prescription] Try smiling at that troubling problem. Tell yourself: 'This might be my dojo for practice.' As the mind turns, the situation might turn with it." },
+                    { desc: "Your frequency today seems very suitable for establishing 'compassionate boundaries'. Knowing how to appropriately refuse is also a way to protect your Bodhi mind.", action: "[Today's Prescription] If someone makes an unreasonable request today, try expressing your bottom line gently but firmly. Before loving others, you might need to take good care of yourself first." },
+                    { desc: "The Dharma energy flow shows you might have an opportunity to resolve an old misunderstanding today. The combination of reason and courage can melt hard ice.", action: "[Today's Prescription] If there's a knot in your heart you've always wanted to untie, today might be a good time to send a gentle message. Seek no specific outcome, only peace of mind." },
+                    { desc: "Your mental field today seems full of the ability to 'discover tiny beauties'. This perception can make the mundane daily life sparkle.", action: "[Today's Prescription] Try to find three beautiful little things on your way home (a flower, a smile, a gentle breeze) and silently give thanks in your heart." },
+                    { desc: "Your frequency seems to exhibit the potential for 'sympathetic joy'. Seeing others' success without jealousy can rapidly expand your mind's capacity.", action: "[Today's Prescription] If you hear good news about someone today, try sending the most sincere blessing from your heart: 'May they be even better, may all beings attain peace and joy.'" },
+                    { desc: "The system shows you seem to have deeper tolerance for 'imperfection' today. This ease of mind can drastically reduce internal friction.", action: "[Today's Prescription] If things don't go as planned today, or you make a small mistake, try to pass it off with a light smile. Perhaps there is a perfect arrangement hidden within the imperfect." },
+                    { desc: "Your capacity for action seems to be awakening. No longer just daydreaming, but willing to take practical steps.", action: "[Today's Prescription] Try breaking down a complex goal into the simplest first step, and complete it today. Action might be the best tranquilizer for the mind." },
+                    { desc: "Your frequency seems to be brewing the flexibility of 'willingness to think and solve problems'. Things that felt difficult in the past might look different today.", action: "[Today's Prescription] Try to seize this momentum and tackle a long-shelved small problem today; it might go smoother than expected." },
+                    { desc: "The Dharma Realm reflects that your thoughts today might carry a warm tolerance. This might be the tiny spark of a Bodhisattva's 'unconditional compassion'.", action: "[Today's Prescription] If someone makes a small, unintentional mistake against you today, try diffusing it with a smile. Your tolerance has the chance to be the beginning of a good karmic affinity." },
+                    { desc: "Your frequency seems to have the opportunity to break through stagnation, showing the light of 'taking the initiative'. If used for good, this power might accumulate much Bodhi merit.", action: "[Today's Prescription] Try saying a sincere and warm 'Thank you for your hard work' to someone serving you today (like a clerk or driver). Feel the flowing kindness." },
+                    { desc: "Today your mental field seems very steady, equipped with the power to 'bear burdens'. This frequency might invisibly make those around you feel at ease.", action: "[Today's Prescription] If you encounter sudden work or tedious chores today, try facing them without complaint. This might be a good dojo for practicing patience and diligence." },
+                    { desc: "The system shows you seem to exhibit a calmness that doesn't dance to the tune of immediate disturbances. This could be a good opportunity to not be turned by circumstances.", action: "[Today's Prescription] Try to maintain this clarity of a bystander. When others rush, you don't; when others are angry, you slow down. Conquering motion with stillness might yield unexpected results." },
+                    { desc: "Your logical thinking seems particularly clear today. This might help you see through the tangles of superficial phenomena to the core of the problem.", action: "[Today's Prescription] Try using this rationality for introspection. When emotions arise, don't rush to act out, but rationally observe where they come from and where they go." },
+                    { desc: "Your mind seems to have given rise to understanding and empathy for others' situations. You might begin to realize everyone perhaps has their own unspeakable difficulties.", action: "[Today's Prescription] If you meet someone bad-tempered today, try thinking to yourself: 'They might be in a lot of pain right now to act like this.' This might nurture a compassionate heart." },
+                    { desc: "Today, you seem to show greater acceptance toward things that 'don't go as expected'. This mindset of not forcing things might be the beginning of liberation.", action: "[Today's Prescription] Try letting nature take its course. If a plan changes today, try accepting it gladly, and see what this sudden blank space might bring." },
+                    { desc: "The Dharma energy flow shows today might be very suitable for 'cleaning up' and 'letting go', whether physical objects or mental attachments.", action: "[Today's Prescription] Try tidying up one useless clutter item today, or deleting useless information. Emptying the external has the chance to drive internal lightness." }
+                ]
+            },
+
+            // ==========================================
+            // 【Tier 3: 401 - 600 Hz】
+            // ==========================================
+            { 
+                min: 401, max: 600, color: "rgba(40, 140, 160, 0.9)", border: "#4dd2ff", 
+                contents: [
+                    { desc: "Today your mental frequency seems to have vast space to resonate with the 'purity' of the Dharma Realm. You might find many things pleasing to the eye, with joy flowing within.", action: "[Today's Prescription] Try not to cling to this tranquility. Before sleep, silently wish this peace upon someone you have a 'barrier' with. A single thought of dedication might be the whole Dharma Realm." },                    
+                    { desc: "The Dharma mirror shows your frequency today seems to subtly resonate with the Bodhisattva path of 'oneness of giver and receiver'. You might feel others' joy and suffering more easily.", action: "[Today's Prescription] Try this breathing practice: As you inhale, visualize taking in the suffering of sentient beings; as you exhale, visualize sending your peace and light to them." },
+                    { desc: "Your energy today seems overflowing with unconditional kindness. This love without reason is the strongest protective shield.", action: "[Today's Prescription] Try turning this kindness into action. Prepare a glass of water for family, or open a door for a colleague, letting this high-frequency energy flow naturally." },
+                    { desc: "The system captures that your mental field is in a state of extremely serene silence. Words seem redundant; merely existing is beautiful.", action: "[Today's Prescription] Try reducing unnecessary conversation today. In silence, you might hear the voice of the Dharma Realm and your inner wisdom more clearly." },
+                    { desc: "Your frequency today seems to easily transform surrounding low-frequency energy. You are like a small purifier; wherever you go, it becomes pure.", action: "[Today's Prescription] Try walking into a crowd carrying this pure mind. Without deliberately doing anything, your stable presence might become a safe harbor for others' anxiety." },
+                    { desc: "The Dharma mirror reflects that you might have eyes that 'see the sacred' today. In the most ordinary beings, you seem able to see their future Buddha-nature.", action: "[Today's Prescription] Try facing everyone today with a mindset of 'respecting all Buddhas'. Regardless of their attitude, try silently joining your palms to their inherent Buddha-nature." },
+                    { desc: "Your thoughts seem to have let go of attachment to 'ego achievements'. When something is accomplished, you don't feel it's 'your' credit.", action: "[Today's Prescription] Try silently attributing all smooth sailing and achievements today to the blessings of Buddhas and Bodhisattvas, and the conditions of sentient beings. Selflessness might be limitlessness." },
+                    { desc: "Your language today seems to carry strong healing power. A simple sentence might soothe others' trauma.", action: "[Today's Prescription] Try practicing 'loving speech charity' today. Give a sincere word of encouragement to someone tired; your voice might be their sweet dew." },
+                    { desc: "The system shows you seem able to rapidly sublimate adversity into spiritual nourishment. A lotus blooming in fire is an extraordinary state.", action: "[Today's Prescription] If you see news of worldly suffering today, try not to generate sorrow and anger, but turn it into deep compassion, silently praying for the Dharma Realm to quell disasters." },
+                    { desc: "Your state of mind today seems to have reached the height of 'being at peace wherever you are'. Whether in noise or tranquility, the mind remains unmoved.", action: "[Today's Prescription] Try maintaining mental focus in the noisiest environments (like a subway or busy street). The external traffic might just be another kind of Brahma sound from the Dharma Realm." },
+                    { desc: "The Dharma meter shows your frequency resonates with deep 'gratitude'. This is not thanks for specific things, but praise for 'existence' itself.", action: "[Today's Prescription] Before sleep tonight, try saying to the void without any requests: 'Thank you for all that has happened.'" },
+                    { desc: "Today, you are highly likely to radiate a frequency as clear as lapis lazuli. If maintained, you might slightly transcend personal gains and losses, arousing compassionate resonance with all things.", action: "[Today's Prescription] If you see stray animals or vulnerable people on the street, try silently reciting the Buddha's name for them, wishing them early liberation from samsara." },
+                    { desc: "The Dharma mirror reflects that your inner self seems extremely 'in the flow' today. This latent high frequency makes you less likely to be pulled by external favorable or adverse circumstances.", action: "[Today's Prescription] If you encounter an obstacle today that would normally make you angry, try smiling slightly in your heart; perhaps you can view it as a small test from heaven." },
+                    { desc: "Your frequency indicator seems to be approaching a level of selflessness. Today you have great potential to exhibit unconditional kindness, like sunlight shining on all.", action: "[Today's Prescription] Try not to keep this energy to yourself. Perhaps you can sincerely praise or encourage a friend in a low point through text or voice." },
+                    { desc: "This might be an excellent moment to accumulate flawless merit. Your mind's capacity today seems sufficient to embrace many people and things you previously found hard to overcome.", action: "[Today's Prescription] Before sleep tonight, try dedicating all of today's good thoughts and peace unconditionally to all beings who might be suffering." },
+                    { desc: "Your inner self seems to radiate a deep sense of satisfaction. Seeking nothing externally, self-sufficient. You might have experienced a state of being peaceful without needing a reason.", action: "[Today's Prescription] Try bringing this tranquility into your meals. For one meal today, try not scrolling your phone or talking, but taste the food carefully with a grateful heart." },
+                    { desc: "The Dharma meter shows your mental field seems to be in a state of extreme harmony. Those people and events that once tangled you might now seem like reverse conditions aiding your growth.", action: "[Today's Prescription] Try silently saying 'Thank you' today to those who have hurt you in the past. This thought of gratitude might help sever the links of negative karma." },
+                    { desc: "Your intuition and inspiration seem to be very sharp today. Because your mental lake might temporarily have few ripples, it has the chance to reflect things more clearly.", action: "[Today's Prescription] If making a decision, try referencing the guidance of your first calm intuition. Perhaps without over-calculating gains and losses with your head, you can walk the right path." },
+                    { desc: "One flower, one world; one leaf, one Tathagata. Today you will have the chance to feel the harmony and beauty of cosmic operation in the most ordinary tiny things.", action: "[Today's Prescription] Try spending three minutes observing the movement of a cloud, or the veins of a leaf. See if you can simply dissolve into this observation." },
+                    { desc: "Your frequency seems to resonate with a deep 'Dharma joy'. This joy might not come from material acquisition, but from inner clarity.", action: "[Today's Prescription] Try performing a tiny act of 'formless charity' today. Do a good deed secretly, and try your best not to let anyone know, experiencing that desireless freedom." }
+                ]
+            },
+
+            // ==========================================
+            // 【Tier 4: 601 - 1000 Hz】
+            // ==========================================
+            { 
+                min: 601, max: 1000, color: "rgba(255, 255, 255, 0.95)", border: "#ffffff", 
+                contents: [
+                    { desc: "The Dharma Realm reflects that your frequency today seems extremely ethereal. If you can abide here, you might have the chance to transcend worldly dualities and experience deeper peace.", action: "[Today's Prescription] Seek nothing, abide nowhere. Try not to rejoice because of high frequencies, nor reject low valleys. See if you can simply abide in the present, unmoved as it is." },                           
+                    { desc: "Inconceivable. The Dharma mirror reflects that your consciousness seems to have temporarily transcended 'the observing self' and 'the observed object'. Both subject and object vanish, leaving only purity.", action: "[Today's Prescription] Try to simply 'watch' during your daily activities today. Do not label or judge, letting all things manifest exactly as they are." },
+                    { desc: "Your frequency might be touching the boundaries of time. Past and future seem to have lost their weight; the only reality is the endless 'Now'.", action: "[Today's Prescription] Try gathering your entire mind into this very breath. There is nowhere to go, no tasks to complete; perhaps this very place is Ultimate Bliss." },
+                    { desc: "The system's pointer is nearly still at this moment. Your mental field seems to have entered a state of non-discrimination, treating 'friend and foe equally'. Neither love, nor hate.", action: "[Today's Prescription] If faces of loved ones or old enemies arise in your mind today, try gazing at them with the same peaceful look. In emptiness, they might all be phantoms." },
+                    { desc: "The path of words is cut off; the workings of the mind are extinguished. You seem to have experienced the limits of language. Any textual description seems redundant in this high frequency.", action: "[Today's Prescription] Try enjoying this 'unspeakable' solitude and perfection. There is no need to prove your realization to anyone; just smile and abide." },
+                    { desc: "The Dharma energy flow shows you might be in a perfect state where 'true emptiness generates marvelous existence'. The mind is empty, yet actions are thorough and complete.", action: "[Today's Prescription] Try handling today's complex tasks with a playful 'samadhi' mindset. Play your worldly roles earnestly, but clearly know in your heart this is just a play." },
+                    { desc: "All dharmas are empty, but cause and effect are not empty. Within your seemingly ethereal frequency, there appears to be the deepest reverence and compliance with cosmic laws.", action: "[Today's Prescription] Try to complete a trivial task today with extreme focus and solemnity. Within the smallest cause and effect might hide the vastest Dharma Realm." },
+                    { desc: "Your mind seems like a bright mirror; when things come, it reflects them; when things go, it retains nothing. No traces, no sticking.", action: "[Today's Prescription] When any emotion or thought arises today, try treating it like a bird flying past a mirror. Watch it fly in, watch it fly away, leaving not a single feather." },
+                    { desc: "At this extremely high frequency level, the word 'practice' itself seems to dissolve. Because you might have already recognized that sentient beings are originally Buddhas, requiring no fabrication.", action: "[Today's Prescription] Try letting go of all subtle attachments to 'I want to become better'. Today, allow yourself to be the most ordinary, least ambitious common person." },
+                    { desc: "Unconditional compassion, identifying with the suffering of all. Your energy network seems boundless, silently injecting coolness into this Saha world invisibly.", action: "[Today's Prescription] Try abiding in this unconditional compassion. You don't need to deliberately save beings; your pure frequency itself might be the act of saving them." },
+                    { desc: "When arising and ceasing have extinguished, that tranquility is bliss. The system reminds you that this peace might just be a glimmer of your 'original face'.", action: "[Today's Prescription] Try not to grasp at this state. States change, but the essence that 'is aware of the state' never changes. Just guard that essence." },
+                    { desc: "The path of words is cut off; the workings of the mind are extinguished. Your frequency today might be infinitely touching the edge of 'non-self'. Originally there is not a single thing; where can dust alight?", action: "[Today's Prescription] Try observing the thought of 'I' today. When any emotion arises, gently ask yourself: 'Who is feeling this?' Perhaps don't seek an answer, just observe." },
+                    { desc: "The system's pointer at this moment might only be for reference, because your current mental field seems to be infinitely approaching a state of non-discrimination.", action: "[Today's Prescription] Today, whether drinking water, washing dishes, or sweeping, try to view these daily chores as practices within a dojo. The ordinary mind might be the Way." },
+                    { desc: "Great sound is silent, great form is shapeless. Your frequency seems to have entered a profound silence. In this state, perhaps there is no object that deliberately needs saving.", action: "[Today's Prescription] If someone praises or slanders you today, try attributing all these sounds to the void in your heart. Interpreting it neither as sage-like nor as ordinary might be purer." },
+                    { desc: "What you drew today might not be a score, but a mirror reminding you. True awakening perhaps lies in seeing through all attachments to 'seeking spiritual states'.", action: "[Today's Prescription] Try letting go of the deliberate pursuit of 'practice' itself. Eat when hungry, sleep when tired, every action clear and distinct; this might be the highest level of practice." },
+                    { desc: "All dharmas are created by the mind alone. In this state, you might realize: the external world might just be a projection of inner consciousness. If the mind is pure, the land might also be pure.", action: "[Today's Prescription] Try maintaining the 'dream-like observation' today. Looking at surrounding people and things, gently remind yourself this might be an illusory experience, and you can choose to experience it gracefully." },
+                    { desc: "The past mind is unattainable, the present mind is unattainable, the future mind is unattainable. Your consciousness seems to have a chance to temporarily escape the linear bounds of time, abiding in the 'Now'.", action: "[Today's Prescription] Try deliberately slowing down certain movements today. Walk slowly, breathe slowly. In extreme slowness, you might experience a certain stillness beyond time." },
+                    { desc: "At this level, there seems to be no clear boundary between you and sentient beings. This might be the best opportunity to give rise to 'unconditional compassion and universal empathy'.", action: "[Today's Prescription] Try generating a tiny Bodhi mind today: 'May I suffer on behalf of sentient beings; may all beings have the chance to attain ultimate liberation.'" },
+                    { desc: "All appearances are illusory. You seem to have temporarily seen through certain illusions of the material world. Worldly pursuits might look like water's moon or mirror's flower to you.", action: "[Today's Prescription] This insight is extremely precious, but please try 'not abandoning worldly laws'. See if you can use this transcendental clarity to more perfectly fulfill your worldly duties." },
+                    { desc: "To be born there is definitely to be born there, yet practically there is no going. The ultimate bliss of the highest frequency might not be ten trillion Buddha lands away, but has the chance to be in your pure mind where not a single thought arises at this moment.", action: "[Today's Prescription] Establish no dharma, break no dharma. Try putting down this digital Dharma tool today too. Don't cling to checking in or counting, just know that you are inherently complete with Buddha-nature." }
+                ]
+            }
+        ];
+
+        let currentTurn = 0; let isSpinning = false; let currentRotation = 0; let tickInterval;
+
+        async function triggerSpin() {
+            if(isSpinning || currentTurn >= 3) return;
+            initAudio(); isSpinning = true; currentTurn++;
+            
+            const wheel = document.getElementById('dharma-wheel');
+            const mainText = document.getElementById('main-text');
+            const subText = document.getElementById('sub-text');
+            
+            wheel.classList.remove('spinning-glow'); void wheel.offsetWidth; wheel.classList.add('spinning-glow');
+            
+            let tickDelay = 80;
+            tickInterval = setInterval(() => { playTick(); tickDelay += 10; }, tickDelay);
+            setTimeout(() => clearInterval(tickInterval), 2500);
+
+            if(currentTurn === 1) { currentRotation += 1080; mainText.innerText = "1st Turn ‧ Agamas"; subText.innerText = "Crushing gross ignorance and non-virtue"; }
+            else if (currentTurn === 2) { currentRotation += 1440; mainText.innerText = "2nd Turn ‧ Prajna"; subText.innerText = "Illuminating the emptiness of the five skandhas"; }
+            else if (currentTurn === 3) { currentRotation += 1800; mainText.innerText = "3rd Turn ‧ Mind-Only"; subText.innerText = "All is mind, Dharma Realm resonates"; }
+            
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+            await sleep(2800); clearInterval(tickInterval); isSpinning = false;
+
+            if(currentTurn === 3) {
+                await sleep(500);
+                
+                let score = Math.floor(Math.random() * 800) + 50; 
+                if(Math.random() < 0.1) score += 200; if(score > 1000) score = 1000;
+                
+                db.hwkinsEnergyTotal = (db.hwkinsEnergyTotal || 0) + score;
+                db.dailyWheelCount = 1; save();
+                
+                if (db.hwkinsEnergyTotal >= 12000) {
+                    db.hwkinsEnergyTotal = 0; save(); 
+                    await playFragment(); 
+                }
+                showEnergyResult(score);
+            }
+        }
+
+        async function playFragment() {
+            const t = document.getElementById('fragment-theater');
+            const b = document.getElementById('f-bodhi'); const r = document.getElementById('f-ring'); const p = document.getElementById('f-pillar');
+            const zen = document.getElementById('f-text');
+            const quotes = ["All appearances are illusory", "The path of words is cut off", "In nothingness lies an inexhaustible treasure", "The Dharma is fundamentally no Dharma"];
+            zen.innerText = quotes[Math.floor(Math.random() * quotes.length)];
+            
+            t.style.display = 'flex'; await sleep(50); t.style.opacity = '1';
+            let type = Math.floor(Math.random() * 3); 
+            
+            if(type === 0) { b.style.opacity = '1'; b.style.transform = 'scale(3)'; b.style.boxShadow = '0 0 50px var(--solid-gold)'; await sleep(3000); b.style.opacity = '0'; }
+            else if (type === 1) { r.style.transition = 'all 3s'; r.style.opacity = '1'; r.style.transform = 'scale(1.2)'; await sleep(3000); r.style.opacity = '0'; }
+            else { p.style.transition = 'all 3s'; p.style.opacity = '1'; p.style.transform = 'scale(1.5)'; await sleep(3000); p.style.opacity = '0'; }
+
+            zen.style.opacity = '1'; await sleep(3000); zen.style.opacity = '0'; await sleep(1000);
+            t.style.opacity = '0'; await sleep(1000); t.style.display = 'none';
+        }
+
+        function showEnergyResult(score) {
+            let preset = hwkinsDB.find(h => score >= h.min && score <= h.max) || hwkinsDB[1];
+            let content = preset.contents[Math.floor(Math.random() * preset.contents.length)];
+            
+            const card = document.getElementById('hwkins-card');
+            document.getElementById('hc-title').style.color = preset.border;
+            document.getElementById('hc-title').style.textShadow = `0 0 10px ${preset.border}`;
+            document.getElementById('hc-desc').innerText = content.desc;
+            document.getElementById('hc-action').innerText = content.action;
+            document.getElementById('hc-action').style.color = preset.border;
+            card.style.boxShadow = `0 0 40px ${preset.color}, inset 0 0 15px #000`;
+            card.style.border = `1px solid ${preset.border}`;
+            
+            document.getElementById('wheel-container').style.transform = 'scale(0.8)';
+            document.getElementById('wheel-container').style.opacity = '0.1';
+            document.getElementById('instruction-text').style.opacity = '0';
+            document.getElementById('result-layout').classList.add('show');
+            
+            setTimeout(() => {
+                const fill = document.getElementById('bar-fill');
+                const scoreText = document.getElementById('float-score');
+                let percentage = score / 1000; let targetHeight = percentage * 218; let targetY = 269 - targetHeight;
+                fill.style.fill = preset.color; fill.style.height = targetHeight + "px"; fill.setAttribute("y", targetY);
+                let textTop = 260 - (percentage * 210); scoreText.style.top = textTop + "px";
+                scoreText.style.color = preset.border; scoreText.innerText = score + " Hz";
+            }, 500); 
+        }
+
+        function resetWheel() {
+            document.getElementById('result-layout').classList.remove('show');
+            setTimeout(checkDailyStatus, 1000);
+        }
+    </script>
+</body>
+</html>

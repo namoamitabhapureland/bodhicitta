@@ -73,7 +73,6 @@
         /* === 3. 大千金蓮共用特效 === */
         .lotus-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.5s ease; }
         
-        /* 背後神聖光暈 */
         .lotus-wrapper::before {
             content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 80%; height: 80%; border-radius: 50%;
@@ -110,6 +109,12 @@
         
         /* 系統提示訊息框 */
         #alert-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 1px solid #FFD700; color: #FFF; padding: 15px 30px; border-radius: 8px; z-index: 999; box-shadow: 0 0 20px rgba(212,175,55,0.5); display: none; width: 80%; max-width: 400px; text-align: center; letter-spacing: 1px; line-height: 1.6;}
+        
+        /* Phase 4 擴散光球 */
+        .light-orb { width: 60px; height: 60px; background: radial-gradient(circle, #fff 10%, #FFD700 50%, transparent 80%); border-radius: 50%; margin: 25px auto; filter: blur(2px); animation: pulse 2s infinite alternate; }
+        @keyframes pulse { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.4); opacity: 1; box-shadow: 0 0 40px #FFD700; } }
+        .orb-expand { animation: expandUniverse 2.5s forwards ease-in; }
+        @keyframes expandUniverse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(80); opacity: 0; } }
     </style>
 </head>
 <body>
@@ -131,7 +136,6 @@
 
     <div id="phase-0" class="phase-container active" style="transform: translateY(0) scale(1);">
         <div class="lotus-wrapper" onclick="checkAndGoToPhase1()">
-            
             <svg class="lotus-svg" width="280" height="280" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                     <linearGradient id="goldGrad0" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -142,11 +146,8 @@
                         <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#FFD700" flood-opacity="0.4"/>
                     </filter>
                     <radialGradient id="centerGlow0" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stop-color="#FFFFFF"/>
-                        <stop offset="40%" stop-color="#FFD700"/>
-                        <stop offset="100%" stop-color="#B8860B"/>
+                        <stop offset="0%" stop-color="#FFFFFF"/><stop offset="40%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/>
                     </radialGradient>
-                    
                     <g id="pWide0"><path d="M 200 200 C 160 100, 160 30, 200 0 C 240 30, 240 100, 200 200 Z" fill="url(#goldGrad0)" filter="url(#glow0)" stroke="rgba(255,255,255,0.4)" stroke-width="1"/></g>
                     <g id="pNarr0"><path d="M 200 200 C 175 120, 180 50, 200 15 C 220 50, 225 120, 200 200 Z" fill="url(#goldGrad0)" filter="url(#glow0)" stroke="rgba(255,255,255,0.6)" stroke-width="0.8"/></g>
                 </defs>
@@ -257,9 +258,13 @@
 
             <div class="oracle-box">
                 <div id="oracleTitle" style="font-size: 1.15rem; color: #FFD700; margin-bottom: 15px; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,215,0,0.5);"></div>
+                
+                <div id="oracleVerse" style="color: #d4af37; font-size: 1.05rem; font-family: 'DFKai-sb', 'BiauKai', serif; line-height: 1.6; margin-bottom: 15px; border-left: 2px solid rgba(212,175,55,0.5); padding-left: 15px; text-align: left; white-space: pre-wrap;"></div>
+                
                 <div id="oracleText" style="color: rgba(255,255,255,0.9); line-height: 1.8; text-align: justify; font-size: 0.95rem; letter-spacing: 1px;"></div>
             </div>
-            <button class="gold-stamping-btn" onclick="goToPhase(4)">將此覺知進行大迴向</button>
+            
+            <button class="gold-stamping-btn" onclick="triggerDedicationEffect()">將此覺知進行大迴向</button>
         </div>
     </div>
 
@@ -267,34 +272,89 @@
         <div class="glass-panel">
             <h2 style="border:none;">法界擴散</h2>
             <p style="color:rgba(255,255,255,0.85); line-height:1.8; letter-spacing:1px; margin-top:0;">一滴水如何不乾涸？唯有投入大海。<br>您的祈願與覺知，已化作萬道光芒共享於法界。</p>
+            
             <div class="light-orb" id="finalOrb" style="margin-bottom: 40px;"></div>
+            
             <p style="margin-top: 30px; font-size: 0.85rem; color:#d4af37;">任務圓滿，防護網已重新啟動。</p>
             <button class="gold-stamping-btn" onclick="window.location.href='index.html'">登出密室 ． 返回大廳</button>
         </div>
     </div>
 
     <script>
-        // === 籤詩資料庫 (暫時代碼，後續可擴充) ===
+        // === 12 則高階公案資料庫 (涵蓋順、平、逆境，隱去吉凶字眼) ===
         const oracles = [
-            { title: "【 劇本更新 ． 觀無常 】", text: "眼前之困境，皆是阿賴耶識中舊有數據之釋放。萬法皆幻，唯覺不迷。看破戲夢劇本，安住當下任務，即是解脫。" },
-            { title: "【 資源調度 ． 菩提行 】", text: "世間資源皆是幻象中的工具，為私利而求終不可得；若發菩提心為利他而用，法界資源自然為您調度。請將今日所求，迴向苦難眾生。" },
-            { title: "【 隨緣定頻 ． 不退轉 】", text: "無需恐懼未知的無常。這套極樂系統擁有絕對的容錯機制，只要心存善念，暗處的善知識終會在下個節點與您相遇。您的方向並未偏離。" },
-            { title: "【 系統重置 ． 歸零心 】", text: "執著於過去成敗，徒耗載體算力。放下即是最高效的除錯。將焦慮清空，世界如鏡，您若安定，法界便給予您安定。" }
+            { 
+                title: "【 百尺竿頭 ． 視角升級 】", 
+                verse: "百尺竿頭不動人，雖然得入未為真。\n百尺竿頭須進步，十方世界是全身。",
+                text: "【公案：景德傳燈錄】\n系統狀態：算力充沛，資源順暢。\n法界解碼：您當下所求之事正處於順境，或已達到一定成就。然而，法界提醒您，切勿停滯於眼前的『百尺竿頭』而沾沾自喜。放下對現有安穩的執著，將您的發心從『利己』擴展到『利他（十方世界）』，您的境界將迎來真正的量子躍遷。" 
+            },
+            { 
+                title: "【 龍女成佛 ． 瞬間解碼 】", 
+                verse: "深智透菩提，剎那轉女身。\n南方無垢界，等正覺天人。",
+                text: "【經典：法華經．提婆達多品】\n系統狀態：頻率契合，通道大開。\n法界解碼：您所焦慮的障礙，其實是不存在的虛妄。如同八歲龍女，不被世俗的『性別、年齡、業障』等舊有代碼所限制，一念之間直證菩提。法界告訴您：只要您當下發起至誠的菩提心，您所求之事將如龍女獻寶般，瞬間突破瓶頸，圓滿成就。" 
+            },
+            { 
+                title: "【 趙州喫茶 ． 直指人心 】", 
+                verse: "曾到未曾到，喫茶去一遭。\n院主生疑怪，同聲喫茶高。",
+                text: "【公案：趙州從諗禪師】\n系統狀態：大道至簡，無需外求。\n法界解碼：您把問題想得太複雜了！無論您過去的業力（曾到）或現在的焦慮（未曾到），解決之道都不在遠方。趙州禪師的『喫茶去』，是法界給您的最高指引：回到當下，做好眼前最平凡的小事（喝茶、吃飯、工作）。放下過度籌謀，順流而下，吉相自現。" 
+            },
+            { 
+                title: "【 拈花微笑 ． 頻率共振 】", 
+                verse: "世尊靈山會上，拈花示眾。\n百萬人天，悉皆罔措，唯迦葉破顏微笑。",
+                text: "【公案：五燈會元】\n系統狀態：高維連線，心領神會。\n法界解碼：您目前所面臨的抉擇或人際關係，不需要用太多的言語或邏輯去爭辯。法界提示您：保持內心的清明與微笑。真正屬於您的善緣與契機，會在無言的默契中與您同頻共振（拈花微笑）。相信您的直覺，順著那份平靜的喜悅前行即可。" 
+            },
+            { 
+                title: "【 磨磚作鏡 ． 停止盲動 】", 
+                verse: "磨磚豈能成鏡面？坐禪豈能作成佛？\n車若不行，打車即是？打牛即是？",
+                text: "【公案：南嶽懷讓與馬祖道一】\n系統狀態：算力空轉，請優化路徑。\n法界解碼：您為了所求之事，正在進行無效的努力（磨磚作鏡）。您非常焦慮，拚命向外馳求或盲目執著於某種形式（打車）。法界警告：方向錯了，越努力越受挫。請立刻停下腳步，反觀自心（打牛）。唯有從『心念』上轉變，放下執念，事態才會開始流轉。" 
+            },
+            { 
+                title: "【 盲龜浮木 ． 珍惜載體 】", 
+                verse: "大海有一盲龜，壽無量劫，百年一出其頭。\n海中有浮木，只有一孔，漂流海浪，隨風東西。",
+                text: "【經典：雜阿含經】\n系統狀態：平穩運行，守護核心。\n法界解碼：您當下可能覺得生活平庸或進展緩慢，甚至對現狀感到不滿。但法界提醒您：能擁有此人身載體、並能聽聞佛法，其機率如盲龜遇浮木般稀有！請停止對『得不到』的抱怨，將注意力收回，感恩並善用現有的資源，安穩度過這段沉潛期。" 
+            },
+            { 
+                title: "【 騎驢覓驢 ． 本自具足 】", 
+                verse: "騎驢覓驢不知休，向外馳求枉用心。\n踏破鐵鞋無覓處，得來全不費工夫。",
+                text: "【公案：黃龍慧南禪師】\n系統狀態：搜尋錯誤，目標已在本地。\n法界解碼：您正在焦慮尋找的答案、安全感或某個人，其實一直都在您身邊，甚至就在您的自性之中。您就像騎著驢子卻到處找驢子。法界指示：停止向外攀緣與比較。靜下心來，盤點您目前已擁有的事物，您會發現，您所需要的一切條件，其實早就具足了。" 
+            },
+            { 
+                title: "【 丹霞燒佛 ． 破除相求 】", 
+                verse: "木佛無心火內燃，院主驚惶急撲煙。\n若是真金燒不壞，何勞泥塑與木雕。",
+                text: "【公案：丹霞天然禪師】\n系統狀態：破除舊有緩存（Cache）。\n法界解碼：您目前的困境，是因為您太執著於某種『形式、面子、或既定的成功標準（木佛）』。丹霞燒佛是為了破除對偶像的迷信。法界指引：大膽打破您心中預設的那些框架吧！不要害怕失去表面的光環，只要您的發心是純正的（真金），燒掉虛妄後，真相自然顯現。" 
+            },
+            { 
+                title: "【 捨身飼虎 ． 重置我執 】", 
+                verse: "投身巖下飼於菟，須是還他大丈夫。\n捨己也應難再得，通行天下此人無。",
+                text: "【經典：金光明經】\n系統狀態：遭受劇烈震盪，強制重置。\n法界解碼：您正面臨痛苦的失去、挫折或關係的剝離。這不是法界的懲罰，而是系統正在強制您『卸載我執』。薩埵太子連色身都能佈施，您還在害怕失去什麼？這是一場高階的考試：當您敢於徹底放手，不再恐懼失去，您將從這場逆境中獲得重生，獲得整個法界的支持。" 
+            },
+            { 
+                title: "【 婆子燒庵 ． 破除停滯 】", 
+                verse: "枯木倚寒巖，三冬無暖氣。\n若作佛法會，便是瞎漢智。",
+                text: "【公案：五燈會元】\n系統狀態：系統僵化，啟動破壞性創新。\n法界解碼：您目前的痛苦，是因為您長期待在一個『看似安全，實則毫無生命力（枯木寒巖）』的狀態。老太婆燒毀茅庵，是為了逼走死氣沉沉的和尚。這場無常與打擊，是法界在放火燒您的舒適圈！請勇敢面對破壞，這正是激活您慈悲與行動力的最佳契機。" 
+            },
+            { 
+                title: "【 貧女寶藏 ． 停止乞討 】", 
+                verse: "家內自有真金藏，何勞向外苦求索。\n不識衣珠猶是客，空將破鉢走長安。",
+                text: "【經典：法華經 / 大涅槃經】\n系統狀態：能量匱乏，請轉換供電來源。\n法界解碼：您現在覺得自己很慘、資源匱乏、沒人愛（如貧女乞討）。這是一個嚴重的錯覺！法界嚴厲提醒：您衣襟裡明明縫著無價的摩尼寶珠（佛性），卻四處向人低聲下氣地乞求情感與認同。請立刻停止受害者心態！向內找回您的自尊與自性之光，您本來就是富有的。" 
+            },
+            { 
+                title: "【 野狐禪 ． 承擔因果 】", 
+                verse: "不昧因果，不落因果。\n五百生墮野狐身，一轉語悟透本源。",
+                text: "【公案：百丈懷海禪師】\n系統狀態：業力迴圈，需手動解除。\n法界解碼：您目前深陷於某種剪不斷、理還亂的糾紛或痛苦輪迴中。這源自於您過去逃避責任，或試圖用小聰明去規避因果。法界直言：唯一的解藥就是『不昧因果』——勇敢且平靜地去承擔您該負的責任，不抱怨、不逃避。當您願意完全承擔的剎那，五百世的野狐業報，瞬間消散。" 
+            }
         ];
 
-        // === 彈跳視窗 (防濫用提示) ===
+        // === 彈跳視窗與每日一次限制 ===
         function showAlert(msg) {
             const box = document.getElementById('alert-box');
-            box.innerText = msg;
-            box.style.display = 'block';
+            box.innerText = msg; box.style.display = 'block';
             setTimeout(() => box.style.display = 'none', 3000);
         }
 
-        // === 檢查每日一次限制 ===
         function checkAndGoToPhase1() {
             const today = new Date().toLocaleDateString();
             const lastDate = localStorage.getItem('lotusBlessingDate');
-            
             if (lastDate === today) {
                 showAlert("今日覺知連線已圓滿。佛法貴在心誠，請明日再來。");
             } else {
@@ -307,9 +367,45 @@
             document.getElementById('phase-' + phaseNum).classList.add('active');
             
             if (phaseNum === 4) { 
-                // 記錄今天已經抽過籤了
                 localStorage.setItem('lotusBlessingDate', new Date().toLocaleDateString());
                 setTimeout(() => document.getElementById('finalOrb').classList.add('orb-expand'), 500); 
+            }
+        }
+
+        // === 滿版金光大迴向特效 (Phase 4 專用) ===
+        function triggerDedicationEffect() {
+            // 切換到第四區
+            goToPhase(4);
+            
+            // 產生漫天飛舞的金光粒子 (如同首頁的大迴向)
+            for(let i=0; i<60; i++) {
+                let dust = document.createElement('div');
+                dust.style.position = 'fixed';
+                dust.style.background = '#FFD700'; // 採用純金色
+                dust.style.borderRadius = '50%';
+                dust.style.pointerEvents = 'none';
+                dust.style.filter = 'drop-shadow(0 0 8px #FFD700)';
+                dust.style.zIndex = '9999';
+                
+                // 從畫面正中央 (光球位置) 產生
+                dust.style.left = '50%'; 
+                dust.style.top = '50%';
+                
+                let size = Math.random() * 4 + 2; 
+                dust.style.width = size + 'px'; 
+                dust.style.height = size + 'px';
+                document.body.appendChild(dust); 
+                
+                // 原生 animate 引擎驅動金光向法界 (四周) 擴散飛升
+                let endX = (Math.random() - 0.5) * window.innerWidth * 1.5;
+                let endY = (Math.random() - 0.5) * window.innerHeight * 1.5 - 100; // 偏向上飛
+                
+                dust.animate([
+                    { opacity: 1, transform: `translate(0, 0) scale(1)` },
+                    { opacity: 0, transform: `translate(${endX}px, ${endY}px) scale(0)` }
+                ], { duration: 3000 + Math.random() * 1500, easing: 'ease-out', fill: 'forwards' });
+
+                setTimeout(() => dust.remove(), 5000);
             }
         }
 
@@ -355,11 +451,7 @@
             goToPhase(2); 
         }
 
-        holdBtn.addEventListener('mousedown', startPress);
-        holdBtn.addEventListener('mouseup', cancelPress);
-        holdBtn.addEventListener('mouseleave', cancelPress);
-        holdBtn.addEventListener('touchstart', startPress, {passive: false});
-        holdBtn.addEventListener('touchend', cancelPress);
+        holdBtn.addEventListener('mousedown', startPress); holdBtn.addEventListener('mouseup', cancelPress); holdBtn.addEventListener('mouseleave', cancelPress); holdBtn.addEventListener('touchstart', startPress, {passive: false}); holdBtn.addEventListener('touchend', cancelPress);
 
         // === 跑馬燈選燈引擎 ===
         let isSpinning = false;
@@ -368,14 +460,11 @@
             isSpinning = true;
 
             const heart = document.getElementById('pulse-heart');
-            heart.style.animation = 'none';
-            heart.style.fill = '#FFF';
-
+            heart.style.animation = 'none'; heart.style.fill = '#FFF';
             document.getElementById('roulette-lotus').style.animation = 'none';
 
             const petals = Array.from(document.querySelectorAll('.roulette-petal'));
-            let currentIndex = 0;
-            let steps = 0;
+            let currentIndex = 0; let steps = 0;
             const totalSteps = 30 + Math.floor(Math.random() * 20); 
             let speed = 50; 
 
@@ -396,6 +485,7 @@
 
                     let randomOracle = oracles[Math.floor(Math.random() * oracles.length)];
                     document.getElementById('oracleTitle').innerText = randomOracle.title;
+                    document.getElementById('oracleVerse').innerText = randomOracle.verse; // ✨ 寫入公案四句偈
                     document.getElementById('oracleText').innerText = randomOracle.text;
 
                     setTimeout(() => {

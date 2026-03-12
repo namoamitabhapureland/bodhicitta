@@ -866,7 +866,20 @@
         function startRoulette() {
             if (isSpinning) return;
             isSpinning = true;
-
+try {
+                let AudioContext = window.AudioContext || window.webkitAudioContext;
+                let ctx = new AudioContext();
+                if (ctx.state === 'suspended') ctx.resume();
+                let osc = ctx.createOscillator();
+                let gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1046.50, ctx.currentTime); // C6 高音清脆
+                osc.frequency.exponentialRampToValueAtTime(523.25, ctx.currentTime + 1.5);
+                gain.gain.setValueAtTime(0.5, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 2);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 2);
+            } catch(e) {}
             const heart = document.getElementById('pulse-heart');
             heart.style.animation = 'none'; heart.style.fill = '#FFF';
             document.getElementById('roulette-lotus').style.animation = 'none';
@@ -895,6 +908,25 @@
                     document.getElementById('oracleTitle').innerText = randomOracle.title;
                     document.getElementById('oracleVerse').innerText = randomOracle.verse; // ✨ 寫入公案四句偈
                     document.getElementById('oracleText').innerText = randomOracle.text;
+                    let txt = randomOracle.text;
+                    let borderColor = "var(--solid-gold)"; // 預設純金光
+                    let shadowColor = "rgba(212,175,55,0.15)";
+                    
+                    if(txt.includes('警告') || txt.includes('震盪') || txt.includes('錯誤') || txt.includes('粉碎') || txt.includes('重置') || txt.includes('匱乏') || txt.includes('阻礙')) {
+                        borderColor = "#ff8b94"; // 警示紫紅光 (逆境)
+                        shadowColor = "rgba(255, 139, 148, 0.3)";
+                    } else if(txt.includes('平穩') || txt.includes('正常') || txt.includes('安住') || txt.includes('休眠') || txt.includes('無解') || txt.includes('等待')) {
+                        borderColor = "#9fdfc8"; // 平靜蔚白光 (平境)
+                        shadowColor = "rgba(159, 223, 200, 0.3)";
+                    } else {
+                        borderColor = "#a8e6cf"; // 突破金綠光 (順境)
+                        shadowColor = "rgba(168, 230, 207, 0.3)";
+                    }
+                    
+                    // 套用能量框顏色到 UI
+                    let obox = document.querySelector('.oracle-box');
+                    obox.style.borderColor = borderColor;
+                    obox.style.boxShadow = `0 10px 30px rgba(0,0,0,0.9), 0 0 25px ${shadowColor} inset, 0 0 15px ${borderColor}`;
 
                     setTimeout(() => {
                         document.querySelector('.realm-bg svg').style.animationDuration = '120s'; 

@@ -14,9 +14,17 @@
         body { 
             margin: 0; background: var(--bg-deep); color: #eee; 
             font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
-            overflow: hidden; touch-action: none;
+            overflow: hidden; touch-action: none; user-select: none;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* 左上角返回道場按鈕 */
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; letter-spacing: 1px; cursor: pointer;
+            text-shadow: 0 0 8px rgba(212,175,55,0.5); background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+        }
 
         .matrix-section { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; overflow: hidden; }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
@@ -39,19 +47,36 @@
             box-shadow: 0 0 30px rgba(212,175,55,0.5);
         }
 
+        /* 純淨的法輪圖示按鈕 */
         #yizhen-btn { display: none; border-color: var(--gold); color: var(--gold); background: rgba(0,0,0,0.8); }
         
         #status-panel {
-            position: absolute; top: 30px; left: 5%; width: 90%; max-width: 320px;
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px;
             background: rgba(5,5,10,0.8); backdrop-filter: blur(10px);
             border-left: 3px solid rgba(139,168,156,0.6); padding: 15px; z-index: 10; transition: 0.8s; pointer-events: none;
         }
         .status-title { font-size: 1.1rem; font-weight: bold; color: var(--cyan); letter-spacing: 2px; margin-bottom: 5px; transition: 0.8s; }
         .status-desc { font-size: 0.8rem; color: #aaa; line-height: 1.6; transition: 0.8s; }
-
+        
+        /* 結界警告彈窗 */
+        #lock-warning {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(10,10,10,0.95); border: 1px solid var(--cyan); padding: 25px; border-radius: 15px;
+            color: #eee; text-align: center; z-index: 9999; opacity: 0; pointer-events: none; transition: all 0.3s;
+            box-shadow: 0 0 30px rgba(139,168,156,0.3); width: 85%; max-width: 320px;
+        }
+        #lock-warning.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+        
+        /* 下方理論區塊 (待定，隱藏) */
+        #theory-container { display: none; }
     </style>
 </head>
 <body>
+
+    <div class="back-btn" onclick="window.location.href='index.html?screen=3'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        回道場
+    </div>
 
     <section class="matrix-section" id="matrix-view">
         <div class="dharmadhatu-light" id="bg-light"></div>
@@ -59,7 +84,7 @@
         <div id="status-panel">
             <div class="status-title" id="s-title">娑婆態 ． 受限連線</div>
             <div class="status-desc" id="s-desc">
-                載體：碳基透明態，生滅無常。<br>傳輸：實線上傳，但受限於硬體，下載微弱。<br>法座：空無。
+                載體：碳基半透明態，生滅無常。<br>傳輸：實線上傳，但受限於硬體，下載微弱。<br>法座：空無。
             </div>
         </div>
 
@@ -68,31 +93,63 @@
         <div class="ui-layer" id="ui-layer">
             <button class="switch-btn" id="toggle-btn" onclick="toggleState()">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                <span id="btn-text">切換至極樂金身</span>
+                <span id="btn-text">切換極樂金身</span>
             </button>
             
-            <button class="switch-btn" id="yizhen-btn" onclick="triggerImplosion()">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/></svg>
+            <button class="switch-btn" id="yizhen-btn" onclick="checkAndTriggerImplosion()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93"/></svg>
                 轉入一真法界
             </button>
 
-            <div style="color:rgba(139,168,156,0.6); font-size:0.75rem; letter-spacing:2px;" id="drag-hint">左右滑動 ． 360° 俯瞰矩陣</div>
+            <div style="color:rgba(139,168,156,0.6); font-size:0.75rem; letter-spacing:2px;" id="drag-hint">360° 全息滑動俯瞰</div>
         </div>
     </section>
+    
+    <div id="lock-warning">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="1.5" style="margin-bottom:10px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <div style="font-weight:bold; letter-spacing:2px; margin-bottom:10px; color:var(--gold);">結界未解</div>
+        <div style="font-size:0.85rem; line-height:1.6; color:#bbb; margin-bottom:20px;">
+            需達「初信位」<br>或累積念佛滿一萬聲<br>方可契入一真法界觀想。
+        </div>
+        <button style="background:var(--cyan); color:#000; border:none; padding:8px 20px; border-radius:15px; font-weight:bold; cursor:pointer;" onclick="document.getElementById('lock-warning').classList.remove('show')">繼續精進</button>
+    </div>
+
+    <div id="theory-container"></div>
 
     <script>
+        // --- 讀取本地修行資料 ---
+        let db = { totalNian: 0, points: 0 };
+        try {
+            let localDb = JSON.parse(localStorage.getItem('PX_V15.0'));
+            if (localDb) db = localDb;
+        } catch(e) {}
+
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
         let width, height;
         
         let particles = [], lotusParticles = [], dataLinks = [], stars = [], sublimeDust = [];
-        let rotY = 0; let isDragging = false; let startX;
+        
+        // ✨ 解鎖 360 度視角
+        let rotX = -0.15; let rotY = 0; 
+        let isDragging = false; let startX, startY;
+        let vX = 0, vY = 0; // 阻尼速度
 
         // 0: 娑婆, 1: 極樂, 2: 一真法界
         let targetState = 0; 
-        let tLotus = 0; // 蓮花綻放度
-        let tGold = 0;  // 金身染金度
-        let tCollapse = 1.0; // 1.0(完整) -> 0.0(縮成點)
+        let tLotus = 0; 
+        let tGold = 0;  
+        let tCollapse = 1.0; 
+
+        // 預先建立發光圓點 (替代耗效能的 shadowBlur)
+        const glowCanvas = document.createElement('canvas');
+        glowCanvas.width = glowCanvas.height = 32;
+        const gCtx = glowCanvas.getContext('2d');
+        const gGrad = gCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
+        gGrad.addColorStop(0, 'rgba(255,255,255,1)');
+        gGrad.addColorStop(0.2, 'rgba(212,175,55,0.8)');
+        gGrad.addColorStop(1, 'rgba(212,175,55,0)');
+        gCtx.fillStyle = gGrad; gCtx.fillRect(0,0,32,32);
 
         function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
         window.addEventListener('resize', resize); resize();
@@ -107,13 +164,13 @@
             for (let t=0; t<=1; t+=0.04) { let lx = -32*(1-t)-12*t-Math.sin(t*Math.PI)*15, ly = -55*(1-t)+25*t+Math.sin(t*Math.PI)*8, lz = 30*t; let rx = 32*(1-t)+12*t+Math.sin(t*Math.PI)*15; for(let a=0; a<Math.PI*2; a+=1.5) { addPt(particles, lx+4*Math.cos(a), ly, lz+4*Math.sin(a), Math.random(), 'body'); addPt(particles, rx+4*Math.cos(a), ly, lz+4*Math.sin(a), Math.random(), 'body'); } }
             for (let lon=0; lon<Math.PI*2; lon+=0.08) { let x=40*Math.cos(lon), y=32+4*Math.sin(lon*2), z=10+30*Math.sin(lon); for (let rad=0; rad<Math.PI*2; rad+=0.8) addPt(particles, x+7*Math.cos(rad), y+7*Math.sin(rad), z, Math.random(), 'body'); }
 
-            // 2. ✨ 第二圈：我執金環 (第七識) ✨ - 待會只縮這個！
+            // 2. 第二圈：我執金環 (第七識)
             const manasR = 110;
             for(let i=0; i<200; i++) { let t=Math.random()*Math.PI*2, p=Math.acos(Math.random()*2-1); addPt(particles, manasR*Math.sin(p)*Math.cos(t), -15+manasR*Math.cos(p), manasR*Math.sin(p)*Math.sin(t), Math.random(), 'manas'); }
             
-            // 3. ✨ 最外圍：阿賴耶雲端 (第八識) ✨ - 待會不縮！
+            // 3. 最外圍：阿賴耶雲端 (第八識)
             const alayaR = 240;
-            for(let i=0; i<600; i++) { let t=Math.random()*Math.PI*2, p=Math.acos(Math.random()*2-1); addPt(particles, alayaR*Math.sin(p)*Math.cos(t), -15+alayaR*Math.cos(p), alayaR*Math.sin(p)*Math.sin(t), Math.random(), 'alaya'); }
+            for(let i=0; i<500; i++) { let t=Math.random()*Math.PI*2, p=Math.acos(Math.random()*2-1); addPt(particles, alayaR*Math.sin(p)*Math.cos(t), -15+alayaR*Math.cos(p), alayaR*Math.sin(p)*Math.sin(t), Math.random(), 'alaya'); }
 
             // 4. 3D 金蓮
             const layers = [{n:10,l:25,t:0.2,w:12,b:-3,y:40}, {n:14,l:45,t:0.7,w:18,b:8,y:45}, {n:18,l:70,t:1.25,w:26,b:22,y:50}];
@@ -131,51 +188,44 @@
 
             // 連線
             for(let i=0; i<40; i++) dataLinks.push({s: Math.floor(Math.random()*500), e: particles.length-Math.floor(Math.random()*600)-1});
-            
-            // 星空矩陣
-            for(let i=0; i<300; i++) stars.push({ x: (Math.random()-0.5)*1200, y: (Math.random()-0.5)*1200, z: (Math.random()-0.5)*1200, s: Math.random()*1.5 });
+            // 星空
+            for(let i=0; i<250; i++) stars.push({ x: (Math.random()-0.5)*1200, y: (Math.random()-0.5)*1200, z: (Math.random()-0.5)*1200, s: Math.random()*1.5 });
         }
 
         function lerp(a, b, t) { return a + (b - a) * t; }
         function lerpCol(a, b, t) { return `rgba(${a[0]+(b[0]-a[0])*t},${a[1]+(b[1]-a[1])*t},${a[2]+(b[2]-a[2])*t},${a[3]+(b[3]-a[3])*t})`; }
 
         function render() {
-            ctx.clearRect(0, 0, width, height); ctx.globalCompositeOperation = 'screen';
+            ctx.clearRect(0, 0, width, height); 
+            ctx.globalCompositeOperation = 'screen';
             
             if (targetState === 1) {
-                // ✨ 修復：蓮花先開，金身後成
-                tLotus += (1 - tLotus) * 0.05;
-                if (tLotus > 0.5) tGold += (1 - tGold) * 0.05; 
+                tLotus += (1 - tLotus) * 0.05; if (tLotus > 0.5) tGold += (1 - tGold) * 0.05; 
             } else if (targetState === 0) {
-                tGold += (0 - tGold) * 0.08;
-                if (tGold < 0.5) tLotus += (0 - tLotus) * 0.05;
+                tGold += (0 - tGold) * 0.08; if (tGold < 0.5) tLotus += (0 - tLotus) * 0.05;
             } else if (targetState === 2) {
-                // 🌌 一真法界坍縮
                 tCollapse += (0 - tCollapse) * 0.015; 
             }
 
-            if(!isDragging) rotY -= 0.004;
-            const cx=width/2, cy=height/2+30, fov=350, sinX=Math.sin(-0.15), cosX=Math.cos(-0.15), sinY=Math.sin(rotY), cosY=Math.cos(rotY);
+            // 360 度旋轉阻尼
+            if(!isDragging) { rotY -= 0.003; rotX += vY; rotY += vX; vX *= 0.95; vY *= 0.95; }
+            if (rotX > 1.2) rotX = 1.2; if (rotX < -1.2) rotX = -1.2; // 限制極端仰角
+
+            const cx=width/2, cy=height/2+30, fov=350, sinX=Math.sin(rotX), cosX=Math.cos(rotX), sinY=Math.sin(rotY), cosY=Math.cos(rotY);
             let proj = [];
 
-            // 投影函數 (引入第二圈精準坍縮)
-            function project(p, c, s, g, isAlaya) {
+            function project(p, c, s, hasGlow, isAlaya) {
                 let wx = p.x, wy = p.y, wz = p.z;
-                
-                // ✨ 法理精準還原：只有非阿賴耶識(我執/身體/蓮花)才會向內坍縮！
-                if (!isAlaya && targetState === 2) {
-                    wx *= tCollapse; wy *= tCollapse; wz *= tCollapse;
-                }
-
+                if (!isAlaya && targetState === 2) { wx *= tCollapse; wy *= tCollapse; wz *= tCollapse; }
                 let x1=wx*cosY-wz*sinY, z1=wz*cosY+wx*sinY, y2=wy*cosX-z1*sinX, z2=z1*cosX+wy*sinX;
                 if(z2 < -fov+10) return null; let scale=fov/(fov+z2);
-                return {px:cx+x1*scale, py:cy+y2*scale, z:z2, sc:scale, c:c, s:s, g:g, raw:p};
+                return {px:cx+x1*scale, py:cy+y2*scale, z:z2, sc:scale, c:c, s:s, glow:hasGlow, raw:p};
             }
 
             if (targetState === 2) {
                 let starAlpha = 1 - tCollapse;
                 stars.forEach(st => {
-                    let pr = project({x:st.x, y:st.y, z:st.z}, `rgba(255,255,255,${starAlpha * 0.8})`, st.s, 'transparent', true);
+                    let pr = project({x:st.x, y:st.y, z:st.z}, `rgba(255,255,255,${starAlpha * 0.8})`, st.s, false, true);
                     if(pr) { ctx.beginPath(); ctx.arc(pr.px, pr.py, pr.s*pr.sc, 0, Math.PI*2); ctx.fillStyle=pr.c; ctx.fill(); }
                 });
             }
@@ -184,89 +234,74 @@
                 if(p.type==='body') {
                     let densityThreshold = 0.85 - (tGold * 0.8);
                     if(p.rnd > densityThreshold) {
-                        let col = lerpCol([139,168,156,0.4], [243,229,171,0.9], tGold);
-                        let pr = project(p, col, 1.0+(tGold*0.8), tGold>0.5?'rgba(212,175,55,0.5)':'transparent', false);
+                        // ✨ 增強娑婆人體的顯色度 (基底 0.6 不透明度)
+                        let col = lerpCol([139,168,156,0.6], [243,229,171,0.95], tGold);
+                        let pr = project(p, col, 1.0+(tGold*0.8), tGold>0.5, false);
                         if(pr){ pr.idx=i; proj.push(pr); }
                     }
                 } 
-                else if(p.type==='manas') { 
-                    // 第二圈我執
-                    let pr=project(p, `rgba(212,175,55,${0.5+tGold*0.4})`, 1.5, 'rgba(212,175,55,0.8)', false); 
-                    if(pr){ pr.idx=i; proj.push(pr); } 
-                }
-                else if(p.type==='alaya') { 
-                    // 最外圍阿賴耶識 (不坍縮)
-                    let pr=project(p, `rgba(139,168,156,${0.3+tGold*0.2})`, 1.5, 'transparent', true); 
-                    if(pr){ pr.idx=i; proj.push(pr); } 
-                }
+                else if(p.type==='manas') { let pr=project(p, `rgba(212,175,55,${0.5+tGold*0.4})`, 1.5, true, false); if(pr){ pr.idx=i; proj.push(pr); } }
+                else if(p.type==='alaya') { let pr=project(p, `rgba(139,168,156,${0.3+tGold*0.2})`, 1.5, false, true); if(pr){ pr.idx=i; proj.push(pr); } }
             });
 
             if(tLotus > 0.01) {
                 lotusParticles.forEach(lp => {
                     let growY = lerp(50, lp.y, tLotus); let growX = lp.x * tLotus; let growZ = lp.z * tLotus;
-                    let pr=project({x:growX, y:growY, z:growZ}, `rgba(212,175,55,${tLotus*0.9})`, 1.2*tLotus, 'rgba(212,175,55,0.5)', false);
+                    let pr=project({x:growX, y:growY, z:growZ}, `rgba(212,175,55,${tLotus*0.9})`, 1.2*tLotus, true, false);
                     if(pr) proj.push(pr);
                 });
             }
 
             proj.sort((a,b) => b.z-a.z);
             
+            // 連線繪製
             ctx.lineWidth=1;
             dataLinks.forEach(l => {
                 let p1 = proj.find(p=>p.idx===l.s), p2 = proj.find(p=>p.idx===l.e);
                 if(p1 && p2) {
                     ctx.beginPath(); ctx.moveTo(p1.px, p1.py); ctx.lineTo(p2.px, p2.py);
-                    // ✨ 修復：娑婆也是實線，但是暗淡的青色；極樂是明亮的金光實線 ✨
-                    if(tGold < 0.5) { 
-                        ctx.setLineDash([]); 
-                        ctx.strokeStyle=`rgba(139,168,156,0.3)`; 
-                    } else { 
-                        ctx.setLineDash([]); 
-                        ctx.strokeStyle=`rgba(243,229,171,${0.2 + tGold*0.5})`; 
-                    }
+                    if(tGold < 0.5) ctx.strokeStyle=`rgba(139,168,156,0.3)`; 
+                    else ctx.strokeStyle=`rgba(243,229,171,${0.2 + tGold*0.5})`; 
                     ctx.stroke();
                 }
             });
-            ctx.setLineDash([]);
 
+            // ✨ 效能飛昇版繪製 (無 shadowBlur，改用偽光暈貼圖)
             proj.forEach(p => {
                 let dS = p.s*p.sc; if(dS<0.1) return;
-                ctx.beginPath(); ctx.arc(p.px, p.py, dS, 0, Math.PI*2); ctx.fillStyle=p.c;
-                if(p.g!=='transparent') { ctx.shadowBlur=10*p.sc; ctx.shadowColor=p.g; } else ctx.shadowBlur=0;
-                ctx.fill();
+                if(p.glow) {
+                    // 貼上偽光暈
+                    ctx.drawImage(glowCanvas, p.px - dS*4, p.py - dS*4, dS*8, dS*8);
+                }
+                ctx.beginPath(); ctx.arc(p.px, p.py, dS, 0, Math.PI*2); ctx.fillStyle=p.c; ctx.fill();
             });
 
-            // 昇華特效
+            // 昇華金塵
             if (targetState === 2) {
-                if(Math.random() > 0.4 && tCollapse > 0.1) {
-                    sublimeDust.push({ x: (Math.random()-0.5)*150, y: (Math.random()-0.5)*150, z: (Math.random()-0.5)*150, life: 1.0 });
-                }
+                if(Math.random() > 0.4 && tCollapse > 0.1) sublimeDust.push({ x: (Math.random()-0.5)*150, y: (Math.random()-0.5)*150, z: (Math.random()-0.5)*150, life: 1.0 });
                 sublimeDust.forEach((sd, index) => {
-                    sd.y -= 1.5; sd.life -= 0.01;
+                    sd.y -= 1.5; sd.life -= 0.015;
                     if(sd.life <= 0) sublimeDust.splice(index, 1);
                     else {
-                        // 昇華的塵埃不受坍縮影響
-                        let pr = project({x:sd.x, y:sd.y, z:sd.z}, `rgba(243,229,171,${sd.life})`, 2, 'var(--solid-gold)', true);
-                        if(pr) { ctx.beginPath(); ctx.arc(pr.px, pr.py, pr.s*pr.sc, 0, Math.PI*2); ctx.fillStyle=pr.c; ctx.shadowBlur=10; ctx.shadowColor=pr.g; ctx.fill(); }
+                        let pr = project({x:sd.x, y:sd.y, z:sd.z}, `rgba(243,229,171,${sd.life})`, 2, true, true);
+                        if(pr) { ctx.drawImage(glowCanvas, pr.px - pr.s*pr.sc*4, pr.py - pr.s*pr.sc*4, pr.s*pr.sc*8, pr.s*pr.sc*8); ctx.beginPath(); ctx.arc(pr.px, pr.py, pr.s*pr.sc, 0, Math.PI*2); ctx.fillStyle=pr.c; ctx.fill(); }
                     }
                 });
             }
-            ctx.shadowBlur=0;
 
-            // 最終的菩提明點呼吸
+            // 一真明點 (心跳)
             if (targetState === 2 && tCollapse < 0.05) {
                 let pulse = 1 + Math.sin(Date.now() * 0.003) * 0.5;
-                ctx.beginPath(); ctx.arc(cx, cy, 3 * pulse, 0, Math.PI*2);
-                ctx.fillStyle = '#fff'; ctx.shadowBlur = 30 * pulse; ctx.shadowColor = 'var(--solid-gold)'; ctx.fill();
+                ctx.drawImage(glowCanvas, cx - 15*pulse, cy - 15*pulse, 30*pulse, 30*pulse);
+                ctx.beginPath(); ctx.arc(cx, cy, 3 * pulse, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill();
             }
 
             requestAnimationFrame(render);
         }
 
-        // --- UI 控制 ---
+        // --- 狀態與結界查核 ---
         function toggleState() {
-            let btn = document.getElementById('toggle-btn');
-            let yBtn = document.getElementById('yizhen-btn');
+            let btn = document.getElementById('toggle-btn'); let yBtn = document.getElementById('yizhen-btn');
             let sTitle = document.getElementById('s-title'); let sDesc = document.getElementById('s-desc');
             
             if (targetState === 0) {
@@ -274,15 +309,27 @@
                 document.getElementById('status-panel').style.borderLeftColor = 'var(--solid-gold)';
                 sTitle.style.color = 'var(--gold)'; sTitle.innerText = "極樂態 ． 完整全息";
                 sDesc.innerHTML = "載體：無漏金身，緻密純粹。<br>傳輸：金光實線，上下載雙向開放。<br>法座：九品金蓮承托。";
-                
-                // 顯示進入一真法界的按鈕
-                yBtn.style.display = 'flex';
+                yBtn.style.display = 'flex'; // 顯示一真法界按鈕
             } else {
-                targetState = 0; btn.classList.remove('pure-mode'); document.getElementById('btn-text').innerText = "切換至極樂金身";
+                targetState = 0; btn.classList.remove('pure-mode'); document.getElementById('btn-text').innerText = "切換極樂金身";
                 document.getElementById('status-panel').style.borderLeftColor = 'rgba(139,168,156,0.6)';
                 sTitle.style.color = 'var(--cyan)'; sTitle.innerText = "娑婆態 ． 受限連線";
-                sDesc.innerHTML = "載體：碳基透明態，生滅無常。<br>傳輸：實線上傳，但受限於硬體，下載微弱。<br>法座：空無。";
+                sDesc.innerHTML = "載體：碳基半透明態，生滅無常。<br>傳輸：實線上傳，但受限於硬體，下載微弱。<br>法座：空無。";
                 yBtn.style.display = 'none';
+            }
+        }
+
+        // ✨ 結界攔截邏輯 ✨
+        function checkAndTriggerImplosion() {
+            let points = db.points || 0;
+            let totalNian = db.totalNian || 0;
+            
+            // 條件：點數 >= 10 (初信位) 或 念佛 >= 10000
+            if (points >= 10 || totalNian >= 10000) {
+                triggerImplosion();
+            } else {
+                // 條件未達，跳出警告
+                document.getElementById('lock-warning').classList.add('show');
             }
         }
 
@@ -296,12 +343,20 @@
             document.getElementById('s-title').style.color = '#fff';
             document.getElementById('s-title').innerText = "一真法界 ． 菩提不滅";
             document.getElementById('s-desc').innerHTML = "我執消融，載體坍縮。<br>萬法歸一，唯留大悲心跳動於星海之中。";
-
-            targetState = 2;
+            
+            targetState = 2; // 觸發坍縮
         }
 
-        canvas.addEventListener('pointerdown', (e) => { isDragging = true; startX = e.clientX || e.touches[0].clientX; });
-        canvas.addEventListener('pointermove', (e) => { if (!isDragging) return; let x = e.clientX || (e.touches ? e.touches[0].clientX : 0); rotY -= (x - startX) * 0.01; startX = x; });
+        // 360度互動
+        canvas.addEventListener('pointerdown', (e) => { isDragging = true; startX = e.clientX || e.touches[0].clientX; startY = e.clientY || e.touches[0].clientY; vX = 0; vY = 0; });
+        canvas.addEventListener('pointermove', (e) => { 
+            if (!isDragging) return; 
+            let x = e.clientX || (e.touches ? e.touches[0].clientX : 0); let y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+            let dx = x - startX; let dy = y - startY;
+            rotY -= dx * 0.008; rotX -= dy * 0.008;
+            vX = -dx * 0.0005; vY = -dy * 0.0005; // 記錄鬆手時的速度
+            startX = x; startY = y;
+        });
         canvas.addEventListener('pointerup', () => isDragging = false); canvas.addEventListener('pointercancel', () => isDragging = false);
 
         generateTopology(); render();

@@ -3,67 +3,552 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mind-Only Journey ‧ Under Construction</title>
+    <title>Mind-Only Matrix ‧ Mystery of Rebirth</title>
     <style>
-        body {
-            margin: 0; background-color: #030303; color: #f3e5ab;
-            font-family: "PingFang TC", "Microsoft JhengHei", serif;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; overflow: hidden; text-align: center;
-            user-select: none; -webkit-tap-highlight-color: transparent;
+        :root {
+            --bg-deep: #010103;
+            --gold: #f3e5ab;
+            --solid-gold: #d4af37;
+            --cyan: #8ba89c;
+            --text-main: #d0d0d0;
         }
-        .icon { 
-            margin-bottom: 25px; opacity: 0.85; 
-            animation: pulse 3s infinite alternate ease-in-out;
+        /* ✨ Absolute scroll lock for smooth 360° rotation ✨ */
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+            overflow: hidden; touch-action: none; user-select: none;
         }
-        @keyframes pulse {
-            0% { filter: drop-shadow(0 0 5px rgba(212,175,55,0.3)); transform: scale(0.95); }
-            100% { filter: drop-shadow(0 0 20px rgba(212,175,55,0.7)); transform: scale(1.05); }
-        }
-        .title { 
-            font-size: 1.5rem; letter-spacing: 4px; color: #d4af37; 
-            margin-bottom: 15px; text-shadow: 0 0 10px rgba(212,175,55,0.3);
-        }
-        .subtitle { 
-            font-size: 0.95rem; letter-spacing: 2px; color: rgba(255,255,255,0.6); 
-            line-height: 2; margin-bottom: 45px;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* ================= UI Overlays & Buttons ================= */
         .back-btn {
-            padding: 14px 35px; border: 1px solid rgba(212,175,55,0.5);
-            border-radius: 30px; color: #f3e5ab; cursor: pointer; text-decoration: none;
-            font-size: 0.95rem; letter-spacing: 2px; transition: 0.3s;
-            background: linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(0,0,0,0) 100%);
-            backdrop-filter: blur(5px);
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.9rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; letter-spacing: 1px; cursor: pointer;
+            text-shadow: 0 0 8px rgba(212,175,55,0.5); background: rgba(0,0,0,0.5); 
+            padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
         }
-        .back-btn:active { 
-            background: rgba(212,175,55,0.25); transform: scale(0.95); border-color: #d4af37;
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        .dharmadhatu-light {
+            position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, rgba(139,168,156,0.02) 50%, transparent 80%);
+            animation: breath 8s infinite alternate ease-in-out; pointer-events: none; transition: opacity 2s; z-index: 0;
         }
+        @keyframes breath { 0% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* 💡 Additive Golden Flash: No masking, purely illuminating 💡 */
+        #golden-flash {
+            position: absolute; inset: 0; background: rgba(243, 229, 171, 1);
+            mix-blend-mode: screen; opacity: 0; pointer-events: none; z-index: 50;
+        }
+
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 15px; transition: opacity 1s;}
+        
+        .switch-btn {
+            background: rgba(15,15,15,0.8); border: 1px solid rgba(139,168,156,0.5); color: var(--cyan);
+            padding: 14px 28px; border-radius: 30px; font-size: 0.95rem; font-weight: bold; letter-spacing: 1px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.5s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.6); font-family: "Palatino Linotype", serif;
+        }
+        .switch-btn:active { transform: scale(0.95); }
+        .switch-btn.pure-mode {
+            border-color: var(--solid-gold); color: #000; background: linear-gradient(135deg, var(--solid-gold), #b08d2b);
+            box-shadow: 0 0 30px rgba(212,175,55,0.6), inset 0 0 10px rgba(255,255,255,0.3);
+        }
+
+        #theory-btn { border-color: rgba(139,168,156,0.8); color: var(--cyan); background: rgba(5,15,10,0.8); }
+        #yizhen-btn { display: none; border-color: var(--gold); color: var(--gold); background: rgba(10,5,0,0.9); }
+        
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 340px;
+            background: rgba(5,5,10,0.7); backdrop-filter: blur(12px);
+            border-left: 3px solid rgba(139,168,156,0.6); padding: 15px 20px; z-index: 10; transition: 0.8s; pointer-events: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-radius: 0 10px 10px 0;
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+        }
+        .status-title { font-size: 1.05rem; font-weight: bold; color: var(--cyan); letter-spacing: 1px; margin-bottom: 6px; transition: 0.8s; }
+        .status-desc { font-size: 0.8rem; color: #aaa; line-height: 1.6; transition: 0.8s; }
+        
+        /* 結界警告 Modal Warning */
+        #lock-warning {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(10,10,10,0.95); border: 1px solid var(--cyan); padding: 30px; border-radius: 15px;
+            color: #eee; text-align: center; z-index: 9999; opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 40px rgba(139,168,156,0.2), inset 0 0 20px rgba(139,168,156,0.1); width: 85%; max-width: 320px;
+            font-family: "Palatino Linotype", serif;
+        }
+        #lock-warning.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+
+        /* 終章 Epilogue Overlay */
+        #epilogue-overlay {
+            position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 60; opacity: 0; pointer-events: none; transition: opacity 3s ease-in;
+        }
+        .epilogue-text {
+            color: var(--gold); font-size: 1.15rem; letter-spacing: 2px; line-height: 2.2; text-align: center;
+            text-shadow: 0 0 15px rgba(212,175,55,0.8); font-weight: bold; margin-top: 15vh; font-style: italic;
+        }
+
+        /* ================= Drawer: Dharma Scroll Area ================= */
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh;
+            background: rgba(5, 5, 8, 0.95); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0;
+            transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        
+        .drawer-header {
+            position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.9));
+            padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2);
+        }
+        .close-bar { width: 40px; height: 4px; background: rgba(212,175,55,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        .close-btn { color: var(--cyan); font-size: 0.85rem; letter-spacing: 2px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-family: sans-serif; }
+
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+
+        .humble-statement {
+            font-size: 0.9rem; color: rgba(243,229,171,0.6); line-height: 1.7; text-align: justify;
+            padding: 20px; border: 1px solid rgba(212,175,55,0.2); border-radius: 12px;
+            background: rgba(20,15,5,0.3); margin-bottom: 50px; font-style: italic;
+        }
+
+        .main-title { color: var(--gold); font-size: 1.6rem; letter-spacing: 3px; text-align: center; margin-bottom: 50px; font-weight: normal; text-shadow: 0 0 15px rgba(212,175,55,0.3); text-transform: uppercase; }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--solid-gold), transparent); margin: 15px auto 0; }
+
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 24px; height: 24px; stroke: var(--gold); fill: none; stroke-width: 1.2; filter: drop-shadow(0 0 5px rgba(212,175,55,0.4)); flex-shrink: 0;}
+        .c-title { color: var(--gold); font-size: 1.2rem; letter-spacing: 1.5px; font-weight: bold; }
+        
+        .science-note { font-size: 0.75rem; color: rgba(139,168,156,0.8); letter-spacing: 1px; padding-left: 39px; margin-bottom: 12px; font-family: monospace; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
+        .science-note::before { content: '▰'; font-size: 0.5rem; color: rgba(139,168,156,0.4); }
+
+        .c-text { color: var(--text-main); font-size: 1rem; line-height: 1.9; text-align: justify; padding-left: 39px; }
+        
+        /* Soft Highlight */
+        .soft-highlight { color: var(--cyan); border-bottom: 1px dotted rgba(139,168,156,0.6); padding-bottom: 1px; }
+
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
     </style>
 </head>
 <body>
 
-    <svg class="icon" width="60" height="60" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-            <linearGradient id="weishi-gold" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#f3e5ab"/>
-                <stop offset="50%" stop-color="#d4af37"/>
-                <stop offset="100%" stop-color="#b8860b"/>
-            </linearGradient>
-        </defs>
-        <circle cx="12" cy="12" r="10" fill="none" stroke="url(#weishi-gold)" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.8"/>
-        <path d="M3 12 C3 12 7 5 12 5 C17 5 21 12 21 12 C21 12 17 19 12 19 C7 19 3 12 3 12 Z" fill="none" stroke="url(#weishi-gold)" stroke-width="1.5"/>
-        <circle cx="12" cy="12" r="3.5" fill="#020202" stroke="url(#weishi-gold)" stroke-width="1.2"/>
-        <circle cx="12" cy="12" r="1.5" fill="#f3e5ab"/>
-    </svg>
-
-    <div class="title">Dharma Realm Unfolding...</div>
-    
-    <div class="subtitle">
-        Mind-Only ‧ Rebirth Mystery<br>
-        <span style="font-size: 0.8rem; color: rgba(255,255,255,0.4); letter-spacing: 1px;">This Dharma treasure awaits ripe conditions.<br>Please continue accumulating merit provisions.</span>
+    <div class="back-btn" onclick="window.location.href='index_en.html?screen=3'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Return
     </div>
 
-    <a href="index_en.html?screen=3" class="back-btn">Return ‧ Pure Land System</a>
+    <section class="matrix-section">
+        <div class="dharmadhatu-light" id="bg-light"></div>
+        <div id="golden-flash"></div> 
+        
+        <div id="status-panel">
+            <div class="status-title" id="s-title">Saha Realm ‧ Mixed Dwelling</div>
+            <div class="status-desc" id="s-desc">
+                Vessel: Carbon-based translucent state, impermanent.<br>Transmission: Physical upload, weak download.<br>Dharma Seat: Void.
+            </div>
+        </div>
 
+        <canvas id="matrixCanvas"></canvas>
+
+        <div id="epilogue-overlay">
+            <div class="epilogue-text">
+                All phenomena collapse,<br>returning to absolute stillness.<br>The only indestructible essence<br>is the Great Compassion that, knowing all is empty,<br>endlessly walks the Bodhisattva path.
+            </div>
+        </div>
+
+        <div class="ui-layer" id="ui-layer">
+            <button class="switch-btn" id="toggle-btn" onclick="toggleState()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                <span id="btn-text">Switch to Golden Vessel</span>
+            </button>
+            
+            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                Mystery of Rebirth
+            </button>
+
+            <button class="switch-btn" id="yizhen-btn" onclick="checkAndTriggerImplosion()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93"/></svg>
+                Enter One True Realm
+            </button>
+
+            <div style="color:rgba(139,168,156,0.6); font-size:0.75rem; letter-spacing:2px; font-family: sans-serif; text-transform: uppercase;" id="drag-hint">360° Holographic Swipe</div>
+        </div>
+    </section>
+    
+    <div id="lock-warning">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="1.5" style="margin-bottom:15px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <div style="font-weight:bold; letter-spacing:2px; margin-bottom:12px; color:var(--gold); font-size:1.2rem; text-transform: uppercase;">Seal Unbroken</div>
+        <div style="font-size:0.9rem; line-height:1.6; color:#bbb; margin-bottom:25px;">
+            Requires attaining the <span style="color:#fff; font-weight:bold;">Ten Faiths Level</span><br>or accumulating <span style="color:#fff; font-weight:bold;">10,000</span> recitations<br>to unlock the contemplation of the One True Dharma Realm.
+        </div>
+        <button style="background:linear-gradient(135deg, var(--cyan), #6b8a7c); color:#000; border:none; padding:10px 25px; border-radius:20px; font-weight:bold; cursor:pointer; letter-spacing:1px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); text-transform: uppercase;" onclick="document.getElementById('lock-warning').classList.remove('show')">Continue Cultivating</button>
+    </div>
+
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()">
+            <div class="close-bar"></div>
+            <div class="close-btn">Close Dharma Scroll</div>
+        </div>
+        <div class="theory-container">
+            
+            <div class="humble-statement">
+                "The ocean of Dharma is vast and boundless; only Buddhas can fully comprehend its ultimate depths. This text represents the humble attempt of a lay practitioner to explore the true meaning of the Tathagata's teachings, guided by sutras, logic, and the commentaries of patriarchs. Any omissions or errors stem from my own limited intellect. May the Three Jewels bestow their blessings, and may fellow practitioners discern with wisdom."
+            </div>
+
+            <h1 class="main-title">Mind-Only Code ‧ The Mystery of Rebirth</h1>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <div class="c-title">Illusion and Awakening</div>
+                </div>
+                <div class="c-text">
+                    Life, <span class="soft-highlight">perhaps</span>, is like a multi-layered holographic web of emptiness. We are all travelers cast into the script of samsara; stepping too deeply into the roles, we often mistake the sorrows and joys of the physical vessel for reality. However, true awakening <span class="soft-highlight">seems</span> not to lie in denying the phenomenon of "I am in an illusion," but in maintaining the clarity of a third-person observer while performing the karmic play.<br><br>True Bodhisattvas see through the underlying trajectory of this drama of life and death. Thus, they "fear not death"—knowing rebirth is merely the changing of vessels; and they "wait not for death"—knowing that, though clad in illusion, they carry the grand vow of altruism to fulfill.
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    <div class="c-title">The Drive of Consciousness</div>
+                </div>
+                <div class="science-note">ALAYA_CLUSTER_AND_EVOLUTION</div>
+                <div class="c-text">
+                    What truly drives the cycle of birth and death? The Eighth Consciousness (Alaya Consciousness) is like a profound ocean holding the seeds of all dharmas. It <span class="soft-highlight">might</span> merely be a vast, undifferentiated "cluster of karmic memories over countless eons." Without external traction, it remains as still as an ancient well.<br><br>What truly initiates rebirth <span class="soft-highlight">seems</span> to be the Seventh Consciousness (Ego/Manas). Driven by an intense "fear of extinction and thirst for existence," this ignorant desire for survival grasps the karmic seeds of the Alaya, blindly diving into a new womb. We <span class="soft-highlight">might contemplate this</span>: the ocean of Alaya is like the boundless source of life, and the alternating "I" across lifetimes is like flickering dust in the vast cosmos. The disintegration and rebirth of the physical vessel tens of thousands of times may seem impermanent, but the wisdom and traces forged in each refinement are <span class="soft-highlight">perhaps</span> all meant to achieve the ultimate perfection of "transforming consciousness into wisdom" in the end.
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <div class="c-title">The Critical Junction</div>
+                </div>
+                <div class="science-note">VESSEL_COLLAPSE_AND_TRANSFER</div>
+                <div class="c-text">
+                    Why do all Buddhas point to the "moment of death" as the ultimate opportunity for liberation? Concealed within this <span class="soft-highlight">may</span> be the deepest mechanics of the life vessel.<br><br>While an ordinary being is alive, the operation of consciousness relies heavily on the support of the physical body and the brain. When impermanence strikes and physiological functions are on the verge of collapse, this <span class="soft-highlight">seems</span> to be the "critical junction" where the ego is about to lose its material anchor and plunge into the blind pull of karma. Once the physical body completely shuts down, the faint consciousness, stripped of the clear memories of its present life, <span class="soft-highlight">might</span> only drift with the winds of karma, not knowing where its soul will land.<br><br>The compassionate reception of Amitabha Buddha <span class="soft-highlight">perhaps</span> precisely captures this golden, fleeting moment when "the physical body is failing, yet a trace of clarity remains." The Dharma Realm cannot forcibly pull one in; the practitioner must generate the sole corresponding frequency—"The Supreme Bodhi Mind"—at this very juncture. Once the vows align, Amitabha's boundless network of light can instantaneously transfer the complete continuity of the ego and the Alaya Consciousness into the Nine-Grade Lotus Womb of the Pure Land before the spirit disperses.
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><polygon points="12 2 2 22 22 22"/></svg>
+                    <div class="c-title">Reality of Ultimate Bliss</div>
+                </div>
+                <div class="science-note">DIMENSIONAL_NOISE_REDUCTION</div>
+                <div class="c-text">
+                    Regarding the nature of the Pure Land, debates between "Mind-Only" and "Substantial Existence" have existed since ancient times. If the Land of Ultimate Bliss were merely the formless "Land of Eternally Tranquil Light," then it <span class="soft-highlight">seems</span> there would be no need to establish the "Flawless Golden Body" and various magnificent environments. It is precisely because it is the "Land of Real Reward and Adornment" achieved by Amitabha's great vows, designed to receive us beings residing in the "Land of Co-dwelling of Ordinary and Sage," that this exceedingly strict Golden Body mechanism <span class="soft-highlight">must</span> exist.<br><br>The ground covered in gold and lapis lazuli is <span class="soft-highlight">perhaps</span> not worldly wealth, but rather provides the ultimate "Dharmic pure sound and visual noise reduction," allowing beings accustomed to the chaotic Five Turbidities to settle their minds. The World-Honored One once mentioned the titles of "humans, devas, and Bodhisattvas" in the Pure Land, but this <span class="soft-highlight">might</span> merely be an "expedient designation" accommodating the origins of the beings. In essence, once transformed and born there, all are "of the same kind, with no difference in form." By completely leveling the differences of beauty, ugliness, strength, and weakness, it <span class="soft-highlight">seems</span> to uproot the breeding ground of karma that triggers greed, anger, and ignorance right from the source, forcing the practitioner to contemplate emptiness in a realm free of desires.
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                    <div class="c-title">Compassionate Elevation</div>
+                </div>
+                <div class="science-note">COMPASSIONATE_SANDBOX_AND_ELEVATION</div>
+                <div class="c-text">
+                    The great vows of Amitabha reveal the most inconceivable inclusion and elevation in the Dharma Realm.<br><br>
+                    For those who have not aroused the great Bodhi mind, do not understand the vast wisdom of the Mahayana, yet do not wish to drift in karma, this Pure Land <span class="soft-highlight">seems</span> to compassionately lower a "Borderland City of Doubt." These 500 years are not a punishment, but <span class="soft-highlight">perhaps</span> an "isolation and adaptation zone" where the ego, carrying worldly impurities, can slowly cleanse itself without suffering, waiting until doubts are severed to behold the Buddha.<br><br>
+                    To help ordinary beings bound by concepts of time and space comprehend the magnitude of this vow, we <span class="soft-highlight">might temporarily view it through a dimensional reduction</span>: in the conventional Mahayana Bodhisattva path, a practitioner must battle through birth and death for <span class="soft-highlight">ten thousand great eons</span> to fulfill the Ten Faiths and attain the "Abode" stage, and even expend <span class="soft-highlight">one Asamkhyeya kalpa</span> (the birth and death of countless universes) to reach the "First Ground" and secure the stage of absolute non-retrogression ("Rightly Determined").<br><br>
+                    Yet, retrogressive conditions in the Saha world are countless, and arousing the true mind is incredibly difficult. The profound mystery of the Amitabha Dharma is that once ordinary beings log in, despite carrying past karmic habits, they receive the blessing of "dwelling in the Rightly Determined State, inevitably reaching Nirvana." This equates to <span class="soft-highlight">saving the practitioner an entire Asamkhyeya kalpa of samsaric wandering</span>, instantly granting the non-retrogressive credential of a First Ground Bodhisattva. If high-level Bodhisattvas from other realms are born there, they directly ascend to "ultimately reaching the Stage of One Lifetime to Buddhahood."<br><br>
+                    [The Path to Buddhahood] However, the laws of the Dharma Realm are also exceedingly strict: attaining non-retrogression in the Pure Land <span class="soft-highlight">seems</span> only to ensure that the roots of Bodhi will no longer degenerate. The practitioner must still await the prophecies of the Buddhas and plunge once more into countless eons across the ten directions to extensively save sentient beings, in order to truly perfect the Supreme Buddhahood.
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <div class="c-title">Returning by Vow</div>
+                </div>
+                <div class="science-note">COSMIC_RESONANCE_NETWORK</div>
+                <div class="c-text">
+                    When practitioners in the Pure Land see through the illusion of life and death, they will inevitably follow their great compassion to return to the world. However, the scope of this returning vow is not limited to the Saha world. In the boundless Avatamsaka (Huayan) Dharma Realm, practitioners from countless planets in the ten directions converge in Ultimate Bliss; once they attain wisdom, they will "follow their original vows", transforming and traveling to any dark corner of the universe that requires salvation.<br><br>In the practical combat of donning a physical body and entering the dust of the world, the protective mindfulness of the Pure Land <span class="soft-highlight">seems</span> to ensure that dispatched practitioners possess a baseline safeguard against falling into the evil realms. Even if temporarily lost in the five turbidities of a new environment, the profound "habitual momentum towards goodness" in their Alaya Consciousness will <span class="soft-highlight">always have the chance</span> to pull them back like a powerful gravity. Simultaneously, countless Bodhisattvas already stationed in the Dharma Realm <span class="soft-highlight">might</span> manifest as "virtuous friends" within the intertwining karmic network, awakening the practitioner's awareness at critical nodes. And the vow of "being born into noble families" is <span class="soft-highlight">perhaps</span> precisely to allow practitioners to bypass the anxieties of baseline survival, rapidly unlock their accumulated wisdom from past lives, and dive into the grand endeavor of salvation.
+                </div>
+            </div>
+            
+            <div style="text-align:center; margin-top: 60px; margin-bottom: 30px;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(212,175,55,0.4)" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/>
+                </svg>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Read Local Data
+        let db = { totalNian: 0, points: 0 };
+        try {
+            let localDb = JSON.parse(localStorage.getItem('PX_V15.0'));
+            if (localDb) db = localDb;
+        } catch(e) {}
+
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [], lotusParticles = [], dataLinks = [], stars = [], sublimeDust = [];
+        
+        let rotX = -0.15; let rotY = 0; 
+        let isDragging = false; let startX, startY;
+        let vX = 0, vY = 0; 
+
+        let targetState = 0; 
+        let tLotus = 0; let tGold = 0; let tCollapse = 1.0; 
+
+        // Pseudo Glow
+        const glowCanvas = document.createElement('canvas');
+        glowCanvas.width = glowCanvas.height = 32;
+        const gCtx = glowCanvas.getContext('2d');
+        const gGrad = gCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
+        gGrad.addColorStop(0, 'rgba(255,255,255,1)');
+        gGrad.addColorStop(0.2, 'rgba(212,175,55,0.6)');
+        gGrad.addColorStop(1, 'rgba(212,175,55,0)');
+        gCtx.fillStyle = gGrad; gCtx.fillRect(0,0,32,32);
+
+        function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+        window.addEventListener('resize', resize); resize();
+
+        function generateTopology() {
+            particles = []; lotusParticles = []; dataLinks = []; stars = []; sublimeDust = [];
+            function addPt(arr, x, y, z, rnd, type) { arr.push({x, y, z, rnd, type}); }
+
+            for (let lat=0; lat<=Math.PI; lat+=0.25) { for (let lon=0; lon<Math.PI*2; lon+=0.25) { addPt(particles, 14*Math.sin(lat)*Math.cos(lon), -85+20*Math.cos(lat), 16*Math.sin(lat)*Math.sin(lon), Math.random(), 'body'); }}
+            for (let y=-60; y<=25; y+=3) { let w = 35-Math.pow((y+60)*0.12, 2); if (y>-10) w += (y+10)*0.8; for (let lon=0; lon<Math.PI*2; lon+=0.25) addPt(particles, w*Math.cos(lon), y, (12+(y>0?y*0.3:0))*Math.sin(lon), Math.random(), 'body'); }
+            for (let t=0; t<=1; t+=0.04) { let lx = -32*(1-t)-12*t-Math.sin(t*Math.PI)*15, ly = -55*(1-t)+25*t+Math.sin(t*Math.PI)*8, lz = 30*t; let rx = 32*(1-t)+12*t+Math.sin(t*Math.PI)*15; for(let a=0; a<Math.PI*2; a+=1.5) { addPt(particles, lx+4*Math.cos(a), ly, lz+4*Math.sin(a), Math.random(), 'body'); addPt(particles, rx+4*Math.cos(a), ly, lz+4*Math.sin(a), Math.random(), 'body'); } }
+            for (let lon=0; lon<Math.PI*2; lon+=0.08) { let x=40*Math.cos(lon), y=32+4*Math.sin(lon*2), z=10+30*Math.sin(lon); for (let rad=0; rad<Math.PI*2; rad+=0.8) addPt(particles, x+7*Math.cos(rad), y+7*Math.sin(rad), z, Math.random(), 'body'); }
+
+            const manasR = 110;
+            for(let i=0; i<200; i++) { let t=Math.random()*Math.PI*2, p=Math.acos(Math.random()*2-1); addPt(particles, manasR*Math.sin(p)*Math.cos(t), -15+manasR*Math.cos(p), manasR*Math.sin(p)*Math.sin(t), Math.random(), 'manas'); }
+            
+            const alayaR = 240;
+            for(let i=0; i<500; i++) { let t=Math.random()*Math.PI*2, p=Math.acos(Math.random()*2-1); addPt(particles, alayaR*Math.sin(p)*Math.cos(t), -15+alayaR*Math.cos(p), alayaR*Math.sin(p)*Math.sin(t), Math.random(), 'alaya'); }
+
+            const layers = [{n:10,l:25,t:0.2,w:12,b:-3,y:40}, {n:14,l:45,t:0.7,w:18,b:8,y:45}, {n:18,l:70,t:1.25,w:26,b:22,y:50}];
+            layers.forEach((L, idx) => {
+                for(let i=0; i<L.n; i++) {
+                    let a = (Math.PI*2/L.n)*i+(idx*0.2);
+                    for(let t=0; t<=1; t+=0.05) { for(let v=-1; v<=1; v+=0.25) {
+                        if(Math.abs(v)>0.7 || t>0.8 || Math.random()>0.4) {
+                            let pW=L.w*Math.sin(t*Math.PI), oR=t*L.l*Math.sin(L.t)+Math.pow(t,2)*L.b, uY=-t*L.l*Math.cos(L.t);
+                            addPt(lotusParticles, oR*Math.cos(a)-(v*pW)*Math.sin(a), uY+L.y, oR*Math.sin(a)+(v*pW)*Math.cos(a), Math.random(), 'lotus');
+                        }
+                    }}
+                }
+            });
+
+            for(let i=0; i<40; i++) dataLinks.push({s: Math.floor(Math.random()*500), e: particles.length-Math.floor(Math.random()*600)-1});
+            for(let i=0; i<250; i++) stars.push({ x: (Math.random()-0.5)*1200, y: (Math.random()-0.5)*1200, z: (Math.random()-0.5)*1200, s: Math.random()*1.5 });
+        }
+
+        function lerp(a, b, t) { return a + (b - a) * t; }
+        function lerpCol(a, b, t) { return `rgba(${a[0]+(b[0]-a[0])*t},${a[1]+(b[1]-a[1])*t},${a[2]+(b[2]-a[2])*t},${a[3]+(b[3]-a[3])*t})`; }
+
+        function render() {
+            ctx.clearRect(0, 0, width, height); 
+            ctx.globalCompositeOperation = 'screen';
+            
+            if (targetState === 1) {
+                tLotus += (1 - tLotus) * 0.05; if (tLotus > 0.5) tGold += (1 - tGold) * 0.05; 
+            } else if (targetState === 0) {
+                tGold += (0 - tGold) * 0.08; if (tGold < 0.5) tLotus += (0 - tLotus) * 0.05;
+            } else if (targetState === 2) {
+                tCollapse += (0 - tCollapse) * 0.015; 
+            }
+
+            if(!isDragging) { rotY -= 0.003; rotX += vY; rotY += vX; vX *= 0.95; vY *= 0.95; }
+            if (rotX > 1.2) rotX = 1.2; if (rotX < -1.2) rotX = -1.2;
+
+            const cx=width/2, cy=height/2+30, fov=350, sinX=Math.sin(rotX), cosX=Math.cos(rotX), sinY=Math.sin(rotY), cosY=Math.cos(rotY);
+            let proj = [];
+
+            function project(p, c, s, hasGlow, isAlaya) {
+                let wx = p.x, wy = p.y, wz = p.z;
+                if (!isAlaya && targetState === 2) { wx *= tCollapse; wy *= tCollapse; wz *= tCollapse; }
+                let x1=wx*cosY-wz*sinY, z1=wz*cosY+wx*sinY, y2=wy*cosX-z1*sinX, z2=z1*cosX+wy*sinX;
+                if(z2 < -fov+10) return null; let scale=fov/(fov+z2);
+                return {px:cx+x1*scale, py:cy+y2*scale, z:z2, sc:scale, c:c, s:s, glow:hasGlow, raw:p};
+            }
+
+            if (targetState === 2) {
+                let starAlpha = 1 - tCollapse;
+                stars.forEach(st => {
+                    let pr = project({x:st.x, y:st.y, z:st.z}, `rgba(255,255,255,${starAlpha * 0.8})`, st.s, false, true);
+                    if(pr) { ctx.beginPath(); ctx.arc(pr.px, pr.py, pr.s*pr.sc, 0, Math.PI*2); ctx.fillStyle=pr.c; ctx.fill(); }
+                });
+            }
+
+            if (targetState !== 2) {
+                let bodyAura = project({x:0, y:-25, z:0}, 'rgba(0,0,0,0)', 1, false, false);
+                if (bodyAura) {
+                    let aS = 80 * bodyAura.sc;
+                    let auraGrad = ctx.createRadialGradient(bodyAura.px, bodyAura.py, 0, bodyAura.px, bodyAura.py, aS);
+                    let aCol1 = lerpCol([139,168,156,0.15], [243,229,171,0.25], tGold);
+                    let aCol2 = `rgba(0,0,0,0)`;
+                    auraGrad.addColorStop(0, aCol1); auraGrad.addColorStop(1, aCol2);
+                    ctx.beginPath(); ctx.arc(bodyAura.px, bodyAura.py, aS, 0, Math.PI*2); ctx.fillStyle=auraGrad; ctx.fill();
+                }
+            }
+
+            particles.forEach((p, i) => {
+                if(p.type==='body') {
+                    let densityThreshold = 0.85 - (tGold * 0.8);
+                    if(p.rnd > densityThreshold) {
+                        let col = lerpCol([160,190,180,0.85], [255,223,100,1.0], tGold);
+                        let pr = project(p, col, 1.2+(tGold*0.6), tGold>0.5, false);
+                        if(pr){ pr.idx=i; proj.push(pr); }
+                    }
+                } 
+                else if(p.type==='manas') { let pr=project(p, `rgba(212,175,55,${0.5+tGold*0.4})`, 1.5, false, false); if(pr){ pr.idx=i; proj.push(pr); } }
+                else if(p.type==='alaya') { let pr=project(p, `rgba(139,168,156,${0.3+tGold*0.2})`, 1.5, false, true); if(pr){ pr.idx=i; proj.push(pr); } }
+            });
+
+            if(tLotus > 0.01) {
+                lotusParticles.forEach(lp => {
+                    let growY = lerp(50, lp.y, tLotus); let growX = lp.x * tLotus; let growZ = lp.z * tLotus;
+                    let pr=project({x:growX, y:growY, z:growZ}, `rgba(243,229,171,${tLotus*0.95})`, 1.2*tLotus, true, false);
+                    if(pr) proj.push(pr);
+                });
+            }
+
+            proj.sort((a,b) => b.z-a.z);
+            
+            ctx.lineWidth=1;
+            dataLinks.forEach(l => {
+                let p1 = proj.find(p=>p.idx===l.s), p2 = proj.find(p=>p.idx===l.e);
+                if(p1 && p2) {
+                    ctx.beginPath(); ctx.moveTo(p1.px, p1.py); ctx.lineTo(p2.px, p2.py);
+                    if(tGold < 0.5) ctx.strokeStyle=`rgba(139,168,156,0.4)`; 
+                    else ctx.strokeStyle=`rgba(243,229,171,${0.2 + tGold*0.5})`; 
+                    ctx.stroke();
+                }
+            });
+
+            proj.forEach(p => {
+                let dS = p.s*p.sc; if(dS<0.1) return;
+                ctx.beginPath(); ctx.arc(p.px, p.py, dS, 0, Math.PI*2); ctx.fillStyle=p.c; ctx.fill();
+                if(p.glow && p.raw.type === 'body') {
+                    ctx.beginPath(); ctx.arc(p.px, p.py, dS*0.4, 0, Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
+                }
+            });
+
+            if (targetState === 2) {
+                if(Math.random() > 0.4 && tCollapse > 0.1) sublimeDust.push({ x: (Math.random()-0.5)*150, y: (Math.random()-0.5)*150, z: (Math.random()-0.5)*150, life: 1.0 });
+                sublimeDust.forEach((sd, index) => {
+                    sd.y -= 1.5; sd.life -= 0.015;
+                    if(sd.life <= 0) sublimeDust.splice(index, 1);
+                    else {
+                        let pr = project({x:sd.x, y:sd.y, z:sd.z}, `rgba(243,229,171,${sd.life})`, 2, true, true);
+                        if(pr) { 
+                            let dsG = pr.s*pr.sc;
+                            ctx.drawImage(glowCanvas, pr.px - dsG*4, pr.py - dsG*4, dsG*8, dsG*8); 
+                            ctx.beginPath(); ctx.arc(pr.px, pr.py, dsG, 0, Math.PI*2); ctx.fillStyle=pr.c; ctx.fill(); 
+                        }
+                    }
+                });
+            }
+
+            if (targetState === 2 && tCollapse < 0.05) {
+                let pulse = 1 + Math.sin(Date.now() * 0.003) * 0.5;
+                ctx.drawImage(glowCanvas, cx - 20*pulse, cy - 20*pulse, 40*pulse, 40*pulse);
+                ctx.beginPath(); ctx.arc(cx, cy, 3 * pulse, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill();
+            }
+
+            requestAnimationFrame(render);
+        }
+
+        // ================= UI & Drawer Controls =================
+        function toggleState() {
+            let btn = document.getElementById('toggle-btn'); let yBtn = document.getElementById('yizhen-btn'); let tBtn = document.getElementById('theory-btn');
+            let sTitle = document.getElementById('s-title'); let sDesc = document.getElementById('s-desc');
+            
+            if (targetState === 0) {
+                targetState = 1; btn.classList.add('pure-mode'); document.getElementById('btn-text').innerText = "Return to Saha";
+                document.getElementById('status-panel').style.borderLeftColor = 'var(--solid-gold)';
+                sTitle.style.color = 'var(--gold)'; sTitle.innerText = "Pure Land ‧ True Reward";
+                sDesc.innerHTML = "Vessel: Flawless Golden Body.<br>Transmission: Golden bi-directional sync.<br>Seat: Nine-Grade Golden Lotus.";
+                
+                yBtn.style.display = 'flex'; tBtn.style.display = 'none';
+            } else {
+                targetState = 0; btn.classList.remove('pure-mode'); document.getElementById('btn-text').innerText = "Switch to Golden Vessel";
+                document.getElementById('status-panel').style.borderLeftColor = 'rgba(139,168,156,0.6)';
+                sTitle.style.color = 'var(--cyan)'; sTitle.innerText = "Saha Realm ‧ Mixed Dwelling";
+                sDesc.innerHTML = "Vessel: Carbon translucent state, impermanent.<br>Transmission: Restricted physical upload.<br>Seat: Void.";
+                
+                yBtn.style.display = 'none'; tBtn.style.display = 'flex';
+            }
+        }
+
+        function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+        function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+
+        // ================= Seal & Ultimate Realm Effects =================
+        function checkAndTriggerImplosion() {
+            let points = db.points || 0;
+            let totalNian = db.totalNian || 0;
+            let currentDays = points / 100;
+            
+            if (currentDays >= 90 || totalNian >= 10000) {
+                triggerImplosion();
+            } else {
+                document.getElementById('lock-warning').classList.add('show');
+            }
+        }
+
+        function triggerImplosion() {
+            document.getElementById('toggle-btn').style.display = 'none';
+            document.getElementById('yizhen-btn').style.display = 'none';
+            document.getElementById('drag-hint').style.display = 'none';
+            document.getElementById('bg-light').style.opacity = '0';
+            
+            document.getElementById('status-panel').style.borderLeftColor = '#fff';
+            document.getElementById('s-title').style.color = '#fff';
+            document.getElementById('s-title').innerText = "One True Realm ‧ Bodhi";
+            document.getElementById('s-desc').innerHTML = "Ego dissolves, vessel collapses.<br>All dharmas return to one, leaving only<br>the Great Compassion in the sea of stars.";
+            
+            targetState = 2;
+
+            setTimeout(() => {
+                const flash = document.getElementById('golden-flash');
+                flash.style.transition = 'opacity 0.2s ease-out';
+                flash.style.opacity = '0.9'; 
+                
+                setTimeout(() => {
+                    flash.style.transition = 'opacity 3.5s ease-in';
+                    flash.style.opacity = '0';
+                    setTimeout(() => { document.getElementById('epilogue-overlay').style.opacity = '1'; }, 1000);
+                }, 250);
+            }, 5500);
+        }
+
+        // ================= 360 Interaction =================
+        canvas.addEventListener('pointerdown', (e) => { 
+            if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return;
+            isDragging = true; startX = e.clientX || e.touches[0].clientX; startY = e.clientY || e.touches[0].clientY; vX = 0; vY = 0; 
+        });
+        canvas.addEventListener('pointermove', (e) => { 
+            if (!isDragging) return; 
+            let x = e.clientX || (e.touches ? e.touches[0].clientX : 0); let y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+            let dx = x - startX; let dy = y - startY;
+            rotY -= dx * 0.008; rotX -= dy * 0.008;
+            vX = -dx * 0.0005; vY = -dy * 0.0005; 
+            startX = x; startY = y;
+        });
+        canvas.addEventListener('pointerup', () => isDragging = false); canvas.addEventListener('pointercancel', () => isDragging = false);
+
+        generateTopology(); render();
+    </script>
 </body>
 </html>

@@ -10,16 +10,17 @@
             --gold: #f3e5ab;
             --solid-gold: #d4af37;
             --cyan: #8ba89c;
-            --text-main: #cccccc;
+            --text-main: #d0d0d0;
         }
+        /* ✨ 鎖死本體滑動，確保 360 度 3D 旋轉絕對絲滑 ✨ */
         body { 
             margin: 0; background: var(--bg-deep); color: var(--text-main); 
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
-            overflow-x: hidden; scroll-behavior: smooth;
+            overflow: hidden; touch-action: none; user-select: none;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-        /* ================= 頂部導航 ================= */
+        /* ================= UI 浮層與按鈕 ================= */
         .back-btn {
             position: absolute; top: 20px; left: 20px; z-index: 1000;
             color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
@@ -30,15 +31,20 @@
         }
         .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
 
-        /* ================= 3D 矩陣區塊 ================= */
-        .matrix-section { position: relative; width: 100vw; height: 100vh; background: #000; overflow: hidden; touch-action: pan-y; }
-        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
         
         .dharmadhatu-light {
             position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, rgba(139,168,156,0.02) 50%, transparent 80%);
-            animation: breath 8s infinite alternate ease-in-out; pointer-events: none; transition: opacity 2s;
+            animation: breath 8s infinite alternate ease-in-out; pointer-events: none; transition: opacity 2s; z-index: 0;
         }
         @keyframes breath { 0% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* 💡 加法級金光閃耀：不遮蔽，只疊加增輝 💡 */
+        #golden-flash {
+            position: absolute; inset: 0; background: rgba(243, 229, 171, 1);
+            mix-blend-mode: screen; opacity: 0; pointer-events: none; z-index: 50;
+        }
 
         .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 15px; transition: opacity 1s;}
         
@@ -75,66 +81,62 @@
         }
         #lock-warning.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
 
-        /* ================= 絕美排版：理論區塊 ================= */
-        .theory-section {
-            position: relative; padding: 100px 6% 120px; background: var(--bg-deep);
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(212,175,55,0.03), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(139,168,156,0.03), transparent 25%);
+        /* 終章法語 (一真法界專屬) */
+        #epilogue-overlay {
+            position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 60; opacity: 0; pointer-events: none; transition: opacity 3s ease-in;
         }
-        
-        .theory-container { max-width: 680px; margin: 0 auto; position: relative; z-index: 2; }
+        .epilogue-text {
+            color: var(--gold); font-size: 1.1rem; letter-spacing: 6px; line-height: 2.5; text-align: center;
+            text-shadow: 0 0 15px rgba(212,175,55,0.8); font-weight: bold; margin-top: 15vh;
+        }
 
-        /* 謙遜聲明 (楔子前) */
+        /* ================= 抽屜式：法寶閣文案區 ================= */
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh;
+            background: rgba(5, 5, 8, 0.95); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0;
+            transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        
+        .drawer-header {
+            position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.9));
+            padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2);
+        }
+        .close-bar { width: 40px; height: 4px; background: rgba(212,175,55,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        .close-btn { color: var(--cyan); font-size: 0.9rem; letter-spacing: 2px; font-weight: bold; cursor: pointer; }
+
+        .theory-container { padding: 30px 6% 20px; max-width: 680px; margin: 0 auto; }
+
         .humble-statement {
             font-size: 0.85rem; color: rgba(243,229,171,0.6); line-height: 1.8; text-align: justify;
-            padding: 20px; border: 1px solid rgba(212,175,55,0.2); border-radius: 8px;
-            background: rgba(20,15,5,0.3); margin-bottom: 60px; font-style: italic; letter-spacing: 1px;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+            padding: 20px; border: 1px solid rgba(212,175,55,0.2); border-radius: 12px;
+            background: rgba(20,15,5,0.3); margin-bottom: 50px; font-style: italic; letter-spacing: 1px;
         }
 
-        .main-title { 
-            color: var(--gold); font-size: 1.7rem; letter-spacing: 6px; text-align: center; 
-            margin-bottom: 60px; font-weight: normal; 
-            text-shadow: 0 0 15px rgba(212,175,55,0.4);
-        }
+        .main-title { color: var(--gold); font-size: 1.5rem; letter-spacing: 5px; text-align: center; margin-bottom: 50px; font-weight: normal; text-shadow: 0 0 15px rgba(212,175,55,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--solid-gold), transparent); margin: 15px auto 0; }
+
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .c-icon { width: 22px; height: 22px; stroke: var(--gold); fill: none; stroke-width: 1.2; filter: drop-shadow(0 0 5px rgba(212,175,55,0.4)); }
+        .c-title { color: var(--gold); font-size: 1.15rem; letter-spacing: 3px; font-weight: bold; }
         
-        .main-title::after {
-            content: ''; display: block; width: 60px; height: 1.5px;
-            background: linear-gradient(90deg, transparent, var(--solid-gold), transparent);
-            margin: 20px auto 0;
+        .science-note { font-size: 0.8rem; color: rgba(139,168,156,0.8); letter-spacing: 1px; padding-left: 34px; margin-bottom: 12px; font-family: monospace; display: flex; align-items: center; gap: 8px; }
+        .science-note::before { content: '▰'; font-size: 0.5rem; color: rgba(139,168,156,0.4); }
+
+        .c-text { color: var(--text-main); font-size: 0.95rem; line-height: 2.1; text-align: justify; padding-left: 34px; letter-spacing: 0.5px; }
+        
+        /* ✨ 柔光修辭 (取代刺眼的白字) ✨ */
+        .soft-highlight { 
+            color: var(--cyan); 
+            border-bottom: 1px dotted rgba(139,168,156,0.6); 
+            padding-bottom: 2px;
         }
 
-        .chapter-box { margin-bottom: 55px; position: relative; }
-        
-        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
-        
-        /* 每個章節的 SVG 幾何圖騰 */
-        .c-icon { width: 24px; height: 24px; stroke: var(--gold); fill: none; stroke-width: 1.2; filter: drop-shadow(0 0 5px rgba(212,175,55,0.5)); }
-        
-        .c-title { color: var(--gold); font-size: 1.2rem; letter-spacing: 3px; font-weight: bold; }
-        
-        /* 科學註釋區塊 (使用青色、小字、內縮) */
-        .science-note {
-            font-size: 0.8rem; color: var(--cyan); letter-spacing: 2px;
-            padding-left: 39px; margin-bottom: 15px; font-family: monospace; opacity: 0.8;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .science-note::before { content: '▰'; font-size: 0.5rem; color: rgba(139,168,156,0.5); }
-
-        .c-text { 
-            color: var(--text-main); font-size: 0.95rem; line-height: 2.1; 
-            text-align: justify; padding-left: 39px; letter-spacing: 0.5px;
-        }
-        
-        .highlight { color: #fff; font-weight: bold; text-shadow: 0 0 8px rgba(255,255,255,0.3); }
-
-        /* 底部裝飾線 */
-        .chapter-divider {
-            width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent);
-            margin: 40px 0;
-        }
-
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
     </style>
 </head>
 <body>
@@ -144,11 +146,10 @@
         回道場
     </div>
 
-    <section class="matrix-section" id="matrix-view">
+    <section class="matrix-section">
         <div class="dharmadhatu-light" id="bg-light"></div>
-        
-        <div id="status-panel">
-            <div class="status-title" id="s-title">娑婆態 ． 受限連線</div>
+        <div id="golden-flash"></div> <div id="status-panel">
+            <div class="status-title" id="s-title">娑婆態 ． 凡聖同居</div>
             <div class="status-desc" id="s-desc">
                 載體：碳基半透明態，生滅無常。<br>傳輸：實線上傳，但受限於硬體，下載微弱。<br>法座：空無。
             </div>
@@ -156,19 +157,23 @@
 
         <canvas id="matrixCanvas"></canvas>
 
+        <div id="epilogue-overlay">
+            <div class="epilogue-text">
+                萬相坍縮，歸於寂靜。<br>
+                唯一不滅的，<br>
+                是那明知皆空，<br>
+                卻無止盡行菩薩道的大悲心。
+            </div>
+        </div>
+
         <div class="ui-layer" id="ui-layer">
             <button class="switch-btn" id="toggle-btn" onclick="toggleState()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                    <polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline>
-                </svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
                 <span id="btn-text">切換極樂金身</span>
             </button>
             
-            <button class="switch-btn" id="theory-btn" onclick="scrollToTheory()">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>
-                </svg>
+            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                 探輪迴之謎
             </button>
 
@@ -185,12 +190,16 @@
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="1.5" style="margin-bottom:15px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
         <div style="font-weight:bold; letter-spacing:3px; margin-bottom:12px; color:var(--gold); font-size:1.2rem;">結界未解</div>
         <div style="font-size:0.9rem; line-height:1.8; color:#bbb; margin-bottom:25px;">
-            需達 <span style="color:#fff; font-weight:bold;">「十信位」</span><br>或累積念佛滿 <span style="color:#fff; font-weight:bold;">一萬聲</span><br>方可契入一真法界之觀想。
+            需達 <span style="color:#fff; font-weight:bold;">十信位</span><br>或累積念佛滿 <span style="color:#fff; font-weight:bold;">一萬聲</span><br>方可契入一真法界之觀想。
         </div>
-        <button style="background:linear-gradient(135deg, var(--cyan), #6b8a7c); color:#000; border:none; padding:10px 25px; border-radius:20px; font-weight:bold; cursor:pointer; letter-spacing:2px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);" onclick="document.getElementById('lock-warning').classList.remove('show')">繼續精進</button>
+        <button style="background:linear-gradient(135deg, var(--cyan), #6b8a7c); color:#000; border:none; padding:10px 25px; border-radius:20px; font-weight:bold; cursor:pointer; letter-spacing:2px;" onclick="document.getElementById('lock-warning').classList.remove('show')">繼續精進</button>
     </div>
 
-    <section class="theory-section" id="theory-container">
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()">
+            <div class="close-bar"></div>
+            <div class="close-btn">收起法卷</div>
+        </div>
         <div class="theory-container">
             
             <div class="humble-statement">
@@ -204,9 +213,8 @@
                     <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                     <div class="c-title">戲夢與覺知</div>
                 </div>
-                <div class="science-note">OBSERVATION_OF_THE_ILLUSION</div>
                 <div class="c-text">
-                    生命，<span class="highlight">或許</span>就像是一場多重交疊的全息幻網。我們皆是落入劇本中的演員，因入戲太深，往往將角色之悲歡誤認為真實。然而，真正的覺醒，<span class="highlight">似乎</span>並非要去否定「我正在演戲」這個現象，而是能在演繹的同時，保有第三人稱的清明。<br><br>真正的菩薩，洞悉了這場生死戲碼的底層軌跡，故而<span class="highlight">「不怕死」</span>——因其明白輪迴僅是色身載體的更替；同時也<span class="highlight">「不等死」</span>——因其知曉自己身為演員，有著必須完成的利他宏願。
+                    生命，<span class="soft-highlight">或許</span>就像是一場多重交疊的全息幻網。我們皆是落入劇本中的演員，因入戲太深，往往將角色之悲歡誤認為真實。然而，真正的覺醒，<span class="soft-highlight">似乎</span>並非要去否定「我正在演戲」這個現象，而是能在演繹的同時，保有第三人稱的清明。<br><br>真正的菩薩，洞悉了這場生死戲碼的底層軌跡，故而「不怕死」——因其明白輪迴僅是色身載體的更替；同時也「不等死」——因其知曉自己身為演員，有著必須完成的利他宏願。
                 </div>
             </div>
             <div class="chapter-divider"></div>
@@ -218,7 +226,7 @@
                 </div>
                 <div class="science-note">ALAYA_CLUSTER_AND_EVOLUTION</div>
                 <div class="c-text">
-                    生死流轉，究竟由何驅動？第八識（阿賴耶識）宛如含藏萬法的深邃識田，它<span class="highlight">可能</span>只是一團龐大且無分別的「記憶信息叢聚」，若無外力，便如靜水無波。<br><br>真正啟動輪迴的，<span class="highlight">似乎</span>是第七識（我執）。因我執強烈地「恐懼斷滅、渴望存在」，這股無明的求生欲，便會抓取阿賴耶識的業力種子，盲目地投入新的胎胞。我們<span class="highlight">不妨這樣觀想</span>：阿賴耶識就像是完整的生命本體，而生生世世的「我執」，就像是體內每天生滅的單一細胞。千萬個細胞不斷死亡與更迭，看似無常，但它們所有的經歷與信息，<span class="highlight">或許</span>都是為了成就最終那一次「轉識成智」的終極昇華。
+                    生死流轉，究竟由何驅動？第八識（阿賴耶識）宛如含藏萬法的深邃識田，它<span class="soft-highlight">可能</span>只是一團龐大且無分別的「記憶信息叢聚」，若無外力，便如靜水無波。<br><br>真正啟動輪迴的，<span class="soft-highlight">似乎</span>是第七識（我執）。因我執強烈地「恐懼斷滅、渴望存在」，這股無明的求生欲，便會抓取阿賴耶識的業力種子，盲目地投入新的胎胞。我們<span class="soft-highlight">不妨這樣觀想</span>：阿賴耶識就像是完整的生命本體，而生生世世的「我執」，就像是體內每天生滅的單一細胞。千萬個細胞不斷死亡與更迭，看似無常，但它們所有的經歷與信息，<span class="soft-highlight">或許</span>都是為了成就最終那一次「轉識成智」的終極昇華。
                 </div>
             </div>
             <div class="chapter-divider"></div>
@@ -230,7 +238,7 @@
                 </div>
                 <div class="science-note">CARRIER_COLLAPSE_AND_TRANSFER</div>
                 <div class="c-text">
-                    為何諸佛皆將解脫的關鍵，指歸於「臨命終時」？這其中<span class="highlight">或許</span>蘊含著生命載體最深層的物理密碼。<br><br>凡夫活著時，記憶高度依賴大腦與海馬迴的運作。當臨終到來，生理機能瀕臨瓦解，這<span class="highlight">似乎</span>是我執失去物質支撐、即將陷入盲目牽引的「生死交關」。一旦色身徹底停息，失去現世清晰記憶的我執，便<span class="highlight">可能</span>只能隨業流轉，不知所往。<br><br>而阿彌陀佛的接引，<span class="highlight">或許</span>正是精準捕捉了這「載體將壞、神識尚存一絲清明」的黃金視窗。法界無法強迫轉移，行者必須親自生起<span class="highlight">「發無上菩提心」</span>這唯一的對接願力。一旦願力契合，彌陀的無量光網便能在神識消散前，將我執與阿賴耶識的完整信息，瞬間轉移至極樂蓮胎之中。
+                    為何諸佛皆將解脫的關鍵，指歸於「臨命終時」？這其中<span class="soft-highlight">或許</span>蘊含著生命載體最深層的物理密碼。<br><br>凡夫活著時，記憶高度依賴大腦與海馬迴的運作。當臨終到來，生理機能瀕臨瓦解，這<span class="soft-highlight">似乎</span>是我執失去物質支撐、即將陷入盲目牽引的「生死交關」。一旦色身徹底停息，失去現世清晰記憶的我執，便<span class="soft-highlight">可能</span>只能隨業流轉，不知所往。<br><br>而阿彌陀佛的接引，<span class="soft-highlight">或許</span>正是精準捕捉了這「載體將壞、神識尚存一絲清明」的黃金視窗。法界無法強迫轉移，行者必須親自生起「發無上菩提心」這唯一的對接願力。一旦願力契合，彌陀的無量光網便能在神識消散前，將我執與阿賴耶識的完整信息，瞬間轉移至極樂蓮胎之中。
                 </div>
             </div>
             <div class="chapter-divider"></div>
@@ -242,7 +250,7 @@
                 </div>
                 <div class="science-note">DIMENSIONAL_NOISE_REDUCTION</div>
                 <div class="c-text">
-                    關於淨土的本質，自古有「唯心」與「實有」之辨。若極樂世界僅是無相的「常寂光土」，那<span class="highlight">似乎</span>便無需設立「無漏金身」與種種環境限制。正因其乃彌陀大願所成就的「實報莊嚴土」，且為了接引我們這些身處「凡聖同居土」的眾生，才<span class="highlight">必須</span>存在這套極度嚴謹的金身機制。<br><br>滿地的黃金琉璃，<span class="highlight">或許</span>並非世俗的財富，而是為了提供極致的「頻率降噪」，讓習慣世俗紛擾的眾生得以安定。而世尊曾言極樂有「人天、菩薩」之稱，這<span class="highlight">可能</span>僅是順應眾生來源的「方便說法」。實質上，一旦化生於此，所有載體皆是「咸同一類，形無異狀」。當美醜、強弱的差異被徹底抹平，<span class="highlight">似乎</span>便從物理層面直接拔除了引發貪嗔癡的根源，強迫行者在無慾的環境中直面空性。
+                    關於淨土的本質，自古有「唯心」與「實有」之辨。若極樂世界僅是無相的「常寂光土」，那<span class="soft-highlight">似乎</span>便無需設立「無漏金身」與種種環境限制。正因其乃彌陀大願所成就的「實報莊嚴土」，且為了接引我們這些身處「凡聖同居土」的眾生，才<span class="soft-highlight">必須</span>存在這套極度嚴謹的金身機制。<br><br>滿地的黃金琉璃，<span class="soft-highlight">或許</span>並非世俗的財富，而是為了提供極致的「頻率降噪」，讓習慣世俗紛擾的眾生得以安定。而世尊曾言極樂有「人天、菩薩」之稱，這<span class="soft-highlight">可能</span>僅是順應眾生來源的「方便說法」。實質上，一旦化生於此，所有載體皆是「咸同一類，形無異狀」。當美醜、強弱的差異被徹底抹平，<span class="soft-highlight">似乎</span>便從物理層面直接拔除了引發貪嗔癡的根源，強迫行者在無慾的環境中直面空性。
                 </div>
             </div>
             <div class="chapter-divider"></div>
@@ -254,7 +262,7 @@
                 </div>
                 <div class="science-note">QUARANTINE_SANDBOX_AND_ELEVATION</div>
                 <div class="c-text">
-                    彌陀的大願，展現了法界最不可思議的拔擢與包容機制：<br><br>若未發大心、未解大乘廣智，卻又不想隨業流轉者，這座淨土<span class="highlight">似乎</span>慈悲地降下了「邊地疑城」。這五百年並非懲罰，而<span class="highlight">可能</span>是讓帶著世俗雜質的我執，在無苦的「隔離適應區」中慢慢洗滌，待疑情盡斷，方得見佛聞法。<br><br>而凡夫一經登入，雖帶著娑婆的舊有習氣，卻能蒙受「不住定聚，必至滅度」之防護，形同直接契入初地不退轉的境界；若是他方高階菩薩來生，則直登「究竟必至一生補處」，獲取法界最頂級的證悟資源。
+                    彌陀的大願，展現了法界最不可思議的拔擢與包容機制：<br><br>若未發大心、未解大乘廣智，卻又不想隨業流轉者，這座淨土<span class="soft-highlight">似乎</span>慈悲地降下了「邊地疑城」。這五百年並非懲罰，而<span class="soft-highlight">可能</span>是讓帶著世俗雜質的我執，在無苦的「隔離適應區」中慢慢洗滌，待疑情盡斷，方得見佛聞法。<br><br>而凡夫一經登入，雖帶著娑婆的舊有習氣，卻能蒙受「不住定聚，必至滅度」之防護，形同直接契入初地不退轉的境界；若是他方高階菩薩來生，則直登「究竟必至一生補處」，獲取法界最頂級的證悟資源。
                 </div>
             </div>
             <div class="chapter-divider"></div>
@@ -266,7 +274,7 @@
                 </div>
                 <div class="science-note">COSMIC_RESONANCE_NETWORK</div>
                 <div class="c-text">
-                    當行者在淨土洞悉了生死無懼，必定會依循大悲心重返世間。然而，這份重返的範圍並不僅限於娑婆世界。在浩瀚的華嚴大世界中，十方無量星球的修行者皆會匯聚於極樂，當他們成就智慧後，亦會<span class="highlight">「隨其本願」</span>，前往宇宙中任何需要救度的角落。<br><br>在重披肉身的實戰中，極樂世界的防護，<span class="highlight">似乎</span>確保了外派行者擁有不墮惡道的底線保障。即便在新環境中一時迷失，其阿賴耶識中深厚的「向善慣性」，<span class="highlight">總有機會</span>如強大的引力般將其拉回。同時，法界中無數已歸位的菩薩，<span class="highlight">或許</span>會化作因緣網絡中的「善知識」，在關鍵節點喚醒行者的覺知。而「生尊貴家」之願，<span class="highlight">可能</span>正是為了讓行者跳過底層生存之焦慮，光速解鎖累世智慧，投入度化大業。
+                    當行者在淨土洞悉了生死無懼，必定會依循大悲心重返世間。然而，這份重返的範圍並不僅限於娑婆世界。在浩瀚的華嚴大世界中，十方無量星球的修行者皆會匯聚於極樂，當他們成就智慧後，亦會「隨其本願」，前往宇宙中任何需要救度的角落。<br><br>在重披肉身的實戰中，極樂世界的防護，<span class="soft-highlight">似乎</span>確保了外派行者擁有不墮惡道的底線保障。即便在新環境中一時迷失，其阿賴耶識中深厚的「向善慣性」，<span class="soft-highlight">總有機會</span>如強大的引力般將其拉回。同時，法界中無數已歸位的菩薩，<span class="soft-highlight">或許</span>會化作因緣網絡中的「善知識」，在關鍵節點喚醒行者的覺知。而「生尊貴家」之願，<span class="soft-highlight">可能</span>正是為了讓行者跳過底層生存之焦慮，光速解鎖累世智慧，投入度化大業。
                 </div>
             </div>
             
@@ -277,7 +285,7 @@
             </div>
 
         </div>
-    </section>
+    </div>
 
     <script>
         // 讀取本地資料
@@ -382,7 +390,7 @@
                 });
             }
 
-            // 2. 肉身光暈填充
+            // 2. 肉身光暈
             if (targetState !== 2) {
                 let bodyAura = project({x:0, y:-25, z:0}, 'rgba(0,0,0,0)', 1, false, false);
                 if (bodyAura) {
@@ -462,10 +470,7 @@
             requestAnimationFrame(render);
         }
 
-        function scrollToTheory() {
-            document.getElementById('theory-container').scrollIntoView({ behavior: 'smooth' });
-        }
-
+        // ================= UI 與抽屜控制 =================
         function toggleState() {
             let btn = document.getElementById('toggle-btn'); let yBtn = document.getElementById('yizhen-btn'); let tBtn = document.getElementById('theory-btn');
             let sTitle = document.getElementById('s-title'); let sDesc = document.getElementById('s-desc');
@@ -487,12 +492,16 @@
             }
         }
 
+        function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+        function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+
+        // ================= 結界與一真法界特效 =================
         function checkAndTriggerImplosion() {
             let points = db.points || 0;
             let totalNian = db.totalNian || 0;
             let currentDays = points / 100;
             
-            // 十信位(90日) 或 念佛萬聲
+            // 條件：滿 90 日 (十信位 = 9000點) 或 念佛 >= 10000聲
             if (currentDays >= 90 || totalNian >= 10000) {
                 triggerImplosion();
             } else {
@@ -511,10 +520,33 @@
             document.getElementById('s-title').innerText = "一真法界 ． 菩提不滅";
             document.getElementById('s-desc').innerHTML = "我執消融，載體坍縮。<br>萬法歸一，唯留大悲心跳動於星海之中。";
             
-            targetState = 2; 
+            targetState = 2; // 啟動坍縮
+
+            // 🌟 坍縮 5.5 秒後，觸發加法級「全版閃耀」 🌟
+            setTimeout(() => {
+                const flash = document.getElementById('golden-flash');
+                flash.style.transition = 'opacity 0.2s ease-out';
+                flash.style.opacity = '0.9'; // 極速增輝
+                
+                // 閃耀維持 0.25 秒後，緩慢退去
+                setTimeout(() => {
+                    flash.style.transition = 'opacity 3.5s ease-in';
+                    flash.style.opacity = '0';
+                    
+                    // 光芒退去時，浮現終章法語
+                    setTimeout(() => {
+                        document.getElementById('epilogue-overlay').style.opacity = '1';
+                    }, 1000);
+                }, 250);
+            }, 5500);
         }
 
-        canvas.addEventListener('pointerdown', (e) => { isDragging = true; startX = e.clientX || e.touches[0].clientX; startY = e.clientY || e.touches[0].clientY; vX = 0; vY = 0; });
+        // ================= 360度互動 (加入阻尼滑動) =================
+        canvas.addEventListener('pointerdown', (e) => { 
+            // 如果點到 UI 就不轉動
+            if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return;
+            isDragging = true; startX = e.clientX || e.touches[0].clientX; startY = e.clientY || e.touches[0].clientY; vX = 0; vY = 0; 
+        });
         canvas.addEventListener('pointermove', (e) => { 
             if (!isDragging) return; 
             let x = e.clientX || (e.touches ? e.touches[0].clientX : 0); let y = e.clientY || (e.touches ? e.touches[0].clientY : 0);

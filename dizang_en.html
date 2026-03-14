@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ksitigarbha's Vow Ocean</title>
+    <style>
+        :root {
+            --bg-deep: #010102; --gold: #f3e5ab; --solid-gold: #d4af37; 
+            --cyan: #8ba89c; --blood-red: #8b0000; --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "PingFang TC", "Microsoft JhengHei", "Segoe UI", sans-serif;
+            overflow: hidden; touch-action: none; user-select: none;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.9rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        /* 拔除黑框，改用文字陰影 */
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px;
+            background: transparent; 
+            border-left: 2px solid rgba(212,175,55,0.8); padding: 10px 20px; z-index: 100; transition: 1s; pointer-events: none;
+        }
+        .status-title { font-size: 1.1rem; font-weight: bold; color: var(--gold); letter-spacing: 1px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 15px rgba(0,0,0,1); }
+        .status-desc { font-size: 0.8rem; color: #ddd; line-height: 1.6; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,1); font-style: italic; }
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; transition: background 0.8s; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        .dharmadhatu-light {
+            position: absolute; inset: 0; 
+            background: radial-gradient(circle at 50% 50%, rgba(243,229,171,0.3) 0%, rgba(212,175,55,0.15) 40%, transparent 80%);
+            animation: breathe 5s infinite alternate ease-in-out; pointer-events: none; transition: opacity 1s ease; z-index: 0;
+        }
+        @keyframes breathe { 
+            0% { opacity: 0.25; transform: scale(0.85); filter: brightness(0.8); } 
+            100% { opacity: 1; transform: scale(1.35); filter: brightness(1.5); } 
+        }
+
+        #touch-resonance {
+            position: absolute; inset: 0; 
+            background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.4) 0%, rgba(243,229,171,0.2) 50%, transparent 80%);
+            opacity: 0; pointer-events: none; z-index: 5; mix-blend-mode: screen; transition: opacity 0.8s ease-out;
+        }
+
+        #salvation-flash {
+            position: absolute; inset: 0; 
+            background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f3e5ab 40%, #d4af37 100%);
+            opacity: 0; pointer-events: none; z-index: 99999; 
+            transition: opacity 0.2s ease-out; mix-blend-mode: normal;
+        }
+
+        #hell-overlay {
+            position: absolute; top: 25%; width: 100%; display: flex; flex-direction: column; align-items: center;
+            z-index: 60; opacity: 0; pointer-events: none; transition: opacity 0.5s; padding: 0 20px;
+        }
+        .hell-text {
+            color: #fff; font-size: 1.1rem; letter-spacing: 2px; line-height: 1.8; text-align: center;
+            text-shadow: 0 0 20px var(--blood-red), 0 0 40px var(--blood-red), 0 0 60px #000; font-weight: bold;
+        }
+
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 12px; transition: opacity 1s;}
+        
+        .switch-btn {
+            width: 85%; max-width: 320px; justify-content: center;
+            background: linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(212,175,55,0.5); color: var(--gold);
+            padding: 12px 15px; border-radius: 30px; font-size: 0.85rem; font-weight: bold; letter-spacing: 1px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1);
+        }
+        .switch-btn:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(212,175,55,0.6); }
+
+        #theory-btn { border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,15,10,0.8); }
+
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(212,175,55,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        .close-btn { color: var(--cyan); font-size: 0.85rem; letter-spacing: 2px; font-weight: bold; cursor: pointer; }
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        
+        .humble-statement { font-size: 0.85rem; color: #b0b0b0; line-height: 1.6; text-align: justify; padding: 20px; border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; background: rgba(20,15,5,0.3); margin-bottom: 50px; font-style: normal; }
+        
+        .main-title { color: var(--gold); font-size: 1.4rem; letter-spacing: 2px; text-align: center; margin-bottom: 50px; text-shadow: 0 0 15px rgba(212,175,55,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--solid-gold), transparent); margin: 15px auto 0; }
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 24px; height: 24px; stroke: var(--gold); fill: none; stroke-width: 1.2; filter: drop-shadow(0 0 5px rgba(212,175,55,0.4)); flex-shrink: 0;}
+        .c-title { color: var(--gold); font-size: 1.1rem; letter-spacing: 1px; font-weight: bold; }
+        .c-text { color: var(--text-main); font-size: 0.9rem; line-height: 1.8; text-align: justify; padding-left: 39px; letter-spacing: 0.5px;}
+        .soft-highlight { color: var(--cyan); font-weight: bold; border-bottom: 1px dotted rgba(139,168,156,0.6); padding-bottom: 1px; }
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="back-btn" onclick="window.location.href='index_en.html?screen=3'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Return to Pure Land
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title" id="s-title">Ksitigarbha's Vow Ocean</div>
+        <div class="status-desc" id="s-desc">"Until the hells are empty, I vow not to achieve Buddhahood."</div>
+    </div>
+
+    <section class="matrix-section" id="bg-section">
+        <div class="dharmadhatu-light" id="bg-light"></div>
+        <div id="touch-resonance"></div> 
+        <canvas id="matrixCanvas"></canvas>
+        <div id="hell-overlay"><div class="hell-text" id="hell-quote"></div></div>
+        
+        <div id="salvation-flash"></div>
+
+        <div class="ui-layer" id="ui-layer">
+            <button class="switch-btn" id="btn-vortex" onclick="toggleHell(1)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+                </svg>
+                <span id="text-vortex">Descend to Hells ． Karmic Vortex</span>
+            </button>
+            <button class="switch-btn" id="btn-blade" onclick="toggleHell(2)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 22 22 22"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                <span id="text-blade">Karmic Warning ． Mountain of Knives</span>
+            </button>
+            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                Explore Harmony of Vows & Pure Land
+            </button>
+            
+            <div style="color:rgba(212,175,55,0.6); font-size:0.7rem; letter-spacing:1px; margin-top:5px;" id="drag-hint">360° Holographic View ． Gaze at the Pearl</div>
+        </div>
+    </section>
+
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()"><div class="close-bar"></div><div class="close-btn">Close Sutra Roll</div></div>
+        <div class="theory-container">
+            <div class="humble-statement">The Dharma ocean is boundless; only Buddhas can fully comprehend it. This text is merely a reflection of a lay practitioner's attempt to explore the true meaning of the Tathagata's teachings, based on sutra logic and commentaries. Any omissions or errors are due to personal limitations. May the Three Jewels bless us and fellow practitioners guide us.</div>
+            <h1 class="main-title">Ksitigarbha's Vow Ocean</h1>
+            
+            <div class="chapter-box">
+                <div class="c-header"><svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><div class="c-title">I. Harmony of Amitabha and Ksitigarbha</div></div>
+                <div class="c-text">The <i>Infinite Life Sutra</i> points to the ultimate bliss of "no falling into the three lower realms," while Bodhisattva Ksitigarbha made the grand vow: "Until the hells are empty, I vow not to achieve Buddhahood." In the Dharmadhatu, these two seemingly contrast like Yin and Yang, yet harmonize perfectly. "Carrying karma to the Pure Land" perhaps does not mean past karma simply vanishes out of thin air. In the mundane world, who is truly without karma? However, Amitabha's vow unconditionally embraces all beings, utilizing the mechanism of a golden lotus body to physically transcend mortal dimensions. Thus, rebirth in the Pure Land relies entirely on Amitabha's vow, seemingly irrespective of one's karmic weight. Conversely, Ksitigarbha’s Dharma gate acts as a compassionate alternative within the karmic ocean—a sanctuary for eradicating karma and suffering for those unwilling or not yet ready to directly ascend to the Pure Land.</div>
+            </div>
+            <div class="chapter-divider"></div>
+            
+            <div class="chapter-box">
+                <div class="c-header"><svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/></svg><div class="c-title">II. The Buddha's Entrustment</div></div>
+                <div class="c-text">The transmission of Northern Buddhism often accompanies the return of Bodhisattvas through their vows. During the long, dark era after Sakyamuni Buddha's Nirvana and before Maitreya's descent, the Dharma in this Saha world seems to hang by a mere thread. In the Trayastrimsa Heaven, the Buddha deeply entrusted the heavy responsibility of saving this world to Ksitigarbha. The Bodhisattva acts as the guardian of the most profound vows, stationed in the deepest and darkest dimensions of the Six Realms, perhaps merely to ensure that not a single consciousness is ever entirely abandoned by the universe.</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header"><svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><div class="c-title">III. Avalokitesvara's Inquiry</div></div>
+                <div class="c-text">When contemplating Ksitigarbha's vow, one must not overlook its profound connection to the Pure Land. According to the <i>Ksitigarbha Sutra</i>, the World-Honored One emitted boundless light from his crown and praised Ksitigarbha. At that moment, Avalokitesvara (Guanyin), the left attendant of Amitabha in the Pure Land, specifically rose to inquire about Ksitigarbha's inconceivable deeds. The intersection of these two great Bodhisattvas perhaps conceals a deeper meaning: Avalokitesvara is the vessel guiding beings to the Pure Land, while Ksitigarbha is the beacon eradicating obstacles in the Saha world. One guides to the nine-tiered lotus ponds, while the other pulls beings from the depths of hell. Their vows seemingly weave a network across the void, forging a flawless trajectory for beings to safely navigate from the burning house to the ultimate treasure.</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header"><svg class="c-icon" viewBox="0 0 24 24"><polygon points="12 2 2 22 22 22"/></svg><div class="c-title">IV. Mantra for Eradicating Fixed Karma</div></div>
+                <div class="c-text">Within the Netherworld echoes a subtle sound capable of shattering karmic knots. According to the <i>Dharani Collection Sutra</i>, there exists a mantra widely known as the Mantra for Eradicating Fixed Karma. Its Sanskrit resonance, "Om pramardane svāhā," conceals the divine power to crush and scatter sins. This mantra is perhaps best viewed as a supportive tool for practitioners to uphold the Five Precepts and guard their minds daily. Whether or not one's karma is fully eradicated is a personal progression on the Bodhisattva path; yet, rebirth in the Pure Land relies purely on Amitabha's vow—the two do not conflict. The moment a practitioner awakens the supreme Bodhi mind and vows to be born in the Pure Land, a dedicated lotus seemingly blooms for them in the Seven-Jeweled Pond. Thereafter, the persistent eradication of karma is perhaps not to "exchange" for the ticket to the Pure Land, but merely a calm preparation of Bodhi provisions for future cultivation in the ultimate realm.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [], vortexParticles = [], bladeParticles = [];
+        
+        let rotX = -0.2; let rotY = 0; 
+        let isDragging = false; let startX, startY;
+        let vX = 0, vY = 0; 
+
+        let hellState = 0; 
+        let hellIntensity = 0;
+        let stupaYOffset = 1800; 
+
+        let audioCtx, currentOsc;
+        let quoteTimer; 
+        let sequenceActive = false; 
+
+        // 英文法語
+        const hellQuotes = [ 
+            "To the killer, the retribution of a short lifespan.", 
+            "To the thief, the retribution of extreme poverty.", 
+            "Karmic retributions are distinct and unmistakable." 
+        ];
+        const bladeQuotes = [ 
+            "Those who commit the Ten Evils fall into Avici Hell.", 
+            "Passing through countless kalpas with no escape.", 
+            "Begging for life, yet cannot live; begging for death." 
+        ];
+
+        function playSound(type) {
+            try {
+                if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                if(currentOsc) { currentOsc.stop(); currentOsc.disconnect(); }
+                
+                currentOsc = audioCtx.createOscillator(); 
+                let gain = audioCtx.createGain();
+                
+                if(type === 1) { 
+                    currentOsc.type = 'square'; currentOsc.frequency.setValueAtTime(40, audioCtx.currentTime); 
+                    currentOsc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 3);
+                    gain.gain.setValueAtTime(0.9, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 3);
+                } else if (type === 2) { 
+                    currentOsc.type = 'sawtooth'; currentOsc.frequency.setValueAtTime(1500, audioCtx.currentTime); 
+                    currentOsc.frequency.linearRampToValueAtTime(500, audioCtx.currentTime + 0.8);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+                } else if (type === 0) { 
+                    currentOsc.type = 'sine'; currentOsc.frequency.setValueAtTime(864, audioCtx.currentTime); 
+                    gain.gain.setValueAtTime(1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 4);
+                }
+                currentOsc.connect(gain); gain.connect(audioCtx.destination);
+                currentOsc.start(); currentOsc.stop(audioCtx.currentTime + 4);
+            } catch(e) { console.log("Audio locked"); }
+        }
+
+        function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+        window.addEventListener('resize', resize); resize();
+
+        function generateTopology() {
+            particles = []; vortexParticles = []; bladeParticles = [];
+            function addPt(arr, x, y, z, c, s, type='node') { arr.push({x, y, z, c, s, ox:x, oy:y, oz:z, type}); }
+
+            for(let a=0; a<Math.PI*2; a+=0.25) {
+                for(let b=0; b<Math.PI*2; b+=0.25) {
+                    let r = 35; addPt(particles, r*Math.sin(b)*Math.cos(a), r*Math.cos(b) - 40, r*Math.sin(b)*Math.sin(a), 'rgba(243,229,171,0.9)', 1.8, 'jewel');
+                }
+            }
+            addPt(particles, 0, -40, 0, '#ffffff', 12, 'jewel_core');
+            for(let y=-10; y<=120; y+=4) { addPt(particles, 0, y, 0, 'rgba(212,175,55,1)', 2, 'staff'); }
+            for(let a=0; a<Math.PI*2; a+=0.15) { addPt(particles, 25*Math.cos(a), -10 + 25*Math.sin(a), 0, 'rgba(212,175,55,0.9)', 1.5, 'staff_ring'); }
+            
+            for(let i=0; i<3; i++) {
+                for(let a=0; a<Math.PI*2; a+=0.4) { 
+                    addPt(particles, -22 + 4*Math.cos(a), 5 + i*20 + 4*Math.sin(a), 5*Math.cos(a), 'rgba(243,229,171,1)', 1.2, 'small_ring');
+                    addPt(particles,  22 + 4*Math.cos(a), 5 + i*20 + 4*Math.sin(a), 5*Math.cos(a), 'rgba(243,229,171,1)', 1.2, 'small_ring'); 
+                }
+            }
+
+            for(let i=0; i<1000; i++) {
+                vortexParticles.push({
+                    angle: Math.random() * Math.PI * 2, radius: Math.random() * 800 + 100, yOffset: (Math.random()-0.5) * 200,
+                    spd: Math.random() * 0.08 + 0.02, pull: Math.random() * 6 + 2, 
+                    c: (Math.random() > 0.4) ? 'rgba(180,0,0,0.8)' : 'rgba(150,150,150,0.5)', length: Math.random() * 80 + 20
+                });
+            }
+
+            for(let i=0; i<400; i++) {
+                let angle = Math.random() * Math.PI * 2; let radius = Math.random() * 1000; 
+                bladeParticles.push({
+                    x: radius * Math.cos(angle), z: radius * Math.sin(angle),
+                    w: Math.random() * 20 + 10, h: Math.random() * 500 + 200,
+                    cDark: `rgba(${80+Math.random()*50}, ${80+Math.random()*50}, ${80+Math.random()*50}, 0.8)`,
+                    cLight: `rgba(${180+Math.random()*75}, ${180+Math.random()*75}, ${180+Math.random()*75}, 0.9)`,
+                    flicker: Math.random() * Math.PI * 2
+                });
+            }
+        }
+
+        function render() {
+            ctx.globalCompositeOperation = 'source-over';
+            if (hellState === 1) ctx.fillStyle = `rgba(10,0,0,0.3)`; 
+            else if (hellState === 2) ctx.fillStyle = `rgba(5,5,5,0.2)`; 
+            else ctx.fillStyle = '#010102'; 
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.globalCompositeOperation = 'screen';
+            
+            if(!isDragging) { rotY -= 0.003; rotX += vY; rotY += vX; vX *= 0.95; vY *= 0.95; }
+            if (rotX > 1.2) rotX = 1.2; if (rotX < -1.2) rotX = -1.2; 
+            
+            if(hellState !== 0) hellIntensity += (1 - hellIntensity) * 0.08; 
+            else hellIntensity += (0 - hellIntensity) * 0.1; 
+            
+            const cx = width/2, cy = height/2 + 20, fov = 350;
+            const sinX = Math.sin(rotX), cosX = Math.cos(rotX), sinY = Math.sin(rotY), cosY = Math.cos(rotY);
+            
+            function project(x, y, z) {
+                let x1=x*cosY-z*sinY, z1=z*cosY+x*sinY, y2=y*cosX-z1*sinX, z2=z1*cosX+y*sinX;
+                if(z2 < -fov+10) return null; let scale = fov/(fov+z2);
+                return {px: cx+x1*scale, py: cy+y2*scale, z: z2, sc: scale};
+            }
+
+            if (hellIntensity < 0.95) {
+                let time = Date.now() * 0.001; 
+                let breath = (Math.sin(time) + 1) / 2 * 0.8 + 0.2; 
+                let scaleBreath = (Math.sin(time) + 1) / 2 * 0.6 + 0.8; 
+                
+                particles.forEach(p => {
+                    let isJewel = p.type && p.type.includes('jewel');
+                    let sx = isJewel ? p.ox * scaleBreath : p.ox;
+                    let sy = isJewel ? (p.oy + 40) * scaleBreath - 40 : p.oy;
+                    let sz = isJewel ? p.oz * scaleBreath : p.oz;
+
+                    let ex = sx + (Math.random()-0.5)*80*hellIntensity;
+                    let ey = sy + (Math.random()-0.5)*80*hellIntensity;
+                    let ez = sz + (Math.random()-0.5)*80*hellIntensity;
+                    
+                    let pr = project(ex, ey, ez);
+                    if(pr) {
+                        ctx.beginPath(); ctx.arc(pr.px, pr.py, p.s*pr.sc, 0, Math.PI*2);
+                        let alpha = (p.type === 'jewel_core' ? breath : breath * (1 - hellIntensity));
+                        ctx.fillStyle = p.c.replace(/[\d.]+\)$/g, `${alpha})`); ctx.fill();
+                    }
+                });
+            }
+
+            if (hellState === 1 && hellIntensity > 0.1) {
+                ctx.lineWidth = 2.5;
+                vortexParticles.forEach(vp => {
+                    vp.angle += vp.spd * hellIntensity; vp.radius -= vp.pull * hellIntensity;
+                    let currentY = vp.yOffset + (800 - vp.radius) * 1.5; 
+                    if (vp.radius < 10) { vp.radius = 800 + Math.random()*200; }
+                    let x = vp.radius * Math.cos(vp.angle); let z = vp.radius * Math.sin(vp.angle);
+                    let tailX = (vp.radius + vp.length) * Math.cos(vp.angle - vp.spd*2); let tailZ = (vp.radius + vp.length) * Math.sin(vp.angle - vp.spd*2);
+                    let tailY = currentY - (vp.length * 1.5);
+                    let p1 = project(x, currentY, z); let p2 = project(tailX, tailY, tailZ);
+                    if(p1 && p2) {
+                        ctx.beginPath(); ctx.moveTo(p1.px, p1.py); ctx.lineTo(p2.px, p2.py);
+                        ctx.strokeStyle = vp.c.replace(/[\d.]+\)$/g, `${hellIntensity})`); ctx.stroke();
+                    }
+                });
+            }
+            
+            if (hellState === 2 && hellIntensity > 0.1) {
+                stupaYOffset += (0 - stupaYOffset) * 0.15; 
+                bladeParticles.forEach(bp => {
+                    let baseY = 300 + stupaYOffset; let topY = baseY - bp.h;
+                    let pTop = project(bp.x, topY, bp.z); let pLeft = project(bp.x - bp.w, baseY, bp.z - bp.w);
+                    let pRight = project(bp.x + bp.w, baseY, bp.z + bp.w); let pFront = project(bp.x, baseY, bp.z - bp.w*1.5);
+
+                    if(pTop && pLeft && pRight && pFront) {
+                        bp.flicker += 0.1; let alpha = ((Math.sin(bp.flicker)+1)/2 * 0.5 + 0.5) * hellIntensity;
+                        ctx.beginPath(); ctx.moveTo(pTop.px, pTop.py); ctx.lineTo(pLeft.px, pLeft.py); ctx.lineTo(pFront.px, pFront.py); ctx.closePath();
+                        ctx.fillStyle = bp.cDark.replace(/[\d.]+\)$/g, `${alpha})`); ctx.fill();
+                        ctx.beginPath(); ctx.moveTo(pTop.px, pTop.py); ctx.lineTo(pRight.px, pRight.py); ctx.lineTo(pFront.px, pFront.py); ctx.closePath();
+                        ctx.fillStyle = bp.cLight.replace(/[\d.]+\)$/g, `${alpha})`); ctx.fill();
+                    }
+                });
+            }
+            requestAnimationFrame(render);
+        }
+
+        function toggleHell(type) {
+            if(sequenceActive) return; 
+            if(hellState === type) { triggerSalvationLight(); return; } 
+            
+            hellState = type; 
+            updateUI();
+            
+            let bgSection = document.getElementById('bg-section');
+            if(type === 1) bgSection.style.background = '#0a0000'; 
+            else { stupaYOffset = 1800; bgSection.style.background = '#050505'; }
+
+            playHellSequence(type); 
+        }
+
+        function updateUI() {
+            let btn1 = document.getElementById('btn-vortex'); let btn2 = document.getElementById('btn-blade');
+            let txt1 = document.getElementById('text-vortex'); let txt2 = document.getElementById('text-blade');
+            let panel = document.getElementById('status-panel');
+            let hint = document.getElementById('drag-hint');
+
+            if (hellState === 0) {
+                panel.style.opacity = '1';
+                hint.innerText = "360° Holographic View ． Gaze at the Pearl";
+                hint.style.color = "rgba(212,175,55,0.6)";
+                txt1.innerText = "Descend to Hells ． Karmic Vortex";
+                btn1.style.background = 'linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95))';
+                btn1.style.color = 'var(--gold)'; btn1.style.borderColor = 'rgba(212,175,55,0.5)';
+                txt2.innerText = "Karmic Warning ． Mountain of Knives";
+                btn2.style.background = 'linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95))';
+                btn2.style.color = 'var(--gold)'; btn2.style.borderColor = 'rgba(212,175,55,0.5)';
+            } else if (hellState === 1) {
+                panel.style.opacity = '0';
+                hint.innerText = "360° Holographic View ． Contemplate the Netherworld";
+                hint.style.color = "rgba(200,0,0,0.6)";
+                txt1.innerText = "Gaze at the Pearl ． Return to Vow"; 
+                btn1.style.background = 'rgba(10,30,20,0.9)'; btn1.style.color = 'var(--cyan)'; btn1.style.borderColor = 'var(--cyan)';
+                txt2.innerText = "Karmic Warning ． Mountain of Knives"; 
+                btn2.style.background = 'linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95))'; btn2.style.color = 'var(--gold)'; btn2.style.borderColor = 'rgba(212,175,55,0.5)';
+            } else if (hellState === 2) {
+                panel.style.opacity = '0';
+                hint.innerText = "360° Holographic View ． Contemplate the Netherworld";
+                hint.style.color = "rgba(200,0,0,0.6)";
+                txt1.innerText = "Descend to Hells ． Karmic Vortex"; 
+                btn1.style.background = 'linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95))'; btn1.style.color = 'var(--gold)'; btn1.style.borderColor = 'rgba(212,175,55,0.5)';
+                txt2.innerText = "Gaze at the Pearl ． Return to Vow"; 
+                btn2.style.background = 'rgba(10,30,20,0.9)'; btn2.style.color = 'var(--cyan)'; btn2.style.borderColor = 'var(--cyan)';
+            }
+        }
+
+        function playHellSequence(type) {
+            clearTimeout(quoteTimer); 
+            let arr = (type === 1) ? hellQuotes : bladeQuotes;
+            let idx = 0;
+            let overlay = document.getElementById('hell-overlay'); let text = document.getElementById('hell-quote');
+            playSound(type); 
+
+            function nextQuote() {
+                if(hellState !== type) { overlay.style.opacity = '0'; return; } 
+                text.innerText = arr[idx]; overlay.style.opacity = '1';
+                quoteTimer = setTimeout(() => {
+                    if(hellState !== type) return;
+                    overlay.style.opacity = '0'; idx = (idx + 1) % arr.length;
+                    quoteTimer = setTimeout(nextQuote, 1200);
+                }, 3500);
+            }
+            nextQuote();
+        }
+
+        async function triggerSalvationLight() {
+            if (sequenceActive) return;
+            sequenceActive = true;
+            
+            hellState = 0; 
+            updateUI(); 
+            clearTimeout(quoteTimer);
+            document.getElementById('hell-overlay').style.opacity = '0';
+
+            let flash = document.getElementById('salvation-flash');
+            playSound(0); 
+            flash.style.transition = 'opacity 0.1s ease-out'; flash.style.opacity = '1'; 
+            
+            await sleep(800); 
+            
+            document.getElementById('bg-section').style.background = '#000';
+            generateTopology(); 
+            
+            flash.style.transition = 'opacity 2.5s ease-in'; flash.style.opacity = '0'; 
+            sequenceActive = false; 
+        }
+
+        function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+        function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+
+        canvas.addEventListener('pointerdown', (e) => { 
+            if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; 
+            isDragging = true; startX = e.clientX || e.touches[0].clientX; startY = e.clientY || e.touches[0].clientY; vX = 0; vY = 0; 
+            
+            if(hellState === 0) {
+                let rFlash = document.getElementById('touch-resonance');
+                rFlash.style.transition = 'none'; rFlash.style.opacity = '0.8'; 
+                setTimeout(() => { rFlash.style.transition = 'opacity 1s ease-out'; rFlash.style.opacity = '0'; }, 50);
+            }
+        });
+        
+        canvas.addEventListener('pointermove', (e) => { if (!isDragging) return; let x = e.clientX || (e.touches ? e.touches[0].clientX : 0); let y = e.clientY || (e.touches ? e.touches[0].clientY : 0); let dx = x - startX; let dy = y - startY; rotY -= dx * 0.008; rotX -= dy * 0.008; vX = -dx * 0.0005; vY = -dy * 0.0005; startX = x; startY = y; });
+        canvas.addEventListener('pointerup', () => isDragging = false); canvas.addEventListener('pointercancel', () => isDragging = false);
+
+        generateTopology(); render();
+    </script>
+</body>
+</html>

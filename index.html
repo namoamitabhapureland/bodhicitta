@@ -1365,14 +1365,52 @@ function playBell() {
     }
 
 
+        // 建立一個全域陣列，避免安卓把正在排隊的語音當垃圾刪掉
+    window.sysUtterances = [];
+
     function speak(t, r) {
-        if (!window.speechSynthesis) return; window.speechSynthesis.cancel(); 
+        if (!window.speechSynthesis) return; 
+        window.speechSynthesis.cancel(); 
+        
         let isAndroid = /Android/i.test(navigator.userAgent);
         let textToSpeak = isAndroid ? t : t.replace(/阿/g, 'ㄚ');
+        
         const m = new SpeechSynthesisUtterance(textToSpeak);
-        m.lang = 'zh-TW'; m.rate = r || 0.8; m.pitch = 1.0; m.volume = 1.0;
-        setTimeout(() => { window.speechSynthesis.speak(m); }, 50);
+        m.lang = 'zh-TW'; 
+        m.rate = r || 0.8; 
+        m.pitch = 1.0; 
+        m.volume = 1.0;
+
+        // 【安卓專屬強心針】：如果不加這段，安卓 Chrome 很容易發啞巴
+        if (isAndroid) {
+            window.sysUtterances.push(m); // 放入陣列防回收
+            // 安卓需要語音包完全載入後再唸
+            let voices = window.speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                // 優先找 Google 的中文語音，避免抓到三星自帶的奇怪語音
+                let zhVoice = voices.find(v => v.lang === 'zh-TW' && v.name.includes('Google')) || 
+                              voices.find(v => v.lang.includes('zh'));
+                if (zhVoice) m.voice = zhVoice;
+            }
+            
+            // 唸完後從陣列清掉，釋放記憶體
+            m.onend = function() {
+                window.sysUtterances = window.sysUtterances.filter(u => u !== m);
+            };
+            
+            // 安卓需要延遲久一點點，讓引擎準備好
+            setTimeout(() => { window.speechSynthesis.speak(m); }, 150);
+        } else {
+            // 【蘋果 iOS 專屬】：完全維持您原本最完美的邏輯，一字不改！
+            setTimeout(() => { window.speechSynthesis.speak(m); }, 50);
+        }
     }
+
+    // 提前喚醒安卓語音庫
+    if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = function() { speechSynthesis.getVoices(); };
+    }
+
 
     if (!db.musicList) db.musicList = [];
     function addMusic() {

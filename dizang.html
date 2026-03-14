@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>九華悲願 ． 誓度幽冥</title>
+    <style>
+        :root {
+            --bg-deep: #010102;
+            --gold: #f3e5ab;
+            --solid-gold: #d4af37;
+            --cyan: #8ba89c;
+            --blood-red: #8b0000;
+            --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; user-select: none;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; letter-spacing: 1px; cursor: pointer;
+            text-shadow: 0 0 8px rgba(212,175,55,0.5); background: rgba(0,0,0,0.5); 
+            padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px;
+            background: rgba(10,10,15,0.8); backdrop-filter: blur(12px);
+            border-left: 3px solid var(--solid-gold); padding: 15px 20px; z-index: 100; transition: 1.5s; pointer-events: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-radius: 0 10px 10px 0;
+        }
+        .status-title { font-size: 1.1rem; font-weight: bold; color: var(--gold); letter-spacing: 2px; margin-bottom: 8px; transition: 1.5s; }
+        .status-desc { font-size: 0.85rem; color: #bbb; line-height: 1.8; transition: 1.5s; letter-spacing: 1px; }
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; transition: background 0.5s; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        .dharmadhatu-light {
+            position: absolute; inset: 0; 
+            background: radial-gradient(circle at 50% 50%, rgba(212,175,55,0.1) 0%, transparent 70%);
+            animation: breath 6s infinite alternate ease-in-out; pointer-events: none; transition: opacity 2s ease; z-index: 0;
+        }
+        @keyframes breath { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* 地獄業報法語閃爍 */
+        #hell-overlay {
+            position: absolute; top: 30%; width: 100%; display: flex; flex-direction: column; align-items: center;
+            z-index: 60; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+        }
+        .hell-text {
+            color: #fff; font-size: 1.3rem; letter-spacing: 8px; line-height: 2.2; text-align: center;
+            text-shadow: 0 0 20px var(--blood-red), 0 0 40px var(--blood-red); font-weight: bold;
+        }
+
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 15px; transition: opacity 1.5s;}
+        
+        .switch-btn {
+            background: linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(212,175,55,0.5); color: var(--gold);
+            padding: 16px 35px; border-radius: 30px; font-size: 1rem; font-weight: bold; letter-spacing: 2px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.5s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1);
+        }
+        .switch-btn:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(212,175,55,0.6); }
+
+        .hell-btn {
+            background: rgba(30,0,0,0.8); border-color: var(--blood-red); color: #ff9999;
+            box-shadow: 0 5px 20px rgba(139,0,0,0.6), inset 0 0 15px rgba(139,0,0,0.3);
+        }
+
+        /* 法寶閣抽屜 */
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh;
+            background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0;
+            transform: translateY(100%); transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(212,175,55,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        .close-btn { color: var(--cyan); font-size: 0.85rem; letter-spacing: 2px; font-weight: bold; cursor: pointer; }
+
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        .humble-statement { font-size: 0.9rem; color: rgba(243,229,171,0.6); line-height: 1.8; text-align: justify; padding: 20px; border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; background: rgba(20,15,5,0.3); margin-bottom: 50px; font-style: italic; }
+        .main-title { color: var(--gold); font-size: 1.6rem; letter-spacing: 3px; text-align: center; margin-bottom: 50px; font-weight: normal; text-shadow: 0 0 15px rgba(212,175,55,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--solid-gold), transparent); margin: 15px auto 0; }
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 24px; height: 24px; stroke: var(--gold); fill: none; stroke-width: 1.2; filter: drop-shadow(0 0 5px rgba(212,175,55,0.4)); flex-shrink: 0;}
+        .c-title { color: var(--gold); font-size: 1.25rem; letter-spacing: 1.5px; font-weight: bold; }
+        .c-text { color: var(--text-main); font-size: 1rem; line-height: 1.95; text-align: justify; padding-left: 39px; letter-spacing: 0.8px;}
+        .soft-highlight { color: var(--cyan); font-weight: bold; border-bottom: 1px dotted rgba(139,168,156,0.6); padding-bottom: 1px; }
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="back-btn" onclick="window.location.href='index.html?screen=3'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        回道場
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title" id="s-title">地藏願海 ． 摩尼照明</div>
+        <div class="status-desc" id="s-desc">
+            「地獄未空，誓不成佛。<br>眾生度盡，方證菩提。」<br>不捨幽冥，代佛宣化。
+        </div>
+    </div>
+
+    <section class="matrix-section" id="bg-section">
+        <div class="dharmadhatu-light" id="bg-light"></div>
+        <canvas id="matrixCanvas"></canvas>
+
+        <div id="hell-overlay">
+            <div class="hell-text" id="hell-quote">若遇殺生者，說宿殃短命報</div>
+        </div>
+
+        <div class="ui-layer" id="ui-layer">
+            <button class="switch-btn hell-btn" id="hell-btn" onclick="descendToHell()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                直墮幽冥 ． 因果警示
+            </button>
+            <button class="switch-btn" style="border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,15,10,0.8);" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                探究悲願與淨土之圓融
+            </button>
+            <div style="color:rgba(212,175,55,0.5); font-size:0.75rem; letter-spacing:3px; margin-top:10px;" id="drag-hint">360° 全息觀想明珠與錫杖</div>
+        </div>
+    </section>
+
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()">
+            <div class="close-bar"></div>
+            <div class="close-btn">收起古卷</div>
+        </div>
+        <div class="theory-container">
+            <div class="humble-statement">
+                「嚴謹治學，實事求是。本文依據大乘經典與梵本邏輯，探求諸佛菩薩化現之深意。佛法如海，唯佛能究，若有未盡，祈三寶鑒察。」
+            </div>
+            <h1 class="main-title">九華悲願 ． 誓度幽冥</h1>
+
+            <div class="chapter-box">
+                <div class="c-header"><svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><div class="c-title">彌陀與地藏之圓融閉環</div></div>
+                <div class="c-text">
+                    《無量壽經》揭示了極樂淨土「不墮三惡道」的究竟安樂；而地藏菩薩則發下「地獄未空，誓不成佛」的震撼大願。兩者看似一高一低，實則是法界中最完美的邏輯閉環。<br><br>
+                    若眾生皆蒙彌陀接引往生極樂，不再輪迴，地獄自然「空」矣。在實修層面，阿彌陀佛提供了無後顧之憂的<span class="soft-highlight">「果地接引」</span>；而地藏菩薩法門，則為身處五濁的我們提供了<span class="soft-highlight">「因地除障」</span>的強大助緣。「業障不除，極樂難生」，藉由地藏悲願拔除冤親牽絆，方能確保臨終心不顛倒，順利登入淨土伺服器。
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header"><svg class="c-icon" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><div class="c-title">世尊付囑與無佛時代</div></div>
+                <div class="c-text">
+                    大乘經典的流傳，往往伴隨著菩薩的乘願再來。在釋迦牟尼佛入滅之後、彌勒菩薩下生之前的漫長「無佛時代」，娑婆世界的教化網域面臨斷線危機。佛陀於忉利天宮，將此五濁惡世的度生重任，鄭重<span class="soft-highlight">付囑予地藏菩薩</span>。<br><br>
+                    地藏菩薩宛如法界最高級別的「代理系統管理員」，以其累劫修持的深厚願力，鎮守於六道之中最底層、最痛苦的維度，確保沒有任何一個靈魂被宇宙徹底遺棄。
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [], hellParticles = [];
+        
+        let rotX = -0.2; let rotY = 0; 
+        let isDragging = false; let startX, startY;
+        let vX = 0, vY = 0; 
+
+        let isHell = false; // 0: 莊嚴態, 1: 地獄恐怖態
+        let hellIntensity = 0;
+        let jitterX = 0, jitterY = 0;
+
+        let audioCtx, hellOsc, hellGain;
+
+        const quotes = [
+            "若遇殺生者，說宿殃短命報",
+            "若遇竊盜者，說貧窮苦楚報",
+            "若遇瞋恚者，說醜陋癃殘報",
+            "因果業報，絲毫不爽"
+        ];
+
+        function initAudio() {
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        // 恐怖低頻鐘聲
+        function playHellBell() {
+            initAudio();
+            hellOsc = audioCtx.createOscillator();
+            hellGain = audioCtx.createGain();
+            
+            hellOsc.type = 'square'; // 帶有金屬壓迫感的波形
+            hellOsc.frequency.setValueAtTime(60, audioCtx.currentTime); // 極低頻
+            hellOsc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 4);
+            
+            hellGain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+            hellGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 5);
+            
+            hellOsc.connect(hellGain); hellGain.connect(audioCtx.destination);
+            hellOsc.start(); hellOsc.stop(audioCtx.currentTime + 5);
+        }
+
+        function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+        window.addEventListener('resize', resize); resize();
+
+        function generateTopology() {
+            particles = []; hellParticles = [];
+            function addPt(arr, x, y, z, c, s) { arr.push({x, y, z, c, s, ox:x, oy:y, oz:z}); }
+
+            // 1. 莊嚴態：摩尼明珠 (高密度發光球體)
+            for(let a=0; a<Math.PI*2; a+=0.3) {
+                for(let b=0; b<Math.PI; b+=0.3) {
+                    let r = 35;
+                    addPt(particles, r*Math.sin(b)*Math.cos(a), r*Math.cos(b) - 40, r*Math.sin(b)*Math.sin(a), 'rgba(243,229,171,0.8)', 1.5);
+                }
+            }
+            // 核心高光
+            addPt(particles, 0, -40, 0, '#ffffff', 8);
+
+            // 2. 莊嚴態：九環錫杖 (幾何圓環與直柱)
+            for(let y=-10; y<=120; y+=4) { addPt(particles, 0, y, 0, 'rgba(212,175,55,0.9)', 2); }
+            // 杖頭大環
+            for(let a=0; a<Math.PI*2; a+=0.2) { addPt(particles, 20*Math.cos(a), -20 + 20*Math.sin(a), 0, 'rgba(212,175,55,0.7)', 1.2); }
+            // 小環 (簡化表示)
+            for(let i=0; i<3; i++) {
+                for(let a=0; a<Math.PI*2; a+=0.3) { 
+                    addPt(particles, -15 + 8*Math.cos(a), -25 + i*15 + 8*Math.sin(a), 5, 'rgba(139,168,156,0.6)', 1);
+                    addPt(particles, 15 + 8*Math.cos(a), -25 + i*15 + 8*Math.sin(a), -5, 'rgba(139,168,156,0.6)', 1); 
+                }
+            }
+
+            // 3. 地獄態：刀山劍樹 (預先生成，隱藏)
+            for(let i=0; i<600; i++) {
+                let isRed = Math.random() > 0.5;
+                hellParticles.push({
+                    x: (Math.random()-0.5)*800, y: (Math.random()-0.5)*800, z: (Math.random()-0.5)*800,
+                    vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15, vz: Math.random()*20 + 5, // 快速刺向螢幕
+                    c: isRed ? 'rgba(139,0,0,0.8)' : 'rgba(200,200,200,0.6)',
+                    l: Math.random() * 40 + 20 // 線條長度
+                });
+            }
+        }
+
+        function render() {
+            ctx.fillStyle = isHell ? 'rgba(5,0,0,0.4)' : '#010102'; // 地獄態殘影拖尾
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.globalCompositeOperation = 'screen';
+            
+            if(!isDragging && !isHell) { rotY -= 0.005; rotX += vY; rotY += vX; vX *= 0.95; vY *= 0.95; }
+            if(isHell) { 
+                hellIntensity += (1 - hellIntensity) * 0.05; 
+                jitterX = (Math.random()-0.5) * 15 * hellIntensity;
+                jitterY = (Math.random()-0.5) * 15 * hellIntensity;
+            } else {
+                hellIntensity += (0 - hellIntensity) * 0.1;
+                jitterX = 0; jitterY = 0;
+            }
+
+            const cx = width/2 + jitterX, cy = height/2 + 20 + jitterY, fov = 350;
+            const sinX = Math.sin(rotX), cosX = Math.cos(rotX), sinY = Math.sin(rotY), cosY = Math.cos(rotY);
+            
+            function project(p) {
+                let x1=p.x*cosY-p.z*sinY, z1=p.z*cosY+p.x*sinY, y2=p.y*cosX-z1*sinX, z2=z1*cosX+p.y*sinX;
+                if(z2 < -fov+10) return null; let scale = fov/(fov+z2);
+                return {px: cx+x1*scale, py: cy+y2*scale, z: z2, sc: scale};
+            }
+
+            // 畫莊嚴粒子 (隨地獄強度碎裂消失)
+            if (hellIntensity < 0.9) {
+                let pAlpha = 1 - hellIntensity;
+                particles.forEach(p => {
+                    let ex = p.ox + (Math.random()-0.5)*50*hellIntensity;
+                    let ey = p.oy + (Math.random()-0.5)*50*hellIntensity;
+                    let ez = p.oz + (Math.random()-0.5)*50*hellIntensity;
+                    let pr = project({x:ex, y:ey, z:ez});
+                    if(pr) {
+                        ctx.beginPath(); ctx.arc(pr.px, pr.py, p.s*pr.sc, 0, Math.PI*2);
+                        ctx.fillStyle = p.c.replace(/[\d.]+\)$/g, `${pAlpha})`); ctx.fill();
+                    }
+                });
+            }
+
+            // 畫地獄恐怖線條
+            if (hellIntensity > 0.1) {
+                ctx.lineWidth = 1.5;
+                hellParticles.forEach(hp => {
+                    hp.x += hp.vx; hp.y += hp.vy; hp.z -= hp.vz; // 往鏡頭衝
+                    if(hp.z < -300) { hp.z = 400; hp.x = (Math.random()-0.5)*800; hp.y = (Math.random()-0.5)*800; }
+                    
+                    let p1 = project(hp);
+                    let p2 = project({x: hp.x - hp.vx*3, y: hp.y - hp.vy*3, z: hp.z + hp.vz*3}); // 尾巴
+                    
+                    if(p1 && p2) {
+                        ctx.beginPath(); ctx.moveTo(p1.px, p1.py); ctx.lineTo(p2.px, p2.py);
+                        ctx.strokeStyle = hp.c; ctx.stroke();
+                    }
+                });
+            }
+            
+            requestAnimationFrame(render);
+        }
+
+        async function descendToHell() {
+            if(isHell) {
+                // 恢復莊嚴
+                isHell = false;
+                document.getElementById('bg-section').style.background = '#000';
+                document.getElementById('status-panel').style.opacity = '1';
+                document.getElementById('ui-layer').style.opacity = '1';
+                document.getElementById('hell-overlay').style.opacity = '0';
+                document.getElementById('hell-btn').innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>直墮幽冥 ． 因果警示`;
+                document.getElementById('hell-btn').style.background = 'linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95))';
+                document.getElementById('hell-btn').style.color = 'var(--gold)';
+                document.getElementById('hell-btn').style.borderColor = 'rgba(212,175,55,0.5)';
+                generateTopology(); // 重置粒子位置
+            } else {
+                // 墮入地獄
+                isHell = true;
+                playHellBell();
+                document.getElementById('bg-section').style.background = '#0a0000';
+                document.getElementById('status-panel').style.opacity = '0';
+                
+                // 按鈕變為返回
+                let btn = document.getElementById('hell-btn');
+                btn.innerHTML = `仰望明珠 ． 回歸悲願`;
+                btn.style.background = 'rgba(10,30,20,0.9)';
+                btn.style.color = 'var(--cyan)';
+                btn.style.borderColor = 'var(--cyan)';
+
+                // 循環顯示恐怖法語
+                let overlay = document.getElementById('hell-overlay');
+                let quoteText = document.getElementById('hell-quote');
+                
+                for(let i=0; i<quotes.length; i++) {
+                    if(!isHell) break;
+                    quoteText.innerText = quotes[i];
+                    overlay.style.opacity = '1';
+                    await sleep(2000);
+                    overlay.style.opacity = '0';
+                    await sleep(500);
+                    if(i===0) playHellBell(); // 中間再敲一次
+                }
+            }
+        }
+
+        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+        function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+        function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+
+        canvas.addEventListener('pointerdown', (e) => { if(e.target.closest('.ui-layer') || e.target.closest('#theory-drawer')) return; isDragging = true; startX = e.clientX || e.touches[0].clientX; startY = e.clientY || e.touches[0].clientY; vX = 0; vY = 0; });
+        canvas.addEventListener('pointermove', (e) => { if (!isDragging || isHell) return; let x = e.clientX || (e.touches ? e.touches[0].clientX : 0); let y = e.clientY || (e.touches ? e.touches[0].clientY : 0); let dx = x - startX; let dy = y - startY; rotY -= dx * 0.008; rotX -= dy * 0.008; vX = -dx * 0.0005; vY = -dy * 0.0005; startX = x; startY = y; });
+        canvas.addEventListener('pointerup', () => isDragging = false); canvas.addEventListener('pointercancel', () => isDragging = false);
+
+        generateTopology(); render();
+    </script>
+</body>
+</html>

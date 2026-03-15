@@ -2,18 +2,18 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>菩提星系 ． 清淨時空</title>
+    <title>菩提金心 ． 星空修行</title>
     <style>
         body { margin: 0; background: #010102; overflow: hidden; }
         canvas { width: 100vw; height: 100vh; display: block; }
     </style>
 </head>
 <body>
-    <canvas id="starCanvas"></canvas>
+    <canvas id="mainCanvas"></canvas>
     <script>
-        const canvas = document.getElementById('starCanvas');
+        const canvas = document.getElementById('mainCanvas');
         const ctx = canvas.getContext('2d');
-        let w, h;
+        let w, h, time = 0;
         const stars = [];
 
         function init() {
@@ -25,39 +25,59 @@
                     x: (Math.random() - 0.5) * 2000,
                     y: (Math.random() - 0.5) * 2000,
                     z: Math.random() * 2000,
-                    size: 1.5,
-                    color: i % 3 === 0 ? '#f3e5ab' : (i % 3 === 1 ? '#8ba89c' : '#d4af37')
+                    color: i % 2 === 0 ? '#d4af37' : '#8ba89c'
                 });
             }
         }
 
         function draw() {
-            // 維持背景深邃，不產生殘影疊加導致的反白
             ctx.fillStyle = '#010102';
             ctx.fillRect(0, 0, w, h);
+            time += 0.05;
 
-            const fov = 400; // 視角焦距
-
+            // --- 1. 深邃星空背景 ---
             stars.forEach(s => {
-                s.z -= 2; // 向前飄移的速度
-                if (s.z <= 0) s.z = 2000; // 循環回到遠方
-
-                // 3D 投影計算
-                const scale = fov / (fov + s.z);
+                s.z -= 1.5;
+                if (s.z <= 0) s.z = 2000;
+                const scale = 400 / (400 + s.z);
                 const x2d = w/2 + s.x * scale;
                 const y2d = h/2 + s.y * scale;
-
-                // 根據距離調整透明度與大小，產生深邃感
-                const alpha = Math.min(1, (2000 - s.z) / 1500);
-                
+                ctx.globalAlpha = Math.min(1, (2000 - s.z) / 1500);
                 ctx.beginPath();
-                ctx.arc(x2d, y2d, s.size * scale * 2, 0, Math.PI * 2);
+                ctx.arc(x2d, y2d, 1.2 * scale, 0, Math.PI * 2);
                 ctx.fillStyle = s.color;
-                ctx.globalAlpha = alpha;
                 ctx.fill();
             });
-            
+
+            // --- 2. 金色菩提心 (核心亮點) ---
             ctx.globalAlpha = 1;
+            const centerX = w/2;
+            const centerY = h/2;
+            
+            // 呼吸跳動算法
+            const pulse = Math.sin(time * 0.5) * 5;
+            const coreSize = 8 + pulse * 0.2;
+            
+            // 外圍氤氳光暈 (多層疊加，避免反白)
+            const grad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 40 + pulse * 2);
+            grad.addColorStop(0, 'rgba(243, 229, 171, 0.9)'); // 香檳金
+            grad.addColorStop(0.2, 'rgba(212, 175, 55, 0.4)'); // 琥珀金
+            grad.addColorStop(1, 'rgba(212, 175, 55, 0)');   // 消失
+            
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 50 + pulse * 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 核心金色小球
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, coreSize, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff'; // 核心最亮點
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#f3e5ab';
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
             requestAnimationFrame(draw);
         }
 

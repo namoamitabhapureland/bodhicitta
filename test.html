@@ -2,91 +2,71 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>菩提幾何 ． 全景預演</title>
+    <title>菩提幾何 ． 千葉蓮花預演</title>
     <style>
-        body { margin: 0; background: #050505; color: #f3e5ab; overflow: hidden; font-family: sans-serif; }
-        #canvas-container { width: 100vw; height: 100vh; cursor: grab; perspective: 1000px; display: flex; justify-content: center; align-items: center; }
-        .world { transform-style: preserve-3d; transition: transform 0.1s; }
-        .node { 
-            position: absolute; width: 8px; height: 8px; 
-            background: rgba(243, 229, 171, 0.9);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.8), 0 0 30px rgba(255, 255, 255, 0.3);
-            border-radius: 2px; transform-style: preserve-3d;
+        body { margin: 0; background: #050505; color: #f3e5ab; overflow: hidden; }
+        #canvas-container { width: 100vw; height: 100vh; perspective: 1200px; display: flex; justify-content: center; align-items: center; }
+        .world { transform-style: preserve-3d; }
+        /* 瓣片：Roblox風格的幾何長方體 */
+        .petal { 
+            position: absolute; width: 12px; height: 60px; 
+            background: rgba(212, 175, 55, 0.4);
+            border: 1px solid rgba(243, 229, 171, 0.6);
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2), 0 0 15px rgba(212, 175, 55, 0.3);
+            transform-origin: bottom center;
+            border-radius: 2px;
         }
-        .info { position: fixed; bottom: 30px; width: 100%; text-align: center; letter-spacing: 5px; opacity: 0.7; pointer-events: none; }
+        /* 核心種子 */
+        .core {
+            position: absolute; width: 20px; height: 20px; background: #fff;
+            border-radius: 50%; box-shadow: 0 0 50px #f3e5ab, 0 0 100px #fff;
+            transform: translate3d(-10px, -10px, 0);
+        }
     </style>
 </head>
 <body>
     <div id="canvas-container">
-        <div class="world" id="world"></div>
+        <div class="world" id="world">
+            <div class="core"></div>
+        </div>
     </div>
-    <div class="info">撥動大千 ． 預見圓滿</div>
 
     <script>
         const world = document.getElementById('world');
-        const count = 108;
-        const nodes = [];
+        const layers = [12, 18, 24, 24, 30]; // 五層花瓣，共108片
+        let petalIndex = 0;
 
-        // 數學排列：108顆種子組成幾何蓮花軌跡
-        for (let i = 0; i < count; i++) {
-            const node = document.createElement('div');
-            node.className = 'node';
-            
-            // 費馬螺旋排列 (Fermat's Spiral) 配合高度變化形成 3D 蓮花
-            const phi = i * Math.PI * (3 - Math.sqrt(5)); // 黃金角度
-            const radius = Math.sqrt(i) * 20;
-            const y = (i - count / 2) * 2; // 縱向拉伸成塔狀蓮花
-            
-            const x = Math.cos(phi) * radius;
-            const z = Math.sin(phi) * radius;
+        layers.forEach((count, layerIndex) => {
+            const radius = (layerIndex + 1) * 25; // 每層半徑
+            const tilt = 90 - (layerIndex * 20); // 每層傾斜角度，越外層越平
 
-            node.style.transform = `translate3d(${x}px, ${y}px, ${z}px)`;
-            world.appendChild(node);
-            nodes.push(node);
-        }
-
-        // 3D 互動邏輯
-        let rotateY = 0;
-        let rotateX = -20;
-        let isDragging = false;
-        let lastX, lastY;
-
-        window.addEventListener('mousedown', (e) => { isDragging = true; lastX = e.clientX; lastY = e.clientY; });
-        window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const deltaX = e.clientX - lastX;
-            const deltaY = e.clientY - lastY;
-            rotateY += deltaX * 0.5;
-            rotateX -= deltaY * 0.5;
-            world.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-            lastX = e.clientX;
-            lastY = e.clientY;
-        });
-        window.addEventListener('mouseup', () => isDragging = false);
-
-        // 手機觸控支援
-        window.addEventListener('touchstart', (e) => { isDragging = true; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; });
-        window.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            const deltaX = e.touches[0].clientX - lastX;
-            const deltaY = e.touches[0].clientY - lastY;
-            rotateY += deltaX * 0.5;
-            rotateX -= deltaY * 0.5;
-            world.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-            lastX = e.touches[0].clientX;
-            lastY = e.touches[0].clientY;
-        });
-        window.addEventListener('touchend', () => isDragging = false);
-
-        // 自動緩緩旋轉
-        function animate() {
-            if (!isDragging) {
-                rotateY += 0.2;
-                world.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            for (let i = 0; i < count; i++) {
+                const petal = document.createElement('div');
+                petal.className = 'petal';
+                const angle = (i / count) * 360;
+                
+                // 3D 變換：旋轉到對應角度，再向外平移，最後做瓣片的傾斜
+                petal.style.transform = `
+                    rotateY(${angle}deg) 
+                    translateZ(${radius}px) 
+                    rotateX(${tilt}deg)
+                `;
+                
+                // 為了美感，給瓣片一點漸層光
+                petal.style.background = `linear-gradient(to top, rgba(212,175,55,0.8), rgba(243,229,171,0.2))`;
+                
+                world.appendChild(petal);
             }
-            requestAnimationFrame(animate);
+        });
+
+        // 簡單旋轉邏輯
+        let ry = 0;
+        function frame() {
+            ry += 0.3;
+            world.style.transform = `rotateX(-25deg) rotateY(${ry}deg)`;
+            requestAnimationFrame(frame);
         }
-        animate();
+        frame();
     </script>
 </body>
 </html>

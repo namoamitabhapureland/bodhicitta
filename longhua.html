@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>龍華三會 ． 赴法界約</title>
+    <style>
+        :root {
+            --gold: #f3e5ab;
+            --solid-gold: #d4af37;
+            --emerald: #097969;
+            --cyan: #9fdfc8;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0; padding: 0; background: #000; color: #eee;
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+            overflow: hidden; /* 鎖死畫面，專注 3D 互動 */
+            touch-action: none; /* 防止手機預設滑動，讓給 3D 旋轉 */
+        }
+        
+        /* ✨ 3D Canvas 畫布 ✨ */
+        #realm-canvas {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 1; cursor: grab;
+        }
+        #realm-canvas:active { cursor: grabbing; }
+
+        /* ✨ UI 介面層 ✨ */
+        .ui-layer {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 10; pointer-events: none; /* 讓點擊穿透到 Canvas */
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        /* 頂部標題 */
+        .header {
+            text-align: center; padding: 40px 20px 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
+        }
+        .title { color: var(--gold); font-size: 1.5rem; font-weight: bold; letter-spacing: 4px; text-shadow: 0 0 15px var(--solid-gold); margin-bottom: 5px; }
+        .subtitle { color: var(--cyan); font-size: 0.85rem; letter-spacing: 2px; opacity: 0.8; }
+        
+        /* 拖曳提示 */
+        .drag-hint {
+            position: absolute; top: 120px; left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,0.5); font-size: 0.75rem; letter-spacing: 1px;
+            display: flex; align-items: center; gap: 8px;
+            animation: pulse-hint 2s infinite alternate;
+        }
+        @keyframes pulse-hint { 0% { opacity: 0.3; } 100% { opacity: 0.8; } }
+
+        /* 底部法界古卷 */
+        .scroll-box {
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 70%, transparent 100%);
+            padding: 30px 25px 40px; pointer-events: auto; /* 恢復點擊 */
+            border-top: 1px solid rgba(212,175,55,0.2);
+            max-height: 40vh; overflow-y: auto; scrollbar-width: none;
+        }
+        .scroll-content { text-align: justify; line-height: 1.8; font-size: 0.95rem; color: #ddd; }
+        .highlight { color: var(--gold); font-weight: bold; }
+        .data-list { margin: 15px 0; padding-left: 15px; border-left: 2px solid var(--solid-gold); }
+        .data-item { color: var(--cyan); font-size: 0.9rem; margin-bottom: 8px; }
+        .data-num { color: #fff; font-weight: bold; font-family: monospace; font-size: 1.05rem; }
+
+        /* 返回按鈕 */
+        .back-btn {
+            display: block; width: 100%; max-width: 300px; margin: 20px auto 0;
+            background: transparent; color: var(--gold); border: 1px solid var(--gold);
+            padding: 12px; border-radius: 25px; font-size: 0.9rem; letter-spacing: 2px;
+            text-align: center; cursor: pointer; transition: 0.3s; pointer-events: auto;
+        }
+        .back-btn:active { background: var(--gold); color: #000; }
+    </style>
+</head>
+<body>
+
+    <canvas id="realm-canvas"></canvas>
+
+    <div class="ui-layer">
+        <div class="header">
+            <div class="title">賢劫 ． 龍華菩提</div>
+            <div class="subtitle">彌勒下生 ． 赴法界約</div>
+        </div>
+
+        <div class="drag-hint">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16v-2a4 4 0 0 0-4-4H7"/><polygon points="11 6 7 10 11 14"/><path d="M3 8v2a4 4 0 0 0 4 4h10"/><polygon points="13 18 17 14 13 10"/></svg>
+            觸控滑動以觀想神樹
+        </div>
+
+        <div class="scroll-box">
+            <div class="scroll-content">
+                《菩薩處胎經》載，彌勒菩薩未來下生娑婆，於高大如龍盤空之龍華菩提樹下成佛，開三大法會度化有緣：
+                <div class="data-list">
+                    <div class="data-item">第一會：釋尊法運受五戒者 <span class="data-num">(96億)</span></div>
+                    <div class="data-item">第二會：釋尊法運受三歸者 <span class="data-num">(94億)</span></div>
+                    <div class="data-item">第三會：乃至一稱南無佛者 <span class="data-num">(92億)</span></div>
+                </div>
+                唯識宗匠具金剛之志，方能直往內院。然凡夫之志脆若琉璃，若無<span class="highlight">淨土本願托底</span>，恐於輪迴巨浪中再度沉淪。
+                <br><br>
+                今稱念彌陀求生極樂，非為逃避，乃為獲不退轉金身。待時機至，吾等極樂菩薩必將<span class="highlight">乘願再來</span>，從容赴此龍華之約！
+            </div>
+            <button class="back-btn" onclick="window.history.back()">返回大乘法界</button>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('realm-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    // 3D 空間變數
+    let particles = [];
+    let angleX = 0; // 攝影機上下角度
+    let angleY = 0; // 攝影機左右角度
+    let isDragging = false;
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+    let time = 0;
+
+    // 調整畫布大小
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // 創建龍華樹粒子
+    function initParticles() {
+        particles = [];
+        const trunkCount = 800;
+        const canopyCount = 1500;
+        const haloCount = 900;
+
+        // 1. 樹幹 (虯結如龍盤空) - 古銅色與暗金
+        for (let i = 0; i < trunkCount; i++) {
+            let t = i / trunkCount;
+            let radius = 40 * (1 - t) + 10; // 底部粗，頂部細
+            let spiral = t * Math.PI * 15; // 螺旋盤繞
+            let x = Math.cos(spiral) * radius;
+            let z = Math.sin(spiral) * radius;
+            let y = t * 300 - 150; // 高度範圍 -150 到 150
+            
+            // 加入噪點讓樹幹更粗糙蒼勁
+            x += (Math.random() - 0.5) * 15;
+            z += (Math.random() - 0.5) * 15;
+            
+            particles.push({
+                x: x, y: y, z: z,
+                baseX: x, baseY: y, baseZ: z,
+                color: Math.random() > 0.3 ? '#8b5a2b' : '#d4af37', // 檀木色與金色
+                size: Math.random() * 2 + 1,
+                type: 'trunk'
+            });
+        }
+
+        // 2. 樹冠 (翡翠與琉璃綠) - 茂密的半球體
+        for (let i = 0; i < canopyCount; i++) {
+            let theta = Math.random() * Math.PI * 2;
+            let phi = Math.acos(Math.random() * 2 - 1);
+            let radius = Math.random() * 120 + 40;
+            // 讓樹冠像傘狀
+            phi = phi / 1.5; 
+            
+            let x = radius * Math.sin(phi) * Math.cos(theta);
+            let y = radius * Math.cos(phi) + 150; // 放在樹幹頂端
+            let z = radius * Math.sin(phi) * Math.sin(theta);
+            
+            // 翡翠綠、琉璃青、點綴金光
+            let colors = ['#097969', '#50c878', '#008b8b', '#f3e5ab'];
+            let color = colors[Math.floor(Math.random() * colors.length)];
+
+            particles.push({
+                x: x, y: y, z: z,
+                baseX: x, baseY: y, baseZ: z,
+                color: color,
+                size: Math.random() * 2.5 + 1,
+                type: 'canopy',
+                randomOffset: Math.random() * Math.PI * 2
+            });
+        }
+
+        // 3. 龍華三會三大光輪 (96億、94億、92億)
+        const halos = [
+            { radius: 180, y: -50, color: '#ffffff', speed: 0.005 }, // 第一會
+            { radius: 240, y: 0, color: '#f3e5ab', speed: 0.003 },   // 第二會
+            { radius: 320, y: 50, color: '#d4af37', speed: 0.002 }   // 第三會
+        ];
+
+        halos.forEach((halo, index) => {
+            let count = haloCount / 3;
+            for(let i=0; i<count; i++) {
+                let theta = (i / count) * Math.PI * 2;
+                particles.push({
+                    angle: theta, radius: halo.radius, y: halo.y,
+                    color: halo.color, size: Math.random() * 2.5 + 1.5,
+                    type: 'halo', speed: halo.speed
+                });
+            }
+        });
+    }
+
+    // 3D 投影邏輯
+    function project(x, y, z) {
+        // 1. 繞 X 軸旋轉 (上下)
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX);
+        let y1 = y * cosX - z * sinX;
+        let z1 = y * sinX + z * cosX;
+        
+        // 2. 繞 Y 軸旋轉 (左右)
+        let cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let x2 = x * cosY - z1 * sinY;
+        let z2 = x * sinY + z1 * cosY;
+
+        // 3. 透視投影
+        let fov = 400; // 視角深度
+        let scale = fov / (fov + z2 + 200); // 200 是攝影機距離
+        
+        let screenX = (width / 2) + x2 * scale;
+        // 把整棵樹稍微往下移一點，配合 UI
+        let screenY = (height / 2) - y1 * scale - 50; 
+        
+        return { x: screenX, y: screenY, scale: scale, z: z2 };
+    }
+
+    function animate() {
+        ctx.fillStyle = 'rgba(5, 5, 5, 0.4)'; // 拖影效果，營造流動感
+        ctx.fillRect(0, 0, width, height);
+        
+        // 讓整棵樹自動緩緩自轉 (如果使用者沒在滑動)
+        if(!isDragging) angleY += 0.002;
+        time += 0.05;
+
+        // 為了 3D 前後遮擋關係，先按 Z 軸深度排序粒子
+        let projectedParticles = [];
+
+        particles.forEach(p => {
+            let px = p.x, py = p.y, pz = p.z;
+
+            // 處理動態效果
+            if (p.type === 'canopy') {
+                // 樹冠像微風吹拂般呼吸
+                py += Math.sin(time + p.randomOffset) * 0.5;
+            } else if (p.type === 'halo') {
+                // 光輪獨立水平旋轉
+                p.angle += p.speed;
+                px = Math.cos(p.angle) * p.radius;
+                pz = Math.sin(p.angle) * p.radius;
+            }
+
+            let proj = project(px, py, pz);
+            if (proj.z > -400) { // 剔除跑到攝影機背後的粒子
+                projectedParticles.push({
+                    sx: proj.x, sy: proj.y,
+                    scale: proj.scale, z: proj.z,
+                    color: p.color, size: p.size, type: p.type
+                });
+            }
+        });
+
+        // 排序：遠的先畫，近的後畫 (Z 軸由大到小)
+        projectedParticles.sort((a, b) => b.z - a.z);
+
+        // 繪製粒子
+        ctx.globalCompositeOperation = 'screen'; // 光影疊加效果
+        projectedParticles.forEach(p => {
+            let finalSize = p.size * p.scale;
+            if (finalSize < 0.1) return;
+
+            ctx.beginPath();
+            ctx.arc(p.sx, p.sy, finalSize, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+
+            // 為光輪加上微光暈
+            if(p.type === 'halo' && Math.random() > 0.8) {
+                ctx.beginPath();
+                ctx.arc(p.sx, p.sy, finalSize * 3, 0, Math.PI * 2);
+                ctx.fillStyle = p.color.replace(')', ', 0.1)').replace('rgb', 'rgba'); // 簡單的透明度處理
+                ctx.fill();
+            }
+        });
+        ctx.globalCompositeOperation = 'source-over'; // 恢復預設
+
+        requestAnimationFrame(animate);
+    }
+
+    // 觸控與滑鼠互動事件 (360度拖曳)
+    function onDown(e) {
+        isDragging = true;
+        lastMouseX = e.touches ? e.touches[0].clientX : e.clientX;
+        lastMouseY = e.touches ? e.touches[0].clientY : e.clientY;
+    }
+    function onMove(e) {
+        if (!isDragging) return;
+        let currentX = e.touches ? e.touches[0].clientX : e.clientX;
+        let currentY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        let deltaX = currentX - lastMouseX;
+        let deltaY = currentY - lastMouseY;
+        
+        angleY += deltaX * 0.01; // 左右轉
+        angleX += deltaY * 0.01; // 上下轉
+        
+        // 限制上下角度，避免樹翻轉過度
+        angleX = Math.max(-Math.PI/3, Math.min(Math.PI/3, angleX));
+
+        lastMouseX = currentX;
+        lastMouseY = currentY;
+    }
+    function onUp() { isDragging = false; }
+
+    canvas.addEventListener('mousedown', onDown);
+    canvas.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchstart', onDown, {passive: true});
+    canvas.addEventListener('touchmove', onMove, {passive: true});
+    window.addEventListener('touchend', onUp);
+
+    // 啟動
+    initParticles();
+    animate();
+
+</script>
+</body>
+</html>

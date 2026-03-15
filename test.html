@@ -105,7 +105,6 @@
             <button class="back-btn" onclick="window.history.back()">返回大乘法界</button>
         </div>
     </div>
-
 <script>
     const canvas = document.getElementById('realm-canvas');
     const ctx = canvas.getContext('2d');
@@ -169,19 +168,17 @@
 
             particles.push({
                 x: x, y: y, z: z, 
-                baseY: y, // 呼吸基準高度
-                baseRadius: radius, // 呼吸基準半徑
-                basePhi: phi, baseTheta: theta, // 呼吸基準角度
+                baseY: y, baseRadius: radius, basePhi: phi, baseTheta: theta,
                 color: color,
                 size: Math.random() * 3 + 1, type: 'canopy',
-                pulseOffset: Math.random() * Math.PI * 2 // 呼吸隨機偏移
+                pulseOffset: Math.random() * Math.PI * 2 
             });
         }
 
-        // 3. 彌勒法音漣漪 (初始化三個不同大小的波紋)
-        ripples.push({ radius: 0, maxRadius: 400, speed: 0.8 });
-        ripples.push({ radius: 130, maxRadius: 400, speed: 0.8 });
-        ripples.push({ radius: 260, maxRadius: 400, speed: 0.8 });
+        // 3. ✨ 升級版：彌勒法音能量光浪 (範圍加大、速度加快)
+        ripples.push({ radius: 0, maxRadius: 600, speed: 1.2 });
+        ripples.push({ radius: 200, maxRadius: 600, speed: 1.2 });
+        ripples.push({ radius: 400, maxRadius: 600, speed: 1.2 });
     }
 
     // 3D 投影核心運算
@@ -198,58 +195,53 @@
         let scale = fov / (fov + z2 + 250); 
         
         let screenX = (width / 2) + x2 * scale;
-        let screenY = (height / 2) - y1 * scale - 80; // 整體稍微下移
+        let screenY = (height / 2) - y1 * scale - 80; 
         
         return { x: screenX, y: screenY, scale: scale, z: z2 };
     }
 
-    // 渲染彌勒金身剪影 (永遠面向鏡頭的 Billboarding 技術)
+    // 渲染彌勒金身剪影
     function drawMaitreya() {
-        // 佛身坐落於樹基 (-100 的高度)
-        // ✨ 添加呼吸脈衝
         let pulse = Math.sin(time) * 1.5; 
         let yPulse = -100 + pulse;
         let proj = project(0, yPulse, 0); 
         
         if (proj.z > -400) {
             let scale = proj.scale;
-            ctx.shadowBlur = 30 + pulse * 2; // 發光隨呼吸跳動
+            ctx.shadowBlur = 30 + pulse * 2; 
             ctx.shadowColor = 'rgba(243, 229, 171, 0.8)';
-            ctx.fillStyle = 'rgba(212, 175, 55, 0.9)'; // 真金色
+            ctx.fillStyle = 'rgba(212, 175, 55, 0.9)'; 
 
-            // 底部盤腿基座 (橢圓)
             ctx.beginPath();
             ctx.ellipse(proj.x, proj.y + 15 * scale, (35 + pulse * 0.5) * scale, (10 + pulse * 0.2) * scale, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // 中間福報大肚 (大圓)
             ctx.beginPath();
             ctx.arc(proj.x, proj.y, (22 + pulse * 0.8) * scale, 0, Math.PI * 2);
             ctx.fill();
 
-            // 上方佛首 (小圓)
             ctx.beginPath();
             ctx.arc(proj.x, proj.y - 30 * scale, (12 + pulse * 0.3) * scale, 0, Math.PI * 2);
             ctx.fill();
             
-            // 關閉發光，避免影響其他粒子
             ctx.shadowBlur = 0; 
         }
     }
 
-    // 渲染法音漣漪 (3D 擴散水波)
+    // ✨ 終極升級：渲染震撼法界的光浪 (能量漣漪)
     function drawRipples() {
-        ctx.lineWidth = 1.5;
+        ctx.globalCompositeOperation = 'screen'; // 開啟螢幕疊加，讓波紋像純光一樣亮
+        
         for (let r of ripples) {
             r.radius += r.speed;
             if (r.radius > r.maxRadius) r.radius = 0;
             
-            let opacity = 1 - (r.radius / r.maxRadius);
-            // ✨ 改為淡透明的真金色，增加消融感
-            ctx.strokeStyle = `rgba(212, 175, 55, ${opacity * 0.35})`; 
+            // 讓波紋淡出的曲線更自然 (非線性衰減)
+            let opacity = 1 - Math.pow(r.radius / r.maxRadius, 1.5);
+            if (opacity < 0) opacity = 0;
 
+            // 準備 3D 圓形路徑
             ctx.beginPath();
-            // 畫 3D 圓圈 (取 60 個點連接成透視圓)
             for (let i = 0; i <= 60; i++) {
                 let theta = (i / 60) * Math.PI * 2;
                 let x = Math.cos(theta) * r.radius;
@@ -259,22 +251,35 @@
                 if (i === 0) ctx.moveTo(proj.x, proj.y);
                 else ctx.lineTo(proj.x, proj.y);
             }
+
+            // 【第一層：寬廣的純金外暈】
+            ctx.lineWidth = 12; // 故意畫得很粗
+            ctx.strokeStyle = `rgba(212, 175, 55, ${opacity * 0.25})`; // 透明度低，作為光暈
             ctx.stroke();
+
+            // 【第二層：高亮的白金核心脈衝】
+            ctx.lineWidth = 2.5; // 核心細緻且銳利
+            ctx.shadowBlur = 20; // 強烈發光
+            ctx.shadowColor = `rgba(243, 229, 171, ${opacity})`;
+            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.7})`; // 白金色
+            ctx.stroke();
+            
+            ctx.shadowBlur = 0; // 重置
         }
+        ctx.globalCompositeOperation = 'source-over'; // 關閉疊加
     }
 
     function animate() {
-        // 清除畫布，帶微弱拖影
         ctx.fillStyle = 'rgba(2, 5, 2, 0.5)'; 
         ctx.fillRect(0, 0, width, height);
         
-        if(!isDragging) angleY += 0.0015; // 緩慢自轉
+        if(!isDragging) angleY += 0.0015; 
         time += 0.03;
 
-        // 1. 畫漣漪 (在最底層)
+        // 1. 先畫震撼的法音漣漪
         drawRipples();
 
-        // 2. 處理 3D 粒子
+        // 2. 處理 3D 粒子 (樹幹與樹冠)
         let projectedParticles = [];
         particles.forEach(p => {
             let py = p.y;
@@ -282,11 +287,10 @@
             let pz = p.z;
             let scaleFactor = 1;
 
-            // ✨ 添加粒子呼吸脈衝
             if (p.type === 'trunk') {
-                py = p.baseY + Math.sin(time + p.pulseOffset) * 2; // 樹幹微小上下跳動
+                py = p.baseY + Math.sin(time + p.pulseOffset) * 2; 
             } else if (p.type === 'canopy') {
-                scaleFactor = 1 + Math.sin(time + p.pulseOffset) * 0.03; // 樹冠輕微收縮
+                scaleFactor = 1 + Math.sin(time + p.pulseOffset) * 0.03; 
                 let radius = p.baseRadius * scaleFactor;
                 py = radius * Math.cos(p.basePhi) + 120 + Math.sin(time + p.pulseOffset) * 1.5;
                 px = radius * Math.sin(p.basePhi) * Math.cos(p.baseTheta);
@@ -302,12 +306,9 @@
             }
         });
 
-        // 遠近排序
         projectedParticles.sort((a, b) => b.z - a.z);
 
-        // 開啟全域發光
         ctx.globalCompositeOperation = 'screen';
-        
         projectedParticles.forEach(p => {
             let finalSize = p.size * p.scale;
             if (finalSize < 0.2) return;
@@ -315,7 +316,6 @@
             ctx.beginPath();
             ctx.arc(p.sx, p.sy, finalSize, 0, Math.PI * 2);
             ctx.fillStyle = p.color;
-            // 樹冠增加光暈感
             if (p.type === 'canopy') {
                 ctx.shadowBlur = 8;
                 ctx.shadowColor = p.color;
@@ -327,13 +327,12 @@
         ctx.globalCompositeOperation = 'source-over';
         ctx.shadowBlur = 0;
 
-        // 3. 畫彌勒金身 (疊在樹幹最前方)
+        // 3. 畫彌勒金身
         drawMaitreya();
 
         requestAnimationFrame(animate);
     }
 
-    // 觸控與滑鼠互動 (360 度轉向)
     function onDown(e) {
         isDragging = true;
         lastMouseX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -346,7 +345,7 @@
         
         angleY += (currentX - lastMouseX) * 0.01; 
         angleX += (currentY - lastMouseY) * 0.01; 
-        angleX = Math.max(-Math.PI/4, Math.min(Math.PI/4, angleX)); // 鎖定上下視角極限
+        angleX = Math.max(-Math.PI/4, Math.min(Math.PI/4, angleX)); 
 
         lastMouseX = currentX; lastMouseY = currentY;
     }
@@ -362,5 +361,6 @@
     initRealm();
     animate();
 </script>
+
 </body>
 </html>

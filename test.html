@@ -147,8 +147,10 @@
             
             particles.push({
                 x: x, y: y, z: z,
+                baseY: y, // 呼吸基準高度
                 color: Math.random() > 0.4 ? '#8b5a2b' : '#d4af37', // 古銅與暗金
-                size: Math.random() * 2 + 1, type: 'trunk'
+                size: Math.random() * 2 + 1, type: 'trunk',
+                pulseOffset: Math.random() * Math.PI * 2 // 呼吸隨機偏移
             });
         }
 
@@ -166,9 +168,13 @@
             let color = colors[Math.floor(Math.random() * colors.length)];
 
             particles.push({
-                x: x, y: y, z: z, color: color,
+                x: x, y: y, z: z, 
+                baseY: y, // 呼吸基準高度
+                baseRadius: radius, // 呼吸基準半徑
+                basePhi: phi, baseTheta: theta, // 呼吸基準角度
+                color: color,
                 size: Math.random() * 3 + 1, type: 'canopy',
-                offset: Math.random() * Math.PI * 2
+                pulseOffset: Math.random() * Math.PI * 2 // 呼吸隨機偏移
             });
         }
 
@@ -200,27 +206,30 @@
     // 渲染彌勒金身剪影 (永遠面向鏡頭的 Billboarding 技術)
     function drawMaitreya() {
         // 佛身坐落於樹基 (-100 的高度)
-        let proj = project(0, -100, 0); 
+        // ✨ 添加呼吸脈衝
+        let pulse = Math.sin(time) * 1.5; 
+        let yPulse = -100 + pulse;
+        let proj = project(0, yPulse, 0); 
         
         if (proj.z > -400) {
             let scale = proj.scale;
-            ctx.shadowBlur = 30;
+            ctx.shadowBlur = 30 + pulse * 2; // 發光隨呼吸跳動
             ctx.shadowColor = 'rgba(243, 229, 171, 0.8)';
             ctx.fillStyle = 'rgba(212, 175, 55, 0.9)'; // 真金色
 
             // 底部盤腿基座 (橢圓)
             ctx.beginPath();
-            ctx.ellipse(proj.x, proj.y + 15 * scale, 35 * scale, 10 * scale, 0, 0, Math.PI * 2);
+            ctx.ellipse(proj.x, proj.y + 15 * scale, (35 + pulse * 0.5) * scale, (10 + pulse * 0.2) * scale, 0, 0, Math.PI * 2);
             ctx.fill();
 
             // 中間福報大肚 (大圓)
             ctx.beginPath();
-            ctx.arc(proj.x, proj.y, 22 * scale, 0, Math.PI * 2);
+            ctx.arc(proj.x, proj.y, (22 + pulse * 0.8) * scale, 0, Math.PI * 2);
             ctx.fill();
 
             // 上方佛首 (小圓)
             ctx.beginPath();
-            ctx.arc(proj.x, proj.y - 30 * scale, 12 * scale, 0, Math.PI * 2);
+            ctx.arc(proj.x, proj.y - 30 * scale, (12 + pulse * 0.3) * scale, 0, Math.PI * 2);
             ctx.fill();
             
             // 關閉發光，避免影響其他粒子
@@ -236,7 +245,8 @@
             if (r.radius > r.maxRadius) r.radius = 0;
             
             let opacity = 1 - (r.radius / r.maxRadius);
-            ctx.strokeStyle = `rgba(212, 175, 55, ${opacity * 0.6})`;
+            // ✨ 改為淡透明的真金色，增加消融感
+            ctx.strokeStyle = `rgba(212, 175, 55, ${opacity * 0.35})`; 
 
             ctx.beginPath();
             // 畫 3D 圓圈 (取 60 個點連接成透視圓)
@@ -268,15 +278,26 @@
         let projectedParticles = [];
         particles.forEach(p => {
             let py = p.y;
-            if (p.type === 'canopy') {
-                py += Math.sin(time + p.offset) * 1.5; // 樹冠呼吸感
+            let px = p.x;
+            let pz = p.z;
+            let scaleFactor = 1;
+
+            // ✨ 添加粒子呼吸脈衝
+            if (p.type === 'trunk') {
+                py = p.baseY + Math.sin(time + p.pulseOffset) * 2; // 樹幹微小上下跳動
+            } else if (p.type === 'canopy') {
+                scaleFactor = 1 + Math.sin(time + p.pulseOffset) * 0.03; // 樹冠輕微收縮
+                let radius = p.baseRadius * scaleFactor;
+                py = radius * Math.cos(p.basePhi) + 120 + Math.sin(time + p.pulseOffset) * 1.5;
+                px = radius * Math.sin(p.basePhi) * Math.cos(p.baseTheta);
+                pz = radius * Math.sin(p.basePhi) * Math.sin(p.baseTheta);
             }
             
-            let proj = project(p.x, py, p.z);
+            let proj = project(px, py, pz);
             if (proj.z > -400) {
                 projectedParticles.push({
                     sx: proj.x, sy: proj.y, scale: proj.scale, z: proj.z,
-                    color: p.color, size: p.size, type: p.type
+                    color: p.color, size: p.size * scaleFactor, type: p.type
                 });
             }
         });

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>龍華菩提 ． 賢劫千佛</title>
+    <style>
+        :root {
+            --bg-deep: #010102; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; user-select: none;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* 返回按鈕 */
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        /* 左上角狀態列 (無黑框透光版) */
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px;
+            background: transparent; border-left: 2px solid rgba(212,175,55,0.8); 
+            padding: 10px 20px; z-index: 100; transition: 1s; pointer-events: none;
+        }
+        .status-title { font-size: 1.15rem; font-weight: bold; color: var(--gold); letter-spacing: 2px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 15px rgba(0,0,0,1); }
+        .status-desc { font-size: 0.85rem; color: #ddd; line-height: 1.8; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,1); }
+
+        /* 3D 畫布與特效層 */
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; transition: background 0.8s; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+        /* 千佛動態文字顯示器 */
+        #buddha-name-display {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            color: var(--gold); font-size: 2.2rem; font-weight: bold; letter-spacing: 8px;
+            text-shadow: 0 0 20px var(--solid-gold); z-index: 50;
+            opacity: 0; transition: opacity 1.5s ease-in-out, color 0.5s, text-shadow 0.5s;
+            white-space: nowrap; text-align: center; pointer-events: none;
+        }
+        .buddha-rank { font-size: 1rem; color: var(--cyan); letter-spacing: 4px; margin-bottom: 12px; text-shadow: none; display: block;}
+        
+        /* 宇宙大閃光 */
+        #universe-flash {
+            position: absolute; inset: 0; background: #fff; z-index: 99999; pointer-events: none;
+            opacity: 0; transition: opacity 1.5s ease-out;
+        }
+        .flash-active { opacity: 1 !important; transition: opacity 0.1s ease-in !important; }
+
+        /* 底部 UI 控制區 */
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 12px; transition: opacity 1s;}
+        
+        .switch-btn {
+            width: 85%; max-width: 320px; justify-content: center;
+            background: linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(212,175,55,0.5); color: var(--gold);
+            padding: 14px 20px; border-radius: 30px; font-size: 1rem; font-weight: bold; letter-spacing: 2px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1);
+        }
+        .switch-btn:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(212,175,55,0.6); }
+        #theory-btn { border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,15,10,0.8); }
+
+        /* 古卷抽屜 */
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(212,175,55,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        .close-btn { color: var(--cyan); font-size: 0.85rem; letter-spacing: 2px; font-weight: bold; cursor: pointer; }
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        
+        .humble-statement { font-size: 0.85rem; color: #b0b0b0; line-height: 1.8; text-align: justify; padding: 20px; border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; background: rgba(20,15,5,0.3); margin-bottom: 50px; font-style: normal; }
+        
+        .main-title { color: var(--gold); font-size: 1.5rem; letter-spacing: 3px; text-align: center; margin-bottom: 50px; text-shadow: 0 0 15px rgba(212,175,55,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--solid-gold), transparent); margin: 15px auto 0; }
+        
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 24px; height: 24px; stroke: var(--gold); fill: none; stroke-width: 1.5; filter: drop-shadow(0 0 5px rgba(212,175,55,0.4)); flex-shrink: 0;}
+        .c-title { color: var(--gold); font-size: 1.2rem; letter-spacing: 1.5px; font-weight: bold; }
+        .c-text { color: var(--text-main); font-size: 0.95rem; line-height: 1.9; text-align: justify; padding-left: 39px; letter-spacing: 0.8px;}
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="back-btn" onclick="window.history.back()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        回道場
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title" id="s-title">龍華菩提 ． 彌勒下生</div>
+        <div class="status-desc" id="s-desc">「乃至一稱南無佛，皆於龍華得度脫。」<br>乘願再來，赴法界約。</div>
+    </div>
+
+    <section class="matrix-section" id="bg-section">
+        <div id="universe-flash"></div> <canvas id="realmCanvas"></canvas>
+        
+        <div id="buddha-name-display">
+            <span class="buddha-rank" id="buddha-rank"></span>
+            <span id="buddha-name"></span>
+        </div>
+
+        <div class="ui-layer" id="ui-layer">
+            <button class="switch-btn" id="btn-longhua" onclick="toggleRealm(0)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="18" r="4"/><path d="M12 14v-4"/><path d="M8 8s2-4 4-4 4 4 4 4-2 4-4 4-4-4-4-4z"/></svg>
+                <span id="text-longhua">仰望菩提 ． 赴龍華約</span>
+            </button>
+            <button class="switch-btn" id="btn-xianjie" onclick="toggleRealm(1)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12c0-6 8-6 8 0s8 6 8 0-8-6-8 0-8 6-8 0z"/><circle cx="12" cy="12" r="2"/></svg>
+                <span id="text-xianjie">觀想千佛 ． 宇宙接力</span>
+            </button>
+            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                探究極樂與賢劫千佛之約
+            </button>
+            
+            <div style="color:rgba(212,175,55,0.6); font-size:0.75rem; letter-spacing:2px; margin-top:5px;" id="drag-hint">360° 滑動觀想 ． 彌勒法界</div>
+        </div>
+    </section>
+
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()"><div class="close-bar"></div><div class="close-btn">收起古卷</div></div>
+        <div class="theory-container">
+            <div class="humble-statement">法海浩瀚，唯佛與佛乃能究盡。本文僅為一介在家居士，依經教邏輯與祖師大德之註疏，試圖探求如來真實義之修學略影。若有未盡或錯漏之處，皆屬個人智識之侷限，祈願三寶加被，同修共鑒。</div>
+            <h1 class="main-title">彌勒下生 ． 千佛接力</h1>
+            
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"/><circle cx="12" cy="14" r="3"/></svg>
+                    <div class="c-title">一、極樂托底與普賢之德</div>
+                </div>
+                <div class="c-text">昔玄奘大師乃唯識宗匠，神識清明具金剛之志，或能直趨兜率內院。然凡夫之心緒往往脆若琉璃，若無彌陀本願之攝受托底，泛游業海，或許宛如孤舟入巨浪，稍有不慎，便可能於隔陰之迷中隨波逐流。<br><br>經教中隱喻，極樂世界或許並非行者止步貪享之終極歸宿。往生淨土、證阿鞞跋致，似是為了讓行者能安穩蓄積菩提資糧。若依無量壽經彌陀第二十二願之深意，菩薩生彼國者，雖究竟必至一生補處；然若欲超越常倫，亦可披弘誓鎧，返入娑婆，修普賢之德。這或許暗示著，極樂乃是護念凡夫行菩薩道、迴入娑婆度有情的一處增上勝處。</div>
+            </div>
+            <div class="chapter-divider"></div>
+            
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                    <div class="c-title">二、法身常住與乘願再來</div>
+                </div>
+                <div class="c-text">縱觀法界，報化之身似皆示現生滅之相，或許唯有清淨法身方能常住不凋。依觀世音菩薩授記經所透漏之玄機，極樂世界阿彌陀佛雖壽量不可思議，然化緣若盡，亦可能示現入滅。佛入滅後，正法住世無量劫，待正法滅盡之際，觀世音菩薩將於七寶菩提樹下成等正覺，號曰普光功德山王如來。<br><br>這種無常中的相續，或許正訴說著法脈傳承的深意。由此深觀，吾等仰賴彌陀願力期盼換取不退轉之身，或許便能於機緣成熟時，更從容地赴那彌勒菩薩的龍華三會之約，乃至化身微塵，投身於賢劫千佛那浩瀚無垠的宇宙接力之中。</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('realmCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    // 全局狀態 0: 龍華菩提, 1: 賢劫千佛
+    let currentRealm = 0; 
+    let time = 0;
+
+    // --- 龍華菩提 變數 ---
+    let lhParticles = [];
+    let lhRipples = [];
+    let angleX = 0.1, angleY = 0;
+    let isDragging = false;
+    let lastMouseX = 0, lastMouseY = 0;
+
+    // --- 賢劫千佛 變數 ---
+    let xjStars = [];
+    const FOV = 400; 
+    const timeline = [
+        { rank: "第九小劫 ． 第一尊", name: "拘留孫佛", highlight: false },
+        { rank: "第九小劫 ． 第二尊", name: "拘那含牟尼佛", highlight: false },
+        { rank: "第九小劫 ． 第三尊", name: "迦葉佛", highlight: false },
+        { rank: "第九小劫 ． 第四尊", name: "釋迦牟尼佛", highlight: true },
+        { rank: "第十小劫 ． 第五尊", name: "彌勒尊佛", highlight: true },
+        { isFastMode: true, rank: "第十五小劫", name: "994 尊佛相繼出世", lotusCount: 15 }, 
+        { rank: "第二十小劫 ． 第一千尊", name: "樓至佛 (盧至如來)", highlight: true, isLast: true }
+    ];
+    let xjStep = 0;
+    let xjFastCounter = 0;
+    let lotusState = { phase: 'waiting', timer: 0, z: 2000, scale: 0, opacity: 0, petals: [] };
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+    }
+    window.addEventListener('resize', resize); resize();
+
+    // ================= 初始化引擎 =================
+    function initEngines() {
+        // 1. 初始化龍華樹
+        lhParticles = []; lhRipples = [];
+        for (let i = 0; i < 600; i++) {
+            let t = i / 600; let radius = 35 * (1 - t) + 5; let spiral = t * Math.PI * 12;
+            let y = t * 250 - 100; 
+            lhParticles.push({
+                x: Math.cos(spiral)*radius + (Math.random()-0.5)*10, y: y, z: Math.sin(spiral)*radius + (Math.random()-0.5)*10,
+                baseY: y, color: Math.random()>0.4 ? '#8b5a2b' : '#d4af37', size: Math.random()*2+1, type: 'trunk', pulseOffset: Math.random()*Math.PI*2 
+            });
+        }
+        for (let i = 0; i < 2000; i++) {
+            let theta = Math.random() * Math.PI * 2; let phi = Math.acos(Math.random()*2 - 1) / 1.4; 
+            let radius = Math.random() * 220 + 60; 
+            let colors = ['#097969', '#2e8b57', '#008b8b', '#f3e5ab'];
+            lhParticles.push({
+                x: radius*Math.sin(phi)*Math.cos(theta), y: radius*Math.cos(phi)+120, z: radius*Math.sin(phi)*Math.sin(theta), 
+                baseY: radius*Math.cos(phi)+120, baseRadius: radius, basePhi: phi, baseTheta: theta,
+                color: colors[Math.floor(Math.random()*colors.length)], size: Math.random()*3+1, type: 'canopy', pulseOffset: Math.random()*Math.PI*2 
+            });
+        }
+        lhRipples.push({ radius: 0, maxRadius: 600, speed: 1.2 });
+        lhRipples.push({ radius: 200, maxRadius: 600, speed: 1.2 });
+        lhRipples.push({ radius: 400, maxRadius: 600, speed: 1.2 });
+
+        // 2. 初始化千佛星河
+        xjStars = []; lotusState.petals = [];
+        for (let i = 0; i < 800; i++) {
+            xjStars.push({
+                x: (Math.random()-0.5)*3000, y: (Math.random()-0.5)*3000, z: Math.random()*2000, 
+                speed: Math.random()*5+2, color: Math.random()>0.5 ? '#9fdfc8' : '#f3e5ab'
+            });
+        }
+        for(let i=0; i<12; i++) lotusState.petals.push(i * (Math.PI * 2 / 12));
+    }
+
+    // ================= 龍華渲染邏輯 =================
+    function project3D(x, y, z) {
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+        let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
+        let scale = FOV / (FOV + z2 + 250); 
+        return { x: (width/2) + x2*scale, y: (height/2) - y1*scale - 80, scale: scale, z: z2 };
+    }
+
+    function renderLonghua() {
+        if(!isDragging) angleY += 0.0015; 
+        
+        // 畫法音光浪
+        ctx.globalCompositeOperation = 'screen';
+        for (let r of lhRipples) {
+            r.radius += r.speed; if (r.radius > r.maxRadius) r.radius = 0;
+            let opacity = Math.max(0, 1 - Math.pow(r.radius / r.maxRadius, 1.5));
+            ctx.beginPath();
+            for (let i = 0; i <= 60; i++) {
+                let theta = (i/60)*Math.PI*2;
+                let proj = project3D(Math.cos(theta)*r.radius, -100, Math.sin(theta)*r.radius);
+                if (i===0) ctx.moveTo(proj.x, proj.y); else ctx.lineTo(proj.x, proj.y);
+            }
+            ctx.lineWidth = 12; ctx.strokeStyle = `rgba(212, 175, 55, ${opacity * 0.25})`; ctx.stroke();
+            ctx.lineWidth = 2.5; ctx.shadowBlur = 20; ctx.shadowColor = `rgba(243, 229, 171, ${opacity})`;
+            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.7})`; ctx.stroke(); ctx.shadowBlur = 0;
+        }
+        ctx.globalCompositeOperation = 'source-over';
+
+        // 畫樹
+        let projected = [];
+        lhParticles.forEach(p => {
+            let px=p.x, py=p.y, pz=p.z, sFac=1;
+            if (p.type === 'trunk') { py = p.baseY + Math.sin(time+p.pulseOffset)*2; } 
+            else if (p.type === 'canopy') {
+                sFac = 1 + Math.sin(time+p.pulseOffset)*0.03; let rad = p.baseRadius*sFac;
+                py = rad*Math.cos(p.basePhi) + 120 + Math.sin(time+p.pulseOffset)*1.5;
+                px = rad*Math.sin(p.basePhi)*Math.cos(p.baseTheta); pz = rad*Math.sin(p.basePhi)*Math.sin(p.baseTheta);
+            }
+            let proj = project3D(px, py, pz);
+            if (proj.z > -400) projected.push({ sx: proj.x, sy: proj.y, scale: proj.scale, z: proj.z, c: p.color, s: p.size*sFac, type: p.type });
+        });
+        projected.sort((a,b) => b.z - a.z);
+
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.scale; if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.sx, p.sy, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if (p.type === 'canopy') { ctx.shadowBlur=8; ctx.shadowColor=p.c; } else ctx.shadowBlur=0;
+            ctx.fill();
+        });
+        ctx.globalCompositeOperation = 'source-over'; ctx.shadowBlur=0;
+
+        // 畫彌勒金身
+        let pulse = Math.sin(time)*1.5; 
+        let proj = project3D(0, -100+pulse, 0); 
+        if (proj.z > -400) {
+            let sc = proj.scale; ctx.shadowBlur = 30+pulse*2; ctx.shadowColor = 'rgba(243,229,171,0.8)'; ctx.fillStyle = 'rgba(212,175,55,0.9)'; 
+            ctx.beginPath(); ctx.ellipse(proj.x, proj.y+15*sc, (35+pulse*0.5)*sc, (10+pulse*0.2)*sc, 0,0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(proj.x, proj.y, (22+pulse*0.8)*sc, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(proj.x, proj.y-30*sc, (12+pulse*0.3)*sc, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0; 
+        }
+    }
+
+    // ================= 千佛渲染邏輯 =================
+    function drawPetal(ctx, size) {
+        ctx.beginPath(); ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(size*0.4, size*0.2, size*0.8, size*0.5, size, 0);
+        ctx.bezierCurveTo(size*0.8, -size*0.5, size*0.4, -size*0.2, 0, 0);
+        ctx.fill(); ctx.stroke();
+    }
+
+    function renderXianjie() {
+        ctx.globalCompositeOperation = 'screen'; 
+        let curData = timeline[xjStep];
+        let speedMult = curData.isFastMode ? 6 : 1;
+
+        // 星辰流動
+        xjStars.forEach(star => {
+            let sSpeed = curData.isFastMode ? star.speed*4 : star.speed;
+            star.z -= sSpeed;
+            if (star.z <= 0) { star.z = 2000; star.x = (Math.random()-0.5)*3000; star.y = (Math.random()-0.5)*3000; }
+            let sc = FOV / (FOV + star.z); let sx = (width/2) + star.x*sc; let sy = (height/2) + star.y*sc - 50;
+            let alpha = Math.min(1, sc*1.5);
+            ctx.beginPath(); ctx.arc(sx, sy, Math.max(0.1, 3*sc), 0, Math.PI*2);
+            ctx.fillStyle = `rgba(${star.color==='#f3e5ab'?'243,229,171':'159,223,200'}, ${alpha})`; ctx.fill();
+        });
+
+        // 邏輯更新
+        const textDisplay = document.getElementById('buddha-name-display');
+        const rankEl = document.getElementById('buddha-rank'); const nameEl = document.getElementById('buddha-name');
+        
+        switch(lotusState.phase) {
+            case 'waiting':
+                lotusState.timer += speedMult;
+                if(lotusState.timer > 80) { 
+                    lotusState.phase = 'approaching'; lotusState.timer = 0; lotusState.z = 2500;
+                    if (xjFastCounter === 0) { 
+                        rankEl.innerText = curData.rank; nameEl.innerText = curData.name;
+                        if (curData.highlight) { nameEl.style.color = "#ffffff"; nameEl.style.textShadow = "0 0 20px #fff, 0 0 40px var(--cyan)"; } 
+                        else { nameEl.style.color = "var(--gold)"; nameEl.style.textShadow = "0 0 20px var(--solid-gold)"; }
+                    }
+                    if (!curData.isFastMode || xjFastCounter === 0) textDisplay.style.opacity = 0; 
+                } break;
+            case 'approaching':
+                lotusState.z -= (25*speedMult);
+                if(lotusState.z <= 200) { lotusState.phase = 'blooming'; lotusState.timer = 0; textDisplay.style.opacity = 1; } break;
+            case 'blooming':
+                lotusState.timer += speedMult; lotusState.scale = Math.min(1, lotusState.timer/60); lotusState.opacity = Math.min(1, lotusState.timer/30);
+                if(lotusState.timer > (curData.isLast ? 300 : 150)) {
+                    if (curData.isLast) { document.getElementById('universe-flash').classList.add('flash-active'); setTimeout(() => document.getElementById('universe-flash').classList.remove('flash-active'), 150); }
+                    lotusState.phase = 'dissolving'; lotusState.timer = 0;
+                    if (!curData.isFastMode || xjFastCounter >= curData.lotusCount-1) textDisplay.style.opacity = 0; 
+                } break;
+            case 'dissolving':
+                lotusState.timer += speedMult; lotusState.opacity = Math.max(0, 1-(lotusState.timer/60)); lotusState.scale += 0.01*speedMult;
+                if(lotusState.timer > 60) {
+                    lotusState.phase = 'waiting'; lotusState.timer = 0;
+                    if (curData.isFastMode) { xjFastCounter++; if (xjFastCounter >= curData.lotusCount) { xjFastCounter=0; xjStep=(xjStep+1)%timeline.length; } } 
+                    else { xjStep=(xjStep+1)%timeline.length; }
+                } break;
+        }
+
+        // 畫蓮花
+        let cx = width/2, cy = height/2 - 80;
+        if (lotusState.phase === 'approaching') {
+            let sc = FOV/(FOV+lotusState.z); ctx.shadowBlur = 20; ctx.shadowColor = '#fff';
+            ctx.beginPath(); ctx.arc(cx, cy, 15*sc, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowBlur = 0;
+        } else if (lotusState.phase === 'blooming' || lotusState.phase === 'dissolving') {
+            ctx.save(); ctx.translate(cx, cy);
+            let rotSpeed = curData.isFastMode ? 0.015 : 0.005;
+            ctx.rotate((lotusState.timer*rotSpeed) * (lotusState.phase==='dissolving'?2:1));
+            let sMult = curData.isLast ? 1.3 : 1; let bSize = 120 * lotusState.scale * sMult;
+            
+            ctx.shadowBlur = 30; ctx.shadowColor = `rgba(212,175,55,${lotusState.opacity})`;
+            ctx.fillStyle = `rgba(243,229,171,${lotusState.opacity*0.2})`; ctx.strokeStyle = `rgba(255,255,255,${lotusState.opacity*0.8})`; ctx.lineWidth = 1.5;
+            for (let i=0; i<12; i++) {
+                ctx.save(); ctx.rotate(lotusState.petals[i]); drawPetal(ctx, bSize); ctx.restore();
+                ctx.save(); ctx.rotate(lotusState.petals[i]+Math.PI/12); drawPetal(ctx, bSize*0.6); ctx.restore();
+            }
+            ctx.beginPath(); ctx.arc(0, 0, 15*lotusState.scale*sMult, 0, Math.PI*2); ctx.fillStyle = `rgba(255,255,255,${lotusState.opacity})`; ctx.fill();
+            ctx.restore();
+        }
+        ctx.globalCompositeOperation = 'source-over';
+    }
+
+    // ================= 主迴圈與 UI 控制 =================
+    function animate() {
+        ctx.fillStyle = currentRealm === 0 ? 'rgba(2, 5, 2, 0.5)' : 'rgba(0, 0, 0, 0.4)';
+        ctx.fillRect(0, 0, width, height);
+        time += 0.03;
+
+        if (currentRealm === 0) renderLonghua();
+        else renderXianjie();
+
+        requestAnimationFrame(animate);
+    }
+
+    function toggleRealm(type) {
+        if(currentRealm === type) return;
+        currentRealm = type;
+        
+        let panel = document.getElementById('status-panel');
+        let title = document.getElementById('s-title'); let desc = document.getElementById('s-desc');
+        let btnL = document.getElementById('btn-longhua'); let btnX = document.getElementById('btn-xianjie');
+        let hint = document.getElementById('drag-hint');
+        let nameDisp = document.getElementById('buddha-name-display');
+
+        if (type === 0) {
+            title.innerText = "龍華菩提 ． 彌勒下生"; desc.innerHTML = "「乃至一稱南無佛，皆於龍華得度脫。」<br>乘願再來，赴法界約。";
+            btnL.style.background = 'rgba(10,30,20,0.9)'; btnL.style.color = 'var(--cyan)'; btnL.style.borderColor = 'var(--cyan)';
+            btnX.style.background = 'linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95))'; btnX.style.color = 'var(--gold)'; btnX.style.borderColor = 'rgba(212,175,55,0.5)';
+            hint.style.opacity = 1; nameDisp.style.opacity = 0;
+            // 重置千佛狀態以免背景偷跑
+            lotusState.phase = 'waiting'; lotusState.timer = 0; xjStep = 0; xjFastCounter = 0;
+        } else {
+            title.innerText = "賢劫千佛 ． 時空長河"; desc.innerHTML = "「第十五小劫，九百九十四佛出世。」<br>佛法火炬，傳承無盡。";
+            btnX.style.background = 'rgba(10,30,20,0.9)'; btnX.style.color = 'var(--cyan)'; btnX.style.borderColor = 'var(--cyan)';
+            btnL.style.background = 'linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95))'; btnL.style.color = 'var(--gold)'; btnL.style.borderColor = 'rgba(212,175,55,0.5)';
+            hint.style.opacity = 0; 
+            // 如果是在千佛狀態，強制重置鏡頭
+            angleX = 0.1; angleY = 0;
+        }
+    }
+
+    function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+    function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+
+    // 觸控旋轉 (僅限龍華菩提有效)
+    function onDown(e) { if(currentRealm!==0 || e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; isDragging = true; lastMouseX = e.touches?e.touches[0].clientX:e.clientX; lastMouseY = e.touches?e.touches[0].clientY:e.clientY; }
+    function onMove(e) { if (!isDragging || currentRealm!==0) return; let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; angleY += (curX-lastMouseX)*0.01; angleX += (curY-lastMouseY)*0.01; angleX = Math.max(-Math.PI/4, Math.min(Math.PI/4, angleX)); lastMouseX=curX; lastMouseY=curY; }
+    function onUp() { isDragging = false; }
+
+    canvas.addEventListener('mousedown', onDown); canvas.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
+
+    // 啟動
+    initEngines(); toggleRealm(0); animate();
+</script>
+</body>
+</html>

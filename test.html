@@ -3,96 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>菩提幾何 ． 十八瓣蓮 (99分優化版)</title>
+    <title>一真法界 ． 琉璃星系</title>
     <style>
-        :root { --gold: #f3e5ab; --deep-gold: #d4af37; --bg: #050505; }
-        body { margin: 0; background: var(--bg); overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        body { margin: 0; background: #000; overflow: hidden; font-family: "PingFang TC", sans-serif; }
+        #universe { width: 100vw; height: 100vh; perspective: 1500px; display: flex; justify-content: center; align-items: center; }
         
-        #stage { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; perspective: 1000px; }
-        svg { width: 85vmin; height: 85vmin; filter: drop-shadow(0 0 20px rgba(212,175,55,0.2)); transition: transform 0.1s ease-out; }
+        .container { position: absolute; transform-style: preserve-3d; width: 0; height: 0; }
         
-        .petal { fill: rgba(212, 175, 55, 0.15); stroke: var(--gold); stroke-width: 0.5; transition: all 0.5s; cursor: pointer; }
-        .petal:hover { fill: rgba(255, 255, 255, 0.4); stroke: #fff; filter: brightness(1.5); }
-        
-        /* 核心心燈 */
-        .core-light { fill: #fff; filter: blur(2px); animation: pulse 3s infinite alternate ease-in-out; }
-        @keyframes pulse { from { opacity: 0.5; transform: scale(0.8); } to { opacity: 1; transform: scale(1.2); } }
-        
-        .info-text { position: fixed; bottom: 40px; color: var(--gold); letter-spacing: 8px; font-size: 0.9rem; opacity: 0.6; pointer-events: none; }
+        /* 琉璃星球：利用 CSS 徑向漸層模擬 3D 球體與發光 */
+        .star {
+            position: absolute; border-radius: 50%;
+            transform-style: preserve-3d;
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+
+        /* 核心菩提明點 */
+        .bodhi-core {
+            position: absolute; width: 12px; height: 12px;
+            background: #fff; border-radius: 50%;
+            box-shadow: 0 0 40px #fff, 0 0 80px #f3e5ab;
+            z-index: 10;
+        }
+
+        .label {
+            position: fixed; bottom: 40px; width: 100%; text-align: center;
+            color: #f3e5ab; letter-spacing: 10px; font-size: 0.8rem;
+            text-shadow: 0 0 10px #d4af37; opacity: 0.6; pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
-<div id="stage">
-    <svg id="lotus-svg" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">
-        <radialGradient id="grad1" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" style="stop-color:var(--gold); stop-opacity:0.2" />
-            <stop offset="100%" style="stop-color:var(--bg); stop-opacity:0" />
-        </radialGradient>
-        <circle cx="100" cy="100" r="80" fill="url(#grad1)" />
-
-        <g id="lotus-g"></g>
-        
-        <circle cx="100" cy="100" r="3" class="core-light" />
-    </svg>
+<div id="universe">
+    <div class="bodhi-core"></div>
+    <div class="container" id="star-field"></div>
 </div>
 
-<div class="info-text">妙依總工程師勘驗 ． 百八煩惱轉菩提</div>
+<div class="label">撥動指尖 ． 點亮本初光明</div>
 
 <script>
-    const g = document.getElementById('lotus-g');
-    const svg = document.getElementById('lotus-svg');
-    const layers = [
-        { count: 8, r: 15, h: 25, w: 10, op: 0.9, tilt: 0 },   // 內層：最尖、最直
-        { count: 16, r: 30, h: 35, w: 14, op: 0.7, tilt: 5 },
-        { count: 24, r: 45, h: 45, w: 18, op: 0.5, tilt: 10 },
-        { count: 28, r: 60, h: 55, w: 22, op: 0.3, tilt: 15 },
-        { count: 32, r: 75, h: 65, w: 26, op: 0.2, tilt: 20 }  // 外層：最開、最淡
+    const field = document.getElementById('star-field');
+    const count = 108;
+    const stars = [];
+    
+    // 琉璃色系表：金色、青色、紫色、白色
+    const colors = [
+        'radial-gradient(circle at 30% 30%, #fff, #f3e5ab, #d4af37)',
+        'radial-gradient(circle at 30% 30%, #fff, #8ba89c, #2d5a4c)',
+        'radial-gradient(circle at 30% 30%, #fff, #e0f7fa, #00acc1)',
+        'radial-gradient(circle at 30% 30%, #fff, #f8bbd0, #c2185b)'
     ];
 
-    // 繪製瓣尖花瓣 (幾何水滴形)
-    function createPetalPath(w, h) {
-        // M: 起點(底部), Q: 二次貝茲曲線, 頂點(尖端)
-        return `M 0 0 Q ${w/2} ${h*0.3} 0 ${h} Q ${-w/2} ${h*0.3} 0 0 Z`;
+    // 初始化 108 顆星球
+    for (let i = 0; i < count; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        
+        // 隨機大小與色彩
+        const size = Math.random() * 6 + 3;
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        star.style.background = colors[Math.floor(Math.random() * colors.length)];
+        star.style.boxShadow = `0 0 ${size*2}px rgba(255,255,255,0.3)`;
+
+        // 分佈在 3D 空間中
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(Math.random() * 2 - 1);
+        const distance = 150 + Math.random() * 150; // 形成球狀雲圖
+
+        const x = distance * Math.sin(phi) * Math.cos(theta);
+        const y = distance * Math.sin(phi) * Math.sin(theta);
+        const z = distance * Math.cos(phi);
+
+        star.dataset.x = x;
+        star.dataset.y = y;
+        star.dataset.z = z;
+
+        field.appendChild(star);
+        stars.push(star);
     }
 
-    layers.forEach((layer, lIdx) => {
-        for (let i = 0; i < layer.count; i++) {
-            const angle = (i / layer.count) * 360;
-            const pathData = createPetalPath(layer.w, layer.h);
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            
-            path.setAttribute("d", pathData);
-            path.setAttribute("class", "petal");
-            path.style.fill = `rgba(212, 175, 55, ${layer.op})`;
-            
-            // 計算佈局：旋轉 -> 平移出半徑 -> 再次旋轉微調瓣尖
-            // 注意：這裡是 2D 模擬 3D 向上盛開感
-            path.setAttribute("transform", `
-                translate(100, 100) 
-                rotate(${angle}) 
-                translate(0, ${-layer.r}) 
-                rotate(180)
-            `);
-            
-            g.appendChild(path);
-        }
-    });
+    let rotX = 0, rotY = 0;
+    let targetRotX = 0, targetRotY = 0;
 
-    // 視差互動：讓蓮花隨鼠標輕微轉動
-    document.addEventListener('mousemove', (e) => {
-        const x = (window.innerWidth / 2 - e.clientX) / 25;
-        const y = (window.innerHeight / 2 - e.clientY) / 25;
-        svg.style.transform = `rotateY(${x}deg) rotateX(${-y}deg)`;
-    });
+    // 渲染函數
+    function render() {
+        // 平滑旋轉
+        rotX += (targetRotX - rotX) * 0.05;
+        rotY += (targetRotY - rotY) * 0.05;
 
-    // 手機傾斜感應
-    window.addEventListener('deviceorientation', (e) => {
-        const x = e.gamma / 2;
-        const y = e.beta / 2;
-        svg.style.transform = `rotateY(${x}deg) rotateX(${-y}deg)`;
-    });
+        stars.forEach(star => {
+            const x = parseFloat(star.dataset.x);
+            const y = parseFloat(star.dataset.y);
+            const z = parseFloat(star.dataset.z);
 
+            // 應用 3D 旋轉矩陣變換
+            const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+            const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+
+            // 旋轉後的座標
+            let nx = x * cosY - z * sinY;
+            let nz = x * sinY + z * cosY;
+            let ny = y * cosX - nz * sinX;
+            let finalZ = y * sinX + nz * cosX;
+
+            // 透視縮放：離鏡頭越近越大越亮
+            const scale = 1000 / (1000 + finalZ);
+            star.style.opacity = (scale - 0.5) * 1.5;
+            star.style.transform = `translate3d(${nx * scale}px, ${ny * scale}px, 0) scale(${scale})`;
+            star.style.zIndex = Math.floor(scale * 1000);
+        });
+
+        // 閒置時自動緩緩旋轉
+        targetRotY += 0.002;
+        requestAnimationFrame(render);
+    }
+
+    // 交互：撥動大千世界
+    let isDragging = false, lx, ly;
+    window.addEventListener('mousedown', e => { isDragging = true; lx = e.clientX; ly = e.clientY; });
+    window.addEventListener('mousemove', e => {
+        if (!isDragging) return;
+        targetRotY += (e.clientX - lx) * 0.01;
+        targetRotX -= (e.clientY - ly) * 0.01;
+        lx = e.clientX; ly = e.clientY;
+    });
+    window.addEventListener('mouseup', () => isDragging = false);
+    
+    // 觸控支援
+    window.addEventListener('touchstart', e => { isDragging = true; lx = e.touches[0].clientX; ly = e.touches[0].clientY; });
+    window.addEventListener('touchmove', e => {
+        if (!isDragging) return;
+        targetRotY += (e.touches[0].clientX - lx) * 0.01;
+        targetRotX -= (e.touches[0].clientY - ly) * 0.01;
+        lx = e.touches[0].clientX; ly = e.touches[0].clientY;
+    });
+    window.addEventListener('touchend', () => isDragging = false);
+
+    render();
 </script>
 </body>
 </html>

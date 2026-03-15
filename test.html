@@ -3,35 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>因果圓滿 ． 星辰覺醒</title>
+    <title>彩虹星海 ． 願力追蹤</title>
     <style>
-        body { margin: 0; background: #010102; overflow: hidden; font-family: "PingFang TC", serif; touch-action: none; user-select: none; }
-        canvas { width: 100vw; height: 100vh; display: block; position: absolute; z-index: 1; transition: filter 0.5s ease; }
+        body { margin: 0; background: #010103; overflow: hidden; font-family: "PingFang TC", serif; touch-action: none; user-select: none; }
         
-        .charging canvas { filter: brightness(0.5) blur(1px); }
+        /* 背景星雲漸層，取代原本的死黑 */
+        #nebula {
+            position: absolute; inset: 0; z-index: 0;
+            background: radial-gradient(circle at 50% 50%, #1a1025 0%, #010103 100%);
+            transition: opacity 1s;
+        }
 
+        canvas { width: 100vw; height: 100vh; display: block; position: absolute; z-index: 1; }
+
+        /* 蓄力時星雲與未亮星球變暗 (降熵) */
+        .charging #nebula { opacity: 0.2; }
+
+        /* 橫向單行誓願 */
         #vow-display {
-            position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);
+            position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);
             width: 100%; text-align: center; z-index: 10; pointer-events: none;
-            color: #f3e5ab; font-size: 1.6rem; letter-spacing: 12px; font-weight: 300;
+            color: #f3e5ab; font-size: 1.5rem; letter-spacing: 12px; font-weight: 300;
             text-shadow: 0 0 20px rgba(243, 229, 171, 0.8), 0 0 40px #fff;
             opacity: 0; transition: opacity 0.3s;
         }
         .charging #vow-display { opacity: 1; }
 
+        /* 宇宙大閃光 */
         #flash { position: absolute; inset: 0; background: #fff; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.5s ease-out; }
-        #hint { position: absolute; bottom: 40px; width: 100%; text-align: center; color: rgba(243, 229, 171, 0.5); font-size: 0.85rem; letter-spacing: 6px; z-index: 5; transition: opacity 0.5s; pointer-events: none; }
         
-        /* 右下角進度顯示 */
+        /* 提示與進度 */
+        #hint { position: absolute; bottom: 40px; width: 100%; text-align: center; color: rgba(243, 229, 171, 0.5); font-size: 0.85rem; letter-spacing: 6px; z-index: 5; transition: opacity 0.5s; pointer-events: none; }
         #progress { position: absolute; top: 30px; right: 30px; color: #8ba89c; font-size: 0.9rem; letter-spacing: 4px; z-index: 10; opacity: 0.8; }
     </style>
 </head>
 <body id="body-state">
 
+    <div id="nebula"></div>
     <canvas id="mainCanvas"></canvas>
     <div id="vow-display">眾生無邊誓願度</div>
     <div id="flash"></div>
-    <div id="hint">長按金心 ． 匯聚願力</div>
+    <div id="hint">長按金心 ． 喚醒星辰</div>
     <div id="progress">覺醒 0 / 108</div>
 
     <script>
@@ -44,113 +56,164 @@
         const progressTxt = document.getElementById('progress');
         
         const vows = ["眾生無邊誓願度", "煩惱無盡誓願斷", "法門無量誓願學", "佛道無上誓願成"];
-        // 覺醒後的琉璃色彩 (金、青、紅、白)
-        const awakeColors = ['#d4af37', '#8ba89c', '#c2185b', '#e0f7fa']; 
+        // 琉璃星球的顏色庫 (金、青、紅、紫、白玉)
+        const planetColors = [
+            { r: 212, g: 175, b: 55 },  // 金
+            { r: 139, g: 168, b: 156 }, // 青
+            { r: 194, g: 24,  b: 91 },  // 蓮紅
+            { r: 126, g: 87,  b: 194 }, // 紫
+            { r: 224, g: 247, b: 250 }  // 白玉
+        ];
         
         let w, h, time = 0;
-        let stars = [];
+        let planets = [];
         let isPressing = false;
         let chargeLevel = 0;
         let litCount = 0;
         
-        // 流星動畫參數
+        // 相機系統 (實現鏡頭追蹤)
+        let camera = { x: 0, y: 0, z: 0 };
+        let targetCamera = { x: 0, y: 0, z: 0 };
         let shooting = false;
-        let targetStar = null;
-        let beamProgress = 0;
+        let targetPlanet = null;
+        let travelProgress = 0;
 
         function init() {
             w = canvas.width = window.innerWidth;
             h = canvas.height = window.innerHeight;
-            // 初始化 108 顆星球 (預設為暗色磨砂態)
-            stars = Array.from({length: 108}, () => ({
-                x: (Math.random() - 0.5) * 2000, 
-                y: (Math.random() - 0.5) * 2000, 
-                z: Math.random() * 2000,
-                isLit: false,
-                color: 'rgba(100, 100, 110, 0.3)', // 黯淡無光
-                size: Math.random() * 1.5 + 1
-            }));
+            
+            // 創建 108 顆彩色星球
+            planets = Array.from({length: 108}, () => {
+                const colorObj = planetColors[Math.floor(Math.random() * planetColors.length)];
+                return {
+                    x: (Math.random() - 0.5) * 4000, 
+                    y: (Math.random() - 0.5) * 4000, 
+                    z: Math.random() * 4000,
+                    isLit: false,
+                    baseColor: colorObj,
+                    size: Math.random() * 6 + 3 // 星球大小
+                };
+            });
         }
 
         function draw() {
-            ctx.fillStyle = '#010102'; ctx.fillRect(0, 0, w, h);
+            ctx.clearRect(0, 0, w, h);
             time += 0.05;
 
-            // 星空流動
-            let speed = isPressing ? 0.1 : (shooting ? 0 : 1.5);
-            stars.forEach(s => {
-                s.z -= speed; if (s.z <= 0) s.z = 2000;
-                const scale = 400 / (400 + s.z);
-                const x2d = w/2 + s.x * scale;
-                const y2d = h/2 + s.y * scale;
+            // 相機漫遊邏輯
+            if (!shooting) {
+                targetCamera.z += (isPressing ? 2 : 5); // 平常緩慢前進，蓄力時變慢
+            } else {
+                // 鏡頭追蹤流星，飛向目標星球
+                travelProgress += 0.02; // 飛行速度
+                const ease = travelProgress < 0.5 ? 2 * travelProgress * travelProgress : -1 + (4 - 2 * travelProgress) * travelProgress; // 平滑加速減速
                 
-                ctx.globalAlpha = Math.min(1, (2000 - s.z) / 1500);
-                ctx.beginPath(); ctx.arc(x2d, y2d, s.size * scale * (s.isLit ? 2 : 1), 0, Math.PI * 2);
+                targetCamera.x = targetPlanet.x * ease;
+                targetCamera.y = targetPlanet.y * ease;
+                targetCamera.z = camera.z + (targetPlanet.z - camera.z - 200) * 0.05; // 逼近目標
                 
-                if (s.isLit) {
-                    // 已點亮的恆星：有光暈、色彩飽滿
-                    ctx.fillStyle = s.color;
-                    ctx.shadowBlur = 15 * scale; ctx.shadowColor = s.color;
-                    ctx.fill(); ctx.shadowBlur = 0;
-                } else {
-                    // 未點亮的暗星：灰暗磨砂
-                    ctx.fillStyle = s.color; ctx.fill();
-                }
-            });
-
-            // 繪製發射中的流星光束
-            if (shooting && targetStar) {
-                const scale = 400 / (400 + targetStar.z);
-                const targetX = w/2 + targetStar.x * scale;
-                const targetY = h/2 + targetStar.y * scale;
-                
-                beamProgress += 0.08; // 光束速度
-                const currentX = w/2 + (targetX - w/2) * beamProgress;
-                const currentY = h/2 + (targetY - h/2) * beamProgress;
-
-                ctx.beginPath();
-                ctx.moveTo(w/2, h/2 + 30);
-                ctx.lineTo(currentX, currentY);
-                ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; 
-                ctx.shadowBlur = 20; ctx.shadowColor = '#f3e5ab';
-                ctx.stroke(); ctx.shadowBlur = 0;
-
-                // 擊中判定
-                if (beamProgress >= 1) {
+                if (travelProgress >= 1) {
+                    // 擊中！
                     shooting = false;
-                    targetStar.isLit = true;
-                    // 隨機賦予高貴的琉璃色彩
-                    targetStar.color = awakeColors[Math.floor(Math.random() * awakeColors.length)];
+                    targetPlanet.isLit = true;
                     litCount++;
                     progressTxt.innerText = `覺醒 ${litCount} / 108`;
                     
-                    // 擊中瞬間的法界閃爍
-                    flash.style.opacity = 0.8;
-                    setTimeout(() => { flash.style.opacity = 0; }, 300);
-                    hint.innerText = "星辰覺醒 ． 功德增明";
+                    flash.style.opacity = 1;
+                    setTimeout(() => { flash.style.opacity = 0; }, 400);
+                    
+                    // 鏡頭重置緩動
+                    targetCamera = { x: 0, y: 0, z: targetCamera.z };
+                    hint.innerText = "星辰覺醒 ． 明日請早";
                     hint.style.opacity = 0.5;
                 }
             }
 
-            // 中心菩提心 (集氣放大)
-            if (!shooting) {
-                ctx.globalAlpha = 1;
-                let basePulse = isPressing ? 0 : Math.sin(time * 0.5) * 5;
-                let currentRadius = 45 + basePulse + (chargeLevel * 1.5); 
+            // 平滑移動相機
+            camera.x += (targetCamera.x - camera.x) * 0.1;
+            camera.y += (targetCamera.y - camera.y) * 0.1;
+            camera.z += (targetCamera.z - camera.z) * 0.1;
+
+            // 渲染星球
+            planets.forEach(p => {
+                // 相對相機的距離
+                let dz = p.z - camera.z;
                 
-                const grad = ctx.createRadialGradient(w/2, h/2 + 30, 0, w/2, h/2 + 30, currentRadius + 10);
+                // 如果星球跑到鏡頭後面，讓它回到前方循環 (僅限非追蹤狀態)
+                if (dz < 10) {
+                    if (!shooting) p.z = camera.z + 4000;
+                    return; 
+                }
+
+                const fov = 600;
+                const scale = fov / dz;
+                const x2d = w/2 + (p.x - camera.x) * scale;
+                const y2d = h/2 + (p.y - camera.y) * scale;
+                const r2d = p.size * scale;
+
+                // 判斷是否在畫面內
+                if (x2d > -50 && x2d < w+50 && y2d > -50 && y2d < h+50) {
+                    ctx.beginPath();
+                    ctx.arc(x2d, y2d, r2d, 0, Math.PI * 2);
+
+                    const {r, g, b} = p.baseColor;
+                    
+                    if (p.isLit) {
+                        // 已覺醒：極亮、帶有強烈光暈
+                        ctx.fillStyle = `rgb(${r},${g},${b})`;
+                        ctx.shadowBlur = 30 * scale; 
+                        ctx.shadowColor = `rgb(${r},${g},${b})`;
+                        ctx.fill(); 
+                        ctx.shadowBlur = 0;
+                        
+                        // 核心白光
+                        ctx.beginPath(); ctx.arc(x2d, y2d, r2d * 0.4, 0, Math.PI*2);
+                        ctx.fillStyle = '#fff'; ctx.fill();
+                    } else {
+                        // 未覺醒：蓄力時變暗，平時保有微弱色彩
+                        let opacity = isPressing ? 0.2 : 0.6;
+                        ctx.fillStyle = `rgba(${r},${g},${b}, ${opacity})`;
+                        ctx.fill();
+                    }
+                }
+            });
+
+            // 渲染發射中的流星 (畫面中央的純白金剛光束)
+            if (shooting) {
+                const dz = targetPlanet.z - camera.z;
+                const scale = 600 / dz;
+                const targetX = w/2 + (targetPlanet.x - camera.x) * scale;
+                const targetY = h/2 + (targetPlanet.y - camera.y) * scale;
+
+                ctx.beginPath();
+                ctx.moveTo(w/2, h/2 + 50); // 從畫面下方金心位置射出
+                ctx.lineTo(targetX, targetY);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; 
+                ctx.lineWidth = 4; 
+                ctx.shadowBlur = 20; ctx.shadowColor = '#f3e5ab';
+                ctx.stroke(); ctx.shadowBlur = 0;
+            }
+
+            // 中心菩提心 (非追蹤時才顯示)
+            if (!shooting && !travelProgress) {
+                let basePulse = isPressing ? 0 : Math.sin(time * 0.5) * 5;
+                let currentRadius = 40 + basePulse + (chargeLevel * 1.2); 
+                
+                // 光暈
+                const grad = ctx.createRadialGradient(w/2, h/2 + 50, 0, w/2, h/2 + 50, currentRadius + 10);
                 grad.addColorStop(0, `rgba(243, 229, 171, ${0.8 + (chargeLevel/200)})`);
                 grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
-                ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(w/2, h/2 + 30, currentRadius + 15, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(w/2, h/2 + 50, currentRadius + 15, 0, Math.PI * 2); ctx.fill();
 
-                ctx.beginPath(); ctx.arc(w/2, h/2 + 30, 8 + (chargeLevel * 0.3), 0, Math.PI * 2);
+                // 核心
+                ctx.beginPath(); ctx.arc(w/2, h/2 + 50, 8 + (chargeLevel * 0.3), 0, Math.PI * 2);
                 ctx.fillStyle = '#fff'; ctx.shadowBlur = 15 + (chargeLevel*0.5); ctx.shadowColor = '#f3e5ab'; ctx.fill(); ctx.shadowBlur = 0;
             }
 
             requestAnimationFrame(draw);
         }
 
-        // 集氣引擎
+        // 集氣邏輯
         setInterval(() => {
             if (isPressing) {
                 chargeLevel += 1;
@@ -163,7 +226,7 @@
                     setTimeout(() => {
                         vowDisplay.innerText = vows[stage];
                         vowDisplay.style.opacity = 1;
-                        vowDisplay.style.fontSize = `${1.6 + (stage * 0.1)}rem`; 
+                        vowDisplay.style.fontSize = `${1.5 + (stage * 0.1)}rem`; 
                     }, 50);
                 }
             } else {
@@ -174,7 +237,7 @@
 
         function handleDown(e) {
             e.preventDefault();
-            if (shooting) return; // 正在發射時不可按
+            if (shooting || travelProgress > 0) return; 
             isPressing = true; bodyState.className = 'charging'; hint.style.opacity = 0;
         }
 
@@ -184,18 +247,15 @@
             isPressing = false; bodyState.className = '';
             
             if (chargeLevel >= 95) {
-                // 集氣滿圓！尋找一顆未點亮的星
                 vowDisplay.style.opacity = 0;
-                let unlitStars = stars.filter(s => !s.isLit);
+                let unlit = planets.filter(p => !p.isLit && (p.z - camera.z) > 1000); // 找一顆遠處的暗星
                 
-                if (unlitStars.length > 0) {
-                    targetStar = unlitStars[Math.floor(Math.random() * unlitStars.length)];
+                if (unlit.length > 0) {
+                    // 選定目標，啟動追蹤
+                    targetPlanet = unlit[Math.floor(Math.random() * unlit.length)];
                     shooting = true;
-                    beamProgress = 0;
+                    travelProgress = 0;
                     chargeLevel = 0;
-                } else {
-                    hint.innerText = "108 圓滿 ． 華嚴現前";
-                    hint.style.opacity = 0.5;
                 }
             } else {
                 hint.style.opacity = 0.5;

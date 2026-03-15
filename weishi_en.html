@@ -194,9 +194,15 @@
 
     <div id="theory-drawer">
         <div class="drawer-header" onclick="closeTheoryDrawer()">
-            <div class="close-bar"></div>
-            <div class="close-btn">Close Dharma Scroll</div>
+    <div class="close-bar"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+        <div class="close-btn">Close Scroll</div>
+        <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+            <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+            <span id="tts-text">Listen</span>
         </div>
+    </div>
+
         <div class="theory-container">
             
             <div class="humble-statement">
@@ -547,6 +553,56 @@
             startX = x; startY = y;
         });
         canvas.addEventListener('pointerup', () => isDragging = false); canvas.addEventListener('pointercancel', () => isDragging = false);
+    // ================= Listen to Dharma (TTS) =================
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+    let sysUtterances = []; 
+
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("TTS not supported.");
+        const btnText = document.getElementById('tts-text');
+        const btnIcon = document.getElementById('tts-icon');
+        
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel(); isPlayingTheory = false;
+            btnText.innerText = "Listen";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            let nodes = document.querySelectorAll('#theory-drawer .main-title, #theory-drawer .c-title, #theory-drawer .c-text');
+            let textToRead = Array.from(nodes).map(n => n.textContent.trim()).join('. ');
+            textToRead = textToRead.replace(/I\./g, 'Chapter 1.').replace(/II\./g, 'Chapter 2.').replace(/III\./g, 'Chapter 3.').replace(/IV\./g, 'Chapter 4.');
+            
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead);
+            theoryUtterance.lang = 'en-US'; theoryUtterance.rate = 0.85;
+
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            if (isAndroid) {
+                sysUtterances.push(theoryUtterance);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let enVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) || voices.find(v => v.lang.startsWith('en'));
+                    if (enVoice) theoryUtterance.voice = enVoice;
+                }
+            }
+
+            theoryUtterance.onend = () => {
+                isPlayingTheory = false; btnText.innerText = "Listen";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                if(isAndroid) sysUtterances = sysUtterances.filter(u => u !== theoryUtterance);
+            };
+            
+            window.speechSynthesis.speak(theoryUtterance); isPlayingTheory = true;
+            btnText.innerText = "Stop"; btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    if (typeof closeTheoryDrawer === "function") {
+        const originalCloseTheoryDrawer = closeTheoryDrawer;
+        closeTheoryDrawer = function() {
+            if (isPlayingTheory) toggleTheoryAudio();
+            originalCloseTheoryDrawer();
+        }
+    }
 
         generateTopology(); render();
     </script>

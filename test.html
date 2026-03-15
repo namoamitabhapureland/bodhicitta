@@ -2,71 +2,97 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>菩提幾何 ． 千葉蓮花預演</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>菩提幾何 ． 十八瓣蓮 (99分優化版)</title>
     <style>
-        body { margin: 0; background: #050505; color: #f3e5ab; overflow: hidden; }
-        #canvas-container { width: 100vw; height: 100vh; perspective: 1200px; display: flex; justify-content: center; align-items: center; }
-        .world { transform-style: preserve-3d; }
-        /* 瓣片：Roblox風格的幾何長方體 */
-        .petal { 
-            position: absolute; width: 12px; height: 60px; 
-            background: rgba(212, 175, 55, 0.4);
-            border: 1px solid rgba(243, 229, 171, 0.6);
-            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2), 0 0 15px rgba(212, 175, 55, 0.3);
-            transform-origin: bottom center;
-            border-radius: 2px;
-        }
-        /* 核心種子 */
-        .core {
-            position: absolute; width: 20px; height: 20px; background: #fff;
-            border-radius: 50%; box-shadow: 0 0 50px #f3e5ab, 0 0 100px #fff;
-            transform: translate3d(-10px, -10px, 0);
-        }
+        :root { --gold: #f3e5ab; --deep-gold: #d4af37; --bg: #050505; }
+        body { margin: 0; background: var(--bg); overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        
+        #stage { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; perspective: 1000px; }
+        svg { width: 85vmin; height: 85vmin; filter: drop-shadow(0 0 20px rgba(212,175,55,0.2)); transition: transform 0.1s ease-out; }
+        
+        .petal { fill: rgba(212, 175, 55, 0.15); stroke: var(--gold); stroke-width: 0.5; transition: all 0.5s; cursor: pointer; }
+        .petal:hover { fill: rgba(255, 255, 255, 0.4); stroke: #fff; filter: brightness(1.5); }
+        
+        /* 核心心燈 */
+        .core-light { fill: #fff; filter: blur(2px); animation: pulse 3s infinite alternate ease-in-out; }
+        @keyframes pulse { from { opacity: 0.5; transform: scale(0.8); } to { opacity: 1; transform: scale(1.2); } }
+        
+        .info-text { position: fixed; bottom: 40px; color: var(--gold); letter-spacing: 8px; font-size: 0.9rem; opacity: 0.6; pointer-events: none; }
     </style>
 </head>
 <body>
-    <div id="canvas-container">
-        <div class="world" id="world">
-            <div class="core"></div>
-        </div>
-    </div>
 
-    <script>
-        const world = document.getElementById('world');
-        const layers = [12, 18, 24, 24, 30]; // 五層花瓣，共108片
-        let petalIndex = 0;
+<div id="stage">
+    <svg id="lotus-svg" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">
+        <radialGradient id="grad1" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" style="stop-color:var(--gold); stop-opacity:0.2" />
+            <stop offset="100%" style="stop-color:var(--bg); stop-opacity:0" />
+        </radialGradient>
+        <circle cx="100" cy="100" r="80" fill="url(#grad1)" />
 
-        layers.forEach((count, layerIndex) => {
-            const radius = (layerIndex + 1) * 25; // 每層半徑
-            const tilt = 90 - (layerIndex * 20); // 每層傾斜角度，越外層越平
+        <g id="lotus-g"></g>
+        
+        <circle cx="100" cy="100" r="3" class="core-light" />
+    </svg>
+</div>
 
-            for (let i = 0; i < count; i++) {
-                const petal = document.createElement('div');
-                petal.className = 'petal';
-                const angle = (i / count) * 360;
-                
-                // 3D 變換：旋轉到對應角度，再向外平移，最後做瓣片的傾斜
-                petal.style.transform = `
-                    rotateY(${angle}deg) 
-                    translateZ(${radius}px) 
-                    rotateX(${tilt}deg)
-                `;
-                
-                // 為了美感，給瓣片一點漸層光
-                petal.style.background = `linear-gradient(to top, rgba(212,175,55,0.8), rgba(243,229,171,0.2))`;
-                
-                world.appendChild(petal);
-            }
-        });
+<div class="info-text">妙依總工程師勘驗 ． 百八煩惱轉菩提</div>
 
-        // 簡單旋轉邏輯
-        let ry = 0;
-        function frame() {
-            ry += 0.3;
-            world.style.transform = `rotateX(-25deg) rotateY(${ry}deg)`;
-            requestAnimationFrame(frame);
+<script>
+    const g = document.getElementById('lotus-g');
+    const svg = document.getElementById('lotus-svg');
+    const layers = [
+        { count: 8, r: 15, h: 25, w: 10, op: 0.9, tilt: 0 },   // 內層：最尖、最直
+        { count: 16, r: 30, h: 35, w: 14, op: 0.7, tilt: 5 },
+        { count: 24, r: 45, h: 45, w: 18, op: 0.5, tilt: 10 },
+        { count: 28, r: 60, h: 55, w: 22, op: 0.3, tilt: 15 },
+        { count: 32, r: 75, h: 65, w: 26, op: 0.2, tilt: 20 }  // 外層：最開、最淡
+    ];
+
+    // 繪製瓣尖花瓣 (幾何水滴形)
+    function createPetalPath(w, h) {
+        // M: 起點(底部), Q: 二次貝茲曲線, 頂點(尖端)
+        return `M 0 0 Q ${w/2} ${h*0.3} 0 ${h} Q ${-w/2} ${h*0.3} 0 0 Z`;
+    }
+
+    layers.forEach((layer, lIdx) => {
+        for (let i = 0; i < layer.count; i++) {
+            const angle = (i / layer.count) * 360;
+            const pathData = createPetalPath(layer.w, layer.h);
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            
+            path.setAttribute("d", pathData);
+            path.setAttribute("class", "petal");
+            path.style.fill = `rgba(212, 175, 55, ${layer.op})`;
+            
+            // 計算佈局：旋轉 -> 平移出半徑 -> 再次旋轉微調瓣尖
+            // 注意：這裡是 2D 模擬 3D 向上盛開感
+            path.setAttribute("transform", `
+                translate(100, 100) 
+                rotate(${angle}) 
+                translate(0, ${-layer.r}) 
+                rotate(180)
+            `);
+            
+            g.appendChild(path);
         }
-        frame();
-    </script>
+    });
+
+    // 視差互動：讓蓮花隨鼠標輕微轉動
+    document.addEventListener('mousemove', (e) => {
+        const x = (window.innerWidth / 2 - e.clientX) / 25;
+        const y = (window.innerHeight / 2 - e.clientY) / 25;
+        svg.style.transform = `rotateY(${x}deg) rotateX(${-y}deg)`;
+    });
+
+    // 手機傾斜感應
+    window.addEventListener('deviceorientation', (e) => {
+        const x = e.gamma / 2;
+        const y = e.beta / 2;
+        svg.style.transform = `rotateY(${x}deg) rotateX(${-y}deg)`;
+    });
+
+</script>
 </body>
 </html>

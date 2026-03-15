@@ -148,7 +148,15 @@
     </section>
 
     <div id="theory-drawer">
-        <div class="drawer-header" onclick="closeTheoryDrawer()"><div class="close-bar"></div><div class="close-btn">收起古卷</div></div>
+        <div class="drawer-header" onclick="closeTheoryDrawer()">
+    <div class="close-bar"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+        <div class="close-btn">收起古卷</div>
+        <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+            <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+            <span id="tts-text">聆聽法音</span>
+        </div>
+    </div>
         <div class="theory-container">
             <div class="humble-statement">法海浩瀚，唯佛與佛乃能究盡。本文僅為一介在家居士，依經教邏輯與祖師大德之註疏，試圖探求如來真實義之修學略影。若有未盡或錯漏之處，皆屬個人智識之侷限，祈願三寶加被，同修共鑒。</div>
             <h1 class="main-title">九華悲願 ． 誓度幽冥</h1>
@@ -462,6 +470,58 @@
         
         canvas.addEventListener('pointermove', (e) => { if (!isDragging) return; let x = e.clientX || (e.touches ? e.touches[0].clientX : 0); let y = e.clientY || (e.touches ? e.touches[0].clientY : 0); let dx = x - startX; let dy = y - startY; rotY -= dx * 0.008; rotX -= dy * 0.008; vX = -dx * 0.0005; vY = -dy * 0.0005; startX = x; startY = y; });
         canvas.addEventListener('pointerup', () => isDragging = false); canvas.addEventListener('pointercancel', () => isDragging = false);
+    // ================= 聆聽法音 (TTS) =================
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+    let sysUtterances = []; 
+
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("您的設備不支援語音");
+        const btnText = document.getElementById('tts-text');
+        const btnIcon = document.getElementById('tts-icon');
+        
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel(); isPlayingTheory = false;
+            btnText.innerText = "聆聽法音";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            // 通用抓取：自動抓取該頁面抽屜內的所有標題與內文
+            let nodes = document.querySelectorAll('#theory-drawer .main-title, #theory-drawer .c-title, #theory-drawer .c-text');
+            let textToRead = Array.from(nodes).map(n => n.textContent.trim()).join('。');
+            textToRead = textToRead.replace(/一、/g, '第一章：').replace(/二、/g, '第二章：').replace(/三、/g, '第三章：').replace(/四、/g, '第四章：');
+            
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead);
+            theoryUtterance.lang = 'zh-TW'; theoryUtterance.rate = 0.85;
+
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            if (isAndroid) {
+                sysUtterances.push(theoryUtterance);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let zhVoice = voices.find(v => v.lang === 'zh-TW' && v.name.includes('Google')) || voices.find(v => v.lang.includes('zh'));
+                    if (zhVoice) theoryUtterance.voice = zhVoice;
+                }
+            }
+
+            theoryUtterance.onend = () => {
+                isPlayingTheory = false; btnText.innerText = "聆聽法音";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                if(isAndroid) sysUtterances = sysUtterances.filter(u => u !== theoryUtterance);
+            };
+            
+            window.speechSynthesis.speak(theoryUtterance); isPlayingTheory = true;
+            btnText.innerText = "停止聆聽"; btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    // 覆寫關閉抽屜，保證聲音中斷
+    if (typeof closeTheoryDrawer === "function") {
+        const originalCloseTheoryDrawer = closeTheoryDrawer;
+        closeTheoryDrawer = function() {
+            if (isPlayingTheory) toggleTheoryAudio();
+            originalCloseTheoryDrawer();
+        }
+    }
 
         generateTopology(); render();
     </script>

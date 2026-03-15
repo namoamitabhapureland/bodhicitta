@@ -2,145 +2,73 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>一真法界 ． 琉璃星系</title>
+    <title>菩提星系 ． 氣韻版</title>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; font-family: "PingFang TC", sans-serif; }
-        #universe { width: 100vw; height: 100vh; perspective: 1500px; display: flex; justify-content: center; align-items: center; }
-        
-        .container { position: absolute; transform-style: preserve-3d; width: 0; height: 0; }
-        
-        /* 琉璃星球：利用 CSS 徑向漸層模擬 3D 球體與發光 */
-        .star {
-            position: absolute; border-radius: 50%;
-            transform-style: preserve-3d;
-            transition: box-shadow 0.3s, transform 0.3s;
-        }
-
-        /* 核心菩提明點 */
-        .bodhi-core {
-            position: absolute; width: 12px; height: 12px;
-            background: #fff; border-radius: 50%;
-            box-shadow: 0 0 40px #fff, 0 0 80px #f3e5ab;
-            z-index: 10;
-        }
-
-        .label {
-            position: fixed; bottom: 40px; width: 100%; text-align: center;
-            color: #f3e5ab; letter-spacing: 10px; font-size: 0.8rem;
-            text-shadow: 0 0 10px #d4af37; opacity: 0.6; pointer-events: none;
-        }
+        body { margin: 0; background: #010102; overflow: hidden; }
+        canvas { width: 100vw; height: 100vh; display: block; }
     </style>
 </head>
 <body>
+    <canvas id="starCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('starCanvas');
+        const ctx = canvas.getContext('2d');
+        let w, h, time = 0;
+        const stars = [];
 
-<div id="universe">
-    <div class="bodhi-core"></div>
-    <div class="container" id="star-field"></div>
-</div>
+        function init() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            for (let i = 0; i < 108; i++) {
+                stars.push({
+                    angle: (i / 108) * Math.PI * 2,
+                    dist: 100 + Math.random() * 200,
+                    size: Math.random() * 3 + 1,
+                    speed: 0.002 + Math.random() * 0.005,
+                    color: i % 2 === 0 ? '#f3e5ab' : '#8ba89c',
+                    z: Math.random() * 1000
+                });
+            }
+        }
 
-<div class="label">撥動指尖 ． 點亮本初光明</div>
+        function draw() {
+            // 關鍵：不再是全黑抹除，而是帶有留痕的半透抹除，產生「飄」的速度感
+            ctx.fillStyle = 'rgba(1, 1, 2, 0.2)';
+            ctx.fillRect(0, 0, w, h);
+            time += 0.01;
 
-<script>
-    const field = document.getElementById('star-field');
-    const count = 108;
-    const stars = [];
-    
-    // 琉璃色系表：金色、青色、紫色、白色
-    const colors = [
-        'radial-gradient(circle at 30% 30%, #fff, #f3e5ab, #d4af37)',
-        'radial-gradient(circle at 30% 30%, #fff, #8ba89c, #2d5a4c)',
-        'radial-gradient(circle at 30% 30%, #fff, #e0f7fa, #00acc1)',
-        'radial-gradient(circle at 30% 30%, #fff, #f8bbd0, #c2185b)'
-    ];
+            ctx.globalCompositeOperation = 'screen';
 
-    // 初始化 108 顆星球
-    for (let i = 0; i < count; i++) {
-        const star = document.createElement('div');
-        star.className = 'star';
-        
-        // 隨機大小與色彩
-        const size = Math.random() * 6 + 3;
-        star.style.width = `${size}px`;
-        star.style.height = `${size}px`;
-        star.style.background = colors[Math.floor(Math.random() * colors.length)];
-        star.style.boxShadow = `0 0 ${size*2}px rgba(255,255,255,0.3)`;
+            stars.forEach(s => {
+                s.angle += s.speed;
+                // 加入呼吸感：半徑會隨時間微動
+                const dynamicDist = s.dist + Math.sin(time + s.angle) * 20;
+                
+                // 3D 投影感
+                const x = w/2 + Math.cos(s.angle) * dynamicDist;
+                const y = h/2 + Math.sin(s.angle) * dynamicDist * 0.5; // 橢圓軌道增加深度感
+                
+                // 光輝感：多層光暈
+                ctx.beginPath();
+                ctx.arc(x, y, s.size, 0, Math.PI * 2);
+                ctx.fillStyle = s.color;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = s.color;
+                ctx.fill();
+                
+                // 淡淡的軌道線，增加時空感
+                ctx.beginPath();
+                ctx.arc(x, y, s.size * 0.5, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+                ctx.stroke();
+            });
 
-        // 分佈在 3D 空間中
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos(Math.random() * 2 - 1);
-        const distance = 150 + Math.random() * 150; // 形成球狀雲圖
+            requestAnimationFrame(draw);
+        }
 
-        const x = distance * Math.sin(phi) * Math.cos(theta);
-        const y = distance * Math.sin(phi) * Math.sin(theta);
-        const z = distance * Math.cos(phi);
-
-        star.dataset.x = x;
-        star.dataset.y = y;
-        star.dataset.z = z;
-
-        field.appendChild(star);
-        stars.push(star);
-    }
-
-    let rotX = 0, rotY = 0;
-    let targetRotX = 0, targetRotY = 0;
-
-    // 渲染函數
-    function render() {
-        // 平滑旋轉
-        rotX += (targetRotX - rotX) * 0.05;
-        rotY += (targetRotY - rotY) * 0.05;
-
-        stars.forEach(star => {
-            const x = parseFloat(star.dataset.x);
-            const y = parseFloat(star.dataset.y);
-            const z = parseFloat(star.dataset.z);
-
-            // 應用 3D 旋轉矩陣變換
-            const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
-            const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
-
-            // 旋轉後的座標
-            let nx = x * cosY - z * sinY;
-            let nz = x * sinY + z * cosY;
-            let ny = y * cosX - nz * sinX;
-            let finalZ = y * sinX + nz * cosX;
-
-            // 透視縮放：離鏡頭越近越大越亮
-            const scale = 1000 / (1000 + finalZ);
-            star.style.opacity = (scale - 0.5) * 1.5;
-            star.style.transform = `translate3d(${nx * scale}px, ${ny * scale}px, 0) scale(${scale})`;
-            star.style.zIndex = Math.floor(scale * 1000);
-        });
-
-        // 閒置時自動緩緩旋轉
-        targetRotY += 0.002;
-        requestAnimationFrame(render);
-    }
-
-    // 交互：撥動大千世界
-    let isDragging = false, lx, ly;
-    window.addEventListener('mousedown', e => { isDragging = true; lx = e.clientX; ly = e.clientY; });
-    window.addEventListener('mousemove', e => {
-        if (!isDragging) return;
-        targetRotY += (e.clientX - lx) * 0.01;
-        targetRotX -= (e.clientY - ly) * 0.01;
-        lx = e.clientX; ly = e.clientY;
-    });
-    window.addEventListener('mouseup', () => isDragging = false);
-    
-    // 觸控支援
-    window.addEventListener('touchstart', e => { isDragging = true; lx = e.touches[0].clientX; ly = e.touches[0].clientY; });
-    window.addEventListener('touchmove', e => {
-        if (!isDragging) return;
-        targetRotY += (e.touches[0].clientX - lx) * 0.01;
-        targetRotX -= (e.touches[0].clientY - ly) * 0.01;
-        lx = e.touches[0].clientX; ly = e.touches[0].clientY;
-    });
-    window.addEventListener('touchend', () => isDragging = false);
-
-    render();
-</script>
+        window.addEventListener('resize', init);
+        init();
+        draw();
+    </script>
 </body>
 </html>

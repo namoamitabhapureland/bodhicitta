@@ -3,344 +3,406 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>賢劫千佛 ． 宇宙接力</title>
+    <title>發菩提心 ． 華藏曼陀羅</title>
     <style>
         :root {
-            --gold: #f3e5ab;
-            --solid-gold: #d4af37;
-            --cyan: #9fdfc8;
-        }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            margin: 0; padding: 0; background: #000; color: #eee;
-            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
-            overflow: hidden; 
+            --bg-deep: #010102; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --fire: #ff9d00;
+            --mandala-fill: 0%; /* JS 動態控制曼陀羅上色進度 */
         }
         
-        #realm-canvas {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 1;
+        body { 
+            margin: 0; background: var(--bg-deep); color: #d0d0d0; 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; overflow: hidden; touch-action: none; user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .ui-layer {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 10; pointer-events: none; 
-            display: flex; flex-direction: column; justify-content: space-between;
+        /* === 背景：華藏曼陀羅 (純線條，依願力上色) === */
+        .mandala-bg {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 180vw; height: 180vw; max-width: 800px; max-height: 800px;
+            z-index: 0; pointer-events: none; opacity: 0.8;
+            animation: slowSpin 180s linear infinite;
         }
+        @keyframes slowSpin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
 
-        .header {
-            text-align: center; padding: 40px 20px 0;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
+        /* === 導航與狀態列 === */
+        .back-link { 
+            position: absolute; top: 25px; left: 25px; color: var(--gold); text-decoration: none; 
+            z-index: 100; font-size: 0.95rem; letter-spacing: 2px; 
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px);
         }
-        .title { color: var(--gold); font-size: 1.5rem; font-weight: bold; letter-spacing: 4px; text-shadow: 0 0 15px var(--solid-gold); margin-bottom: 5px; }
-        .subtitle { color: var(--cyan); font-size: 0.85rem; letter-spacing: 2px; opacity: 0.8; }
         
-        /* ✨ 佛號顯示器 (支援動態高光) ✨ */
-        #buddha-name-display {
-            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-            color: var(--gold); font-size: 2.2rem; font-weight: bold; letter-spacing: 8px;
-            text-shadow: 0 0 20px var(--solid-gold);
-            opacity: 0; transition: opacity 1.5s ease-in-out, color 0.5s, text-shadow 0.5s;
-            white-space: nowrap; text-align: center;
+        #streak-panel {
+            position: absolute; top: 25px; right: 25px; z-index: 100; text-align: right;
         }
-        .buddha-rank { font-size: 1rem; color: var(--cyan); letter-spacing: 4px; margin-bottom: 12px; text-shadow: none; display: block;}
+        .streak-num { font-size: 1.5rem; color: var(--gold); font-weight: bold; text-shadow: 0 0 10px var(--solid-gold); }
+        .streak-text { font-size: 0.7rem; color: var(--cyan); letter-spacing: 1px; }
+
+        /* === 容器切換邏輯 === */
+        .phase-container {
+            position: absolute; z-index: 10; width: 90%; max-width: 450px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: all 0.8s ease-in-out;
+            transform: translateY(20px) scale(0.95);
+        }
+        .phase-container.active { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+
+        .glass-panel {
+            background: rgba(10, 10, 10, 0.85); border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 20px; padding: 35px 25px; width: 100%; box-sizing: border-box;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9), 0 0 20px rgba(212,175,55,0.05) inset;
+            text-align: center; backdrop-filter: blur(12px);
+        }
+
+        /* === 鎖定畫面 (十念前置攔截) === */
+        .locked-icon { width: 60px; height: 60px; filter: drop-shadow(0 0 10px #ff4d4d); margin-bottom: 20px; }
         
-        /* ✨ 宇宙輪迴大閃光 ✨ */
-        #universe-flash {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #fff; z-index: 9999; pointer-events: none;
-            opacity: 0; transition: opacity 1.5s ease-out;
+        /* === 核心：菩提心燈 === */
+        .lamp-container {
+            position: relative; width: 150px; height: 200px; margin-bottom: 30px;
         }
-        .flash-active { opacity: 1 !important; transition: opacity 0.1s ease-in !important; }
+        .lotus-base {
+            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 120px; height: 60px; filter: drop-shadow(0 0 10px rgba(212,175,55,0.5));
+        }
+        .flame {
+            position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);
+            width: 40px; height: 80px; background: radial-gradient(ellipse at bottom, #fff 10%, #ffd700 40%, #ff5e00 80%, transparent 100%);
+            border-radius: 50% 50% 20% 20% / 60% 60% 30% 30%;
+            filter: drop-shadow(0 0 20px var(--fire)); transform-origin: bottom center;
+            /* 依據連續天數改變大小與亮度，由 JS 控制 */
+        }
+        .flame-flicker { animation: flicker 3s infinite alternate ease-in-out; }
+        @keyframes flicker { 0% { transform: translateX(-50%) scale(0.95) skewX(-2deg); opacity: 0.8; } 100% { transform: translateX(-50%) scale(1.05) skewX(2deg); opacity: 1; filter: drop-shadow(0 0 35px var(--fire)); } }
 
-        .scroll-box {
-            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 60%, transparent 100%);
-            padding: 30px 25px 40px; pointer-events: auto; 
-            border-top: 1px solid rgba(212,175,55,0.2);
-            max-height: 45vh; overflow-y: auto; scrollbar-width: none;
+        /* === 長按集氣與四弘誓願 === */
+        .btn-hold {
+            width: 100%; min-height: 60px; border: 1px solid var(--solid-gold); border-radius: 30px; 
+            background: linear-gradient(145deg, #222, #000); color: var(--gold); 
+            font-size: 1.1rem; letter-spacing: 3px; font-weight: bold;
+            cursor: pointer; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8); transition: 0.3s;
         }
-        .scroll-content { text-align: justify; line-height: 1.8; font-size: 0.95rem; color: #ddd; }
-        .highlight { color: var(--gold); font-weight: bold; text-shadow: 0 0 5px rgba(212,175,55,0.4); }
+        .btn-hold:active { transform: scale(0.95); }
+        .progress-bar { position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: rgba(212,175,55,0.3); z-index: 1; transition: width 0.1s linear; }
+        
+        #vow-display {
+            position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 2rem; font-weight: bold; color: #fff; letter-spacing: 8px;
+            text-shadow: 0 0 20px var(--solid-gold), 0 0 40px #fff; z-index: 50;
+            white-space: nowrap; opacity: 0; transition: opacity 0.5s ease;
+        }
 
-        .back-btn {
-            display: block; width: 100%; max-width: 300px; margin: 20px auto 0;
-            background: transparent; color: var(--gold); border: 1px solid var(--gold);
-            padding: 12px; border-radius: 25px; font-size: 0.9rem; letter-spacing: 2px;
-            text-align: center; cursor: pointer; transition: 0.3s; pointer-events: auto;
-            box-shadow: 0 0 10px rgba(212,175,55,0.1);
-        }
-        .back-btn:active { background: var(--gold); color: #000; box-shadow: 0 0 20px rgba(212,175,55,0.6); }
+        /* === 宇宙白幕 (過場用) === */
+        #universe-flash { position: fixed; inset: 0; background: #fff; z-index: 99999; opacity: 0; pointer-events: none; transition: opacity 1.5s ease-out; }
+
+        /* === 琉璃法器 (滿 21 天的福報具象) === */
+        .reward-icon { width: 120px; height: 120px; filter: drop-shadow(0 0 30px #8ba89c); animation: float 3s infinite alternate ease-in-out; margin-bottom: 20px;}
+        @keyframes float { 0% { transform: translateY(0); } 100% { transform: translateY(-15px); } }
+
     </style>
 </head>
 <body>
 
-    <div id="universe-flash"></div> <canvas id="realm-canvas"></canvas>
+    <a href="index.html?screen=3" class="back-link">← 回道場</a>
+    
+    <div id="streak-panel" style="display: none;">
+        <div class="streak-num" id="ui-streak">0 / 21</div>
+        <div class="streak-text">心燈相繼 (日)</div>
+    </div>
 
-    <div class="ui-layer">
-        <div class="header">
-            <div class="title">賢劫千佛 ． 宇宙接力</div>
-            <div class="subtitle">時空長河 ． 願力不息</div>
-        </div>
+    <div class="mandala-bg">
+        <svg viewBox="0 0 400 400" width="100%" height="100%">
+            <defs>
+                <radialGradient id="fillGrad" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="rgba(212,175,55,0.9)"/>
+                    <stop offset="var(--mandala-fill)" stop-color="rgba(212,175,55,0.6)"/>
+                    <stop offset="var(--mandala-fill)" stop-color="rgba(255,255,255,0.05)"/>
+                    <stop offset="100%" stop-color="rgba(255,255,255,0.02)"/>
+                </radialGradient>
+            </defs>
+            <g fill="url(#fillGrad)" stroke="rgba(212,175,55,0.4)" stroke-width="1">
+                <circle cx="200" cy="200" r="180" stroke-dasharray="4 8"/>
+                <circle cx="200" cy="200" r="140"/>
+                <g transform="rotate(0 200 200)"><rect x="90" y="90" width="220" height="220"/></g>
+                <g transform="rotate(45 200 200)"><rect x="90" y="90" width="220" height="220"/></g>
+                <path d="M 200 200 L 200 40 Q 240 100 200 200" /> <path d="M 200 200 L 200 40 Q 160 100 200 200" />
+                <path d="M 200 200 L 200 360 Q 240 300 200 200" /> <path d="M 200 200 L 200 360 Q 160 300 200 200" />
+                <path d="M 200 200 L 40 200 Q 100 160 200 200" /> <path d="M 200 200 L 40 200 Q 100 240 200 200" />
+                <path d="M 200 200 L 360 200 Q 300 160 200 200" /> <path d="M 200 200 L 360 200 Q 300 240 200 200" />
+            </g>
+        </svg>
+    </div>
 
-        <div id="buddha-name-display">
-            <span class="buddha-rank" id="buddha-rank">第九小劫</span>
-            <span id="buddha-name">拘留孫佛</span>
-        </div>
+    <div id="vow-display"></div>
 
-        <div class="scroll-box">
-            <div class="scroll-content">
-                依《賢劫經》所載，吾等所處之時空名為「賢劫」。於此漫長劫中，將有一千尊佛依序降生娑婆，接力度化眾生。<br><br>
-                佛法乃宇宙間永不熄滅之火炬。第九小劫四佛出世，第十小劫彌勒下生，第十五小劫更有九百九十四尊佛相繼出世，直至第二十小劫樓至佛圓滿千佛之數。<br><br>
-                吾等今日求生極樂，換取不退轉金身，實為預備此宇宙之約。待未來時機成熟，必將於此<span class="highlight">千佛接力</span>中，化身大菩薩乘願再來，甚至於未來際，綻放屬於吾等成佛之金蓮！
-            </div>
-            <button class="back-btn" onclick="window.history.back()">返回大乘法界</button>
+    <div id="universe-flash"></div>
+
+
+    <div id="phase-locked" class="phase-container">
+        <div class="glass-panel">
+            <svg class="locked-icon" viewBox="0 0 24 24" fill="none" stroke="#ff4d4d" stroke-width="1.5">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <h2 style="color:#ff4d4d; letter-spacing:3px; margin-top:0;">法界尚未開啟</h2>
+            <p style="color:#aaa; font-size:0.95rem; line-height:1.8; text-align:justify; margin-bottom: 25px;">
+                菩提心乃大乘之基，需以清淨信願為底。<br><br>
+                系統偵測：您今日尚未與阿彌陀佛對頻。<br>
+                <span style="color:var(--gold);">請先至首頁完成「十念定課」，方能點燃菩提心燈。</span>
+            </p>
+            <button class="btn-hold" onclick="window.location.href='index.html'">去念佛 ． 開啟結界</button>
         </div>
     </div>
 
+
+    <div id="phase-1" class="phase-container">
+        <h2 style="color:var(--gold); letter-spacing:5px; text-shadow:0 0 15px var(--solid-gold); margin-bottom: 5px;">點燃菩提心燈</h2>
+        <p id="lamp-status-text" style="color:var(--cyan); font-size:0.85rem; letter-spacing:1px; margin-bottom: 30px;">(心燈微弱，請注入願力)</p>
+
+        <div class="lamp-container">
+            <div id="bodhi-flame" class="flame flame-flicker"></div>
+            <svg class="lotus-base" viewBox="0 0 100 50">
+                <path d="M50 45 C 80 45, 95 25, 95 5 C 75 20, 60 40, 50 45" fill="url(#goldGrad)" stroke="#fff" stroke-width="0.5"/>
+                <path d="M50 45 C 20 45, 5 25, 5 5 C 25 20, 40 40, 50 45" fill="url(#goldGrad)" stroke="#fff" stroke-width="0.5"/>
+                <path d="M50 48 C 70 30, 65 5, 50 15 C 35 5, 30 30, 50 48" fill="#d4af37"/>
+                <defs><linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f3e5ab"/><stop offset="100%" stop-color="#8a6d1c"/></linearGradient></defs>
+            </svg>
+        </div>
+
+        <button id="btn-ignite" class="btn-hold">
+            <div id="progress-bar" class="progress-bar"></div>
+            <span style="position:relative; z-index:2;">長按發心 ． 點亮大千</span>
+        </button>
+    </div>
+
+
+    <div id="phase-2" class="phase-container">
+        <div class="glass-panel">
+            <h2 style="color:var(--gold); letter-spacing:4px; margin-top:0;">願力已遍照法界</h2>
+            <p style="color:#eee; font-size:1rem; line-height:1.8; margin-bottom: 25px;">
+                您今日的菩提心已化為光芒，<br>
+                為華藏曼陀羅注入了新的色彩。<br>
+                <span style="color:var(--cyan); font-size:0.85rem;">(每日護持，勿令心燈熄滅)</span>
+            </p>
+            <button class="btn-hold" onclick="window.location.href='index.html?screen=3'">返回 ． 檢視修行資糧</button>
+        </div>
+    </div>
+
+
+    <div id="phase-3" class="phase-container">
+        <div class="glass-panel" style="border-color: var(--cyan); box-shadow: 0 0 30px rgba(139,168,156,0.4) inset;">
+            <h2 style="color:var(--cyan); letter-spacing:4px; margin-top:0;">法界拼圖 ． 圓滿顯化</h2>
+            
+            <svg class="reward-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="lapisGlow" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#ffffff"/>
+                        <stop offset="40%" stop-color="#8ba89c"/>
+                        <stop offset="100%" stop-color="transparent"/>
+                    </radialGradient>
+                </defs>
+                <circle cx="50" cy="50" r="45" fill="url(#lapisGlow)"/>
+                <path d="M50 10 C 70 40, 80 60, 50 90 C 20 60, 30 40, 50 10 Z" fill="rgba(255,255,255,0.8)" stroke="#8ba89c" stroke-width="2"/>
+                <circle cx="50" cy="65" r="8" fill="#fff" filter="drop-shadow(0 0 5px #fff)"/>
+            </svg>
+
+            <p style="color:#ddd; font-size:0.95rem; line-height:1.8; text-align:justify; margin-bottom: 25px;">
+                恭喜行者！您已連續 <span style="color:var(--gold); font-weight:bold;">21 日</span> 護持菩提心燈不滅。<br><br>
+                您清淨的願力已凝結成<span style="color:var(--cyan); font-weight:bold;">「琉璃摩尼寶珠」</span>。此法器已存入您的福德庫，願護佑您身心安康、世俗圓滿，並作為往生淨土之堅實資糧。
+            </p>
+            <button class="btn-hold" onclick="window.location.href='index.html?screen=3'">收下法器 ． 返回道場</button>
+        </div>
+    </div>
+
+
 <script>
-    const canvas = document.getElementById('realm-canvas');
-    const ctx = canvas.getContext('2d');
-    let width, height;
+    // ================= 核心變數與資料庫 =================
+    let db;
+    try {
+        db = JSON.parse(localStorage.getItem('PX_V15.0'));
+        if (!db || typeof db !== 'object') db = null;
+    } catch(e) {}
     
-    let stars = [];
-    const NUM_STARS = 800;
-    const FOV = 400; 
+    if (!db) {
+        // 如果沒有資料，先給個預設，但實務上應該會被攔截
+        db = { name: "", totalNian: 0, points: 0, lastNianDate: "", bodhiStreak: 0, lastBodhiDate: "" };
+    }
+    if (db.bodhiStreak === undefined) db.bodhiStreak = 0;
+    if (db.lastBodhiDate === undefined) db.lastBodhiDate = "";
 
-    // ✨ 終極千佛時間線 (嚴格依據《賢劫經》)
-    const timeline = [
-        { rank: "第九小劫 ． 第一尊", name: "拘留孫佛", highlight: false },
-        { rank: "第九小劫 ． 第二尊", name: "拘那含牟尼佛", highlight: false },
-        { rank: "第九小劫 ． 第三尊", name: "迦葉佛", highlight: false },
-        { rank: "第九小劫 ． 第四尊", name: "釋迦牟尼佛", highlight: true }, // 特殊高光
-        { rank: "第十小劫 ． 第五尊", name: "彌勒尊佛", highlight: true }, // 特殊高光
-        // 快轉模式：994 尊佛連續爆發
-        { isFastMode: true, rank: "第十五小劫", name: "994 尊佛相繼出世", lotusCount: 15 }, 
-        { rank: "第二十小劫 ． 第一千尊", name: "樓至佛 (盧至如來)", highlight: true, isLast: true } // 最後一尊
+    const todayStr = new Date().toLocaleDateString();
+    const MAX_CYCLE = 21; // 21 天一期圓滿
+
+    // ================= 初始化檢查與心燈明暗邏輯 =================
+    function initBodhi() {
+        // 1. 攔截系統：檢查今天是否念佛 (十念前置)
+        if (db.lastNianDate !== todayStr) {
+            showPhase('phase-locked');
+            return;
+        }
+
+        // 2. 結算懲罰：如果昨天沒來，燈會變暗 (扣天數)
+        if (db.lastBodhiDate && db.lastBodhiDate !== todayStr) {
+            let lastDate = new Date(db.lastBodhiDate).setHours(0,0,0,0);
+            let currentDate = new Date(todayStr).setHours(0,0,0,0);
+            let diffDays = (currentDate - lastDate) / 86400000;
+            
+            if (diffDays > 1) {
+                // 斷一天扣 2 天進度 (Loss Aversion 心理學)
+                let penalty = Math.floor(diffDays - 1) * 2;
+                db.bodhiStreak = Math.max(0, db.bodhiStreak - penalty);
+                saveDB();
+            }
+        }
+
+        // 3. 檢查今天是否已經點過燈
+        if (db.lastBodhiDate === todayStr) {
+            // 已點過，直接顯示結果頁 (曼陀羅狀態)
+            updateVisuals();
+            showPhase('phase-2');
+        } else {
+            // 還沒點，顯示點燈畫面
+            document.getElementById('streak-panel').style.display = 'block';
+            updateVisuals();
+            showPhase('phase-1');
+        }
+    }
+
+    // 更新心燈大小與曼陀羅顏色
+    function updateVisuals() {
+        let cycleProgress = db.bodhiStreak % MAX_CYCLE;
+        if (db.bodhiStreak > 0 && cycleProgress === 0 && db.lastBodhiDate === todayStr) cycleProgress = MAX_CYCLE; // 剛好滿 21 天當天
+        
+        document.getElementById('ui-streak').innerText = `${cycleProgress} / ${MAX_CYCLE}`;
+
+        // 計算亮度比例 (0.3 ~ 1.2)
+        let intensity = 0.3 + (cycleProgress / MAX_CYCLE) * 0.9;
+        
+        const flame = document.getElementById('bodhi-flame');
+        flame.style.transform = `translateX(-50%) scale(${intensity})`;
+        flame.style.opacity = Math.min(1, intensity + 0.2);
+        
+        let statusText = "心燈微弱，請注入願力";
+        if (cycleProgress >= 15) statusText = "心燈光芒萬丈，法界震動";
+        else if (cycleProgress >= 7) statusText = "心燈明亮，願力漸增";
+        document.getElementById('lamp-status-text').innerText = `(${statusText})`;
+
+        // 曼陀羅上色魔法 (透過 CSS 變數控制漸層比例)
+        let fillPct = Math.max(5, (cycleProgress / MAX_CYCLE) * 100); // 至少留 5% 顏色
+        document.documentElement.style.setProperty('--mandala-fill', `${fillPct}%`);
+    }
+
+    function showPhase(phaseId) {
+        document.querySelectorAll('.phase-container').forEach(el => el.classList.remove('active'));
+        document.getElementById(phaseId).classList.add('active');
+    }
+
+    function saveDB() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
+
+    // ================= 長按集氣與四弘誓願動畫 =================
+    const btnIgnite = document.getElementById('btn-ignite');
+    const progressBar = document.getElementById('progress-bar');
+    const vowDisplay = document.getElementById('vow-display');
+    let pressInterval;
+    let progress = 0;
+    
+    const vows = [
+        "眾生無邊誓願度", 
+        "煩惱無盡誓願斷", 
+        "法門無量誓願學", 
+        "佛道無上誓願成", 
+        "發菩提心 ． 同生極樂"
     ];
-    
-    let currentStep = 0;
-    let fastLotusCounter = 0;
+    let vowIndex = 0;
 
-    let lotusState = {
-        phase: 'waiting', 
-        timer: 0,
-        z: 2000,
-        scale: 0,
-        opacity: 0,
-        petals: []
-    };
+    function startPress(e) {
+        if(e) e.preventDefault();
+        progress = 0; vowIndex = 0;
+        progressBar.style.width = '0%';
+        vowDisplay.innerText = vows[0];
+        vowDisplay.style.opacity = 1;
+        
+        if (navigator.vibrate) navigator.vibrate(20); // 觸覺回饋
 
-    function resize() {
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
+        pressInterval = setInterval(() => {
+            progress += 2; // 50 * 100ms = 5秒長按
+            progressBar.style.width = progress + '%';
+            
+            // 根據進度切換誓願文字 (每 20% 換一句)
+            let newIndex = Math.floor(progress / 20);
+            if (newIndex !== vowIndex && newIndex < vows.length) {
+                vowIndex = newIndex;
+                vowDisplay.style.opacity = 0; // 淡出
+                setTimeout(() => {
+                    vowDisplay.innerText = vows[vowIndex];
+                    vowDisplay.style.opacity = 1; // 淡入
+                    if (navigator.vibrate) navigator.vibrate(30);
+                }, 200);
+            }
+
+            // 火苗跟著長按變大
+            const flame = document.getElementById('bodhi-flame');
+            let baseScale = 0.3 + ((db.bodhiStreak % MAX_CYCLE) / MAX_CYCLE) * 0.9;
+            flame.style.transform = `translateX(-50%) scale(${baseScale + (progress/100)*0.5})`;
+
+            if(progress >= 100) { finishPress(); }
+        }, 100);
     }
-    window.addEventListener('resize', resize);
-    resize();
 
-    function initStars() {
-        stars = [];
-        for (let i = 0; i < NUM_STARS; i++) {
-            stars.push({
-                x: (Math.random() - 0.5) * 3000, y: (Math.random() - 0.5) * 3000,
-                z: Math.random() * 2000, speed: Math.random() * 5 + 2, 
-                color: Math.random() > 0.5 ? '#9fdfc8' : '#f3e5ab'
-            });
+    function cancelPress() {
+        if(progress > 0 && progress < 100) {
+            clearInterval(pressInterval);
+            progress = 0; progressBar.style.width = '0%';
+            vowDisplay.style.opacity = 0;
+            updateVisuals(); // 恢復火苗大小
         }
-        for(let i=0; i<12; i++) lotusState.petals.push(i * (Math.PI * 2 / 12));
     }
 
-    function drawPetal(ctx, size) {
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.bezierCurveTo(size * 0.4, size * 0.2, size * 0.8, size * 0.5, size, 0);
-        ctx.bezierCurveTo(size * 0.8, -size * 0.5, size * 0.4, -size * 0.2, 0, 0);
-        ctx.fill(); ctx.stroke();
-    }
+    function finishPress() {
+        clearInterval(pressInterval);
+        vowDisplay.style.opacity = 0;
+        
+        // 1. 更新資料庫
+        db.bodhiStreak++;
+        db.lastBodhiDate = todayStr;
+        db.points += 50; // 發菩提心給予大量資糧
+        saveDB();
 
-    // 觸發宇宙輪迴閃光
-    function triggerFlash() {
+        // 2. 觸發宇宙白幕爆發過場
         const flash = document.getElementById('universe-flash');
-        flash.classList.add('flash-active');
-        setTimeout(() => flash.classList.remove('flash-active'), 150);
-    }
-
-    // ✨ 狀態機：控制時間流速與文字渲染
-    function updateLotusLogic() {
-        const textDisplay = document.getElementById('buddha-name-display');
-        const rankEl = document.getElementById('buddha-rank');
-        const nameEl = document.getElementById('buddha-name');
+        flash.style.opacity = 1;
         
-        let currentData = timeline[currentStep];
-        // 如果進入第15小劫，時間流速變為 6 倍！
-        let speedMult = currentData.isFastMode ? 6 : 1; 
-
-        switch(lotusState.phase) {
-            case 'waiting':
-                lotusState.timer += speedMult;
-                if(lotusState.timer > 80) { // 等待期
-                    lotusState.phase = 'approaching';
-                    lotusState.timer = 0;
-                    lotusState.z = 2500;
-                    
-                    // 文字渲染邏輯
-                    if (fastLotusCounter === 0) { // 避免快轉時一直重繪文字
-                        rankEl.innerText = currentData.rank;
-                        nameEl.innerText = currentData.name;
-                        
-                        // 高光判斷 (釋迦、彌勒、樓至)
-                        if (currentData.highlight) {
-                            nameEl.style.color = "#ffffff";
-                            nameEl.style.textShadow = "0 0 20px #fff, 0 0 40px var(--cyan)";
-                        } else {
-                            nameEl.style.color = "var(--gold)";
-                            nameEl.style.textShadow = "0 0 20px var(--solid-gold)";
-                        }
-                    }
-                    if (!currentData.isFastMode || fastLotusCounter === 0) {
-                        textDisplay.style.opacity = 0; // 準備淡入
-                    }
-                }
-                break;
-                
-            case 'approaching':
-                lotusState.z -= (25 * speedMult);
-                if(lotusState.z <= 200) {
-                    lotusState.phase = 'blooming';
-                    lotusState.timer = 0;
-                    textDisplay.style.opacity = 1; // 顯示文字
-                }
-                break;
-                
-            case 'blooming':
-                lotusState.timer += speedMult;
-                lotusState.scale = Math.min(1, lotusState.timer / 60);
-                lotusState.opacity = Math.min(1, lotusState.timer / 30);
-                
-                // 最後一尊佛停留久一點 (300幀)，其餘正常 (150幀)
-                let bloomDuration = currentData.isLast ? 300 : 150; 
-                
-                if(lotusState.timer > bloomDuration) {
-                    // 樓至佛圓滿時，引爆閃光！
-                    if (currentData.isLast) triggerFlash();
-                    
-                    lotusState.phase = 'dissolving';
-                    lotusState.timer = 0;
-                    
-                    // 快轉模式下，文字不消失，持續掛在畫面上
-                    if (!currentData.isFastMode || fastLotusCounter >= currentData.lotusCount - 1) {
-                        textDisplay.style.opacity = 0; 
-                    }
-                }
-                break;
-                
-            case 'dissolving':
-                lotusState.timer += speedMult;
-                lotusState.opacity = Math.max(0, 1 - (lotusState.timer / 60));
-                lotusState.scale += 0.01 * speedMult;
-                
-                if(lotusState.timer > 60) {
-                    lotusState.phase = 'waiting';
-                    lotusState.timer = 0;
-                    
-                    // 步驟切換邏輯
-                    if (currentData.isFastMode) {
-                        fastLotusCounter++;
-                        if (fastLotusCounter >= currentData.lotusCount) {
-                            fastLotusCounter = 0; // 快轉結束
-                            currentStep = (currentStep + 1) % timeline.length;
-                        }
-                    } else {
-                        currentStep = (currentStep + 1) % timeline.length;
-                    }
-                }
-                break;
-        }
+        setTimeout(() => {
+            updateVisuals(); // 曼陀羅瞬間上色
+            flash.style.opacity = 0;
+            
+            // 3. 判斷是否滿 21 天結出法器
+            if (db.bodhiStreak % MAX_CYCLE === 0 && db.bodhiStreak > 0) {
+                showPhase('phase-3');
+            } else {
+                showPhase('phase-2');
+            }
+        }, 1500);
     }
 
-    function animate() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-        ctx.fillRect(0, 0, width, height);
-        
-        ctx.globalCompositeOperation = 'screen'; 
+    // 綁定事件
+    btnIgnite.addEventListener('mousedown', startPress);
+    btnIgnite.addEventListener('mouseup', cancelPress);
+    btnIgnite.addEventListener('mouseleave', cancelPress);
+    btnIgnite.addEventListener('touchstart', startPress, {passive: false});
+    btnIgnite.addEventListener('touchend', cancelPress);
 
-        // 1. 星塵長河
-        stars.forEach(star => {
-            // 如果在快轉模式，星河也跟著加速流動！
-            let currentData = timeline[currentStep];
-            let starSpeed = currentData.isFastMode ? star.speed * 4 : star.speed;
-            
-            star.z -= starSpeed;
-            if (star.z <= 0) {
-                star.z = 2000;
-                star.x = (Math.random() - 0.5) * 3000;
-                star.y = (Math.random() - 0.5) * 3000;
-            }
+    // 啟動系統
+    initBodhi();
 
-            let scale = FOV / (FOV + star.z);
-            let sx = (width / 2) + star.x * scale;
-            let sy = (height / 2) + star.y * scale - 50;
-            let size = Math.max(0.1, 3 * scale);
-            let alpha = Math.min(1, scale * 1.5);
-
-            ctx.beginPath();
-            ctx.arc(sx, sy, size, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(${star.color === '#f3e5ab' ? '243,229,171' : '159,223,200'}, ${alpha})`;
-            ctx.fill();
-        });
-
-        // 2. 更新邏輯
-        updateLotusLogic();
-
-        // 3. 繪製蓮花
-        let cx = width / 2;
-        let cy = height / 2 - 80;
-
-        if (lotusState.phase === 'approaching') {
-            let scale = FOV / (FOV + lotusState.z);
-            let size = 15 * scale;
-            ctx.shadowBlur = 20; ctx.shadowColor = '#fff';
-            ctx.beginPath(); ctx.arc(cx, cy, size, 0, Math.PI * 2);
-            ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowBlur = 0;
-        } 
-        else if (lotusState.phase === 'blooming' || lotusState.phase === 'dissolving') {
-            ctx.save();
-            ctx.translate(cx, cy);
-            
-            // 旋轉動畫 (快轉模式下轉更快)
-            let rotSpeed = timeline[currentStep].isFastMode ? 0.015 : 0.005;
-            let rotation = (lotusState.timer * rotSpeed) * (lotusState.phase === 'dissolving' ? 2 : 1);
-            ctx.rotate(rotation);
-
-            // 樓至佛 (最後一尊) 蓮花稍微巨大化
-            let sizeMult = timeline[currentStep].isLast ? 1.3 : 1;
-            let baseSize = 120 * lotusState.scale * sizeMult;
-            
-            ctx.shadowBlur = 30;
-            ctx.shadowColor = `rgba(212, 175, 55, ${lotusState.opacity})`;
-            ctx.fillStyle = `rgba(243, 229, 171, ${lotusState.opacity * 0.2})`; 
-            ctx.strokeStyle = `rgba(255, 255, 255, ${lotusState.opacity * 0.8})`; 
-            ctx.lineWidth = 1.5;
-
-            for (let i = 0; i < 12; i++) {
-                ctx.save(); ctx.rotate(lotusState.petals[i]); drawPetal(ctx, baseSize); ctx.restore();
-                ctx.save(); ctx.rotate(lotusState.petals[i] + Math.PI/12); drawPetal(ctx, baseSize * 0.6); ctx.restore();
-            }
-
-            ctx.beginPath();
-            ctx.arc(0, 0, 15 * lotusState.scale * sizeMult, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255, 255, 255, ${lotusState.opacity})`;
-            ctx.fill();
-            ctx.restore();
-        }
-
-        ctx.globalCompositeOperation = 'source-over';
-        requestAnimationFrame(animate);
-    }
-
-    initStars();
-    animate();
 </script>
 </body>
 </html>

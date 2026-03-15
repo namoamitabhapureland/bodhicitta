@@ -118,7 +118,7 @@
             <span id="buddha-name"></span>
         </div>
 
-                <div class="ui-layer" id="ui-layer">
+                       <div class="ui-layer" id="ui-layer">
             <button class="switch-btn" id="btn-longhua" onclick="toggleRealm(0)">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <circle cx="12" cy="10" r="9" stroke-dasharray="2 4" opacity="0.6"/>
@@ -138,9 +138,10 @@
                 </svg>
                 <span id="text-xianjie">觀想千佛 ． 宇宙接力</span>
             </button>
+            
             <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                探究極樂與賢劫千佛之約
+                探究彌勒與賢劫千佛之約
             </button>
             
             <div style="color:rgba(212,175,55,0.6); font-size:0.75rem; letter-spacing:2px; margin-top:5px;" id="drag-hint">360° 滑動觀想 ． 彌勒法界</div>
@@ -148,17 +149,30 @@
     </section>
 
     <div id="theory-drawer">
-        <div class="drawer-header" onclick="closeTheoryDrawer()"><div class="close-bar"></div><div class="close-btn">收起古卷</div></div>
-        <div class="theory-container">
+        <div class="drawer-header" onclick="closeTheoryDrawer()">
+            <div class="close-bar"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+                <div class="close-btn">收起古卷</div>
+                <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                    <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                    <span id="tts-text">聆聽法音</span>
+                </div>
+            </div>
+        </div>
+        <div class="theory-container" id="theory-content-box">
             <div class="humble-statement">法海浩瀚，唯佛與佛乃能究盡。本文僅為一介在家居士，依經教邏輯與祖師大德之註疏，試圖探求如來真實義之修學略影。若有未盡或錯漏之處，皆屬個人智識之侷限，祈願三寶加被，同修共鑒。</div>
             <h1 class="main-title">彌勒下生 ． 千佛接力</h1>
             
             <div class="chapter-box">
                 <div class="c-header">
                     <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
-                    <div class="c-title">一、釋尊授記與未來佛之緣起</div>
+                    <div class="c-title">一、釋尊授記與龍華三會</div>
                 </div>
-                <div class="c-text">依《彌勒下生經》等大乘教典所載，昔日釋尊於法會之中，將無上正等正覺之宏誓，深情付囑予彌勒大士。經教中隱喻，彌勒菩薩現居兜率內院，為一生補處。待娑婆世界歲月推移、因緣成熟之際，將降生人間，於龍華樹下證得究竟覺，是為賢劫第五尊佛。這份授記，或許不僅是單純的法脈交替，更是諸佛不捨眾生、生生不息之慈悲誓約。
+                <div class="c-text">依《菩薩處胎經》等大乘教典所載，昔日釋尊於法會之中，將無上正等正覺之宏誓，深情付囑予彌勒大士。彌勒菩薩現居兜率內院，為一生補處。待因緣成熟之際，將下生娑婆，於高大如龍盤空之龍華菩提樹下成佛，開三大法會度化有緣：<br><br>
+                <span style="color:var(--cyan); font-weight:bold;">第一會</span>：度九十六億釋尊法運受五戒者。<br>
+                <span style="color:var(--cyan); font-weight:bold;">第二會</span>：度九十四億釋尊法運受三歸者。<br>
+                <span style="color:var(--cyan); font-weight:bold;">第三會</span>：度九十二億乃至一稱南無佛者。<br><br>
+                這份授記，或許不僅是單純的法脈交替，更是諸佛不捨眾生、生生不息之慈悲誓約。
                     <svg style="width:14px;height:14px;vertical-align:middle;margin-left:6px;opacity:0.8;" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
                 </div>
             </div>
@@ -458,6 +472,64 @@
 
     canvas.addEventListener('mousedown', onDown); canvas.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
     canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
+    // ================= 聆聽法音 (TTS) 邏輯 =================
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+    let sysUtterances = []; // 防安卓垃圾回收機制
+
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("您的設備不支援語音功能");
+        
+        const btnText = document.getElementById('tts-text');
+        const btnIcon = document.getElementById('tts-icon');
+        
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel();
+            isPlayingTheory = false;
+            btnText.innerText = "聆聽法音";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            // 抓取內容並過濾 SVG，讓朗讀更順暢
+            let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text');
+            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('。');
+            
+            // 替換特殊字元
+            textToRead = textToRead.replace(/一、/g, '第一章：').replace(/二、/g, '第二章：').replace(/三、/g, '第三章：');
+            
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead);
+            theoryUtterance.lang = 'zh-TW';
+            theoryUtterance.rate = 0.8; // 稍微放慢語速，照顧老菩薩
+
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            if (isAndroid) {
+                sysUtterances.push(theoryUtterance);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let zhVoice = voices.find(v => v.lang === 'zh-TW' && v.name.includes('Google')) || voices.find(v => v.lang.includes('zh'));
+                    if (zhVoice) theoryUtterance.voice = zhVoice;
+                }
+            }
+
+            theoryUtterance.onend = () => {
+                isPlayingTheory = false;
+                btnText.innerText = "聆聽法音";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                if(isAndroid) sysUtterances = sysUtterances.filter(u => u !== theoryUtterance);
+            };
+            
+            window.speechSynthesis.speak(theoryUtterance);
+            isPlayingTheory = true;
+            btnText.innerText = "停止聆聽";
+            btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    // ✨ 覆寫關閉抽屜邏輯，保證收起古卷時聲音會自動停止
+    const originalCloseTheoryDrawer = closeTheoryDrawer;
+    closeTheoryDrawer = function() {
+        if (isPlayingTheory) toggleTheoryAudio(); // 停止播放
+        originalCloseTheoryDrawer();
+    }
 
     // 啟動
     initEngines(); toggleRealm(0); animate();

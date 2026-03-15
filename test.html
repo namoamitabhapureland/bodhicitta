@@ -2,89 +2,202 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>終極大獎 ． 蓮華因陀羅網</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>星空發心 ． 因緣顯化</title>
     <style>
-        body { margin: 0; background: #010102; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: "PingFang TC", sans-serif; }
+        body { margin: 0; background: #010102; overflow: hidden; font-family: "PingFang TC", sans-serif; touch-action: none; user-select: none; }
+        canvas { width: 100vw; height: 100vh; display: block; position: absolute; top: 0; left: 0; z-index: 1; }
         
-        .item-box { width: 300px; height: 400px; position: relative; display: flex; flex-direction: column; align-items: center; }
-        svg { width: 100%; height: 80%; filter: drop-shadow(0 0 25px rgba(243, 229, 171, 0.3)); overflow: visible; }
-        
-        /* 懸浮呼吸動畫 */
-        @keyframes float-pulse {
-            0% { transform: translateY(0px); filter: drop-shadow(0 0 20px rgba(243, 229, 171, 0.2)); }
-            50% { transform: translateY(-15px); filter: drop-shadow(0 0 40px rgba(243, 229, 171, 0.6)); }
-            100% { transform: translateY(0px); filter: drop-shadow(0 0 20px rgba(243, 229, 171, 0.2)); }
+        /* 宇宙大閃光 (淨化過場) */
+        #flash-overlay {
+            position: absolute; inset: 0; background: #fff; z-index: 10;
+            opacity: 0; pointer-events: none; transition: opacity 0.8s ease-out;
         }
-        .float-obj { animation: float-pulse 6s infinite ease-in-out; transform-origin: center; }
-        
-        /* 因陀羅網緩慢自轉 (象徵法輪常轉、重重無盡) */
-        @keyframes rotate-net { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .spin-net { animation: rotate-net 30s linear infinite; transform-origin: 50px 75px; }
 
-        /* 蓮花核心光芒吞吐 */
-        @keyframes lotus-breath { 0% { opacity: 0.5; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1.05); } }
-        .core-light { animation: lotus-breath 3s infinite alternate ease-in-out; transform-origin: 50px 75px; }
-        
-        /* 節點摩尼珠閃爍 */
-        @keyframes node-flash { 0% { opacity: 0.3; r: 1.5; } 100% { opacity: 1; r: 2.5; } }
-        .node { animation: node-flash 2s infinite alternate ease-in-out; }
+        /* 法寶顯現區 */
+        #reward-container {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
+            width: 200px; height: 300px; z-index: 20; display: flex; flex-direction: column; align-items: center;
+            opacity: 0; pointer-events: none; transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        #reward-container.show { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+        /* 飛入法寶閣的動畫類別 */
+        #reward-container.collecting {
+            transform: translate(calc(50vw - 80px), calc(50vh - 80px)) scale(0.1);
+            opacity: 0; transition: all 1s cubic-bezier(0.5, 0, 0.2, 1);
+        }
 
-        .label { color: #f3e5ab; letter-spacing: 6px; font-size: 1.1rem; margin-top: 20px; text-shadow: 0 0 15px #d4af37; text-align: center; line-height: 1.6; }
-        .sub-label { font-size: 0.75rem; color: #8ba89c; letter-spacing: 3px; }
+        .reward-svg { width: 100%; height: 80%; filter: drop-shadow(0 0 25px rgba(243, 229, 171, 0.6)); }
+        .reward-text { color: #f3e5ab; font-size: 1.1rem; letter-spacing: 5px; margin-top: 15px; text-shadow: 0 0 15px #d4af37; opacity: 0; transition: opacity 1s 0.5s; }
+        #reward-container.show .reward-text { opacity: 1; }
+
+        /* 右下角法寶閣圖示 (六角幾何) */
+        #treasure-btn {
+            position: absolute; bottom: 30px; right: 30px; width: 50px; height: 50px; z-index: 30;
+            background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(243, 229, 171, 0.4);
+            display: flex; justify-content: center; align-items: center; cursor: pointer;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            transition: all 0.3s; box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+        }
+        #treasure-btn:active { transform: scale(0.9); background: rgba(212, 175, 55, 0.3); }
+        #treasure-btn.ping { animation: btn-ping 0.5s ease-out; background: rgba(243, 229, 171, 0.5); }
+        @keyframes btn-ping { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+
+        /* 操作提示 */
+        .hint { position: absolute; bottom: 40px; width: 100%; text-align: center; color: #f3e5ab; opacity: 0.5; font-size: 0.85rem; letter-spacing: 4px; z-index: 5; pointer-events: none; transition: opacity 0.5s; }
     </style>
 </head>
 <body>
 
-<div class="item-box">
-    <svg viewBox="0 0 100 150">
-        <defs>
-            <radialGradient id="net-glow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" style="stop-color:#fff; stop-opacity:1" />
-                <stop offset="30%" style="stop-color:#f3e5ab; stop-opacity:0.5" />
-                <stop offset="100%" style="stop-color:#d4af37; stop-opacity:0" />
-            </radialGradient>
+    <canvas id="mainCanvas"></canvas>
+    <div id="flash-overlay"></div>
+    <div class="hint" id="hint-text">長按金心 ． 點亮菩提</div>
 
-            <g id="geo-petal">
-                <path d="M50 75 L42 50 L50 25 L58 50 Z" fill="rgba(212, 175, 55, 0.15)" stroke="#f3e5ab" stroke-width="0.3" />
-                <path d="M50 75 L46 55 L50 35 L54 55 Z" fill="rgba(255, 255, 255, 0.3)" stroke="#fff" stroke-width="0.2" />
+    <div id="reward-container">
+        <svg class="reward-svg" viewBox="0 0 100 150">
+            <defs>
+                <linearGradient id="pure-glass" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#fff; stop-opacity:0.9" />
+                    <stop offset="50%" style="stop-color:#f3e5ab; stop-opacity:0.4" />
+                    <stop offset="100%" style="stop-color:#d4af37; stop-opacity:0.1" />
+                </linearGradient>
+            </defs>
+            <g>
+                <rect x="49.5" y="10" width="1" height="120" fill="#fff" opacity="0.8" />
+                <path d="M50 10 L60 40 L50 50 L40 40 Z" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5" />
+                <path d="M50 50 L65 90 L50 100 L35 90 Z" fill="rgba(243, 229, 171, 0.15)" stroke="#f3e5ab" stroke-width="0.4" />
+                <path d="M50 50 L55 92 L50 98 L45 92 Z" fill="rgba(255, 255, 255, 0.4)" stroke="none" />
+                <path d="M25 100 L50 90 L75 100 L50 110 Z" fill="rgba(212, 175, 55, 0.2)" stroke="#f3e5ab" stroke-width="0.6" />
+                <path d="M46 110 L54 110 L52 135 L48 135 Z" fill="rgba(243, 229, 171, 0.1)" stroke="#f3e5ab" stroke-width="0.5" />
+                <polygon points="50,135 55,140 50,145 45,140" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5" />
             </g>
-        </defs>
+        </svg>
+        <div class="reward-text">智慧幾何寶劍</div>
+    </div>
 
-        <g class="float-obj">
-            <circle cx="50" cy="75" r="45" fill="url(#net-glow)" opacity="0.4" filter="blur(6px)" />
+    <div id="treasure-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f3e5ab" stroke-width="1.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+    </div>
 
-            <g class="spin-net">
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const flash = document.getElementById('flash-overlay');
+        const reward = document.getElementById('reward-container');
+        const hint = document.getElementById('hint-text');
+        const tBtn = document.getElementById('treasure-btn');
+        let w, h, time = 0;
+        let isPressing = false;
+        let pressDuration = 0;
+        let state = 'idle'; // idle, manifesting, collecting
+        const stars = [];
+
+        function init() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            stars.length = 0;
+            for (let i = 0; i < 80; i++) {
+                stars.push({
+                    x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000,
+                    color: i % 2 === 0 ? '#d4af37' : '#8ba89c'
+                });
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = '#010102'; ctx.fillRect(0, 0, w, h);
+            time += 0.05;
+
+            // 星空飄動 (如果正在顯化，星空減速停止)
+            let speed = state === 'idle' ? 1.5 : 0.2;
+            if (isPressing) speed = 0.5; // 蓄力時變慢
+
+            stars.forEach(s => {
+                s.z -= speed; if (s.z <= 0) s.z = 2000;
+                const scale = 400 / (400 + s.z);
+                ctx.globalAlpha = Math.min(1, (2000 - s.z) / 1500) * (state === 'idle' ? 1 : 0.3); // 顯化時背景變暗
+                ctx.beginPath(); ctx.arc(w/2 + s.x * scale, h/2 + s.y * scale, 1.5 * scale, 0, Math.PI * 2);
+                ctx.fillStyle = s.color; ctx.fill();
+            });
+
+            // 中心金心 (蓄力時變大、顯化時消失)
+            if (state === 'idle') {
+                ctx.globalAlpha = 1;
+                const pulse = Math.sin(time * 0.5) * 5;
+                const pressScale = isPressing ? pressDuration * 0.5 : 0; // 越按越大
                 
-                <g stroke="rgba(243, 229, 171, 0.3)" stroke-width="0.2">
-                    <polygon points="50,25 85.35,39.65 85.35,75 85.35,110.35 50,125 14.65,110.35 14.65,75 14.65,39.65" fill="none" stroke-width="0.4" />
-                    <polygon points="50,25 85.35,75 50,125 14.65,75" fill="none" stroke-dasharray="1,1" />
-                    <polygon points="85.35,39.65 85.35,110.35 14.65,110.35 14.65,39.65" fill="none" stroke-dasharray="1,1" />
-                </g>
+                const grad = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, 40 + pulse + pressScale*2);
+                grad.addColorStop(0, `rgba(243, 229, 171, ${isPressing ? 1 : 0.9})`);
+                grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+                
+                ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(w/2, h/2, 50 + pulse + pressScale*2, 0, Math.PI * 2); ctx.fill();
 
-                <use href="#geo-petal" transform="rotate(0 50 75)" />
-                <use href="#geo-petal" transform="rotate(45 50 75)" />
-                <use href="#geo-petal" transform="rotate(90 50 75)" />
-                <use href="#geo-petal" transform="rotate(135 50 75)" />
-                <use href="#geo-petal" transform="rotate(180 50 75)" />
-                <use href="#geo-petal" transform="rotate(225 50 75)" />
-                <use href="#geo-petal" transform="rotate(270 50 75)" />
-                <use href="#geo-petal" transform="rotate(315 50 75)" />
+                ctx.beginPath(); ctx.arc(w/2, h/2, 8 + pressScale, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff'; ctx.shadowBlur = 20; ctx.shadowColor = '#f3e5ab'; ctx.fill(); ctx.shadowBlur = 0;
+            }
 
-                <circle cx="50" cy="25" r="2" fill="#fff" class="node" style="animation-delay: 0s;" />
-                <circle cx="85.35" cy="39.65" r="2" fill="#f3e5ab" class="node" style="animation-delay: 0.2s;" />
-                <circle cx="85.35" cy="75" r="2" fill="#fff" class="node" style="animation-delay: 0.4s;" />
-                <circle cx="85.35" cy="110.35" r="2" fill="#d4af37" class="node" style="animation-delay: 0.6s;" />
-                <circle cx="50" cy="125" r="2" fill="#fff" class="node" style="animation-delay: 0.8s;" />
-                <circle cx="14.65" cy="110.35" r="2" fill="#f3e5ab" class="node" style="animation-delay: 1s;" />
-                <circle cx="14.65" cy="75" r="2" fill="#fff" class="node" style="animation-delay: 1.2s;" />
-                <circle cx="14.65" cy="39.65" r="2" fill="#d4af37" class="node" style="animation-delay: 1.4s;" />
+            requestAnimationFrame(draw);
+        }
 
-                <circle cx="50" cy="75" r="6" fill="#fff" class="core-light" filter="drop-shadow(0 0 8px #fff)" />
-                <polygon points="50,68 53,75 50,82 47,75" fill="#f3e5ab" /> </g>
-        </g>
-    </svg>
-    <div class="label">華嚴蓮華因陀羅網<br><span class="sub-label">重重無盡 ‧ 圓滿大獎</span></div>
-</div>
+        // 互動邏輯
+        function startPress(e) { if(state !== 'idle') return; isPressing = true; hint.style.opacity = 0; }
+        function endPress(e) {
+            if(!isPressing || state !== 'idle') return;
+            isPressing = false;
+            
+            // 觸發顯化劇本
+            if (pressDuration > 10) { 
+                triggerManifestation(); 
+            } else { 
+                hint.style.opacity = 0.5; // 按太短，提示恢復
+            }
+            pressDuration = 0;
+        }
 
+        // 蓄力計時
+        setInterval(() => { if(isPressing) pressDuration++; }, 50);
+
+        function triggerManifestation() {
+            state = 'manifesting';
+            
+            // 1. 宇宙大閃光 (淨化過場)
+            flash.style.opacity = 1;
+            
+            setTimeout(() => {
+                flash.style.opacity = 0;
+                // 2. 法寶柔和浮現
+                reward.classList.add('show');
+                
+                // 3. 停留 3.5 秒後，化作流光飛入法寶閣
+                setTimeout(() => {
+                    reward.classList.remove('show');
+                    reward.classList.add('collecting');
+                    
+                    // 4. 抵達法寶閣，圖示震動回饋
+                    setTimeout(() => {
+                        reward.classList.remove('collecting');
+                        tBtn.classList.add('ping');
+                        setTimeout(() => tBtn.classList.remove('ping'), 500);
+                        
+                        // 恢復初始狀態
+                        state = 'idle';
+                        hint.innerText = "明日再來 ． 點亮星辰";
+                        hint.style.opacity = 0.5;
+                    }, 1000); // 飛行動畫時間
+
+                }, 3500); // 停留觀賞時間
+                
+            }, 800); // 閃光持續時間
+        }
+
+        // 綁定事件
+        window.addEventListener('mousedown', startPress); window.addEventListener('mouseup', endPress);
+        window.addEventListener('touchstart', startPress); window.addEventListener('touchend', endPress);
+
+        window.addEventListener('resize', init);
+        init(); draw();
+    </script>
 </body>
 </html>

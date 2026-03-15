@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>菩提星系 ． 氣韻版</title>
+    <title>菩提星系 ． 清淨時空</title>
     <style>
         body { margin: 0; background: #010102; overflow: hidden; }
         canvas { width: 100vw; height: 100vh; display: block; }
@@ -13,56 +13,51 @@
     <script>
         const canvas = document.getElementById('starCanvas');
         const ctx = canvas.getContext('2d');
-        let w, h, time = 0;
+        let w, h;
         const stars = [];
 
         function init() {
             w = canvas.width = window.innerWidth;
             h = canvas.height = window.innerHeight;
+            stars.length = 0;
             for (let i = 0; i < 108; i++) {
                 stars.push({
-                    angle: (i / 108) * Math.PI * 2,
-                    dist: 100 + Math.random() * 200,
-                    size: Math.random() * 3 + 1,
-                    speed: 0.002 + Math.random() * 0.005,
-                    color: i % 2 === 0 ? '#f3e5ab' : '#8ba89c',
-                    z: Math.random() * 1000
+                    x: (Math.random() - 0.5) * 2000,
+                    y: (Math.random() - 0.5) * 2000,
+                    z: Math.random() * 2000,
+                    size: 1.5,
+                    color: i % 3 === 0 ? '#f3e5ab' : (i % 3 === 1 ? '#8ba89c' : '#d4af37')
                 });
             }
         }
 
         function draw() {
-            // 關鍵：不再是全黑抹除，而是帶有留痕的半透抹除，產生「飄」的速度感
-            ctx.fillStyle = 'rgba(1, 1, 2, 0.2)';
+            // 維持背景深邃，不產生殘影疊加導致的反白
+            ctx.fillStyle = '#010102';
             ctx.fillRect(0, 0, w, h);
-            time += 0.01;
 
-            ctx.globalCompositeOperation = 'screen';
+            const fov = 400; // 視角焦距
 
             stars.forEach(s => {
-                s.angle += s.speed;
-                // 加入呼吸感：半徑會隨時間微動
-                const dynamicDist = s.dist + Math.sin(time + s.angle) * 20;
-                
-                // 3D 投影感
-                const x = w/2 + Math.cos(s.angle) * dynamicDist;
-                const y = h/2 + Math.sin(s.angle) * dynamicDist * 0.5; // 橢圓軌道增加深度感
-                
-                // 光輝感：多層光暈
-                ctx.beginPath();
-                ctx.arc(x, y, s.size, 0, Math.PI * 2);
-                ctx.fillStyle = s.color;
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = s.color;
-                ctx.fill();
-                
-                // 淡淡的軌道線，增加時空感
-                ctx.beginPath();
-                ctx.arc(x, y, s.size * 0.5, 0, Math.PI * 2);
-                ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-                ctx.stroke();
-            });
+                s.z -= 2; // 向前飄移的速度
+                if (s.z <= 0) s.z = 2000; // 循環回到遠方
 
+                // 3D 投影計算
+                const scale = fov / (fov + s.z);
+                const x2d = w/2 + s.x * scale;
+                const y2d = h/2 + s.y * scale;
+
+                // 根據距離調整透明度與大小，產生深邃感
+                const alpha = Math.min(1, (2000 - s.z) / 1500);
+                
+                ctx.beginPath();
+                ctx.arc(x2d, y2d, s.size * scale * 2, 0, Math.PI * 2);
+                ctx.fillStyle = s.color;
+                ctx.globalAlpha = alpha;
+                ctx.fill();
+            });
+            
+            ctx.globalAlpha = 1;
             requestAnimationFrame(draw);
         }
 

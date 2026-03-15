@@ -3,199 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>星空發心 ． 因緣顯化</title>
+    <title>零增熵 ． 發菩提心</title>
     <style>
-        body { margin: 0; background: #010102; overflow: hidden; font-family: "PingFang TC", sans-serif; touch-action: none; user-select: none; }
-        canvas { width: 100vw; height: 100vh; display: block; position: absolute; top: 0; left: 0; z-index: 1; }
+        body { margin: 0; background: #010102; overflow: hidden; font-family: "PingFang TC", "Microsoft JhengHei", serif; touch-action: none; user-select: none; }
+        canvas { width: 100vw; height: 100vh; display: block; position: absolute; z-index: 1; transition: filter 1s ease; }
         
-        /* 宇宙大閃光 (淨化過場) */
-        #flash-overlay {
-            position: absolute; inset: 0; background: #fff; z-index: 10;
-            opacity: 0; pointer-events: none; transition: opacity 0.8s ease-out;
+        /* 當進入誓願狀態時，背景星空模糊變暗 (降低環境熵) */
+        .vow-mode canvas { filter: brightness(0.3) blur(2px); }
+
+        /* 四宏誓願文字層 */
+        #vow-container {
+            position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 10; display: flex; flex-direction: column; align-items: center; gap: 15px;
+            opacity: 0; pointer-events: none; transition: opacity 2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .vow-mode #vow-container { opacity: 1; }
+        /* 長按發願時，文字化作光塵消失的過渡 */
+        .manifesting #vow-container { opacity: 0; transform: translate(-50%, -40%) scale(0.95); transition: all 0.8s ease-in; filter: blur(4px); }
+
+        .vow-line {
+            color: #f3e5ab; font-size: 1.3rem; letter-spacing: 12px; font-weight: 300;
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.8), 0 0 30px rgba(255, 255, 255, 0.4);
+            writing-mode: vertical-rl; /* 直書更具東方莊嚴感 */
+        }
+        .vow-wrapper { display: flex; flex-direction: row-reverse; gap: 30px; }
+
+        /* 操作提示 (極簡) */
+        #hint {
+            position: absolute; bottom: 40px; width: 100%; text-align: center;
+            color: rgba(243, 229, 171, 0.4); font-size: 0.85rem; letter-spacing: 6px; z-index: 5;
+            transition: opacity 1s; pointer-events: none;
         }
 
-        /* 法寶顯現區 */
-        #reward-container {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
-            width: 200px; height: 300px; z-index: 20; display: flex; flex-direction: column; align-items: center;
-            opacity: 0; pointer-events: none; transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        #reward-container.show { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-        /* 飛入法寶閣的動畫類別 */
-        #reward-container.collecting {
-            transform: translate(calc(50vw - 80px), calc(50vh - 80px)) scale(0.1);
-            opacity: 0; transition: all 1s cubic-bezier(0.5, 0, 0.2, 1);
-        }
-
-        .reward-svg { width: 100%; height: 80%; filter: drop-shadow(0 0 25px rgba(243, 229, 171, 0.6)); }
-        .reward-text { color: #f3e5ab; font-size: 1.1rem; letter-spacing: 5px; margin-top: 15px; text-shadow: 0 0 15px #d4af37; opacity: 0; transition: opacity 1s 0.5s; }
-        #reward-container.show .reward-text { opacity: 1; }
-
-        /* 右下角法寶閣圖示 (六角幾何) */
-        #treasure-btn {
-            position: absolute; bottom: 30px; right: 30px; width: 50px; height: 50px; z-index: 30;
-            background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(243, 229, 171, 0.4);
-            display: flex; justify-content: center; align-items: center; cursor: pointer;
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            transition: all 0.3s; box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
-        }
-        #treasure-btn:active { transform: scale(0.9); background: rgba(212, 175, 55, 0.3); }
-        #treasure-btn.ping { animation: btn-ping 0.5s ease-out; background: rgba(243, 229, 171, 0.5); }
-        @keyframes btn-ping { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
-
-        /* 操作提示 */
-        .hint { position: absolute; bottom: 40px; width: 100%; text-align: center; color: #f3e5ab; opacity: 0.5; font-size: 0.85rem; letter-spacing: 4px; z-index: 5; pointer-events: none; transition: opacity 0.5s; }
+        /* 宇宙大閃光 (保持原本的淨化感) */
+        #flash { position: absolute; inset: 0; background: #fff; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.8s ease-out; }
     </style>
 </head>
-<body>
+<body id="body-state">
 
     <canvas id="mainCanvas"></canvas>
-    <div id="flash-overlay"></div>
-    <div class="hint" id="hint-text">長按金心 ． 點亮菩提</div>
-
-    <div id="reward-container">
-        <svg class="reward-svg" viewBox="0 0 100 150">
-            <defs>
-                <linearGradient id="pure-glass" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#fff; stop-opacity:0.9" />
-                    <stop offset="50%" style="stop-color:#f3e5ab; stop-opacity:0.4" />
-                    <stop offset="100%" style="stop-color:#d4af37; stop-opacity:0.1" />
-                </linearGradient>
-            </defs>
-            <g>
-                <rect x="49.5" y="10" width="1" height="120" fill="#fff" opacity="0.8" />
-                <path d="M50 10 L60 40 L50 50 L40 40 Z" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5" />
-                <path d="M50 50 L65 90 L50 100 L35 90 Z" fill="rgba(243, 229, 171, 0.15)" stroke="#f3e5ab" stroke-width="0.4" />
-                <path d="M50 50 L55 92 L50 98 L45 92 Z" fill="rgba(255, 255, 255, 0.4)" stroke="none" />
-                <path d="M25 100 L50 90 L75 100 L50 110 Z" fill="rgba(212, 175, 55, 0.2)" stroke="#f3e5ab" stroke-width="0.6" />
-                <path d="M46 110 L54 110 L52 135 L48 135 Z" fill="rgba(243, 229, 171, 0.1)" stroke="#f3e5ab" stroke-width="0.5" />
-                <polygon points="50,135 55,140 50,145 45,140" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5" />
-            </g>
-        </svg>
-        <div class="reward-text">智慧幾何寶劍</div>
+    
+    <div id="vow-container">
+        <div class="vow-wrapper">
+            <div class="vow-line">眾生無邊誓願度</div>
+            <div class="vow-line">煩惱無盡誓願斷</div>
+            <div class="vow-line">法門無量誓願學</div>
+            <div class="vow-line">佛道無上誓願成</div>
+        </div>
     </div>
 
-    <div id="treasure-btn">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f3e5ab" stroke-width="1.5">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-        </svg>
-    </div>
+    <div id="flash"></div>
+    <div id="hint">輕觸金心 ． 喚醒誓願</div>
 
     <script>
         const canvas = document.getElementById('mainCanvas');
         const ctx = canvas.getContext('2d');
-        const flash = document.getElementById('flash-overlay');
-        const reward = document.getElementById('reward-container');
-        const hint = document.getElementById('hint-text');
-        const tBtn = document.getElementById('treasure-btn');
+        const bodyState = document.getElementById('body-state');
+        const hint = document.getElementById('hint');
+        const flash = document.getElementById('flash');
+        
         let w, h, time = 0;
-        let isPressing = false;
-        let pressDuration = 0;
-        let state = 'idle'; // idle, manifesting, collecting
-        const stars = [];
+        let stars = [];
+        let state = 'idle'; // idle -> vowing -> charging -> manifesting
+        let pressTimer;
 
         function init() {
             w = canvas.width = window.innerWidth;
             h = canvas.height = window.innerHeight;
-            stars.length = 0;
-            for (let i = 0; i < 80; i++) {
-                stars.push({
-                    x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000,
-                    color: i % 2 === 0 ? '#d4af37' : '#8ba89c'
-                });
-            }
+            stars = Array.from({length: 108}, (_, i) => ({
+                x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000,
+                color: i % 2 === 0 ? '#d4af37' : '#8ba89c'
+            }));
         }
 
         function draw() {
             ctx.fillStyle = '#010102'; ctx.fillRect(0, 0, w, h);
             time += 0.05;
 
-            // 星空飄動 (如果正在顯化，星空減速停止)
-            let speed = state === 'idle' ? 1.5 : 0.2;
-            if (isPressing) speed = 0.5; // 蓄力時變慢
+            // 星空背景
+            let speed = (state === 'idle') ? 1.5 : 0.2; // 誓願時星空幾乎靜止
+            if (state === 'charging') speed = 0.5;
 
             stars.forEach(s => {
                 s.z -= speed; if (s.z <= 0) s.z = 2000;
                 const scale = 400 / (400 + s.z);
-                ctx.globalAlpha = Math.min(1, (2000 - s.z) / 1500) * (state === 'idle' ? 1 : 0.3); // 顯化時背景變暗
+                ctx.globalAlpha = Math.min(1, (2000 - s.z) / 1500);
                 ctx.beginPath(); ctx.arc(w/2 + s.x * scale, h/2 + s.y * scale, 1.5 * scale, 0, Math.PI * 2);
                 ctx.fillStyle = s.color; ctx.fill();
             });
 
-            // 中心金心 (蓄力時變大、顯化時消失)
-            if (state === 'idle') {
-                ctx.globalAlpha = 1;
-                const pulse = Math.sin(time * 0.5) * 5;
-                const pressScale = isPressing ? pressDuration * 0.5 : 0; // 越按越大
-                
-                const grad = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, 40 + pulse + pressScale*2);
-                grad.addColorStop(0, `rgba(243, 229, 171, ${isPressing ? 1 : 0.9})`);
-                grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
-                
-                ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(w/2, h/2, 50 + pulse + pressScale*2, 0, Math.PI * 2); ctx.fill();
+            // 中心金心繪製
+            ctx.globalAlpha = 1;
+            let basePulse = Math.sin(time * 0.5) * 5;
+            if (state === 'vowing') basePulse = Math.sin(time * 0.2) * 2; // 誓願時呼吸變得極其平緩
+            
+            let chargeScale = (state === 'charging') ? 15 : 0; // 蓄力放大
+            
+            // 外層氤氳
+            const grad = ctx.createRadialGradient(w/2, h/2 + 50, 0, w/2, h/2 + 50, 45 + basePulse + chargeScale);
+            grad.addColorStop(0, `rgba(243, 229, 171, ${state === 'charging' ? 1 : 0.8})`);
+            grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+            ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(w/2, h/2 + 50, 55 + basePulse + chargeScale, 0, Math.PI * 2); ctx.fill();
 
-                ctx.beginPath(); ctx.arc(w/2, h/2, 8 + pressScale, 0, Math.PI * 2);
-                ctx.fillStyle = '#ffffff'; ctx.shadowBlur = 20; ctx.shadowColor = '#f3e5ab'; ctx.fill(); ctx.shadowBlur = 0;
-            }
+            // 核心白金點
+            ctx.beginPath(); ctx.arc(w/2, h/2 + 50, 6 + (chargeScale*0.2), 0, Math.PI * 2);
+            ctx.fillStyle = '#fff'; ctx.shadowBlur = 15; ctx.shadowColor = '#f3e5ab'; ctx.fill(); ctx.shadowBlur = 0;
 
             requestAnimationFrame(draw);
         }
 
-        // 互動邏輯
-        function startPress(e) { if(state !== 'idle') return; isPressing = true; hint.style.opacity = 0; }
-        function endPress(e) {
-            if(!isPressing || state !== 'idle') return;
-            isPressing = false;
-            
-            // 觸發顯化劇本
-            if (pressDuration > 10) { 
-                triggerManifestation(); 
-            } else { 
-                hint.style.opacity = 0.5; // 按太短，提示恢復
+        // 互動邏輯 (零增熵控制)
+        function handlePointerDown() {
+            if (state === 'idle') {
+                // 第一次點擊：進入誓願模式
+                state = 'vowing';
+                bodyState.className = 'vow-mode';
+                hint.style.opacity = 0;
+                setTimeout(() => { hint.innerText = "默念圓滿，長按金心以發願"; hint.style.opacity = 0.5; }, 2000);
+            } else if (state === 'vowing') {
+                // 在誓願模式下長按：開始蓄力
+                state = 'charging';
+                hint.style.opacity = 0;
+                pressTimer = setTimeout(() => {
+                    triggerShootingStar();
+                }, 1000); // 長按 1 秒觸發
             }
-            pressDuration = 0;
         }
 
-        // 蓄力計時
-        setInterval(() => { if(isPressing) pressDuration++; }, 50);
+        function handlePointerUp() {
+            if (state === 'charging') {
+                // 長按時間不夠，退回誓願模式
+                clearTimeout(pressTimer);
+                state = 'vowing';
+                hint.style.opacity = 0.5;
+            }
+        }
 
-        function triggerManifestation() {
+        function triggerShootingStar() {
             state = 'manifesting';
+            bodyState.className = 'manifesting'; // 觸發文字消失與星空恢復
             
-            // 1. 宇宙大閃光 (淨化過場)
-            flash.style.opacity = 1;
-            
+            // 延遲一下讓文字化為光塵，然後大閃光
             setTimeout(() => {
-                flash.style.opacity = 0;
-                // 2. 法寶柔和浮現
-                reward.classList.add('show');
-                
-                // 3. 停留 3.5 秒後，化作流光飛入法寶閣
+                flash.style.opacity = 1;
                 setTimeout(() => {
-                    reward.classList.remove('show');
-                    reward.classList.add('collecting');
-                    
-                    // 4. 抵達法寶閣，圖示震動回饋
+                    flash.style.opacity = 0;
+                    // 這裡銜接「流星擊中星球 -> 法寶浮現」的邏輯
+                    // (為了專注展示誓願邏輯，此處先行重置)
                     setTimeout(() => {
-                        reward.classList.remove('collecting');
-                        tBtn.classList.add('ping');
-                        setTimeout(() => tBtn.classList.remove('ping'), 500);
-                        
-                        // 恢復初始狀態
                         state = 'idle';
-                        hint.innerText = "明日再來 ． 點亮星辰";
+                        bodyState.className = '';
+                        hint.innerText = "輕觸金心 ． 喚醒誓願";
                         hint.style.opacity = 0.5;
-                    }, 1000); // 飛行動畫時間
-
-                }, 3500); // 停留觀賞時間
-                
-            }, 800); // 閃光持續時間
+                    }, 2000);
+                }, 800);
+            }, 800);
         }
 
-        // 綁定事件
-        window.addEventListener('mousedown', startPress); window.addEventListener('mouseup', endPress);
-        window.addEventListener('touchstart', startPress); window.addEventListener('touchend', endPress);
-
+        window.addEventListener('mousedown', handlePointerDown); window.addEventListener('mouseup', handlePointerUp);
+        window.addEventListener('touchstart', handlePointerDown); window.addEventListener('touchend', handlePointerUp);
         window.addEventListener('resize', init);
         init(); draw();
     </script>

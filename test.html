@@ -22,8 +22,13 @@
 
         .obs-ui { opacity: 0; pointer-events: none; transition: opacity 1s; z-index: 30; position: absolute; }
         .mode-observation .obs-ui { opacity: 1; pointer-events: auto; }
+        
         #btn-back { top: 30px; left: 30px; padding: 8px 15px; border: 1px solid rgba(243, 229, 171, 0.4); background: rgba(212, 175, 55, 0.1); color: #f3e5ab; border-radius: 20px; font-size: 0.8rem; letter-spacing: 2px; cursor: pointer; backdrop-filter: blur(5px); transition: 0.3s; }
         #btn-back:active { transform: scale(0.95); background: rgba(212, 175, 55, 0.3); }
+
+        /* ✨ 復刻：右下角多寶塔導航節點 */
+        #btn-treasure { bottom: 40px; right: 30px; width: 55px; height: 55px; background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(243, 229, 171, 0.6); display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 50%; box-shadow: 0 0 15px rgba(212,175,55,0.2); transition: all 0.3s; backdrop-filter: blur(5px); }
+        #btn-treasure:active { transform: scale(0.9); background: rgba(243, 229, 171, 0.3); box-shadow: 0 0 25px rgba(212,175,55,0.6); }
 
         #treasure-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90vw; height: 80vh; z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1); }
         #treasure-overlay.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
@@ -63,15 +68,19 @@
         <div class="t-text-group">
             <div class="t-name" id="t-name-ui"></div>
             <div class="t-desc" id="t-desc-ui"></div>
-            <div class="t-action-hint">輕觸畫面 ． 願具隨身</div>
+            <div class="t-action-hint">輕觸畫面 ． 願歸法界</div>
         </div>
     </div>
     
     <div id="flash"></div>
     <div id="hint">長按發菩提心 ． 迴向法界</div>
-    <div id="progress">功德迴向法界 ． <span id="lit-count-ui">0</span> / 3000</div>
+    <div id="progress">華藏大千世界 ． <span id="lit-count-ui">0</span> / 3000</div>
 
-    <div class="obs-ui" id="btn-back" onclick="window.location.href='index.html?screen=3'">← 歸位修行區</div>
+    <div class="obs-ui" id="btn-back" onclick="window.location.href='index.html?screen=3'">← 修行區</div>
+    
+    <div class="obs-ui" id="btn-treasure" onclick="window.location.href='treasure.html'">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f3e5ab" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
 
     <div id="modal-overlay">
         <div class="modal-box">
@@ -93,29 +102,27 @@
         const vows = ["眾生無邊誓願度", "煩惱無盡誓願斷", "法門無量誓願學", "佛道無上誓願成"];
         const planetColors = [{r: 212, g: 175, b: 55}, {r: 139, g: 168, b: 156}, {r: 194, g: 24, b: 91}, {r: 224, g: 247, b: 250}];
         
-        // --- 核心 JSON 存檔讀取與預設 ---
+        // ✨ 華嚴大千世界名相 (隨機賦予星球，重遊不增進度)
+        const huayanWorlds = ["普明莊嚴世界", "勝音光世界", "無垢琉璃世界", "妙樂華香世界", "金剛耀世界", "淨光普照世界", "法雲幢世界", "香水海微塵世界", "光明照耀世界", "寶光滿世界", "無量光世界", "蓮華勝世界", "妙寶莊嚴世界", "離塵世界", "普賢行世界"];
+
         let db;
         try {
             db = JSON.parse(localStorage.getItem('PX_V15.0'));
             if (!db || typeof db !== 'object') db = null;
         } catch(e) {}
         
-        if (!db) {
-            db = { treasures: { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 }, bodhiLitCount: 0, bodhiLastDate: "", bodhiLastDropDate: "" };
-        }
+        if (!db) db = { treasures: { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 }, bodhiLitCount: 0, bodhiLastDate: "", bodhiLastDropDate: "" };
         if (!db.treasures) db.treasures = { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 };
         if (db.bodhiLitCount === undefined) db.bodhiLitCount = 0;
-        if (db.bodhiLastDropDate === undefined) db.bodhiLastDropDate = ""; // ✨ 新增：追蹤上次顯化日期
+        if (db.bodhiLastDropDate === undefined) db.bodhiLastDropDate = "";
 
-        function saveDB() {
-            localStorage.setItem('PX_V15.0', JSON.stringify(db));
-        }
+        function saveDB() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
 
         const pureGlassDef = `<defs><linearGradient id="pure-glass" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#fff; stop-opacity:0.9" /><stop offset="50%" style="stop-color:#f3e5ab; stop-opacity:0.6" /><stop offset="100%" style="stop-color:#d4af37; stop-opacity:0.2" /></linearGradient></defs>`;
         const basicTreasures = [
-            { id: "sword", name: "幾何慧劍", tag: "破迷 ‧ 決斷", desc: "劍氣本空，象徵破除世業迷惘與前路關卡。若逢躑躅未明，此劍或可映照本心。皆因行者至誠發無上菩提，感得法界幽微之迴響。冀以此緣，斬盡葛藤，令事理通達，無礙前行。", svg: `<svg viewBox="0 0 100 150">${pureGlassDef}<g><rect x="49.5" y="10" width="1" height="120" fill="#fff" opacity="0.8" /><path d="M50 10 L60 40 L50 50 L40 40 Z" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5" /><path d="M50 50 L65 90 L50 100 L35 90 Z" fill="rgba(243, 229, 171, 0.2)" stroke="#f3e5ab" stroke-width="0.4" /><path d="M50 50 L55 92 L50 98 L45 92 Z" fill="rgba(255, 255, 255, 0.5)" stroke="none" /><path d="M25 100 L50 90 L75 100 L50 110 Z" fill="rgba(212, 175, 55, 0.3)" stroke="#f3e5ab" stroke-width="0.6" /><path d="M46 110 L54 110 L52 135 L48 135 Z" fill="rgba(243, 229, 171, 0.2)" stroke="#f3e5ab" stroke-width="0.5" /><polygon points="50,135 55,140 50,145 45,140" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5" /></g></svg>` },
-            { id: "vase", name: "琉璃淨瓶", tag: "療癒 ‧ 息災", desc: "琉璃凝粹，象徵息滅四大之微與身心違和。若逢暗夜驚瀾，此甘露或可潤澤枯槁。皆因行者至誠發無上菩提，感得法界幽微之迴響。冀以此緣，滌蕩疾厄，令身心泰然，得獲安康。", svg: `<svg viewBox="0 0 100 150">${pureGlassDef}<g><path d="M45 30 L55 30 L55 50 L75 100 L65 130 L35 130 L25 100 L45 50 Z" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5"/><path d="M45 50 L55 50 L75 100 L25 100 Z" fill="rgba(243, 229, 171, 0.15)" stroke="#fff" stroke-width="0.3"/><polygon points="45,30 55,30 50,10" fill="rgba(255,255,255,0.6)" stroke="#f3e5ab" stroke-width="0.3"/><ellipse cx="50" cy="130" rx="15" ry="4" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5"/></g></svg>` },
-            { id: "jewel", name: "多面寶珠", tag: "滿願 ‧ 增上", desc: "摩尼多面，象徵福德增上與百事逢春。若祈善念之轉，此願具或可折射勝緣。皆因行者至誠發無上菩提，感得法界幽微之迴響。冀以此緣，匯聚資糧，令所求如意，善果日增。", svg: `<svg viewBox="0 0 100 150">${pureGlassDef}<g transform="translate(0, 15)"><polygon points="50,20 85,60 50,120 15,60" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.6"/><polygon points="50,20 65,60 50,120 35,60" fill="rgba(255,255,255,0.3)" stroke="#fff" stroke-width="0.4"/><polygon points="35,60 65,60 50,120" fill="rgba(212, 175, 55, 0.2)" stroke="none"/><circle cx="50" cy="60" r="5" fill="#fff" filter="drop-shadow(0 0 8px #fff)"/></g></svg>` }
+            { id: "sword", name: "幾何慧劍", svg: `<svg viewBox="0 0 100 150">${pureGlassDef}<g><rect x="49.5" y="10" width="1" height="120" fill="#fff" opacity="0.8" /><path d="M50 10 L60 40 L50 50 L40 40 Z" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5" /><path d="M50 50 L65 90 L50 100 L35 90 Z" fill="rgba(243, 229, 171, 0.2)" stroke="#f3e5ab" stroke-width="0.4" /><path d="M50 50 L55 92 L50 98 L45 92 Z" fill="rgba(255, 255, 255, 0.5)" stroke="none" /><path d="M25 100 L50 90 L75 100 L50 110 Z" fill="rgba(212, 175, 55, 0.3)" stroke="#f3e5ab" stroke-width="0.6" /><path d="M46 110 L54 110 L52 135 L48 135 Z" fill="rgba(243, 229, 171, 0.2)" stroke="#f3e5ab" stroke-width="0.5" /><polygon points="50,135 55,140 50,145 45,140" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5" /></g></svg>` },
+            { id: "vase", name: "琉璃淨瓶", svg: `<svg viewBox="0 0 100 150">${pureGlassDef}<g><path d="M45 30 L55 30 L55 50 L75 100 L65 130 L35 130 L25 100 L45 50 Z" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5"/><path d="M45 50 L55 50 L75 100 L25 100 Z" fill="rgba(243, 229, 171, 0.15)" stroke="#fff" stroke-width="0.3"/><polygon points="45,30 55,30 50,10" fill="rgba(255,255,255,0.6)" stroke="#f3e5ab" stroke-width="0.3"/><ellipse cx="50" cy="130" rx="15" ry="4" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5"/></g></svg>` },
+            { id: "jewel", name: "多面寶珠", svg: `<svg viewBox="0 0 100 150">${pureGlassDef}<g transform="translate(0, 15)"><polygon points="50,20 85,60 50,120 15,60" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.6"/><polygon points="50,20 65,60 50,120 35,60" fill="rgba(255,255,255,0.3)" stroke="#fff" stroke-width="0.4"/><polygon points="35,60 65,60 50,120" fill="rgba(212, 175, 55, 0.2)" stroke="none"/><circle cx="50" cy="60" r="5" fill="#fff" filter="drop-shadow(0 0 8px #fff)"/></g></svg>` }
         ];
 
         let w, h, time = 0;
@@ -147,7 +154,6 @@
                 setTimeout(() => { modalOverlay.classList.add('show'); }, 500);
             }
 
-            // ✨ 1080 顆極簡渲染星辰，映射 3000 進度
             planets = []; const radius = 1500; 
             for (let i = 0; i < 1080; i++) {
                 const phi = Math.acos(1 - 2 * (i + 0.5) / 1080);
@@ -159,7 +165,8 @@
                 planets.push({
                     id: i, baseX: radius * Math.cos(theta) * Math.sin(phi), baseY: radius * Math.cos(phi), baseZ: radius * Math.sin(theta) * Math.sin(phi),
                     isLit: isLit, colorObj: planetColors[i % 4], size: Math.random() * 2 + 1,
-                    state: 'orbit', animT: 0
+                    state: 'orbit', animT: 0,
+                    worldName: huayanWorlds[Math.floor(Math.random() * huayanWorlds.length)] // ✨ 賦予大千世界名號
                 });
             }
 
@@ -181,7 +188,6 @@
             return { x: x1, y: y2, z: z2 };
         }
 
-        // 貝茲曲線輔助函數 (為香煙流光準備)
         function getQBezier(t, p0, p1, p2) {
             return (1-t)*(1-t)*p0 + 2*(1-t)*t*p1 + t*t*p2;
         }
@@ -224,7 +230,6 @@
                     ctx.fillStyle = auraGrad; ctx.beginPath(); ctx.arc(x2d, y2d, r2d * 5, 0, Math.PI*2); ctx.fill();
                 } else if (p.isLit) {
                     let breath = (Math.sin(time * 2 + p.id) + 1) / 2;
-                    // ✨ 讓亮起的星辰加入極其微弱的色彩流動與發光感
                     ctx.fillStyle = `rgba(${r},${g},${b}, ${0.5 + breath*0.4})`;
                     ctx.shadowBlur = 5; ctx.shadowColor = `rgba(${r},${g},${b}, 0.8)`;
                     ctx.beginPath(); ctx.arc(x2d, y2d, r2d, 0, Math.PI * 2); ctx.fill();
@@ -236,9 +241,8 @@
                 }
             });
 
-            // ✨ 美學昇華：貝茲曲線香煙流光
             if (shooting && targetPlanet) {
-                beamProgress += 0.018; // 放慢速度，展現空靈感
+                beamProgress += 0.025; 
                 let targetWorld = rotate3D(targetPlanet.baseX, targetPlanet.baseY, targetPlanet.baseZ, rotX, rotY);
                 let scale = 1000 / (targetWorld.z + 2000);
                 
@@ -246,13 +250,12 @@
                 let endX = startX + (targetWorld.x * scale);
                 let endY = startY + (targetWorld.y * scale) - 50;
                 
-                // 動態控制點，製造優雅弧度
                 let cpX = startX + (endX - startX) * 0.5 + (startX > endX ? -150 : 150);
                 let cpY = startY - 120;
                 
                 let headX = getQBezier(beamProgress, startX, cpX, endX);
                 let headY = getQBezier(beamProgress, startY, cpY, endY);
-                let tailT = Math.max(0, beamProgress - 0.35); // 拖尾長度
+                let tailT = Math.max(0, beamProgress - 0.35); 
                 let tailX = getQBezier(tailT, startX, cpX, endX);
                 let tailY = getQBezier(tailT, startY, cpY, endY);
                 
@@ -267,19 +270,11 @@
                     ctx.lineTo(getQBezier(t, startX, cpX, endX), getQBezier(t, startY, cpY, endY));
                 }
                 
-                ctx.strokeStyle = grad;
-                ctx.lineWidth = 4 + (beamProgress * 1.5);
-                ctx.lineCap = 'round';
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = '#d4af37';
-                ctx.stroke();
-                ctx.shadowBlur = 0;
+                ctx.strokeStyle = grad; ctx.lineWidth = 4 + (beamProgress * 1.5); ctx.lineCap = 'round';
+                ctx.shadowBlur = 15; ctx.shadowColor = '#d4af37'; ctx.stroke(); ctx.shadowBlur = 0;
                 
                 if (beamProgress >= 1) { 
-                    shooting = false; 
-                    targetPlanet.state = 'flying_in'; 
-                    targetPlanet.animT = 0; 
-                    targetPlanet.isLit = true;
+                    shooting = false; targetPlanet.state = 'flying_in'; targetPlanet.animT = 0; 
                 }
             }
 
@@ -295,85 +290,74 @@
                 });
             }
 
-            // ✨ 美學昇華：蓮華波紋集氣
             if (appState === 'daily_ritual' && !shooting && (!targetPlanet || targetPlanet.state === 'orbit')) {
                 let basePulse = isPressing ? 0 : Math.sin(time * 0.5) * 5;
                 let currentRadius = 40 + basePulse + (chargeLevel * 1.5); 
                 
-                // 多重波紋展現八功德水漣漪
                 for(let r = 0; r < 3; r++) {
                     let ringRad = currentRadius - (r * 15);
                     if(ringRad < 0) continue;
                     const grad = ctx.createRadialGradient(w/2, h/2 + 50, 0, w/2, h/2 + 50, ringRad + 10);
                     let alpha = (0.7 - r*0.2) + (chargeLevel/200);
-                    grad.addColorStop(0, `rgba(243, 229, 171, ${alpha})`); 
-                    grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
-                    
-                    ctx.fillStyle = grad; 
-                    ctx.beginPath(); 
-                    ctx.arc(w/2, h/2 + 50, ringRad + 15, 0, Math.PI * 2); 
-                    ctx.fill();
+                    grad.addColorStop(0, `rgba(243, 229, 171, ${alpha})`); grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+                    ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(w/2, h/2 + 50, ringRad + 15, 0, Math.PI * 2); ctx.fill();
                 }
                 
-                // 核心明點
-                ctx.beginPath(); 
-                ctx.arc(w/2, h/2 + 50, 8 + (chargeLevel * 0.3), 0, Math.PI * 2);
-                ctx.fillStyle = '#fff'; 
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = '#fff';
-                ctx.fill();
-                ctx.shadowBlur = 0;
+                ctx.beginPath(); ctx.arc(w/2, h/2 + 50, 8 + (chargeLevel * 0.3), 0, Math.PI * 2);
+                ctx.fillStyle = '#fff'; ctx.shadowBlur = 20; ctx.shadowColor = '#fff'; ctx.fill(); ctx.shadowBlur = 0;
             }
 
             requestAnimationFrame(draw);
         }
 
-        // ✨ 嚴格戒律：檢查是否滿 3 天才能顯化
         function checkDropEligibility() {
-            if (litCount === 1) return true; // 初發心必定法界回饋
-            if (!db.bodhiLastDropDate) return true; // 歷史檔案修復
+            if (litCount === 1) return true; 
+            if (!db.bodhiLastDropDate) return true; 
             
             const lastDrop = new Date(db.bodhiLastDropDate).setHours(0,0,0,0);
             const today = new Date().setHours(0,0,0,0);
             const diffDays = Math.round((today - lastDrop) / 86400000);
             
-            return diffDays >= 3; // 滿三天方可顯化一尊
+            return diffDays >= 3; 
         }
 
         function showTreasureOverlay(planet) {
             appState = 'treasure_view'; 
             flash.style.opacity = 1; setTimeout(() => { flash.style.opacity = 0; }, 600);
             
-            litCount++; 
-            if(litCount > 3000) litCount = 3000;
-            litCountUi.innerText = litCount;
+            // ✨ 邏輯昇華：判斷是點亮新星，還是重遊舊地
+            let isNewStar = !planet.isLit;
             
-            // 執行 3 天顯化 1 次之判定
+            if (isNewStar) {
+                planet.isLit = true;
+                litCount++; 
+                if(litCount > 3000) litCount = 3000;
+                litCountUi.innerText = litCount;
+            }
+            
             hasDroppedTreasure = checkDropEligibility();
 
             if (hasDroppedTreasure) {
-                // 記錄今日為最後顯化日
                 db.bodhiLastDropDate = new Date().toDateString();
 
                 svgContainer.style.display = 'flex';
                 const treasure = basicTreasures[Math.floor(Math.random() * basicTreasures.length)];
-                
                 db.treasures[treasure.id] = (db.treasures[treasure.id] || 0) + 1;
                 saveDB();
 
                 svgContainer.innerHTML = treasure.svg;
+                tNameUi.innerHTML = `【${planet.worldName}】<br><span class="t-tag" style="margin-top:8px;">${treasure.name} 顯現</span>`;
                 
-                if (litCount === 1) {
-                    tNameUi.innerHTML = `初發菩提 ． 法界迴響 <span class="t-tag">【堅固 ‧ 緣起】</span>`;
-                    tDescUi.innerText = `行者初發無上菩提心，清淨一念，震動十方。法界隨順初發之善因，特顯此『${treasure.name}』以作迴饋。祈願藉此勝緣，堅固道心，行願無盡。`;
-                } else {
-                    tNameUi.innerHTML = `因緣和合 ． ${treasure.name}現 <span class="t-tag">【${treasure.tag}】</span>`;
-                    tDescUi.innerText = treasure.desc; 
-                }
+                tDescUi.innerText = isNewStar 
+                    ? `行者發菩提心，點亮華藏新星，震動十方。法界隨順善因，特顯此願具。祈願藉此勝緣，堅固道心，行願無盡。`
+                    : `行者願力重遊此界，菩提心不減。法界感念恆心，特顯此願具以作迴饋。`;
             } else {
                 svgContainer.style.display = 'none';
-                tNameUi.innerHTML = `法界覺醒 ． 功德增明`;
-                tDescUi.innerText = `行者至誠發無上菩提，點亮華藏星辰。願此微小清淨之光，融入無盡法界，迴向十方眾生得大安樂。`;
+                tNameUi.innerHTML = `【${planet.worldName}】<br><span class="t-tag" style="margin-top:8px;">願力普照</span>`;
+                
+                tDescUi.innerText = isNewStar
+                    ? `行者至誠發心，點亮華藏新星。願此微小清淨之光，融入無盡法界，迴向十方眾生得大安樂。`
+                    : `行者願力重遊此界。雖進度不增，然菩提心恆常不滅，功德無量。`;
             }
 
             treasureOverlay.classList.remove('collecting');
@@ -384,24 +368,16 @@
             if (appState !== 'treasure_view') return;
             treasureOverlay.classList.remove('show');
             treasureOverlay.classList.add('collecting');
-            
-            setTimeout(() => {
-                if (targetPlanet) targetPlanet.state = 'flying_out'; 
-            }, 800); 
+            setTimeout(() => { if (targetPlanet) targetPlanet.state = 'flying_out'; }, 800); 
         }
 
         function completeRitual() {
             appState = 'observation'; bodyState.className = 'mode-observation';
             hint.innerText = "今日願力已滿，請明日再來觀心"; hint.style.opacity = 0.5;
-            
-            db.bodhiLitCount = litCount;
-            db.bodhiLastDate = new Date().toDateString();
-            saveDB();
+            db.bodhiLitCount = litCount; db.bodhiLastDate = new Date().toDateString(); saveDB();
         }
 
-        function closeModal() {
-            modalOverlay.classList.remove('show');
-        }
+        function closeModal() { modalOverlay.classList.remove('show'); }
 
         setInterval(() => {
             if (appState === 'daily_ritual' && isPressing) {
@@ -434,10 +410,8 @@
                 if (chargeLevel >= 95) { 
                     vowDisplay.style.opacity = 0; 
                     
-                    // ✨ 邏輯昇華：精準尋找未點亮的星辰
-                    let unlitPlanets = planets.filter(p => !p.isLit);
-                    if(unlitPlanets.length === 0) unlitPlanets = planets; // 萬一3000功德全滿的防呆
-                    targetPlanet = unlitPlanets[Math.floor(Math.random() * unlitPlanets.length)]; 
+                    // ✨ 恢復：完全隨機，允許願力重遊已點亮之星辰 (非線性進度)
+                    targetPlanet = planets[Math.floor(Math.random() * planets.length)]; 
                     
                     shooting = true; beamProgress = 0; chargeLevel = 0; 
                 }

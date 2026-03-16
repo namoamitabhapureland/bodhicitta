@@ -3,48 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>小千世界 ． 效能與掉寶優化</title>
+    <title>小千世界 ． 法寶迴向與觀想</title>
     <style>
-        * { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; outline: none; -webkit-tap-highlight-color: transparent; }
+        /* 封印原生觸控干擾 */
+        * { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; outline: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         body { margin: 0; background: #010103; overflow: hidden; font-family: "PingFang TC", "Microsoft JhengHei", serif; touch-action: none; }
         
         #nebula { position: absolute; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 50%, #150d1f 0%, #010103 100%); transition: opacity 1s; }
         canvas { width: 100vw; height: 100vh; display: block; position: absolute; z-index: 1; }
         .charging #nebula { opacity: 0.2; }
 
+        /* 四宏誓願集氣 */
         #vow-display { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); width: 100%; text-align: center; z-index: 10; pointer-events: none; color: #f3e5ab; font-size: 1.5rem; letter-spacing: 12px; font-weight: 300; text-shadow: 0 0 20px rgba(243, 229, 171, 0.8), 0 0 40px #fff; opacity: 0; transition: opacity 0.3s; }
         .charging #vow-display { opacity: 1; }
 
         #flash { position: absolute; inset: 0; background: #fff; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.8s ease-out; }
         
-        #progress { position: absolute; top: 30px; right: 30px; color: #8ba89c; font-size: 0.9rem; letter-spacing: 3px; z-index: 10; opacity: 0.8; text-shadow: 0 0 10px rgba(139,168,156,0.5); }
+        /* 頂部進度與底部提示 */
+        #progress { position: absolute; top: 30px; right: 30px; color: #8ba89c; font-size: 0.9rem; letter-spacing: 3px; z-index: 10; opacity: 0.8; text-shadow: 0 0 10px rgba(139,168,156,0.5); transition: opacity 0.5s; }
         #hint { position: absolute; bottom: 40px; width: 100%; text-align: center; color: rgba(243, 229, 171, 0.5); font-size: 0.85rem; letter-spacing: 6px; z-index: 5; transition: opacity 0.5s; pointer-events: none; }
 
+        /* 觀想模式 UI */
         .obs-ui { opacity: 0; pointer-events: none; transition: opacity 1s; z-index: 30; position: absolute; }
         .mode-observation .obs-ui { opacity: 1; pointer-events: auto; }
         #btn-back { top: 30px; left: 30px; padding: 8px 15px; border: 1px solid rgba(243, 229, 171, 0.4); background: rgba(212, 175, 55, 0.1); color: #f3e5ab; border-radius: 20px; font-size: 0.8rem; letter-spacing: 2px; cursor: pointer; backdrop-filter: blur(5px); }
         #btn-treasure { bottom: 40px; right: 30px; width: 50px; height: 50px; background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(243, 229, 171, 0.6); display: flex; justify-content: center; align-items: center; cursor: pointer; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); transition: all 0.3s; }
         #btn-treasure.ping { transform: scale(1.4); background: rgba(243, 229, 171, 0.6); box-shadow: 0 0 30px #d4af37; }
 
-        /* 法寶展示圖層 */
+        /* 法寶展示圖層 (手動收起) */
         #treasure-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90vw; height: 80vh; z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1); }
         #treasure-overlay.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
         #treasure-overlay.collecting { transform: translate(calc(50vw - 80px), calc(50vh - 80px)) scale(0.1); opacity: 0; pointer-events: none; }
 
         #svg-container { width: 100%; height: 35%; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 0 20px rgba(243, 229, 171, 0.4)); animation: float-pulse 4s infinite ease-in-out; }
         @keyframes float-pulse { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); filter: drop-shadow(0 0 30px rgba(243, 229, 171, 0.8)); } }
-        #svg-container svg { width: auto; height: 100%; }
+        #svg-container svg { width: auto; height: 100%; overflow: visible; }
 
         .t-text-group { text-align: center; margin-top: 30px; opacity: 0; transition: opacity 1s 0.5s; flex-shrink: 0; padding: 0 15px; }
         #treasure-overlay.show .t-text-group { opacity: 1; }
         
-        .t-name { color: #fff; font-size: 1.2rem; letter-spacing: 4px; text-shadow: 0 0 15px #fff, 0 0 30px #d4af37; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; }
+        .t-name { color: #fff; font-size: 1.15rem; letter-spacing: 4px; text-shadow: 0 0 15px #fff, 0 0 30px #d4af37; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; line-height: 1.5; }
         .t-tag { font-size: 0.75rem; color: #8ba89c; border: 1px solid rgba(139,168,156,0.6); padding: 3px 8px; border-radius: 12px; background: rgba(139, 168, 156, 0.1); text-shadow: none; letter-spacing: 2px; }
         
-        .t-desc { color: #f3e5ab; font-size: 0.95rem; letter-spacing: 2px; line-height: 1.8; text-align: justify; text-align-last: center; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
+        .t-desc { color: #f3e5ab; font-size: 0.9rem; letter-spacing: 2px; line-height: 1.8; text-align: justify; text-align-last: center; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
         .t-action-hint { margin-top: 30px; font-size: 0.8rem; color: rgba(255,255,255,0.6); letter-spacing: 4px; animation: blink 2s infinite; }
         @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
+        /* === 彈出視窗 Modal (今日功德已滿) === */
+        #modal-overlay { position: fixed; inset: 0; background: rgba(1, 1, 3, 0.8); backdrop-filter: blur(10px); z-index: 60; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+        #modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-box { width: 80%; max-width: 320px; background: rgba(21, 13, 31, 0.8); border: 1px solid rgba(243, 229, 171, 0.3); border-radius: 15px; padding: 30px 20px; text-align: center; box-shadow: 0 0 40px rgba(212, 175, 55, 0.1); transform: translateY(20px); transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        #modal-overlay.show .modal-box { transform: translateY(0); }
+        .modal-title { color: #f3e5ab; font-size: 1.2rem; letter-spacing: 6px; margin-bottom: 20px; text-shadow: 0 0 15px rgba(243, 229, 171, 0.6); }
+        .modal-text { color: #8ba89c; font-size: 0.9rem; letter-spacing: 2px; line-height: 1.8; margin-bottom: 30px; }
+        .modal-btn { background: transparent; border: 1px solid rgba(243, 229, 171, 0.6); color: #f3e5ab; padding: 10px 30px; border-radius: 25px; font-size: 0.9rem; letter-spacing: 4px; cursor: pointer; transition: background 0.3s; }
+        .modal-btn:active { background: rgba(243, 229, 171, 0.2); }
+
+        /* 重置測試按鈕 (僅供工程師測試用，正式上線可隱藏) */
+        #test-reset { position: absolute; top: 10px; right: 10px; z-index: 100; color: #666; font-size: 10px; background: none; border: 1px solid #333; padding: 2px 5px; cursor: pointer; }
     </style>
 </head>
 <body id="body-state">
@@ -54,89 +70,119 @@
     <div id="vow-display">眾生無邊誓願度</div>
     
     <div id="treasure-overlay" onclick="collectTreasure()">
-        <div id="svg-container">
-            <svg viewBox="0 0 100 150">
-                <defs>
-                    <linearGradient id="pure-glass" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#fff; stop-opacity:0.9" />
-                        <stop offset="50%" style="stop-color:#f3e5ab; stop-opacity:0.6" />
-                        <stop offset="100%" style="stop-color:#d4af37; stop-opacity:0.2" />
-                    </linearGradient>
-                </defs>
-                <g>
-                    <rect x="49.5" y="10" width="1" height="120" fill="#fff" opacity="0.8" />
-                    <path d="M50 10 L60 40 L50 50 L40 40 Z" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5" />
-                    <path d="M50 50 L65 90 L50 100 L35 90 Z" fill="rgba(243, 229, 171, 0.2)" stroke="#f3e5ab" stroke-width="0.4" />
-                    <path d="M50 50 L55 92 L50 98 L45 92 Z" fill="rgba(255, 255, 255, 0.5)" stroke="none" />
-                    <path d="M25 100 L50 90 L75 100 L50 110 Z" fill="rgba(212, 175, 55, 0.3)" stroke="#f3e5ab" stroke-width="0.6" />
-                    <path d="M46 110 L54 110 L52 135 L48 135 Z" fill="rgba(243, 229, 171, 0.2)" stroke="#f3e5ab" stroke-width="0.5" />
-                    <polygon points="50,135 55,140 50,145 45,140" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5" />
-                </g>
-            </svg>
-        </div>
-        <div class="t-text-group">
-            <div class="t-name" id="t-name-ui">因緣和合 ． 幾何慧劍現 <span class="t-tag" id="t-tag-ui">【破迷 ‧ 決斷】</span></div>
-            <div class="t-desc" id="t-desc-ui">劍氣本空，能斷無明之網...</div>
+        <div id="svg-container"></div> <div class="t-text-group">
+            <div class="t-name" id="t-name-ui"></div>
+            <div class="t-desc" id="t-desc-ui"></div>
             <div class="t-action-hint">輕觸畫面 ． 功德歸藏</div>
         </div>
     </div>
     
     <div id="flash"></div>
     <div id="hint">長按發菩提心 ． 迴向法界</div>
-    <div id="progress">功德迴向法界 ． 2 / 1080</div>
+    <div id="progress">功德迴向法界 ． <span id="lit-count-ui">0</span> / 3000</div>
 
     <div class="obs-ui" id="btn-back">← 歸位首頁</div>
     <div class="obs-ui" id="btn-treasure">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f3e5ab" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
     </div>
 
+    <div id="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">今日功德圓滿</div>
+            <div class="modal-text">行者今日已發菩提心<br>願力已迴向法界<br><br>修行貴在細水長流<br>請明日再來，點亮星辰</div>
+            <button class="modal-btn" onclick="closeModal()">觀想星海</button>
+        </div>
+    </div>
+
+    <button id="test-reset" onclick="resetTest()">重置測試進度</button>
+
     <script>
         const canvas = document.getElementById('mainCanvas'); const ctx = canvas.getContext('2d');
         const bodyState = document.getElementById('body-state'); const vowDisplay = document.getElementById('vow-display');
         const treasureOverlay = document.getElementById('treasure-overlay'); const svgContainer = document.getElementById('svg-container');
-        const tNameUi = document.getElementById('t-name-ui'); const tDescUi = document.getElementById('t-desc-ui'); const tTagUi = document.getElementById('t-tag-ui');
+        const tNameUi = document.getElementById('t-name-ui'); const tDescUi = document.getElementById('t-desc-ui');
         const hint = document.getElementById('hint'); const flash = document.getElementById('flash');
-        const progressTxt = document.getElementById('progress'); const btnTreasure = document.getElementById('btn-treasure');
+        const litCountUi = document.getElementById('lit-count-ui'); const btnTreasure = document.getElementById('btn-treasure');
+        const modalOverlay = document.getElementById('modal-overlay');
         
         const vows = ["眾生無邊誓願度", "煩惱無盡誓願斷", "法門無量誓願學", "佛道無上誓願成"];
         const planetColors = [{r: 212, g: 175, b: 55}, {r: 139, g: 168, b: 156}, {r: 194, g: 24, b: 91}, {r: 224, g: 247, b: 250}];
         
-        // 帶有 tag 功能標籤的法語庫 (35%掉寶機率時使用)
-        const treasureTexts = [
-            { t: "因緣和合 ． 幾何慧劍現", tag: "破迷 ‧ 決斷", d: "劍氣本空，能斷無明之網；鋒芒藏智，可破世業之迷。若逢關卡躑躅、前路未明，此劍或可映照本心。皆因行者至誠發無上菩提，感得法界幽微之迴響。冀以此緣，斬盡葛藤，令事理通達，無礙前行。" },
-            { t: "因緣和合 ． 琉璃淨瓶現", tag: "療癒 ‧ 息災", d: "琉璃凝粹，內湛清涼之水；淨瓶無垢，堪息四大之微。若逢身心違和、暗夜驚瀾，此甘露或可潤澤枯槁。皆因行者至誠發無上菩提，感得法界幽微之迴響。冀以此緣，滌蕩疾厄，令身心泰然，得獲安康。" },
-            { t: "因緣和合 ． 多面寶珠現", tag: "滿願 ‧ 增上", d: "摩尼多面，本具萬法之光；如意圓融，能隨善念之轉。若祈福德增上、百事逢春，此寶珠或可折射勝緣。皆因行者至誠發無上菩提，感得法界幽微之迴響。冀以此緣，匯聚資糧，令所求如意，善果日增。" }
+        // ----------------------------------------------------
+        // SVG 寶物資料庫 (幾何慧劍、琉璃淨瓶、多面寶珠)
+        // ----------------------------------------------------
+        const pureGlassDef = `<defs><linearGradient id="pure-glass" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#fff; stop-opacity:0.9" /><stop offset="50%" style="stop-color:#f3e5ab; stop-opacity:0.6" /><stop offset="100%" style="stop-color:#d4af37; stop-opacity:0.2" /></linearGradient></defs>`;
+        
+        const treasuresData = [
+            {
+                id: "sword", name: "幾何慧劍", tag: "破迷 ‧ 決斷",
+                desc: "劍氣本空，象徵破除世業迷惘與前路關卡。若逢躑躅未明，此劍或可映照本心。皆因行者至誠發無上菩提，感得法界幽微之迴響。冀以此緣，斬盡葛藤，令事理通達，無礙前行。",
+                svg: `<svg viewBox="0 0 100 150">${pureGlassDef}<g><rect x="49.5" y="10" width="1" height="120" fill="#fff" opacity="0.8" /><path d="M50 10 L60 40 L50 50 L40 40 Z" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5" /><path d="M50 50 L65 90 L50 100 L35 90 Z" fill="rgba(243, 229, 171, 0.2)" stroke="#f3e5ab" stroke-width="0.4" /><path d="M50 50 L55 92 L50 98 L45 92 Z" fill="rgba(255, 255, 255, 0.5)" stroke="none" /><path d="M25 100 L50 90 L75 100 L50 110 Z" fill="rgba(212, 175, 55, 0.3)" stroke="#f3e5ab" stroke-width="0.6" /><path d="M46 110 L54 110 L52 135 L48 135 Z" fill="rgba(243, 229, 171, 0.2)" stroke="#f3e5ab" stroke-width="0.5" /><polygon points="50,135 55,140 50,145 45,140" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5" /></g></svg>`
+            },
+            {
+                id: "vase", name: "琉璃淨瓶", tag: "療癒 ‧ 息災",
+                desc: "琉璃凝粹，象徵息滅四大之微與身心違和。若逢暗夜驚瀾，此甘露或可潤澤枯槁。皆因行者至誠發無上菩提，感得法界幽微之迴響。冀以此緣，滌蕩疾厄，令身心泰然，得獲安康。",
+                svg: `<svg viewBox="0 0 100 150">${pureGlassDef}<g><path d="M45 30 L55 30 L55 50 L75 100 L65 130 L35 130 L25 100 L45 50 Z" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5"/><path d="M45 50 L55 50 L75 100 L25 100 Z" fill="rgba(243, 229, 171, 0.15)" stroke="#fff" stroke-width="0.3"/><polygon points="45,30 55,30 50,10" fill="rgba(255,255,255,0.6)" stroke="#f3e5ab" stroke-width="0.3"/><ellipse cx="50" cy="130" rx="15" ry="4" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5"/></g></svg>`
+            },
+            {
+                id: "jewel", name: "多面寶珠", tag: "滿願 ‧ 增上",
+                desc: "摩尼多面，象徵福德增上與百事逢春。若祈善念之轉，此寶珠或可折射勝緣。皆因行者至誠發無上菩提，感得法界幽微之迴響。冀以此緣，匯聚資糧，令所求如意，善果日增。",
+                svg: `<svg viewBox="0 0 100 150">${pureGlassDef}<g transform="translate(0, 15)"><polygon points="50,20 85,60 50,120 15,60" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.6"/><polygon points="50,20 65,60 50,120 35,60" fill="rgba(255,255,255,0.3)" stroke="#fff" stroke-width="0.4"/><polygon points="35,60 65,60 50,120" fill="rgba(212, 175, 55, 0.2)" stroke="none"/><circle cx="50" cy="60" r="5" fill="#fff" filter="drop-shadow(0 0 8px #fff)"/></g></svg>`
+            }
         ];
 
         let w, h, time = 0;
         let planets = [];       
         let fgPlanets = [];     
         let appState = 'daily_ritual'; 
-        let isPressing = false; let chargeLevel = 0; let litCount = 0;
+        let isPressing = false; let chargeLevel = 0; 
+        
+        // 系統資料
+        let litCount = 0; // 進度：最高 3000
+        let hasPlayedToday = false; 
+        let hasDroppedTreasure = false; 
+
         let rotX = 0, rotY = 0; let targetRotX = 0, targetRotY = 0;
         let isDragging = false; let lastMouseX = 0, lastMouseY = 0;
         let shooting = false; let targetPlanet = null; let beamProgress = 0;
-        
-        let hasDroppedTreasure = false; // 紀錄這次是否有掉寶
 
         function init() {
             w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
             
-            // 背景星 (效能極致版，拔除 shadowBlur)
+            // 從 LocalStorage 讀取進度 (模擬 API 對接)
+            litCount = parseInt(localStorage.getItem('huaYenLitCount')) || 0;
+            let lastDate = localStorage.getItem('huaYenLastDate');
+            let today = new Date().toDateString();
+            if (lastDate === today) hasPlayedToday = true;
+
+            litCountUi.innerText = litCount;
+
+            // 如果今天已經玩過，直接進入觀想模式並彈出視窗
+            if (hasPlayedToday) {
+                appState = 'observation';
+                bodyState.className = 'mode-observation';
+                hint.innerText = "今日功德已滿，請明日再來觀心"; hint.style.opacity = 0.5;
+                setTimeout(() => { modalOverlay.classList.add('show'); }, 500);
+            }
+
+            // 視覺層：1080 顆極簡渲染星 (進度歸進度，畫面歸畫面)
             planets = []; const radius = 1500; 
             for (let i = 0; i < 1080; i++) {
                 const phi = Math.acos(1 - 2 * (i + 0.5) / 1080);
                 const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+                
+                // 根據 litCount 決定畫面上預設亮幾顆 (按比例)
+                let ratio = litCount / 3000;
+                let isLit = (i < 1080 * ratio);
+
                 planets.push({
                     id: i, baseX: radius * Math.cos(theta) * Math.sin(phi), baseY: radius * Math.cos(phi), baseZ: radius * Math.sin(theta) * Math.sin(phi),
-                    isLit: false, colorObj: planetColors[i % 4], size: Math.random() * 2 + 1,
+                    isLit: isLit, colorObj: planetColors[i % 4], size: Math.random() * 2 + 1,
                     state: 'orbit', animT: 0
                 });
             }
-            planets[540].isLit = true; planets[100].isLit = true;
-            litCount = 2; progressTxt.innerText = `功德迴向法界 ． ${litCount} / 1080`;
 
-            // 前景大星 (嚴格限制 5 顆)
+            // 前景大星
             fgPlanets = [];
             for (let i = 0; i < 5; i++) {
                 fgPlanets.push({
@@ -144,8 +190,7 @@
                     speed: (Math.random() * 0.3 + 0.1) * (Math.random() > 0.5 ? 1 : -1),
                     size: Math.random() * 15 + 10,
                     isLit: Math.random() > 0.5,
-                    colorObj: planetColors[Math.floor(Math.random() * 4)],
-                    phase: Math.random() * Math.PI * 2
+                    colorObj: planetColors[Math.floor(Math.random() * 4)], phase: Math.random() * Math.PI * 2
                 });
             }
         }
@@ -162,7 +207,6 @@
             if (appState === 'daily_ritual' && !shooting) targetRotY += 0.001;
             rotX += (targetRotX - rotX) * 0.1; rotY += (targetRotY - rotY) * 0.1;
 
-            // 1. 繪製背景矩陣 (極簡渲染)
             planets.forEach(p => {
                 let worldPos = rotate3D(p.baseX, p.baseY, p.baseZ, rotX, rotY);
                 let currentX = worldPos.x, currentY = worldPos.y, currentZ = worldPos.z;
@@ -190,13 +234,10 @@
                 const {r, g, b} = p.colorObj;
 
                 if (p.state === 'presenting') {
-                    // 星球退位成極度柔和的大光暈 (不重疊法寶)
                     const auraGrad = ctx.createRadialGradient(x2d, y2d, 0, x2d, y2d, r2d * 5);
-                    auraGrad.addColorStop(0, `rgba(${r},${g},${b}, 0.2)`);
-                    auraGrad.addColorStop(1, `rgba(${r},${g},${b}, 0)`);
+                    auraGrad.addColorStop(0, `rgba(${r},${g},${b}, 0.2)`); auraGrad.addColorStop(1, `rgba(${r},${g},${b}, 0)`);
                     ctx.fillStyle = auraGrad; ctx.beginPath(); ctx.arc(x2d, y2d, r2d * 5, 0, Math.PI*2); ctx.fill();
                 } else if (p.isLit) {
-                    // 覺醒星：只用透明度與小實心圓，徹底移除 shadowBlur 提升效能
                     let breath = (Math.sin(time * 2 + p.id) + 1) / 2;
                     ctx.fillStyle = `rgba(${r},${g},${b}, ${0.5 + breath*0.3})`;
                     ctx.beginPath(); ctx.arc(x2d, y2d, r2d, 0, Math.PI * 2); ctx.fill();
@@ -218,24 +259,18 @@
                 if (beamProgress >= 1) { shooting = false; targetPlanet.state = 'flying_in'; targetPlanet.animT = 0; }
             }
 
-            // 2. 繪製前景 5 顆大星 (移除雙圈白點，改用柔和徑向漸層)
             if (appState !== 'treasure_view') {
                 fgPlanets.forEach(fp => {
                     fp.x += fp.speed;
                     if (fp.x > w + 80) fp.x = -80; else if (fp.x < -80) fp.x = w + 80;
                     const {r, g, b} = fp.colorObj;
                     let opacity = fp.isLit ? (0.6 + 0.2 * Math.sin(time + fp.phase)) : 0.2;
-                    
                     const grad = ctx.createRadialGradient(fp.x, fp.y, 0, fp.x, fp.y, fp.size);
-                    grad.addColorStop(0, `rgba(${r},${g},${b}, ${opacity})`);
-                    grad.addColorStop(0.6, `rgba(${r},${g},${b}, ${opacity * 0.5})`);
-                    grad.addColorStop(1, `rgba(${r},${g},${b}, 0)`);
-                    ctx.fillStyle = grad;
-                    ctx.beginPath(); ctx.arc(fp.x, fp.y, fp.size, 0, Math.PI * 2); ctx.fill();
+                    grad.addColorStop(0, `rgba(${r},${g},${b}, ${opacity})`); grad.addColorStop(0.6, `rgba(${r},${g},${b}, ${opacity * 0.5})`); grad.addColorStop(1, `rgba(${r},${g},${b}, 0)`);
+                    ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(fp.x, fp.y, fp.size, 0, Math.PI * 2); ctx.fill();
                 });
             }
 
-            // 中心金心
             if (appState === 'daily_ritual' && !shooting && (!targetPlanet || targetPlanet.state === 'orbit')) {
                 let basePulse = isPressing ? 0 : Math.sin(time * 0.5) * 5;
                 let currentRadius = 40 + basePulse + (chargeLevel * 1.5); 
@@ -249,27 +284,40 @@
             requestAnimationFrame(draw);
         }
 
-        // === 機率掉寶系統 (35%掉寶 / 65%純點亮) ===
+        // === 盲盒掉寶與進度核心邏輯 ===
         function showTreasureOverlay(planet) {
             appState = 'treasure_view'; 
             flash.style.opacity = 1; setTimeout(() => { flash.style.opacity = 0; }, 600);
             
-            if (!planet.isLit) { planet.isLit = true; litCount++; progressTxt.innerText = `功德迴向法界 ． ${litCount} / 1080`; }
+            planet.isLit = true; 
             
-            // 決定是否掉落法寶 (約35%機率)
-            hasDroppedTreasure = Math.random() < 0.35;
+            // 推進 3000 進度
+            litCount++; 
+            if(litCount > 3000) litCount = 3000;
+            litCountUi.innerText = litCount;
+            
+            // 首日 100% 掉寶，之後 35% 掉寶
+            hasDroppedTreasure = (litCount === 1) ? true : (Math.random() < 0.35);
 
             if (hasDroppedTreasure) {
-                // 掉寶：顯示 SVG 與法語
                 svgContainer.style.display = 'flex';
-                const randText = treasureTexts[Math.floor(Math.random() * treasureTexts.length)];
-                tNameUi.innerHTML = `${randText.t} <span class="t-tag">【${randText.tag}】</span>`;
-                tDescUi.innerText = randText.d;
+                // 隨機抽選三大法寶之一
+                const treasure = treasuresData[Math.floor(Math.random() * treasuresData.length)];
+                
+                svgContainer.innerHTML = treasure.svg;
+                
+                // 首日專屬稱號與法語
+                if (litCount === 1) {
+                    tNameUi.innerHTML = `初發菩提 ． 法界迴響 <span class="t-tag">【堅固 ‧ 緣起】</span>`;
+                    tDescUi.innerText = `行者初發無上菩提心，清淨一念，震動十方。法界隨順初發之善因，特顯此『${treasure.name}』以作迴饋。祈願藉此勝緣，堅固道心，行願無盡。`;
+                } else {
+                    tNameUi.innerHTML = `因緣和合 ． ${treasure.name}現 <span class="t-tag">【${treasure.tag}】</span>`;
+                    tDescUi.innerText = treasure.desc; // 載入我們優化過的「象徵」法語
+                }
             } else {
-                // 無掉寶：只顯示點亮文字，隱藏 SVG
                 svgContainer.style.display = 'none';
                 tNameUi.innerHTML = `法界覺醒 ． 功德增明`;
-                tDescUi.innerText = `行者至誠發無上菩提，點亮華藏星辰。願此微小清淨之光，融入無盡法界，迴向法界眾生得大安樂。`;
+                tDescUi.innerText = `行者至誠發無上菩提，點亮華藏星辰。願此微小清淨之光，融入無盡法界，迴向十方眾生得大安樂。`;
             }
 
             treasureOverlay.classList.remove('collecting');
@@ -280,19 +328,33 @@
             if (appState !== 'treasure_view') return;
             treasureOverlay.classList.remove('show');
             treasureOverlay.classList.add('collecting');
+            
             setTimeout(() => {
-                // 如果有掉寶，法寶閣才震動
                 if (hasDroppedTreasure) {
                     btnTreasure.classList.add('ping');
                     setTimeout(() => btnTreasure.classList.remove('ping'), 300);
                 }
                 if (targetPlanet) targetPlanet.state = 'flying_out'; 
-            }, 800); // 縮短收起時間，讓節奏更俐落
+            }, 800); 
         }
 
         function completeRitual() {
             appState = 'observation'; bodyState.className = 'mode-observation';
             hint.innerText = "今日功德已滿，請明日再來觀心"; hint.style.opacity = 0.5;
+            
+            // 寫入存檔 (鎖定今日)
+            localStorage.setItem('huaYenLitCount', litCount);
+            localStorage.setItem('huaYenLastDate', new Date().toDateString());
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('show');
+        }
+
+        function resetTest() {
+            localStorage.removeItem('huaYenLitCount');
+            localStorage.removeItem('huaYenLastDate');
+            location.reload();
         }
 
         setInterval(() => {
@@ -304,7 +366,7 @@
         }, 30);
 
         function pointerDown(e) {
-            if (e.target.closest('.obs-ui') || appState === 'treasure_view') return;
+            if (e.target.closest('.obs-ui') || e.target.closest('#modal-overlay') || e.target.closest('#test-reset') || appState === 'treasure_view') return;
             if (appState === 'daily_ritual') {
                 if (shooting || (targetPlanet && targetPlanet.state !== 'orbit')) return;
                 isPressing = true; bodyState.classList.add('charging'); hint.style.opacity = 0;

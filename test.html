@@ -15,7 +15,7 @@
         #vow-display { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); width: 100%; text-align: center; z-index: 10; pointer-events: none; color: #f3e5ab; font-size: 1.5rem; letter-spacing: 12px; font-weight: 300; text-shadow: 0 0 20px rgba(243, 229, 171, 0.8), 0 0 40px #fff; opacity: 0; transition: opacity 0.3s; }
         .charging #vow-display { opacity: 1; }
 
-        /* ✨ 放開防呆提示大字 */
+        /* 放開防呆提示大字 */
         #release-hint { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 1.8rem; letter-spacing: 15px; text-shadow: 0 0 30px #d4af37, 0 0 60px #fff; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 60; font-weight: bold; white-space: nowrap;}
         .ready-to-release #release-hint { opacity: 1; }
         .ready-to-release #vow-display { opacity: 0 !important; }
@@ -24,7 +24,7 @@
         
         #progress { position: absolute; top: 30px; right: 30px; color: #8ba89c; font-size: 0.9rem; letter-spacing: 3px; z-index: 10; opacity: 0.8; text-shadow: 0 0 10px rgba(139,168,156,0.5); transition: opacity 0.5s; }
         
-        /* ✨ 底部提示文字提亮與呼吸動畫 */
+        /* 底部提示文字提亮與呼吸動畫 */
         #hint { position: absolute; bottom: 40px; width: 100%; text-align: center; color: rgba(255, 255, 255, 0.85); font-size: 0.95rem; letter-spacing: 6px; z-index: 5; transition: opacity 0.5s; pointer-events: none; text-shadow: 0 0 10px rgba(243, 229, 171, 0.8); animation: hint-breathe 3s infinite alternate; }
         @keyframes hint-breathe { 0% { opacity: 0.5; transform: scale(0.98); } 100% { opacity: 1; transform: scale(1.02); } }
 
@@ -130,7 +130,27 @@
     </div>
 
     <script>
-        // ✨ 新增：跨平台語音引擎
+        // ✨ 蘋果 iOS 專屬：破冰解鎖器
+        let iosAudioUnlocked = false;
+        
+        // 此事件只需觸發一次，用來騙過蘋果的靜音鎖定
+        document.body.addEventListener('touchstart', function() {
+            if (!iosAudioUnlocked && window.speechSynthesis) {
+                let silentUtterance = new SpeechSynthesisUtterance('');
+                window.speechSynthesis.speak(silentUtterance);
+                iosAudioUnlocked = true;
+            }
+        }, { once: true });
+        
+        document.body.addEventListener('mousedown', function() {
+            if (!iosAudioUnlocked && window.speechSynthesis) {
+                let silentUtterance = new SpeechSynthesisUtterance('');
+                window.speechSynthesis.speak(silentUtterance);
+                iosAudioUnlocked = true;
+            }
+        }, { once: true });
+
+        // ✨ 跨平台語音引擎 (拔除 iOS 的延遲 setTimeout)
         window.sysUtterances = [];
         function speak(t, r = 0.85) {
             if (!window.speechSynthesis) return; 
@@ -139,6 +159,7 @@
             let textToSpeak = isAndroid ? t : t.replace(/阿/g, 'ㄚ');
             const m = new SpeechSynthesisUtterance(textToSpeak);
             m.lang = 'zh-TW'; m.rate = r; 
+            
             if (isAndroid) {
                 window.sysUtterances.push(m);
                 let voices = window.speechSynthesis.getVoices();
@@ -147,9 +168,11 @@
                     if (zhVoice) m.voice = zhVoice;
                 }
                 m.onend = function() { window.sysUtterances = window.sysUtterances.filter(u => u !== m); };
+                // Android 保持原有的延遲機制以保證穩定
                 setTimeout(() => { window.speechSynthesis.speak(m); }, 150);
             } else {
-                setTimeout(() => { window.speechSynthesis.speak(m); }, 50);
+                // ✨ 蘋果 iOS 必須絕對「同步」執行，不使用 setTimeout
+                window.speechSynthesis.speak(m);
             }
         }
 
@@ -186,7 +209,6 @@
 
         function saveDB() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
 
-        // ✨ 植入 3D 琉璃小獎版本
         const basicTreasures = [
             { id: "sword", name: "幾何慧劍", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 5)"><polygon points="50,10 56,40 50,105 44,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="50,10 56,40 50,105" fill="url(#facet-cyan)" opacity="0.8"/><polygon points="50,10 44,40 50,105" fill="url(#facet-dark)" opacity="0.6"/><polygon points="35,100 65,100 55,110 45,110" fill="url(#pure-glass)" stroke="#d4af37" stroke-width="0.8"/><polygon points="46,110 54,110 52,135 48,135" fill="url(#facet-dark)"/><polygon points="50,135 56,142 50,148 44,142" fill="url(#facet-light)" stroke="#f3e5ab" stroke-width="1"/><circle cx="50" cy="105" r="4" fill="#fff" filter="drop-shadow(0 0 8px #e0f7fa)"/></g></svg>` },
             { id: "vase", name: "琉璃淨瓶", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 10)"><polygon points="45,25 55,25 58,50 42,50" fill="url(#facet-light)" stroke="#f3e5ab" stroke-width="0.3"/><polygon points="42,50 58,50 72,95 28,95" fill="url(#facet-cyan)" stroke="#fff" stroke-width="0.5"/><polygon points="50,50 58,50 72,95 50,95" fill="url(#facet-dark)" opacity="0.5"/><polygon points="42,50 50,50 50,95 28,95" fill="url(#facet-light)" opacity="0.5"/><polygon points="28,95 72,95 60,125 40,125" fill="url(#facet-dark)" stroke="#f3e5ab" stroke-width="0.5"/><path d="M40 125 Q50 135 60 125 Z" fill="url(#facet-light)"/><ellipse cx="50" cy="95" rx="22" ry="6" fill="rgba(255,255,255,0.4)"/><circle cx="50" cy="80" r="10" fill="rgba(255,255,255,0.8)" filter="drop-shadow(0 0 15px #e0f7fa)"/></g></svg>` },
@@ -443,7 +465,6 @@
 
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-        // ✨ 語音與集氣判斷邏輯昇華
         let hasSpokenIntro = false;
         let hasSpokenRelease = false;
 

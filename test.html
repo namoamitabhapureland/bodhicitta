@@ -3,21 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>華嚴大世界 ． 108星觀想矩陣</title>
+    <title>星寶合一 ． 呼吸與歸藏</title>
     <style>
-        body { margin: 0; background: #010103; overflow: hidden; font-family: "PingFang TC", "Microsoft JhengHei", serif; touch-action: none; user-select: none; }
+        body { margin: 0; background: #010103; overflow: hidden; font-family: "PingFang TC", serif; touch-action: none; user-select: none; }
         
-        /* 宇宙深邃星雲 */
         #nebula {
             position: absolute; inset: 0; z-index: 0;
             background: radial-gradient(circle at 50% 50%, #150d1f 0%, #010103 100%);
             transition: opacity 1s;
         }
-
         canvas { width: 100vw; height: 100vh; display: block; position: absolute; z-index: 1; }
-        .charging #nebula { opacity: 0.3; } /* 集氣時降熵 */
+        .charging #nebula { opacity: 0.3; }
 
-        /* 四宏誓願顯示 */
+        /* 四宏誓願 */
         #vow-display {
             position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%);
             width: 100%; text-align: center; z-index: 10; pointer-events: none;
@@ -27,64 +25,96 @@
         }
         .charging #vow-display { opacity: 1; }
 
-        /* 寶星展示法語 */
-        #treasure-text {
-            position: absolute; top: 65%; left: 50%; transform: translate(-50%, -50%);
-            text-align: center; color: #fff; z-index: 20; pointer-events: none;
-            opacity: 0; transition: opacity 0.8s;
-        }
-        .star-name { font-size: 1.5rem; letter-spacing: 10px; text-shadow: 0 0 15px #fff, 0 0 30px #d4af37; margin-bottom: 10px; }
-        .star-desc { font-size: 0.9rem; letter-spacing: 5px; color: #f3e5ab; }
-
         /* 淨化大閃光 */
         #flash { position: absolute; inset: 0; background: #fff; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.8s ease-out; }
         
-        /* 底部提示 */
+        /* 底部提示與進度 */
         #hint { position: absolute; bottom: 40px; width: 100%; text-align: center; color: rgba(243, 229, 171, 0.5); font-size: 0.85rem; letter-spacing: 6px; z-index: 5; transition: opacity 0.5s; pointer-events: none; }
-        
-        /* 右上角進度 */
         #progress { position: absolute; top: 30px; right: 30px; color: #8ba89c; font-size: 0.9rem; letter-spacing: 4px; z-index: 10; opacity: 0.8; }
 
-        /* === 觀想模式 UI (完成後浮現) === */
+        /* === 觀想模式 UI === */
         .obs-ui { opacity: 0; pointer-events: none; transition: opacity 1s; z-index: 30; position: absolute; }
         .mode-observation .obs-ui { opacity: 1; pointer-events: auto; }
-
-        /* 返回首頁按鈕 (左上角) */
         #btn-back {
             top: 30px; left: 30px; padding: 8px 15px; border: 1px solid rgba(243, 229, 171, 0.4);
             background: rgba(212, 175, 55, 0.1); color: #f3e5ab; border-radius: 20px;
             font-size: 0.8rem; letter-spacing: 2px; cursor: pointer; backdrop-filter: blur(5px);
         }
-        /* 法寶閣圖示 (右下角) */
         #btn-treasure {
             bottom: 40px; right: 30px; width: 50px; height: 50px;
             background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(243, 229, 171, 0.6);
             display: flex; justify-content: center; align-items: center; cursor: pointer;
             clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        #btn-treasure.ping { transform: scale(1.4); background: rgba(243, 229, 171, 0.6); box-shadow: 0 0 30px #d4af37; }
+
+        /* === 法寶獨立圖層 (SVG) === */
+        #treasure-overlay {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
+            width: 200px; height: 300px; z-index: 40; display: flex; flex-direction: column; align-items: center;
+            opacity: 0; pointer-events: none; transition: all 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        /* 1. 展現狀態 */
+        #treasure-overlay.show { opacity: 1; transform: translate(-50%, -55%) scale(1.2); }
+        /* 2. 飛入法寶閣狀態 */
+        #treasure-overlay.collecting {
+            transform: translate(calc(50vw - 80px), calc(50vh - 80px)) scale(0.1); /* 飛向右下角 */
+            opacity: 0; transition: all 1s cubic-bezier(0.5, 0, 0.2, 1);
+        }
+
+        /* 法寶本身的緩慢懸浮呼吸 */
+        .svg-container { width: 100%; height: 75%; filter: drop-shadow(0 0 20px rgba(243, 229, 171, 0.4)); animation: float-pulse 4s infinite ease-in-out; }
+        @keyframes float-pulse { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); filter: drop-shadow(0 0 30px rgba(243, 229, 171, 0.8)); } }
+
+        /* 暫代法語 */
+        .t-text-group { text-align: center; margin-top: 20px; opacity: 0; transition: opacity 1s 0.5s; }
+        #treasure-overlay.show .t-text-group { opacity: 1; }
+        .t-name { color: #fff; font-size: 1.2rem; letter-spacing: 8px; text-shadow: 0 0 15px #fff, 0 0 30px #d4af37; }
+        .t-desc { color: #f3e5ab; font-size: 0.8rem; letter-spacing: 4px; margin-top: 8px; }
+
     </style>
 </head>
 <body id="body-state">
 
     <div id="nebula"></div>
     <canvas id="mainCanvas"></canvas>
+    
     <div id="vow-display">眾生無邊誓願度</div>
     
-    <div id="treasure-text">
-        <div class="star-name" id="t-name">普光琉璃星</div>
-        <div class="star-desc" id="t-desc">覺醒 ． 法寶歸藏</div>
+    <div id="treasure-overlay">
+        <div class="svg-container">
+            <svg viewBox="0 0 100 150">
+                <defs>
+                    <linearGradient id="pure-glass" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#fff; stop-opacity:0.9" />
+                        <stop offset="50%" style="stop-color:#f3e5ab; stop-opacity:0.4" />
+                        <stop offset="100%" style="stop-color:#d4af37; stop-opacity:0.1" />
+                    </linearGradient>
+                </defs>
+                <g>
+                    <rect x="49.5" y="10" width="1" height="120" fill="#fff" opacity="0.8" />
+                    <path d="M50 10 L60 40 L50 50 L40 40 Z" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5" />
+                    <path d="M50 50 L65 90 L50 100 L35 90 Z" fill="rgba(243, 229, 171, 0.15)" stroke="#f3e5ab" stroke-width="0.4" />
+                    <path d="M50 50 L55 92 L50 98 L45 92 Z" fill="rgba(255, 255, 255, 0.4)" stroke="none" />
+                    <path d="M25 100 L50 90 L75 100 L50 110 Z" fill="rgba(212, 175, 55, 0.2)" stroke="#f3e5ab" stroke-width="0.6" />
+                    <path d="M46 110 L54 110 L52 135 L48 135 Z" fill="rgba(243, 229, 171, 0.1)" stroke="#f3e5ab" stroke-width="0.5" />
+                    <polygon points="50,135 55,140 50,145 45,140" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5" />
+                </g>
+            </svg>
+        </div>
+        <div class="t-text-group">
+            <div class="t-name" id="t-name-ui">普光琉璃星</div>
+            <div class="t-desc" id="t-desc-ui">因緣和合 ． 幾何慧劍現</div> </div>
     </div>
     
     <div id="flash"></div>
     <div id="hint">長按金心 ． 喚醒星辰</div>
-    <div id="progress">華藏覺醒 0 / 108</div>
+    <div id="progress">華藏覺醒 1 / 108</div>
 
-    <div class="obs-ui" id="btn-back" onclick="alert('返回首頁 Screen 3 (連接 JSON 存檔)')">← 歸位首頁</div>
-    <div class="obs-ui" id="btn-treasure" onclick="alert('開啟法寶閣 (treasure.html)')">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f3e5ab" stroke-width="1.5">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-        </svg>
+    <div class="obs-ui" id="btn-back">← 歸位首頁</div>
+    <div class="obs-ui" id="btn-treasure">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f3e5ab" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
     </div>
 
     <script>
@@ -92,195 +122,114 @@
         const ctx = canvas.getContext('2d');
         const bodyState = document.getElementById('body-state');
         const vowDisplay = document.getElementById('vow-display');
-        const treasureTxt = document.getElementById('treasure-text');
-        const tName = document.getElementById('t-name');
-        const tDesc = document.getElementById('t-desc');
+        const treasureOverlay = document.getElementById('treasure-overlay');
+        const tNameUi = document.getElementById('t-name-ui');
+        const tDescUi = document.getElementById('t-desc-ui');
         const hint = document.getElementById('hint');
         const flash = document.getElementById('flash');
         const progressTxt = document.getElementById('progress');
+        const btnTreasure = document.getElementById('btn-treasure');
         
-        // 華嚴大世界 專屬命名庫 (組合產生108尊號)
-        const huaYenPrefixes = ["普光", "海印", "焰摩", "無垢", "須彌", "兜率", "琉璃", "金剛", "般若", "華藏", "妙明", "清淨", "無礙", "莊嚴", "寶威", "大智", "法雲", "善慧"];
         const vows = ["眾生無邊誓願度", "煩惱無盡誓願斷", "法門無量誓願學", "佛道無上誓願成"];
-        const planetColors = [
-            { r: 212, g: 175, b: 55 },  // 金
-            { r: 139, g: 168, b: 156 }, // 青
-            { r: 194, g: 24,  b: 91 },  // 紅
-            { r: 224, g: 247, b: 250 }  // 白
-        ];
+        const planetColors = [{r: 212, g: 175, b: 55}, {r: 139, g: 168, b: 156}, {r: 194, g: 24, b: 91}];
         
         let w, h, time = 0;
         let planets = [];
-        
-        // 系統狀態控制
-        let appState = 'daily_ritual'; // daily_ritual (發心發射) -> observation (自由觀想)
-        let isPressing = false;
-        let chargeLevel = 0;
-        let litCount = 0;
-        
-        // 3D 矩陣旋轉控制
-        let rotX = 0, rotY = 0;
-        let targetRotX = 0, targetRotY = 0;
-        let isDragging = false;
-        let lastMouseX = 0, lastMouseY = 0;
-        
-        // 動畫狀態
-        let shooting = false;
-        let targetPlanet = null;
-        let beamProgress = 0;
+        let appState = 'daily_ritual'; 
+        let isPressing = false; let chargeLevel = 0; let litCount = 0;
+        let rotX = 0, rotY = 0; let targetRotX = 0, targetRotY = 0;
+        let isDragging = false; let lastMouseX = 0, lastMouseY = 0;
+        let shooting = false; let targetPlanet = null; let beamProgress = 0;
 
         function init() {
-            w = canvas.width = window.innerWidth;
-            h = canvas.height = window.innerHeight;
-            
-            // 底層邏輯：生成 108 顆固定座標 (費氏球面)
-            planets = [];
-            const radius = 900; 
+            w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
+            planets = []; const radius = 900; 
             for (let i = 0; i < 108; i++) {
                 const phi = Math.acos(1 - 2 * (i + 0.5) / 108);
                 const theta = Math.PI * (1 + Math.sqrt(5)) * i;
-                
-                const prefix = huaYenPrefixes[i % huaYenPrefixes.length];
-                const colorObj = planetColors[Math.floor(Math.random() * planetColors.length)];
-                
                 planets.push({
-                    id: i,
-                    name: `${prefix}寶星`,
-                    baseX: radius * Math.cos(theta) * Math.sin(phi),
-                    baseY: radius * Math.cos(phi),
-                    baseZ: radius * Math.sin(theta) * Math.sin(phi),
-                    isLit: false,
-                    colorObj: colorObj,
-                    size: Math.random() * 4 + 3,
-                    state: 'orbit', // orbit, flying_in, presenting, flying_out
-                    animT: 0
+                    id: i, name: `琉璃寶星 ${i+1}`,
+                    baseX: radius * Math.cos(theta) * Math.sin(phi), baseY: radius * Math.cos(phi), baseZ: radius * Math.sin(theta) * Math.sin(phi),
+                    isLit: false, colorObj: planetColors[i % 3], size: Math.random() * 4 + 3,
+                    state: 'orbit', animT: 0
                 });
             }
-
-            // === API 存檔點預留：讀取 ===
-            // 這裡未來會從首頁 JSON 讀取 litStarsArray = [0, 5, 12...];
-            // 為了模擬「昨天的進度」，我們先點亮第0顆星與第10顆星
-            planets[0].isLit = true; planets[10].isLit = true;
-            litCount = 2;
-            progressTxt.innerText = `華藏覺醒 ${litCount} / 108`;
+            // 預設點亮第0顆，證明絕對座標與呼吸效果
+            planets[0].isLit = true; litCount = 1;
         }
 
-        // 3D 空間雙軸旋轉函數
         function rotate3D(x, y, z, pitch, yaw) {
-            // 繞 Y 軸旋轉 (左右)
-            let x1 = x * Math.cos(yaw) - z * Math.sin(yaw);
-            let z1 = x * Math.sin(yaw) + z * Math.cos(yaw);
-            // 繞 X 軸旋轉 (上下)
-            let y2 = y * Math.cos(pitch) - z1 * Math.sin(pitch);
-            let z2 = y * Math.sin(pitch) + z1 * Math.cos(pitch);
+            let x1 = x * Math.cos(yaw) - z * Math.sin(yaw); let z1 = x * Math.sin(yaw) + z * Math.cos(yaw);
+            let y2 = y * Math.cos(pitch) - z1 * Math.sin(pitch); let z2 = y * Math.sin(pitch) + z1 * Math.cos(pitch);
             return { x: x1, y: y2, z: z2 };
         }
 
         function draw() {
             ctx.clearRect(0, 0, w, h);
             time += 0.05;
-            
-            // 處理矩陣自轉與拖曳阻尼
-            if (appState === 'daily_ritual' && !shooting) {
-                targetRotY += 0.002; // 儀軌階段星系自動緩慢旋轉
-            }
-            rotX += (targetRotX - rotX) * 0.1;
-            rotY += (targetRotY - rotY) * 0.1;
+            if (appState === 'daily_ritual' && !shooting) targetRotY += 0.002;
+            rotX += (targetRotX - rotX) * 0.1; rotY += (targetRotY - rotY) * 0.1;
 
-            // 渲染星球
             planets.forEach(p => {
-                // 1. 計算矩陣絕對座標旋轉後的位置
                 let worldPos = rotate3D(p.baseX, p.baseY, p.baseZ, rotX, rotY);
-                let currentX = worldPos.x;
-                let currentY = worldPos.y;
-                let currentZ = worldPos.z;
+                let currentX = worldPos.x, currentY = worldPos.y, currentZ = worldPos.z;
 
-                // 2. 處理寶物飛向螢幕中心的動畫
                 if (p.state !== 'orbit') {
-                    let centerX = 0, centerY = -50, centerZ = -1000; // 飛到眼前放大
-                    
+                    let centerX = 0, centerY = -50, centerZ = -1000;
                     if (p.state === 'flying_in') {
                         p.animT += 0.02;
-                        if (p.animT >= 1) { p.animT = 1; p.state = 'presenting'; triggerTreasure(p); }
+                        if (p.animT >= 1) { p.animT = 1; p.state = 'presenting'; triggerTreasureOverlay(p); }
                     } else if (p.state === 'flying_out') {
                         p.animT -= 0.015;
-                        if (p.animT <= 0) { 
-                            p.animT = 0; p.state = 'orbit'; 
-                            completeRitual(); // 歸位後解鎖觀想模式
-                        }
+                        if (p.animT <= 0) { p.animT = 0; p.state = 'orbit'; completeRitual(); }
                     }
-
-                    // 平滑插值
                     const ease = p.animT < 0.5 ? 2 * p.animT * p.animT : -1 + (4 - 2 * p.animT) * p.animT;
-                    currentX = currentX + (centerX - currentX) * ease;
-                    currentY = currentY + (centerY - currentY) * ease;
-                    currentZ = currentZ + (centerZ - currentZ) * ease;
+                    currentX += (centerX - currentX) * ease; currentY += (centerY - currentY) * ease; currentZ += (centerZ - currentZ) * ease;
                 }
 
-                // 3. 投影到 2D
-                let dz = currentZ + 1400; // 相機距離
-                if (dz < 10) return; // 剔除鏡頭後方
-
+                let dz = currentZ + 1400; if (dz < 10) return;
                 const scale = 1000 / dz;
-                const x2d = w/2 + currentX * scale;
-                const y2d = h/2 + currentY * scale;
-                const r2d = p.size * scale;
-
+                const x2d = w/2 + currentX * scale, y2d = h/2 + currentY * scale, r2d = p.size * scale;
                 const {r, g, b} = p.colorObj;
-                ctx.beginPath();
-                ctx.arc(x2d, y2d, r2d, 0, Math.PI * 2);
+
+                ctx.beginPath(); ctx.arc(x2d, y2d, r2d, 0, Math.PI * 2);
 
                 if (p.isLit || p.state !== 'orbit') {
-                    let glow = p.state === 'presenting' ? 80 * scale : 20 * scale;
+                    // === 核心優化：已覺醒星球的「生命呼吸光暈」 ===
+                    // 利用 sine 波讓亮星的光暈與大小產生脈動
+                    let breath = Math.sin(time * 1.5 + p.id) * 0.3 + 0.7; // 0.4 到 1.0 的脈動
+                    let glow = (p.state === 'presenting' ? 80 : 30 * breath) * scale;
+                    let coreSize = p.state === 'presenting' ? r2d * 0.5 : r2d * 0.6 * breath;
+
                     ctx.fillStyle = `rgb(${r},${g},${b})`;
                     ctx.shadowBlur = glow; ctx.shadowColor = `rgb(${r},${g},${b})`;
                     ctx.fill(); ctx.shadowBlur = 0;
                     
-                    ctx.beginPath(); ctx.arc(x2d, y2d, r2d * 0.5, 0, Math.PI*2);
-                    ctx.fillStyle = '#fff'; ctx.fill();
+                    ctx.beginPath(); ctx.arc(x2d, y2d, coreSize, 0, Math.PI*2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${0.7 + breath*0.3})`; ctx.fill();
                 } else {
                     let opacity = (appState === 'daily_ritual' && isPressing) ? 0.1 : 0.4;
-                    ctx.fillStyle = `rgba(${r},${g},${b}, ${opacity})`;
-                    ctx.fill();
+                    ctx.fillStyle = `rgba(${r},${g},${b}, ${opacity})`; ctx.fill();
                 }
             });
 
-            // 繪製發射的流星光束
             if (shooting && targetPlanet) {
                 beamProgress += 0.05;
                 let targetWorld = rotate3D(targetPlanet.baseX, targetPlanet.baseY, targetPlanet.baseZ, rotX, rotY);
-                let dz = targetWorld.z + 1400;
-                let scale = 1000 / dz;
-                let targetX = w/2 + targetWorld.x * scale;
-                let targetY = h/2 + targetWorld.y * scale;
-
-                let currentX = w/2 + (targetX - w/2) * beamProgress;
-                let currentY = (h/2 + 50) + (targetY - (h/2 + 50)) * beamProgress;
-
-                ctx.beginPath();
-                ctx.moveTo(w/2, h/2 + 50);
-                ctx.lineTo(currentX, currentY);
-                ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; 
-                ctx.shadowBlur = 20; ctx.shadowColor = '#f3e5ab';
-                ctx.stroke(); ctx.shadowBlur = 0;
-
-                if (beamProgress >= 1) {
-                    shooting = false;
-                    targetPlanet.state = 'flying_in'; // 命中，觸發星球飛出
-                    targetPlanet.animT = 0;
-                }
+                let scale = 1000 / (targetWorld.z + 1400);
+                let currentX = w/2 + ((w/2 + targetWorld.x * scale) - w/2) * beamProgress;
+                let currentY = (h/2 + 50) + ((h/2 + targetWorld.y * scale) - (h/2 + 50)) * beamProgress;
+                ctx.beginPath(); ctx.moveTo(w/2, h/2 + 50); ctx.lineTo(currentX, currentY);
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.shadowBlur = 20; ctx.shadowColor = '#f3e5ab'; ctx.stroke(); ctx.shadowBlur = 0;
+                if (beamProgress >= 1) { shooting = false; targetPlanet.state = 'flying_in'; targetPlanet.animT = 0; }
             }
 
-            // 中心金心 (僅在儀軌階段顯示)
             if (appState === 'daily_ritual' && !shooting && (!targetPlanet || targetPlanet.state === 'orbit')) {
                 let basePulse = isPressing ? 0 : Math.sin(time * 0.5) * 5;
                 let currentRadius = 40 + basePulse + (chargeLevel * 1.5); 
-                
                 const grad = ctx.createRadialGradient(w/2, h/2 + 50, 0, w/2, h/2 + 50, currentRadius + 10);
-                grad.addColorStop(0, `rgba(243, 229, 171, ${0.8 + (chargeLevel/200)})`);
-                grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+                grad.addColorStop(0, `rgba(243, 229, 171, ${0.8 + (chargeLevel/200)})`); grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
                 ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(w/2, h/2 + 50, currentRadius + 15, 0, Math.PI * 2); ctx.fill();
-
                 ctx.beginPath(); ctx.arc(w/2, h/2 + 50, 8 + (chargeLevel * 0.3), 0, Math.PI * 2);
                 ctx.fillStyle = '#fff'; ctx.shadowBlur = 15 + (chargeLevel*0.5); ctx.shadowColor = '#f3e5ab'; ctx.fill(); ctx.shadowBlur = 0;
             }
@@ -288,119 +237,73 @@
             requestAnimationFrame(draw);
         }
 
-        // 寶物化現邏輯 (包含機率疊加判定)
-        function triggerTreasure(planet) {
-            flash.style.opacity = 1;
-            setTimeout(() => { flash.style.opacity = 0; }, 500);
+        // === SVG 法寶圖層的無縫接軌邏輯 ===
+        function triggerTreasureOverlay(planet) {
+            flash.style.opacity = 1; setTimeout(() => { flash.style.opacity = 0; }, 500);
             
-            tName.innerText = planet.name;
+            if (!planet.isLit) { planet.isLit = true; litCount++; progressTxt.innerText = `華藏覺醒 ${litCount} / 108`; }
             
-            if (planet.isLit) {
-                // 機率打中已亮星球：因緣疊加
-                tDesc.innerText = "因緣疊加 ． 功德增明";
-            } else {
-                // 打中新星：覺醒
-                planet.isLit = true;
-                litCount++;
-                progressTxt.innerText = `華藏覺醒 ${litCount} / 108`;
-                tDesc.innerText = "法界覺醒 ． 琉璃歸藏";
-                
-                // === API 存檔點預留：寫入 ===
-                // 將新的 litCount 與 planet.id 寫入首頁 JSON
-            }
-
-            treasureTxt.style.opacity = 1;
+            // 1. 顯示 SVG 法寶
+            treasureOverlay.classList.remove('collecting');
+            treasureOverlay.classList.add('show');
+            tNameUi.innerText = planet.name;
             
-            // 停留觀看 2.5 秒後歸位
+            // 2. 停留 3 秒後，法寶化作流光飛入右下角
             setTimeout(() => {
-                treasureTxt.style.opacity = 0;
-                planet.state = 'flying_out'; 
-            }, 2500);
+                treasureOverlay.classList.remove('show');
+                treasureOverlay.classList.add('collecting');
+                
+                // 3. 飛行時間 (1秒) 後，法寶閣震動接收，星球歸位
+                setTimeout(() => {
+                    btnTreasure.classList.add('ping');
+                    setTimeout(() => btnTreasure.classList.remove('ping'), 300);
+                    planet.state = 'flying_out'; // Canvas 繼續接手，星球飛回矩陣
+                }, 1000);
+
+            }, 3000);
         }
 
-        // 儀軌完成，切換到觀想模式
         function completeRitual() {
-            appState = 'observation';
-            bodyState.className = 'mode-observation';
-            hint.innerText = "撥動星系 ． 觀想華藏";
-            hint.style.opacity = 0.5;
+            appState = 'observation'; bodyState.className = 'mode-observation';
+            hint.innerText = "撥動星系 ． 觀想華藏"; hint.style.opacity = 0.5;
         }
 
-        // ==== 互動控制引擎 ====
-
-        // 發心集氣邏輯
         setInterval(() => {
             if (appState === 'daily_ritual' && isPressing) {
-                chargeLevel += 1;
-                if (chargeLevel > 100) chargeLevel = 100;
-                let stage = Math.floor((chargeLevel / 100) * 4);
-                if (stage > 3) stage = 3;
-                
-                if (vowDisplay.innerText !== vows[stage]) {
-                    vowDisplay.style.opacity = 0;
-                    setTimeout(() => { vowDisplay.innerText = vows[stage]; vowDisplay.style.opacity = 1; }, 50);
-                }
-            } else {
-                chargeLevel *= 0.8;
-            }
+                chargeLevel += 1; if (chargeLevel > 100) chargeLevel = 100;
+                let stage = Math.floor((chargeLevel / 100) * 4); if (stage > 3) stage = 3;
+                if (vowDisplay.innerText !== vows[stage]) { vowDisplay.style.opacity = 0; setTimeout(() => { vowDisplay.innerText = vows[stage]; vowDisplay.style.opacity = 1; }, 50); }
+            } else { chargeLevel *= 0.8; }
         }, 30);
 
-        // 事件綁定 (區分儀軌與觀想)
         function pointerDown(e) {
-            if (e.target.closest('.obs-ui')) return; // 點擊UI時不觸發
-            
+            if (e.target.closest('.obs-ui')) return;
             if (appState === 'daily_ritual') {
                 if (shooting || (targetPlanet && targetPlanet.state !== 'orbit')) return;
                 isPressing = true; bodyState.classList.add('charging'); hint.style.opacity = 0;
             } else if (appState === 'observation') {
-                isDragging = true;
-                lastMouseX = e.touches ? e.touches[0].clientX : e.clientX;
-                lastMouseY = e.touches ? e.touches[0].clientY : e.clientY;
-                hint.style.opacity = 0;
+                isDragging = true; lastMouseX = e.touches ? e.touches[0].clientX : e.clientX; lastMouseY = e.touches ? e.touches[0].clientY : e.clientY; hint.style.opacity = 0;
             }
         }
-
         function pointerMove(e) {
             if (appState === 'observation' && isDragging) {
-                let currentX = e.touches ? e.touches[0].clientX : e.clientX;
-                let currentY = e.touches ? e.touches[0].clientY : e.clientY;
-                
-                let deltaX = currentX - lastMouseX;
-                let deltaY = currentY - lastMouseY;
-                
-                targetRotY += deltaX * 0.005; // 左右滑動旋轉 Y 軸
-                targetRotX += deltaY * 0.005; // 上下滑動旋轉 X 軸
-                
-                // 限制 X 軸不要過度翻轉
-                if (targetRotX > 0.5) targetRotX = 0.5;
-                if (targetRotX < -0.5) targetRotX = -0.5;
-
+                let currentX = e.touches ? e.touches[0].clientX : e.clientX; let currentY = e.touches ? e.touches[0].clientY : e.clientY;
+                targetRotY += (currentX - lastMouseX) * 0.005; targetRotX += (currentY - lastMouseY) * 0.005;
+                if (targetRotX > 0.5) targetRotX = 0.5; if (targetRotX < -0.5) targetRotX = -0.5;
                 lastMouseX = currentX; lastMouseY = currentY;
             }
         }
-
         function pointerUp(e) {
             if (appState === 'daily_ritual' && isPressing) {
                 isPressing = false; bodyState.classList.remove('charging');
-                
-                if (chargeLevel >= 95) {
-                    vowDisplay.style.opacity = 0;
-                    // 機率機制：從「所有星球」中隨機抽一顆 (允許重複打中)
-                    targetPlanet = planets[Math.floor(Math.random() * planets.length)];
-                    shooting = true; beamProgress = 0; chargeLevel = 0;
-                } else {
-                    hint.style.opacity = 0.5;
-                }
-            } else if (appState === 'observation') {
-                isDragging = false;
-                hint.style.opacity = 0.5;
-            }
+                if (chargeLevel >= 95) { vowDisplay.style.opacity = 0; targetPlanet = planets[Math.floor(Math.random() * planets.length)]; shooting = true; beamProgress = 0; chargeLevel = 0; }
+                else { hint.style.opacity = 0.5; }
+            } else if (appState === 'observation') { isDragging = false; hint.style.opacity = 0.5; }
         }
 
         window.addEventListener('mousedown', pointerDown); window.addEventListener('mousemove', pointerMove); window.addEventListener('mouseup', pointerUp);
         window.addEventListener('touchstart', pointerDown, {passive: false}); window.addEventListener('touchmove', pointerMove, {passive: false}); window.addEventListener('touchend', pointerUp, {passive: false});
         window.addEventListener('resize', init);
-        
         init(); draw();
     </script>
 </body>

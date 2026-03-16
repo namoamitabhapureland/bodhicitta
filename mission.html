@@ -2,264 +2,308 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>彌陀矩陣 ‧ 發菩提心</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>琉璃多寶閣 ． 法界實修</title>
     <style>
-        :root { 
-            --gold: #f3e5ab; 
-            --solid-gold: #d4af37; 
-            --cyan: #9fdfc8; 
-            --bg-deep: #020202; 
-        }
+        * { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; outline: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        body { margin: 0; background: #010103; overflow: hidden; font-family: "PingFang TC", "Microsoft JhengHei", serif; color: #f3e5ab; touch-action: manipulation; }
         
-        body { 
-            margin: 0; padding: 0; height: 100vh; background: var(--bg-deep); color: #fff; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            font-family: "PingFang TC", "Microsoft JhengHei", serif; overflow: hidden; 
-            user-select: none; -webkit-tap-highlight-color: transparent; 
-        }
+        /* 幽暗深邃的背景 */
+        #bg { position: absolute; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 30%, #1a1225 0%, #010103 80%); }
 
-        #page-curtain { position: fixed; inset: 0; background: #000; z-index: 999999; pointer-events: none; transition: opacity 0.8s ease-in-out; opacity: 1; }
+        /* 頂部導航 */
+        header { position: relative; z-index: 10; padding: 40px 20px 20px; text-align: center; border-bottom: 1px solid rgba(243, 229, 171, 0.1); background: rgba(1,1,3,0.5); backdrop-filter: blur(10px); }
+        .header-title { font-size: 1.2rem; letter-spacing: 8px; text-shadow: 0 0 15px rgba(243, 229, 171, 0.5); }
+        #btn-back { position: absolute; left: 20px; top: 40px; font-size: 0.9rem; color: #8ba89c; cursor: pointer; letter-spacing: 2px; }
 
-        .top-nav-btn {
-            position: absolute; top: 20px; left: 20px;
-            background: rgba(0, 0, 0, 0.6); 
-            border: 1px solid rgba(212,175,55,0.6); 
-            color: var(--gold); 
-            padding: 8px 16px; border-radius: 25px; font-size: 0.85rem; font-weight: bold; letter-spacing: 1px; 
-            display: flex; align-items: center; gap: 6px; z-index: 100; cursor: pointer; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.8), inset 0 0 10px rgba(212,175,55,0.15); 
-            backdrop-filter: blur(10px); transition: 0.3s;
-        }
-        .top-nav-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.25); border-color: var(--solid-gold); }
+        /* 多寶格展示區 */
+        #treasure-grid { position: relative; z-index: 10; height: calc(100vh - 200px); overflow-y: auto; padding: 30px 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; align-content: start; }
+        
+        /* 單一琉璃格 */
+        .t-cell { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(139, 168, 156, 0.3); border-radius: 12px; aspect-ratio: 3/4; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; cursor: pointer; transition: all 0.3s ease; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); overflow: hidden; }
+        .t-cell::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%); pointer-events: none; }
+        
+        /* 選取狀態 */
+        .t-cell.selected { border-color: #f3e5ab; box-shadow: 0 0 20px rgba(212, 175, 55, 0.4), inset 0 0 20px rgba(212, 175, 55, 0.2); transform: translateY(-5px); }
+        
+        .t-svg { width: 60%; height: 60%; filter: drop-shadow(0 0 10px rgba(243, 229, 171, 0.3)); animation: float 4s infinite ease-in-out; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); filter: drop-shadow(0 0 20px rgba(243, 229, 171, 0.6)); } }
+        
+        .t-info { margin-top: 15px; text-align: center; }
+        .t-name { font-size: 0.9rem; letter-spacing: 2px; color: #fff; margin-bottom: 5px; }
+        .t-lvl { font-size: 0.7rem; color: #d4af37; letter-spacing: 1px; }
+        .t-tag { font-size: 0.65rem; color: #8ba89c; display: block; margin-top: 4px; }
 
-        /* ======= 菩提光軌 ======= */
-        #bodhi-container {
-            position: relative; width: 320px; height: 320px; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; transition: transform 0.3s ease;
-        }
-        #bodhi-container:active { transform: scale(0.96); }
+        /* 底部操作區 */
+        footer { position: fixed; bottom: 0; left: 0; width: 100%; z-index: 20; padding: 20px; background: rgba(1,1,3,0.85); backdrop-filter: blur(15px); border-top: 1px solid rgba(243, 229, 171, 0.2); display: flex; justify-content: space-around; gap: 15px; }
+        .action-btn { flex: 1; padding: 15px 0; border-radius: 30px; border: 1px solid rgba(243, 229, 171, 0.4); background: rgba(212, 175, 55, 0.1); color: #f3e5ab; font-size: 0.9rem; letter-spacing: 4px; cursor: pointer; transition: all 0.3s; opacity: 0.5; pointer-events: none; }
+        .action-btn.active { opacity: 1; pointer-events: auto; box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
+        .action-btn:active { background: rgba(243, 229, 171, 0.3); transform: scale(0.98); }
 
-        .orbit {
-            position: absolute; border-radius: 50%; border: 1.5px dashed rgba(212,175,55,0.15);
-            transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1); pointer-events: none;
-        }
-        .orbit-1 { width: 140px; height: 140px; animation: spin-right 20s linear infinite; }
-        .orbit-2 { width: 200px; height: 200px; animation: spin-left 30s linear infinite; }
-        .orbit-3 { width: 260px; height: 260px; animation: spin-right 40s linear infinite; }
-        .orbit-4 { width: 320px; height: 320px; animation: spin-left 50s linear infinite; }
+        /* === 彈出視窗 Modal (實修門檻) === */
+        #modal-overlay { position: fixed; inset: 0; background: rgba(1, 1, 3, 0.85); backdrop-filter: blur(10px); z-index: 60; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
+        #modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-box { width: 85%; max-width: 340px; background: rgba(21, 13, 31, 0.9); border: 1px solid rgba(243, 229, 171, 0.3); border-radius: 12px; padding: 30px 25px; box-shadow: 0 0 40px rgba(212, 175, 55, 0.1); transform: translateY(20px); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        #modal-overlay.show .modal-box { transform: translateY(0); }
+        
+        .modal-title { text-align: center; color: #fff; font-size: 1.1rem; letter-spacing: 4px; margin-bottom: 20px; text-shadow: 0 0 15px rgba(243, 229, 171, 0.5); }
+        .modal-desc { color: #8ba89c; font-size: 0.85rem; letter-spacing: 2px; line-height: 1.6; margin-bottom: 25px; text-align: justify; text-align-last: center; }
+        
+        /* 打勾實修區塊 */
+        .checkbox-container { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 30px; cursor: pointer; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(139, 168, 156, 0.2); }
+        .checkbox-box { width: 22px; height: 22px; border: 1px solid #f3e5ab; border-radius: 4px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; transition: all 0.2s; }
+        .checkbox-box.checked { background: rgba(212, 175, 55, 0.5); box-shadow: 0 0 10px rgba(243, 229, 171, 0.5); }
+        .checkbox-box.checked::after { content: '✓'; color: #fff; font-size: 14px; }
+        .checkbox-text { font-size: 0.8rem; color: #e0e0e0; letter-spacing: 1px; line-height: 1.5; }
 
-        @keyframes spin-right { 100% { transform: rotate(360deg); } }
-        @keyframes spin-left { 100% { transform: rotate(-360deg); } }
+        .modal-confirm-btn { width: 100%; padding: 12px; border-radius: 25px; border: 1px solid rgba(243, 229, 171, 0.2); background: transparent; color: rgba(243, 229, 171, 0.4); font-size: 0.9rem; letter-spacing: 4px; transition: all 0.3s; pointer-events: none; }
+        .modal-confirm-btn.ready { background: rgba(212, 175, 55, 0.2); border-color: rgba(243, 229, 171, 0.8); color: #f3e5ab; pointer-events: auto; box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
 
-        /* 光軌啟動狀態 */
-        .orbit.active {
-            border-style: solid; border-color: var(--solid-gold);
-            box-shadow: 0 0 20px rgba(212,175,55,0.4), inset 0 0 10px rgba(212,175,55,0.2);
-            background: rgba(243,229,171,0.02);
-        }
+        .modal-close { position: absolute; top: 15px; right: 20px; color: #8ba89c; font-size: 1.2rem; cursor: pointer; }
 
-        /* 中心摩尼寶珠 */
-        #mani-jewel {
-            position: relative; width: 60px; height: 60px; z-index: 10;
-            filter: drop-shadow(0 0 15px rgba(212,175,55,0.5)); transition: all 0.5s;
-            animation: breathe-jewel 3s infinite alternate ease-in-out;
-        }
-        @keyframes breathe-jewel {
-            0% { transform: scale(0.9); filter: drop-shadow(0 0 10px rgba(212,175,55,0.4)); }
-            100% { transform: scale(1.1); filter: drop-shadow(0 0 25px rgba(243,229,171,0.8)); }
-        }
-
-        /* ======= 引導文字區 ======= */
-        #text-wrap { margin-top: 50px; text-align: center; height: 100px; display: flex; flex-direction: column; justify-content: flex-start; }
-        .title-text { font-size: 1.25rem; color: var(--gold); letter-spacing: 5px; text-shadow: 0 0 10px rgba(212,175,55,0.5); transition: opacity 0.8s; margin-bottom: 12px;}
-        .desc-text { font-size: 0.9rem; color: var(--cyan); letter-spacing: 2px; line-height: 1.6; opacity: 0.8; transition: opacity 0.8s; }
-
-        /* ======= 無相光暈大迴向 (Phase 2) ======= */
-        #formless-light {
-            position: fixed; inset: 0; z-index: 500; pointer-events: none; opacity: 0;
-            background: radial-gradient(circle at center, rgba(243,229,171,0.95) 0%, rgba(212,175,55,0.8) 40%, rgba(2,2,2,0.9) 100%);
-            mix-blend-mode: screen; transition: opacity 4s cubic-bezier(0.25, 0.1, 0.25, 1);
-        }
-
-        #vow-theater {
-            position: fixed; inset: 0; z-index: 600; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: opacity 2s ease; padding: 0 20px; text-align: center;
-        }
-        .vow-title { color: #fff; font-size: 1.35rem; letter-spacing: 6px; margin-bottom: 30px; text-shadow: 0 0 20px var(--gold); }
-        .vow-content { color: var(--gold); font-size: 1.05rem; line-height: 2.2; letter-spacing: 2px; text-shadow: 0 0 10px rgba(212,175,55,0.8); }
-
-        /* 能量條 (隱藏式，用於計算長按) */
-        #progress-line { width: 100px; height: 2px; background: rgba(212,175,55,0.2); margin: 20px auto 0; position: relative; overflow: hidden; border-radius: 2px; transition: opacity 0.5s; }
-        #progress-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: var(--solid-gold); box-shadow: 0 0 10px var(--gold); transition: width 0.1s linear; }
-
+        /* === 全螢幕動畫與法語區 === */
+        #anim-overlay { position: fixed; inset: 0; background: #010103; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 1s; }
+        #anim-overlay.show { opacity: 1; pointer-events: auto; }
+        
+        .anim-text { color: #fff; font-size: 1.1rem; letter-spacing: 6px; line-height: 2; text-align: center; text-shadow: 0 0 20px rgba(243, 229, 171, 0.5); opacity: 0; transition: opacity 1.5s; padding: 0 30px; }
+        .anim-subtext { color: #8ba89c; font-size: 0.85rem; letter-spacing: 4px; margin-top: 20px; opacity: 0; transition: opacity 1s; }
+        .anim-flash { position: absolute; inset: 0; background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(212,175,55,0) 70%); opacity: 0; pointer-events: none; transition: opacity 1s; }
+        
     </style>
 </head>
 <body>
 
-    <div id="page-curtain"></div>
-    <div id="formless-light"></div>
+    <div id="bg"></div>
 
-    <div class="top-nav-btn" onclick="navigateTo('index.html?screen=3')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-        回修行位
-    </div>
+    <header>
+        <div id="btn-back" onclick="alert('返回星空首頁')">← 星海</div>
+        <div class="header-title">琉璃多寶閣</div>
+    </header>
 
-    <div id="bodhi-container">
-        <div class="orbit orbit-1" id="orb-1"></div>
-        <div class="orbit orbit-2" id="orb-2"></div>
-        <div class="orbit orbit-3" id="orb-3"></div>
-        <div class="orbit orbit-4" id="orb-4"></div>
-        
-        <svg id="mani-jewel" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <radialGradient id="jewel-glow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
-                    <stop offset="30%" stop-color="#f3e5ab" stop-opacity="0.9"/>
-                    <stop offset="100%" stop-color="#d4af37" stop-opacity="0"/>
-                </radialGradient>
-            </defs>
-            <path d="M50 10 C 75 40, 85 65, 50 90 C 15 65, 25 40, 50 10 Z" fill="url(#jewel-glow)"/>
-            <path d="M50 15 C 65 40, 70 60, 50 85 C 30 60, 35 40, 50 15 Z" fill="rgba(255,255,255,0.6)"/>
-            <circle cx="50" cy="65" r="4" fill="#fff" filter="drop-shadow(0 0 4px #fff)"/>
-        </svg>
-    </div>
+    <div id="treasure-grid">
+        </div>
 
-    <div id="text-wrap">
-        <div id="t-title" class="title-text">發無上菩提心</div>
-        <div id="t-desc" class="desc-text">長按明點 ‧ 注入願力<br>擴散慈悲喜捨四無量心</div>
-        <div id="progress-line"><div id="progress-fill"></div></div>
-    </div>
+    <footer>
+        <button class="action-btn" id="btn-dedicate" onclick="openDedicateModal()">祈福迴向</button>
+        <button class="action-btn" id="btn-merge" onclick="openMergeModal()">願力交織</button>
+    </footer>
 
-    <div id="vow-theater">
-        <div class="vow-title">心包太虛 ‧ 願滿法界</div>
-        <div class="vow-content">
-            虛空有盡，我願無窮。<br>
-            願代眾生，受無量苦；<br>
-            令諸眾生，畢竟大樂。<br>
-            <span style="font-size: 0.85rem; color: var(--cyan); display: block; margin-top: 30px; opacity: 0.8;">( 當日琉璃心燈已點亮 )</span>
+    <div id="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal()">✕</div>
+            <div class="modal-title" id="m-title">祈請與實修</div>
+            <div class="modal-desc" id="m-desc">欲調用願力，請先圓滿實修。</div>
+            
+            <div class="checkbox-container" onclick="toggleCheckbox()">
+                <div class="checkbox-box" id="m-checkbox"></div>
+                <div class="checkbox-text" id="m-check-text">
+                    我已如實完成：<br>
+                    靜心禁語三小時<br>
+                    行一次微小佈施<br>
+                    至誠念佛三千遍
+                </div>
+            </div>
+            
+            <button class="modal-confirm-btn" id="m-confirm-btn" onclick="executeAction()">實修圓滿 ． 啟動</button>
         </div>
     </div>
 
+    <div id="anim-overlay" onclick="closeAnim()">
+        <div class="anim-flash" id="anim-flash"></div>
+        <div id="anim-svg-container" style="width: 150px; height: 150px; margin-bottom: 40px; opacity: 0; transition: opacity 1s;"></div>
+        <div class="anim-text" id="anim-text"></div>
+        <div class="anim-subtext" id="anim-subtext">輕觸畫面 ． 功德圓滿</div>
+    </div>
+
     <script>
-        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+        // --- 核心資料庫 (包含 SVG 定義) ---
+        const pureGlassDef = `<defs><linearGradient id="pure-glass" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#fff; stop-opacity:0.9" /><stop offset="50%" style="stop-color:#f3e5ab; stop-opacity:0.6" /><stop offset="100%" style="stop-color:#d4af37; stop-opacity:0.2" /></linearGradient></defs>`;
         
-        window.onload = () => {
-            document.getElementById('page-curtain').style.opacity = '0';
-            checkDailyStatus();
+        const svgLib = {
+            sword: `<svg viewBox="0 0 100 150">${pureGlassDef}<g><rect x="49.5" y="10" width="1" height="120" fill="#fff" opacity="0.8" /><path d="M50 10 L60 40 L50 50 L40 40 Z" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5" /><path d="M50 50 L65 90 L50 100 L35 90 Z" fill="rgba(243, 229, 171, 0.2)" stroke="#f3e5ab" stroke-width="0.4" /><path d="M50 50 L55 92 L50 98 L45 92 Z" fill="rgba(255, 255, 255, 0.5)" stroke="none" /><path d="M25 100 L50 90 L75 100 L50 110 Z" fill="rgba(212, 175, 55, 0.3)" stroke="#f3e5ab" stroke-width="0.6" /><path d="M46 110 L54 110 L52 135 L48 135 Z" fill="rgba(243, 229, 171, 0.2)" stroke="#f3e5ab" stroke-width="0.5" /><polygon points="50,135 55,140 50,145 45,140" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5" /></g></svg>`,
+            vase: `<svg viewBox="0 0 100 150">${pureGlassDef}<g><path d="M45 30 L55 30 L55 50 L75 100 L65 130 L35 130 L25 100 L45 50 Z" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5"/><path d="M45 50 L55 50 L75 100 L25 100 Z" fill="rgba(243, 229, 171, 0.15)" stroke="#fff" stroke-width="0.3"/><polygon points="45,30 55,30 50,10" fill="rgba(255,255,255,0.6)" stroke="#f3e5ab" stroke-width="0.3"/><ellipse cx="50" cy="130" rx="15" ry="4" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5"/></g></svg>`,
+            jewel: `<svg viewBox="0 0 100 150">${pureGlassDef}<g transform="translate(0, 15)"><polygon points="50,20 85,60 50,120 15,60" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.6"/><polygon points="50,20 65,60 50,120 35,60" fill="rgba(255,255,255,0.3)" stroke="#fff" stroke-width="0.4"/><polygon points="35,60 65,60 50,120" fill="rgba(212, 175, 55, 0.2)" stroke="none"/><circle cx="50" cy="60" r="5" fill="#fff" filter="drop-shadow(0 0 8px #fff)"/></g></svg>`,
+            // 合成後的新寶物範例 (金剛蓮華燈)
+            lotus_lamp: `<svg viewBox="0 0 100 150">${pureGlassDef}<g><path d="M30 80 Q50 120 70 80 Q50 40 30 80" fill="url(#pure-glass)" stroke="#f3e5ab" stroke-width="0.5"/><path d="M20 70 Q50 130 80 70 Q50 50 20 70" fill="rgba(243, 229, 171, 0.2)" stroke="#fff" stroke-width="0.3"/><circle cx="50" cy="80" r="10" fill="#fff" filter="drop-shadow(0 0 15px #f3e5ab)"/><path d="M40 120 L60 120 L55 140 L45 140 Z" fill="rgba(212, 175, 55, 0.4)" stroke="#f3e5ab"/></g></svg>`
         };
 
-        function navigateTo(url) {
-            document.getElementById('page-curtain').style.opacity = '1';
-            setTimeout(() => { window.location.href = url; }, 800);
+        // 行者的法寶庫存 (預設放三個供測試)
+        let inventory = [
+            { id: 'item_1', type: 'sword', name: '幾何慧劍', level: 2, tag: '事業 ‧ 破迷', svg: svgLib.sword },
+            { id: 'item_2', type: 'vase', name: '琉璃淨瓶', level: 1, tag: '健康 ‧ 息災', svg: svgLib.vase },
+            { id: 'item_3', type: 'jewel', name: '多面寶珠', level: 1, tag: '福德 ‧ 滿願', svg: svgLib.jewel }
+        ];
+
+        let selectedItems = []; // 當前選取的法寶
+        let currentAction = ''; // 'dedicate' 或 'merge'
+
+        // --- UI 更新邏輯 ---
+        function renderGrid() {
+            const grid = document.getElementById('treasure-grid');
+            grid.innerHTML = '';
+            
+            inventory.forEach(item => {
+                const isSelected = selectedItems.includes(item.id);
+                const cell = document.createElement('div');
+                cell.className = `t-cell ${isSelected ? 'selected' : ''}`;
+                cell.onclick = () => toggleSelect(item.id);
+                
+                cell.innerHTML = `
+                    <div class="t-svg">${item.svg}</div>
+                    <div class="t-info">
+                        <div class="t-name">${item.name}</div>
+                        <div class="t-lvl">Lv.${item.level}</div>
+                        <span class="t-tag">【${item.tag}】</span>
+                    </div>
+                `;
+                grid.appendChild(cell);
+            });
+            updateButtons();
         }
 
-        let db;
-        try { db = JSON.parse(localStorage.getItem('PX_V15.0')); } catch(e) {}
-        if (!db || typeof db !== 'object') db = {}; 
-        
-        function save() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
+        function toggleSelect(id) {
+            const index = selectedItems.indexOf(id);
+            if (index > -1) {
+                selectedItems.splice(index, 1);
+            } else {
+                // 最多只能選兩個來交織
+                if (selectedItems.length < 2) {
+                    selectedItems.push(id);
+                } else {
+                    // 選第三個時，替換掉第一個
+                    selectedItems.shift();
+                    selectedItems.push(id);
+                }
+            }
+            renderGrid();
+        }
 
-        function checkDailyStatus() {
-            const today = new Date().toLocaleDateString();
-            if (db.bodhiDate === today) {
-                document.getElementById('t-desc').innerHTML = "今日願力已遍滿法界<br>心燈不滅，明日再啟";
-                document.getElementById('bodhi-container').style.pointerEvents = 'none';
-                document.getElementById('bodhi-container').style.opacity = '0.5';
-                document.getElementById('progress-line').style.opacity = '0';
+        function updateButtons() {
+            const btnDedicate = document.getElementById('btn-dedicate');
+            const btnMerge = document.getElementById('btn-merge');
+            
+            // 祈福迴向：只需選 1 個
+            if (selectedItems.length === 1) {
+                btnDedicate.classList.add('active');
+            } else {
+                btnDedicate.classList.remove('active');
+            }
+            
+            // 願力交織：必須選 2 個
+            if (selectedItems.length === 2) {
+                btnMerge.classList.add('active');
+            } else {
+                btnMerge.classList.remove('active');
             }
         }
 
-        let audioCtx; let gainNode;
-        function initAudio() {
-            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if(audioCtx.state === 'suspended') audioCtx.resume();
+        // --- 彈出視窗 (Modal) 邏輯 ---
+        const modal = document.getElementById('modal-overlay');
+        const mTitle = document.getElementById('m-title');
+        const mDesc = document.getElementById('m-desc');
+        const mCheckText = document.getElementById('m-check-text');
+        const mCheckBtn = document.getElementById('m-checkbox');
+        const mConfirmBtn = document.getElementById('m-confirm-btn');
+        let isChecked = false;
+
+        function toggleCheckbox() {
+            isChecked = !isChecked;
+            if (isChecked) {
+                mCheckBtn.classList.add('checked');
+                mConfirmBtn.classList.add('ready');
+            } else {
+                mCheckBtn.classList.remove('checked');
+                mConfirmBtn.classList.remove('ready');
+            }
         }
 
-        function playResonance() {
-            if(!audioCtx) return;
-            let osc = audioCtx.createOscillator(); 
-            gainNode = audioCtx.createGain();
-            osc.type = 'sine'; 
-            osc.frequency.setValueAtTime(432, audioCtx.currentTime); 
-            
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 3);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 10);
-            
-            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 10);
+        function closeModal() {
+            modal.classList.remove('show');
+            isChecked = false; mCheckBtn.classList.remove('checked'); mConfirmBtn.classList.remove('ready');
         }
 
-        const container = document.getElementById('bodhi-container');
-        const fill = document.getElementById('progress-fill');
-        let progress = 0; let chargeInterval; let isComplete = false;
-        let currentLevel = 0;
+        function openDedicateModal() {
+            currentAction = 'dedicate';
+            const item = inventory.find(i => i.id === selectedItems[0]);
+            mTitle.innerText = "【 祈福迴向 ． 實修前置 】";
+            mDesc.innerText = `欲調用此「${item.name}」之願力，請先圓滿今日之實修，方能至誠感應。`;
+            mCheckText.innerHTML = "我已如實完成下方一項或全部願行：<br>．靜心禁語三小時<br>．行一次無相佈施<br>．至誠念佛三千遍";
+            mConfirmBtn.innerText = "實修圓滿 ． 至誠迴向";
+            modal.classList.add('show');
+        }
 
-        async function startCharge(e) {
-            if (e) e.preventDefault();
-            if (isComplete || db.bodhiDate === new Date().toLocaleDateString()) return;
-            initAudio();
+        function openMergeModal() {
+            currentAction = 'merge';
+            mTitle.innerText = "【 願力交織 ． 實修前置 】";
+            mDesc.innerText = `欲將此二法寶之願力匯聚昇華，請先靜心攝念，以清淨心和合因緣。`;
+            mCheckText.innerHTML = "我已如實完成：<br>．至誠默唸佛號（或心咒）一百遍。";
+            mConfirmBtn.innerText = "實修圓滿 ． 啟動和合";
+            modal.classList.add('show');
+        }
 
-            document.getElementById('t-desc').innerHTML = "願離諸苦 ‧ 願得安樂<br>願無嫉妒 ‧ 願捨執念";
+        // --- 執行行動與動畫 ---
+        function executeAction() {
+            closeModal();
+            const animOverlay = document.getElementById('anim-overlay');
+            const animFlash = document.getElementById('anim-flash');
+            const animText = document.getElementById('anim-text');
+            const animSvg = document.getElementById('anim-svg-container');
+            const animSubtext = document.getElementById('anim-subtext');
+            
+            animOverlay.classList.add('show');
+            animFlash.style.opacity = '1';
+            animText.style.opacity = '0'; animSvg.style.opacity = '0'; animSubtext.style.opacity = '0';
 
-            chargeInterval = setInterval(() => {
-                progress += 2; 
-                fill.style.width = progress + '%';
-
-                let newLevel = Math.floor(progress / 25);
-                if (newLevel > currentLevel && newLevel <= 4) {
-                    currentLevel = newLevel;
-                    document.getElementById(`orb-${currentLevel}`).classList.add('active');
+            setTimeout(() => {
+                animFlash.style.opacity = '0'; // 閃光退去
+                
+                if (currentAction === 'dedicate') {
+                    // 【祈福迴向】邏輯：消耗一級
+                    const idx = inventory.findIndex(i => i.id === selectedItems[0]);
+                    inventory[idx].level -= 1;
+                    if(inventory[idx].level <= 0) inventory.splice(idx, 1); // 如果Lv0則用完消失
+                    
+                    animSvg.innerHTML = '';
+                    animText.innerHTML = "願以此功德，普及於一切。<br>祈願順遂安康，業障消除。<br>我等與眾生，皆共成佛道。";
+                    animText.style.opacity = '1';
+                    
+                } else if (currentAction === 'merge') {
+                    // 【願力交織】邏輯：機率成功或失敗
+                    const isSuccess = Math.random() > 0.4; // 60% 成功率測試
+                    
+                    if (isSuccess) {
+                        // 成功：刪除舊的，加入新的
+                        inventory = inventory.filter(i => !selectedItems.includes(i.id));
+                        inventory.push({ id: 'item_' + Date.now(), type: 'lotus_lamp', name: '金剛蓮華燈', level: 1, tag: '破迷 ‧ 息災 ‧ 圓滿', svg: svgLib.lotus_lamp });
+                        
+                        animSvg.innerHTML = svgLib.lotus_lamp;
+                        animSvg.style.opacity = '1';
+                        animText.innerHTML = "【 因緣具足 ． 金剛蓮華燈現 】<br><span style='font-size:0.8rem; color:#8ba89c;'>願力交織擴容，涵蓋舊有，能量增上。</span>";
+                    } else {
+                        // 失敗：原狀含藏 (不扣級)
+                        animSvg.innerHTML = '';
+                        animText.innerHTML = "【 因緣尚待 ． 願力含藏 】<br><span style='font-size:0.8rem; color:#8ba89c;'>願力不滅，法寶安然，請持平常心靜待善緣。</span>";
+                    }
+                    animText.style.opacity = '1';
                 }
+                
+                setTimeout(() => { animSubtext.style.opacity = '1'; }, 1500);
 
-                if(progress >= 100) {
-                    completeVow();
-                }
-            }, 60);
+            }, 800);
         }
 
-        function stopCharge() {
-            if (isComplete) return;
-            clearInterval(chargeInterval);
-            progress = 0; fill.style.width = '0%'; currentLevel = 0;
-            document.querySelectorAll('.orbit').forEach(el => el.classList.remove('active'));
-            document.getElementById('t-desc').innerHTML = "長按明點 ‧ 注入願力<br>擴散慈悲喜捨四無量心";
+        // 關閉動畫，回到更新後的網格
+        function closeAnim() {
+            const animOverlay = document.getElementById('anim-overlay');
+            if (document.getElementById('anim-text').style.opacity === '1') {
+                animOverlay.classList.remove('show');
+                selectedItems = [];
+                renderGrid();
+            }
         }
 
-        async function completeVow() {
-            clearInterval(chargeInterval);
-            isComplete = true;
-            
-            db.bodhiDate = new Date().toLocaleDateString();
-            save();
-
-            playResonance();
-
-            document.getElementById('text-wrap').style.opacity = '0';
-            document.getElementById('bodhi-container').style.transform = 'scale(1.5)';
-            document.getElementById('bodhi-container').style.opacity = '0';
-            
-            await sleep(500);
-            document.getElementById('formless-light').style.opacity = '1';
-            
-            await sleep(2000);
-            const vowTheater = document.getElementById('vow-theater');
-            vowTheater.style.opacity = '1';
-
-            await sleep(6000);
-            vowTheater.style.opacity = '0';
-            document.getElementById('formless-light').style.opacity = '0';
-
-            await sleep(2000);
-            navigateTo('index.html?screen=3');
-        }
-
-        container.addEventListener('mousedown', startCharge); 
-        container.addEventListener('mouseup', stopCharge); 
-        container.addEventListener('mouseleave', stopCharge); 
-        container.addEventListener('touchstart', startCharge, {passive: false}); 
-        container.addEventListener('touchend', stopCharge);
+        // 初始化渲染
+        renderGrid();
 
     </script>
 </body>

@@ -2,10 +2,22 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>星寶合一 ． 呼吸與歸藏</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>華嚴大世界 ． 防干擾強化版</title>
     <style>
-        body { margin: 0; background: #010103; overflow: hidden; font-family: "PingFang TC", serif; touch-action: none; user-select: none; }
+        /* 1. 徹底封印手機原生長按選取與拷貝選單 */
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body { margin: 0; background: #010103; overflow: hidden; font-family: "PingFang TC", serif; touch-action: none; }
         
         #nebula {
             position: absolute; inset: 0; z-index: 0;
@@ -15,7 +27,6 @@
         canvas { width: 100vw; height: 100vh; display: block; position: absolute; z-index: 1; }
         .charging #nebula { opacity: 0.3; }
 
-        /* 四宏誓願 */
         #vow-display {
             position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%);
             width: 100%; text-align: center; z-index: 10; pointer-events: none;
@@ -25,14 +36,12 @@
         }
         .charging #vow-display { opacity: 1; }
 
-        /* 淨化大閃光 */
         #flash { position: absolute; inset: 0; background: #fff; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.8s ease-out; }
         
-        /* 底部提示與進度 */
         #hint { position: absolute; bottom: 40px; width: 100%; text-align: center; color: rgba(243, 229, 171, 0.5); font-size: 0.85rem; letter-spacing: 6px; z-index: 5; transition: opacity 0.5s; pointer-events: none; }
         #progress { position: absolute; top: 30px; right: 30px; color: #8ba89c; font-size: 0.9rem; letter-spacing: 4px; z-index: 10; opacity: 0.8; }
 
-        /* === 觀想模式 UI === */
+        /* 觀想模式 UI */
         .obs-ui { opacity: 0; pointer-events: none; transition: opacity 1s; z-index: 30; position: absolute; }
         .mode-observation .obs-ui { opacity: 1; pointer-events: auto; }
         #btn-back {
@@ -45,33 +54,36 @@
             background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(243, 229, 171, 0.6);
             display: flex; justify-content: center; align-items: center; cursor: pointer;
             clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.3s;
         }
         #btn-treasure.ping { transform: scale(1.4); background: rgba(243, 229, 171, 0.6); box-shadow: 0 0 30px #d4af37; }
 
-        /* === 法寶獨立圖層 (SVG) === */
+        /* 3. 解決劍與文字重疊：重構排版，確保剛性間距 */
         #treasure-overlay {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
-            width: 200px; height: 300px; z-index: 40; display: flex; flex-direction: column; align-items: center;
+            width: 250px; height: 380px; z-index: 40; 
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
             opacity: 0; pointer-events: none; transition: all 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        /* 1. 展現狀態 */
-        #treasure-overlay.show { opacity: 1; transform: translate(-50%, -55%) scale(1.2); }
-        /* 2. 飛入法寶閣狀態 */
+        #treasure-overlay.show { opacity: 1; transform: translate(-50%, -55%) scale(1.1); }
         #treasure-overlay.collecting {
-            transform: translate(calc(50vw - 80px), calc(50vh - 80px)) scale(0.1); /* 飛向右下角 */
+            transform: translate(calc(50vw - 80px), calc(50vh - 80px)) scale(0.1);
             opacity: 0; transition: all 1s cubic-bezier(0.5, 0, 0.2, 1);
         }
 
-        /* 法寶本身的緩慢懸浮呼吸 */
-        .svg-container { width: 100%; height: 75%; filter: drop-shadow(0 0 20px rgba(243, 229, 171, 0.4)); animation: float-pulse 4s infinite ease-in-out; }
+        /* 固定 SVG 容器高度，不讓它往下擠 */
+        .svg-container { 
+            width: 100%; height: 250px; display: flex; align-items: center; justify-content: center;
+            filter: drop-shadow(0 0 20px rgba(243, 229, 171, 0.4)); animation: float-pulse 4s infinite ease-in-out; 
+        }
         @keyframes float-pulse { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); filter: drop-shadow(0 0 30px rgba(243, 229, 171, 0.8)); } }
+        .svg-container svg { width: auto; height: 100%; }
 
-        /* 暫代法語 */
-        .t-text-group { text-align: center; margin-top: 20px; opacity: 0; transition: opacity 1s 0.5s; }
+        /* 文字區塊推開，絕不重疊 */
+        .t-text-group { text-align: center; margin-top: 30px; opacity: 0; transition: opacity 1s 0.5s; flex-shrink: 0; }
         #treasure-overlay.show .t-text-group { opacity: 1; }
-        .t-name { color: #fff; font-size: 1.2rem; letter-spacing: 8px; text-shadow: 0 0 15px #fff, 0 0 30px #d4af37; }
-        .t-desc { color: #f3e5ab; font-size: 0.8rem; letter-spacing: 4px; margin-top: 8px; }
+        .t-name { color: #fff; font-size: 1.3rem; letter-spacing: 8px; text-shadow: 0 0 15px #fff, 0 0 30px #d4af37; }
+        .t-desc { color: #f3e5ab; font-size: 0.85rem; letter-spacing: 4px; margin-top: 10px; }
 
     </style>
 </head>
@@ -79,7 +91,6 @@
 
     <div id="nebula"></div>
     <canvas id="mainCanvas"></canvas>
-    
     <div id="vow-display">眾生無邊誓願度</div>
     
     <div id="treasure-overlay">
@@ -105,7 +116,8 @@
         </div>
         <div class="t-text-group">
             <div class="t-name" id="t-name-ui">普光琉璃星</div>
-            <div class="t-desc" id="t-desc-ui">因緣和合 ． 幾何慧劍現</div> </div>
+            <div class="t-desc" id="t-desc-ui">因緣和合 ． 幾何慧劍現</div>
+        </div>
     </div>
     
     <div id="flash"></div>
@@ -154,7 +166,7 @@
                     state: 'orbit', animT: 0
                 });
             }
-            // 預設點亮第0顆，證明絕對座標與呼吸效果
+            // 預設點亮第0顆，供您測試極端呼吸光暈
             planets[0].isLit = true; litCount = 1;
         }
 
@@ -189,24 +201,27 @@
 
                 let dz = currentZ + 1400; if (dz < 10) return;
                 const scale = 1000 / dz;
-                const x2d = w/2 + currentX * scale, y2d = h/2 + currentY * scale, r2d = p.size * scale;
+                const baseR2d = p.size * scale;
+                // 2 & 4. 覺醒星辰基礎放大 1.5 倍，確保在矩陣中夠醒目
+                const r2d = p.isLit ? baseR2d * 1.5 : baseR2d; 
+                
+                const x2d = w/2 + currentX * scale, y2d = h/2 + currentY * scale;
                 const {r, g, b} = p.colorObj;
 
                 ctx.beginPath(); ctx.arc(x2d, y2d, r2d, 0, Math.PI * 2);
 
                 if (p.isLit || p.state !== 'orbit') {
-                    // === 核心優化：已覺醒星球的「生命呼吸光暈」 ===
-                    // 利用 sine 波讓亮星的光暈與大小產生脈動
-                    let breath = Math.sin(time * 1.5 + p.id) * 0.3 + 0.7; // 0.4 到 1.0 的脈動
-                    let glow = (p.state === 'presenting' ? 80 : 30 * breath) * scale;
-                    let coreSize = p.state === 'presenting' ? r2d * 0.5 : r2d * 0.6 * breath;
+                    // 2 & 4. 強化呼吸演算法：震幅拉大，製造強烈「心跳」感
+                    let breath = (Math.sin(time * 2 + p.id) + 1) / 2; // 產出 0 到 1 的平滑脈動
+                    let glow = (p.state === 'presenting' ? 80 : 20 + 50 * breath) * scale;
+                    let coreSize = p.state === 'presenting' ? r2d * 0.5 : r2d * (0.3 + 0.5 * breath); // 核心隨之劇烈漲縮
 
                     ctx.fillStyle = `rgb(${r},${g},${b})`;
                     ctx.shadowBlur = glow; ctx.shadowColor = `rgb(${r},${g},${b})`;
                     ctx.fill(); ctx.shadowBlur = 0;
                     
                     ctx.beginPath(); ctx.arc(x2d, y2d, coreSize, 0, Math.PI*2);
-                    ctx.fillStyle = `rgba(255, 255, 255, ${0.7 + breath*0.3})`; ctx.fill();
+                    ctx.fillStyle = `rgba(255, 255, 255, ${0.6 + breath*0.4})`; ctx.fill();
                 } else {
                     let opacity = (appState === 'daily_ritual' && isPressing) ? 0.1 : 0.4;
                     ctx.fillStyle = `rgba(${r},${g},${b}, ${opacity})`; ctx.fill();
@@ -237,27 +252,23 @@
             requestAnimationFrame(draw);
         }
 
-        // === SVG 法寶圖層的無縫接軌邏輯 ===
         function triggerTreasureOverlay(planet) {
             flash.style.opacity = 1; setTimeout(() => { flash.style.opacity = 0; }, 500);
             
             if (!planet.isLit) { planet.isLit = true; litCount++; progressTxt.innerText = `華藏覺醒 ${litCount} / 108`; }
             
-            // 1. 顯示 SVG 法寶
             treasureOverlay.classList.remove('collecting');
             treasureOverlay.classList.add('show');
             tNameUi.innerText = planet.name;
             
-            // 2. 停留 3 秒後，法寶化作流光飛入右下角
             setTimeout(() => {
                 treasureOverlay.classList.remove('show');
                 treasureOverlay.classList.add('collecting');
                 
-                // 3. 飛行時間 (1秒) 後，法寶閣震動接收，星球歸位
                 setTimeout(() => {
                     btnTreasure.classList.add('ping');
                     setTimeout(() => btnTreasure.classList.remove('ping'), 300);
-                    planet.state = 'flying_out'; // Canvas 繼續接手，星球飛回矩陣
+                    planet.state = 'flying_out'; 
                 }, 1000);
 
             }, 3000);

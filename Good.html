@@ -9,6 +9,10 @@
         body { margin: 0; background: #010103; overflow: hidden; font-family: "PingFang TC", "Microsoft JhengHei", serif; color: #f3e5ab; touch-action: manipulation; }
         
         #bg { position: absolute; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 30%, #1a1225 0%, #010103 80%); }
+        
+        /* ✨ 優化四：因陀羅網常駐結界 */
+        #indra-bg { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; transition: opacity 2s; background-image: repeating-radial-gradient(circle at 50% 50%, transparent 0, rgba(156, 39, 176, 0.03) 2px, transparent 6px), radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.05) 0%, transparent 70%); animation: slow-spin 180s linear infinite; }
+        @keyframes slow-spin { from { transform: rotate(0deg) scale(1.5); } to { transform: rotate(360deg) scale(1.5); } }
 
         header { position: relative; z-index: 10; padding: 40px 20px 20px; text-align: center; border-bottom: 1px solid rgba(243, 229, 171, 0.1); background: rgba(1,1,3,0.5); backdrop-filter: blur(10px); display: flex; justify-content: space-between; align-items: center;}
         .header-title { font-size: 1.2rem; letter-spacing: 8px; text-shadow: 0 0 15px rgba(243, 229, 171, 0.5); flex: 1; text-align: center;}
@@ -18,26 +22,31 @@
         /* --- 網格佈局 --- */
         #treasure-grid { 
             position: relative; z-index: 10; height: calc(100vh - 120px); overflow-y: auto; 
-            padding: 20px 15px 120px 15px; 
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; align-content: start; 
+            padding: 20px 15px 120px 15px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; align-content: start; scrollbar-width: none;
         }
         
         .t-cell { 
             background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(139, 168, 156, 0.3); border-radius: 12px; 
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
-            position: relative; cursor: pointer; transition: all 0.3s ease; 
+            position: relative; cursor: pointer; transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); 
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5); padding: 15px 10px; min-height: 220px; 
         }
-        .t-cell::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%); pointer-events: none; }
+        .t-cell::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%); pointer-events: none; border-radius: 12px; }
+        
         .t-cell.selected { border-color: #f3e5ab; box-shadow: 0 0 20px rgba(212, 175, 55, 0.4), inset 0 0 20px rgba(212, 175, 55, 0.2); transform: translateY(-5px); }
         
-        .t-cell.locked { border-color: rgba(255, 255, 255, 0.05); background: rgba(0,0,0,0.3); box-shadow: none; cursor: help; }
-        .t-cell.locked .t-svg { filter: grayscale(100%) brightness(20%) opacity(0.6); animation: none; transform: scale(0.9); }
+        /* ✨ 優化二：願力共鳴 (引導長者交織) */
+        @keyframes breathe-gold { 0% { box-shadow: inset 0 0 10px rgba(212,175,55,0.1), 0 0 5px rgba(212,175,55,0.1); border-color: rgba(212,175,55,0.3); } 100% { box-shadow: inset 0 0 25px rgba(212,175,55,0.5), 0 0 15px rgba(212,175,55,0.4); border-color: rgba(212,175,55,0.8); } }
+        .t-cell.resonance { animation: breathe-gold 2.5s infinite alternate; }
+
+        /* ✨ 優化一：琉璃空龕 (取代死板灰階) */
+        .t-cell.locked { background: rgba(255, 255, 255, 0.01); border: 1px dashed rgba(139, 168, 156, 0.2); box-shadow: none; cursor: help; }
+        .t-cell.locked .t-svg { filter: opacity(0.12) drop-shadow(0 0 5px rgba(255,255,255,0.3)); transform: scale(0.95); animation: none; }
         .t-cell.locked .t-name { color: #555; text-shadow: none; }
         .t-cell.locked .t-tag { color: #444; border-color: #333; background: transparent; }
         .t-cell.locked .t-lvl { color: #666; font-size: 0.7rem; }
 
-        .t-svg { width: 100%; height: 90px; filter: drop-shadow(0 0 10px rgba(243, 229, 171, 0.3)); animation: float 4s infinite ease-in-out; display: flex; align-items: center; justify-content: center; }
+        .t-svg { width: 100%; height: 90px; filter: drop-shadow(0 0 10px rgba(243, 229, 171, 0.3)); animation: float 4s infinite ease-in-out; display: flex; align-items: center; justify-content: center; position: relative; }
         .t-svg svg { width: auto; height: 100%; overflow: visible; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); filter: drop-shadow(0 0 20px rgba(243, 229, 171, 0.6)); } }
         
@@ -59,7 +68,6 @@
         .modal-title { text-align: center; color: #fff; font-size: 1.1rem; letter-spacing: 4px; margin-bottom: 15px; text-shadow: 0 0 15px rgba(243, 229, 171, 0.5); }
         .modal-desc { color: #8ba89c; font-size: 0.85rem; letter-spacing: 2px; line-height: 1.6; margin-bottom: 20px; text-align: center; }
         
-        /* 護念輸入框 */
         #dedicate-input-wrap { display: none; margin-bottom: 20px; width: 100%; }
         #dedicate-target { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #d4af37; border-radius: 8px; color: #fff; padding: 12px; font-size: 0.95rem; text-align: center; outline: none; letter-spacing: 2px; box-shadow: inset 0 0 10px rgba(212,175,55,0.1); transition: 0.3s; }
         #dedicate-target:focus { box-shadow: inset 0 0 15px rgba(212,175,55,0.3), 0 0 10px rgba(212,175,55,0.3); }
@@ -76,11 +84,9 @@
         .modal-confirm-btn.ready { background: rgba(212, 175, 55, 0.2); border-color: rgba(243, 229, 171, 0.8); color: #f3e5ab; pointer-events: auto; box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
         .modal-close { position: absolute; top: 15px; right: 20px; color: #8ba89c; font-size: 1.2rem; cursor: pointer; z-index: 10; }
 
-        /* 語音按鈕 */
         .voice-btn { margin: 15px auto 0; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; color: var(--gold); border: 1px solid rgba(212,175,55,0.4); padding: 8px 15px; border-radius: 20px; width: fit-content; font-size: 0.8rem; transition: 0.3s; }
         .voice-btn:active { background: rgba(212,175,55,0.2); }
 
-        /* === 工程師測試面板 === */
         #dev-panel { margin-top: 15px; border-top: 1px dashed #555; padding-top: 15px; display: none; text-align: center; }
         .dev-btn { padding: 6px 12px; border: none; border-radius: 5px; font-size: 0.8rem; margin: 0 5px; cursor: pointer; }
         .dev-btn.success { background: rgba(76, 175, 80, 0.3); border: 1px solid #4CAF50; color: #fff; }
@@ -92,6 +98,11 @@
         .anim-text { color: #fff; font-size: 1.1rem; letter-spacing: 4px; line-height: 2; text-align: center; text-shadow: 0 0 20px rgba(243, 229, 171, 0.5); opacity: 0; transition: opacity 1.5s; padding: 0 30px; position: relative; z-index: 5;}
         .anim-subtext { color: #8ba89c; font-size: 0.85rem; letter-spacing: 4px; margin-top: 30px; opacity: 0; transition: opacity 1s; }
         .anim-flash { position: absolute; inset: 0; background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(212,175,55,0) 70%); opacity: 0; pointer-events: none; transition: opacity 1s; }
+        
+        /* ✨ 優化三：護念銘刻字體 */
+        .engrave-name { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #d4af37; font-size: 1.4rem; letter-spacing: 5px; font-weight: bold; text-shadow: 0 0 20px #fff, 0 0 10px #d4af37; z-index: 10; opacity: 0; white-space: nowrap; animation: engrave-in 1s forwards; }
+        @keyframes engrave-in { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+
         #toast { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); background: rgba(21, 13, 31, 0.95); border: 1px solid #d4af37; color: #f3e5ab; padding: 15px 25px; border-radius: 12px; font-size: 0.85rem; letter-spacing: 2px; text-align: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); width: 80%; line-height: 1.6; }
         #toast.show { opacity: 1; }
         
@@ -116,7 +127,7 @@
     </svg>
 
     <div id="bg"></div>
-    <header>
+    <div id="indra-bg"></div> <header>
         <div class="header-btn" onclick="window.location.href='index.html?screen=3'">← 退居</div>
         <div class="header-title">琉璃多寶閣</div>
         <div class="header-btn" onclick="openInfoModal()">法界真義</div>
@@ -152,9 +163,9 @@
             </div>
 
             <div id="m-info-wrap" style="display: none; text-align: justify; color: #aaa; font-size: 0.9rem; line-height: 1.8; letter-spacing: 1px;">
-                《法華經》有云：「化城喻」。行者向極樂寶所之途，路險且長。佛憫眾生疲倦，化作一城以暫息。<br><br>
-                此多寶閣，即為入世之化城。閣中法相，皆為引導行者發起「別迴向」之慈悲方便，以護念身邊親友之苦。<br><br>
-                然須謹記：法相本空，借假修真。<span style="color:#d4af37;">切莫生起搜集、貪愛之俗念。</span>相滅願生，每一次的歸零，皆是無相佈施。最終，一切功德仍須匯入主系統，導歸極樂。
+                《法華經》有云：「化城喻」。行者向極樂寶所之途，路險且長。佛憫眾生疲倦，或可化作一城以暫息。<br><br>
+                此多寶閣，即為入世之化城。閣中法相，皆為隨順引導行者發起「別迴向」之慈悲方便，以護念身邊親友之苦。<br><br>
+                然須謹記：法相本空，借假修真。<span style="color:#d4af37;">祈勿生起搜集、貪愛之俗念。</span>相滅願生，每一次的歸零，皆是無相佈施。最終，一切功德仍須匯入主系統，導歸極樂。
                 
                 <div class="voice-btn" onclick="playInfoVoice()">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
@@ -180,7 +191,6 @@
     </div>
 
     <script>
-        // --- 語音模組 (移植自主系統) ---
         window.sysUtterances = [];
         function speak(t, r = 0.85) {
             if (!window.speechSynthesis) return; 
@@ -203,7 +213,6 @@
             }
         }
 
-        // --- 主系統資料庫讀取 ---
         let db;
         try {
             db = JSON.parse(localStorage.getItem('PX_V15.0'));
@@ -211,7 +220,6 @@
         } catch(e) {}
         
         if (!db || !db.treasures) {
-            // 防呆與獨立測試用預設值
             db = { treasures: { sword: 3, vase: 2, jewel: 1, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 } };
         }
         let inventory = db.treasures;
@@ -222,6 +230,11 @@
                 realDb.treasures = inventory;
                 localStorage.setItem('PX_V15.0', JSON.stringify(realDb));
             }
+        }
+
+        // 初始化檢查因陀羅網結界
+        if (inventory.indra_net > 0) {
+            setTimeout(() => { document.getElementById('indra-bg').style.opacity = '1'; }, 500);
         }
 
         const allTreasures = [
@@ -248,22 +261,42 @@
             const grid = document.getElementById('treasure-grid');
             grid.innerHTML = '';
             
+            // 計算共鳴目標
+            let resonatingItems = [];
+            if (selectedItems.length === 1) {
+                const id1 = selectedItems[0];
+                allTreasures.forEach(t => {
+                    if (t.id !== id1 && inventory[t.id] > 0) {
+                        const pairKey1 = id1 + '+' + t.id;
+                        const pairKey2 = t.id + '+' + id1;
+                        if (mergeRecipes[pairKey1] || mergeRecipes[pairKey2]) resonatingItems.push(t.id);
+                    }
+                });
+            }
+
             allTreasures.forEach(item => {
                 const level = inventory[item.id] || 0;
                 const isLocked = level === 0;
                 const isSelected = selectedItems.includes(item.id);
+                const isResonating = resonatingItems.includes(item.id);
                 
                 const cell = document.createElement('div');
                 if (isLocked) {
                     cell.className = 't-cell locked';
                     cell.onclick = () => showToast(`【法界暗格】<br>${item.formula}。`);
-                    cell.innerHTML = `<div class="t-svg">${item.svg}</div><div class="t-info"><div class="t-name">？？？</div><div class="t-lvl">因緣未具</div><span class="t-tag">尚未顯化</span></div>`;
+                    cell.innerHTML = `<div class="t-svg">${item.svg}</div><div class="t-info"><div class="t-name">琉璃空龕</div><div class="t-lvl">因緣未具</div><span class="t-tag">靜默安住</span></div>`;
                 } else {
-                    cell.className = `t-cell ${isSelected ? 'selected' : ''}`;
-                    // 終極大獎不被消耗，也不參與祈福與交織
+                    let classes = 't-cell';
+                    if (isSelected) classes += ' selected';
+                    else if (isResonating) classes += ' resonance';
+
+                    cell.className = classes;
                     if (item.id === 'indra_net') {
-                        cell.onclick = () => showToast(`【重重無盡】<br>此乃導歸極樂之橋樑，常駐加持，無需起用。`);
-                        cell.innerHTML = `<div class="t-svg">${item.svg}</div><div class="t-info"><div class="t-name" style="color:#d4af37;">${item.name}</div><div class="t-lvl">常駐法相</div><span class="t-tag">【${item.tag}】</span></div>`;
+                        cell.onclick = () => {
+                            showToast(`【重重無盡】<br>此乃導歸極樂之橋樑，常駐加持，祈願移步大迴向。`);
+                            setTimeout(() => { window.location.href = 'index.html?screen=4'; }, 2000);
+                        };
+                        cell.innerHTML = `<div class="t-svg">${item.svg}</div><div class="t-info"><div class="t-name" style="color:#d4af37;">${item.name}</div><div class="t-lvl">常駐結界</div><span class="t-tag">【${item.tag}】</span></div>`;
                     } else {
                         cell.onclick = () => toggleSelect(item.id);
                         cell.innerHTML = `<div class="t-svg">${item.svg}</div><div class="t-info"><div class="t-name">${item.name}</div><div class="t-lvl">結緣：${level} 尊</div><span class="t-tag">【${item.tag}】</span></div>`;
@@ -330,13 +363,13 @@
         }
 
         function playInfoVoice() {
-            speak("法華經有云，化城喻。行者向極樂寶所之途，路險且長。佛憫眾生疲倦，化作一城以暫息。此多寶閣，即為入世之化城。閣中法相，皆為引導行者發起別迴向之慈悲方便，以護念身邊親友之苦。然須謹記，法相本空，借假修真。切莫生起搜集、貪愛之俗念。相滅願生，每一次的歸零，皆是無相佈施。最終，一切功德仍須匯入主系統，導歸極樂。", 0.85);
+            speak("法華經有云，化城喻。行者向極樂寶所之途，路險且長。佛憫眾生疲倦，或可化作一城以暫息。此多寶閣，即為入世之化城。閣中法相，皆為隨順引導行者發起別迴向之慈悲方便，以護念身邊親友之苦。然須謹記，法相本空，借假修真。祈勿生起搜集、貪愛之俗念。相滅願生，每一次的歸零，皆是無相佈施。最終，一切功德仍須匯入主系統，導歸極樂。", 0.85);
         }
 
         function openDedicateModal() {
             currentAction = 'dedicate';
             const item = allTreasures.find(i => i.id === selectedItems[0]);
-            let reqText = item.type === 'basic' ? "靜心禁語一刻鐘<br>行微小佈施一次<br>至誠念佛一千五百遍" : "靜心禁語三小時<br>行無相佈施一次<br>至誠念佛三千遍";
+            let reqText = item.type === 'basic' ? "靜心禁語一刻鐘<br>行微小佈施或利他<br>至誠念佛一千五百遍" : "靜心禁語三小時<br>行無相佈施一次<br>至誠念佛三千遍";
 
             document.getElementById('m-title').innerText = "【 起用護念 ． 祈福別迴向 】";
             document.getElementById('m-desc').innerText = `欲起用「${item.name}」之願力護念親友，請確立對象，並圓滿今日實修，方能至誠感應。`;
@@ -363,13 +396,13 @@
             currentMergeProb = Math.min(100, (lv1 + lv2) * 10);
             
             let probColor = currentMergeProb === 100 ? "#d4af37" : "#ef5350";
-            let probDesc = currentMergeProb === 100 ? "因緣圓滿，必定顯化" : "因緣尚淺，建議繼續積累";
+            let probDesc = currentMergeProb === 100 ? "因緣圓滿，必定顯化" : "因緣尚淺，或可繼續積累";
 
             document.getElementById('m-title').innerText = "【 願力交織 ． 實修前置 】";
             document.getElementById('m-desc').innerHTML = `當前契合度：<span style="color:${probColor}; font-weight:bold; font-size:1.1rem;">${currentMergeProb}%</span><br>(${probDesc})`;
             
             mWarning.style.display = 'block';
-            mWarning.innerHTML = "⚠️ 嚴格戒律：交織一旦啟動，無論成敗，投入之兩尊法相將<b>強制歸零</b>。失敗則化作微塵，無相佈施迴向法界。絕不允許無限試錯。";
+            mWarning.innerHTML = "⚠️ 嚴格戒律：交織一旦啟動，無論成敗，投入之兩尊法相將<b>強制歸零</b>。失敗則化作微塵，無相佈施迴向法界。祈勿落入試錯之貪念。";
             
             document.getElementById('m-check-text').innerHTML = "我已如實完成：<br>．至誠默唸佛號（或心咒）一百遍。";
             mConfirmBtn.innerText = "甘受無常 ． 啟動交織";
@@ -378,10 +411,9 @@
             modal.classList.add('show');
         }
 
-        // 光塵分解動畫
         function createDustParticles(container, colorStr) {
             const rect = container.getBoundingClientRect();
-            for(let i=0; i<40; i++) {
+            for(let i=0; i<50; i++) {
                 let dust = document.createElement('div'); 
                 dust.style.position = 'fixed'; dust.style.background = colorStr;
                 dust.style.borderRadius = '50%'; dust.style.pointerEvents = 'none';
@@ -393,10 +425,10 @@
                 
                 dust.animate([
                     { opacity: 1, transform: `translate(0, 0) scale(1)` },
-                    { opacity: 0, transform: `translate(${(Math.random() - 0.5) * 200}px, ${-(Math.random() * 250 + 50)}px) scale(0)` }
-                ], { duration: 3000, easing: 'ease-out', fill: 'forwards' });
+                    { opacity: 0, transform: `translate(${(Math.random() - 0.5) * 250}px, ${-(Math.random() * 300 + 50)}px) scale(0)` }
+                ], { duration: 3500, easing: 'ease-out', fill: 'forwards' });
 
-                setTimeout(() => dust.remove(), 3100);
+                setTimeout(() => dust.remove(), 3600);
             }
         }
 
@@ -427,23 +459,23 @@
                     inventory[selectedItems[0]] -= 1;
                     const usedItem = allTreasures.find(i => i.id === selectedItems[0]);
                     
-                    // 顯示法相，然後分解
-                    animSvg.innerHTML = usedItem.svg; animSvg.style.opacity = '1';
+                    // ✨ 優化三：護念銘刻 (名字與SVG一同化塵)
+                    animSvg.innerHTML = usedItem.svg + `<div class="engrave-name">${targetName}</div>`; 
+                    animSvg.style.opacity = '1';
                     
                     setTimeout(() => {
-                        animSvg.style.opacity = '0'; // 消失
-                        createDustParticles(animSvg, '#d4af37'); // 化作金塵
+                        animSvg.style.opacity = '0'; 
+                        createDustParticles(animSvg, '#d4af37'); 
                         speak("相滅願生，功德迴施。祈願" + targetName + "，平安順遂。", 0.8);
                         animText.innerHTML = `【 相滅願生 ． 功德迴施 】<br><span style='color:#d4af37; font-size:1.4rem;'>祈願 ${targetName}</span><br><span style='font-size:0.9rem; color:#8ba89c;'>平安順遂，業障消除</span>`;
                         animText.style.opacity = '1';
-                    }, 1000);
+                    }, 1800); // 延長停留，增加莊嚴感
                     
                 } else if (currentAction === 'merge') {
                     let isSuccess = false;
                     if (forceResult !== null) { isSuccess = forceResult; } 
                     else { isSuccess = (Math.random() * 100) < currentMergeProb; }
                     
-                    // 梭哈歸零！
                     inventory[selectedItems[0]] = 0;
                     inventory[selectedItems[1]] = 0;
                     
@@ -455,15 +487,15 @@
                         animText.innerHTML = `【 因緣具足 ． ${targetObj.name}顯化 】<br><span style='font-size:0.8rem; color:#f3e5ab;'>十方願力交織，能量擴容增上。</span>`;
                     } else {
                         animSvg.innerHTML = '';
-                        createDustParticles(animSvg, '#8ba89c'); // 化作青塵
-                        speak("因緣未具，化作微塵，迴向法界", 0.8);
+                        createDustParticles(animSvg, '#8ba89c'); 
+                        speak("因緣未具，化作微塵，無相迴向法界", 0.8);
                         animText.innerHTML = "【 因緣未具 ． 化作微塵 】<br><span style='font-size:0.8rem; color:#8ba89c;'>您投入之願力已全數化作無相大佈施，迴向十方法界。</span>";
                     }
                     animText.style.opacity = '1';
                 }
                 
                 saveDB();
-                setTimeout(() => { document.getElementById('anim-subtext').style.opacity = '1'; }, 2500);
+                setTimeout(() => { document.getElementById('anim-subtext').style.opacity = '1'; }, 3500);
             }, 800);
         }
 
@@ -471,6 +503,10 @@
             if (document.getElementById('anim-subtext').style.opacity === '1') {
                 document.getElementById('anim-overlay').classList.remove('show');
                 selectedItems = [];
+                // 如果剛剛交織出因陀羅網，觸發背景常駐
+                if (inventory.indra_net > 0) {
+                    document.getElementById('indra-bg').style.opacity = '1';
+                }
                 renderGrid(); 
             }
         }

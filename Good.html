@@ -205,7 +205,6 @@
         let db;
         try { db = JSON.parse(localStorage.getItem('PX_V15.0')); if (!db || typeof db !== 'object') db = null; } catch(e) {}
         
-        // 測試用：滿配法相，讓您可以直接測試超大獎交織
         if (!db || !db.treasures) {
             db = { treasures: { sword: 5, vase: 5, jewel: 5, lotus_lamp: 1, dharma_wheel: 1, white_lotus: 1, indra_net: 0 } };
         }
@@ -311,10 +310,26 @@
 
                     cell.className = classes;
                     if (item.id === 'indra_net') {
-                        // ✨ 朝聖跳轉修正：點擊已顯化的終極大獎才跳轉
+                        // ✨ 點擊因陀羅網，彈出專屬 Modal，準備跳轉大迴向
                         cell.onclick = () => {
-                            showToast(`【重重無盡】<br>化城將空，即將前往法界印心...`);
-                            setTimeout(() => { window.location.href = 'realm.html'; }, 2500);
+                            currentAction = 'go_dedicate';
+                            document.getElementById('m-title').innerText = "【 蓮華因陀羅網 】";
+                            document.getElementById('m-desc').innerHTML = "此乃常駐法界之網，重重無盡，不增不減。<br><br>它已默默安住在您的『大迴向』之中。是否立即前往？";
+                            
+                            document.getElementById('dedicate-input-wrap').style.display = 'none';
+                            document.getElementById('m-warning').style.display = 'none';
+                            document.getElementById('m-check-wrap').style.display = 'none';
+                            document.getElementById('m-info-wrap').style.display = 'none';
+                            document.getElementById('m-content-wrap').style.display = 'block';
+
+                            const btn = document.getElementById('m-confirm-btn');
+                            btn.innerText = "移步大迴向";
+                            btn.style.display = 'block';
+                            btn.classList.add('ready'); // 讓按鈕直接變亮可點
+                            isChecked = true; 
+                            
+                            document.getElementById('dev-panel').style.display = 'none';
+                            document.getElementById('modal-overlay').classList.add('show');
                         };
                         cell.innerHTML = `<div class="t-svg">${item.svg}</div><div class="t-info"><div class="t-name" style="color:#d4af37;">${item.name}</div><div class="t-lvl">常駐結界</div><span class="t-tag">【${item.tag}】</span></div>`;
                     } else {
@@ -371,6 +386,7 @@
             isChecked = false; mCheckBtn.classList.remove('checked'); mConfirmBtn.classList.remove('ready');
             mWarning.style.display = 'none'; devPanel.style.display = 'none'; dedicateInputWrap.style.display = 'none';
             mContentWrap.style.display = 'block'; mInfoWrap.style.display = 'none'; mConfirmBtn.style.display = 'block';
+            document.getElementById('m-check-wrap').style.display = 'flex'; // 恢復 checkbox
             if (window.speechSynthesis) window.speechSynthesis.cancel();
         }
 
@@ -454,6 +470,12 @@
         }
 
         function executeAction(forceResult = null) {
+            // ✨ 如果動作是前往大迴向，直接跳轉，不執行後續動畫
+            if (currentAction === 'go_dedicate') {
+                window.location.href = 'index.html?screen=4';
+                return;
+            }
+
             if (forceResult === null && !isChecked) return; 
             
             let targetName = "十方眾生";
@@ -503,13 +525,17 @@
                         inventory[currentMergeTarget] = (inventory[currentMergeTarget] || 0) + 1;
                         const targetObj = allTreasures.find(i => i.id === currentMergeTarget);
                         
-                        // ✨ 修正大獎顯化邏輯：不直接跳轉，讓長者看見大獎！
                         animSvg.innerHTML = targetObj.svg; 
                         animSvg.style.opacity = '1';
 
                         if (currentMergeTarget === 'indra_net') {
+                            saveDB(); // 立刻存檔，確保跳轉前已記錄
                             speak("因緣具足，一真法界，重重無盡", 0.8);
-                            animText.innerHTML = `【 因緣具足 ． ${targetObj.name}顯化 】<br><span style='font-size:0.8rem; color:#f3e5ab;'>十方願力交織，終極結界已成！</span>`;
+                            animText.innerHTML = `【 願力圓滿 ． 化城將空 】<br><span style='font-size:0.8rem; color:#f3e5ab;'>十方願力交織，即將前往法界印心...</span>`;
+                            
+                            // ✨ 在這裡讓行者看 3.5 秒的大獎，然後自動跳轉動畫！
+                            setTimeout(() => { window.location.href = 'realm.html'; }, 3500);
+                            return; 
                         } else {
                             speak("因緣具足，法相顯化", 0.8);
                             animText.innerHTML = `【 因緣具足 ． ${targetObj.name}顯化 】<br><span style='font-size:0.8rem; color:#f3e5ab;'>十方願力交織，能量擴容增上。</span>`;

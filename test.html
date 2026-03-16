@@ -254,16 +254,46 @@
                 }
             });
 
-            if (shooting && targetPlanet) {
-                beamProgress += 0.03;
+                        if (shooting && targetPlanet) {
+                // 稍微放慢速度，讓願力流動更優雅
+                beamProgress += 0.025; 
                 let targetWorld = rotate3D(targetPlanet.baseX, targetPlanet.baseY, targetPlanet.baseZ, rotX, rotY);
                 let scale = 1000 / (targetWorld.z + 2000);
-                let currentX = w/2 + ((w/2 + targetWorld.x * scale) - w/2) * beamProgress;
-                let currentY = (h/2 + 50) + ((h/2 + targetWorld.y * scale) - (h/2 + 50)) * beamProgress;
-                ctx.beginPath(); ctx.moveTo(w/2, h/2 + 50); ctx.lineTo(currentX, currentY);
-                ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
-                if (beamProgress >= 1) { shooting = false; targetPlanet.state = 'flying_in'; targetPlanet.animT = 0; }
+                
+                let startX = w/2;
+                let startY = h/2 + 50;
+                // 計算當前光束前端的座標
+                let currentX = startX + (targetWorld.x * scale) * beamProgress;
+                let currentY = startY + ((h/2 + targetWorld.y * scale) - startY) * beamProgress;
+                
+                // ✨ 核心優化：建立「純金琉璃漸層」光束
+                let grad = ctx.createLinearGradient(startX, startY, currentX, currentY);
+                grad.addColorStop(0, 'rgba(212, 175, 55, 0)');    // 尾部化入虛空 (透明)
+                grad.addColorStop(0.5, 'rgba(243, 229, 171, 0.4)'); // 中段柔和金光
+                grad.addColorStop(1, 'rgba(255, 255, 255, 0.9)');   // 前端明亮清淨
+                
+                ctx.beginPath(); 
+                ctx.moveTo(startX, startY); 
+                ctx.lineTo(currentX, currentY);
+                
+                // 替換死板的白線，改用漸層與發光濾鏡
+                ctx.strokeStyle = grad; 
+                ctx.lineWidth = 4; // 稍微加粗讓光暈顯現
+                ctx.lineCap = 'round'; // 圓潤的端點，不銳利
+                ctx.shadowBlur = 15; // 增加外發光濾鏡
+                ctx.shadowColor = '#d4af37'; // 金色光暈
+                ctx.stroke();
+                
+                // 重置 shadow 避免影響後續畫布上的星辰
+                ctx.shadowBlur = 0;
+
+                if (beamProgress >= 1) { 
+                    shooting = false; 
+                    targetPlanet.state = 'flying_in'; 
+                    targetPlanet.animT = 0; 
+                }
             }
+
 
             if (appState !== 'treasure_view') {
                 fgPlanets.forEach(fp => {

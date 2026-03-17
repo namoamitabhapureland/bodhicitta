@@ -11,7 +11,7 @@
             --solid-gold: #d4af37;
             --cyan: #8ba89c;
             --text-main: #d0d0d0;
-            --glass-bg: rgba(10, 15, 12, 0.85);
+            --glass-bg: rgba(8, 12, 10, 0.9);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
@@ -22,49 +22,35 @@
             overflow: hidden; touch-action: none; width: 100vw; height: 100vh;
         }
 
-        /* 3D 視角畫布 */
+        /* 3D 原生畫布 */
         canvas { display: block; width: 100%; height: 100%; position: absolute; z-index: 1; }
 
-        /* 螢幕周圍幽暗暈影 */
-        .vignette {
+        /* 幽暗暈影與受罰時的血紅遮罩 */
+        #vignette {
             position: absolute; inset: 0; pointer-events: none; z-index: 2;
-            background: radial-gradient(circle at center, transparent 30%, rgba(1, 1, 3, 0.95) 100%);
+            background: radial-gradient(circle at center, transparent 20%, rgba(1, 1, 3, 0.95) 100%);
+            transition: background 0.8s ease;
         }
 
         /* 頂部引路題詞 */
         .header-title {
-            position: absolute; top: 30px; left: 0; width: 100%; text-align: center;
-            color: var(--gold); font-size: 1.1rem; letter-spacing: 6px; z-index: 10;
-            text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); pointer-events: none;
-            opacity: 0.8; animation: breath 4s infinite alternate ease-in-out;
+            position: absolute; top: 35px; left: 0; width: 100%; text-align: center;
+            color: var(--gold); font-size: 1.15rem; letter-spacing: 8px; z-index: 10;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.8); pointer-events: none;
+            opacity: 0.85; animation: breath 3s infinite alternate ease-in-out;
+        }
+        @keyframes breath { 0% { opacity: 0.6; text-shadow: 0 0 10px rgba(212,175,55,0.4); } 100% { opacity: 1; text-shadow: 0 0 30px rgba(243,229,171,1); } }
+
+        /* 底部操作提示 (無相操作) */
+        .op-hint {
+            position: absolute; bottom: 40px; left: 0; width: 100%; text-align: center;
+            color: rgba(139,168,156,0.6); font-size: 0.8rem; letter-spacing: 4px; z-index: 10;
+            pointer-events: none; transition: opacity 0.5s;
         }
 
-        @keyframes breath { 0% { opacity: 0.5; text-shadow: 0 0 10px rgba(212,175,55,0.3); } 100% { opacity: 1; text-shadow: 0 0 25px rgba(243,229,171,0.8); } }
-
-        /* 底部法輪導航 (方向控制) */
-        .nav-controls {
-            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 25px; z-index: 20; align-items: center;
-        }
-
-        .btn-move {
-            width: 60px; height: 60px; border-radius: 50%;
-            background: linear-gradient(135deg, rgba(20,25,22,0.9), rgba(5,8,5,1));
-            border: 1px solid rgba(139,168,156,0.4);
-            display: flex; justify-content: center; align-items: center;
-            cursor: pointer; box-shadow: 0 0 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(139,168,156,0.1);
-            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        .btn-move:active { transform: scale(0.9); border-color: var(--solid-gold); box-shadow: 0 0 25px rgba(212,175,55,0.5); }
-        .btn-move svg { width: 28px; height: 28px; stroke: var(--cyan); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: 0.3s; }
-        .btn-move:active svg { stroke: var(--gold); filter: drop-shadow(0 0 5px var(--gold)); }
-
-        .btn-forward { width: 75px; height: 75px; border-color: rgba(212,175,55,0.5); }
-        .btn-forward svg { width: 34px; height: 34px; stroke: var(--gold); }
-
-        /* 琉璃玉簡 (問心題庫介面) */
+        /* 琉璃玉簡 (問心題庫) */
         .modal-wrap {
-            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px);
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px);
             z-index: 50; display: flex; justify-content: center; align-items: center;
             opacity: 0; pointer-events: none; transition: opacity 0.6s ease;
         }
@@ -73,15 +59,14 @@
         .jade-scroll {
             width: 88%; max-width: 480px; background: var(--glass-bg);
             border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 20px;
-            padding: 35px 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.9), inset 0 0 30px rgba(212,175,55,0.05);
-            transform: translateY(30px) scale(0.95); transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            padding: 35px 25px; box-shadow: 0 15px 50px rgba(0,0,0,0.9), inset 0 0 30px rgba(212,175,55,0.05);
+            transform: translateY(20px) scale(0.95); transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
             position: relative; overflow: hidden;
         }
         .modal-wrap.show .jade-scroll { transform: translateY(0) scale(1); }
 
-        /* 考題文字美學 */
         .q-title {
-            color: var(--gold); font-size: 1.15rem; letter-spacing: 2px; line-height: 1.8;
+            color: var(--gold); font-size: 1.1rem; letter-spacing: 2px; line-height: 1.8;
             margin-bottom: 30px; text-align: justify; text-shadow: 0 0 10px rgba(212,175,55,0.3);
             border-bottom: 1px solid rgba(139,168,156,0.3); padding-bottom: 20px;
         }
@@ -90,55 +75,48 @@
             width: 100%; background: rgba(5, 5, 5, 0.6); border: 1px solid rgba(139,168,156,0.3);
             border-radius: 12px; padding: 18px 20px; margin-bottom: 15px;
             color: var(--text-main); font-size: 0.95rem; letter-spacing: 1px; line-height: 1.6;
-            text-align: left; cursor: pointer; transition: all 0.4s;
-            display: flex; align-items: flex-start; gap: 15px; position: relative; overflow: hidden;
+            text-align: justify; cursor: pointer; transition: all 0.4s;
+            display: flex; align-items: flex-start; gap: 15px;
         }
-        .option-btn:active { transform: scale(0.98); }
-        .option-btn.selected { border-color: var(--solid-gold); background: rgba(212,175,55,0.1); color: var(--gold); box-shadow: inset 0 0 20px rgba(212,175,55,0.2); }
+        .option-btn:active { transform: scale(0.98); background: rgba(212,175,55,0.1); border-color: var(--solid-gold); }
         
-        .opt-icon { width: 22px; height: 22px; flex-shrink: 0; stroke: rgba(139,168,156,0.6); fill: none; stroke-width: 1.5; transition: 0.4s; margin-top: 2px;}
-        .option-btn.selected .opt-icon { stroke: var(--gold); filter: drop-shadow(0 0 5px var(--gold)); }
+        .opt-icon { width: 22px; height: 22px; flex-shrink: 0; stroke: rgba(139,168,156,0.6); fill: none; stroke-width: 1.5; margin-top: 2px;}
 
-        /* 提示訊息 */
+        /* 系統提示音 */
         .msg-toast {
-            position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
-            color: var(--cyan); font-size: 1.2rem; letter-spacing: 4px; text-shadow: 0 0 15px rgba(139,168,156,0.8);
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            color: var(--gold); font-size: 1.3rem; letter-spacing: 6px; font-weight: bold;
+            text-shadow: 0 0 20px rgba(212,175,55,0.9);
             opacity: 0; pointer-events: none; transition: 0.5s; z-index: 40; text-align: center;
+            width: 100%;
         }
 
-        /* 終極授記畫面 */
+        /* 終局金蓮 */
         #cert-modal { text-align: center; }
-        .cert-lotus { width: 120px; height: 120px; margin: 0 auto 30px; filter: drop-shadow(0 0 20px rgba(212,175,55,0.6)); animation: float 4s infinite ease-in-out; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); filter: drop-shadow(0 0 30px rgba(243,229,171,0.9)); } }
+        .cert-lotus { width: 130px; height: 130px; margin: 0 auto 30px; filter: drop-shadow(0 0 25px rgba(212,175,55,0.8)); animation: float 4s infinite ease-in-out; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); filter: drop-shadow(0 0 40px rgba(243,229,171,1)); } }
         
         .btn-confirm {
             margin-top: 20px; background: transparent; border: 1px solid var(--solid-gold);
-            color: var(--gold); padding: 12px 30px; border-radius: 25px; font-size: 1rem;
+            color: var(--gold); padding: 12px 35px; border-radius: 30px; font-size: 1rem;
             letter-spacing: 4px; cursor: pointer; transition: 0.3s;
         }
-        .btn-confirm:active { background: rgba(212,175,55,0.2); box-shadow: 0 0 15px rgba(212,175,55,0.5); }
+        .btn-confirm:active { background: rgba(212,175,55,0.2); box-shadow: 0 0 20px rgba(212,175,55,0.6); }
+
+        /* 雷達地圖 (開發者校準用，可設為 display:none) */
+        #minimap { position: absolute; top: 20px; right: 20px; z-index: 5; opacity: 0.3; pointer-events: none; display: none; }
     </style>
 </head>
 <body>
 
     <canvas id="renderCanvas"></canvas>
-    <div class="vignette"></div>
+    <canvas id="minimap" width="120" height="120"></canvas>
+    <div id="vignette"></div>
 
-    <div class="header-title" id="stage-title">八識迷城 ． 尋徑問心</div>
+    <div class="header-title">八識迷城 ． 尋徑問心</div>
+    <div class="op-hint" id="op-hint">輕觸虛空以潛行 ． 滑動指尖以轉向</div>
 
-    <div class="msg-toast" id="sys-msg">無常流轉 ． 陣法變更</div>
-
-    <div class="nav-controls" id="nav-ui">
-        <div class="btn-move" onclick="turn(-1)">
-            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </div>
-        <div class="btn-move btn-forward" onclick="moveForward()">
-            <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"></polyline></svg>
-        </div>
-        <div class="btn-move" onclick="turn(1)">
-            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </div>
-    </div>
+    <div class="msg-toast" id="sys-msg"></div>
 
     <div id="q-modal" class="modal-wrap">
         <div class="jade-scroll">
@@ -152,46 +130,51 @@
             <svg class="cert-lotus" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                     <linearGradient id="gold-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="#f3e5ab"/><stop offset="100%" stop-color="#d4af37"/>
+                        <stop offset="0%" stop-color="#ffffff"/><stop offset="40%" stop-color="#f3e5ab"/><stop offset="100%" stop-color="#d4af37"/>
                     </linearGradient>
                 </defs>
                 <path d="M50 85 C 80 70, 90 40, 75 25 C 65 40, 55 60, 50 85" fill="none" stroke="url(#gold-grad)" stroke-width="2"/>
                 <path d="M50 85 C 20 70, 10 40, 25 25 C 35 40, 45 60, 50 85" fill="none" stroke="url(#gold-grad)" stroke-width="2"/>
                 <path d="M50 85 C 65 50, 65 20, 50 10 C 35 20, 35 50, 50 85" fill="rgba(212,175,55,0.1)" stroke="url(#gold-grad)" stroke-width="2.5"/>
-                <circle cx="50" cy="50" r="4" fill="#fff" filter="drop-shadow(0 0 5px #fff)"/>
+                <circle cx="50" cy="50" r="4" fill="#fff" filter="drop-shadow(0 0 8px #fff)"/>
             </svg>
-            <div style="color:var(--gold); font-size:1.3rem; letter-spacing:4px; font-weight:bold; margin-bottom:15px; text-shadow:0 0 15px rgba(212,175,55,0.8);">破迷開悟 ． 陣法圓滿</div>
-            <div style="color:var(--cyan); font-size:0.9rem; line-height:1.8; letter-spacing:1px; margin-bottom:30px; text-align:justify; text-align-last:center;">行者已勘破諸相，直見底層邏輯。<br>此無明幻陣已破，願菩提心不退，乘願再來。</div>
+            <div style="color:var(--gold); font-size:1.3rem; letter-spacing:4px; font-weight:bold; margin-bottom:15px; text-shadow:0 0 15px rgba(212,175,55,0.8);">不退轉 ． 授記金印</div>
+            <div style="color:var(--cyan); font-size:0.9rem; line-height:1.9; letter-spacing:1.5px; margin-bottom:30px; text-align:justify; text-align-last:center;">行者已勘破生死諸相，直見法界底層邏輯。<br>此無明幻陣已破，祈願菩提不退，乘願再來。</div>
             <button class="btn-confirm" onclick="location.reload()">重返虛空</button>
         </div>
     </div>
 
 <script>
-    /** * 底層 3D 射線追蹤引擎 (Raycaster) 
-     * 陣法地圖 (0: 虛空通道, 1: 琉璃壁, 2,3,4: 問心節點, 5: 出口蓮華)
+    /** * 【彌陀淨土系統 ． 業力射線引擎 (Karma Raycaster)】
+     * Map: 0=空, 1=琉璃壁, 2/3/4=問心節點, 5=出口
      */
     const map = [
-        [1,1,1,1,1,1,1,1,1,1],
-        [1,0,0,0,1,0,0,0,5,1],
-        [1,0,1,2,1,0,1,1,0,1],
-        [1,0,1,0,0,0,0,1,0,1],
-        [1,0,1,1,1,1,0,1,4,1],
-        [1,0,0,0,0,1,0,0,0,1],
-        [1,1,1,1,3,1,1,1,0,1],
-        [1,0,0,0,0,0,0,0,0,1],
-        [1,1,1,1,1,1,1,1,1,1]
+        [1,1,1,1,1,1,1,1,1,1,1],
+        [1,0,0,1,0,0,0,1,5,1,1],
+        [1,0,1,1,0,1,0,1,0,1,1],
+        [1,0,0,2,0,1,0,4,0,1,1],
+        [1,1,1,1,0,1,1,1,0,1,1],
+        [1,0,0,0,0,0,0,1,0,1,1],
+        [1,0,1,1,1,3,1,1,0,1,1],
+        [1,0,0,0,1,0,0,0,0,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1]
     ];
-
-    const mapWidth = map[0].length;
-    const mapHeight = map.length;
-    const TILE_SIZE = 64;
+    const MAP_W = map[0].length, MAP_H = map.length, TILE = 64;
     
-    // 行者初始狀態
-    let px = 1.5 * TILE_SIZE, py = 7.5 * TILE_SIZE; 
-    let pAngle = Math.PI * 1.5; // 面向上方
-    let fov = Math.PI / 3;
+    // 行者初始狀態 (位於左下角)
+    let px = 1.5 * TILE, py = 7.5 * TILE; 
+    let pAngle = -Math.PI / 2; // 面向上
+    const fov = Math.PI / 3;
 
-    // 畫布設定
+    // 引擎狀態
+    let isMoving = false;
+    let isTurning = false;
+    let isModalOpen = false;
+    let isPunished = false; // 業力反噬狀態 (血紅+震動)
+    let time = 0;
+    let particles = [];
+    let currentNode = null;
+
     const canvas = document.getElementById('renderCanvas');
     const ctx = canvas.getContext('2d');
     let width, height;
@@ -202,46 +185,132 @@
     }
     window.addEventListener('resize', resize); resize();
 
-    // 題庫系統 (文言玄味，無常不定)
+    // 題庫系統 (依總工程師指示，硬核法理)
     const questions = {
         2: {
-            title: "娑婆信仰浩如煙海，神祇覺者交錯。若欲探尋解脫生死之本源，以法界觀之，何者或為佛教之根本？",
+            title: "娑婆信仰浩如煙海。若探尋解脫生死之本源，以法界觀之，何者或為正信佛教之核心？",
             options: [
-                { text: "祈求具備大威德之造物主或神明，賜予永生與庇護。", isCorrect: false },
-                { text: "了知因果自作自受，依循覺者（佛陀）所揭示之空性與緣起，自求解脫。", isCorrect: true }
+                { text: "祈求具備大威德之造物主或唯一真神，賜予永生與庇護。", isCorrect: false },
+                { text: "了知因果自作自受，依循覺者所揭示之空性與緣起，自求解脫。", isCorrect: true }
             ]
         },
         3: {
-            title: "世有行者，好談大乘之玄妙，卻輕忽南傳四聖諦之教法。於法脈流轉中，此二者之關係，或作何解？",
+            title: "歷代高僧大德，心明法理，或已無懼生死，然仍發願求生極樂。其深層之動機，或許為何？",
             options: [
-                { text: "四聖諦宛若佛法之深根，大乘菩提心則為根上綻放之華葉。無根，則華葉無以長存。", isCorrect: true },
-                { text: "大乘乃究竟之唯一真理，小乘或為焦芽敗種，不值一悟。", isCorrect: false }
+                { text: "了知生死僅為載體更迭。彼等『不怕死，亦不等死』，求生極樂乃為獲取不退轉之金身，以備未來重返十方之資糧。", isCorrect: true },
+                { text: "因娑婆苦海難熬，欲求一無憂無慮、永享安樂之神仙避風港。", isCorrect: false }
             ]
         },
         4: {
-            title: "歷代高僧，心明法理，或已無懼生死，然仍發願求生極樂。其深層之動機，或許為何？",
+            title: "極樂世界拔除三毒，無有苦樂之激盪。對於未曾深思空性之凡夫，若驟然登入此境，其最初之體驗，或許為何？",
             options: [
-                { text: "了知生死為載體更迭。彼等或『不怕死，亦不等死』，求生極樂乃為獲取不退轉之金身，以備重返十方之資糧。", isCorrect: true },
-                { text: "因娑婆苦海難熬，欲求一無憂無慮、永享安樂之避風港。", isCorrect: false }
+                { text: "於黃金七寶中，獲得永無止境之感官滿足與狂喜。", isCorrect: false },
+                { text: "面臨失去世俗刺激之『系統不適應』。彼處實為一強迫戒斷習氣、直面空性之『適應艙』。", isCorrect: true }
             ]
         }
     };
 
-    let currentNode = null;
-    let isModalOpen = false;
-    let time = 0;
+    // --- 觸控邏輯 (純手勢，無按鈕) ---
+    let touchStartX = 0, touchStartY = 0;
+    canvas.addEventListener('touchstart', e => {
+        if(isModalOpen) return;
+        touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
+    }, {passive: false});
 
-    // 繪製迷宮
-    function render3D() {
-        ctx.fillStyle = 'rgba(1, 1, 3, 0.4)'; // 殘影拖曳感
-        ctx.fillRect(0, 0, width, height);
+    canvas.addEventListener('touchend', e => {
+        if(isModalOpen || isTurning) return;
+        let touchEndX = e.changedTouches[0].clientX;
+        let touchEndY = e.changedTouches[0].clientY;
+        let dx = touchEndX - touchStartX;
+        let dy = touchEndY - touchStartY;
+
+        document.getElementById('op-hint').style.opacity = 0; // 隱藏提示
+
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+            // 左右滑動 -> 轉向 90 度
+            executeTurn(dx > 0 ? 1 : -1);
+        } else if (Math.abs(dx) < 20 && Math.abs(dy) < 20) {
+            // 單擊 -> 啟動/停止業力流轉 (前進)
+            isMoving = !isMoving;
+        }
+    });
+
+    // --- 陣法流轉與運算 ---
+    function executeTurn(direction, isKarmaForced = false) {
+        isTurning = true; isMoving = false;
+        let targetAngle = pAngle + (direction * Math.PI / 2);
+        let step = 0;
+        let turnSpeed = isKarmaForced ? 0.05 : 0.08; // 業力強制轉向較慢且沉重
         
-        // 天地虛空線
-        ctx.strokeStyle = 'rgba(139, 168, 156, 0.05)';
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(0, height/2); ctx.lineTo(width, height/2); ctx.stroke();
+        function turnAnim() {
+            step += turnSpeed;
+            pAngle += (direction * Math.PI / 2 * turnSpeed);
+            if (step < 1) requestAnimationFrame(turnAnim);
+            else { 
+                pAngle = targetAngle; 
+                isTurning = false; 
+                // 將角度正規化，避免浮點數誤差
+                pAngle = Math.round(pAngle / (Math.PI/2)) * (Math.PI/2);
+            }
+        }
+        turnAnim();
+    }
 
-        const numRays = Math.floor(width / 4); // 解析度
+    function createGoldDust(cx, cy) {
+        for(let i=0; i<40; i++) {
+            particles.push({
+                x: cx, y: cy, z: 200 + Math.random()*100,
+                vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15, vz: Math.random()*10 - 5,
+                life: 1, size: Math.random()*4 + 2
+            });
+        }
+    }
+
+    function updateLogic() {
+        if (isMoving && !isTurning && !isModalOpen) {
+            let nextX = px + Math.cos(pAngle) * 3;
+            let nextY = py + Math.sin(pAngle) * 3;
+            let gridX = Math.floor(nextX / TILE);
+            let gridY = Math.floor(nextY / TILE);
+
+            // 碰撞偵測
+            let buffer = 15; // 牆壁緩衝區
+            let checkX = Math.floor((nextX + Math.cos(pAngle)*buffer) / TILE);
+            let checkY = Math.floor((nextY + Math.sin(pAngle)*buffer) / TILE);
+
+            if (map[checkY][checkX] === 0) {
+                px = nextX; py = nextY;
+            } else {
+                isMoving = false; // 撞牆或遇到節點，自動停止
+                let nodeType = map[checkY][checkX];
+                if (nodeType >= 2 && nodeType <= 4) {
+                    // 確保站在格子中央
+                    px = gridX * TILE + TILE/2; py = gridY * TILE + TILE/2;
+                    currentNode = { x: checkX, y: checkY, type: nodeType };
+                    openQuestion(nodeType);
+                } else if (nodeType === 5) {
+                    showCertificate();
+                }
+            }
+        }
+    }
+
+    // --- 核心視覺渲染 (Raycaster) ---
+    function render3D() {
+        updateLogic();
+        
+        // 業力反噬之視覺震顫 (Camera Shake)
+        let shakeX = 0, shakeY = 0;
+        if (isPunished) {
+            shakeX = (Math.random() - 0.5) * 15;
+            shakeY = (Math.random() - 0.5) * 15;
+        }
+
+        // 天地虛空
+        ctx.fillStyle = isPunished ? 'rgba(20, 0, 0, 0.6)' : 'rgba(1, 1, 3, 0.4)';
+        ctx.fillRect(0, 0, width, height);
+
+        const numRays = Math.floor(width / 3); // 效能與畫質的平衡
         
         for (let i = 0; i < numRays; i++) {
             let rayAngle = (pAngle - fov / 2.0) + (i / numRays) * fov;
@@ -251,53 +320,51 @@
             let eyeY = Math.sin(rayAngle);
             let hitType = 0;
 
-            // 射線步進 (DDA 近似法)
             while (!hitWall && distanceToWall < 800) {
                 distanceToWall += 1;
-                let testX = Math.floor((px + eyeX * distanceToWall) / TILE_SIZE);
-                let testY = Math.floor((py + eyeY * distanceToWall) / TILE_SIZE);
+                let testX = Math.floor((px + eyeX * distanceToWall) / TILE);
+                let testY = Math.floor((py + eyeY * distanceToWall) / TILE);
 
-                if (testX < 0 || testX >= mapWidth || testY < 0 || testY >= mapHeight) {
+                if (testX < 0 || testX >= MAP_W || testY < 0 || testY >= MAP_H) {
                     hitWall = true; distanceToWall = 800;
                 } else if (map[testY][testX] > 0) {
-                    hitWall = true;
-                    hitType = map[testY][testX];
+                    hitWall = true; hitType = map[testY][testX];
                 }
             }
 
-            // 修正魚眼變形
             let correctedDist = distanceToWall * Math.cos(rayAngle - pAngle);
-            let ceiling = (height / 2.0) - height / (correctedDist * 0.02);
-            let floor = height - ceiling;
+            let ceiling = (height / 2.0) - height / (correctedDist * 0.02) + shakeY;
+            let floor = height - ceiling + shakeY;
             let wallHeight = floor - ceiling;
 
-            // 繪製材質 (發光線條美學)
-            let opacity = Math.max(0, 1 - correctedDist / 500);
+            // 無明迷霧計算 (受罰時能見度極低)
+            let maxDist = isPunished ? 300 : 550;
+            let opacity = Math.max(0, 1 - correctedDist / maxDist);
+            
             if (opacity > 0) {
                 let rectWidth = width / numRays;
-                let rectX = i * rectWidth;
+                let rectX = i * rectWidth + shakeX;
                 
                 ctx.globalCompositeOperation = 'screen';
                 
-                if (hitType === 1) { // 琉璃壁
-                    ctx.fillStyle = `rgba(212, 175, 55, ${opacity * 0.15})`;
+                if (hitType === 1) { // 一般琉璃壁
+                    let r = isPunished ? 180 : 212;
+                    let g = isPunished ? 20 : 175;
+                    let b = isPunished ? 20 : 55;
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity * (isPunished?0.4:0.15)})`;
                     ctx.fillRect(rectX, ceiling, rectWidth+1, wallHeight);
                     
-                    // 邊緣光線
-                    if (i % 2 === 0) {
-                        ctx.strokeStyle = `rgba(139, 168, 156, ${opacity * 0.4})`;
-                        ctx.lineWidth = 0.5;
+                    if (i % 2 === 0 && !isPunished) {
+                        ctx.strokeStyle = `rgba(139, 168, 156, ${opacity * 0.4})`; ctx.lineWidth = 0.5;
                         ctx.beginPath(); ctx.moveTo(rectX, ceiling); ctx.lineTo(rectX, floor); ctx.stroke();
                     }
-                } else if (hitType >= 2 && hitType <= 4) { // 問心節點 (金色發光柱)
+                } else if (hitType >= 2 && hitType <= 4) { // 問心節點
                     let pulse = Math.sin(time + hitType) * 0.5 + 0.5;
-                    ctx.fillStyle = `rgba(243, 229, 171, ${opacity * (0.4 + pulse*0.3)})`;
+                    let r = isPunished ? 255 : 243; let g = isPunished ? 0 : 229; let b = isPunished ? 0 : 171;
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity * (0.4 + pulse*0.4)})`;
                     ctx.fillRect(rectX, ceiling + wallHeight*0.2, rectWidth+1, wallHeight*0.6);
-                    ctx.shadowBlur = 20; ctx.shadowColor = `rgba(243, 229, 171, ${opacity})`;
-                    ctx.fillStyle = '#fff';
-                    ctx.fillRect(rectX, ceiling + wallHeight*0.4, rectWidth+1, wallHeight*0.2);
-                    ctx.shadowBlur = 0;
-                } else if (hitType === 5) { // 出口 (青色法光)
+                    ctx.fillStyle = '#fff'; ctx.fillRect(rectX, ceiling + wallHeight*0.45, rectWidth+1, wallHeight*0.1);
+                } else if (hitType === 5) { // 出口蓮華光
                     let pulse = Math.sin(time*2) * 0.5 + 0.5;
                     ctx.fillStyle = `rgba(139, 168, 156, ${opacity * (0.6 + pulse*0.4)})`;
                     ctx.fillRect(rectX, ceiling, rectWidth+1, wallHeight);
@@ -305,118 +372,108 @@
                 ctx.globalCompositeOperation = 'source-over';
             }
         }
-        time += 0.05;
-        if(!isModalOpen) requestAnimationFrame(render3D);
-    }
 
-    // 移動控制
-    function moveForward() {
-        if(isModalOpen) return;
-        
-        let targetX = px + Math.cos(pAngle) * (TILE_SIZE);
-        let targetY = py + Math.sin(pAngle) * (TILE_SIZE);
-        let gridX = Math.floor(targetX / TILE_SIZE);
-        let gridY = Math.floor(targetY / TILE_SIZE);
-
-        if (map[gridY][gridX] === 0) {
-            // 平滑移動動畫
-            let step = 0;
-            function moveAnim() {
-                step += 0.1;
-                px += Math.cos(pAngle) * (TILE_SIZE * 0.1);
-                py += Math.sin(pAngle) * (TILE_SIZE * 0.1);
-                if (step < 1) requestAnimationFrame(moveAnim);
-                else { px = targetX; py = targetY; checkNode(gridX, gridY); }
+        // 渲染破迷光塵 (Particles)
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i];
+            p.x += p.vx; p.y += p.vy; p.z += p.vz; p.life -= 0.02;
+            if (p.life <= 0) { particles.splice(i, 1); continue; }
+            
+            // 將 3D 粒子映射到螢幕
+            let dx = p.x - px, dy = p.y - py;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            let angle = Math.atan2(dy, dx) - pAngle;
+            // 修正角度至 -PI 到 PI
+            while (angle > Math.PI) angle -= Math.PI*2;
+            while (angle < -Math.PI) angle += Math.PI*2;
+            
+            if (Math.abs(angle) < fov/1.5 && dist > 10) {
+                let screenX = width/2 + Math.tan(angle) * (width/2) / Math.tan(fov/2);
+                let correctedDist = dist * Math.cos(angle);
+                let screenY = height/2 - (p.z / (correctedDist * 0.02));
+                let size = (p.size / (correctedDist * 0.02)) * 100;
+                
+                ctx.globalCompositeOperation = 'screen';
+                ctx.fillStyle = `rgba(243, 229, 171, ${p.life})`;
+                ctx.beginPath(); ctx.arc(screenX + shakeX, screenY + shakeY, Math.max(0.5, size), 0, Math.PI*2); ctx.fill();
+                ctx.globalCompositeOperation = 'source-over';
             }
-            moveAnim();
-        } else if (map[gridY][gridX] >= 2) {
-            // 觸發節點，不走進去，站在原處觸發
-            checkNode(gridX, gridY);
         }
+
+        time += 0.05;
+        requestAnimationFrame(render3D);
     }
 
-    function turn(direction) {
-        if(isModalOpen) return;
-        let targetAngle = pAngle + (direction * Math.PI / 2);
-        let step = 0;
-        function turnAnim() {
-            step += 0.1;
-            pAngle += (direction * Math.PI / 2 * 0.1);
-            if (step < 1) requestAnimationFrame(turnAnim);
-            else { pAngle = targetAngle; }
-        }
-        turnAnim();
-    }
-
-    // 檢查陣法節點
-    function checkNode(gx, gy) {
-        let nodeType = map[gy][gx];
-        if (nodeType >= 2 && nodeType <= 4) {
-            currentNode = { x: gx, y: gy, type: nodeType };
-            openQuestion(nodeType);
-        } else if (nodeType === 5) {
-            showCertificate();
-        }
-    }
-
-    function showMsg(text) {
+    // --- 互動與審判邏輯 ---
+    function showMsg(text, isRed = false) {
         const msg = document.getElementById('sys-msg');
-        msg.innerText = text; msg.style.opacity = 1;
-        setTimeout(() => msg.style.opacity = 0, 2000);
+        msg.innerText = text; 
+        msg.style.color = isRed ? '#ff4444' : 'var(--gold)';
+        msg.style.textShadow = isRed ? '0 0 20px #ff0000' : '0 0 20px rgba(212,175,55,0.9)';
+        msg.style.opacity = 1;
+        setTimeout(() => msg.style.opacity = 0, 2500);
     }
 
-    // 題庫介面邏輯
     function openQuestion(type) {
         isModalOpen = true;
         const qData = questions[type];
         document.getElementById('q-text').innerText = qData.title;
+        const optsContainer = document.getElementById('q-options'); optsContainer.innerHTML = '';
         
-        const optsContainer = document.getElementById('q-options');
-        optsContainer.innerHTML = '';
-        
-        // 隨機打亂選項順序以防背題
         let shuffled = [...qData.options].sort(() => Math.random() - 0.5);
-        
         shuffled.forEach(opt => {
-            const btn = document.createElement('div');
-            btn.className = 'option-btn';
-            btn.innerHTML = `
-                <svg class="opt-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
-                <span>${opt.text}</span>
-            `;
+            const btn = document.createElement('div'); btn.className = 'option-btn';
+            btn.innerHTML = `<svg class="opt-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg><span>${opt.text}</span>`;
             btn.onclick = () => handleAnswer(opt.isCorrect, btn);
             optsContainer.appendChild(btn);
         });
-
         document.getElementById('q-modal').classList.add('show');
     }
 
     function handleAnswer(isCorrect, btnElement) {
-        // 防止重複點擊
         const allBtns = document.querySelectorAll('.option-btn');
         allBtns.forEach(b => b.style.pointerEvents = 'none');
-        btnElement.classList.add('selected');
+        
+        if (isCorrect) {
+            btnElement.style.borderColor = 'var(--solid-gold)';
+            btnElement.style.background = 'rgba(212,175,55,0.2)';
+            btnElement.style.color = 'var(--gold)';
+        } else {
+            btnElement.style.borderColor = '#ff4444';
+            btnElement.style.background = 'rgba(50,0,0,0.8)';
+            btnElement.style.color = '#ff8888';
+        }
 
         setTimeout(() => {
             document.getElementById('q-modal').classList.remove('show');
             isModalOpen = false;
             
             if (isCorrect) {
-                showMsg("勘破迷障 ． 陣法開啟");
-                // 答對：牆壁消失變為平地
+                showMsg("破迷開悟 ． 琉璃光現");
+                // 獎勵：牆壁碎裂化為金塵，自動前進
                 map[currentNode.y][currentNode.x] = 0;
-                requestAnimationFrame(render3D);
+                createGoldDust(currentNode.x*TILE + TILE/2, currentNode.y*TILE + TILE/2);
+                setTimeout(() => { isMoving = true; }, 800);
             } else {
-                showMsg("無常流轉 ． 迷途知返");
-                // 答錯：強迫轉身 180 度 (無常流轉)
-                turn(2);
-                requestAnimationFrame(render3D);
+                showMsg("業力反噬 ． 無常流轉", true);
+                // 懲罰：恐怖血紅氛圍，劇烈震顫，強制180度轉向
+                isPunished = true;
+                document.getElementById('vignette').style.background = 'radial-gradient(circle at center, transparent 10%, rgba(30, 0, 0, 0.98) 100%)';
+                
+                // 強制業力轉向 (2 = 180度)
+                executeTurn(2, true);
+
+                // 數秒後業力消退，恢復原狀
+                setTimeout(() => {
+                    isPunished = false;
+                    document.getElementById('vignette').style.background = 'radial-gradient(circle at center, transparent 20%, rgba(1, 1, 3, 0.95) 100%)';
+                }, 3000);
             }
-        }, 1200);
+        }, 1000);
     }
 
     function showCertificate() {
-        isModalOpen = true;
+        isModalOpen = true; isMoving = false;
         document.getElementById('c-modal').classList.add('show');
     }
 

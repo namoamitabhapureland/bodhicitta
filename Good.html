@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>八識迷城 ． 360全景問心</title>
+    <title>八識迷城 ． 破門問心</title>
     <style>
         :root {
             --bg-deep: #010103;
@@ -19,16 +19,19 @@
             background: var(--bg-deep); color: #d0d0d0; 
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
             overflow: hidden; touch-action: none; width: 100vw; height: 100vh;
-            perspective: 1000px; 
         }
 
-        /* 宇宙背景 */
-        .universe-bg {
-            position: absolute; inset: -50%; background: radial-gradient(circle at center, #05080a 0%, #000000 100%);
-            z-index: 0; pointer-events: none; transition: background 0.5s;
+        /* 3D 星河畫布 */
+        canvas { display: block; position: absolute; inset: 0; z-index: 1; }
+
+        /* 幽暗暈影與反噬遮罩 */
+        #vignette {
+            position: absolute; inset: 0; z-index: 2; pointer-events: none;
+            background: radial-gradient(circle at center, transparent 20%, rgba(1, 1, 3, 0.95) 100%);
+            transition: background 0.5s ease;
         }
 
-        /* 啟動屏障 (破除黑屏的關鍵) */
+        /* 啟動屏障 */
         .start-screen {
             position: fixed; inset: 0; background: rgba(1, 1, 3, 0.95); z-index: 999;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -38,196 +41,248 @@
             color: var(--gold); font-size: 1.5rem; letter-spacing: 8px; font-weight: bold;
             margin-bottom: 40px; text-shadow: 0 0 20px rgba(212,175,55,0.6);
         }
+        .btn-main {
+            background: transparent; border: 1px solid var(--solid-gold);
+            color: var(--gold); padding: 12px 35px; border-radius: 30px; font-size: 1rem;
+            letter-spacing: 4px; cursor: pointer; transition: 0.3s; box-shadow: inset 0 0 10px rgba(212,175,55,0.1);
+        }
+        .btn-main:active { transform: scale(0.95); background: rgba(212,175,55,0.2); box-shadow: 0 0 20px rgba(212,175,55,0.5); }
 
-        /* HUD 介面 */
+        /* --- 法門 3D 容器 --- */
+        .door-container {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 220px; height: 350px; z-index: 10; perspective: 1200px;
+            display: none; opacity: 0; transition: opacity 0.8s, transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* 門框美學 */
+        .door-frame {
+            position: absolute; inset: 0; border: 4px solid #333; border-bottom: none;
+            border-radius: 120px 120px 0 0; box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            transform-style: preserve-3d;
+        }
+        .door-frame.lv1 { border-color: #555; box-shadow: 0 0 20px rgba(255,255,255,0.1); }
+        .door-frame.lv2 { border-color: var(--cyan); box-shadow: 0 0 30px rgba(139,168,156,0.3); }
+        .door-frame.lv3 { border-color: var(--solid-gold); box-shadow: 0 0 40px rgba(212,175,55,0.4); }
+
+        /* 左右兩片門扉 */
+        .door-panel {
+            position: absolute; top: 0; width: 50%; height: 100%;
+            background: linear-gradient(135deg, #111, #050505);
+            border: 1px solid rgba(255,255,255,0.1); transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .door-panel.left { left: 0; border-radius: 120px 0 0 0; transform-origin: left; border-right: 1px solid #000; }
+        .door-panel.right { right: 0; border-radius: 0 120px 0 0; transform-origin: right; border-left: 1px solid #333; }
+
+        .door-frame.lv2 .door-panel { background: rgba(10,20,15,0.9); border-color: rgba(139,168,156,0.4); }
+        .door-frame.lv3 .door-panel { background: linear-gradient(135deg, rgba(30,25,10,0.95), #000); border-color: rgba(212,175,55,0.5); }
+
+        /* 推門互動提示 */
+        .door-hint {
+            position: absolute; top: -50px; width: 100%; text-align: center;
+            color: var(--gold); font-size: 0.9rem; letter-spacing: 4px; animation: pulse 2s infinite alternate;
+        }
+
+        /* 門開啟的動畫狀態 */
+        .door-container.opening .door-panel.left { transform: rotateY(-110deg); }
+        .door-container.opening .door-panel.right { transform: rotateY(110deg); }
+        .door-container.zooming { transform: translate(-50%, -50%) scale(10); opacity: 0; }
+
+        /* --- HUD 介面 (考題與沙漏) --- */
         .hud-layer {
             position: absolute; inset: 0; z-index: 50; pointer-events: none;
-            display: flex; flex-direction: column; align-items: center;
-        }
-
-        .question-panel {
-            margin-top: 15vh; width: 85%; max-width: 500px;
-            background: rgba(5, 8, 5, 0.85); backdrop-filter: blur(10px);
-            border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 15px;
-            padding: 25px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.9), inset 0 0 20px rgba(212,175,55,0.05);
-            text-align: justify; opacity: 0; transform: translateY(-20px); transition: all 0.8s ease;
-        }
-        .question-panel.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
-        
-        .q-level { color: var(--cyan); font-size: 0.8rem; letter-spacing: 4px; margin-bottom: 10px; text-align: center; }
-        .q-text { color: var(--gold); font-size: 1.05rem; letter-spacing: 2px; line-height: 1.8; text-shadow: 0 0 10px rgba(212,175,55,0.3); }
-
-        /* 無常沙漏 */
-        .timer-bar-wrap {
-            position: absolute; top: 0; left: 0; width: 100%; height: 4px;
-            background: rgba(255,255,255,0.05); display: none;
-        }
-        .timer-bar {
-            height: 100%; width: 100%; background: linear-gradient(90deg, var(--danger), var(--solid-gold));
-            box-shadow: 0 0 15px var(--solid-gold); transform-origin: left;
-        }
-        .timer-text {
-            position: absolute; top: 15px; right: 20px; color: var(--danger);
-            font-size: 1.2rem; letter-spacing: 2px; font-weight: bold; text-shadow: 0 0 10px var(--danger);
-            display: none;
-        }
-
-        /* 3D 空間容器 */
-        .scene {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            transform-style: preserve-3d; transition: transform 0.1s linear; z-index: 10;
-        }
-
-        /* 法門美學 */
-        .door {
-            position: absolute; left: 50%; top: 50%;
-            width: 260px; height: 420px; margin-left: -130px; margin-top: -160px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; transform-style: preserve-3d; backface-visibility: hidden;
-            transition: transform 0.3s, box-shadow 0.3s, filter 0.3s; pointer-events: auto;
         }
-        .door:active { transform: scale3d(0.95, 0.95, 1) !important; }
-        
-        .door-option-text {
-            position: absolute; top: -60px; width: 320px; text-align: center;
-            color: #ccc; font-size: 0.95rem; letter-spacing: 1px; line-height: 1.6;
-            text-shadow: 0 0 10px #000; opacity: 0.8; transition: 0.3s;
-        }
-        .door:hover .door-option-text { color: var(--gold); opacity: 1; }
 
-        .door-lv1 {
-            background: linear-gradient(to bottom, #1a1a1a, #0a0a0a);
-            border: 2px solid #333; border-radius: 10px 10px 0 0;
-            box-shadow: inset 0 0 20px #000, 0 10px 20px rgba(0,0,0,0.8);
+        /* 美學倒數計時 */
+        .timer-container {
+            position: absolute; top: 8%; display: flex; flex-direction: column; align-items: center;
+            opacity: 0; transform: translateY(-20px); transition: 0.5s;
         }
-        .door-lv1::before { content: ''; position: absolute; width: 80%; height: 80%; border: 1px solid #222; }
-        
-        .door-lv2 {
-            background: rgba(10, 25, 20, 0.7); backdrop-filter: blur(5px);
-            border: 2px solid var(--cyan); border-radius: 150px 150px 0 0;
-            box-shadow: inset 0 0 30px rgba(139,168,156,0.2), 0 0 20px rgba(139,168,156,0.1);
+        .timer-circle {
+            width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--solid-gold);
+            display: flex; justify-content: center; align-items: center;
+            color: var(--gold); font-size: 1.5rem; font-weight: bold; text-shadow: 0 0 15px var(--solid-gold);
+            box-shadow: inset 0 0 15px rgba(212,175,55,0.2), 0 0 20px rgba(212,175,55,0.3);
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
         }
-        .door-lv2::before { content: ''; position: absolute; width: 85%; height: 85%; border: 1px solid rgba(139,168,156,0.5); border-radius: 140px 140px 0 0; }
-        
-        .door-lv3 {
-            background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(5,5,5,0.9));
-            backdrop-filter: blur(12px);
-            border: 2px solid var(--solid-gold); border-radius: 15px;
-            box-shadow: inset 0 0 40px rgba(212,175,55,0.3), 0 0 30px rgba(212,175,55,0.2);
+        .timer-container.danger .timer-circle {
+            border-color: var(--danger); color: #ff6666; text-shadow: 0 0 15px var(--danger);
+            box-shadow: inset 0 0 20px rgba(139,0,0,0.5), 0 0 30px rgba(139,0,0,0.6); animation: shake 0.5s infinite;
         }
-        .door-lv3::before { content: ''; position: absolute; inset: 12px; border: 1px dashed var(--gold); opacity: 0.6; }
 
-        .door-handle { position: absolute; right: 25px; top: 50%; transform: translateY(-50%); width: 15px; height: 60px; }
+        /* 題目玉簡 */
+        .question-panel {
+            width: 88%; max-width: 480px; background: rgba(5, 8, 5, 0.85); backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 20px;
+            padding: 30px 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.9), inset 0 0 20px rgba(212,175,55,0.05);
+            opacity: 0; transform: translateY(30px) scale(0.95); transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .question-panel.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
         
-        /* 系統回饋 */
+        .q-level { color: var(--cyan); font-size: 0.85rem; letter-spacing: 4px; margin-bottom: 15px; text-align: center; }
+        .q-text { color: var(--gold); font-size: 1.05rem; letter-spacing: 2px; line-height: 1.8; text-align: justify; text-shadow: 0 0 10px rgba(212,175,55,0.2); margin-bottom: 25px; border-bottom: 1px solid rgba(139,168,156,0.3); padding-bottom: 20px; }
+
+        .option-btn {
+            width: 100%; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(139,168,156,0.3);
+            border-radius: 12px; padding: 15px 20px; margin-bottom: 12px;
+            color: #d0d0d0; font-size: 0.95rem; letter-spacing: 1px; line-height: 1.6;
+            text-align: justify; cursor: pointer; transition: all 0.3s; display: flex; align-items: flex-start; gap: 15px;
+        }
+        .option-btn:active { transform: scale(0.98); background: rgba(212,175,55,0.15); border-color: var(--solid-gold); }
+        .opt-icon { width: 20px; height: 20px; flex-shrink: 0; stroke: rgba(139,168,156,0.6); fill: none; stroke-width: 1.5; margin-top: 2px;}
+
+        /* 系統提示 */
         .toast-msg {
-            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             font-size: 1.5rem; letter-spacing: 8px; font-weight: bold; text-align: center;
             opacity: 0; z-index: 100; pointer-events: none; transition: opacity 0.5s; width: 100%;
         }
-        .flash-overlay {
-            position: absolute; inset: 0; z-index: 90; pointer-events: none; opacity: 0; transition: opacity 0.8s;
-        }
+        .flash-overlay { position: absolute; inset: 0; z-index: 90; pointer-events: none; opacity: 0; transition: opacity 0.5s; background: rgba(243,229,171,0.9); }
 
-        .op-hint {
-            position: absolute; bottom: 40px; width: 100%; text-align: center;
-            color: rgba(255,255,255,0.4); font-size: 0.85rem; letter-spacing: 4px; pointer-events: none; animation: pulse 2s infinite alternate;
-        }
-        @keyframes pulse { 0% { opacity: 0.3; } 100% { opacity: 0.8; } }
-        
-        .btn-confirm {
-            background: transparent; border: 1px solid var(--solid-gold);
-            color: var(--gold); padding: 12px 35px; border-radius: 30px; font-size: 1rem;
-            letter-spacing: 4px; cursor: pointer; transition: 0.3s;
-        }
-        .btn-confirm:active { background: rgba(212,175,55,0.2); box-shadow: 0 0 20px rgba(212,175,55,0.6); }
-
+        @keyframes pulse { 0% { opacity: 0.4; } 100% { opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
     </style>
 </head>
 <body>
 
     <div class="start-screen" id="start-screen">
-        <div class="start-title">八識迷城 ． 360問心幻陣</div>
-        <button class="btn-confirm" onclick="startMatrix()">踏入法界</button>
+        <div class="start-title">八識迷城 ． 破門問心</div>
+        <button class="btn-main" onclick="startMatrix()">推開法界</button>
     </div>
 
-    <div class="universe-bg" id="u-bg"></div>
+    <canvas id="starCanvas"></canvas>
+    <div id="vignette"></div>
     <div class="flash-overlay" id="flash-screen"></div>
 
-    <div class="hud-layer">
-        <div class="timer-bar-wrap" id="timer-wrap"><div class="timer-bar" id="timer-bar"></div></div>
-        <div class="timer-text" id="timer-text">60</div>
-
-        <div class="question-panel" id="q-panel">
-            <div class="q-level" id="q-level">第一重 ． 破迷啟信</div>
-            <div class="q-text" id="q-text">加載中...</div>
+    <div class="door-container" id="door-container" onclick="openDoor()">
+        <div class="door-hint">輕觸推門</div>
+        <div class="door-frame" id="door-frame">
+            <div class="door-panel left"></div>
+            <div class="door-panel right"></div>
         </div>
-        <div class="op-hint" id="op-hint" style="display: none;">左右滑動環視 ． 推開法門作答</div>
     </div>
 
-    <div class="scene" id="scene"></div>
+    <div class="hud-layer">
+        <div class="timer-container" id="timer-container">
+            <div class="timer-circle" id="timer-text">--</div>
+        </div>
+
+        <div class="question-panel" id="q-panel">
+            <div class="q-level" id="q-level">第一重</div>
+            <div class="q-text" id="q-text">加載中...</div>
+            <div id="q-options"></div>
+        </div>
+    </div>
 
     <div class="toast-msg" id="toast"></div>
 
 <script>
+    // ================= 星河引擎 (Starfield) =================
+    const canvas = document.getElementById('starCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let stars = [];
+    const FOV = 400;
+    let baseSpeed = 2;   // 預設緩慢前進
+    let warpSpeed = 2;   // 動態加速倍率
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+    }
+    window.addEventListener('resize', resize); resize();
+
+    function initStars() {
+        stars = [];
+        for (let i = 0; i < 500; i++) {
+            stars.push({
+                x: (Math.random() - 0.5) * 2000,
+                y: (Math.random() - 0.5) * 2000,
+                z: Math.random() * 2000,
+                color: Math.random() > 0.5 ? '#9fdfc8' : '#f3e5ab'
+            });
+        }
+    }
+
+    function renderStars() {
+        ctx.fillStyle = 'rgba(1, 1, 3, 0.4)'; // 殘影
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.globalCompositeOperation = 'screen';
+        stars.forEach(star => {
+            star.z -= (baseSpeed * warpSpeed);
+            if (star.z <= 0) { star.z = 2000; star.x = (Math.random() - 0.5) * 2000; star.y = (Math.random() - 0.5) * 2000; }
+            
+            let scale = FOV / (FOV + star.z);
+            let sx = (width / 2) + star.x * scale;
+            let sy = (height / 2) + star.y * scale;
+            let alpha = Math.min(1, scale * 2);
+            let radius = Math.max(0.5, 2.5 * scale);
+
+            ctx.beginPath(); ctx.arc(sx, sy, radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${star.color === '#f3e5ab' ? '243,229,171' : '139,168,156'}, ${alpha})`;
+            ctx.fill();
+        });
+        ctx.globalCompositeOperation = 'source-over';
+        requestAnimationFrame(renderStars);
+    }
+    initStars(); renderStars();
+
+    // ================= 題庫與邏輯 =================
     const stages = [
         {
             level: "第一重 ． 破迷啟信",
-            doorStyle: "door-lv1",
-            radius: 400,
-            timeLimit: 0,
-            text: "娑婆信仰浩如煙海。若欲探尋解脫生死之本源，以法界觀之，何者或為佛教之根本導師？",
+            doorLv: "lv1",
+            timeLimit: 0, // 送分題無倒數
+            text: "娑婆信仰浩如煙海。若欲探尋解脫生死之本源，以法界觀之，何者或為正信佛教之核心？",
             options: [
-                { text: "祈求威德無邊之造物主，賜予永生庇護。", isCorrect: false },
-                { text: "了知因果，依循覺者所揭示之空性自求解脫。", isCorrect: true }
+                { text: "祈求具備大威德之神明，賜予庇護與感官之安樂。", isCorrect: false },
+                { text: "了知因果，依循覺者所揭示之空性與緣起，自求解脫。", isCorrect: true }
             ]
         },
         {
             level: "第二重 ． 尋根溯源",
-            doorStyle: "door-lv2",
-            radius: 450,
-            timeLimit: 45,
-            text: "世有大乘行者，常輕忽南傳四聖諦之教法。於法脈流轉中，此二者之真實關係，或作何解？",
+            doorLv: "lv2",
+            timeLimit: 30,
+            text: "世有行者，好談大乘之玄妙，卻輕忽南傳四聖諦之教法。於法脈流轉中，此二者之關係或作何解？",
             options: [
-                { text: "大乘乃究竟唯一真理，小乘或為焦芽敗種。", isCorrect: false },
-                { text: "四聖諦宛若深根，菩提心為華葉。無根則華葉無存。", isCorrect: true },
-                { text: "兩者各自獨立，互不相干，無須會通。", isCorrect: false }
+                { text: "大乘乃究竟唯一真理，小乘或為焦芽敗種，無須理會。", isCorrect: false },
+                { text: "四聖諦宛若佛法深根，菩提心為其華葉。無根則華無以存。", isCorrect: true }
             ]
         },
         {
             level: "第三重 ． 淨土實相",
-            doorStyle: "door-lv3",
-            radius: 500,
-            timeLimit: 30,
-            text: "極樂世界拔除三毒。對於未曾深思空性之凡夫，若驟然登入此境，其最初體驗或許為何？",
+            doorLv: "lv3",
+            timeLimit: 20, // 困難題，時間極短
+            text: "極樂世界拔除三毒，無有苦樂激盪。對於未曾深思空性之凡夫，若驟然登入此境，其最初體驗或許為何？",
             options: [
-                { text: "於黃金七寶中，獲得永無止境之感官滿足。", isCorrect: false },
-                { text: "面臨失去世俗刺激之不適應。彼處實為直面空性之適應艙。", isCorrect: true },
-                { text: "與造物主同在，永遠沉浸於無思無想之境。", isCorrect: false }
+                { text: "於黃金七寶中，獲得永無止境之感官滿足與狂喜。", isCorrect: false },
+                { text: "面臨失去世俗刺激之不適應。彼處實為強迫直面空性之適應艙。", isCorrect: true }
             ]
         }
     ];
 
     let currentStage = 0;
-    let rotationY = 0;
-    let targetRotationY = 0;
-    let isDragging = false;
-    let lastX = 0;
     let timerInterval = null;
     let timeLeft = 0;
-    let isTransitioning = false;
-
-    // --- 啟動與語音解鎖 ---
     let sysUtterances = [];
+
+    // 啟動陣法
     function startMatrix() {
         document.getElementById('start-screen').style.opacity = '0';
         setTimeout(() => document.getElementById('start-screen').style.display = 'none', 800);
-        document.getElementById('op-hint').style.display = 'block';
         
         if (window.speechSynthesis) {
             let u = new SpeechSynthesisUtterance(""); u.volume = 0; window.speechSynthesis.speak(u);
         }
-        loadStage(0);
+        
+        // 星河加速推進，隨後顯化第一道門
+        warpSpeed = 8;
+        setTimeout(() => {
+            warpSpeed = 2; // 減速
+            spawnDoor(currentStage);
+        }, 1500);
     }
 
     function speakText(text) {
@@ -249,179 +304,161 @@
         }
     }
 
-    // --- 3D 全景控制 ---
-    const scene = document.getElementById('scene');
-    
-    document.body.addEventListener('touchstart', e => {
-        if(isTransitioning || document.getElementById('start-screen').style.display !== 'none') return;
-        isDragging = true; lastX = e.touches[0].clientX;
-        document.getElementById('op-hint').style.opacity = 0;
-    }, {passive: false});
+    // 顯化法門
+    function spawnDoor(index) {
+        if (index >= stages.length) {
+            showMsg("不退轉 ． 陣法圓滿", true);
+            setTimeout(() => location.reload(), 4000);
+            return;
+        }
 
-    document.body.addEventListener('touchmove', e => {
-        if(!isDragging || isTransitioning) return;
-        let deltaX = e.touches[0].clientX - lastX;
-        targetRotationY += deltaX * 0.35;
-        lastX = e.touches[0].clientX;
-    }, {passive: false});
-
-    document.body.addEventListener('touchend', () => { isDragging = false; });
-
-    function animate() {
-        rotationY += (targetRotationY - rotationY) * 0.1;
-        scene.style.transform = `translateZ(300px) rotateY(${rotationY}deg)`;
-        requestAnimationFrame(animate);
-    }
-    animate();
-
-    // --- 陣法生成 ---
-    function loadStage(index) {
-        if(index >= stages.length) { showFinalCert(); return; }
+        const doorContainer = document.getElementById('door-container');
+        const doorFrame = document.getElementById('door-frame');
         
-        isTransitioning = false;
+        // 設定門的美學階級
+        doorFrame.className = `door-frame ${stages[index].doorLv}`;
+        
+        // 門浮現
+        doorContainer.style.display = 'flex';
+        doorContainer.classList.remove('opening', 'zooming');
+        setTimeout(() => {
+            doorContainer.style.opacity = 1;
+        }, 50);
+    }
+
+    // 推開法門 (穿透動畫)
+    function openDoor() {
+        const doorContainer = document.getElementById('door-container');
+        doorContainer.style.pointerEvents = 'none'; // 防連點
+        
+        // 1. 門扉打開
+        doorContainer.classList.add('opening');
+        
+        // 2. 星河極速衝刺 & 視角穿透
+        setTimeout(() => {
+            warpSpeed = 15; // 進入超空間
+            doorContainer.classList.add('zooming');
+        }, 400);
+
+        // 3. 穿透完畢，星河減速，顯化題目
+        setTimeout(() => {
+            doorContainer.style.display = 'none';
+            doorContainer.style.pointerEvents = 'auto';
+            warpSpeed = 1; // 懸停感
+            showQuestion(currentStage);
+        }, 1200);
+    }
+
+    // 顯化玉簡與沙漏
+    function showQuestion(index) {
         const stageData = stages[index];
         const panel = document.getElementById('q-panel');
+        const optsContainer = document.getElementById('q-options');
         
         document.getElementById('q-level').innerText = stageData.level;
         document.getElementById('q-text').innerText = stageData.text;
+        optsContainer.innerHTML = '';
+        
+        let shuffled = [...stageData.options].sort(() => Math.random() - 0.5);
+        shuffled.forEach(opt => {
+            const btn = document.createElement('div'); btn.className = 'option-btn';
+            btn.innerHTML = `<svg class="opt-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg><span>${opt.text}</span>`;
+            btn.onclick = () => checkAnswer(opt.isCorrect);
+            optsContainer.appendChild(btn);
+        });
+
         panel.classList.add('show');
         speakText(stageData.text);
 
-        scene.innerHTML = '';
-        let optCount = stageData.options.length;
-        let angleStep = 360 / optCount;
-
-        let shuffledOpts = stageData.options.map((opt, i) => ({...opt, origIdx: i})).sort(() => Math.random() - 0.5);
-
-        shuffledOpts.forEach((opt, i) => {
-            let angle = i * angleStep;
-            let door = document.createElement('div');
-            door.className = `door ${stageData.doorStyle}`;
-            door.style.transform = `rotateY(${angle}deg) translateZ(${stageData.radius}px)`;
-            
-            let handleColor = stageData.doorStyle === 'door-lv3' ? 'var(--solid-gold)' : (stageData.doorStyle === 'door-lv2' ? 'var(--cyan)' : '#888');
-            let handleSvg = `<svg class="door-handle" viewBox="0 0 20 80" fill="none" stroke="${handleColor}" stroke-width="3"><rect x="5" y="10" width="10" height="60" rx="5"/><line x1="10" y1="25" x2="10" y2="55"/></svg>`;
-
-            door.innerHTML = `<div class="door-option-text">${opt.text}</div>${handleSvg}`;
-            door.onclick = () => checkAnswer(opt.isCorrect, door);
-            scene.appendChild(door);
-        });
-
-        targetRotationY = 0;
-
         // 無常沙漏
         clearInterval(timerInterval);
-        if(stageData.timeLimit > 0) {
+        const timerContainer = document.getElementById('timer-container');
+        const timerText = document.getElementById('timer-text');
+        timerContainer.classList.remove('danger');
+
+        if (stageData.timeLimit > 0) {
             timeLeft = stageData.timeLimit;
-            document.getElementById('timer-wrap').style.display = 'block';
-            document.getElementById('timer-text').style.display = 'block';
-            document.getElementById('timer-text').innerText = timeLeft;
-            
-            let bar = document.getElementById('timer-bar');
-            bar.style.transition = 'none'; bar.style.transform = 'scaleX(1)';
-            setTimeout(() => {
-                bar.style.transition = `transform ${stageData.timeLimit}s linear`;
-                bar.style.transform = 'scaleX(0)';
-            }, 50);
+            timerText.innerText = timeLeft;
+            timerContainer.style.opacity = 1;
+            timerContainer.style.transform = 'translateY(0)';
 
             timerInterval = setInterval(() => {
                 timeLeft--;
-                document.getElementById('timer-text').innerText = timeLeft;
-                if(timeLeft <= 0) {
+                timerText.innerText = timeLeft;
+                if (timeLeft <= 5) timerContainer.classList.add('danger'); // 逼近底線，發紅震動
+                
+                if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    handleTimeOut();
+                    handleFail("無常到來 ． 陣法重置");
                 }
             }, 1000);
         } else {
-            document.getElementById('timer-wrap').style.display = 'none';
-            document.getElementById('timer-text').style.display = 'none';
+            timerContainer.style.opacity = 0;
+            timerContainer.style.transform = 'translateY(-20px)';
         }
     }
 
-    // --- 業力審判 ---
-    function checkAnswer(isCorrect, doorEl) {
-        if(isTransitioning) return;
-        isTransitioning = true;
+    // 業力審判
+    function checkAnswer(isCorrect) {
         clearInterval(timerInterval);
         window.speechSynthesis.cancel();
-
         document.getElementById('q-panel').classList.remove('show');
-        doorEl.style.transform += ` translateZ(150px) scale(1.1)`; // 推門動畫
+        document.getElementById('timer-container').style.opacity = 0;
+
+        if (isCorrect) {
+            showMsg("破迷開悟 ． 琉璃光現", true);
+            warpSpeed = 8; // 飛向下一個階段
+            setTimeout(() => {
+                currentStage++; warpSpeed = 2;
+                spawnDoor(currentStage);
+            }, 1500);
+        } else {
+            handleFail("一念無明 ． 業力反噬");
+        }
+    }
+
+    function handleFail(msg) {
+        document.getElementById('q-panel').classList.remove('show');
+        document.getElementById('timer-container').style.opacity = 0;
         
+        const vignette = document.getElementById('vignette');
+        const flash = document.getElementById('flash-screen');
+        
+        // 恐怖血紅氛圍 + 螢幕震顫
+        vignette.style.background = 'radial-gradient(circle at center, transparent 10%, rgba(50, 0, 0, 0.98) 100%)';
+        flash.style.background = 'rgba(139,0,0,0.5)'; flash.style.opacity = 1;
+        warpSpeed = -10; // 業力倒抽 (星河倒退飛)
+        
+        let shake = setInterval(() => {
+            document.body.style.transform = `translate(${(Math.random()-0.5)*20}px, ${(Math.random()-0.5)*20}px)`;
+        }, 50);
+
+        showMsg(msg, false);
+
         setTimeout(() => {
-            if(isCorrect) {
-                showFeedback(true, "破迷開悟 ． 琉璃光現");
-                setTimeout(() => { currentStage++; loadStage(currentStage); }, 2500);
-            } else {
-                showFeedback(false, "一念無明 ． 業力反噬");
-                setTimeout(() => { loadStage(currentStage); }, 3500);
-            }
-        }, 500);
+            clearInterval(shake); document.body.style.transform = 'translate(0,0)';
+            flash.style.opacity = 0;
+            vignette.style.background = 'radial-gradient(circle at center, transparent 20%, rgba(1, 1, 3, 0.95) 100%)';
+            warpSpeed = 2; // 恢復正常
+            spawnDoor(currentStage); // 重新面對同一扇門
+        }, 2500);
     }
 
-    function handleTimeOut() {
-        if(isTransitioning) return;
-        isTransitioning = true;
-        window.speechSynthesis.cancel();
-        document.getElementById('q-panel').classList.remove('show');
-        showFeedback(false, "無常到來 ． 幻陣重置");
-        setTimeout(() => { loadStage(currentStage); }, 3500);
-    }
-
-    function showFeedback(isSuccess, msgText) {
+    function showMsg(text, isSuccess) {
         const toast = document.getElementById('toast');
         const flash = document.getElementById('flash-screen');
-        const bg = document.getElementById('u-bg');
+        toast.innerText = text;
         
-        toast.innerText = msgText;
-        
-        if(isSuccess) {
+        if (isSuccess) {
             toast.style.color = "var(--gold)"; toast.style.textShadow = "0 0 20px var(--solid-gold)";
-            flash.style.background = "rgba(243,229,171,0.9)"; flash.style.opacity = 1;
-            setTimeout(() => flash.style.opacity = 0, 800);
+            flash.style.background = "rgba(243,229,171,0.8)"; flash.style.opacity = 1;
+            setTimeout(() => flash.style.opacity = 0, 600);
         } else {
             toast.style.color = "var(--danger)"; toast.style.textShadow = "0 0 20px #ff0000";
-            bg.style.background = "radial-gradient(circle at center, #3a0000 0%, #000000 100%)";
-            
-            let shake = setInterval(() => {
-                let dx = (Math.random()-0.5)*20; let dy = (Math.random()-0.5)*20;
-                document.body.style.transform = `translate(${dx}px, ${dy}px)`;
-            }, 50);
-            
-            setTimeout(() => {
-                clearInterval(shake); document.body.style.transform = 'translate(0,0)';
-                bg.style.background = "radial-gradient(circle at center, #05080a 0%, #000000 100%)";
-            }, 1500);
         }
         
         toast.style.opacity = 1;
         setTimeout(() => toast.style.opacity = 0, 2000);
-    }
-
-    function showFinalCert() {
-        document.getElementById('q-panel').classList.remove('show');
-        document.getElementById('timer-wrap').style.display = 'none';
-        document.getElementById('timer-text').style.display = 'none';
-        scene.innerHTML = ''; 
-        
-        setTimeout(() => {
-            const cert = document.createElement('div');
-            cert.style.cssText = "position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:100; text-align:center; width:90%;";
-            cert.innerHTML = `
-                <svg width="150" height="150" viewBox="0 0 100 100" style="filter:drop-shadow(0 0 25px rgba(212,175,55,0.8)); margin-bottom:20px; animation:float 4s infinite ease-in-out;">
-                    <defs><linearGradient id="gold-g" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#fff"/><stop offset="50%" stop-color="#f3e5ab"/><stop offset="100%" stop-color="#d4af37"/></linearGradient></defs>
-                    <path d="M50 85 C 80 70, 90 40, 75 25 C 65 40, 55 60, 50 85" fill="none" stroke="url(#gold-g)" stroke-width="2"/>
-                    <path d="M50 85 C 20 70, 10 40, 25 25 C 35 40, 45 60, 50 85" fill="none" stroke="url(#gold-g)" stroke-width="2"/>
-                    <path d="M50 85 C 65 50, 65 20, 50 10 C 35 20, 35 50, 50 85" fill="rgba(212,175,55,0.1)" stroke="url(#gold-g)" stroke-width="2.5"/>
-                    <circle cx="50" cy="50" r="4" fill="#fff"/>
-                </svg>
-                <div style="color:var(--gold); font-size:1.5rem; letter-spacing:6px; font-weight:bold; margin-bottom:15px; text-shadow:0 0 20px rgba(212,175,55,0.9);">不退轉 ． 菩提金印</div>
-                <div style="color:var(--cyan); font-size:0.95rem; line-height:1.8; letter-spacing:2px;">行者已勘破生死諸相<br>直見法界底層邏輯。<br>願乘願再來，度化有情。</div>
-                <div style="margin-top:30px; padding:10px 25px; border:1px solid var(--solid-gold); color:var(--gold); border-radius:30px; display:inline-block; cursor:pointer;" onclick="location.reload()">重返虛空</div>
-            `;
-            document.body.appendChild(cert);
-            speakText("行者已勘破生死諸相，直見法界底層邏輯。願乘願再來，度化有情。");
-        }, 1000);
     }
 </script>
 </body>

@@ -12,13 +12,10 @@
         canvas { width: 100vw; height: 100vh; display: block; position: absolute; z-index: 1; }
         .charging #nebula { opacity: 0.2; }
 
-        #vow-display { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); width: 100%; text-align: center; z-index: 10; pointer-events: none; color: #f3e5ab; font-size: 1.5rem; letter-spacing: 12px; font-weight: 300; text-shadow: 0 0 20px rgba(243, 229, 171, 0.8), 0 0 40px #fff; opacity: 0; transition: opacity 0.3s; }
-        .charging #vow-display { opacity: 1; }
-
-        /* 放開防呆提示大字 */
-        #release-hint { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 1.8rem; letter-spacing: 15px; text-shadow: 0 0 30px #d4af37, 0 0 60px #fff; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 60; font-weight: bold; white-space: nowrap;}
-        .ready-to-release #release-hint { opacity: 1; }
-        .ready-to-release #vow-display { opacity: 0 !important; }
+                /* ✨ 擴大點擊區：避開頂部與底部的按鈕，其餘區域皆可點擊 */
+        #vow-click-zone { position: absolute; top: 15%; bottom: 25%; left: 0; right: 0; z-index: 25; display: flex; justify-content: center; align-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        
+        #vow-display { position: absolute; top: 25%; color: #f3e5ab; font-size: 1.5rem; letter-spacing: 12px; font-weight: 300; text-shadow: 0 0 20px rgba(243, 229, 171, 0.8), 0 0 40px #fff; opacity: 1; transition: opacity 0.3s; pointer-events: none; }
 
         #flash { position: absolute; inset: 0; background: #fff; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.8s ease-out; }
         
@@ -86,8 +83,10 @@
     <div id="nebula"></div>
     <canvas id="mainCanvas"></canvas>
     
-    <div id="vow-display">眾生無邊誓願度</div>
-    <div id="release-hint">願力具足 ． 請放開</div>
+       <div id="vow-click-zone" onclick="triggerVow()">
+        <div id="vow-display">請輕觸此處</div>
+    </div>
+
     
     <div id="treasure-overlay" onclick="collectTreasure()">
         <div id="svg-container"></div> 
@@ -219,7 +218,8 @@
         let planets = [];       
         let fgPlanets = [];     
         let appState = 'daily_ritual'; 
-        let isPressing = false; let chargeLevel = 0; 
+        let vowStep = 0; let isProcessingVow = false; let lastTapTime = 0;
+
         
         let litCount = db.bodhiLitCount; 
         let hasPlayedToday = false; 
@@ -283,100 +283,21 @@
         function draw() {
             ctx.clearRect(0, 0, w, h);
             time += 0.05;
-            if (appState === 'daily_ritual' && !shooting) targetRotY += 0.001;
-            rotX += (targetRotX - rotX) * 0.1; rotY += (targetRotY - rotY) * 0.1;
-
-            planets.forEach(p => {
-                let worldPos = rotate3D(p.baseX, p.baseY, p.baseZ, rotX, rotY);
-                let currentX = worldPos.x, currentY = worldPos.y, currentZ = worldPos.z;
-
-                if (p.state !== 'orbit') {
-                    let centerX = 0, centerY = -50, centerZ = -1800; 
-                    if (p.state === 'flying_in') {
-                        p.animT += 0.02;
-                        if (p.animT >= 1) { p.animT = 1; p.state = 'presenting'; showTreasureOverlay(p); }
-                    } else if (p.state === 'flying_out') {
-                        p.animT -= 0.015;
-                        if (p.animT <= 0) { p.animT = 0; p.state = 'orbit'; completeRitual(); }
-                    }
-                    const ease = p.animT < 0.5 ? 2 * p.animT * p.animT : -1 + (4 - 2 * p.animT) * p.animT;
-                    currentX += (centerX - currentX) * ease; currentY += (centerY - currentY) * ease; currentZ += (centerZ - currentZ) * ease;
-                }
-
-                let dz = currentZ + 2000; if (dz < 10) return; 
-                const scale = 1000 / dz;
-                const x2d = w/2 + currentX * scale, y2d = h/2 + currentY * scale;
-                if (x2d < -50 || x2d > w + 50 || y2d < -50 || y2d > h + 50) return;
-
-                const baseR2d = p.size * scale;
-                const r2d = p.isLit ? baseR2d * 2.5 : baseR2d; 
-                const {r, g, b} = p.colorObj;
-
-                if (p.state === 'presenting') {
-                    const auraGrad = ctx.createRadialGradient(x2d, y2d, 0, x2d, y2d, r2d * 5);
-                    auraGrad.addColorStop(0, `rgba(${r},${g},${b}, 0.3)`); auraGrad.addColorStop(1, `rgba(${r},${g},${b}, 0)`);
-                    ctx.fillStyle = auraGrad; ctx.beginPath(); ctx.arc(x2d, y2d, r2d * 5, 0, Math.PI*2); ctx.fill();
-                    ctx.fillStyle = `rgba(${r},${g},${b}, 0.8)`; ctx.beginPath(); ctx.arc(x2d, y2d, r2d, 0, Math.PI * 2); ctx.fill();
-                } else if (p.isLit) {
-                    let breath = (Math.sin(time * 2 + p.id) + 1) / 2;
-                    ctx.fillStyle = `rgba(${r},${g},${b}, ${0.5 + breath*0.4})`;
-                    ctx.shadowBlur = 5; ctx.shadowColor = `rgba(${r},${g},${b}, 0.8)`;
-                    ctx.beginPath(); ctx.arc(x2d, y2d, r2d, 0, Math.PI * 2); ctx.fill();
-                    ctx.shadowBlur = 0;
-                } else {
-                    let opacity = (appState === 'daily_ritual' && isPressing) ? 0.05 : 0.3;
-                    ctx.fillStyle = `rgba(${r},${g},${b}, ${opacity})`;
-                    ctx.beginPath(); ctx.arc(x2d, y2d, r2d, 0, Math.PI * 2); ctx.fill();
-                }
-            });
-
-            if (shooting && targetPlanet) {
-                beamProgress += 0.025; 
-                let targetWorld = rotate3D(targetPlanet.baseX, targetPlanet.baseY, targetPlanet.baseZ, rotX, rotY);
-                let scale = 1000 / (targetWorld.z + 2000);
-                let startX = w/2; let startY = h/2 + 50;
-                let endX = startX + (targetWorld.x * scale); let endY = startY + (targetWorld.y * scale) - 50;
-                let cpX = startX + (endX - startX) * 0.5 + (startX > endX ? -150 : 150); let cpY = startY - 120;
-                
-                let headX = getQBezier(beamProgress, startX, cpX, endX); let headY = getQBezier(beamProgress, startY, cpY, endY);
-                let tailT = Math.max(0, beamProgress - 0.35); 
-                let tailX = getQBezier(tailT, startX, cpX, endX); let tailY = getQBezier(tailT, startY, cpY, endY);
-                
-                let grad = ctx.createLinearGradient(tailX, tailY, headX, headY);
-                grad.addColorStop(0, 'rgba(212, 175, 55, 0)'); grad.addColorStop(0.6, 'rgba(243, 229, 171, 0.6)'); grad.addColorStop(1, 'rgba(255, 255, 255, 1)');
-                
-                ctx.beginPath(); ctx.moveTo(tailX, tailY);
-                for(let t = tailT; t <= beamProgress; t += 0.02) { ctx.lineTo(getQBezier(t, startX, cpX, endX), getQBezier(t, startY, cpY, endY)); }
-                
-                ctx.strokeStyle = grad; ctx.lineWidth = 4 + (beamProgress * 1.5); ctx.lineCap = 'round';
-                ctx.shadowBlur = 15; ctx.shadowColor = '#d4af37'; ctx.stroke(); ctx.shadowBlur = 0;
-                
-                if (beamProgress >= 1) { shooting = false; targetPlanet.state = 'flying_in'; targetPlanet.animT = 0; }
-            }
-
-            if (appState !== 'treasure_view') {
-                fgPlanets.forEach(fp => {
-                    fp.x += fp.speed; if (fp.x > w + 80) fp.x = -80; else if (fp.x < -80) fp.x = w + 80;
-                    const {r, g, b} = fp.colorObj; let opacity = fp.isLit ? (0.6 + 0.2 * Math.sin(time + fp.phase)) : 0.2;
-                    const grad = ctx.createRadialGradient(fp.x, fp.y, 0, fp.x, fp.y, fp.size);
-                    grad.addColorStop(0, `rgba(${r},${g},${b}, ${opacity})`); grad.addColorStop(0.6, `rgba(${r},${g},${b}, ${opacity * 0.5})`); grad.addColorStop(1, `rgba(${r},${g},${b}, 0)`);
-                    ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(fp.x, fp.y, fp.size, 0, Math.PI * 2); ctx.fill();
-                });
-            }
-
+            // ✨ 光環根據點擊次數 (vowStep) 穩定放大
             if (appState === 'daily_ritual' && !shooting && (!targetPlanet || targetPlanet.state === 'orbit')) {
-                let basePulse = isPressing ? 0 : Math.sin(time * 0.5) * 5;
-                let currentRadius = 40 + basePulse + (chargeLevel * 1.5); 
+                let basePulse = Math.sin(time * 0.5) * 5;
+                let currentRadius = 40 + basePulse + (vowStep * 20); 
                 for(let r = 0; r < 3; r++) {
                     let ringRad = currentRadius - (r * 15); if(ringRad < 0) continue;
                     const grad = ctx.createRadialGradient(w/2, h/2 + 50, 0, w/2, h/2 + 50, ringRad + 10);
-                    let alpha = (0.7 - r*0.2) + (chargeLevel/200);
+                    let alpha = (0.7 - r*0.2) + (vowStep * 0.15);
                     grad.addColorStop(0, `rgba(243, 229, 171, ${alpha})`); grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
                     ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(w/2, h/2 + 50, ringRad + 15, 0, Math.PI * 2); ctx.fill();
                 }
-                ctx.beginPath(); ctx.arc(w/2, h/2 + 50, 8 + (chargeLevel * 0.3), 0, Math.PI * 2);
+                ctx.beginPath(); ctx.arc(w/2, h/2 + 50, 8 + (vowStep * 4), 0, Math.PI * 2);
                 ctx.fillStyle = '#fff'; ctx.shadowBlur = 20; ctx.shadowColor = '#fff'; ctx.fill(); ctx.shadowBlur = 0;
             }
+
 
             requestAnimationFrame(draw);
         }
@@ -465,73 +386,64 @@
 
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-        let hasSpokenIntro = false;
-        let hasSpokenRelease = false;
+                // ✨ 核心點擊發心函數 (加入防偷點鎖定機制)
+        function triggerVow() {
+            let now = Date.now();
+            if (now - lastTapTime < 300) return; 
+            lastTapTime = now;
 
-        setInterval(() => {
-            if (appState === 'daily_ritual' && isPressing) {
-                chargeLevel += 1.2; 
-                if (chargeLevel > 100) chargeLevel = 100;
+            // 💡 新增防線：如果正在等 2.5 秒、正在發射光束、或星球正在飛，嚴格禁止點擊！
+            if (isProcessingVow || vowStep >= 4 || appState !== 'daily_ritual' || shooting || (targetPlanet && targetPlanet.state !== 'orbit')) return;
+            
+            isProcessingVow = true; 
+            if (navigator.vibrate) navigator.vibrate(15);
+            hint.style.opacity = 0;
+            
+            speak(vows[vowStep], 0.85);
+
+            vowDisplay.style.opacity = 0;
+            
+            setTimeout(() => {
+                vowDisplay.innerText = vows[vowStep];
+                vowDisplay.style.opacity = 1;
+                vowStep++;
                 
-                let stage = Math.floor((chargeLevel / 100) * 4); 
-                if (stage > 3) stage = 3;
-                
-                if (vowDisplay.innerText !== vows[stage]) { 
-                    vowDisplay.style.opacity = 0; 
-                    setTimeout(() => { 
-                        vowDisplay.innerText = vows[stage]; 
-                        vowDisplay.style.opacity = 1; 
-                        speak(vows[stage], 0.8); 
-                    }, 50); 
-                }
+                if (vowStep === 4) {
+                    // 💡 終極物理防呆：點滿四次後，立刻把隱形按鈕「鎖死」，絕對不給多按！
+                    document.getElementById('vow-click-zone').style.pointerEvents = 'none';
 
-                if (chargeLevel >= 95) {
-                    bodyState.classList.add('ready-to-release');
-                    if(!hasSpokenRelease) {
-                        speak("願力具足，請放開", 0.9);
-                        hasSpokenRelease = true;
-                    }
+                    setTimeout(() => {
+                        vowDisplay.style.opacity = 0; 
+                        targetPlanet = planets[Math.floor(Math.random() * planets.length)]; 
+                        shooting = true; beamProgress = 0; 
+                        vowStep = 0; 
+                        speak("願力圓滿", 0.85);
+                        isProcessingVow = false; 
+                    }, 2500); 
+                } else {
+                    setTimeout(() => { isProcessingVow = false; }, 500); 
                 }
-            } else { 
-                chargeLevel *= 0.8; 
-                bodyState.classList.remove('ready-to-release');
-                hasSpokenRelease = false;
-            }
-        }, 30);
+            }, 50);
+        }
 
+            
+            
+
+        // 背景星空拖曳 (不再干涉中間的發心區塊)
         function pointerDown(e) {
-            if (e.target.closest('.obs-ui') || e.target.closest('.modal-wrap') || appState === 'treasure_view') return;
-            if (appState === 'daily_ritual') {
-                if (shooting || (targetPlanet && targetPlanet.state !== 'orbit')) return;
-                isPressing = true; bodyState.classList.add('charging'); hint.style.opacity = 0;
-                
-                if (!hasSpokenIntro) {
-                    speak("請長按凝聚願力", 0.9);
-                    hasSpokenIntro = true;
-                }
-            } else if (appState === 'observation') {
-                isDragging = true; lastMouseX = e.touches ? e.touches[0].clientX : e.clientX; lastMouseY = e.touches ? e.touches[0].clientY : e.clientY; hint.style.opacity = 0;
-            }
+            if (e.target.closest('#vow-click-zone') || e.target.closest('.obs-ui') || e.target.closest('.modal-wrap') || appState === 'treasure_view') return;
+            isDragging = true; lastMouseX = e.touches ? e.touches[0].clientX : e.clientX; lastMouseY = e.touches ? e.touches[0].clientY : e.clientY; 
         }
         function pointerMove(e) {
-            if (appState === 'observation' && isDragging) {
+            if (isDragging) {
                 let currentX = e.touches ? e.touches[0].clientX : e.clientX; let currentY = e.touches ? e.touches[0].clientY : e.clientY;
                 targetRotY += (currentX - lastMouseX) * 0.005; targetRotX += (currentY - lastMouseY) * 0.005;
                 if (targetRotX > 0.5) targetRotX = 0.5; if (targetRotX < -0.5) targetRotX = -0.5;
                 lastMouseX = currentX; lastMouseY = currentY;
             }
         }
-        function pointerUp(e) {
-            if (appState === 'daily_ritual' && isPressing) {
-                isPressing = false; bodyState.classList.remove('charging');
-                if (chargeLevel >= 95) { 
-                    vowDisplay.style.opacity = 0; 
-                    targetPlanet = planets[Math.floor(Math.random() * planets.length)]; 
-                    shooting = true; beamProgress = 0; chargeLevel = 0; 
-                }
-                else { hint.style.opacity = 0.5; }
-            } else if (appState === 'observation') { isDragging = false; hint.style.opacity = 0.5; }
-        }
+        function pointerUp(e) { isDragging = false; }
+
 
         window.addEventListener('mousedown', pointerDown); window.addEventListener('mousemove', pointerMove); window.addEventListener('mouseup', pointerUp);
         window.addEventListener('touchstart', pointerDown, {passive: false}); window.addEventListener('touchmove', pointerMove, {passive: false}); window.addEventListener('touchend', pointerUp, {passive: false});

@@ -406,30 +406,28 @@
         }
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-        // ✨ 重構為「點四次」的完美防呆發心系統
+                // ✨ 核心解法：拔除 setTimeout 延遲，手指點擊「當下」直接強制發聲！
         function pointerDown(e) {
             if (e.target.closest('.obs-ui') || e.target.closest('.modal-wrap') || appState === 'treasure_view') return;
             
             if (appState === 'daily_ritual') {
                 if (shooting || (targetPlanet && targetPlanet.state !== 'orbit')) return;
                 
-                // 只要還沒點滿4次，點一下就推進一步
                 if (vowStep < 4) {
                     if (navigator.vibrate) navigator.vibrate(15);
                     bodyState.classList.add('charging'); 
                     hint.style.opacity = 0;
-                    vowDisplay.style.opacity = 0;
                     
+                    // ✨✨✨ 關鍵：在點擊的這一毫秒，立刻呼叫語音！絕不放進延遲器！
+                    let currentVow = vows[vowStep];
+                    speak(currentVow, 0.85);
+
+                    vowDisplay.style.opacity = 0;
                     setTimeout(() => {
-                        vowDisplay.innerText = vows[vowStep];
+                        vowDisplay.innerText = currentVow;
                         vowDisplay.style.opacity = 1;
-                        
-                        // ✨ 點一次，念一句！
-                        speak(vows[vowStep], 0.85);
-                        
                         vowStep++;
                         
-                        // 當點滿四次時，自動發射！
                         if (vowStep === 4) {
                             setTimeout(() => {
                                 vowDisplay.style.opacity = 0; 
@@ -437,15 +435,17 @@
                                 shooting = true; beamProgress = 0; 
                                 vowStep = 0; 
                                 speak("願力圓滿", 0.85);
-                            }, 1500); // 留一點時間讓最後一句話唸完
+                            }, 1500); 
                         }
-                    }, 50);
+                    }, 50); // 文字動畫依然延遲 0.05 秒，但聲音已提前衝出去了
                 }
 
             } else if (appState === 'observation') {
                 isDragging = true; lastMouseX = e.touches ? e.touches[0].clientX : e.clientX; lastMouseY = e.touches ? e.touches[0].clientY : e.clientY; hint.style.opacity = 0;
             }
         }
+
+            
         
         function pointerMove(e) {
             if (appState === 'observation' && isDragging) {

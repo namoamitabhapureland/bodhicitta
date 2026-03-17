@@ -474,16 +474,6 @@
         .carousel-dots { display: flex; justify-content: center; gap: 8px; margin-top: 5px; margin-bottom: 15px; width: 100%; }
         .carousel-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(212,175,55,0.3); transition: 0.3s; }
         .carousel-dot.active { background: var(--solid-gold); box-shadow: 0 0 8px var(--solid-gold); width: 14px; border-radius: 3px; }
-        /* ✨ 因陀羅網專屬：大迴向輸入框光暈 */
-        .indra-border {
-            border: 2px solid rgba(212, 175, 55, 0.8) !important;
-            box-shadow: 0 0 20px rgba(156, 39, 176, 0.5), inset 0 0 15px rgba(212, 175, 55, 0.4) !important;
-            animation: indra-breathe 4s infinite alternate;
-        }
-        @keyframes indra-breathe {
-            0% { box-shadow: 0 0 10px rgba(156, 39, 176, 0.3), inset 0 0 10px rgba(212, 175, 55, 0.2); }
-            100% { box-shadow: 0 0 30px rgba(156, 39, 176, 0.8), inset 0 0 25px rgba(212, 175, 55, 0.6); }
-        }
 
 
     </style>
@@ -1638,28 +1628,13 @@ function getLotusSVG(rankType, nianCount = 0) {
 
     function save() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
     
-                function showScreen(n) { 
+            function showScreen(n) { 
         document.querySelectorAll('.container').forEach(c => c.style.display = 'none'); 
         document.getElementById('screen-'+n).style.display = 'flex'; 
         
         if(n===3) { 
             renderTasks(); 
             renderVisitedRealms(); 
-        }
-        
-        // ✨ 新增：第四頁大迴向的因陀羅網昇華判斷
-        if(n===4) {
-            let hasIndraNet = db.treasures && db.treasures.indra_net > 0;
-            const dediBox = document.getElementById('dedi-box');
-            const dediBtn = document.getElementById('dedi-btn');
-            
-            if (hasIndraNet) {
-                dediBox.classList.add('indra-border');
-                dediBtn.innerText = "因陀羅網重重無盡 ． 放大功德迴向";
-            } else {
-                dediBox.classList.remove('indra-border');
-                dediBtn.innerText = "化入法界與極樂 ． 圓滿迴向";
-            }
         }
         
         if(n===5) { 
@@ -1669,7 +1644,6 @@ function getLotusSVG(rankType, nianCount = 0) {
         }
         window.scrollTo(0,0); 
     } 
-
 
     function visitRealm(url, realmId) {
         if (!db.visitedRealms) db.visitedRealms = [];
@@ -1716,38 +1690,25 @@ function getLotusSVG(rankType, nianCount = 0) {
         showScreen(1); updateUI(); 
     }
 
-    function startDedicationEffect() {
-        const box = document.getElementById('dedi-box'); 
-        const btn = document.getElementById('dedi-btn');
+        function startDedicationEffect() {
+        const box = document.getElementById('dedi-box'); const btn = document.getElementById('dedi-btn');
         btn.style.opacity = '0'; btn.style.pointerEvents = 'none'; box.classList.add('dedi-dissolve');
         const rect = box.getBoundingClientRect();
         
-        // ✨ 判斷是否擁有因陀羅網
-        let db = JSON.parse(localStorage.getItem('PX_V15.0')) || {};
-        let hasIndraNet = db.treasures && db.treasures.indra_net > 0;
-        
-        // ✨ 數量昇華：一般 60 顆，因陀羅網爆發 240 顆！
-        let particleCount = hasIndraNet ? 240 : 60; 
-        
         if (rect.width > 0) {
-            for(let i=0; i<particleCount; i++) {
+            for(let i=0; i<60; i++) {
                 let dust = document.createElement('div'); 
-                dust.style.position = 'fixed'; 
-                
-                // ✨ 若有因陀羅網，混入紫金光芒與更強的發光
-                let isPurple = hasIndraNet && Math.random() > 0.5;
-                dust.style.background = isPurple ? '#e1bee7' : 'var(--gold)';
-                let glowColor = isPurple ? '#9c27b0' : 'var(--solid-gold)';
-                
+                // ✨ 採用 JS 原生設定，根除蘋果 iOS 阻擋動畫的 Bug
+                dust.style.position = 'fixed'; dust.style.background = 'var(--gold)';
                 dust.style.borderRadius = '50%'; dust.style.pointerEvents = 'none';
-                dust.style.filter = `drop-shadow(0 0 8px ${glowColor})`; dust.style.zIndex = '9999';
+                dust.style.filter = 'drop-shadow(0 0 8px var(--solid-gold))'; dust.style.zIndex = '9999';
                 
                 dust.style.left = rect.left + Math.random() * rect.width + 'px'; 
                 dust.style.top = rect.top + Math.random() * rect.height + 'px';
                 let size = Math.random() * 4 + 2; dust.style.width = size + 'px'; dust.style.height = size + 'px';
                 document.body.appendChild(dust); 
                 
-                // ✨ 完美保留您的原生 animate 引擎
+                // ✨ 原生 animate 引擎驅動金光化入法界
                 dust.animate([
                     { opacity: 1, transform: `translate(0, 0) scale(1)` },
                     { opacity: 0, transform: `translate(${(Math.random() - 0.5) * 150}px, ${-(Math.random() * 250 + 100)}px) scale(0)` }
@@ -1756,20 +1717,11 @@ function getLotusSVG(rankType, nianCount = 0) {
                 setTimeout(() => dust.remove(), 3600);
             }
         }
-        
-        // ✨ 語音昇華
-        if (hasIndraNet) {
-            speak("因陀羅網，重重無盡。迴向法界，同生極樂", 0.75);
-        } else {
-            speak("迴向法界，同生極樂", 0.7);
-        }
-        
-        setTimeout(() => { 
-            save(); box.classList.remove('dedi-dissolve'); box.value = ""; 
-            btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; goHome();
-        }, 3500); 
-    }
+        speak("迴向法界，同生極樂", 0.7);
+        setTimeout(() => { save(); box.classList.remove('dedi-dissolve'); box.value = ""; btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; goHome();
 
+}, 3500); 
+    }
 
     let breatheInterval;
     function startBreathing() {
@@ -1839,12 +1791,11 @@ function getLotusSVG(rankType, nianCount = 0) {
     if(db.name) document.getElementById('user-name').value = db.name;
     renderMusicList(); 
     updateUI();
-        // ✨ 【記憶路由系統昇華版】：自動接收並前往指定頁面 (包含第 4 頁大迴向)
+    // ✨ 【記憶路由系統】：讀取網址的 ?screen=3 來決定一進來要顯示哪一頁
 window.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const screenNum = urlParams.get('screen');
-    if (screenNum) {
-        showScreen(parseInt(screenNum));
+    if (urlParams.get('screen') === '3') {
+        showScreen(3);
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 });

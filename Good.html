@@ -469,23 +469,9 @@
             }
         }
 
-        function executeAction(forceResult = null) {
-            // ✨ 如果動作是前往大迴向，直接跳轉，不執行後續動畫
-            if (currentAction === 'go_dedicate') {
-                window.location.href = 'index.html?screen=4';
-                return;
-            }
-
-            if (forceResult === null && !isChecked) return; 
-            
-            let targetName = "十方眾生";
-            if (currentAction === 'dedicate') {
-                if(dedicateTarget.value.trim() === '') {
-                    showToast("請輸入護念對象"); return;
-                }
-                targetName = dedicateTarget.value.trim();
-            }
-
+            function executeAction(forceResult = null) {
+        // ✨ 1. 移步大迴向：取消看動畫，改為原地發光昇華後跳轉
+        if (currentAction === 'go_dedicate') {
             closeModal();
             const animOverlay = document.getElementById('anim-overlay');
             const animText = document.getElementById('anim-text');
@@ -498,61 +484,101 @@
             setTimeout(() => {
                 document.getElementById('anim-flash').style.opacity = '0'; 
                 
-                if (currentAction === 'dedicate') {
-                    inventory[selectedItems[0]] -= 1;
-                    const usedItem = allTreasures.find(i => i.id === selectedItems[0]);
-                    
-                    animSvg.innerHTML = usedItem.svg + `<div class="engrave-name">${targetName}</div>`; 
-                    animSvg.style.opacity = '1';
-                    
-                    setTimeout(() => {
-                        animSvg.style.opacity = '0'; 
-                        createDustParticles(animSvg, '#d4af37'); 
-                        speak("相滅願生，功德迴施。祈願" + targetName + "，平安順遂。", 0.8);
-                        animText.innerHTML = `【 相滅願生 ． 功德迴施 】<br><span style='color:#d4af37; font-size:1.4rem;'>祈願 ${targetName}</span><br><span style='font-size:0.9rem; color:#8ba89c;'>平安順遂，業障消除</span>`;
-                        animText.style.opacity = '1';
-                    }, 1800); 
-                    
-                } else if (currentAction === 'merge') {
-                    let isSuccess = false;
-                    if (forceResult !== null) { isSuccess = forceResult; } 
-                    else { isSuccess = (Math.random() * 100) < currentMergeProb; }
-                    
-                    inventory[selectedItems[0]] = 0;
-                    inventory[selectedItems[1]] = 0;
-                    
-                    if (isSuccess) {
-                        inventory[currentMergeTarget] = (inventory[currentMergeTarget] || 0) + 1;
-                        const targetObj = allTreasures.find(i => i.id === currentMergeTarget);
-                        
-                        animSvg.innerHTML = targetObj.svg; 
-                        animSvg.style.opacity = '1';
-
-                        if (currentMergeTarget === 'indra_net') {
-                            saveDB(); // 立刻存檔，確保跳轉前已記錄
-                            speak("因緣具足，一真法界，重重無盡", 0.8);
-                            animText.innerHTML = `【 願力圓滿 ． 化城將空 】<br><span style='font-size:0.8rem; color:#f3e5ab;'>十方願力交織，即將前往法界印心...</span>`;
-                            
-                            // ✨ 在這裡讓行者看 3.5 秒的大獎，然後自動跳轉動畫！
-                            setTimeout(() => { window.location.href = 'realm.html'; }, 3500);
-                            return; 
-                        } else {
-                            speak("因緣具足，法相顯化", 0.8);
-                            animText.innerHTML = `【 因緣具足 ． ${targetObj.name}顯化 】<br><span style='font-size:0.8rem; color:#f3e5ab;'>十方願力交織，能量擴容增上。</span>`;
-                        }
-                    } else {
-                        animSvg.innerHTML = '';
-                        createDustParticles(animSvg, '#8ba89c'); 
-                        speak("因緣未具，化作微塵，無相迴向法界", 0.8);
-                        animText.innerHTML = "【 因緣未具 ． 化作微塵 】<br><span style='font-size:0.8rem; color:#8ba89c;'>您投入之願力已全數化作無相大佈施，迴向十方法界。</span>";
-                    }
-                    animText.style.opacity = '1';
-                }
+                const targetObj = allTreasures.find(i => i.id === 'indra_net');
+                animSvg.innerHTML = targetObj.svg; 
+                animSvg.style.opacity = '1';
                 
-                saveDB();
-                setTimeout(() => { document.getElementById('anim-subtext').style.opacity = '1'; }, 3500);
+                // ✨ 賦予極度強烈的紫金發光與放大效果
+                animSvg.style.transform = 'scale(1.4)';
+                animSvg.style.filter = 'drop-shadow(0 0 40px #d4af37) drop-shadow(0 0 80px #9c27b0)';
+                animSvg.style.transition = 'all 2.5s cubic-bezier(0.2, 0.8, 0.2, 1)';
+                
+                speak("化城將空，願歸法界。移步大迴向", 0.8);
+                animText.innerHTML = `【 因陀羅網 ． 願力昇華 】<br><span style='color:#d4af37; font-size:1.2rem; line-height:2.5;'>重重無盡，不增不減</span><br><span style='font-size:0.85rem; color:#f3e5ab;'>即將化入大迴向海...</span>`;
+                animText.style.opacity = '1';
+                
+                setTimeout(() => { 
+                    window.location.href = 'index.html?screen=4'; 
+                }, 3500);
             }, 800);
+            return;
         }
+
+        if (forceResult === null && !isChecked) return; 
+        
+        let targetName = "十方眾生";
+        if (currentAction === 'dedicate') {
+            if(dedicateTarget.value.trim() === '') {
+                showToast("請輸入護念對象"); return;
+            }
+            targetName = dedicateTarget.value.trim();
+        }
+
+        closeModal();
+        const animOverlay = document.getElementById('anim-overlay');
+        const animText = document.getElementById('anim-text');
+        const animSvg = document.getElementById('anim-svg-container');
+        
+        animOverlay.classList.add('show');
+        document.getElementById('anim-flash').style.opacity = '1';
+        animText.style.opacity = '0'; animSvg.style.opacity = '0'; document.getElementById('anim-subtext').style.opacity = '0';
+
+        setTimeout(() => {
+            document.getElementById('anim-flash').style.opacity = '0'; 
+            
+            if (currentAction === 'dedicate') {
+                inventory[selectedItems[0]] -= 1;
+                const usedItem = allTreasures.find(i => i.id === selectedItems[0]);
+                
+                animSvg.innerHTML = usedItem.svg + `<div class="engrave-name">${targetName}</div>`; 
+                animSvg.style.opacity = '1';
+                
+                setTimeout(() => {
+                    animSvg.style.opacity = '0'; 
+                    createDustParticles(animSvg, '#d4af37'); 
+                    speak("相滅願生，功德迴施。祈願" + targetName + "，平安順遂。", 0.8);
+                    animText.innerHTML = `【 相滅願生 ． 功德迴施 】<br><span style='color:#d4af37; font-size:1.4rem;'>祈願 ${targetName}</span><br><span style='font-size:0.9rem; color:#8ba89c;'>平安順遂，業障消除</span>`;
+                    animText.style.opacity = '1';
+                }, 1800); 
+                
+            } else if (currentAction === 'merge') {
+                let isSuccess = false;
+                if (forceResult !== null) { isSuccess = forceResult; } 
+                else { isSuccess = (Math.random() * 100) < currentMergeProb; }
+                
+                inventory[selectedItems[0]] = 0;
+                inventory[selectedItems[1]] = 0;
+                
+                if (isSuccess) {
+                    inventory[currentMergeTarget] = (inventory[currentMergeTarget] || 0) + 1;
+                    const targetObj = allTreasures.find(i => i.id === currentMergeTarget);
+                    
+                    animSvg.innerHTML = targetObj.svg; 
+                    animSvg.style.opacity = '1';
+
+                    // ✨ 2. 合成大獎：取消跳轉動畫，改為安穩顯現
+                    if (currentMergeTarget === 'indra_net') {
+                        saveDB(); 
+                        speak("因緣具足，一真法界，重重無盡", 0.8);
+                        animText.innerHTML = `【 因緣具足 ． ${targetObj.name}顯化 】<br><span style='font-size:0.8rem; color:#f3e5ab;'>十方願力交織，終極結界已成！</span>`;
+                    } else {
+                        speak("因緣具足，法相顯化", 0.8);
+                        animText.innerHTML = `【 因緣具足 ． ${targetObj.name}顯化 】<br><span style='font-size:0.8rem; color:#f3e5ab;'>十方願力交織，能量擴容增上。</span>`;
+                    }
+                } else {
+                    animSvg.innerHTML = '';
+                    createDustParticles(animSvg, '#8ba89c'); 
+                    speak("因緣未具，化作微塵，無相迴向法界", 0.8);
+                    animText.innerHTML = "【 因緣未具 ． 化作微塵 】<br><span style='font-size:0.8rem; color:#8ba89c;'>您投入之願力已全數化作無相大佈施，迴向十方法界。</span>";
+                }
+                animText.style.opacity = '1';
+            }
+            
+            saveDB();
+            setTimeout(() => { document.getElementById('anim-subtext').style.opacity = '1'; }, 3500);
+        }, 800);
+    }
+
 
         function closeAnim() {
             if (document.getElementById('anim-subtext').style.opacity === '1') {

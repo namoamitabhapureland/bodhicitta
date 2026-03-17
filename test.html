@@ -121,7 +121,16 @@
         </div>
     </div>
 
-    <script>
+ 
+        
+        
+            
+            
+            
+        
+               
+        
+               <script>
         // ✨ 主系統同款：絕對穩定的單次點擊語音引擎
         window.sysUtterances = [];
         function speak(t, r = 0.85) {
@@ -131,7 +140,8 @@
             let isAndroid = /Android/i.test(navigator.userAgent);
             let textToSpeak = isAndroid ? t : t.replace(/阿/g, 'ㄚ');
             const m = new SpeechSynthesisUtterance(textToSpeak);
-            m.lang = 'zh-TW'; m.rate = r; 
+            m.lang = 'zh-TW'; 
+            m.rate = r; 
             
             if (isAndroid) {
                 window.sysUtterances.push(m);
@@ -143,7 +153,8 @@
                 m.onend = function() { window.sysUtterances = window.sysUtterances.filter(u => u !== m); };
                 setTimeout(() => { window.speechSynthesis.speak(m); }, 150);
             } else {
-                setTimeout(() => { window.speechSynthesis.speak(m); }, 50);
+                // ✨ 蘋果 iOS 專屬：拔除 setTimeout，絕對同步發聲！
+                window.speechSynthesis.speak(m);
             }
         }
 
@@ -182,11 +193,11 @@
         let w, h, time = 0; let planets = []; let fgPlanets = [];     
         let appState = 'daily_ritual'; 
         
-        // ✨ 新增：點擊次數追蹤器
+        // ✨ 新增：點擊次數追蹤器與防幽靈連點金鐘罩
         let vowStep = 0; 
+        let lastTapTime = 0;
         
         let litCount = db.bodhiLitCount; 
-        let hasPlayedToday = (db.bodhiLastDate === new Date().toDateString()); 
         let hasDroppedTreasure = false; 
 
         let rotX = 0, rotY = 0; let targetRotX = 0, targetRotY = 0;
@@ -197,11 +208,9 @@
             w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
             litCountUi.innerText = litCount;
 
-            if (hasPlayedToday) {
-                appState = 'observation'; bodyState.className = 'mode-observation';
-                hint.innerText = "今日願力已滿，或可明日再來觀心"; hint.style.opacity = 0.5;
-                setTimeout(() => { document.getElementById('modal-overlay').classList.add('show'); }, 500);
-            }
+            // ✨ 阿智把「今日已滿」的狀態鎖強制拔除了！
+            // 無論您今天重整多少次，它都會停留在 'daily_ritual' 讓您無限次測試語音！
+            appState = 'daily_ritual';
 
             planets = []; const radius = 1500; 
             for (let i = 0; i < 1080; i++) {
@@ -388,9 +397,12 @@
         }
 
         function completeRitual() {
-            appState = 'observation'; bodyState.className = 'mode-observation';
-            hint.innerText = "今日願力已滿，或可明日再來觀心"; hint.style.opacity = 0.5;
+            // ✨ 讓行者可以繼續測試點擊
+            appState = 'daily_ritual'; 
+            bodyState.className = '';
+            hint.innerText = "輕觸螢幕 ． 凝聚願力"; hint.style.opacity = 1;
             db.bodhiLitCount = litCount; db.bodhiLastDate = new Date().toDateString(); saveDB();
+            setTimeout(() => { document.getElementById('modal-overlay').classList.add('show'); }, 500);
         }
 
         function openLogModal() {
@@ -407,14 +419,10 @@
         }
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-                // ✨ 核心解法：拔除 setTimeout 延遲，手指點擊「當下」直接強制發聲！
-                // ✨ 新增：防連點金鐘罩的時間鎖
-        let lastTapTime = 0;
-
+        // ✨ 完美的點四次＋金鐘罩防幽靈機制
         function pointerDown(e) {
-            // ✨ 防幽靈點擊：如果距離上次點擊不到 400 毫秒，直接視為幽靈，無情擋掉！
             let now = Date.now();
-            if (now - lastTapTime < 400) return;
+            if (now - lastTapTime < 300) return; // 擋掉幽靈連點
             lastTapTime = now;
 
             if (e.target.closest('.obs-ui') || e.target.closest('.modal-wrap') || appState === 'treasure_view') return;
@@ -428,7 +436,7 @@
                     bodyState.classList.add('charging'); 
                     hint.style.opacity = 0;
                     
-                    // ✨ 點一次，念一句！(因為有金鐘罩，絕對不會被幽靈打斷了)
+                    // ✨ 在點擊的當下，立刻送出語音指令！
                     let currentVow = vows[vowStep];
                     speak(currentVow, 0.85);
 
@@ -447,7 +455,7 @@
                                 shooting = true; beamProgress = 0; 
                                 vowStep = 0; 
                                 speak("願力圓滿", 0.85);
-                            }, 1500); // 留一點時間讓最後一句話唸完
+                            }, 1500); 
                         }
                     }, 50);
                 }
@@ -456,9 +464,6 @@
                 isDragging = true; lastMouseX = e.touches ? e.touches[0].clientX : e.clientX; lastMouseY = e.touches ? e.touches[0].clientY : e.clientY; hint.style.opacity = 0;
             }
         }
-
-
-            
         
         function pointerMove(e) {
             if (appState === 'observation' && isDragging) {

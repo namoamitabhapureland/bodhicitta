@@ -128,33 +128,13 @@
             <button class="modal-btn" style="margin-top: 10px; font-size: 0.8rem;" onclick="closeModal('log-modal')">收起玉簡</button>
         </div>
     </div>
-
     <script>
-        // ✨ 蘋果 iOS 專屬：破冰解鎖器
-        let iosAudioUnlocked = false;
-        
-        // 此事件只需觸發一次，用來騙過蘋果的靜音鎖定
-        document.body.addEventListener('touchstart', function() {
-            if (!iosAudioUnlocked && window.speechSynthesis) {
-                let silentUtterance = new SpeechSynthesisUtterance('');
-                window.speechSynthesis.speak(silentUtterance);
-                iosAudioUnlocked = true;
-            }
-        }, { once: true });
-        
-        document.body.addEventListener('mousedown', function() {
-            if (!iosAudioUnlocked && window.speechSynthesis) {
-                let silentUtterance = new SpeechSynthesisUtterance('');
-                window.speechSynthesis.speak(silentUtterance);
-                iosAudioUnlocked = true;
-            }
-        }, { once: true });
-
-        // ✨ 跨平台語音引擎 (拔除 iOS 的延遲 setTimeout)
+        // ✨ 跨平台語音引擎 (拔除所有延遲，確保絕對同步)
         window.sysUtterances = [];
         function speak(t, r = 0.85) {
             if (!window.speechSynthesis) return; 
-            window.speechSynthesis.cancel(); 
+            window.speechSynthesis.cancel(); // 乾淨切斷上一句
+            
             let isAndroid = /Android/i.test(navigator.userAgent);
             let textToSpeak = isAndroid ? t : t.replace(/阿/g, 'ㄚ');
             const m = new SpeechSynthesisUtterance(textToSpeak);
@@ -168,13 +148,23 @@
                     if (zhVoice) m.voice = zhVoice;
                 }
                 m.onend = function() { window.sysUtterances = window.sysUtterances.filter(u => u !== m); };
-                // Android 保持原有的延遲機制以保證穩定
-                setTimeout(() => { window.speechSynthesis.speak(m); }, 150);
-            } else {
-                // ✨ 蘋果 iOS 必須絕對「同步」執行，不使用 setTimeout
-                window.speechSynthesis.speak(m);
+            }
+            // 💡 絕對同步呼叫，不加 setTimeout，破解所有手機的靜音阻擋
+            window.speechSynthesis.speak(m);
+        }
+
+        // 破解蘋果 iOS 第一聲靜音的無聲解鎖器
+        let iosAudioUnlocked = false;
+        function unlockAudio() {
+            if (!iosAudioUnlocked && window.speechSynthesis) {
+                let silentU = new SpeechSynthesisUtterance('');
+                silentU.volume = 0; window.speechSynthesis.speak(silentU);
+                iosAudioUnlocked = true;
             }
         }
+        document.body.addEventListener('touchstart', unlockAudio, { once: true });
+        document.body.addEventListener('mousedown', unlockAudio, { once: true });
+
 
         const canvas = document.getElementById('mainCanvas'); const ctx = canvas.getContext('2d');
         const bodyState = document.getElementById('body-state'); const vowDisplay = document.getElementById('vow-display');
@@ -185,22 +175,15 @@
         
         const vows = ["眾生無邊誓願度", "煩惱無盡誓願斷", "法門無量誓願學", "佛道無上誓願成"];
         const planetColors = [{r: 212, g: 175, b: 55}, {r: 139, g: 168, b: 156}, {r: 194, g: 24, b: 91}, {r: 224, g: 247, b: 250}];
-        
         const prefixes = ["普明", "無垢", "金剛", "妙樂", "法雲", "香水", "琉璃", "常寂", "寶威", "無量", "勝高", "離垢", "普賢", "華藏", "淨光", "寶燄", "蓮華", "微塵", "妙莊嚴"];
         const suffixes = ["光", "音", "海", "網", "幢", "輪", "藏", "月", "華", "焰", "臺", "聚", "界", "城", "明", "善"];
 
         function generateWorldName() {
-            let p = prefixes[Math.floor(Math.random() * prefixes.length)];
-            let s = suffixes[Math.floor(Math.random() * suffixes.length)];
-            return p + s + "世界";
+            return prefixes[Math.floor(Math.random() * prefixes.length)] + suffixes[Math.floor(Math.random() * suffixes.length)] + "世界";
         }
 
         let db;
-        try {
-            db = JSON.parse(localStorage.getItem('PX_V15.0'));
-            if (!db || typeof db !== 'object') db = null;
-        } catch(e) {}
-        
+        try { db = JSON.parse(localStorage.getItem('PX_V15.0')); if (!db || typeof db !== 'object') db = null; } catch(e) {}
         if (!db) db = { treasures: { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 }, bodhiLitCount: 0, bodhiLastDate: "", bodhiLastDropDate: "", visitedWorlds: [] };
         if (!db.treasures) db.treasures = { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 };
         if (db.bodhiLitCount === undefined) db.bodhiLitCount = 0;
@@ -211,18 +194,16 @@
 
         const basicTreasures = [
             { id: "sword", name: "幾何慧劍", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 5)"><polygon points="50,10 56,40 50,105 44,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="50,10 56,40 50,105" fill="url(#facet-cyan)" opacity="0.8"/><polygon points="50,10 44,40 50,105" fill="url(#facet-dark)" opacity="0.6"/><polygon points="35,100 65,100 55,110 45,110" fill="url(#pure-glass)" stroke="#d4af37" stroke-width="0.8"/><polygon points="46,110 54,110 52,135 48,135" fill="url(#facet-dark)"/><polygon points="50,135 56,142 50,148 44,142" fill="url(#facet-light)" stroke="#f3e5ab" stroke-width="1"/><circle cx="50" cy="105" r="4" fill="#fff" filter="drop-shadow(0 0 8px #e0f7fa)"/></g></svg>` },
-            { id: "vase", name: "琉璃淨瓶", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 10)"><polygon points="45,25 55,25 58,50 42,50" fill="url(#facet-light)" stroke="#f3e5ab" stroke-width="0.3"/><polygon points="42,50 58,50 72,95 28,95" fill="url(#facet-cyan)" stroke="#fff" stroke-width="0.5"/><polygon points="50,50 58,50 72,95 50,95" fill="url(#facet-dark)" opacity="0.5"/><polygon points="42,50 50,50 50,95 28,95" fill="url(#facet-light)" opacity="0.5"/><polygon points="28,95 72,95 60,125 40,125" fill="url(#facet-dark)" stroke="#f3e5ab" stroke-width="0.5"/><path d="M40 125 Q50 135 60 125 Z" fill="url(#facet-light)"/><ellipse cx="50" cy="95" rx="22" ry="6" fill="rgba(255,255,255,0.4)"/><circle cx="50" cy="80" r="10" fill="rgba(255,255,255,0.8)" filter="drop-shadow(0 0 15px #e0f7fa)"/></g></svg>` },
-            { id: "jewel", name: "多面寶珠", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 20)"><polygon points="50,15 85,45 50,65 15,45" fill="url(#facet-light)" stroke="#fff" stroke-width="0.8"/><polygon points="15,45 50,65 50,115 25,85" fill="url(#facet-rose)" opacity="0.9" stroke="#fff" stroke-width="0.5"/><polygon points="85,45 50,65 50,115 75,85" fill="url(#facet-dark)" opacity="0.8" stroke="#fff" stroke-width="0.5"/><polygon points="50,115 25,85 50,65" fill="rgba(255,255,255,0.3)"/><polygon points="50,15 50,65 85,45" fill="rgba(255,255,255,0.4)"/><circle cx="50" cy="65" r="5" fill="#fff" filter="drop-shadow(0 0 12px #fff)"/></g></svg>` }
+            { id: "vase", name: "琉璃淨瓶", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 10)"><polygon points="45,20 55,20 60,40 40,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#facet-cyan)" opacity="0.8" stroke="#fff" stroke-width="0.5"/><polygon points="50,40 60,40 75,90 50,90" fill="url(#facet-dark)" opacity="0.6"/><polygon points="25,90 75,90 60,120 40,120" fill="url(#facet-light)" stroke="#f3e5ab" stroke-width="0.5"/><polygon points="50,90 75,90 60,120 50,120" fill="url(#facet-dark)" opacity="0.7"/><polygon points="40,25 60,25" stroke="#f3e5ab" stroke-width="1"/></g></svg>` },
+            { id: "jewel", name: "多面寶珠", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 25)"><polygon points="50,10 80,40 50,55 20,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#facet-rose)" opacity="0.9" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="url(#facet-dark)" opacity="0.8" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 35,25 50,55" fill="rgba(255,255,255,0.4)" stroke="#fff" stroke-width="0.3"/><polygon points="80,40 65,25 50,55" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="0.3"/></g></svg>` }
         ];
 
-        let w, h, time = 0;
-        let planets = [];       
-        let fgPlanets = [];     
+        let w, h, time = 0; let planets = []; let fgPlanets = [];     
         let appState = 'daily_ritual'; 
         let isPressing = false; let chargeLevel = 0; 
         
         let litCount = db.bodhiLitCount; 
-        let hasPlayedToday = false; 
+        let hasPlayedToday = (db.bodhiLastDate === new Date().toDateString()); 
         let hasDroppedTreasure = false; 
 
         let rotX = 0, rotY = 0; let targetRotX = 0, targetRotY = 0;
@@ -231,15 +212,10 @@
 
         function init() {
             w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
-            
-            let today = new Date().toDateString();
-            if (db.bodhiLastDate === today) hasPlayedToday = true;
-
             litCountUi.innerText = litCount;
 
             if (hasPlayedToday) {
-                appState = 'observation';
-                bodyState.className = 'mode-observation';
+                appState = 'observation'; bodyState.className = 'mode-observation';
                 hint.innerText = "今日願力已滿，或可明日再來觀心"; hint.style.opacity = 0.5;
                 setTimeout(() => { document.getElementById('modal-overlay').classList.add('show'); }, 500);
             }
@@ -248,15 +224,10 @@
             for (let i = 0; i < 1080; i++) {
                 const phi = Math.acos(1 - 2 * (i + 0.5) / 1080);
                 const theta = Math.PI * (1 + Math.sqrt(5)) * i;
-                
-                let ratio = litCount / 3000;
-                let isLit = (i < 1080 * ratio);
-
                 planets.push({
                     id: i, baseX: radius * Math.cos(theta) * Math.sin(phi), baseY: radius * Math.cos(phi), baseZ: radius * Math.sin(theta) * Math.sin(phi),
-                    isLit: isLit, colorObj: planetColors[i % 4], size: Math.random() * 2 + 1,
-                    state: 'orbit', animT: 0,
-                    worldName: generateWorldName() 
+                    isLit: (i < 1080 * (litCount / 3000)), colorObj: planetColors[i % 4], size: Math.random() * 2 + 1,
+                    state: 'orbit', animT: 0, worldName: generateWorldName() 
                 });
             }
 
@@ -265,8 +236,7 @@
                 fgPlanets.push({
                     x: Math.random() * w, y: Math.random() * h * 0.8 + h*0.1,
                     speed: (Math.random() * 0.3 + 0.1) * (Math.random() > 0.5 ? 1 : -1),
-                    size: Math.random() * 15 + 10,
-                    isLit: Math.random() > 0.5,
+                    size: Math.random() * 15 + 10, isLit: Math.random() > 0.5,
                     colorObj: planetColors[Math.floor(Math.random() * 4)], phase: Math.random() * Math.PI * 2
                 });
             }
@@ -281,8 +251,7 @@
         function getQBezier(t, p0, p1, p2) { return (1-t)*(1-t)*p0 + 2*(1-t)*t*p1 + t*t*p2; }
 
         function draw() {
-            ctx.clearRect(0, 0, w, h);
-            time += 0.05;
+            ctx.clearRect(0, 0, w, h); time += 0.05;
             if (appState === 'daily_ritual' && !shooting) targetRotY += 0.001;
             rotX += (targetRotX - rotX) * 0.1; rotY += (targetRotY - rotY) * 0.1;
 
@@ -381,15 +350,6 @@
             requestAnimationFrame(draw);
         }
 
-        function checkDropEligibility() {
-            if (litCount === 1) return true; 
-            if (!db.bodhiLastDropDate) return true; 
-            const lastDrop = new Date(db.bodhiLastDropDate).setHours(0,0,0,0);
-            const today = new Date().setHours(0,0,0,0);
-            const diffDays = Math.round((today - lastDrop) / 86400000);
-            return diffDays >= 3; 
-        }
-
         function showTreasureOverlay(planet) {
             appState = 'treasure_view'; 
             flash.style.opacity = 1; setTimeout(() => { flash.style.opacity = 0; }, 600);
@@ -397,17 +357,12 @@
             let isNewStar = !planet.isLit;
             
             if (isNewStar) {
-                planet.isLit = true;
-                litCount++; 
-                if(litCount > 3000) litCount = 3000;
+                planet.isLit = true; litCount++; if(litCount > 3000) litCount = 3000;
                 litCountUi.innerText = litCount;
-                
-                if(!db.visitedWorlds.includes(planet.worldName)) {
-                    db.visitedWorlds.push(planet.worldName);
-                }
+                if(!db.visitedWorlds.includes(planet.worldName)) { db.visitedWorlds.push(planet.worldName); }
             }
             
-            hasDroppedTreasure = checkDropEligibility();
+            hasDroppedTreasure = (litCount === 1) || (!db.bodhiLastDropDate) || (Math.round((new Date().setHours(0,0,0,0) - new Date(db.bodhiLastDropDate).setHours(0,0,0,0)) / 86400000) >= 3);
 
             if (hasDroppedTreasure) {
                 db.bodhiLastDropDate = new Date().toDateString();
@@ -446,42 +401,40 @@
         }
 
         function openLogModal() {
-            const listEl = document.getElementById('log-list');
-            listEl.innerHTML = '';
+            const listEl = document.getElementById('log-list'); listEl.innerHTML = '';
             document.getElementById('log-status').innerText = `已探索世界：${db.visitedWorlds.length} / 3000`;
-            
             if(db.visitedWorlds.length === 0) {
                 listEl.innerHTML = '<div style="text-align:center; color:#666; padding:20px;">尚未踏足星海，祈願行者早發菩提。</div>';
             } else {
-                db.visitedWorlds.slice().reverse().forEach(world => {
-                    const item = document.createElement('div');
-                    item.className = 'log-item';
-                    item.innerText = world;
-                    listEl.appendChild(item);
+                db.visitedWorlds.slice().reverse().forEach(w => {
+                    const item = document.createElement('div'); item.className = 'log-item'; item.innerText = w; listEl.appendChild(item);
                 });
             }
             document.getElementById('log-modal').classList.add('show');
         }
-
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-        let hasSpokenIntro = false;
+        // ✨ 徹底重構：狀態鎖定法 (根除死迴圈)
+        let currentVowStage = -1; 
         let hasSpokenRelease = false;
 
         setInterval(() => {
             if (appState === 'daily_ritual' && isPressing) {
-                chargeLevel += 1.2; 
+                chargeLevel += 0.8; // 💡 放慢集氣速度，給語音時間唸完
                 if (chargeLevel > 100) chargeLevel = 100;
                 
                 let stage = Math.floor((chargeLevel / 100) * 4); 
                 if (stage > 3) stage = 3;
                 
-                if (vowDisplay.innerText !== vows[stage]) { 
+                // ✨ 只有在「階段真正改變」時才觸發文字與語音，絕不重複觸發
+                if (currentVowStage !== stage && chargeLevel < 95) { 
+                    currentVowStage = stage; // 立即鎖定狀態
+                    
                     vowDisplay.style.opacity = 0; 
                     setTimeout(() => { 
                         vowDisplay.innerText = vows[stage]; 
                         vowDisplay.style.opacity = 1; 
-                        speak(vows[stage], 0.8); 
+                        speak(vows[stage], 0.85); // 唸誦誓願
                     }, 50); 
                 }
 
@@ -495,7 +448,15 @@
             } else { 
                 chargeLevel *= 0.8; 
                 bodyState.classList.remove('ready-to-release');
-                hasSpokenRelease = false;
+                // 只有完全退到底部，才重置狀態，準備下一次發心
+                if (chargeLevel < 5) {
+                    currentVowStage = -1;
+                    hasSpokenRelease = false;
+                    if (vowDisplay.innerText !== vows[0]) {
+                        vowDisplay.style.opacity = 0;
+                        setTimeout(() => { vowDisplay.innerText = vows[0]; vowDisplay.style.opacity = 1; }, 200);
+                    }
+                }
             }
         }, 30);
 
@@ -504,11 +465,6 @@
             if (appState === 'daily_ritual') {
                 if (shooting || (targetPlanet && targetPlanet.state !== 'orbit')) return;
                 isPressing = true; bodyState.classList.add('charging'); hint.style.opacity = 0;
-                
-                if (!hasSpokenIntro) {
-                    speak("請長按凝聚願力", 0.9);
-                    hasSpokenIntro = true;
-                }
             } else if (appState === 'observation') {
                 isDragging = true; lastMouseX = e.touches ? e.touches[0].clientX : e.clientX; lastMouseY = e.touches ? e.touches[0].clientY : e.clientY; hint.style.opacity = 0;
             }

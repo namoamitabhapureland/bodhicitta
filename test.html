@@ -64,7 +64,6 @@
     </style>
 </head>
 <body id="body-state">
-<button onclick="speak('測試語音', 1)" style="position:fixed; top:100px; left:50%; transform:translateX(-50%); z-index:9999; padding:20px; font-size:20px; background:gold; color:black;">硬碰硬測試</button>
 
 
     <svg style="position: absolute; width: 0; height: 0; pointer-events: none; left: -9999px;">
@@ -409,18 +408,27 @@
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
                 // ✨ 核心解法：拔除 setTimeout 延遲，手指點擊「當下」直接強制發聲！
+                // ✨ 新增：防連點金鐘罩的時間鎖
+        let lastTapTime = 0;
+
         function pointerDown(e) {
+            // ✨ 防幽靈點擊：如果距離上次點擊不到 400 毫秒，直接視為幽靈，無情擋掉！
+            let now = Date.now();
+            if (now - lastTapTime < 400) return;
+            lastTapTime = now;
+
             if (e.target.closest('.obs-ui') || e.target.closest('.modal-wrap') || appState === 'treasure_view') return;
             
             if (appState === 'daily_ritual') {
                 if (shooting || (targetPlanet && targetPlanet.state !== 'orbit')) return;
                 
+                // 只要還沒點滿4次，點一下就推進一步
                 if (vowStep < 4) {
                     if (navigator.vibrate) navigator.vibrate(15);
                     bodyState.classList.add('charging'); 
                     hint.style.opacity = 0;
                     
-                    // ✨✨✨ 關鍵：在點擊的這一毫秒，立刻呼叫語音！絕不放進延遲器！
+                    // ✨ 點一次，念一句！(因為有金鐘罩，絕對不會被幽靈打斷了)
                     let currentVow = vows[vowStep];
                     speak(currentVow, 0.85);
 
@@ -428,8 +436,10 @@
                     setTimeout(() => {
                         vowDisplay.innerText = currentVow;
                         vowDisplay.style.opacity = 1;
+                        
                         vowStep++;
                         
+                        // 當點滿四次時，自動發射！
                         if (vowStep === 4) {
                             setTimeout(() => {
                                 vowDisplay.style.opacity = 0; 
@@ -437,15 +447,16 @@
                                 shooting = true; beamProgress = 0; 
                                 vowStep = 0; 
                                 speak("願力圓滿", 0.85);
-                            }, 1500); 
+                            }, 1500); // 留一點時間讓最後一句話唸完
                         }
-                    }, 50); // 文字動畫依然延遲 0.05 秒，但聲音已提前衝出去了
+                    }, 50);
                 }
 
             } else if (appState === 'observation') {
                 isDragging = true; lastMouseX = e.touches ? e.touches[0].clientX : e.clientX; lastMouseY = e.touches ? e.touches[0].clientY : e.clientY; hint.style.opacity = 0;
             }
         }
+
 
             
         

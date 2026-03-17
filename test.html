@@ -10,21 +10,13 @@
         
         #nebula { position: absolute; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 50%, #150d1f 0%, #010103 100%); transition: opacity 1s; }
         canvas { width: 100vw; height: 100vh; display: block; position: absolute; z-index: 1; }
-        .charging #nebula { opacity: 0.2; }
 
-        #vow-display { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); width: 100%; text-align: center; z-index: 10; pointer-events: none; color: #f3e5ab; font-size: 1.5rem; letter-spacing: 12px; font-weight: 300; text-shadow: 0 0 20px rgba(243, 229, 171, 0.8), 0 0 40px #fff; opacity: 0; transition: opacity 0.3s; }
-        .charging #vow-display { opacity: 1; }
-
-        /* 放開防呆提示大字 */
-        #release-hint { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 1.8rem; letter-spacing: 15px; text-shadow: 0 0 30px #d4af37, 0 0 60px #fff; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 60; font-weight: bold; white-space: nowrap;}
-        .ready-to-release #release-hint { opacity: 1; }
-        .ready-to-release #vow-display { opacity: 0 !important; }
+        #vow-display { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); width: 100%; text-align: center; z-index: 10; pointer-events: none; color: #f3e5ab; font-size: 1.5rem; letter-spacing: 12px; font-weight: 300; text-shadow: 0 0 20px rgba(243, 229, 171, 0.8), 0 0 40px #fff; opacity: 1; transition: opacity 0.3s; }
 
         #flash { position: absolute; inset: 0; background: #fff; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.8s ease-out; }
         
         #progress { position: absolute; top: 30px; right: 30px; color: #8ba89c; font-size: 0.9rem; letter-spacing: 3px; z-index: 10; opacity: 0.8; text-shadow: 0 0 10px rgba(139,168,156,0.5); transition: opacity 0.5s; }
         
-        /* 底部提示文字提亮與呼吸動畫 */
         #hint { position: absolute; bottom: 40px; width: 100%; text-align: center; color: rgba(255, 255, 255, 0.85); font-size: 0.95rem; letter-spacing: 6px; z-index: 5; transition: opacity 0.5s; pointer-events: none; text-shadow: 0 0 10px rgba(243, 229, 171, 0.8); animation: hint-breathe 3s infinite alternate; }
         @keyframes hint-breathe { 0% { opacity: 0.5; transform: scale(0.98); } 100% { opacity: 1; transform: scale(1.02); } }
 
@@ -86,8 +78,7 @@
     <div id="nebula"></div>
     <canvas id="mainCanvas"></canvas>
     
-    <div id="vow-display">眾生無邊誓願度</div>
-    <div id="release-hint">願力具足 ． 請放開</div>
+    <div id="vow-display">請輕觸畫面</div>
     
     <div id="treasure-overlay" onclick="collectTreasure()">
         <div id="svg-container"></div> 
@@ -99,7 +90,7 @@
     </div>
     
     <div id="flash"></div>
-    <div id="hint">長按發菩提心 ． 迴向法界</div>
+    <div id="hint">輕觸螢幕 ． 凝聚願力</div>
     <div id="progress">華藏大千世界 ． <span id="lit-count-ui">0</span> / 3000</div>
 
     <div class="obs-ui" id="btn-back" onclick="window.location.href='index.html?screen=3'">← 修行區</div>
@@ -128,64 +119,32 @@
             <button class="modal-btn" style="margin-top: 10px; font-size: 0.8rem;" onclick="closeModal('log-modal')">收起玉簡</button>
         </div>
     </div>
+
     <script>
-                // ✨ 重構：不依賴 cancel 的絕對穩定語音引擎
-        let currentSpoken = "";
+        // ✨ 主系統同款：絕對穩定的單次點擊語音引擎
         window.sysUtterances = [];
-
-        function speak(text, rate = 0.85) {
-            if (!window.speechSynthesis) return;
+        function speak(t, r = 0.85) {
+            if (!window.speechSynthesis) return; 
+            window.speechSynthesis.cancel(); 
             
-            // 💡 防呆：如果同一句話還沒講完，絕對不重複觸發，也不強制切斷
-            if (currentSpoken === text) return; 
-            currentSpoken = text;
-
-            // 只有在系統發瘋卡住時，才輕輕清空一下
-            if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-                window.speechSynthesis.cancel();
-            }
-
-            let u = new SpeechSynthesisUtterance(text);
-            u.lang = 'zh-TW'; 
-            u.rate = rate; 
-            u.pitch = 1.0;
-            u.volume = 1.0;
-
-            let voices = window.speechSynthesis.getVoices();
-            if (voices.length > 0) {
-                let zhVoice = voices.find(v => v.lang === 'zh-TW' && v.name.includes('Google')) || voices.find(v => v.lang.includes('zh'));
-                if (zhVoice) u.voice = zhVoice;
-            }
-
-            // 防回收機制
-            window.sysUtterances.push(u);
-            u.onend = function() {
-                window.sysUtterances = window.sysUtterances.filter(item => item !== u);
-                // 講完後釋放狀態
-                if (currentSpoken === text) currentSpoken = ""; 
-            };
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            let textToSpeak = isAndroid ? t : t.replace(/阿/g, 'ㄚ');
+            const m = new SpeechSynthesisUtterance(textToSpeak);
+            m.lang = 'zh-TW'; m.rate = r; 
             
-            u.onerror = function(e) {
-                console.log("語音錯誤:", e);
-                window.sysUtterances = window.sysUtterances.filter(item => item !== u);
-                currentSpoken = "";
-            };
-
-            window.speechSynthesis.speak(u);
-        }
-
-        // iOS 破冰解鎖器 (維持不變)
-        let iosAudioUnlocked = false;
-        function unlockAudio() {
-            if (!iosAudioUnlocked && window.speechSynthesis) {
-                let silentU = new SpeechSynthesisUtterance(' ');
-                silentU.volume = 0; window.speechSynthesis.speak(silentU);
-                iosAudioUnlocked = true;
+            if (isAndroid) {
+                window.sysUtterances.push(m);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let zhVoice = voices.find(v => v.lang === 'zh-TW' && v.name.includes('Google')) || voices.find(v => v.lang.includes('zh'));
+                    if (zhVoice) m.voice = zhVoice;
+                }
+                m.onend = function() { window.sysUtterances = window.sysUtterances.filter(u => u !== m); };
+                setTimeout(() => { window.speechSynthesis.speak(m); }, 150);
+            } else {
+                setTimeout(() => { window.speechSynthesis.speak(m); }, 50);
             }
         }
-        document.body.addEventListener('touchstart', unlockAudio, { once: true });
-        document.body.addEventListener('mousedown', unlockAudio, { once: true });
-
 
         const canvas = document.getElementById('mainCanvas'); const ctx = canvas.getContext('2d');
         const bodyState = document.getElementById('body-state'); const vowDisplay = document.getElementById('vow-display');
@@ -221,7 +180,9 @@
 
         let w, h, time = 0; let planets = []; let fgPlanets = [];     
         let appState = 'daily_ritual'; 
-        let isPressing = false; let chargeLevel = 0; 
+        
+        // ✨ 新增：點擊次數追蹤器
+        let vowStep = 0; 
         
         let litCount = db.bodhiLitCount; 
         let hasPlayedToday = (db.bodhiLastDate === new Date().toDateString()); 
@@ -314,7 +275,7 @@
                     ctx.beginPath(); ctx.arc(x2d, y2d, r2d, 0, Math.PI * 2); ctx.fill();
                     ctx.shadowBlur = 0;
                 } else {
-                    let opacity = (appState === 'daily_ritual' && isPressing) ? 0.05 : 0.3;
+                    let opacity = (appState === 'daily_ritual' && vowStep > 0) ? 0.05 : 0.3;
                     ctx.fillStyle = `rgba(${r},${g},${b}, ${opacity})`;
                     ctx.beginPath(); ctx.arc(x2d, y2d, r2d, 0, Math.PI * 2); ctx.fill();
                 }
@@ -354,21 +315,31 @@
                 });
             }
 
+            // ✨ 光環根據點擊次數 (vowStep) 穩定放大
             if (appState === 'daily_ritual' && !shooting && (!targetPlanet || targetPlanet.state === 'orbit')) {
-                let basePulse = isPressing ? 0 : Math.sin(time * 0.5) * 5;
-                let currentRadius = 40 + basePulse + (chargeLevel * 1.5); 
+                let basePulse = Math.sin(time * 0.5) * 5;
+                let currentRadius = 40 + basePulse + (vowStep * 20); 
                 for(let r = 0; r < 3; r++) {
                     let ringRad = currentRadius - (r * 15); if(ringRad < 0) continue;
                     const grad = ctx.createRadialGradient(w/2, h/2 + 50, 0, w/2, h/2 + 50, ringRad + 10);
-                    let alpha = (0.7 - r*0.2) + (chargeLevel/200);
+                    let alpha = (0.7 - r*0.2) + (vowStep * 0.15);
                     grad.addColorStop(0, `rgba(243, 229, 171, ${alpha})`); grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
                     ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(w/2, h/2 + 50, ringRad + 15, 0, Math.PI * 2); ctx.fill();
                 }
-                ctx.beginPath(); ctx.arc(w/2, h/2 + 50, 8 + (chargeLevel * 0.3), 0, Math.PI * 2);
+                ctx.beginPath(); ctx.arc(w/2, h/2 + 50, 8 + (vowStep * 4), 0, Math.PI * 2);
                 ctx.fillStyle = '#fff'; ctx.shadowBlur = 20; ctx.shadowColor = '#fff'; ctx.fill(); ctx.shadowBlur = 0;
             }
 
             requestAnimationFrame(draw);
+        }
+
+        function checkDropEligibility() {
+            if (litCount === 1) return true; 
+            if (!db.bodhiLastDropDate) return true; 
+            const lastDrop = new Date(db.bodhiLastDropDate).setHours(0,0,0,0);
+            const today = new Date().setHours(0,0,0,0);
+            const diffDays = Math.round((today - lastDrop) / 86400000);
+            return diffDays >= 3; 
         }
 
         function showTreasureOverlay(planet) {
@@ -383,7 +354,7 @@
                 if(!db.visitedWorlds.includes(planet.worldName)) { db.visitedWorlds.push(planet.worldName); }
             }
             
-            hasDroppedTreasure = (litCount === 1) || (!db.bodhiLastDropDate) || (Math.round((new Date().setHours(0,0,0,0) - new Date(db.bodhiLastDropDate).setHours(0,0,0,0)) / 86400000) >= 3);
+            hasDroppedTreasure = checkDropEligibility();
 
             if (hasDroppedTreasure) {
                 db.bodhiLastDropDate = new Date().toDateString();
@@ -435,61 +406,47 @@
         }
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-        // ✨ 徹底重構：狀態鎖定法 (根除死迴圈)
-        let currentVowStage = -1; 
-        let hasSpokenRelease = false;
-
-        setInterval(() => {
-            if (appState === 'daily_ritual' && isPressing) {
-                chargeLevel += 0.8; // 💡 放慢集氣速度，給語音時間唸完
-                if (chargeLevel > 100) chargeLevel = 100;
-                
-                let stage = Math.floor((chargeLevel / 100) * 4); 
-                if (stage > 3) stage = 3;
-                
-                // ✨ 只有在「階段真正改變」時才觸發文字與語音，絕不重複觸發
-                if (currentVowStage !== stage && chargeLevel < 95) { 
-                    currentVowStage = stage; // 立即鎖定狀態
-                    
-                    vowDisplay.style.opacity = 0; 
-                    setTimeout(() => { 
-                        vowDisplay.innerText = vows[stage]; 
-                        vowDisplay.style.opacity = 1; 
-                        speak(vows[stage], 0.85); // 唸誦誓願
-                    }, 50); 
-                }
-
-                if (chargeLevel >= 95) {
-                    bodyState.classList.add('ready-to-release');
-                    if(!hasSpokenRelease) {
-                        speak("願力具足，請放開", 0.9);
-                        hasSpokenRelease = true;
-                    }
-                }
-            } else { 
-                chargeLevel *= 0.8; 
-                bodyState.classList.remove('ready-to-release');
-                // 只有完全退到底部，才重置狀態，準備下一次發心
-                if (chargeLevel < 5) {
-                    currentVowStage = -1;
-                    hasSpokenRelease = false;
-                    if (vowDisplay.innerText !== vows[0]) {
-                        vowDisplay.style.opacity = 0;
-                        setTimeout(() => { vowDisplay.innerText = vows[0]; vowDisplay.style.opacity = 1; }, 200);
-                    }
-                }
-            }
-        }, 30);
-
+        // ✨ 重構為「點四次」的完美防呆發心系統
         function pointerDown(e) {
             if (e.target.closest('.obs-ui') || e.target.closest('.modal-wrap') || appState === 'treasure_view') return;
+            
             if (appState === 'daily_ritual') {
                 if (shooting || (targetPlanet && targetPlanet.state !== 'orbit')) return;
-                isPressing = true; bodyState.classList.add('charging'); hint.style.opacity = 0;
+                
+                // 只要還沒點滿4次，點一下就推進一步
+                if (vowStep < 4) {
+                    if (navigator.vibrate) navigator.vibrate(15);
+                    bodyState.classList.add('charging'); 
+                    hint.style.opacity = 0;
+                    vowDisplay.style.opacity = 0;
+                    
+                    setTimeout(() => {
+                        vowDisplay.innerText = vows[vowStep];
+                        vowDisplay.style.opacity = 1;
+                        
+                        // ✨ 點一次，念一句！
+                        speak(vows[vowStep], 0.85);
+                        
+                        vowStep++;
+                        
+                        // 當點滿四次時，自動發射！
+                        if (vowStep === 4) {
+                            setTimeout(() => {
+                                vowDisplay.style.opacity = 0; 
+                                targetPlanet = planets[Math.floor(Math.random() * planets.length)]; 
+                                shooting = true; beamProgress = 0; 
+                                vowStep = 0; 
+                                speak("願力圓滿", 0.85);
+                            }, 1500); // 留一點時間讓最後一句話唸完
+                        }
+                    }, 50);
+                }
+
             } else if (appState === 'observation') {
                 isDragging = true; lastMouseX = e.touches ? e.touches[0].clientX : e.clientX; lastMouseY = e.touches ? e.touches[0].clientY : e.clientY; hint.style.opacity = 0;
             }
         }
+        
         function pointerMove(e) {
             if (appState === 'observation' && isDragging) {
                 let currentX = e.touches ? e.touches[0].clientX : e.clientX; let currentY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -498,16 +455,9 @@
                 lastMouseX = currentX; lastMouseY = currentY;
             }
         }
+        
         function pointerUp(e) {
-            if (appState === 'daily_ritual' && isPressing) {
-                isPressing = false; bodyState.classList.remove('charging');
-                if (chargeLevel >= 95) { 
-                    vowDisplay.style.opacity = 0; 
-                    targetPlanet = planets[Math.floor(Math.random() * planets.length)]; 
-                    shooting = true; beamProgress = 0; chargeLevel = 0; 
-                }
-                else { hint.style.opacity = 0.5; }
-            } else if (appState === 'observation') { isDragging = false; hint.style.opacity = 0.5; }
+            if (appState === 'observation') { isDragging = false; hint.style.opacity = 0.5; }
         }
 
         window.addEventListener('mousedown', pointerDown); window.addEventListener('mousemove', pointerMove); window.addEventListener('mouseup', pointerUp);
@@ -516,5 +466,3 @@
         
         init(); draw();
     </script>
-</body>
-</html>

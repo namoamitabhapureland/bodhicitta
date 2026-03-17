@@ -72,8 +72,8 @@
         <defs>
             <linearGradient id="pure-glass" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9" /><stop offset="50%" stop-color="#f3e5ab" stop-opacity="0.6" /><stop offset="100%" stop-color="#d4af37" stop-opacity="0.2" /></linearGradient>
             <linearGradient id="facet-light" x1="0%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.95"/><stop offset="100%" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
-            <linearGradient id="facet-dark" x1="50%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d4af37" stop-opacity="0.1"/><stop offset="100%" stop-color="#b8860b" stop-opacity="0.7"/></linearGradient>
-            <linearGradient id="facet-cyan" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e0f7fa" stop-opacity="0.9"/><stop offset="100%" stop-color="#00838f" stop-opacity="0.4"/></linearGradient>
+            <linearGradient id="facet-dark" x1="50%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d4af37" stop-opacity="0.2"/><stop offset="100%" stop-color="#b8860b" stop-opacity="0.8"/></linearGradient>
+            <linearGradient id="facet-cyan" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e0f7fa" stop-opacity="0.9"/><stop offset="100%" stop-color="#00838f" stop-opacity="0.5"/></linearGradient>
             <linearGradient id="facet-rose" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#c2185b" stop-opacity="0.5"/></linearGradient>
         </defs>
     </svg>
@@ -190,6 +190,7 @@
         let isProcessingVow = false; 
         
         let litCount = db.bodhiLitCount; 
+        let hasPlayedToday = (db.bodhiLastDate === new Date().toDateString()); 
         let hasDroppedTreasure = false; 
 
         let rotX = 0, rotY = 0; let targetRotX = 0, targetRotY = 0;
@@ -199,7 +200,17 @@
         function init() {
             w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
             litCountUi.innerText = litCount;
-            appState = 'daily_ritual'; // 強制每日儀軌模式以供測試
+
+            // ✨ 正式版鎖定機制：如果今天玩過了，進入觀賞模式
+            if (hasPlayedToday) {
+                appState = 'observation'; 
+                bodyState.className = 'mode-observation';
+                hint.innerText = "今日願力已滿，或可明日再來觀心"; hint.style.opacity = 0.5;
+                clickZone.style.pointerEvents = 'none'; // 鎖住按鈕
+                setTimeout(() => { document.getElementById('modal-overlay').classList.add('show'); }, 500);
+            } else {
+                appState = 'daily_ritual'; 
+            }
 
             planets = []; const radius = 1500; 
             for (let i = 0; i < 1080; i++) {
@@ -314,6 +325,7 @@
                 });
             }
 
+            // ✨ 光環根據點擊次數 (vowStep) 穩定放大
             if (appState === 'daily_ritual' && !shooting && (!targetPlanet || targetPlanet.state === 'orbit')) {
                 let basePulse = Math.sin(time * 0.5) * 5;
                 let currentRadius = 40 + basePulse + (vowStep * 20); 
@@ -386,13 +398,15 @@
         }
 
         function completeRitual() {
-            appState = 'daily_ritual'; 
-            clickZone.style.pointerEvents = 'auto'; 
-            hint.innerText = "輕觸文字 ． 凝聚願力"; hint.style.opacity = 1;
+            appState = 'observation'; 
+            bodyState.className = 'mode-observation';
+            hint.innerText = "今日願力已滿，或可明日再來觀心"; hint.style.opacity = 0.5;
+            clickZone.style.pointerEvents = 'none'; 
             db.bodhiLitCount = litCount; db.bodhiLastDate = new Date().toDateString(); saveDB();
             setTimeout(() => { document.getElementById('modal-overlay').classList.add('show'); }, 500);
         }
 
+        // ✨ 找回：開啟探索紀錄
         function openLogModal() {
             const listEl = document.getElementById('log-list'); listEl.innerHTML = '';
             document.getElementById('log-status').innerText = `已探索世界：${db.visitedWorlds.length} / 3000`;
@@ -433,7 +447,7 @@
                         vowStep = 0; 
                         speak("願力圓滿", 0.85);
                         isProcessingVow = false; 
-                    }, 1200); 
+                    }, 2500); // ✨ 修復：將等待時間從 1200 改為 2500，保證最後一個字唸完才飛出
                 } else {
                     setTimeout(() => { isProcessingVow = false; }, 500); 
                 }

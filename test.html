@@ -11,7 +11,10 @@
         #nebula { position: absolute; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 50%, #150d1f 0%, #010103 100%); transition: opacity 1s; }
         canvas { width: 100vw; height: 100vh; display: block; position: absolute; z-index: 1; }
 
-        #vow-display { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); width: 100%; text-align: center; z-index: 10; pointer-events: none; color: #f3e5ab; font-size: 1.5rem; letter-spacing: 12px; font-weight: 300; text-shadow: 0 0 20px rgba(243, 229, 171, 0.8), 0 0 40px #fff; opacity: 1; transition: opacity 0.3s; }
+        /* ✨ 實體按鈕區塊：畫面中央巨大透明按鈕 */
+        #vow-click-zone { position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); width: 80vw; height: 40vh; display: flex; justify-content: center; align-items: center; z-index: 50; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        
+        #vow-display { color: #f3e5ab; font-size: 1.5rem; letter-spacing: 12px; font-weight: 300; text-shadow: 0 0 20px rgba(243, 229, 171, 0.8), 0 0 40px #fff; opacity: 1; transition: opacity 0.3s; pointer-events: none; }
 
         #flash { position: absolute; inset: 0; background: #fff; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.8s ease-out; }
         
@@ -60,11 +63,10 @@
 
         #log-list { max-height: 250px; overflow-y: auto; text-align: left; padding: 10px; margin-bottom: 20px; scrollbar-width: none; }
         .log-item { color: #e0e0e0; font-size: 0.85rem; letter-spacing: 2px; padding: 8px 0; border-bottom: 1px dashed rgba(139,168,156,0.2); display: flex; align-items: center; }
-        .log-item::before { content: '✧'; color: var(--gold); margin-right: 8px; font-size: 0.7rem; }
+        .log-item::before { content: '✧'; color: #d4af37; margin-right: 8px; font-size: 0.7rem; }
     </style>
 </head>
 <body id="body-state">
-
 
     <svg style="position: absolute; width: 0; height: 0; pointer-events: none; left: -9999px;">
         <defs>
@@ -79,7 +81,9 @@
     <div id="nebula"></div>
     <canvas id="mainCanvas"></canvas>
     
-    <div id="vow-display">請輕觸畫面</div>
+    <div id="vow-click-zone" onclick="triggerVow()">
+        <div id="vow-display">請輕觸此處</div>
+    </div>
     
     <div id="treasure-overlay" onclick="collectTreasure()">
         <div id="svg-container"></div> 
@@ -121,17 +125,8 @@
         </div>
     </div>
 
- 
-        
-        
-            
-            
-            
-        
-               
-        
-               <script>
-        // ✨ 主系統同款：絕對穩定的單次點擊語音引擎
+    <script>
+        // ✨ 最純淨的語音引擎 (無延遲，直接講)
         window.sysUtterances = [];
         function speak(t, r = 0.85) {
             if (!window.speechSynthesis) return; 
@@ -153,26 +148,24 @@
                 m.onend = function() { window.sysUtterances = window.sysUtterances.filter(u => u !== m); };
                 setTimeout(() => { window.speechSynthesis.speak(m); }, 150);
             } else {
-                // ✨ 蘋果 iOS 專屬：拔除 setTimeout，絕對同步發聲！
                 window.speechSynthesis.speak(m);
             }
         }
 
         const canvas = document.getElementById('mainCanvas'); const ctx = canvas.getContext('2d');
-        const bodyState = document.getElementById('body-state'); const vowDisplay = document.getElementById('vow-display');
+        const vowDisplay = document.getElementById('vow-display');
         const treasureOverlay = document.getElementById('treasure-overlay'); const svgContainer = document.getElementById('svg-container');
         const tNameUi = document.getElementById('t-name-ui'); const tDescUi = document.getElementById('t-desc-ui');
         const hint = document.getElementById('hint'); const flash = document.getElementById('flash');
         const litCountUi = document.getElementById('lit-count-ui');
+        const clickZone = document.getElementById('vow-click-zone');
         
         const vows = ["眾生無邊誓願度", "煩惱無盡誓願斷", "法門無量誓願學", "佛道無上誓願成"];
         const planetColors = [{r: 212, g: 175, b: 55}, {r: 139, g: 168, b: 156}, {r: 194, g: 24, b: 91}, {r: 224, g: 247, b: 250}];
         const prefixes = ["普明", "無垢", "金剛", "妙樂", "法雲", "香水", "琉璃", "常寂", "寶威", "無量", "勝高", "離垢", "普賢", "華藏", "淨光", "寶燄", "蓮華", "微塵", "妙莊嚴"];
         const suffixes = ["光", "音", "海", "網", "幢", "輪", "藏", "月", "華", "焰", "臺", "聚", "界", "城", "明", "善"];
 
-        function generateWorldName() {
-            return prefixes[Math.floor(Math.random() * prefixes.length)] + suffixes[Math.floor(Math.random() * suffixes.length)] + "世界";
-        }
+        function generateWorldName() { return prefixes[Math.floor(Math.random() * prefixes.length)] + suffixes[Math.floor(Math.random() * suffixes.length)] + "世界"; }
 
         let db;
         try { db = JSON.parse(localStorage.getItem('PX_V15.0')); if (!db || typeof db !== 'object') db = null; } catch(e) {}
@@ -193,9 +186,8 @@
         let w, h, time = 0; let planets = []; let fgPlanets = [];     
         let appState = 'daily_ritual'; 
         
-        // ✨ 新增：點擊次數追蹤器與防幽靈連點金鐘罩
         let vowStep = 0; 
-        let lastTapTime = 0;
+        let isProcessingVow = false; 
         
         let litCount = db.bodhiLitCount; 
         let hasDroppedTreasure = false; 
@@ -207,10 +199,7 @@
         function init() {
             w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
             litCountUi.innerText = litCount;
-
-            // ✨ 阿智把「今日已滿」的狀態鎖強制拔除了！
-            // 無論您今天重整多少次，它都會停留在 'daily_ritual' 讓您無限次測試語音！
-            appState = 'daily_ritual';
+            appState = 'daily_ritual'; // 強制每日儀軌模式以供測試
 
             planets = []; const radius = 1500; 
             for (let i = 0; i < 1080; i++) {
@@ -325,7 +314,6 @@
                 });
             }
 
-            // ✨ 光環根據點擊次數 (vowStep) 穩定放大
             if (appState === 'daily_ritual' && !shooting && (!targetPlanet || targetPlanet.state === 'orbit')) {
                 let basePulse = Math.sin(time * 0.5) * 5;
                 let currentRadius = 40 + basePulse + (vowStep * 20); 
@@ -354,6 +342,7 @@
 
         function showTreasureOverlay(planet) {
             appState = 'treasure_view'; 
+            clickZone.style.pointerEvents = 'none'; 
             flash.style.opacity = 1; setTimeout(() => { flash.style.opacity = 0; }, 600);
             
             let isNewStar = !planet.isLit;
@@ -397,10 +386,9 @@
         }
 
         function completeRitual() {
-            // ✨ 讓行者可以繼續測試點擊
             appState = 'daily_ritual'; 
-            bodyState.className = '';
-            hint.innerText = "輕觸螢幕 ． 凝聚願力"; hint.style.opacity = 1;
+            clickZone.style.pointerEvents = 'auto'; 
+            hint.innerText = "輕觸文字 ． 凝聚願力"; hint.style.opacity = 1;
             db.bodhiLitCount = litCount; db.bodhiLastDate = new Date().toDateString(); saveDB();
             setTimeout(() => { document.getElementById('modal-overlay').classList.add('show'); }, 500);
         }
@@ -419,68 +407,59 @@
         }
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-        // ✨ 完美的點四次＋金鐘罩防幽靈機制
-        function pointerDown(e) {
-            let now = Date.now();
-            if (now - lastTapTime < 300) return; // 擋掉幽靈連點
-            lastTapTime = now;
-
-            if (e.target.closest('.obs-ui') || e.target.closest('.modal-wrap') || appState === 'treasure_view') return;
+        // ✨ 核心絕招：綁定在 HTML onclick 的實體按鈕事件
+        function triggerVow() {
+            if (isProcessingVow || vowStep >= 4 || appState !== 'daily_ritual') return;
             
-            if (appState === 'daily_ritual') {
-                if (shooting || (targetPlanet && targetPlanet.state !== 'orbit')) return;
+            isProcessingVow = true; 
+            if (navigator.vibrate) navigator.vibrate(15);
+            hint.style.opacity = 0;
+            
+            // 💡 點擊當下，立刻發聲！完全沒有延遲！
+            speak(vows[vowStep], 0.85);
+
+            vowDisplay.style.opacity = 0;
+            
+            setTimeout(() => {
+                vowDisplay.innerText = vows[vowStep];
+                vowDisplay.style.opacity = 1;
+                vowStep++;
                 
-                // 只要還沒點滿4次，點一下就推進一步
-                if (vowStep < 4) {
-                    if (navigator.vibrate) navigator.vibrate(15);
-                    bodyState.classList.add('charging'); 
-                    hint.style.opacity = 0;
-                    
-                    // ✨ 在點擊的當下，立刻送出語音指令！
-                    let currentVow = vows[vowStep];
-                    speak(currentVow, 0.85);
-
-                    vowDisplay.style.opacity = 0;
+                if (vowStep === 4) {
                     setTimeout(() => {
-                        vowDisplay.innerText = currentVow;
-                        vowDisplay.style.opacity = 1;
-                        
-                        vowStep++;
-                        
-                        // 當點滿四次時，自動發射！
-                        if (vowStep === 4) {
-                            setTimeout(() => {
-                                vowDisplay.style.opacity = 0; 
-                                targetPlanet = planets[Math.floor(Math.random() * planets.length)]; 
-                                shooting = true; beamProgress = 0; 
-                                vowStep = 0; 
-                                speak("願力圓滿", 0.85);
-                            }, 1500); 
-                        }
-                    }, 50);
+                        vowDisplay.style.opacity = 0; 
+                        targetPlanet = planets[Math.floor(Math.random() * planets.length)]; 
+                        shooting = true; beamProgress = 0; 
+                        vowStep = 0; 
+                        speak("願力圓滿", 0.85);
+                        isProcessingVow = false; 
+                    }, 1200); 
+                } else {
+                    setTimeout(() => { isProcessingVow = false; }, 500); 
                 }
-
-            } else if (appState === 'observation') {
-                isDragging = true; lastMouseX = e.touches ? e.touches[0].clientX : e.clientX; lastMouseY = e.touches ? e.touches[0].clientY : e.clientY; hint.style.opacity = 0;
-            }
+            }, 50);
         }
-        
+
+        // 背景星空拖曳
+        function pointerDown(e) {
+            if (e.target.closest('#vow-click-zone') || e.target.closest('.obs-ui') || e.target.closest('.modal-wrap') || appState === 'treasure_view') return;
+            isDragging = true; lastMouseX = e.touches ? e.touches[0].clientX : e.clientX; lastMouseY = e.touches ? e.touches[0].clientY : e.clientY; 
+        }
         function pointerMove(e) {
-            if (appState === 'observation' && isDragging) {
+            if (isDragging) {
                 let currentX = e.touches ? e.touches[0].clientX : e.clientX; let currentY = e.touches ? e.touches[0].clientY : e.clientY;
                 targetRotY += (currentX - lastMouseX) * 0.005; targetRotX += (currentY - lastMouseY) * 0.005;
                 if (targetRotX > 0.5) targetRotX = 0.5; if (targetRotX < -0.5) targetRotX = -0.5;
                 lastMouseX = currentX; lastMouseY = currentY;
             }
         }
-        
-        function pointerUp(e) {
-            if (appState === 'observation') { isDragging = false; hint.style.opacity = 0.5; }
-        }
+        function pointerUp(e) { isDragging = false; }
 
-        window.addEventListener('mousedown', pointerDown); window.addEventListener('mousemove', pointerMove); window.addEventListener('mouseup', pointerUp);
+        window.addEventListener('mousedown', pointerDown); window.addEventListener('mousemove', pointerMove); window.addEventListener('window.mouseup', pointerUp);
         window.addEventListener('touchstart', pointerDown, {passive: false}); window.addEventListener('touchmove', pointerMove, {passive: false}); window.addEventListener('touchend', pointerUp, {passive: false});
         window.addEventListener('resize', init);
         
         init(); draw();
     </script>
+</body>
+</html>

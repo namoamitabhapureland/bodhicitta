@@ -10,16 +10,21 @@
         
         #nebula { position: absolute; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 50%, #150d1f 0%, #010103 100%); transition: opacity 1s; }
         canvas { width: 100vw; height: 100vh; display: block; position: absolute; z-index: 1; }
+        .charging #nebula { opacity: 0.2; }
 
-        /* ✨ 實體按鈕區塊：畫面中央巨大透明按鈕 */
-        #vow-click-zone { position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); width: 80vw; height: 40vh; display: flex; justify-content: center; align-items: center; z-index: 50; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-        
-        #vow-display { color: #f3e5ab; font-size: 1.5rem; letter-spacing: 12px; font-weight: 300; text-shadow: 0 0 20px rgba(243, 229, 171, 0.8), 0 0 40px #fff; opacity: 1; transition: opacity 0.3s; pointer-events: none; }
+        #vow-display { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); width: 100%; text-align: center; z-index: 10; pointer-events: none; color: #f3e5ab; font-size: 1.5rem; letter-spacing: 12px; font-weight: 300; text-shadow: 0 0 20px rgba(243, 229, 171, 0.8), 0 0 40px #fff; opacity: 0; transition: opacity 0.3s; }
+        .charging #vow-display { opacity: 1; }
+
+        /* 放開防呆提示大字 */
+        #release-hint { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 1.8rem; letter-spacing: 15px; text-shadow: 0 0 30px #d4af37, 0 0 60px #fff; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 60; font-weight: bold; white-space: nowrap;}
+        .ready-to-release #release-hint { opacity: 1; }
+        .ready-to-release #vow-display { opacity: 0 !important; }
 
         #flash { position: absolute; inset: 0; background: #fff; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.8s ease-out; }
         
         #progress { position: absolute; top: 30px; right: 30px; color: #8ba89c; font-size: 0.9rem; letter-spacing: 3px; z-index: 10; opacity: 0.8; text-shadow: 0 0 10px rgba(139,168,156,0.5); transition: opacity 0.5s; }
         
+        /* 底部提示文字提亮與呼吸動畫 */
         #hint { position: absolute; bottom: 40px; width: 100%; text-align: center; color: rgba(255, 255, 255, 0.85); font-size: 0.95rem; letter-spacing: 6px; z-index: 5; transition: opacity 0.5s; pointer-events: none; text-shadow: 0 0 10px rgba(243, 229, 171, 0.8); animation: hint-breathe 3s infinite alternate; }
         @keyframes hint-breathe { 0% { opacity: 0.5; transform: scale(0.98); } 100% { opacity: 1; transform: scale(1.02); } }
 
@@ -63,7 +68,7 @@
 
         #log-list { max-height: 250px; overflow-y: auto; text-align: left; padding: 10px; margin-bottom: 20px; scrollbar-width: none; }
         .log-item { color: #e0e0e0; font-size: 0.85rem; letter-spacing: 2px; padding: 8px 0; border-bottom: 1px dashed rgba(139,168,156,0.2); display: flex; align-items: center; }
-        .log-item::before { content: '✧'; color: #d4af37; margin-right: 8px; font-size: 0.7rem; }
+        .log-item::before { content: '✧'; color: var(--gold); margin-right: 8px; font-size: 0.7rem; }
     </style>
 </head>
 <body id="body-state">
@@ -72,8 +77,8 @@
         <defs>
             <linearGradient id="pure-glass" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9" /><stop offset="50%" stop-color="#f3e5ab" stop-opacity="0.6" /><stop offset="100%" stop-color="#d4af37" stop-opacity="0.2" /></linearGradient>
             <linearGradient id="facet-light" x1="0%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.95"/><stop offset="100%" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
-            <linearGradient id="facet-dark" x1="50%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d4af37" stop-opacity="0.2"/><stop offset="100%" stop-color="#b8860b" stop-opacity="0.8"/></linearGradient>
-            <linearGradient id="facet-cyan" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e0f7fa" stop-opacity="0.9"/><stop offset="100%" stop-color="#00838f" stop-opacity="0.5"/></linearGradient>
+            <linearGradient id="facet-dark" x1="50%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d4af37" stop-opacity="0.1"/><stop offset="100%" stop-color="#b8860b" stop-opacity="0.7"/></linearGradient>
+            <linearGradient id="facet-cyan" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e0f7fa" stop-opacity="0.9"/><stop offset="100%" stop-color="#00838f" stop-opacity="0.4"/></linearGradient>
             <linearGradient id="facet-rose" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#c2185b" stop-opacity="0.5"/></linearGradient>
         </defs>
     </svg>
@@ -81,9 +86,8 @@
     <div id="nebula"></div>
     <canvas id="mainCanvas"></canvas>
     
-    <div id="vow-click-zone" onclick="triggerVow()">
-        <div id="vow-display">請輕觸此處</div>
-    </div>
+    <div id="vow-display">眾生無邊誓願度</div>
+    <div id="release-hint">願力具足 ． 請放開</div>
     
     <div id="treasure-overlay" onclick="collectTreasure()">
         <div id="svg-container"></div> 
@@ -95,7 +99,7 @@
     </div>
     
     <div id="flash"></div>
-    <div id="hint">輕觸螢幕 ． 凝聚願力</div>
+    <div id="hint">長按發菩提心 ． 迴向法界</div>
     <div id="progress">華藏大千世界 ． <span id="lit-count-ui">0</span> / 3000</div>
 
     <div class="obs-ui" id="btn-back" onclick="window.location.href='index.html?screen=3'">← 修行區</div>
@@ -126,17 +130,35 @@
     </div>
 
     <script>
-        // ✨ 最純淨的語音引擎 (無延遲，直接講)
+        // ✨ 蘋果 iOS 專屬：破冰解鎖器
+        let iosAudioUnlocked = false;
+        
+        // 此事件只需觸發一次，用來騙過蘋果的靜音鎖定
+        document.body.addEventListener('touchstart', function() {
+            if (!iosAudioUnlocked && window.speechSynthesis) {
+                let silentUtterance = new SpeechSynthesisUtterance('');
+                window.speechSynthesis.speak(silentUtterance);
+                iosAudioUnlocked = true;
+            }
+        }, { once: true });
+        
+        document.body.addEventListener('mousedown', function() {
+            if (!iosAudioUnlocked && window.speechSynthesis) {
+                let silentUtterance = new SpeechSynthesisUtterance('');
+                window.speechSynthesis.speak(silentUtterance);
+                iosAudioUnlocked = true;
+            }
+        }, { once: true });
+
+        // ✨ 跨平台語音引擎 (拔除 iOS 的延遲 setTimeout)
         window.sysUtterances = [];
         function speak(t, r = 0.85) {
             if (!window.speechSynthesis) return; 
             window.speechSynthesis.cancel(); 
-            
             let isAndroid = /Android/i.test(navigator.userAgent);
             let textToSpeak = isAndroid ? t : t.replace(/阿/g, 'ㄚ');
             const m = new SpeechSynthesisUtterance(textToSpeak);
-            m.lang = 'zh-TW'; 
-            m.rate = r; 
+            m.lang = 'zh-TW'; m.rate = r; 
             
             if (isAndroid) {
                 window.sysUtterances.push(m);
@@ -146,29 +168,39 @@
                     if (zhVoice) m.voice = zhVoice;
                 }
                 m.onend = function() { window.sysUtterances = window.sysUtterances.filter(u => u !== m); };
+                // Android 保持原有的延遲機制以保證穩定
                 setTimeout(() => { window.speechSynthesis.speak(m); }, 150);
             } else {
+                // ✨ 蘋果 iOS 必須絕對「同步」執行，不使用 setTimeout
                 window.speechSynthesis.speak(m);
             }
         }
 
         const canvas = document.getElementById('mainCanvas'); const ctx = canvas.getContext('2d');
-        const vowDisplay = document.getElementById('vow-display');
+        const bodyState = document.getElementById('body-state'); const vowDisplay = document.getElementById('vow-display');
         const treasureOverlay = document.getElementById('treasure-overlay'); const svgContainer = document.getElementById('svg-container');
         const tNameUi = document.getElementById('t-name-ui'); const tDescUi = document.getElementById('t-desc-ui');
         const hint = document.getElementById('hint'); const flash = document.getElementById('flash');
         const litCountUi = document.getElementById('lit-count-ui');
-        const clickZone = document.getElementById('vow-click-zone');
         
         const vows = ["眾生無邊誓願度", "煩惱無盡誓願斷", "法門無量誓願學", "佛道無上誓願成"];
         const planetColors = [{r: 212, g: 175, b: 55}, {r: 139, g: 168, b: 156}, {r: 194, g: 24, b: 91}, {r: 224, g: 247, b: 250}];
+        
         const prefixes = ["普明", "無垢", "金剛", "妙樂", "法雲", "香水", "琉璃", "常寂", "寶威", "無量", "勝高", "離垢", "普賢", "華藏", "淨光", "寶燄", "蓮華", "微塵", "妙莊嚴"];
         const suffixes = ["光", "音", "海", "網", "幢", "輪", "藏", "月", "華", "焰", "臺", "聚", "界", "城", "明", "善"];
 
-        function generateWorldName() { return prefixes[Math.floor(Math.random() * prefixes.length)] + suffixes[Math.floor(Math.random() * suffixes.length)] + "世界"; }
+        function generateWorldName() {
+            let p = prefixes[Math.floor(Math.random() * prefixes.length)];
+            let s = suffixes[Math.floor(Math.random() * suffixes.length)];
+            return p + s + "世界";
+        }
 
         let db;
-        try { db = JSON.parse(localStorage.getItem('PX_V15.0')); if (!db || typeof db !== 'object') db = null; } catch(e) {}
+        try {
+            db = JSON.parse(localStorage.getItem('PX_V15.0'));
+            if (!db || typeof db !== 'object') db = null;
+        } catch(e) {}
+        
         if (!db) db = { treasures: { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 }, bodhiLitCount: 0, bodhiLastDate: "", bodhiLastDropDate: "", visitedWorlds: [] };
         if (!db.treasures) db.treasures = { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 };
         if (db.bodhiLitCount === undefined) db.bodhiLitCount = 0;
@@ -179,18 +211,18 @@
 
         const basicTreasures = [
             { id: "sword", name: "幾何慧劍", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 5)"><polygon points="50,10 56,40 50,105 44,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="50,10 56,40 50,105" fill="url(#facet-cyan)" opacity="0.8"/><polygon points="50,10 44,40 50,105" fill="url(#facet-dark)" opacity="0.6"/><polygon points="35,100 65,100 55,110 45,110" fill="url(#pure-glass)" stroke="#d4af37" stroke-width="0.8"/><polygon points="46,110 54,110 52,135 48,135" fill="url(#facet-dark)"/><polygon points="50,135 56,142 50,148 44,142" fill="url(#facet-light)" stroke="#f3e5ab" stroke-width="1"/><circle cx="50" cy="105" r="4" fill="#fff" filter="drop-shadow(0 0 8px #e0f7fa)"/></g></svg>` },
-            { id: "vase", name: "琉璃淨瓶", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 10)"><polygon points="45,20 55,20 60,40 40,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#facet-cyan)" opacity="0.8" stroke="#fff" stroke-width="0.5"/><polygon points="50,40 60,40 75,90 50,90" fill="url(#facet-dark)" opacity="0.6"/><polygon points="25,90 75,90 60,120 40,120" fill="url(#facet-light)" stroke="#f3e5ab" stroke-width="0.5"/><polygon points="50,90 75,90 60,120 50,120" fill="url(#facet-dark)" opacity="0.7"/><polygon points="40,25 60,25" stroke="#f3e5ab" stroke-width="1"/></g></svg>` },
-            { id: "jewel", name: "多面寶珠", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 25)"><polygon points="50,10 80,40 50,55 20,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#facet-rose)" opacity="0.9" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="url(#facet-dark)" opacity="0.8" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 35,25 50,55" fill="rgba(255,255,255,0.4)" stroke="#fff" stroke-width="0.3"/><polygon points="80,40 65,25 50,55" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="0.3"/></g></svg>` }
+            { id: "vase", name: "琉璃淨瓶", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 10)"><polygon points="45,25 55,25 58,50 42,50" fill="url(#facet-light)" stroke="#f3e5ab" stroke-width="0.3"/><polygon points="42,50 58,50 72,95 28,95" fill="url(#facet-cyan)" stroke="#fff" stroke-width="0.5"/><polygon points="50,50 58,50 72,95 50,95" fill="url(#facet-dark)" opacity="0.5"/><polygon points="42,50 50,50 50,95 28,95" fill="url(#facet-light)" opacity="0.5"/><polygon points="28,95 72,95 60,125 40,125" fill="url(#facet-dark)" stroke="#f3e5ab" stroke-width="0.5"/><path d="M40 125 Q50 135 60 125 Z" fill="url(#facet-light)"/><ellipse cx="50" cy="95" rx="22" ry="6" fill="rgba(255,255,255,0.4)"/><circle cx="50" cy="80" r="10" fill="rgba(255,255,255,0.8)" filter="drop-shadow(0 0 15px #e0f7fa)"/></g></svg>` },
+            { id: "jewel", name: "多面寶珠", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 20)"><polygon points="50,15 85,45 50,65 15,45" fill="url(#facet-light)" stroke="#fff" stroke-width="0.8"/><polygon points="15,45 50,65 50,115 25,85" fill="url(#facet-rose)" opacity="0.9" stroke="#fff" stroke-width="0.5"/><polygon points="85,45 50,65 50,115 75,85" fill="url(#facet-dark)" opacity="0.8" stroke="#fff" stroke-width="0.5"/><polygon points="50,115 25,85 50,65" fill="rgba(255,255,255,0.3)"/><polygon points="50,15 50,65 85,45" fill="rgba(255,255,255,0.4)"/><circle cx="50" cy="65" r="5" fill="#fff" filter="drop-shadow(0 0 12px #fff)"/></g></svg>` }
         ];
 
-        let w, h, time = 0; let planets = []; let fgPlanets = [];     
+        let w, h, time = 0;
+        let planets = [];       
+        let fgPlanets = [];     
         let appState = 'daily_ritual'; 
-        
-        let vowStep = 0; 
-        let isProcessingVow = false; 
+        let isPressing = false; let chargeLevel = 0; 
         
         let litCount = db.bodhiLitCount; 
-        let hasPlayedToday = (db.bodhiLastDate === new Date().toDateString()); 
+        let hasPlayedToday = false; 
         let hasDroppedTreasure = false; 
 
         let rotX = 0, rotY = 0; let targetRotX = 0, targetRotY = 0;
@@ -199,27 +231,32 @@
 
         function init() {
             w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
+            
+            let today = new Date().toDateString();
+            if (db.bodhiLastDate === today) hasPlayedToday = true;
+
             litCountUi.innerText = litCount;
 
-            // ✨ 正式版鎖定機制：如果今天玩過了，進入觀賞模式
             if (hasPlayedToday) {
-                appState = 'observation'; 
+                appState = 'observation';
                 bodyState.className = 'mode-observation';
                 hint.innerText = "今日願力已滿，或可明日再來觀心"; hint.style.opacity = 0.5;
-                clickZone.style.pointerEvents = 'none'; // 鎖住按鈕
                 setTimeout(() => { document.getElementById('modal-overlay').classList.add('show'); }, 500);
-            } else {
-                appState = 'daily_ritual'; 
             }
 
             planets = []; const radius = 1500; 
             for (let i = 0; i < 1080; i++) {
                 const phi = Math.acos(1 - 2 * (i + 0.5) / 1080);
                 const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+                
+                let ratio = litCount / 3000;
+                let isLit = (i < 1080 * ratio);
+
                 planets.push({
                     id: i, baseX: radius * Math.cos(theta) * Math.sin(phi), baseY: radius * Math.cos(phi), baseZ: radius * Math.sin(theta) * Math.sin(phi),
-                    isLit: (i < 1080 * (litCount / 3000)), colorObj: planetColors[i % 4], size: Math.random() * 2 + 1,
-                    state: 'orbit', animT: 0, worldName: generateWorldName() 
+                    isLit: isLit, colorObj: planetColors[i % 4], size: Math.random() * 2 + 1,
+                    state: 'orbit', animT: 0,
+                    worldName: generateWorldName() 
                 });
             }
 
@@ -228,7 +265,8 @@
                 fgPlanets.push({
                     x: Math.random() * w, y: Math.random() * h * 0.8 + h*0.1,
                     speed: (Math.random() * 0.3 + 0.1) * (Math.random() > 0.5 ? 1 : -1),
-                    size: Math.random() * 15 + 10, isLit: Math.random() > 0.5,
+                    size: Math.random() * 15 + 10,
+                    isLit: Math.random() > 0.5,
                     colorObj: planetColors[Math.floor(Math.random() * 4)], phase: Math.random() * Math.PI * 2
                 });
             }
@@ -243,7 +281,8 @@
         function getQBezier(t, p0, p1, p2) { return (1-t)*(1-t)*p0 + 2*(1-t)*t*p1 + t*t*p2; }
 
         function draw() {
-            ctx.clearRect(0, 0, w, h); time += 0.05;
+            ctx.clearRect(0, 0, w, h);
+            time += 0.05;
             if (appState === 'daily_ritual' && !shooting) targetRotY += 0.001;
             rotX += (targetRotX - rotX) * 0.1; rotY += (targetRotY - rotY) * 0.1;
 
@@ -285,7 +324,7 @@
                     ctx.beginPath(); ctx.arc(x2d, y2d, r2d, 0, Math.PI * 2); ctx.fill();
                     ctx.shadowBlur = 0;
                 } else {
-                    let opacity = (appState === 'daily_ritual' && vowStep > 0) ? 0.05 : 0.3;
+                    let opacity = (appState === 'daily_ritual' && isPressing) ? 0.05 : 0.3;
                     ctx.fillStyle = `rgba(${r},${g},${b}, ${opacity})`;
                     ctx.beginPath(); ctx.arc(x2d, y2d, r2d, 0, Math.PI * 2); ctx.fill();
                 }
@@ -325,18 +364,17 @@
                 });
             }
 
-            // ✨ 光環根據點擊次數 (vowStep) 穩定放大
             if (appState === 'daily_ritual' && !shooting && (!targetPlanet || targetPlanet.state === 'orbit')) {
-                let basePulse = Math.sin(time * 0.5) * 5;
-                let currentRadius = 40 + basePulse + (vowStep * 20); 
+                let basePulse = isPressing ? 0 : Math.sin(time * 0.5) * 5;
+                let currentRadius = 40 + basePulse + (chargeLevel * 1.5); 
                 for(let r = 0; r < 3; r++) {
                     let ringRad = currentRadius - (r * 15); if(ringRad < 0) continue;
                     const grad = ctx.createRadialGradient(w/2, h/2 + 50, 0, w/2, h/2 + 50, ringRad + 10);
-                    let alpha = (0.7 - r*0.2) + (vowStep * 0.15);
+                    let alpha = (0.7 - r*0.2) + (chargeLevel/200);
                     grad.addColorStop(0, `rgba(243, 229, 171, ${alpha})`); grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
                     ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(w/2, h/2 + 50, ringRad + 15, 0, Math.PI * 2); ctx.fill();
                 }
-                ctx.beginPath(); ctx.arc(w/2, h/2 + 50, 8 + (vowStep * 4), 0, Math.PI * 2);
+                ctx.beginPath(); ctx.arc(w/2, h/2 + 50, 8 + (chargeLevel * 0.3), 0, Math.PI * 2);
                 ctx.fillStyle = '#fff'; ctx.shadowBlur = 20; ctx.shadowColor = '#fff'; ctx.fill(); ctx.shadowBlur = 0;
             }
 
@@ -354,15 +392,19 @@
 
         function showTreasureOverlay(planet) {
             appState = 'treasure_view'; 
-            clickZone.style.pointerEvents = 'none'; 
             flash.style.opacity = 1; setTimeout(() => { flash.style.opacity = 0; }, 600);
             
             let isNewStar = !planet.isLit;
             
             if (isNewStar) {
-                planet.isLit = true; litCount++; if(litCount > 3000) litCount = 3000;
+                planet.isLit = true;
+                litCount++; 
+                if(litCount > 3000) litCount = 3000;
                 litCountUi.innerText = litCount;
-                if(!db.visitedWorlds.includes(planet.worldName)) { db.visitedWorlds.push(planet.worldName); }
+                
+                if(!db.visitedWorlds.includes(planet.worldName)) {
+                    db.visitedWorlds.push(planet.worldName);
+                }
             }
             
             hasDroppedTreasure = checkDropEligibility();
@@ -398,78 +440,100 @@
         }
 
         function completeRitual() {
-            appState = 'observation'; 
-            bodyState.className = 'mode-observation';
+            appState = 'observation'; bodyState.className = 'mode-observation';
             hint.innerText = "今日願力已滿，或可明日再來觀心"; hint.style.opacity = 0.5;
-            clickZone.style.pointerEvents = 'none'; 
             db.bodhiLitCount = litCount; db.bodhiLastDate = new Date().toDateString(); saveDB();
-            setTimeout(() => { document.getElementById('modal-overlay').classList.add('show'); }, 500);
         }
 
-        // ✨ 找回：開啟探索紀錄
         function openLogModal() {
-            const listEl = document.getElementById('log-list'); listEl.innerHTML = '';
+            const listEl = document.getElementById('log-list');
+            listEl.innerHTML = '';
             document.getElementById('log-status').innerText = `已探索世界：${db.visitedWorlds.length} / 3000`;
+            
             if(db.visitedWorlds.length === 0) {
                 listEl.innerHTML = '<div style="text-align:center; color:#666; padding:20px;">尚未踏足星海，祈願行者早發菩提。</div>';
             } else {
-                db.visitedWorlds.slice().reverse().forEach(w => {
-                    const item = document.createElement('div'); item.className = 'log-item'; item.innerText = w; listEl.appendChild(item);
+                db.visitedWorlds.slice().reverse().forEach(world => {
+                    const item = document.createElement('div');
+                    item.className = 'log-item';
+                    item.innerText = world;
+                    listEl.appendChild(item);
                 });
             }
             document.getElementById('log-modal').classList.add('show');
         }
+
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-        // ✨ 核心絕招：綁定在 HTML onclick 的實體按鈕事件
-        function triggerVow() {
-            if (isProcessingVow || vowStep >= 4 || appState !== 'daily_ritual') return;
-            
-            isProcessingVow = true; 
-            if (navigator.vibrate) navigator.vibrate(15);
-            hint.style.opacity = 0;
-            
-            // 💡 點擊當下，立刻發聲！完全沒有延遲！
-            speak(vows[vowStep], 0.85);
+        let hasSpokenIntro = false;
+        let hasSpokenRelease = false;
 
-            vowDisplay.style.opacity = 0;
-            
-            setTimeout(() => {
-                vowDisplay.innerText = vows[vowStep];
-                vowDisplay.style.opacity = 1;
-                vowStep++;
+        setInterval(() => {
+            if (appState === 'daily_ritual' && isPressing) {
+                chargeLevel += 1.2; 
+                if (chargeLevel > 100) chargeLevel = 100;
                 
-                if (vowStep === 4) {
-                    setTimeout(() => {
-                        vowDisplay.style.opacity = 0; 
-                        targetPlanet = planets[Math.floor(Math.random() * planets.length)]; 
-                        shooting = true; beamProgress = 0; 
-                        vowStep = 0; 
-                        speak("願力圓滿", 0.85);
-                        isProcessingVow = false; 
-                    }, 2500); // ✨ 修復：將等待時間從 1200 改為 2500，保證最後一個字唸完才飛出
-                } else {
-                    setTimeout(() => { isProcessingVow = false; }, 500); 
+                let stage = Math.floor((chargeLevel / 100) * 4); 
+                if (stage > 3) stage = 3;
+                
+                if (vowDisplay.innerText !== vows[stage]) { 
+                    vowDisplay.style.opacity = 0; 
+                    setTimeout(() => { 
+                        vowDisplay.innerText = vows[stage]; 
+                        vowDisplay.style.opacity = 1; 
+                        speak(vows[stage], 0.8); 
+                    }, 50); 
                 }
-            }, 50);
-        }
 
-        // 背景星空拖曳
+                if (chargeLevel >= 95) {
+                    bodyState.classList.add('ready-to-release');
+                    if(!hasSpokenRelease) {
+                        speak("願力具足，請放開", 0.9);
+                        hasSpokenRelease = true;
+                    }
+                }
+            } else { 
+                chargeLevel *= 0.8; 
+                bodyState.classList.remove('ready-to-release');
+                hasSpokenRelease = false;
+            }
+        }, 30);
+
         function pointerDown(e) {
-            if (e.target.closest('#vow-click-zone') || e.target.closest('.obs-ui') || e.target.closest('.modal-wrap') || appState === 'treasure_view') return;
-            isDragging = true; lastMouseX = e.touches ? e.touches[0].clientX : e.clientX; lastMouseY = e.touches ? e.touches[0].clientY : e.clientY; 
+            if (e.target.closest('.obs-ui') || e.target.closest('.modal-wrap') || appState === 'treasure_view') return;
+            if (appState === 'daily_ritual') {
+                if (shooting || (targetPlanet && targetPlanet.state !== 'orbit')) return;
+                isPressing = true; bodyState.classList.add('charging'); hint.style.opacity = 0;
+                
+                if (!hasSpokenIntro) {
+                    speak("請長按凝聚願力", 0.9);
+                    hasSpokenIntro = true;
+                }
+            } else if (appState === 'observation') {
+                isDragging = true; lastMouseX = e.touches ? e.touches[0].clientX : e.clientX; lastMouseY = e.touches ? e.touches[0].clientY : e.clientY; hint.style.opacity = 0;
+            }
         }
         function pointerMove(e) {
-            if (isDragging) {
+            if (appState === 'observation' && isDragging) {
                 let currentX = e.touches ? e.touches[0].clientX : e.clientX; let currentY = e.touches ? e.touches[0].clientY : e.clientY;
                 targetRotY += (currentX - lastMouseX) * 0.005; targetRotX += (currentY - lastMouseY) * 0.005;
                 if (targetRotX > 0.5) targetRotX = 0.5; if (targetRotX < -0.5) targetRotX = -0.5;
                 lastMouseX = currentX; lastMouseY = currentY;
             }
         }
-        function pointerUp(e) { isDragging = false; }
+        function pointerUp(e) {
+            if (appState === 'daily_ritual' && isPressing) {
+                isPressing = false; bodyState.classList.remove('charging');
+                if (chargeLevel >= 95) { 
+                    vowDisplay.style.opacity = 0; 
+                    targetPlanet = planets[Math.floor(Math.random() * planets.length)]; 
+                    shooting = true; beamProgress = 0; chargeLevel = 0; 
+                }
+                else { hint.style.opacity = 0.5; }
+            } else if (appState === 'observation') { isDragging = false; hint.style.opacity = 0.5; }
+        }
 
-        window.addEventListener('mousedown', pointerDown); window.addEventListener('mousemove', pointerMove); window.addEventListener('window.mouseup', pointerUp);
+        window.addEventListener('mousedown', pointerDown); window.addEventListener('mousemove', pointerMove); window.addEventListener('mouseup', pointerUp);
         window.addEventListener('touchstart', pointerDown, {passive: false}); window.addEventListener('touchmove', pointerMove, {passive: false}); window.addEventListener('touchend', pointerUp, {passive: false});
         window.addEventListener('resize', init);
         

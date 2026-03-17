@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Naga-puspa Bodhi ． Thousand Buddhas</title>
+    <style>
+        :root {
+            --bg-deep: #010102; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "Optima", "Georgia", serif;
+            overflow: hidden; touch-action: none; user-select: none;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+            font-family: sans-serif; letter-spacing: 1px;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 350px;
+            background: transparent; border-left: 2px solid rgba(212,175,55,0.8); 
+            padding: 10px 20px; z-index: 100; transition: 1s; pointer-events: none;
+        }
+        .status-title { font-size: 1.15rem; font-weight: bold; color: var(--gold); letter-spacing: 1px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 15px rgba(0,0,0,1); }
+        .status-desc { font-size: 0.85rem; color: #ddd; line-height: 1.6; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,1); font-family: sans-serif; }
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; transition: background 0.8s; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+        #buddha-name-display {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            color: var(--gold); font-size: 1.8rem; font-weight: bold; letter-spacing: 2px;
+            text-shadow: 0 0 20px var(--solid-gold); z-index: 50;
+            opacity: 0; transition: opacity 1.5s ease-in-out, color 0.5s, text-shadow 0.5s;
+            white-space: nowrap; text-align: center; pointer-events: none;
+        }
+        .buddha-rank { font-size: 0.9rem; color: var(--cyan); letter-spacing: 2px; margin-bottom: 12px; text-shadow: none; display: block; font-family: sans-serif;}
+        
+        #universe-flash {
+            position: absolute; inset: 0; background: #fff; z-index: 99999; pointer-events: none;
+            opacity: 0; transition: opacity 1.5s ease-out;
+        }
+        .flash-active { opacity: 1 !important; transition: opacity 0.1s ease-in !important; }
+
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 12px; transition: opacity 1s; font-family: sans-serif;}
+        
+        .switch-btn {
+            width: 90%; max-width: 340px; justify-content: center;
+            background: linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(212,175,55,0.5); color: var(--gold);
+            padding: 14px 20px; border-radius: 30px; font-size: 0.95rem; font-weight: bold; letter-spacing: 1px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1);
+        }
+        .switch-btn:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(212,175,55,0.6); }
+        #theory-btn { border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,15,10,0.8); font-size: 0.85rem;}
+
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8); font-family: "Optima", "Georgia", serif;
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(212,175,55,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        .close-btn { color: var(--cyan); font-size: 0.85rem; letter-spacing: 1px; font-weight: bold; cursor: pointer; font-family: sans-serif;}
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        
+        .humble-statement { font-size: 0.85rem; color: #b0b0b0; line-height: 1.6; text-align: justify; padding: 20px; border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; background: rgba(20,15,5,0.3); margin-bottom: 50px; font-style: italic; font-family: sans-serif;}
+        
+        .main-title { color: var(--gold); font-size: 1.4rem; letter-spacing: 1.5px; text-align: center; margin-bottom: 50px; text-shadow: 0 0 15px rgba(212,175,55,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--solid-gold), transparent); margin: 15px auto 0; }
+        
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 24px; height: 24px; stroke: var(--gold); fill: none; stroke-width: 1.5; filter: drop-shadow(0 0 5px rgba(212,175,55,0.4)); flex-shrink: 0;}
+        .c-title { color: var(--gold); font-size: 1.15rem; letter-spacing: 1px; font-weight: bold; }
+        .c-text { color: var(--text-main); font-size: 0.95rem; line-height: 1.8; text-align: justify; padding-left: 39px; letter-spacing: 0.5px;}
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
+    </style>
+</head>
+<body>
+
+        <div class="back-btn" onclick="window.location.href='index_en.html?screen=3'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Sanctuary
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title" id="s-title">Naga-puspa Bodhi ． Descent of Maitreya</div>
+        <div class="status-desc" id="s-desc">"Even those who chant 'Namo Buddha' but once shall find liberation."<br>Returning by vows, fulfilling the covenant.</div>
+    </div>
+
+    <section class="matrix-section" id="bg-section">
+        <div id="universe-flash"></div> 
+        <canvas id="realmCanvas"></canvas>
+        
+        <div id="buddha-name-display">
+            <span class="buddha-rank" id="buddha-rank"></span>
+            <span id="buddha-name"></span>
+        </div>
+
+        <div class="ui-layer" id="ui-layer">
+            <button class="switch-btn" id="btn-longhua" onclick="toggleRealm(0)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="10" r="9" stroke-dasharray="2 4" opacity="0.6"/>
+                    <path d="M12 2 C 17 6, 19 11, 12 16 C 5 11, 7 6, 12 2 Z"/>
+                    <path d="M5 19 C 8 16, 16 16, 19 19 C 15 22, 9 22, 5 19 Z"/>
+                    <path d="M9 17 C 10 15, 14 15, 15 17"/>
+                </svg>
+                <span id="text-longhua">Gaze upon Bodhi ． The Naga Covenant</span>
+            </button>
+            <button class="switch-btn" id="btn-xianjie" onclick="toggleRealm(1)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <ellipse cx="12" cy="12" rx="11" ry="4" transform="rotate(30 12 12)" opacity="0.6"/>
+                    <ellipse cx="12" cy="12" rx="11" ry="4" transform="rotate(-30 12 12)" opacity="0.6"/>
+                    <path d="M12 7 C 15 10, 17 14, 12 17 C 7 14, 9 10, 12 7 Z"/>
+                    <circle cx="12" cy="3" r="1.5" fill="currentColor"/><circle cx="12" cy="21" r="1.5" fill="currentColor"/>
+                    <circle cx="3" cy="12" r="1.5" fill="currentColor"/><circle cx="21" cy="12" r="1.5" fill="currentColor"/>
+                </svg>
+                <span id="text-xianjie">1000 Buddhas ． Endless Succession</span>
+            </button>
+            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                Explore the Covenant of Maitreya & Bhadrakalpa
+            </button>
+            
+            <div style="color:rgba(212,175,55,0.6); font-size:0.75rem; letter-spacing:1px; margin-top:5px;" id="drag-hint">Swipe 360° to Visualize ． Realm of Maitreya</div>
+        </div>
+    </section>
+
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()">
+            <div class="close-bar"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+                <div class="close-btn">Close Scroll</div>
+                <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                    <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                    <span id="tts-text">Listen to Dharma</span>
+                </div>
+            </div>
+        </div>
+        <div class="theory-container" id="theory-content-box">
+            <div class="humble-statement">"Only Buddhas can fully comprehend the ultimate truth." The ocean of Dharma is boundless. This text is composed by a lay practitioner, attempting to glimpse the true meaning of the Tathāgata's teachings based on sutra logic and patriarchal commentaries. Should there be any omissions or errors, they stem from my personal intellectual limits. May the Three Jewels bless us, and may fellow practitioners share in this reflection.</div>
+            <h1 class="main-title">Descent of Maitreya ． Endless Succession</h1>
+            
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                    <div class="c-title">I. Śākyamuni's Prophecy & The Three Assemblies</div>
+                </div>
+                <div class="c-text">According to the *Maitreya Vyākaraṇa Sūtra* and other Mahayana scriptures, Śākyamuni Buddha profoundly entrusted the great vow of Anuttarā Samyaksaṃbodhi to Mahāsattva Maitreya amidst the Dharma assembly. Bodhisattva Maitreya currently resides in the inner court of Tuṣita Heaven as the Buddha-to-be. When conditions ripen, he shall descend to the Sahā world and attain enlightenment beneath the towering Naga-puspa (Dragon Flower) tree, convening three great assemblies to deliver sentient beings:<br><br>
+                <span style="color:var(--cyan); font-weight:bold;">First Assembly</span>: Delivering 96 billion of those who observed the five precepts during Śākyamuni's Dharma era.<br>
+                <span style="color:var(--cyan); font-weight:bold;">Second Assembly</span>: Delivering 94 billion of those who took the three refuges.<br>
+                <span style="color:var(--cyan); font-weight:bold;">Third Assembly</span>: Delivering 92 billion of those who even merely chanted 'Namo Buddha'.<br><br>
+                This prophecy is perhaps not merely a succession of the Dharma lineage, but a compassionate covenant of all Buddhas, never abandoning sentient beings, generating life after life in endless continuity.
+                    <svg style="width:14px;height:14px;vertical-align:middle;margin-left:6px;opacity:0.8;" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"/><circle cx="12" cy="14" r="3"/></svg>
+                    <div class="c-title">II. Foundation of Sukhavati & Virtues of Samantabhadra</div>
+                </div>
+                <div class="c-text">In the past, Master Xuanzang, a grandmaster of the Yogācāra school, possessed a clear consciousness and an adamantine will, which perhaps enabled him to ascend directly to Tuṣita. However, the minds of ordinary beings are often as fragile as glass. Without the foundational embrace of Amitābha’s original vows, drifting in the ocean of karma might be like a lone boat braving massive waves; a slight misstep could lead one to drift endlessly amidst the illusion of rebirth.<br><br>The scriptures metaphorically indicate that Sukhavati (Ultimate Bliss) might not be the final destination for practitioners to rest and indulge. Being born in the Pure Land and attaining Avaivartika (non-retrogression) seems to serve the purpose of allowing practitioners to steadily accumulate Bodhi provisions. If we contemplate the profound meaning of Amitābha’s 22nd Vow, Bodhisattvas born in that land will ultimately reach the stage of becoming a Buddha in one lifetime; yet, if they wish to transcend ordinary limits, they may don the armor of great vows, return to the Sahā world, and cultivate the virtues of Samantabhadra. This perhaps implies that Sukhavati is an exalted realm meant to protect and nurture ordinary beings to practice the Bodhisattva path and return to the Sahā world.
+                    <svg style="width:14px;height:14px;vertical-align:middle;margin-left:6px;opacity:0.8;" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+            
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="10" ry="5"/><path d="M12 2v20"/></svg>
+                    <div class="c-title">III. The Eternal Dharmakaya & Returning by Vows</div>
+                </div>
+                <div class="c-text">Observing the Dharma realm, the Reward and Transformation bodies (Sambhogakāya and Nirmāṇakāya) all seem to manifest signs of arising and ceasing; perhaps only the pure Dharmakāya can remain eternal and unfading. According to the profound mysteries revealed in the *Vyākaraṇa of Avalokiteśvara Sūtra*, although the lifespan of Amitābha Buddha in Sukhavati is inconceivable, when his conditions for transformation conclude, he too might manifest Parinirvāṇa. Countless kalpas after the Buddha’s nirvana, when the True Dharma eventually fades, Bodhisattva Avalokiteśvara shall attain perfect enlightenment under the seven-jeweled Bodhi tree, bearing the title 'Samantaprabhāsa-guṇaparvatarāja Tathāgata'.<br><br>This continuity within impermanence perhaps narrates the profound significance of the Dharma lineage’s transmission. Reflecting deeply upon this, our reliance on Amitābha's vows to attain a non-retrogressive body might simply be so that, when conditions ripen, we can more gracefully attend Bodhisattva Maitreya’s three assemblies.
+                    <svg style="width:14px;height:14px;vertical-align:middle;margin-left:6px;opacity:0.8;" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <div class="c-title">IV. Bhadrakalpa's 1000 Buddhas & Endless Succession</div>
+                </div>
+                <div class="c-text">According to the *Bhadrakalpika Sūtra*, the spacetime we reside in is known as the Bhadrakalpa. During this vast kalpa, one thousand Buddhas shall sequentially descend to the Sahā world, perhaps precisely to continuously deliver sentient beings without interruption.<br><br>The Dharma is like an eternal beacon in the universe. In the 9th minor kalpa, four Buddhas arise; in the 10th, Maitreya descends; and in the 15th, 994 Buddhas successively manifest, until the 20th minor kalpa with Rucika Buddha, which seems to complete the count of the thousand Buddhas.<br><br>Today, relying on the foundation of Sukhavati in hopes of attaining a non-retrogressive body, is perhaps preparing for this immense cosmic covenant. When future conditions ripen, we might manifest as specks of dust to return by vows amidst this endless succession of a thousand Buddhas, and perhaps even in the future bounds, bloom our own golden lotuses of Buddhahood.
+                    <svg style="width:14px;height:14px;vertical-align:middle;margin-left:6px;opacity:0.8;" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('realmCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    // Global states 0: Naga-puspa, 1: 1000 Buddhas
+    let currentRealm = 0; 
+    let time = 0;
+
+    // --- Naga-puspa Variables ---
+    let lhParticles = [];
+    let lhRipples = [];
+    let angleX = 0.1, angleY = 0;
+    let isDragging = false;
+    let lastMouseX = 0, lastMouseY = 0;
+
+    // --- 1000 Buddhas Variables ---
+    let xjStars = [];
+    const FOV = 400; 
+    const timeline = [
+        { rank: "9th Minor Kalpa ． 1st", name: "Krakucchanda Buddha", highlight: false },
+        { rank: "9th Minor Kalpa ． 2nd", name: "Kanakamuni Buddha", highlight: false },
+        { rank: "9th Minor Kalpa ． 3rd", name: "Kāśyapa Buddha", highlight: false },
+        { rank: "9th Minor Kalpa ． 4th", name: "Śākyamuni Buddha", highlight: true },
+        { rank: "10th Minor Kalpa ． 5th", name: "Maitreya Buddha", highlight: true },
+        { isFastMode: true, rank: "15th Minor Kalpa", name: "994 Buddhas successively arise", lotusCount: 15 }, 
+        { rank: "20th Minor Kalpa ． 1000th", name: "Rucika Buddha", highlight: true, isLast: true }
+    ];
+    let xjStep = 0;
+    let xjFastCounter = 0;
+    let lotusState = { phase: 'waiting', timer: 0, z: 2000, scale: 0, opacity: 0, petals: [] };
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+    }
+    window.addEventListener('resize', resize); resize();
+
+    function initEngines() {
+        // 1. Init Naga-puspa tree
+        lhParticles = []; lhRipples = [];
+        for (let i = 0; i < 600; i++) {
+            let t = i / 600; let radius = 35 * (1 - t) + 5; let spiral = t * Math.PI * 12;
+            let y = t * 250 - 100; 
+            lhParticles.push({
+                x: Math.cos(spiral)*radius + (Math.random()-0.5)*10, y: y, z: Math.sin(spiral)*radius + (Math.random()-0.5)*10,
+                baseY: y, color: Math.random()>0.4 ? '#8b5a2b' : '#d4af37', size: Math.random()*2+1, type: 'trunk', pulseOffset: Math.random()*Math.PI*2 
+            });
+        }
+        for (let i = 0; i < 2000; i++) {
+            let theta = Math.random() * Math.PI * 2; let phi = Math.acos(Math.random()*2 - 1) / 1.4; 
+            let radius = Math.random() * 220 + 60; 
+            let colors = ['#097969', '#2e8b57', '#008b8b', '#f3e5ab'];
+            lhParticles.push({
+                x: radius*Math.sin(phi)*Math.cos(theta), y: radius*Math.cos(phi)+120, z: radius*Math.sin(phi)*Math.sin(theta), 
+                baseY: radius*Math.cos(phi)+120, baseRadius: radius, basePhi: phi, baseTheta: theta,
+                color: colors[Math.floor(Math.random()*colors.length)], size: Math.random()*3+1, type: 'canopy', pulseOffset: Math.random()*Math.PI*2 
+            });
+        }
+        lhRipples.push({ radius: 0, maxRadius: 600, speed: 1.2 });
+        lhRipples.push({ radius: 200, maxRadius: 600, speed: 1.2 });
+        lhRipples.push({ radius: 400, maxRadius: 600, speed: 1.2 });
+
+        // 2. Init 1000 Buddhas stars
+        xjStars = []; lotusState.petals = [];
+        for (let i = 0; i < 800; i++) {
+            xjStars.push({
+                x: (Math.random()-0.5)*3000, y: (Math.random()-0.5)*3000, z: Math.random()*2000, 
+                speed: Math.random()*5+2, color: Math.random()>0.5 ? '#9fdfc8' : '#f3e5ab'
+            });
+        }
+        for(let i=0; i<12; i++) lotusState.petals.push(i * (Math.PI * 2 / 12));
+    }
+
+    // --- Rendering Logic ---
+    function project3D(x, y, z) {
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+        let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
+        let scale = FOV / (FOV + z2 + 250); 
+        return { x: (width/2) + x2*scale, y: (height/2) - y1*scale - 80, scale: scale, z: z2 };
+    }
+
+    function renderLonghua() {
+        if(!isDragging) angleY += 0.0015; 
+        
+        ctx.globalCompositeOperation = 'screen';
+        for (let r of lhRipples) {
+            r.radius += r.speed; if (r.radius > r.maxRadius) r.radius = 0;
+            let opacity = Math.max(0, 1 - Math.pow(r.radius / r.maxRadius, 1.5));
+            ctx.beginPath();
+            for (let i = 0; i <= 60; i++) {
+                let theta = (i/60)*Math.PI*2;
+                let proj = project3D(Math.cos(theta)*r.radius, -100, Math.sin(theta)*r.radius);
+                if (i===0) ctx.moveTo(proj.x, proj.y); else ctx.lineTo(proj.x, proj.y);
+            }
+            ctx.lineWidth = 12; ctx.strokeStyle = `rgba(212, 175, 55, ${opacity * 0.25})`; ctx.stroke();
+            ctx.lineWidth = 2.5; ctx.shadowBlur = 20; ctx.shadowColor = `rgba(243, 229, 171, ${opacity})`;
+            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.7})`; ctx.stroke(); ctx.shadowBlur = 0;
+        }
+        ctx.globalCompositeOperation = 'source-over';
+
+        let projected = [];
+        lhParticles.forEach(p => {
+            let px=p.x, py=p.y, pz=p.z, sFac=1;
+            if (p.type === 'trunk') { py = p.baseY + Math.sin(time+p.pulseOffset)*2; } 
+            else if (p.type === 'canopy') {
+                sFac = 1 + Math.sin(time+p.pulseOffset)*0.03; let rad = p.baseRadius*sFac;
+                py = rad*Math.cos(p.basePhi) + 120 + Math.sin(time+p.pulseOffset)*1.5;
+                px = rad*Math.sin(p.basePhi)*Math.cos(p.baseTheta); pz = rad*Math.sin(p.basePhi)*Math.sin(p.baseTheta);
+            }
+            let proj = project3D(px, py, pz);
+            if (proj.z > -400) projected.push({ sx: proj.x, sy: proj.y, scale: proj.scale, z: proj.z, c: p.color, s: p.size*sFac, type: p.type });
+        });
+        projected.sort((a,b) => b.z - a.z);
+
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.scale; if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.sx, p.sy, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if (p.type === 'canopy') { ctx.shadowBlur=8; ctx.shadowColor=p.c; } else ctx.shadowBlur=0;
+            ctx.fill();
+        });
+        ctx.globalCompositeOperation = 'source-over'; ctx.shadowBlur=0;
+
+        let pulse = Math.sin(time)*1.5; 
+        let proj = project3D(0, -100+pulse, 0); 
+        if (proj.z > -400) {
+            let sc = proj.scale; ctx.shadowBlur = 30+pulse*2; ctx.shadowColor = 'rgba(243,229,171,0.8)'; ctx.fillStyle = 'rgba(212,175,55,0.9)'; 
+            ctx.beginPath(); ctx.ellipse(proj.x, proj.y+15*sc, (35+pulse*0.5)*sc, (10+pulse*0.2)*sc, 0,0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(proj.x, proj.y, (22+pulse*0.8)*sc, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(proj.x, proj.y-30*sc, (12+pulse*0.3)*sc, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0; 
+        }
+    }
+
+    function drawPetal(ctx, size) {
+        ctx.beginPath(); ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(size*0.4, size*0.2, size*0.8, size*0.5, size, 0);
+        ctx.bezierCurveTo(size*0.8, -size*0.5, size*0.4, -size*0.2, 0, 0);
+        ctx.fill(); ctx.stroke();
+    }
+
+    function renderXianjie() {
+        ctx.globalCompositeOperation = 'screen'; 
+        let curData = timeline[xjStep];
+        let speedMult = curData.isFastMode ? 6 : 1;
+
+        xjStars.forEach(star => {
+            let sSpeed = curData.isFastMode ? star.speed*4 : star.speed;
+            star.z -= sSpeed;
+            if (star.z <= 0) { star.z = 2000; star.x = (Math.random()-0.5)*3000; star.y = (Math.random()-0.5)*3000; }
+            let sc = FOV / (FOV + star.z); let sx = (width/2) + star.x*sc; let sy = (height/2) + star.y*sc - 50;
+            let alpha = Math.min(1, sc*1.5);
+            ctx.beginPath(); ctx.arc(sx, sy, Math.max(0.1, 3*sc), 0, Math.PI*2);
+            ctx.fillStyle = `rgba(${star.color==='#f3e5ab'?'243,229,171':'159,223,200'}, ${alpha})`; ctx.fill();
+        });
+
+        const textDisplay = document.getElementById('buddha-name-display');
+        const rankEl = document.getElementById('buddha-rank'); const nameEl = document.getElementById('buddha-name');
+        
+        switch(lotusState.phase) {
+            case 'waiting':
+                lotusState.timer += speedMult;
+                if(lotusState.timer > 80) { 
+                    lotusState.phase = 'approaching'; lotusState.timer = 0; lotusState.z = 2500;
+                    if (xjFastCounter === 0) { 
+                        rankEl.innerText = curData.rank; nameEl.innerText = curData.name;
+                        if (curData.highlight) { nameEl.style.color = "#ffffff"; nameEl.style.textShadow = "0 0 20px #fff, 0 0 40px var(--cyan)"; } 
+                        else { nameEl.style.color = "var(--gold)"; nameEl.style.textShadow = "0 0 20px var(--solid-gold)"; }
+                    }
+                    if (!curData.isFastMode || xjFastCounter === 0) textDisplay.style.opacity = 1; 
+                } break;
+            case 'approaching':
+                lotusState.z -= (25*speedMult);
+                if(lotusState.z <= 200) { lotusState.phase = 'blooming'; lotusState.timer = 0; textDisplay.style.opacity = 1; } break;
+            case 'blooming':
+                lotusState.timer += speedMult; lotusState.scale = Math.min(1, lotusState.timer/60); lotusState.opacity = Math.min(1, lotusState.timer/30);
+                if(lotusState.timer > (curData.isLast ? 300 : 150)) {
+                    if (curData.isLast) { document.getElementById('universe-flash').classList.add('flash-active'); setTimeout(() => document.getElementById('universe-flash').classList.remove('flash-active'), 150); }
+                    lotusState.phase = 'dissolving'; lotusState.timer = 0;
+                    if (!curData.isFastMode || xjFastCounter >= curData.lotusCount-1) textDisplay.style.opacity = 0; 
+                } break;
+            case 'dissolving':
+                lotusState.timer += speedMult; lotusState.opacity = Math.max(0, 1-(lotusState.timer/60)); lotusState.scale += 0.01*speedMult;
+                if(lotusState.timer > 60) {
+                    lotusState.phase = 'waiting'; lotusState.timer = 0;
+                    if (curData.isFastMode) { xjFastCounter++; if (xjFastCounter >= curData.lotusCount) { xjFastCounter=0; xjStep=(xjStep+1)%timeline.length; } } 
+                    else { xjStep=(xjStep+1)%timeline.length; }
+                } break;
+        }
+
+        let cx = width/2, cy = height/2 - 80;
+        if (lotusState.phase === 'approaching') {
+            let sc = FOV/(FOV+lotusState.z); ctx.shadowBlur = 20; ctx.shadowColor = '#fff';
+            ctx.beginPath(); ctx.arc(cx, cy, 15*sc, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowBlur = 0;
+        } else if (lotusState.phase === 'blooming' || lotusState.phase === 'dissolving') {
+            ctx.save(); ctx.translate(cx, cy);
+            let rotSpeed = curData.isFastMode ? 0.015 : 0.005;
+            ctx.rotate((lotusState.timer*rotSpeed) * (lotusState.phase==='dissolving'?2:1));
+            let sMult = curData.isLast ? 1.3 : 1; let bSize = 120 * lotusState.scale * sMult;
+            
+            ctx.shadowBlur = 30; ctx.shadowColor = `rgba(212,175,55,${lotusState.opacity})`;
+            ctx.fillStyle = `rgba(243,229,171,${lotusState.opacity*0.2})`; ctx.strokeStyle = `rgba(255,255,255,${lotusState.opacity*0.8})`; ctx.lineWidth = 1.5;
+            for (let i=0; i<12; i++) {
+                ctx.save(); ctx.rotate(lotusState.petals[i]); drawPetal(ctx, bSize); ctx.restore();
+                ctx.save(); ctx.rotate(lotusState.petals[i]+Math.PI/12); drawPetal(ctx, bSize*0.6); ctx.restore();
+            }
+            ctx.beginPath(); ctx.arc(0, 0, 15*lotusState.scale*sMult, 0, Math.PI*2); ctx.fillStyle = `rgba(255,255,255,${lotusState.opacity})`; ctx.fill();
+            ctx.restore();
+        }
+        ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function animate() {
+        ctx.fillStyle = currentRealm === 0 ? 'rgba(2, 5, 2, 0.5)' : 'rgba(0, 0, 0, 0.4)';
+        ctx.fillRect(0, 0, width, height);
+        time += 0.03;
+
+        if (currentRealm === 0) renderLonghua();
+        else renderXianjie();
+
+        requestAnimationFrame(animate);
+    }
+
+    function toggleRealm(type) {
+        if(currentRealm === type) return;
+        currentRealm = type;
+        
+        let title = document.getElementById('s-title'); let desc = document.getElementById('s-desc');
+        let btnL = document.getElementById('btn-longhua'); let btnX = document.getElementById('btn-xianjie');
+        let hint = document.getElementById('drag-hint');
+        let nameDisp = document.getElementById('buddha-name-display');
+
+        if (type === 0) {
+            title.innerText = "Naga-puspa Bodhi ． Descent of Maitreya"; desc.innerHTML = "\"Even those who chant 'Namo Buddha' but once shall find liberation.\"<br>Returning by vows, fulfilling the covenant.";
+            btnL.style.background = 'rgba(10,30,20,0.9)'; btnL.style.color = 'var(--cyan)'; btnL.style.borderColor = 'var(--cyan)';
+            btnX.style.background = 'linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95))'; btnX.style.color = 'var(--gold)'; btnX.style.borderColor = 'rgba(212,175,55,0.5)';
+            hint.style.opacity = 1; nameDisp.style.opacity = 0;
+            lotusState.phase = 'waiting'; lotusState.timer = 0; xjStep = 0; xjFastCounter = 0;
+        } else {
+            title.innerText = "1000 Buddhas ． Endless Succession"; desc.innerHTML = "\"In the 15th minor kalpa, 994 Buddhas shall successively arise.\"<br>The torch of Dharma, an endless lineage.";
+            btnX.style.background = 'rgba(10,30,20,0.9)'; btnX.style.color = 'var(--cyan)'; btnX.style.borderColor = 'var(--cyan)';
+            btnL.style.background = 'linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95))'; btnL.style.color = 'var(--gold)'; btnL.style.borderColor = 'rgba(212,175,55,0.5)';
+            hint.style.opacity = 0; 
+            angleX = 0.1; angleY = 0;
+        }
+    }
+
+    function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+    function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+
+    function onDown(e) { if(currentRealm!==0 || e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; isDragging = true; lastMouseX = e.touches?e.touches[0].clientX:e.clientX; lastMouseY = e.touches?e.touches[0].clientY:e.clientY; }
+    function onMove(e) { if (!isDragging || currentRealm!==0) return; let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; angleY += (curX-lastMouseX)*0.01; angleX += (curY-lastMouseY)*0.01; angleX = Math.max(-Math.PI/4, Math.min(Math.PI/4, angleX)); lastMouseX=curX; lastMouseY=curY; }
+    function onUp() { isDragging = false; }
+
+    canvas.addEventListener('mousedown', onDown); canvas.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
+
+    // ================= TTS Logic (English) =================
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+    let sysUtterances = [];
+
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("Your device does not support Text-To-Speech.");
+        
+        const btnText = document.getElementById('tts-text');
+        const btnIcon = document.getElementById('tts-icon');
+        
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel();
+            isPlayingTheory = false;
+            btnText.innerText = "Listen to Dharma";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text');
+            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('. ');
+            
+            // Clean up Roman numerals for smoother reading
+            textToRead = textToRead.replace(/I\./g, 'Chapter 1.').replace(/II\./g, 'Chapter 2.').replace(/III\./g, 'Chapter 3.').replace(/IV\./g, 'Chapter 4.');
+            
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead);
+            theoryUtterance.lang = 'en-US'; // Set to English
+            theoryUtterance.rate = 0.8; 
+
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            if (isAndroid) {
+                sysUtterances.push(theoryUtterance);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let enVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) || voices.find(v => v.lang.startsWith('en'));
+                    if (enVoice) theoryUtterance.voice = enVoice;
+                }
+            }
+
+            theoryUtterance.onend = () => {
+                isPlayingTheory = false;
+                btnText.innerText = "Listen to Dharma";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                if(isAndroid) sysUtterances = sysUtterances.filter(u => u !== theoryUtterance);
+            };
+            
+            window.speechSynthesis.speak(theoryUtterance);
+            isPlayingTheory = true;
+            btnText.innerText = "Stop Listening";
+            btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    const originalCloseTheoryDrawer = closeTheoryDrawer;
+    closeTheoryDrawer = function() {
+        if (isPlayingTheory) toggleTheoryAudio();
+        originalCloseTheoryDrawer();
+    }
+
+    initEngines(); toggleRealm(0); animate();
+</script>
+</body>
+</html>

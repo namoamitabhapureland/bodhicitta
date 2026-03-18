@@ -198,6 +198,37 @@
 
         @keyframes pulse { 0% { opacity: 0.3; } 100% { opacity: 1; } }
         .svg-full { width: 100%; height: 100%; display: block; overflow: visible; }
+        
+                /* ---------------- 今日圓滿 / 陣法已閉 彈出結界 ---------------- */
+        .modal-wrap { 
+            position: fixed; inset: 0; z-index: 9999; 
+            background: rgba(1, 1, 3, 0.85); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
+            display: flex; justify-content: center; align-items: center; 
+            opacity: 0; pointer-events: none; transition: opacity 0.6s ease; 
+        }
+        .modal-wrap.show { opacity: 1; pointer-events: auto; }
+        
+        .modal-box { 
+            width: 85%; max-width: 360px; 
+            background: linear-gradient(145deg, rgba(15, 20, 25, 0.95), rgba(5, 8, 10, 0.98)); 
+            border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 16px; 
+            padding: 40px 30px; text-align: center; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(212,175,55,0.05); 
+            transform: translateY(20px); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); 
+        }
+        .modal-wrap.show .modal-box { transform: translateY(0); }
+        
+        .modal-title { 
+            color: #f3e5ab; font-size: 1.25rem; letter-spacing: 6px; 
+            margin-bottom: 20px; text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); 
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 15px; font-weight: 300; 
+        }
+        .modal-text { 
+            color: #8ba89c; font-size: 0.95rem; letter-spacing: 3px; line-height: 2.2; 
+            margin-bottom: 30px; font-weight: 300; 
+        }
+
     </style>
 </head>
 <body>
@@ -413,21 +444,20 @@
         }
     } catch(e) {}
 
-    const todayStr = new Date().toDateString();
+        const todayStr = new Date().toDateString();
     let hasPlayedToday = (db.lastMatrixDate === todayStr);
 
-    function getMazeTier() {
-        const pts = db.points + db.tempBag;
-        if (pts < 5000) {
-            let p = 1; if (pts >= 1500) p = 2; if (pts >= 3000) p = 3;
-            return { tier: 1, petals: p, text: "初信" };
-        }
-        if (pts < 15000) {
-            let p = 4; if (pts >= 8000) p = 5; if (pts >= 11000) p = 6;
-            return { tier: 2, petals: p, text: "深信" };
-        }
-        let p = 7; if (pts >= 30000) p = 8;
-        return { tier: 3, petals: p, text: "般若" };
+    // ✨ 注入新法理：若今日已入陣，則自動顯化結界視窗，並隱藏門上文字
+    if (hasPlayedToday) {
+        setTimeout(() => {
+            const modal = document.getElementById('done-modal');
+            if (modal) modal.classList.add('show');
+        }, 600);
+        
+        document.addEventListener("DOMContentLoaded", () => {
+            const hint = document.getElementById('door-hint');
+            if (hint) hint.style.display = 'none';
+        });
     }
 
     function updateTotemUI() {
@@ -583,9 +613,14 @@
         });
     }
 
-    function triggerDoor() {
+        function triggerDoor() {
         if (isProcessing) return;
-        if (hasPlayedToday) { flashEffect('red'); return; }
+        
+        /* 修改：將原本的 flashEffect('red') 替換為呼叫結界視窗 */
+        if (hasPlayedToday) { 
+            document.getElementById('done-modal').classList.add('show'); 
+            return; 
+        }
         
         isProcessing = true; 
         initAudio(); 
@@ -595,7 +630,6 @@
         }
         
         document.getElementById('door-hint').style.display = 'none';
-
         if ('speechSynthesis' in window) window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
 
         const scene = document.getElementById('door-scene');
@@ -850,7 +884,7 @@
     }
 
 
-    function returnToDaochang() {
+     function returnToDaochang() {
         if (window.history.length <= 1 || !document.referrer) {
             location.reload(); 
         } else {
@@ -869,5 +903,15 @@
         }
     }
 </script>
+
+<div id="done-modal" class="modal-wrap">
+    <div class="modal-box">
+        <div class="modal-title">今日陣法已閉</div>
+        <div class="modal-text">一念流轉 ． 靜待明日<br><br>行者今日已入迷城<br>無論迷悟，皆是修行<br>請明日再來，堪破幻網</div>
+        <button class="btn-main" style="margin-top:0;" onclick="returnToDaochang()">歸返道場</button>
+    </div>
+</div>
+
 </body>
 </html>
+

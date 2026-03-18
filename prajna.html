@@ -88,6 +88,14 @@
 
         #door-hint { position: absolute; top: -60px; width: 100%; text-align: center; color: #f3e5ab; font-size: 1rem; letter-spacing: 6px; animation: pulseGlow 2.5s infinite alternate; font-weight: 300; transition: all 0.5s; }
         @keyframes pulseGlow { 0% { opacity: 0.5; text-shadow: 0 0 10px rgba(212,175,55,0.3); } 100% { opacity: 1; text-shadow: 0 0 25px rgba(243,229,171,0.8), 0 0 40px #fff; } }
+        /* ---------------- 業火餘燼美學字體 ---------------- */
+        .door-hint-fail {
+            background: linear-gradient(90deg, #8b3a3a, #d4af37, #8b3a3a) !important;
+            -webkit-background-clip: text !important; background-clip: text !important;
+            color: transparent !important;
+            text-shadow: 0 0 20px rgba(184, 134, 11, 0.5) !important;
+            font-weight: bold; letter-spacing: 6px;
+        }
 
         /* ---------------- 題庫玉簡 ---------------- */
         #q-panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -40%) scale(0.92); width: 92%; max-width: 540px; background: linear-gradient(145deg, rgba(15, 20, 25, 0.95), rgba(5, 8, 10, 0.98)); backdrop-filter: blur(25px); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 20px; padding: 40px 30px; box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 30px rgba(139, 168, 156, 0.05); opacity: 0; pointer-events: none; transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1); z-index: 50; }
@@ -391,14 +399,13 @@
         }
         document.getElementById('ui-tier').innerText = info.text;
 
-        if (hasPlayedToday) {
+                if (hasPlayedToday) {
             const hint = document.getElementById('door-hint');
-            hint.innerText = "一念微細 ． 明日再來";
-            hint.style.color = "#8b0000";
+            hint.innerText = "一念流轉 ． 靜待明日";
+            hint.className = "door-hint-fail"; // 套用漸層美學
             hint.style.animation = "none";
-            hint.style.textShadow = "0 0 15px rgba(139,0,0,0.8)";
         }
-    }
+
     updateTotemUI();
 
     const DEMO_TOTAL_Q = 10; 
@@ -506,13 +513,17 @@
         });
     }
 
-    function triggerDoor() {
+        function triggerDoor() {
         if (isProcessing) return;
         if (hasPlayedToday) { flashEffect('red'); return; }
         
         isProcessing = true; 
         initAudio(); // 初始化音效
-        generateDailyQuiz(); // 生成今日 10 題
+        
+        // 【修改 1】：只有在起點時才生成新題庫，否則會無限輪迴！
+        if (currentStage === 0 && correctCount === 0) {
+            generateDailyQuiz(); 
+        }
         
         document.getElementById('door-hint').style.display = 'none';
 
@@ -527,18 +538,19 @@
             warpSpeed = 1; 
             document.getElementById('q-panel').classList.add('show');
             
-           
             document.getElementById('question-content').style.display = 'block';
             document.getElementById('grand-cert').style.display = 'none';
             document.getElementById('cert-content').style.display = 'none';
-            loadQuestion(0); 
-            // 👆 ==========================================
             
-            const currentQ = questionBank[0];
+            // 【修改 2】：載入「當前進度」的題目，而不是永遠載入 0
+            loadQuestion(currentStage); 
+            
+            const currentQ = questionBank[currentStage];
             readVoiceAndStartTimer(currentQ.text, currentQ.time);
             isProcessing = false; 
         }, 1600); 
     }
+
 
 
     function readVoiceAndStartTimer(text, seconds) {
@@ -629,12 +641,12 @@
         scene.style.transition = 'transform 1.5s, opacity 1.5s';
         scene.classList.remove('opening', 'zooming');
         
-        const hint = document.getElementById('door-hint');
-        hint.innerText = "一念流轉 ． 明日再來";
-        hint.style.color = "#8b0000";
-        hint.style.textShadow = "0 0 15px rgba(139,0,0,0.8)";
+                const hint = document.getElementById('door-hint');
+        hint.innerText = "一念流轉 ． 靜待明日";
+        hint.className = "door-hint-fail"; // 套用漸層美學
         hint.style.animation = "none";
         hint.style.display = 'block';
+
         
         warpSpeed = -15; 
         let shake = setInterval(() => { document.body.style.transform = `translate(${(Math.random()-0.5)*10}px, ${(Math.random()-0.5)*10}px)`; }, 50);

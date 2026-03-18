@@ -558,7 +558,9 @@
 
 
 
+        window.sysUtterances = []; // 防護盾：防止安卓系統中斷語音
     function readVoiceAndStartTimer(text, seconds) {
+        const thisStage = currentStage;
         const wrap = document.getElementById('energy-wrap');
         const bar = document.getElementById('energy-bar');
         const voiceHint = document.getElementById('voice-hint');
@@ -567,23 +569,49 @@
         bar.style.transition = 'none'; bar.style.transform = 'scaleX(1)';
         bar.classList.remove('critical-time');
         
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); 
-            let msg = new SpeechSynthesisUtterance(text);
-            msg.lang = 'zh-TW'; msg.rate = 1.1; 
-            
-            msg.onstart = () => { voiceHint.innerText = '導讀中...'; };
-            msg.onend = () => { voiceHint.innerText = ''; startActualTimer(seconds); };
-            msg.onerror = () => { voiceHint.innerText = ''; startActualTimer(seconds); }; 
-            
-            window.speechSynthesis.speak(msg);
-            setTimeout(() => { if(voiceHint.innerText !== '') { voiceHint.innerText = ''; startActualTimer(seconds); } }, 15000);
-        } else {
-            setTimeout(() => startActualTimer(seconds), 3000);
+        try {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); 
+                let msg = new SpeechSynthesisUtterance(text);
+                msg.lang = 'zh-TW'; msg.rate = 1.1; 
+                window.sysUtterances.push(msg); // 防止被手機當作垃圾回收
+                
+                msg.onstart = () => { voiceHint.innerText = '導讀中...'; };
+                msg.onend = () => { 
+                    if (currentStage !== thisStage) return;
+                    voiceHint.innerText = ''; startActualTimer(seconds); 
+                };
+                msg.onerror = () => { 
+                    if (currentStage !== thisStage) return;
+                    voiceHint.innerText = ''; startActualTimer(seconds); 
+                }; 
+                
+                window.speechSynthesis.speak(msg);
+                
+                // 15秒超時強制啟動 (防手機語音徹底當機)
+                setTimeout(() => { 
+                    if(currentStage === thisStage && voiceHint.innerText !== '') { 
+                        voiceHint.innerText = ''; startActualTimer(seconds); 
+                    } 
+                }, 15000);
+            } else {
+                setTimeout(() => { if (currentStage === thisStage) startActualTimer(seconds); }, 3000);
+            }
+        } catch(err) {
+            // 萬一語音系統徹底報錯，安靜地直接開始計時
+            voiceHint.innerText = '';
+            setTimeout(() => { if (currentStage === thisStage) startActualTimer(seconds); }, 1000);
         }
     }
 
-    function startActualTimer(seconds) {
+
+        function startActualTimer(seconds) {
+        if (isProcessing) return;
+        
+        // 【核心修復】：清空舊計時器，徹底斬斷幽靈！
+        clearTimeout(timerId); 
+        clearTimeout(criticalTimerId);
+
         const bar = document.getElementById('energy-bar');
         void bar.offsetWidth;
         bar.style.transition = `transform ${seconds}s linear`;
@@ -591,22 +619,24 @@
 
         criticalTimerId = setTimeout(() => { 
             bar.classList.add('critical-time'); 
-            playTensionSound(); // 心跳聲
+            try { playTensionSound(); } catch(e){}
         }, Math.max(0, seconds - 4) * 1000); 
         
         timerId = setTimeout(() => { 
-            stopTensionSound(); playWrongSound(); 
+            try { stopTensionSound(); playWrongSound(); } catch(e){} 
             handleFatalFailure(); 
         }, seconds * 1000);
     }
 
-    function processAnswer(isCorrect, isBoss) {
+
+     function processAnswer(isCorrect, isBoss) {
         if (isProcessing) return;
         isProcessing = true; 
         
-        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        // 加入 try-catch 防止背景音效報錯卡死
+        try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(e) {}
         clearTimeout(timerId); clearTimeout(criticalTimerId);
-        stopTensionSound();
+        try { stopTensionSound(); } catch(e) {}
         
         document.getElementById('voice-hint').innerText = '';
         document.getElementById('energy-wrap').style.opacity = 0;
@@ -618,7 +648,7 @@
             setTimeout(() => { if (isBoss) { showSettlement(true, true); } else { nextStage(); } }, 1000);
         } else {
             flashEffect('red');
-            playWrongSound();
+            try { playWrongSound(); } catch(e) {}
             if (isBoss) {
                 setTimeout(() => { showSettlement(true, false); }, 1500);
             } else {
@@ -626,6 +656,7 @@
             }
         }
     }
+
 
     /* ---------------- 無情說法：答錯即鎖定 ---------------- */
     function handleFatalFailure() {
@@ -663,29 +694,29 @@
         }, 1500);
     }
 
-        function nextStage() {
+            function nextStage() {
         currentStage++;
         
-        // 判斷是否已答滿 10 題
         if (currentStage >= DEMO_TOTAL_Q) {
-            if (correctCount === DEMO_TOTAL_Q) { 
-                setTimeout(promptBossQuestion, 500); 
-            } else { 
-                showSettlement(false, false); 
-            }
+            if (correctCount === DEMO_TOTAL_Q) { setTimeout(promptBossQuestion, 500); } 
+            else { showSettlement(false, false); }
         } else {
-            // 【修復關鍵：自動載入下一題，不需要再點門】
+            // 答對後自動進入下一題，並重置玉簡動畫
             document.getElementById('q-panel').classList.remove('show');
             setTimeout(() => {
                 loadQuestion(currentStage);
                 document.getElementById('q-panel').classList.add('show');
                 
                 const currentQ = questionBank[currentStage];
-                readVoiceAndStartTimer(currentQ.text, currentQ.time);
+                
+                // 【核心修復】：先解除鎖定，再去呼叫容易當機的語音！
                 isProcessing = false; 
-            }, 600); // 給一點過場延遲，讓玉簡重新浮現
+                try { readVoiceAndStartTimer(currentQ.text, currentQ.time); }
+                catch(e) { startActualTimer(currentQ.time); }
+            }, 600); 
         }
     }
+
 
     function promptBossQuestion() {
         warpSpeed = 3;

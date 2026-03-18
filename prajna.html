@@ -268,6 +268,57 @@
     </div>
 
 <script>
+    // ==========================================
+    // ✨ 補回遺失的星空引擎 (Star Engine) ✨
+    // ==========================================
+    const canvas = document.getElementById('starCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, stars = [], warpSpeed = 1;
+
+    function resize() { 
+        width = window.innerWidth; 
+        height = window.innerHeight; 
+        canvas.width = width; 
+        canvas.height = height; 
+    }
+    window.addEventListener('resize', resize); 
+    resize();
+
+    for (let i = 0; i < 300; i++) {
+        stars.push({ 
+            x: (Math.random() - 0.5) * 2000, 
+            y: (Math.random() - 0.5) * 2000, 
+            z: Math.random() * 2000, 
+            color: Math.random() > 0.5 ? '#8ba89c' : '#f3e5ab' 
+        });
+    }
+
+    function renderStars() {
+        ctx.fillStyle = 'rgba(1, 1, 3, 0.4)'; 
+        ctx.fillRect(0, 0, width, height); 
+        ctx.globalCompositeOperation = 'screen';
+        
+        stars.forEach(star => {
+            star.z -= warpSpeed;
+            if (star.z <= 0) { 
+                star.z = 2000; 
+                star.x = (Math.random() - 0.5) * 2000; 
+                star.y = (Math.random() - 0.5) * 2000; 
+            } else if (star.z > 2000) {
+                star.z = 0;
+            }
+            let scale = 400 / (400 + star.z);
+            ctx.beginPath(); 
+            ctx.arc((width / 2) + star.x * scale, (height / 2) + star.y * scale, Math.max(0.5, 2 * scale), 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${star.color === '#f3e5ab' ? '243,229,171' : '139,168,156'}, ${Math.min(1, scale * 2)})`; 
+            ctx.fill();
+        });
+        ctx.globalCompositeOperation = 'source-over'; 
+        requestAnimationFrame(renderStars);
+    }
+    renderStars();
+    // ==========================================
+
     // 【音效引擎】
     let audioCtx, tensionOsc, tensionGain, tensionInterval;
     function initAudio() {
@@ -420,14 +471,14 @@
     let timerId = null, criticalTimerId = null;
 
     function initMatrix() {
-        document.getElementById('q-panel').classList.add('show');
-        document.getElementById('question-content').style.display = 'none';
+        document.getElementById('q-panel').classList.remove('show');
+        document.getElementById('question-content').style.display = 'block';
         document.getElementById('cert-content').style.display = 'none';
-        document.getElementById('grand-cert').style.display = 'flex';
-        document.getElementById('stage-text').innerText = "究竟圓滿 ． 般若智印";
-        document.getElementById('stage-text').style.color = "#d4af37";
+        document.getElementById('grand-cert').style.display = 'none';
+        document.getElementById('stage-text').innerText = "陣法載入中";
+        document.getElementById('stage-text').style.color = "#8ba89c";
         document.getElementById('karma-dot').style.display = 'none';
-        document.getElementById('action-btns').innerHTML = '<button class="btn-main" onclick="returnToDaochang()">關閉法印</button>';
+        document.getElementById('action-btns').innerHTML = '';
     }
 
     function flashEffect(type) {
@@ -475,11 +526,20 @@
         setTimeout(() => { 
             warpSpeed = 1; 
             document.getElementById('q-panel').classList.add('show');
+            
+           
+            document.getElementById('question-content').style.display = 'block';
+            document.getElementById('grand-cert').style.display = 'none';
+            document.getElementById('cert-content').style.display = 'none';
+            loadQuestion(0); 
+            // 👆 ==========================================
+            
             const currentQ = questionBank[0];
             readVoiceAndStartTimer(currentQ.text, currentQ.time);
             isProcessing = false; 
         }, 1600); 
     }
+
 
     function readVoiceAndStartTimer(text, seconds) {
         const wrap = document.getElementById('energy-wrap');

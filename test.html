@@ -2,556 +2,277 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>小千世界 ． 發菩提心與觀想</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>日行持業果反饋圖騰 ． 微型測試陣法</title>
     <style>
-        * { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; outline: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-        body { margin: 0; background: #010103; overflow: hidden; font-family: "PingFang TC", "Microsoft JhengHei", serif; touch-action: none; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; padding: 0; background: #010103; color: #eee; font-family: "PingFang TC", "Microsoft JhengHei", serif; display: flex; justify-content: center; align-items: center; height: 100dvh; overflow: hidden; }
+
+        /* ---------------- 測試容器：模擬主系統右下角定位 ---------------- */
+        #test-container {
+            position: relative; width: 100vw; height: 100vh;
+        }
+
+        /* ---------------- 核心圖騰組件 ---------------- */
+        #daily-feedback-totem {
+            position: absolute; bottom: 30px; right: 30px; /* ✨ 定位：右下角 ✨ */
+            display: flex; flex-direction: column; align-items: flex-end; gap: 15px;
+            opacity: 0.9; cursor: pointer; user-select: none;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            z-index: 1000;
+        }
         
-        #nebula { position: absolute; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 50%, #150d1f 0%, #010103 100%); transition: opacity 1s; }
-        canvas { width: 100vw; height: 100vh; display: block; position: absolute; z-index: 1; }
-        .charging #nebula { opacity: 0.2; }
+        #daily-feedback-totem:active { transform: scale(0.96); opacity: 1; }
 
-                /* ✨ 擴大點擊區：避開頂部與底部的按鈕，其餘區域皆可點擊 */
-        #vow-click-zone { position: absolute; top: 15%; bottom: 25%; left: 0; right: 0; z-index: 25; display: flex; justify-content: center; align-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        /* ✨ 向量美學核心：幾何壇城與月輪 ✨ */
+        .totem-icon-wrap { width: 45px; height: 45px; position: relative; }
+        .totem-svg { width: 100%; height: 100%; display: block; overflow: visible; }
         
-        #vow-display { position: absolute; top: 25%; color: #f3e5ab; font-size: 1.5rem; letter-spacing: 12px; font-weight: 300; text-shadow: 0 0 20px rgba(243, 229, 171, 0.8), 0 0 40px #fff; opacity: 1; transition: opacity 0.3s; pointer-events: none; }
-
-        #flash { position: absolute; inset: 0; background: #fff; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.8s ease-out; }
+        /* 壇城（曼陀羅）核心：隨著等級進化 */
+        .mandala-core { fill: none; stroke: #d4af37; stroke-width: 1.2; filter: drop-shadow(0 0 5px rgba(212,175,55,0.4)); transition: all 0.8s ease; }
         
-        #progress { position: absolute; top: 30px; right: 30px; color: #8ba89c; font-size: 0.9rem; letter-spacing: 3px; z-index: 10; opacity: 0.8; text-shadow: 0 0 10px rgba(139,168,156,0.5); transition: opacity 0.5s; }
+        /* 月輪軌道（三十日） */
+        .lunar-ring { fill: none; stroke: #8ba89c; stroke-width: 0.8; stroke-dasharray: 2 4; opacity: 0.5; }
         
-        /* 底部提示文字提亮與呼吸動畫 */
-        #hint { position: absolute; bottom: 40px; width: 100%; text-align: center; color: rgba(255, 255, 255, 0.85); font-size: 0.95rem; letter-spacing: 6px; z-index: 5; transition: opacity 0.5s; pointer-events: none; text-shadow: 0 0 10px rgba(243, 229, 171, 0.8); animation: hint-breathe 3s infinite alternate; }
-        @keyframes hint-breathe { 0% { opacity: 0.5; transform: scale(0.98); } 100% { opacity: 1; transform: scale(1.02); } }
-
-        .obs-ui { opacity: 0; pointer-events: none; transition: opacity 1s; z-index: 30; position: absolute; }
-        .mode-observation .obs-ui { opacity: 1; pointer-events: auto; }
+        /* 每日幾何微粒（月相） */
+        .day-particle { fill: #8ba89c; transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1); opacity: 0.6; }
+        .day-particle.completed { fill: #f3e5ab; opacity: 1; filter: drop-shadow(0 0 6px #fff); }
         
-        #btn-back { top: 30px; left: 30px; padding: 8px 15px; border: 1px solid rgba(243, 229, 171, 0.4); background: rgba(212, 175, 55, 0.1); color: #f3e5ab; border-radius: 20px; font-size: 0.8rem; letter-spacing: 2px; cursor: pointer; backdrop-filter: blur(5px); transition: 0.3s; }
-        #btn-back:active { transform: scale(0.95); background: rgba(212, 175, 55, 0.3); }
+        /* 今日光芒：幾何新月 */
+        .today-glow { fill: none; stroke: #fff; stroke-width: 1; opacity: 0; transition: opacity 0.5s; filter: drop-shadow(0 0 8px #fff); }
+        .totem-icon-wrap.active-today .today-glow { opacity: 0.8; animation: pulseToday 2.5s infinite alternate ease-in-out; }
 
-        #btn-treasure { bottom: 40px; right: 30px; width: 55px; height: 55px; background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(243, 229, 171, 0.6); display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 50%; box-shadow: 0 0 15px rgba(212,175,55,0.2); transition: all 0.3s; backdrop-filter: blur(5px); }
-        #btn-treasure:active { transform: scale(0.9); background: rgba(243, 229, 171, 0.3); box-shadow: 0 0 25px rgba(212,175,55,0.6); }
-
-        #btn-log { bottom: 110px; right: 35px; width: 45px; height: 45px; background: rgba(139, 168, 156, 0.1); border: 1px solid rgba(139, 168, 156, 0.5); display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 50%; transition: all 0.3s; backdrop-filter: blur(5px); }
-        #btn-log:active { transform: scale(0.9); background: rgba(139, 168, 156, 0.3); }
-
-        #treasure-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90vw; height: 80vh; z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        #treasure-overlay.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
-        #treasure-overlay.collecting { transform: translate(calc(50vw - 80px), calc(50vh - 80px)) scale(0.1); opacity: 0; pointer-events: none; }
-
-        #svg-container { width: 100%; height: 35%; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 0 20px rgba(243, 229, 171, 0.4)); animation: float-pulse 4s infinite ease-in-out; }
-        @keyframes float-pulse { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); filter: drop-shadow(0 0 30px rgba(243, 229, 171, 0.8)); } }
-        #svg-container svg { width: auto; height: 100%; overflow: visible; }
-
-        .t-text-group { text-align: center; margin-top: 30px; opacity: 0; transition: opacity 1s 0.5s; flex-shrink: 0; padding: 0 15px; }
-        #treasure-overlay.show .t-text-group { opacity: 1; }
+        @keyframes pulseToday { from { opacity: 0.4; } to { opacity: 0.9; } }
         
-        .t-name { color: #fff; font-size: 1.15rem; letter-spacing: 4px; text-shadow: 0 0 15px #fff, 0 0 30px #d4af37; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; line-height: 1.5; }
-        .t-tag { font-size: 0.75rem; color: #8ba89c; border: 1px solid rgba(139,168,156,0.6); padding: 3px 8px; border-radius: 12px; background: rgba(139, 168, 156, 0.1); text-shadow: none; letter-spacing: 2px; }
-        .t-desc { color: #f3e5ab; font-size: 0.9rem; letter-spacing: 2px; line-height: 1.8; text-align: justify; text-align-last: center; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
-        .t-action-hint { margin-top: 30px; font-size: 0.8rem; color: rgba(255,255,255,0.6); letter-spacing: 4px; animation: blink 2s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+        /* ✨ 統一標題美學 ． 文字行持 ✨ */
+        .totem-text-wrap { display: flex; flex-direction: column; align-items: flex-end; color: #8ba89c; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; }
+        .level-title { font-weight: bold; margin-bottom: 4px; transition: color 0.5s; text-shadow: 0 0 5px rgba(212,175,55,0.1); }
+        .practice-status { color: rgba(139,168,156,0.7); font-size: 0.7rem; letter-spacing: 2px; }
 
-        .modal-wrap { position: fixed; inset: 0; background: rgba(1, 1, 3, 0.8); backdrop-filter: blur(10px); z-index: 60; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
-        .modal-wrap.show { opacity: 1; pointer-events: auto; }
-        .modal-box { width: 85%; max-width: 340px; background: rgba(21, 13, 31, 0.85); border: 1px solid rgba(243, 229, 171, 0.3); border-radius: 15px; padding: 30px 20px; text-align: center; box-shadow: 0 0 40px rgba(212, 175, 55, 0.1); transform: translateY(20px); transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        .modal-wrap.show .modal-box { transform: translateY(0); }
-        .modal-title { color: #f3e5ab; font-size: 1.1rem; letter-spacing: 6px; margin-bottom: 20px; text-shadow: 0 0 15px rgba(243, 229, 171, 0.6); border-bottom: 1px solid rgba(243, 229, 171, 0.2); padding-bottom: 15px; }
-        .modal-text { color: #8ba89c; font-size: 0.9rem; letter-spacing: 2px; line-height: 1.8; margin-bottom: 30px; }
-        .modal-btn { background: transparent; border: 1px solid rgba(243, 229, 171, 0.6); color: #f3e5ab; padding: 10px 30px; border-radius: 25px; font-size: 0.9rem; letter-spacing: 4px; cursor: pointer; transition: background 0.3s; }
-        .modal-btn:active { background: rgba(243, 229, 171, 0.2); }
+        /* 當前果位顏色演化 */
+        .faith { color: #8ba89c !important; }
+        .abiding { color: #a8c2b5 !important; }
+        .prajna { color: #d4af37 !important; text-shadow: 0 0 10px rgba(212,175,55,0.5) !important; }
+        
+        /* ✨ 究竟圓滿：圖騰莊嚴演化 (般若位) ✨ */
+        .totem-icon-wrap.prajna-level .mandala-core { stroke-width: 1.8; filter: drop-shadow(0 0 12px rgba(212,175,55,0.7)); animation: mandalaRotate 40s linear infinite; }
+        @keyframes mandalaRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        #log-list { max-height: 250px; overflow-y: auto; text-align: left; padding: 10px; margin-bottom: 20px; scrollbar-width: none; }
-        .log-item { color: #e0e0e0; font-size: 0.85rem; letter-spacing: 2px; padding: 8px 0; border-bottom: 1px dashed rgba(139,168,156,0.2); display: flex; align-items: center; }
-        .log-item::before { content: '✧'; color: var(--gold); margin-right: 8px; font-size: 0.7rem; }
+        /* ---------------- 測試面版 (手機上可隱藏) ---------------- */
+        #test-panel {
+            position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.8); border: 1px solid #333; padding: 15px; border-radius: 8px; z-index: 2000; display: flex; flex-direction: column; gap: 8px;
+        }
+        .test-btn { background: #222; color: #eee; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
     </style>
 </head>
-<body id="body-state">
+<body>
 
-    <svg style="position: absolute; width: 0; height: 0; pointer-events: none; left: -9999px;">
-        <defs>
-            <linearGradient id="pure-glass" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9" /><stop offset="50%" stop-color="#f3e5ab" stop-opacity="0.6" /><stop offset="100%" stop-color="#d4af37" stop-opacity="0.2" /></linearGradient>
-            <linearGradient id="facet-light" x1="0%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.95"/><stop offset="100%" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
-            <linearGradient id="facet-dark" x1="50%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d4af37" stop-opacity="0.1"/><stop offset="100%" stop-color="#b8860b" stop-opacity="0.7"/></linearGradient>
-            <linearGradient id="facet-cyan" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e0f7fa" stop-opacity="0.9"/><stop offset="100%" stop-color="#00838f" stop-opacity="0.4"/></linearGradient>
-            <linearGradient id="facet-rose" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#c2185b" stop-opacity="0.5"/></linearGradient>
-        </defs>
-    </svg>
-
-    <div id="nebula"></div>
-    <canvas id="mainCanvas"></canvas>
-    
-       <div id="vow-click-zone" onclick="triggerVow()">
-        <div id="vow-display">請輕觸此處</div>
-    </div>
-
-    
-    <div id="treasure-overlay" onclick="collectTreasure()">
-        <div id="svg-container"></div> 
-        <div class="t-text-group">
-            <div class="t-name" id="t-name-ui"></div>
-            <div class="t-desc" id="t-desc-ui"></div>
-            <div class="t-action-hint">輕觸畫面 ． 願歸法界</div>
-        </div>
-    </div>
-    
-    <div id="flash"></div>
-    <div id="hint">發菩提心 ． 迴向法界</div>
-    <div id="progress">華藏三千世界 ． <span id="lit-count-ui">0</span> / 3000</div>
-
-    <div class="obs-ui" id="btn-back" onclick="window.location.href='index.html?screen=3'">← 回道場</div>
-    
-    <div class="obs-ui" id="btn-log" onclick="openLogModal()">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8ba89c" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-    </div>
-
-    <div class="obs-ui" id="btn-treasure" onclick="window.location.href='treasure.html'">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f3e5ab" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-    </div>
-
-    <div id="modal-overlay" class="modal-wrap">
-        <div class="modal-box">
-            <div class="modal-title">今日願力圓滿</div>
-            <div class="modal-text">行者今日已發菩提心<br>清淨願力已遍滿虛空<br><br>修行貴在細水長流<br>請明日再來，點亮星辰</div>
-            <button class="modal-btn" onclick="closeModal('modal-overlay')">安住觀心</button>
-        </div>
-    </div>
-
-    <div id="log-modal" class="modal-wrap">
-        <div class="modal-box" style="padding: 20px;">
-            <div class="modal-title">華藏發心紀事</div>
-            <div id="log-status" style="color: #8ba89c; font-size: 0.8rem; margin-bottom: 10px; letter-spacing: 2px;">已探索世界：0</div>
-            <div id="log-list"></div>
-            <button class="modal-btn" style="margin-top: 10px; font-size: 0.8rem;" onclick="closeModal('log-modal')">收起玉簡</button>
-        </div>
-    </div>
-
-    <script>
-        // ✨ 蘋果 iOS 專屬：破冰解鎖器
-        let iosAudioUnlocked = false;
+    <div id="test-container">
         
-        // 此事件只需觸發一次，用來騙過蘋果的靜音鎖定
-        document.body.addEventListener('touchstart', function() {
-            if (!iosAudioUnlocked && window.speechSynthesis) {
-                let silentUtterance = new SpeechSynthesisUtterance('');
-                window.speechSynthesis.speak(silentUtterance);
-                iosAudioUnlocked = true;
-            }
-        }, { once: true });
-        
-        document.body.addEventListener('mousedown', function() {
-            if (!iosAudioUnlocked && window.speechSynthesis) {
-                let silentUtterance = new SpeechSynthesisUtterance('');
-                window.speechSynthesis.speak(silentUtterance);
-                iosAudioUnlocked = true;
-            }
-        }, { once: true });
-
-        // ✨ 跨平台語音引擎 (拔除 iOS 的延遲 setTimeout)
-        window.sysUtterances = [];
-        function speak(t, r = 0.85) {
-            if (!window.speechSynthesis) return; 
-            window.speechSynthesis.cancel(); 
-            let isAndroid = /Android/i.test(navigator.userAgent);
-            let textToSpeak = isAndroid ? t : t.replace(/阿/g, 'ㄚ');
-            const m = new SpeechSynthesisUtterance(textToSpeak);
-            m.lang = 'zh-TW'; m.rate = r; 
+        <div id="daily-feedback-totem" onclick="simulateDailyProgress()">
             
-            if (isAndroid) {
-                window.sysUtterances.push(m);
-                let voices = window.speechSynthesis.getVoices();
-                if (voices.length > 0) {
-                    let zhVoice = voices.find(v => v.lang === 'zh-TW' && v.name.includes('Google')) || voices.find(v => v.lang.includes('zh'));
-                    if (zhVoice) m.voice = zhVoice;
-                }
-                m.onend = function() { window.sysUtterances = window.sysUtterances.filter(u => u !== m); };
-                // Android 保持原有的延遲機制以保證穩定
-                setTimeout(() => { window.speechSynthesis.speak(m); }, 150);
-            } else {
-                // ✨ 蘋果 iOS 必須絕對「同步」執行，不使用 setTimeout
-                window.speechSynthesis.speak(m);
+            <div class="totem-text-wrap">
+                <span id="level-title" class="level-title faith">初信位</span>
+                <span id="practice-status" class="practice-status">日行持：第 1 日</span>
+            </div>
+
+            <div class="totem-icon-wrap active-today" id="totem-icon">
+                <svg class="totem-svg" viewBox="0 0 100 100">
+                    <defs>
+                        <radialGradient id="pureGoldGrad" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
+                            <stop offset="30%" stop-color="#f3e5ab" stop-opacity="1"/>
+                            <stop offset="100%" stop-color="#d4af37" stop-opacity="1"/>
+                        </radialGradient>
+                    </defs>
+                    
+                    <circle cx="50" cy="50" r="46" class="lunar-ring" />
+                    
+                    <g id="mandala-group" class="mandala-core">
+                        <circle cx="50" cy="50" r="12" fill="none" stroke-width="0.8" stroke-dasharray="1 3"/>
+                        <path d="M50 35 C 58 45, 55 55, 50 56 C 45 55, 42 45, 50 35" stroke-width="1.2"/>
+                        <ellipse cx="50" cy="56" rx="10" ry="2.5" stroke-width="1" opacity="0.6"/>
+                    </g>
+                    
+                    <g id="lunar-particles-group"></g>
+                    
+                    <path id="today-moon-path" class="today-glow" d="M 50 12 Q 54 12, 54 8 Q 50 10, 46 8 Q 46 12, 50 12" />
+                </svg>
+            </div>
+        </div>
+        </div>
+
+    <div id="test-panel">
+        <div style="font-size:0.8rem; color:#888; margin-bottom:5px;">造物主權限 ． 等級觀照</div>
+        <button class="test-btn" onclick="setTestLevel('faith')">切換：信位</button>
+        <button class="test-btn" onclick="setTestLevel('abiding')">切換：住位 (成長)</button>
+        <button class="test-btn" onclick="setTestLevel('prajna')">切換：般若 (圓滿)</button>
+        <div style="font-size:0.7rem; color:#666; margin-top:5px;">(或直接點擊右下角圖騰模擬每日精進)</div>
+    </div>
+
+<script>
+    // ✨ 模擬識海數據 ✨
+    const SIM_TOTAL_DAYS = 30; // 模擬一個月週期
+    let simData = {
+        points: 0,
+        currentDay: 1, // 1~30
+        isCompletedToday: false,
+    };
+
+    // ✨ 初始化月輪軌道上的三十日幾何微粒 ✨
+    function initLunarParticles() {
+        const group = document.getElementById('lunar-particles-group');
+        group.innerHTML = "";
+        for (let i = 0; i < SIM_TOTAL_DAYS; i++) {
+            // 計算環形軌道上的角度（0~360度）
+            const angle = (i * (360 / SIM_TOTAL_DAYS) - 90) * (Math.PI / 180);
+            const r = 46; // 軌道半徑
+            const cx = 50 + r * Math.cos(angle);
+            const cy = 50 + r * Math.sin(angle);
+            
+            // ✨ 採用細緻的几何度量：微型六角形而非單純圓點 ✨
+            const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+            const side = 1.8; // 六角形邊長
+            let points = "";
+            for (let j = 0; j < 6; j++) {
+                const pAngle = j * (60 * (Math.PI / 180));
+                points += (cx + side * Math.cos(pAngle)) + "," + (cy + side * Math.sin(pAngle)) + " ";
             }
+            polygon.setAttribute("points", points.trim());
+            polygon.className = "day-particle";
+            polygon.setAttribute("id", `day-particle-${i + 1}`);
+            
+            group.appendChild(polygon);
+        }
+    }
+
+    // ✨ ✨ ✨ 模擬核心邏輯：每日精進、生滅演化 ✨ ✨ ✨
+    function simulateDailyProgress() {
+        if (navigator.vibrate) navigator.vibrate(20); // 微弱震動反饋
+
+        if (simData.currentDay > SIM_TOTAL_DAYS) {
+            // 一月圓滿，重置週期
+            simData.currentDay = 1;
+            document.querySelectorAll('.day-particle').forEach(p => p.classList.remove('completed'));
         }
 
-        const canvas = document.getElementById('mainCanvas'); const ctx = canvas.getContext('2d');
-        const bodyState = document.getElementById('body-state'); const vowDisplay = document.getElementById('vow-display');
-        const treasureOverlay = document.getElementById('treasure-overlay'); const svgContainer = document.getElementById('svg-container');
-        const tNameUi = document.getElementById('t-name-ui'); const tDescUi = document.getElementById('t-desc-ui');
-        const hint = document.getElementById('hint'); const flash = document.getElementById('flash');
-        const litCountUi = document.getElementById('lit-count-ui');
-        
-        const vows = ["眾生無邊誓願度", "煩惱無盡誓願斷", "法門無量誓願學", "佛道無上誓願成"];
-        const planetColors = [{r: 212, g: 175, b: 55}, {r: 139, g: 168, b: 156}, {r: 194, g: 24, b: 91}, {r: 224, g: 247, b: 250}];
-        
-        const prefixes = ["普明", "無垢", "金剛", "妙樂", "法雲", "香水", "琉璃", "常寂", "寶威", "無量", "勝高", "離垢", "普賢", "華藏", "淨光", "寶燄", "蓮華", "微塵", "妙莊嚴"];
-        const suffixes = ["光", "音", "海", "網", "幢", "輪", "藏", "月", "華", "焰", "臺", "聚", "界", "城", "明", "善"];
-
-        function generateWorldName() {
-            let p = prefixes[Math.floor(Math.random() * prefixes.length)];
-            let s = suffixes[Math.floor(Math.random() * suffixes.length)];
-            return p + s + "世界";
+        // 1. ✨ 生滅演化：今日微粒由虛入實，蛻變為琉璃真金 ✨
+        const currentParticle = document.getElementById(`day-particle-${simData.currentDay}`);
+        if (currentParticle) {
+            currentParticle.classList.add('completed');
         }
 
-        let db;
+        // 2. ✨ 資糧積累：模擬積分增加，觸發果位演化 ✨
+        simData.points += (20 + Math.random() * 30); // 隨機增加資糧
+        updateLevelEvolution();
+
+        // 3. ✨ 月輪推移：更新今日狀態與光芒位置 ✨
+        document.getElementById('practice-status').innerText = `日行持：第 ${simData.currentDay} 日`;
+        
+        // 更新今日幾何新月光芒的位置
+        updateTodayMoonPosition(simData.currentDay);
+
+        simData.currentDay++; saveSim();
+    }
+
+    // ✨ 更新今日幾何新月光芒的位置（與軌道上位置連動） ✨
+    function updateTodayMoonPosition(day) {
+        const angleDegree = ((day - 1) * (360 / SIM_TOTAL_DAYS) - 90);
+        const todayMoonPath = document.getElementById('today-moon-path');
+        // SVG旋轉角度
+        todayMoonPath.setAttribute("transform", `rotate(${angleDegree} 50 50)`);
+    }
+
+    // ✨ ✨ ✨ 果位壇城（曼陀羅）幾何幾何莊嚴演化 ✨ ✨ ✨
+    function updateLevelEvolution() {
+        const points = simData.points;
+        const levelTitle = document.getElementById('level-title');
+        const mandalaGroup = document.getElementById('mandala-group');
+        const totemIconWrap = document.getElementById('totem-icon');
+
+        // ✨ 般若真金漸層 (定義於SVG DEFS中) ✨
+        const pureGold = "url(#pureGoldGrad)";
+
+        if (points >= 1000) {
+            // ✨ ✨ ✨ 般若 (圓滿)：莊嚴壇城盛開，金色光芒與旋轉動畫 ✨ ✨ ✨
+            levelTitle.innerText = "般若果位";
+            levelTitle.className = "level-title prajna";
+            totemIconWrap.classList.add('prajna-level');
+            totemIconWrap.classList.remove('faith-level', 'abiding-level');
+
+            mandalaGroup.innerHTML = `
+                <circle cx="50" cy="50" r="14" fill="none" stroke="${pureGold}" stroke-width="0.6"/>
+                <polygon points="50,22 58,45 80,50 58,55 50,78 42,55 20,50 42,45" fill="none" stroke="${pureGold}" stroke-width="1.8" filter="drop-shadow(0 0 8px ${pureGold})"/>
+                <circle cx="50" cy="50" r="6" fill="${pureGold}" filter="drop-shadow(0 0 10px #fff)"/>
+                ${[...Array(12)].map((_,i) => `<line x1="50" y1="50" x2="50" y2="18" stroke="${pureGold}" stroke-width="0.4" transform="rotate(${i*30} 50 50)"/>`).join('')}
+                <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="60s" repeatCount="indefinite"/>
+            `;
+        } else if (points >= 300) {
+            // ✨ 住位 (成長)：苞芽轉為挺拔，金色框架與玉色承托 ✨
+            levelTitle.innerText = "挺拔住位";
+            levelTitle.className = "level-title abiding";
+            totemIconWrap.classList.remove('prajna-level', 'faith-level');
+            const goldColor = "#f3e5ab";
+
+            mandalaGroup.innerHTML = `
+                <ellipse cx="50" cy="50" rx="14" ry="14" fill="none" stroke="#a8c2b5" stroke-width="1.2" stroke-dasharray="3 3"/>
+                <path d="M50 25 C 65 50, 62 70, 50 72 C 38 70, 35 50, 50 25 Z" fill="none" stroke="${goldColor}" stroke-width="1.5" filter="drop-shadow(0 0 5px ${goldColor})"/>
+                <g stroke="${goldColor}" stroke-width="1" opacity="0.8">
+                    <line x1="50" y1="25" x2="50" y2="72"/>
+                    <line x1="38" y1="50" x2="62" y2="50"/>
+                </g>
+                <circle cx="50" cy="50" r="3" fill="#fff"/>
+            `;
+        } else {
+            // ✨ 信位 (苞芽)：最初信位，細緻玉色苞芽 ✨
+            levelTitle.innerText = "初心信位";
+            levelTitle.className = "level-title faith";
+            totemIconWrap.classList.remove('prajna-level', 'abiding-level');
+            const jadeColor = "#8ba89c";
+
+            mandalaGroup.innerHTML = `
+                <circle cx="50" cy="50" r="12" fill="none" stroke="${jadeColor}" stroke-width="0.8" stroke-dasharray="1 3"/>
+                <path d="M50 35 C 58 45, 55 55, 50 56 C 45 55, 42 45, 50 35" fill="none" stroke="${jadeColor}" stroke-width="1.2" filter="drop-shadow(0 0 5px rgba(139,168,156,0.3))"/>
+                <ellipse cx="50" cy="56" rx="10" ry="2.5" fill="none" stroke="${jadeColor}" stroke-width="1" opacity="0.6"/>
+                <circle cx="50" cy="45" r="1.5" fill="#fff"/>
+            `;
+        }
+    }
+
+    // ✨ 模擬識海存取 (Testing only) ✨
+    function saveSim() { localStorage.setItem('TOTEM_SIM', JSON.stringify(simData)); }
+    function loadSim() {
         try {
-            db = JSON.parse(localStorage.getItem('PX_V15.0'));
-            if (!db || typeof db !== 'object') db = null;
+            const data = JSON.parse(localStorage.getItem('TOTEM_SIM'));
+            if (data && typeof data === 'object') {
+                simData = { ...simData, ...data };
+                // 恢復月輪上已完成的微粒
+                for (let i = 1; i < simData.currentDay; i++) {
+                    const p = document.getElementById(`day-particle-${i}`);
+                    if(p) p.classList.add('completed');
+                }
+                // 恢復今日光芒與文字狀態
+                updateTodayMoonPosition(Math.max(1, simData.currentDay - 1));
+                document.getElementById('practice-status').innerText = `日行持：第 ${Math.max(1, simData.currentDay - 1)} 日`;
+                updateLevelEvolution();
+            }
         } catch(e) {}
-        
-        if (!db) db = { treasures: { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 }, bodhiLitCount: 0, bodhiLastDate: "", bodhiLastDropDate: "", visitedWorlds: [] };
-        if (!db.treasures) db.treasures = { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 };
-        if (db.bodhiLitCount === undefined) db.bodhiLitCount = 0;
-        if (db.bodhiLastDropDate === undefined) db.bodhiLastDropDate = "";
-        if (!db.visitedWorlds) db.visitedWorlds = [];
+    }
 
-        function saveDB() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
+    // ✨ 測試面板工具 ✨
+    function setTestLevel(level) {
+        if (level === 'faith') simData.points = 0;
+        else if (level === 'abiding') simData.points = 300;
+        else if (level === 'prajna') simData.points = 1000;
+        updateLevelEvolution();
+    }
 
-        const basicTreasures = [
-            { id: "sword", name: "幾何慧劍", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 5)"><polygon points="50,10 56,40 50,105 44,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="50,10 56,40 50,105" fill="url(#facet-cyan)" opacity="0.8"/><polygon points="50,10 44,40 50,105" fill="url(#facet-dark)" opacity="0.6"/><polygon points="35,100 65,100 55,110 45,110" fill="url(#pure-glass)" stroke="#d4af37" stroke-width="0.8"/><polygon points="46,110 54,110 52,135 48,135" fill="url(#facet-dark)"/><polygon points="50,135 56,142 50,148 44,142" fill="url(#facet-light)" stroke="#f3e5ab" stroke-width="1"/><circle cx="50" cy="105" r="4" fill="#fff" filter="drop-shadow(0 0 8px #e0f7fa)"/></g></svg>` },
-            { id: "vase", name: "琉璃淨瓶", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 10)"><polygon points="45,25 55,25 58,50 42,50" fill="url(#facet-light)" stroke="#f3e5ab" stroke-width="0.3"/><polygon points="42,50 58,50 72,95 28,95" fill="url(#facet-cyan)" stroke="#fff" stroke-width="0.5"/><polygon points="50,50 58,50 72,95 50,95" fill="url(#facet-dark)" opacity="0.5"/><polygon points="42,50 50,50 50,95 28,95" fill="url(#facet-light)" opacity="0.5"/><polygon points="28,95 72,95 60,125 40,125" fill="url(#facet-dark)" stroke="#f3e5ab" stroke-width="0.5"/><path d="M40 125 Q50 135 60 125 Z" fill="url(#facet-light)"/><ellipse cx="50" cy="95" rx="22" ry="6" fill="rgba(255,255,255,0.4)"/><circle cx="50" cy="80" r="10" fill="rgba(255,255,255,0.8)" filter="drop-shadow(0 0 15px #e0f7fa)"/></g></svg>` },
-            { id: "jewel", name: "多面寶珠", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 20)"><polygon points="50,15 85,45 50,65 15,45" fill="url(#facet-light)" stroke="#fff" stroke-width="0.8"/><polygon points="15,45 50,65 50,115 25,85" fill="url(#facet-rose)" opacity="0.9" stroke="#fff" stroke-width="0.5"/><polygon points="85,45 50,65 50,115 75,85" fill="url(#facet-dark)" opacity="0.8" stroke="#fff" stroke-width="0.5"/><polygon points="50,115 25,85 50,65" fill="rgba(255,255,255,0.3)"/><polygon points="50,15 50,65 85,45" fill="rgba(255,255,255,0.4)"/><circle cx="50" cy="65" r="5" fill="#fff" filter="drop-shadow(0 0 12px #fff)"/></g></svg>` }
-        ];
+    // 啟動陣法
+    initLunarParticles();
+    loadSim(); 
+    if(simData.points === 0) updateLevelEvolution(); // 最初信位初始化
+    updateTodayMoonPosition(simData.currentDay > SIM_TOTAL_DAYS ? 1 : simData.currentDay);
 
-        let w, h, time = 0;
-        let planets = [];       
-        let fgPlanets = [];     
-        let appState = 'daily_ritual'; 
-        let vowStep = 0; let isProcessingVow = false; let lastTapTime = 0;
-
-        
-        let litCount = db.bodhiLitCount; 
-        let hasPlayedToday = false; 
-        let hasDroppedTreasure = false; 
-
-        let rotX = 0, rotY = 0; let targetRotX = 0, targetRotY = 0;
-        let isDragging = false; let lastMouseX = 0, lastMouseY = 0;
-        let shooting = false; let targetPlanet = null; let beamProgress = 0;
-
-        function init() {
-            w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
-            
-            let today = new Date().toDateString();
-            if (db.bodhiLastDate === today) hasPlayedToday = true;
-
-            litCountUi.innerText = litCount;
-
-             const clickZone = document.getElementById('vow-click-zone');
-
-            if (hasPlayedToday) {
-                appState = 'observation';
-                bodyState.className = 'mode-observation';
-                hint.innerText = "今日願力已滿，或可明日再來觀心"; hint.style.opacity = 0.5;
-                // ✨ 如果今天已經圓滿，一進來就把隱形的玻璃牆拆掉，開放 360 度觀星
-                if (clickZone) clickZone.style.display = 'none'; 
-                setTimeout(() => { document.getElementById('modal-overlay').classList.add('show'); }, 500);
-            } else {
-                appState = 'daily_ritual'; 
-                // ✨ 如果還沒圓滿，把隱形玻璃牆架起來，準備讓行者點擊發心
-                if (clickZone) clickZone.style.display = 'flex'; 
-            }
-
-
-            planets = []; const radius = 1500; 
-            for (let i = 0; i < 1080; i++) {
-                const phi = Math.acos(1 - 2 * (i + 0.5) / 1080);
-                const theta = Math.PI * (1 + Math.sqrt(5)) * i;
-                
-                let ratio = litCount / 3000;
-                let isLit = (i < 1080 * ratio);
-
-                planets.push({
-                    id: i, baseX: radius * Math.cos(theta) * Math.sin(phi), baseY: radius * Math.cos(phi), baseZ: radius * Math.sin(theta) * Math.sin(phi),
-                    isLit: isLit, colorObj: planetColors[i % 4], size: Math.random() * 2 + 1,
-                    state: 'orbit', animT: 0,
-                    worldName: generateWorldName() 
-                });
-            }
-
-            fgPlanets = [];
-            for (let i = 0; i < 5; i++) {
-                fgPlanets.push({
-                    x: Math.random() * w, y: Math.random() * h * 0.8 + h*0.1,
-                    speed: (Math.random() * 0.3 + 0.1) * (Math.random() > 0.5 ? 1 : -1),
-                    size: Math.random() * 15 + 10,
-                    isLit: Math.random() > 0.5,
-                    colorObj: planetColors[Math.floor(Math.random() * 4)], phase: Math.random() * Math.PI * 2
-                });
-            }
-        }
-
-        function rotate3D(x, y, z, pitch, yaw) {
-            let x1 = x * Math.cos(yaw) - z * Math.sin(yaw); let z1 = x * Math.sin(yaw) + z * Math.cos(yaw);
-            let y2 = y * Math.cos(pitch) - z1 * Math.sin(pitch); let z2 = y * Math.sin(pitch) + z1 * Math.cos(pitch);
-            return { x: x1, y: y2, z: z2 };
-        }
-
-        function getQBezier(t, p0, p1, p2) { return (1-t)*(1-t)*p0 + 2*(1-t)*t*p1 + t*t*p2; }
-        function draw() {
-            ctx.clearRect(0, 0, w, h);
-            time += 0.05;
-            if (appState === 'daily_ritual' && !shooting) targetRotY += 0.001;
-            rotX += (targetRotX - rotX) * 0.1; rotY += (targetRotY - rotY) * 0.1;
-
-            // 💡 星球陣列！
-            planets.forEach(p => {
-                let worldPos = rotate3D(p.baseX, p.baseY, p.baseZ, rotX, rotY);
-                let currentX = worldPos.x, currentY = worldPos.y, currentZ = worldPos.z;
-
-                if (p.state !== 'orbit') {
-                    let centerX = 0, centerY = -50, centerZ = -1800; 
-                    if (p.state === 'flying_in') {
-                        p.animT += 0.02;
-                        if (p.animT >= 1) { p.animT = 1; p.state = 'presenting'; showTreasureOverlay(p); }
-                    } else if (p.state === 'flying_out') {
-                        p.animT -= 0.015;
-                        if (p.animT <= 0) { p.animT = 0; p.state = 'orbit'; completeRitual(); }
-                    }
-                    const ease = p.animT < 0.5 ? 2 * p.animT * p.animT : -1 + (4 - 2 * p.animT) * p.animT;
-                    currentX += (centerX - currentX) * ease; currentY += (centerY - currentY) * ease; currentZ += (centerZ - currentZ) * ease;
-                }
-
-                let dz = currentZ + 2000; if (dz < 10) return; 
-                const scale = 1000 / dz;
-                const x2d = w/2 + currentX * scale, y2d = h/2 + currentY * scale;
-                if (x2d < -50 || x2d > w + 50 || y2d < -50 || y2d > h + 50) return;
-
-                const baseR2d = p.size * scale;
-                const r2d = p.isLit ? baseR2d * 2.5 : baseR2d; 
-                const {r, g, b} = p.colorObj;
-
-                if (p.state === 'presenting') {
-                    const auraGrad = ctx.createRadialGradient(x2d, y2d, 0, x2d, y2d, r2d * 5);
-                    auraGrad.addColorStop(0, `rgba(${r},${g},${b}, 0.3)`); auraGrad.addColorStop(1, `rgba(${r},${g},${b}, 0)`);
-                    ctx.fillStyle = auraGrad; ctx.beginPath(); ctx.arc(x2d, y2d, r2d * 5, 0, Math.PI*2); ctx.fill();
-                    ctx.fillStyle = `rgba(${r},${g},${b}, 0.8)`; ctx.beginPath(); ctx.arc(x2d, y2d, r2d, 0, Math.PI * 2); ctx.fill();
-                } else if (p.isLit) {
-                    let breath = (Math.sin(time * 2 + p.id) + 1) / 2;
-                    ctx.fillStyle = `rgba(${r},${g},${b}, ${0.5 + breath*0.4})`;
-                    ctx.shadowBlur = 5; ctx.shadowColor = `rgba(${r},${g},${b}, 0.8)`;
-                    ctx.beginPath(); ctx.arc(x2d, y2d, r2d, 0, Math.PI * 2); ctx.fill();
-                    ctx.shadowBlur = 0;
-                } else {
-                    let opacity = (appState === 'daily_ritual' && vowStep > 0) ? 0.05 : 0.3;
-                    ctx.fillStyle = `rgba(${r},${g},${b}, ${opacity})`;
-                    ctx.beginPath(); ctx.arc(x2d, y2d, r2d, 0, Math.PI * 2); ctx.fill();
-                }
-            });
-
-            // 💡 這裡是光束發射動畫！
-            if (shooting && targetPlanet) {
-                beamProgress += 0.025; 
-                let targetWorld = rotate3D(targetPlanet.baseX, targetPlanet.baseY, targetPlanet.baseZ, rotX, rotY);
-                let scale = 1000 / (targetWorld.z + 2000);
-                let startX = w/2; let startY = h/2 + 50;
-                let endX = startX + (targetWorld.x * scale); let endY = startY + (targetWorld.y * scale) - 50;
-                let cpX = startX + (endX - startX) * 0.5 + (startX > endX ? -150 : 150); let cpY = startY - 120;
-                
-                let headX = getQBezier(beamProgress, startX, cpX, endX); let headY = getQBezier(beamProgress, startY, cpY, endY);
-                let tailT = Math.max(0, beamProgress - 0.35); 
-                let tailX = getQBezier(tailT, startX, cpX, endX); let tailY = getQBezier(tailT, startY, cpY, endY);
-                
-                let grad = ctx.createLinearGradient(tailX, tailY, headX, headY);
-                grad.addColorStop(0, 'rgba(212, 175, 55, 0)'); grad.addColorStop(0.6, 'rgba(243, 229, 171, 0.6)'); grad.addColorStop(1, 'rgba(255, 255, 255, 1)');
-                
-                ctx.beginPath(); ctx.moveTo(tailX, tailY);
-                for(let t = tailT; t <= beamProgress; t += 0.02) { ctx.lineTo(getQBezier(t, startX, cpX, endX), getQBezier(t, startY, cpY, endY)); }
-                
-                ctx.strokeStyle = grad; ctx.lineWidth = 4 + (beamProgress * 1.5); ctx.lineCap = 'round';
-                ctx.shadowBlur = 15; ctx.shadowColor = '#d4af37'; ctx.stroke(); ctx.shadowBlur = 0;
-                
-                if (beamProgress >= 1) { shooting = false; targetPlanet.state = 'flying_in'; targetPlanet.animT = 0; }
-            }
-
-            if (appState !== 'treasure_view') {
-                fgPlanets.forEach(fp => {
-                    fp.x += fp.speed; if (fp.x > w + 80) fp.x = -80; else if (fp.x < -80) fp.x = w + 80;
-                    const {r, g, b} = fp.colorObj; let opacity = fp.isLit ? (0.6 + 0.2 * Math.sin(time + fp.phase)) : 0.2;
-                    const grad = ctx.createRadialGradient(fp.x, fp.y, 0, fp.x, fp.y, fp.size);
-                    grad.addColorStop(0, `rgba(${r},${g},${b}, ${opacity})`); grad.addColorStop(0.6, `rgba(${r},${g},${b}, ${opacity * 0.5})`); grad.addColorStop(1, `rgba(${r},${g},${b}, 0)`);
-                    ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(fp.x, fp.y, fp.size, 0, Math.PI * 2); ctx.fill();
-                });
-            }
-
-            // ✨ 光環根據點擊次數穩定放大
-            if (appState === 'daily_ritual' && !shooting && (!targetPlanet || targetPlanet.state === 'orbit')) {
-                let basePulse = Math.sin(time * 0.5) * 5;
-                let currentRadius = 40 + basePulse + (vowStep * 20); 
-                for(let r = 0; r < 3; r++) {
-                    let ringRad = currentRadius - (r * 15); if(ringRad < 0) continue;
-                    const grad = ctx.createRadialGradient(w/2, h/2 + 50, 0, w/2, h/2 + 50, ringRad + 10);
-                    let alpha = (0.7 - r*0.2) + (vowStep * 0.15);
-                    grad.addColorStop(0, `rgba(243, 229, 171, ${alpha})`); grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
-                    ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(w/2, h/2 + 50, ringRad + 15, 0, Math.PI * 2); ctx.fill();
-                }
-                ctx.beginPath(); ctx.arc(w/2, h/2 + 50, 8 + (vowStep * 4), 0, Math.PI * 2);
-                ctx.fillStyle = '#fff'; ctx.shadowBlur = 20; ctx.shadowColor = '#fff'; ctx.fill(); ctx.shadowBlur = 0;
-            }
-
-            requestAnimationFrame(draw);
-        }
-
-
-        function checkDropEligibility() {
-            if (litCount === 1) return true; 
-            if (!db.bodhiLastDropDate) return true; 
-            const lastDrop = new Date(db.bodhiLastDropDate).setHours(0,0,0,0);
-            const today = new Date().setHours(0,0,0,0);
-            const diffDays = Math.round((today - lastDrop) / 86400000);
-            return diffDays >= 3; 
-        }
-
-        function showTreasureOverlay(planet) {
-            appState = 'treasure_view'; 
-            flash.style.opacity = 1; setTimeout(() => { flash.style.opacity = 0; }, 600);
-            
-            let isNewStar = !planet.isLit;
-            
-            if (isNewStar) {
-                planet.isLit = true;
-                litCount++; 
-                if(litCount > 3000) litCount = 3000;
-                litCountUi.innerText = litCount;
-                
-                if(!db.visitedWorlds.includes(planet.worldName)) {
-                    db.visitedWorlds.push(planet.worldName);
-                }
-            }
-            
-            hasDroppedTreasure = checkDropEligibility();
-
-            if (hasDroppedTreasure) {
-                db.bodhiLastDropDate = new Date().toDateString();
-                svgContainer.style.display = 'flex';
-                const treasure = basicTreasures[Math.floor(Math.random() * basicTreasures.length)];
-                db.treasures[treasure.id] = (db.treasures[treasure.id] || 0) + 1;
-                saveDB();
-
-                svgContainer.innerHTML = treasure.svg;
-                tNameUi.innerHTML = `【${planet.worldName}】<br><span class="t-tag" style="margin-top:8px;">${treasure.name} 顯現</span>`;
-                tDescUi.innerText = isNewStar 
-                    ? `行者發菩提心，點亮華藏新星，震動十方。法界隨順善因，特顯此願具。祈願藉此勝緣，堅固道心，行願無盡。`
-                    : `行者願力重遊此界，菩提心不減。法界感念恆心，或可顯此願具以作迴饋。`;
-            } else {
-                svgContainer.style.display = 'none';
-                tNameUi.innerHTML = `【${planet.worldName}】<br><span class="t-tag" style="margin-top:8px;">願力普照</span>`;
-                tDescUi.innerText = isNewStar
-                    ? `行者至誠發心，點亮華藏新星。祈願此微小清淨之光，融入無盡法界，迴向十方眾生得大安樂。`
-                    : `行者願力重遊此界。雖進度不增，然菩提心恆常不滅，功德或可無量。`;
-            }
-
-            treasureOverlay.classList.remove('collecting');
-            treasureOverlay.classList.add('show');
-        }
-
-        function collectTreasure() {
-            if (appState !== 'treasure_view') return;
-            treasureOverlay.classList.remove('show'); treasureOverlay.classList.add('collecting');
-            setTimeout(() => { if (targetPlanet) targetPlanet.state = 'flying_out'; }, 800); 
-        }
-
-                        function completeRitual() {
-            appState = 'observation'; 
-            bodyState.className = 'mode-observation';
-            hint.innerText = "今日願力已滿，或可明日再來觀心"; 
-            hint.style.opacity = 0.5;
-            
-            // ✨ 關鍵修復：儀軌圓滿後，徹底隱藏巨大的點擊區！
-            // 這樣文字就會消失，而且拖曳星空的權限就會還給背景！
-            const clickZone = document.getElementById('vow-click-zone');
-            if (clickZone) clickZone.style.display = 'none';
-            
-            db.bodhiLitCount = litCount; db.bodhiLastDate = new Date().toDateString(); saveDB();
-            setTimeout(() => { document.getElementById('modal-overlay').classList.add('show'); }, 500);
-        }
-
-
-
-        function openLogModal() {
-            const listEl = document.getElementById('log-list');
-            listEl.innerHTML = '';
-            document.getElementById('log-status').innerText = `已探索世界：${db.visitedWorlds.length} / 3000`;
-            
-            if(db.visitedWorlds.length === 0) {
-                listEl.innerHTML = '<div style="text-align:center; color:#666; padding:20px;">尚未踏足星海，祈願行者早發菩提。</div>';
-            } else {
-                db.visitedWorlds.slice().reverse().forEach(world => {
-                    const item = document.createElement('div');
-                    item.className = 'log-item';
-                    item.innerText = world;
-                    listEl.appendChild(item);
-                });
-            }
-            document.getElementById('log-modal').classList.add('show');
-        }
-
-        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-
-                // ✨ 核心點擊發心函數 (加入防偷點鎖定機制)
-        function triggerVow() {
-            let now = Date.now();
-            if (now - lastTapTime < 300) return; 
-            lastTapTime = now;
-
-            // 💡 新增防線：如果正在等 2.5 秒、正在發射光束、或星球正在飛，嚴格禁止點擊！
-            if (isProcessingVow || vowStep >= 4 || appState !== 'daily_ritual' || shooting || (targetPlanet && targetPlanet.state !== 'orbit')) return;
-            
-            isProcessingVow = true; 
-            if (navigator.vibrate) navigator.vibrate(15);
-            hint.style.opacity = 0;
-            
-            speak(vows[vowStep], 0.85);
-
-            vowDisplay.style.opacity = 0;
-            
-            setTimeout(() => {
-                vowDisplay.innerText = vows[vowStep];
-                vowDisplay.style.opacity = 1;
-                vowStep++;
-                
-                if (vowStep === 4) {
-                    // 💡 終極物理防呆：點滿四次後，立刻把隱形按鈕「鎖死」，絕對不給多按！
-                    document.getElementById('vow-click-zone').style.pointerEvents = 'none';
-
-                    setTimeout(() => {
-                        vowDisplay.style.opacity = 0; 
-                        targetPlanet = planets[Math.floor(Math.random() * planets.length)]; 
-                        shooting = true; beamProgress = 0; 
-                        vowStep = 0; 
-                        speak("願力圓滿", 0.85);
-                        isProcessingVow = false; 
-                    }, 2500); 
-                } else {
-                    setTimeout(() => { isProcessingVow = false; }, 500); 
-                }
-            }, 50);
-        }
-
-            
-            
-
-        // 背景星空拖曳 (不再干涉中間的發心區塊)
-        function pointerDown(e) {
-            if (e.target.closest('#vow-click-zone') || e.target.closest('.obs-ui') || e.target.closest('.modal-wrap') || appState === 'treasure_view') return;
-            isDragging = true; lastMouseX = e.touches ? e.touches[0].clientX : e.clientX; lastMouseY = e.touches ? e.touches[0].clientY : e.clientY; 
-        }
-        function pointerMove(e) {
-            if (isDragging) {
-                let currentX = e.touches ? e.touches[0].clientX : e.clientX; let currentY = e.touches ? e.touches[0].clientY : e.clientY;
-                targetRotY += (currentX - lastMouseX) * 0.005; targetRotX += (currentY - lastMouseY) * 0.005;
-                if (targetRotX > 0.5) targetRotX = 0.5; if (targetRotX < -0.5) targetRotX = -0.5;
-                lastMouseX = currentX; lastMouseY = currentY;
-            }
-        }
-        function pointerUp(e) { isDragging = false; }
-
-
-        window.addEventListener('mousedown', pointerDown); window.addEventListener('mousemove', pointerMove); window.addEventListener('mouseup', pointerUp);
-        window.addEventListener('touchstart', pointerDown, {passive: false}); window.addEventListener('touchmove', pointerMove, {passive: false}); window.addEventListener('touchend', pointerUp, {passive: false});
-        window.addEventListener('resize', init);
-        
-        init(); draw();
-    </script>
+</script>
 </body>
 </html>

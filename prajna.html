@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>般若智慧 ． 破迷開悟</title>
+    <style>
+        :root { --bg: #030504; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { 
+            margin: 0; background: var(--bg); color: #eee; font-family: "PingFang TC", sans-serif; 
+            display: flex; flex-direction: column; align-items: center; height: 100dvh; overflow: hidden;
+        }
+
+        /* 強化時間條顯化與無常壓迫感 */
+        #energy-wrap { position: absolute; top: 0; left: 0; width: 100%; height: 8px; z-index: 100; background: rgba(255,255,255,0.05); }
+        #energy-bar { height: 100%; width: 100%; background: linear-gradient(90deg, transparent, #e8cf82 20%, #d4af37 50%, #e8cf82 80%, transparent); box-shadow: 0 0 15px rgba(212, 175, 55, 0.8); transform-origin: left; transition: width 1s linear; }
+        .critical-time { background: linear-gradient(90deg, transparent, #ff4444 20%, #8b0000 50%, #ff4444 80%, transparent) !important; animation: breatheRed 0.4s infinite alternate; }
+        @keyframes breatheRed { from { box-shadow: 0 0 10px rgba(139,0,0,0.8); } to { box-shadow: 0 0 35px rgba(255,0,0,1); } }
+
+        /* 頂部資訊區 */
+        .top-bar { width: 90%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-top: 30px; z-index: 10; }
+        .score-display { color: var(--gold); font-size: 1.1rem; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 10px rgba(212,175,55,0.4); }
+        .btn-back { border: 1px solid var(--cyan); color: var(--cyan); background: transparent; padding: 6px 15px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: 0.3s; }
+        .btn-back:active { background: var(--cyan); color: #000; }
+
+        /* 題目與選項區 */
+        #quiz-container { width: 90%; max-width: 400px; flex: 1; display: flex; flex-direction: column; justify-content: center; z-index: 10; position: relative; }
+        
+        .question-box {
+            background: linear-gradient(145deg, rgba(20,25,22,0.9), rgba(5,8,5,1));
+            border: 1px solid rgba(139,168,156,0.3); border-radius: 16px;
+            padding: 30px 20px; margin-bottom: 25px; text-align: justify;
+            font-size: 1.15rem; line-height: 1.6; color: var(--gold);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(139,168,156,0.05);
+        }
+
+        .option-btn {
+            width: 100%; background: rgba(255,255,255,0.03); border: 1px solid #333;
+            padding: 18px 20px; border-radius: 12px; margin-bottom: 12px;
+            color: #ccc; font-size: 1rem; text-align: left; line-height: 1.4;
+            transition: all 0.3s; cursor: pointer; display: flex; align-items: center; gap: 15px;
+        }
+        .option-btn:active { transform: scale(0.98); background: rgba(243,229,171,0.1); border-color: var(--gold); color: var(--gold); }
+        .option-btn.correct { background: rgba(139,168,156,0.2); border-color: var(--cyan); color: #fff; box-shadow: 0 0 15px rgba(139,168,156,0.4); }
+        .option-btn.wrong { background: rgba(139,58,58,0.2); border-color: #8b3a3a; color: #fff; opacity: 0.7; }
+        
+        .opt-letter { font-weight: bold; color: var(--cyan); opacity: 0.8; }
+
+        /* 業火餘燼美學 (答錯提示) */
+        .door-hint-fail {
+            position: absolute; top: -40px; width: 100%; text-align: center; 
+            color: transparent; font-size: 1.1rem; letter-spacing: 5px; font-weight: bold;
+            background: linear-gradient(90deg, #8b3a3a, #b8860b, #8b3a3a);
+            -webkit-background-clip: text; background-clip: text;
+            filter: drop-shadow(0 0 10px rgba(139, 58, 58, 0.8));
+            opacity: 0; transform: translateY(-10px); transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            pointer-events: none;
+        }
+        .door-hint-fail.show { opacity: 1; transform: translateY(0); text-shadow: 0 0 20px rgba(184, 134, 11, 0.4); }
+
+        /* 右下角八瓣金蓮 (進度顯化) */
+        #lotus-totem { position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px; filter: drop-shadow(0 0 10px rgba(212,175,55,0.1)); z-index: 5; }
+        .lunar-ring { fill: none; stroke: var(--cyan); stroke-width: 0.8; stroke-dasharray: 2 4; opacity: 0.4; transition: 0.5s; }
+        .maze-petal { fill: rgba(139,168,156,0.12); stroke: var(--cyan); stroke-width: 0.8; stroke-opacity: 0.3; transition: all 0.8s; }
+        .maze-petal.lit { fill: var(--gold); stroke: #fff; stroke-width: 1.2; filter: drop-shadow(0 0 8px #fff); opacity: 1; }
+        .maze-core { fill: none; stroke: var(--cyan); stroke-width: 1.5; opacity: 0.6; transition: all 0.8s; }
+        .maze-core.lit { stroke: var(--solid-gold); fill: rgba(212,175,55,0.3); filter: drop-shadow(0 0 15px var(--solid-gold)); opacity: 1; }
+        .center-seed { fill: #fff; opacity: 0.8; transition: all 0.5s; }
+
+        /* 開始帷幕 */
+        #start-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.95); backdrop-filter: blur(10px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000;
+        }
+        .start-btn {
+            background: linear-gradient(135deg, var(--solid-gold), #b8860b); color: #000;
+            border: 2px solid var(--gold); padding: 15px 40px; border-radius: 30px;
+            font-weight: bold; letter-spacing: 4px; font-size: 1.1rem; cursor: pointer;
+            box-shadow: 0 0 20px rgba(212,175,55,0.4); transition: 0.3s;
+        }
+        .start-btn:active { transform: scale(0.95); box-shadow: 0 0 40px var(--solid-gold); }
+    </style>
+</head>
+<body>
+
+    <div id="energy-wrap"><div id="energy-bar"></div></div>
+
+    <div class="top-bar">
+        <button class="btn-back" onclick="goBack()">返回道場</button>
+        <div class="score-display">般若資糧 <span id="score-val">0</span></div>
+    </div>
+
+    <div id="quiz-container">
+        <div id="door-hint" class="door-hint-fail">一念流轉 ． 靜待明日</div>
+        <div class="question-box" id="q-text">加載法理中...</div>
+        <div id="options-wrap"></div>
+    </div>
+
+    <svg id="lotus-totem" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="46" class="lunar-ring" id="totem-ring"/>
+        <g id="petals-group">
+            <path id="petal-1" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(0 50 50)"/>
+            <path id="petal-2" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(45 50 50)"/>
+            <path id="petal-3" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(90 50 50)"/>
+            <path id="petal-4" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(135 50 50)"/>
+            <path id="petal-5" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(180 50 50)"/>
+            <path id="petal-6" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(225 50 50)"/>
+            <path id="petal-7" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(270 50 50)"/>
+            <path id="petal-8" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(315 50 50)"/>
+        </g>
+        <path id="totem-core" class="maze-core" d="M50 35 C 58 45, 55 55, 50 56 C 45 55, 42 45, 50 35"/>
+        <circle cx="50" cy="50" r="2" class="center-seed"/>
+    </svg>
+
+    <div id="start-overlay">
+        <div style="color: var(--gold); font-size: 1.5rem; letter-spacing: 5px; font-weight: bold; margin-bottom: 30px;">般若智慧</div>
+        <div style="color: #aaa; font-size: 0.9rem; letter-spacing: 1px; margin-bottom: 40px; text-align: center; line-height: 1.6;">每日十題 ． 破迷開悟<br>答錯即止 ． 明日再來</div>
+        <button class="start-btn" onclick="initPrajna()">開啟法界</button>
+    </div>
+
+    <script>
+        // 【音效引擎】
+        let audioCtx, tensionOsc, tensionGain, tensionInterval;
+        
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playTensionSound() {
+            if (!audioCtx) return;
+            tensionOsc = audioCtx.createOscillator(); tensionGain = audioCtx.createGain();
+            tensionOsc.type = 'sine'; tensionOsc.frequency.setValueAtTime(45, audioCtx.currentTime);
+            tensionGain.gain.setValueAtTime(0, audioCtx.currentTime);
+            tensionOsc.connect(tensionGain); tensionGain.connect(audioCtx.destination);
+            tensionOsc.start();
+
+            let isHigh = false;
+            tensionInterval = setInterval(() => {
+                isHigh = !isHigh;
+                tensionGain.gain.setTargetAtTime(isHigh ? 0.3 : 0.05, audioCtx.currentTime + 0.1);
+                tensionOsc.frequency.setTargetAtTime(isHigh ? 55 : 45, audioCtx.currentTime + 0.1);
+            }, 400);
+        }
+
+        function stopTensionSound() {
+            if (tensionInterval) clearInterval(tensionInterval);
+            if (tensionGain) tensionGain.gain.setTargetAtTime(0, audioCtx.currentTime + 0.2);
+            if (tensionOsc) setTimeout(() => tensionOsc.stop(), 300);
+        }
+
+        function playWrongSound() {
+            if (!audioCtx) return;
+            let wrongOsc = audioCtx.createOscillator(); let wrongGain = audioCtx.createGain();
+            wrongOsc.type = 'triangle'; 
+            wrongOsc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            wrongOsc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.8);
+            wrongGain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+            wrongGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
+            wrongOsc.connect(wrongGain); wrongGain.connect(audioCtx.destination);
+            wrongOsc.start(); wrongOsc.stop(audioCtx.currentTime + 1);
+        }
+
+        function playCorrectSound() {
+            if (!audioCtx) return;
+            let cOsc = audioCtx.createOscillator(); let cGain = audioCtx.createGain();
+            cOsc.type = 'sine';
+            cOsc.frequency.setValueAtTime(528, audioCtx.currentTime);
+            cGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            cGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+            cOsc.connect(cGain); cGain.connect(audioCtx.destination);
+            cOsc.start(); cOsc.stop(audioCtx.currentTime + 1);
+        }
+
+        // 【題庫】
+        const lowBank = [
+            { text: "娑婆世界佛教之本師教主為誰？", options: [{ text: "釋迦牟尼佛", isCorrect: true }, { text: "阿彌陀佛", isCorrect: false }, { text: "觀世音菩薩", isCorrect: false }, { text: "玉皇大帝", isCorrect: false }] },
+            { text: "修持淨土法門，臨終得以往生極樂之最核心關鍵為何？", options: [{ text: "具足深信切願，老實稱念南無阿彌陀佛", isCorrect: true }, { text: "焚燒大量紙錢與蓮花消解怨氣", isCorrect: false }, { text: "四處朝山拜拜廣求各路神明保佑", isCorrect: false }, { text: "必須擁有深厚禪定達到一念不生", isCorrect: false }] },
+            { text: "極樂世界之「不退轉」，其真實意涵為何？", options: [{ text: "於菩提道上不再退墮凡夫", isCorrect: true }, { text: "永遠留在極樂世界享樂不回娑婆", isCorrect: false }, { text: "做任何事皆不會受到因果法則約束", isCorrect: false }, { text: "肉身永遠不會生病衰老", isCorrect: false }] },
+            { text: "淨土宗所言之「帶業往生」，所帶之「業」指何物？", options: [{ text: "過去無量劫來尚未消除之舊業習氣", isCorrect: true }, { text: "往生後可以繼續造作之新惡業", isCorrect: false }, { text: "世俗之財富與名利福報", isCorrect: false }, { text: "對冤親債主之深切怨恨", isCorrect: false }] },
+            { text: "於道場或家中念佛，最重要之威儀為何？", options: [{ text: "都攝六根，淨念相繼", isCorrect: true }, { text: "必須敲打法器方能感應", isCorrect: false }, { text: "音量必須宏亮以震懾無形", isCorrect: false }, { text: "必須穿著海青縵衣方可開口", isCorrect: false }] },
+            { text: "極樂世界之莊嚴七寶，其存在之最主要目的為何？", options: [{ text: "提供極致清淨無擾之環境以利修行", isCorrect: true }, { text: "展現阿彌陀佛之無上財富", isCorrect: false }, { text: "供往生者無盡之物質享受", isCorrect: false }, { text: "作為獎賞修行高深者之貨幣", isCorrect: false }] },
+            { text: "若行者平時不修善法，僅指望臨終念佛，此心態之盲點為何？", options: [{ text: "臨終四大分解極苦，若無平時熏修極易失念", isCorrect: true }, { text: "佛陀只救好人，不救惡人", isCorrect: false }, { text: "念佛次數不足無法抵銷業障", isCorrect: false }, { text: "必須有高僧加持方能生效", isCorrect: false }] },
+            { text: "大乘佛法中「迴向」之真實功德為何？", options: [{ text: "如一燈燃百千燈，心量拓寬而功德無盡", isCorrect: true }, { text: "將自身功德送出，自身福報便會減少", isCorrect: false }, { text: "可作為與佛菩薩交換世俗利益之籌碼", isCorrect: false }, { text: "僅為念誦儀軌，無實質作用", isCorrect: false }] },
+            { text: "極樂世界眾生「形無異狀」，其深層法理為何？", options: [{ text: "拔除外貌美醜差異所生之傲慢與自卑", isCorrect: true }, { text: "因為極樂世界沒有足夠的材質設計多樣外觀", isCorrect: false }, { text: "為了方便諸佛管理與辨識", isCorrect: false }, { text: "因為所有往生者皆失去自我意識", isCorrect: false }] },
+            { text: "阿彌陀佛四十八願，其最終之願景為何？", options: [{ text: "令十方眾生皆能成就無上佛道", isCorrect: true }, { text: "建立全宇宙最大之勢力範圍", isCorrect: false }, { text: "將所有眾生永遠留在極樂世界", isCorrect: false }, { text: "僅為救度極少數之修行天才", isCorrect: false }] }
+        ];
+
+        const midBank = [
+            { text: "若行者發願往生極樂，然於娑婆遇逆境時常生怨懟。其修行之漏何在？", options: [{ text: "未能將佛法與世俗境緣合一，歷事鍊心", isCorrect: true }, { text: "念佛之音聲不夠至誠懇切", isCorrect: false }, { text: "前世業障過深，今生註定無法解脫", isCorrect: false }, { text: "尚未找到最適合自身之秘密法門", isCorrect: false }] },
+            { text: "《無量壽經》中，他方菩薩聞名與實體往生之權限差異，其核心理則為何？", options: [{ text: "親身投入矩陣實修，方能獲取極致之運算資源與果位", isCorrect: true }, { text: "阿彌陀佛偏心於實體往生之眾生", isCorrect: false }, { text: "遠端連線之頻寬不足以傳輸佛法", isCorrect: false }, { text: "經文翻譯錯誤，實則毫無差異", isCorrect: false }] },
+            { text: "極樂世界既無三惡道，亦無天魔。於此無逆境中修行，其挑戰何在？", options: [{ text: "須於極度純粹之空性環境中，直面微細之無明與習氣", isCorrect: true }, { text: "因過於無聊而容易退失道心", isCorrect: false }, { text: "無法累積忍辱波羅蜜之功德", isCorrect: false }, { text: "缺乏競爭導致修行進度緩慢", isCorrect: false }] },
+            { text: "關於「國中人天」之稱呼，其於唯識矩陣中之實相為何？", options: [{ text: "實皆大乘規格，僅為標記其來自娑婆之初始遺留數據", isCorrect: true }, { text: "代表極樂世界仍有嚴格之階級與種姓制度", isCorrect: false }, { text: "指尚未獲得金身，仍受輪迴之苦的眾生", isCorrect: false }, { text: "為極樂世界中負責服侍高階菩薩之底層", isCorrect: false }] },
+            { text: "行普賢願者，若見他人造惡，其心境當如何安住？", options: [{ text: "深知因果不虛，生大悲心而不生瞋恨分別", isCorrect: true }, { text: "立刻上前嚴厲指責，以顯自身之清高", isCorrect: false }, { text: "視若無睹，以免沾染自身之清淨心", isCorrect: false }, { text: "慶幸自身有修持，不會同流合污", isCorrect: false }] },
+            { text: "極樂世界「胎生五百年」之機制，其於系統中之功能近似於何者？", options: [{ text: "為信根未具者設立之溫和過渡沙盒，免其受空性衝擊", isCorrect: true }, { text: "對不聽話行者之嚴厲懲罰與禁閉", isCorrect: false }, { text: "因極樂空間不足而暫時安置之等待區", isCorrect: false }, { text: "專為剛出生之嬰兒靈魂所設之育幼院", isCorrect: false }] },
+            { text: "菩薩發願乘願再來娑婆，其不畏生死之底氣源於何處？", options: [{ text: "已知輪迴僅為載體更迭，且具備不墮惡道之底層防護", isCorrect: true }, { text: "確信自身定能擁有前世之完整記憶", isCorrect: false }, { text: "深知自己擁有隨時能呼風喚雨之神通", isCorrect: false }, { text: "相信諸佛會替其解決所有世俗困難", isCorrect: false }] },
+            { text: "何謂「不怕死，不等死」之大乘中道？", options: [{ text: "知生死如幻故無懼，知色身堪用故精進利他", isCorrect: true }, { text: "雖不怕死，但每日靜坐什麼也不做等待往生", isCorrect: false }, { text: "極度渴望死亡以求解脫娑婆之苦", isCorrect: false }, { text: "為了利他不惜隨意犧牲自身之性命", isCorrect: false }] },
+            { text: "若言極樂世界乃阿彌陀佛願力所化之「報土」，其真假虛實應如何觀之？", options: [{ text: "於世俗用中為絕對真實，於微觀法界則皆屬光與資訊之顯化", isCorrect: true }, { text: "純屬古人為安慰苦難眾生所編造之神話", isCorrect: false }, { text: "僅存在於行者禪定之幻想中，無實體可言", isCorrect: false }, { text: "乃宇宙中唯一絕對真實、永遠不滅之物理實體", isCorrect: false }] },
+            { text: "淨土行者為何需兼修「五戒十善」？", options: [{ text: "為於娑婆預習極樂清淨之法性，使心境與彼土頻率相應", isCorrect: true }, { text: "若不修滿，阿彌陀佛絕對不會接引", isCorrect: false }, { text: "為了在世俗間獲得良好之名聲", isCorrect: false }, { text: "此乃用以換取極樂世界更高品位之交易籌碼", isCorrect: false }] }
+        ];
+
+        const highBank = [
+            { text: "娑婆若鏡花水月，眾生皆若戲子入局。若欲契入一真法界，行者當持何等心跡？", options: [{ text: "了達劇本虛妄而不廢萬行，以無愧之菩提心演透此生", isCorrect: true }, { text: "既知皆妄，則萬事皆休，安住於枯木寒灰之境", isCorrect: false }, { text: "極力破壞周遭一切世俗規則，以顯自身之超脫", isCorrect: false }, { text: "強求篡改因果劇本，祈冀於此生獲取無上安樂", isCorrect: false }] },
+            { text: "阿賴耶識猶如幽邃識海，含藏萬法。然驅動其流轉投胎、入死生之局者，其機理似為何狀？", options: [{ text: "似第七識之求存執念，緊附數據叢聚，於無常中尋覓新載體", isCorrect: true }, { text: "阿賴耶識自身具備明辨善惡之智，主動抉擇去向", isCorrect: false }, { text: "全憑外在造物神祇之審判與分配", isCorrect: false }, { text: "肉身消亡之瞬間，數據即刻隨風飄散，並無流轉", isCorrect: false }] },
+            { text: "極樂載體拔除貪嗔之根，斷絕世俗之漏。其於法界深層運作中，或具何等微觀意涵？", options: [{ text: "或為提供極致降噪之硬體，俾使阿賴耶識於中極速統整累劫數據", isCorrect: true }, { text: "僅為確保行者能於彼土永享勝妙之五欲安樂", isCorrect: false }, { text: "意在將所有行者同化為毫無思想之傀儡", isCorrect: false }, { text: "為令行者徹底遺忘娑婆之一切記憶與因緣", isCorrect: false }] },
+            { text: "諸佛慈悲，指歸「臨命終時」為接引樞紐。若以神識與色身之連線觀之，此剎那之玄機何在？", options: [{ text: "大腦硬體將崩未散之際，乃我執尚存抉擇權、得將全息數據瞬間上傳之黃金視窗", isCorrect: true }, { text: "因諸佛平日繁忙，僅能於眾生臨終時方能感知其呼喚", isCorrect: false }, { text: "必須經歷極大之肉身痛苦，方能換取極樂之門票", isCorrect: false }, { text: "死後靈魂將立刻飛升，若不在臨終攔截便會消散", isCorrect: false }] },
+            { text: "菩薩留一分「利他之我執」而不入究竟涅槃。此舉於宇宙系統之演化，或許扮演何種樞紐？", options: [{ text: "猶如不滅之探測器，甘冒隔陰之險，為法界之轉識成智提供不竭之驅動力", isCorrect: true }, { text: "因其自身修為不足，尚未具備徹底斬斷我執之能力", isCorrect: false }, { text: "貪戀娑婆世界之信眾供養與崇高地位", isCorrect: false }, { text: "系統出現代碼錯誤，導致其無法順利登出輪迴", isCorrect: false }] },
+            { text: "若將我執視為生滅之細胞，阿賴耶視為整體之命脈。則累劫輪迴之生死替迭，其奧義安在？", options: [{ text: "無數細胞之生滅試錯，皆為成就最終那唯一覺醒之點，圓滿轉智之蛻變", isCorrect: true }, { text: "純屬系統之盲目損耗，毫無終極意義可言", isCorrect: false }, { text: "為了讓每個細胞都能獨立成佛，互不相干", isCorrect: false }, { text: "乃造物者為觀賞眾生受苦而設計之無盡迷宮", isCorrect: false }] },
+            { text: "乘願再來之大士，縱有「不墮惡道」之底層防護，仍有隔陰之迷。其於娑婆實戰中，如何確保不退？", options: [{ text: "仰仗阿賴耶深藏之菩提慣性，於無常中碰撞善緣節點，瞬間重啟覺知", isCorrect: true }, { text: "出生即具備完整之前世記憶與無上神通", isCorrect: false }, { text: "有諸佛時時刻刻在耳邊低語，指引其每一個決定", isCorrect: false }, { text: "其肉身具備刀槍不入、百病不侵之物理特異功能", isCorrect: false }] },
+            { text: "「無量壽」於現象界中亦為相對之相。若報身佛度生因緣圓滿，其系統之最終流向似應為何？", options: [{ text: "相貌消融，回歸最純粹無相之法身光芒，並將矩陣權限無縫交棒", isCorrect: true }, { text: "將極樂世界徹底毀滅，帶領所有眾生玉石俱焚", isCorrect: false }, { text: "永遠保持同一形相，受無量宇宙眾生之永恆膜拜", isCorrect: false }, { text: "化身為掌握生殺大權之唯一神祇，統御十方", isCorrect: false }] },
+            { text: "若言極樂世界無有退轉，然亦無苦樂之強烈對比。則行者於彼土之「精進」，其動力或源於何處？", options: [{ text: "非源於逃避痛苦，而係契入法性後，對解碼宇宙真理與慈悲利他之極致法喜", isCorrect: true }, { text: "害怕若不精進，將會被系統重新流放回娑婆世界", isCorrect: false }, { text: "為了在極樂世界中攀爬更高的階級地位", isCorrect: false }, { text: "被系統強制寫入之自動執行程式，毫無自主意識", isCorrect: false }] },
+            { text: "「凡所有相，皆是虛妄。」若以此理觀照自身之念佛與修行，當生何等見地？", options: [{ text: "知能念之心與所念之佛皆同幻化，然於此大幻網中，唯菩提大願真實不虛", isCorrect: true }, { text: "既皆虛妄，則念與不念毫無分別，索性放棄一切定課", isCorrect: false }, { text: "執著於追求一個絕對真實、可以觸摸的阿彌陀佛實體", isCorrect: false }, { text: "認為只有自己是真實的，其餘諸佛與眾生皆是幻影", isCorrect: false }] }
+        ];
+
+        // 【系統邏輯】
+        let db;
+        let todayQuiz = [];
+        let qIndex = 0;
+        let timer;
+        let timeLeft;
+        const TIME_LIMIT = 20;
+        const LETTERS = ['A', 'B', 'C', 'D'];
+
+        function loadDB() {
+            try { db = JSON.parse(localStorage.getItem('PX_V15.0')); } catch(e){}
+            if (!db) db = { mazePoints: 0, totalCorrect: 0, lastMazeDate: "" };
+            if (db.mazePoints === undefined) db.mazePoints = 0;
+            if (db.totalCorrect === undefined) db.totalCorrect = 0;
+            document.getElementById('score-val').innerText = db.mazePoints;
+            updateTotem();
+        }
+
+        function saveDB() {
+            localStorage.setItem('PX_V15.0', JSON.stringify(db));
+            document.getElementById('score-val').innerText = db.mazePoints;
+            updateTotem();
+        }
+
+        function getMazeTier() {
+            const pts = db.mazePoints;
+            if (pts < 200) return { tier: 1, petals: Math.min(3, Math.max(1, Math.floor(pts/66) + 1)) };
+            if (pts < 800) return { tier: 2, petals: Math.min(6, Math.max(4, Math.floor((pts-200)/200) + 4)) };
+            return { tier: 3, petals: pts < 2000 ? 7 : 8 };
+        }
+
+        function updateTotem() {
+            const info = getMazeTier();
+            for (let i = 1; i <= 8; i++) {
+                let petal = document.getElementById('petal-' + i);
+                if (i <= info.petals) petal.classList.add('lit');
+                else petal.classList.remove('lit');
+            }
+            if (info.petals >= 8) {
+                document.getElementById('totem-core').classList.add('lit');
+                document.getElementById('totem-ring').style.stroke = 'var(--solid-gold)';
+            }
+        }
+
+        function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+        function initPrajna() {
+            initAudio();
+            loadDB();
+            const todayStr = new Date().toLocaleDateString();
+            if (db.lastMazeDate === todayStr) {
+                document.getElementById('start-overlay').innerHTML = `<div style="color:var(--gold); font-size:1.5rem; letter-spacing:3px;">今日已定課</div><div style="color:#8ba89c; margin-top:20px; letter-spacing:2px; cursor:pointer;" onclick="goBack()">返回道場</div>`;
+                return;
+            }
+            
+            document.getElementById('start-overlay').style.display = 'none';
+            const tier = getMazeTier().tier;
+            if (tier === 1) todayQuiz = [...shuffle(lowBank).slice(0, 8), ...shuffle(midBank).slice(0, 2)];
+            else if (tier === 2) todayQuiz = [...shuffle(lowBank).slice(0, 1), ...shuffle(midBank).slice(0, 8), ...shuffle(highBank).slice(0, 1)];
+            else todayQuiz = [...shuffle(midBank).slice(0, 1), ...shuffle(highBank).slice(0, 9)];
+            
+            qIndex = 0;
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            if (qIndex >= todayQuiz.length) {
+                db.lastMazeDate = new Date().toLocaleDateString();
+                saveDB();
+                document.getElementById('q-text').innerText = "今日十題，圓滿破迷。";
+                document.getElementById('options-wrap').innerHTML = `<button class="option-btn" style="justify-content:center; color:var(--solid-gold); font-weight:bold; letter-spacing:3px;" onclick="goBack()">功德圓滿 ． 返回道場</button>`;
+                return;
+            }
+
+            const q = todayQuiz[qIndex];
+            const opts = shuffle(q.options);
+            document.getElementById('q-text').innerText = q.text;
+            
+            let html = '';
+            opts.forEach((o, i) => {
+                html += `<div class="option-btn" onclick="checkAnswer(${o.isCorrect}, this)"><span class="opt-letter">${LETTERS[i]}</span> <span>${o.text}</span></div>`;
+            });
+            document.getElementById('options-wrap').innerHTML = html;
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timer); stopTensionSound();
+            timeLeft = TIME_LIMIT;
+            const bar = document.getElementById('energy-bar');
+            bar.style.transition = 'none'; bar.style.width = '100%'; bar.classList.remove('critical-time');
+            setTimeout(() => { bar.style.transition = `width ${TIME_LIMIT}s linear`; bar.style.width = '0%'; }, 50);
+
+            timer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft === 4) { bar.classList.add('critical-time'); playTensionSound(); }
+                if (timeLeft <= 0) {
+                    clearInterval(timer); stopTensionSound(); playWrongSound();
+                    failSequence();
+                }
+            }, 1000);
+        }
+
+        function checkAnswer(isCorrect, btnEl) {
+            clearInterval(timer); stopTensionSound();
+            document.querySelectorAll('.option-btn').forEach(b => b.style.pointerEvents = 'none');
+
+            if (isCorrect) {
+                btnEl.classList.add('correct'); playCorrectSound();
+                db.totalCorrect++; db.mazePoints += 10; saveDB();
+                setTimeout(() => { qIndex++; renderQuestion(); }, 1200);
+            } else {
+                btnEl.classList.add('wrong'); playWrongSound();
+                failSequence();
+            }
+        }
+
+        function failSequence() {
+            const hint = document.getElementById('door-hint');
+            hint.className = 'door-hint-fail show';
+            // 答錯即鎖定今日進度，確保同一題明日會繼續出現(因為沒從題庫拔除)
+            db.lastMazeDate = new Date().toLocaleDateString();
+            saveDB();
+            setTimeout(() => { goBack(); }, 2500);
+        }
+
+        function goBack() { 
+            stopTensionSound();
+            // 在主系統中是 navigateTo('index.html?screen=3')，此處簡化為退回上一頁
+            window.history.back(); 
+            // 若在本地無法 back，可直接導向： window.location.href = 'index.html?screen=3';
+        }
+
+        window.onload = loadDB;
+    </script>
+</body>
+</html>

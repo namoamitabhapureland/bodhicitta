@@ -2,71 +2,267 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>法界金門 ． 視覺校準</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>八識迷城 ． 核心氛圍</title>
     <style>
-        body { background: #010103; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .door-wrapper { width: 280px; height: 450px; filter: drop-shadow(0 0 30px rgba(212,175,55,0.2)); }
+        :root {
+            --bg-deep: #010103;
+            --gold: #f3e5ab;
+            --solid-gold: #d4af37;
+            --cyan: #8ba89c;
+        }
+
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        
+        body { 
+            background: var(--bg-deep); color: #d0d0d0; 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; width: 100vw; height: 100dvh;
+            perspective: 1200px;
+        }
+
+        /* 1. 星空底層 */
+        canvas { display: block; position: absolute; inset: 0; z-index: 1; }
+        #vignette {
+            position: absolute; inset: 0; z-index: 2; pointer-events: none;
+            background: radial-gradient(circle at center, transparent 10%, rgba(1, 1, 3, 0.95) 100%);
+        }
+
+        /* 2. 法門場景 (包含階梯與門) */
+        .door-scene {
+            position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
+            width: 280px; height: 420px; z-index: 10;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+            transition: transform 1.2s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.8s;
+            pointer-events: auto; cursor: pointer;
+        }
+        
+        /* 穿透特效 */
+        .door-scene.zooming {
+            transform: translate(-50%, -50%) scale(8); opacity: 0; pointer-events: none;
+        }
+
+        /* 階梯底座 */
+        .door-steps {
+            width: 320px; height: 40px; position: absolute; bottom: -20px; z-index: 15;
+        }
+
+        /* 門框本體 */
+        .door-frame {
+            position: absolute; bottom: 15px; width: 220px; height: 340px;
+            perspective: 1000px; z-index: 20;
+        }
+        
+        /* 門框 SVG (不受 3D 影響，永遠穩固) */
+        .frame-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 21; pointer-events: none; }
+
+        /* 左、右門扉 (用 HTML div 包覆 SVG，確保 iOS 旋轉不破圖) */
+        .door-panel {
+            position: absolute; bottom: 0; width: 50%; height: 100%;
+            transform-style: preserve-3d; transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 22; background: rgba(5, 15, 12, 0.6); backdrop-filter: blur(8px);
+        }
+        .door-left { left: 0; transform-origin: left; border-radius: 110px 0 0 0; border-right: 1px solid rgba(212,175,55,0.5); }
+        .door-right { right: 0; transform-origin: right; border-radius: 0 110px 0 0; border-left: 1px solid rgba(212,175,55,0.5); }
+
+        /* 開門動畫 */
+        .door-scene.opening .door-left { transform: rotateY(-105deg); background: rgba(212,175,55,0.1); }
+        .door-scene.opening .door-right { transform: rotateY(105deg); background: rgba(212,175,55,0.1); }
+
+        .door-hint {
+            position: absolute; top: -40px; width: 100%; text-align: center;
+            color: var(--gold); font-size: 0.9rem; letter-spacing: 4px; 
+            animation: pulse 2s infinite alternate; text-shadow: 0 0 10px rgba(212,175,55,0.5);
+        }
+
+        /* 3. 題目玉簡 (貼近底部，絕不遮擋) */
+        .q-panel {
+            position: absolute; bottom: 5%; left: 50%; transform: translate(-50%, 20px);
+            width: 90%; max-width: 450px; background: rgba(5, 8, 5, 0.85); backdrop-filter: blur(15px);
+            border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 20px;
+            padding: 30px 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.9), inset 0 0 20px rgba(212,175,55,0.05);
+            opacity: 0; pointer-events: none; transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 50;
+        }
+        .q-panel.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+        
+        .q-level { color: var(--cyan); font-size: 0.85rem; letter-spacing: 4px; margin-bottom: 15px; text-align: center; }
+        .q-text { color: var(--gold); font-size: 1.05rem; letter-spacing: 2px; line-height: 1.8; text-align: justify; margin-bottom: 25px; border-bottom: 1px solid rgba(139,168,156,0.3); padding-bottom: 20px; }
+
+        .option-btn {
+            width: 100%; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(139,168,156,0.3);
+            border-radius: 12px; padding: 16px 20px; margin-bottom: 12px;
+            color: #d0d0d0; font-size: 0.95rem; letter-spacing: 1px; line-height: 1.6;
+            cursor: pointer; transition: all 0.3s; display: flex; align-items: flex-start; gap: 15px;
+        }
+        .option-btn:active { transform: scale(0.97); background: rgba(212,175,55,0.15); border-color: var(--solid-gold); color: var(--gold); }
+        .opt-icon { width: 22px; height: 22px; flex-shrink: 0; stroke: rgba(139,168,156,0.6); fill: none; stroke-width: 1.5; margin-top: 2px;}
+
+        /* 系統提示 */
+        .toast-msg {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 1.5rem; letter-spacing: 8px; font-weight: bold; text-align: center;
+            opacity: 0; z-index: 100; pointer-events: none; transition: opacity 0.5s; width: 100%;
+        }
+        .flash-overlay { position: absolute; inset: 0; z-index: 90; pointer-events: none; opacity: 0; transition: opacity 0.5s; background: rgba(243,229,171,0.9); }
+
+        @keyframes pulse { 0% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* 門扉內部的 SVG 樣式 */
+        .svg-full { width: 100%; height: 100%; display: block; }
     </style>
 </head>
 <body>
 
-    <div class="door-wrapper">
-        <svg viewBox="0 0 200 320" width="100%" height="100%">
-            <defs>
-                <linearGradient id="gold-frame" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#fff" stop-opacity="0.9"/>
-                    <stop offset="30%" stop-color="#f3e5ab" stop-opacity="0.8"/>
-                    <stop offset="70%" stop-color="#d4af37" stop-opacity="0.9"/>
-                    <stop offset="100%" stop-color="#8b6508" stop-opacity="0.8"/>
-                </linearGradient>
-                <linearGradient id="glass-cyan" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="#e0f7fa" stop-opacity="0.8"/>
-                    <stop offset="100%" stop-color="#004d40" stop-opacity="0.6"/>
-                </linearGradient>
-                <linearGradient id="glass-dark" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="#010103" stop-opacity="0.95"/>
-                    <stop offset="100%" stop-color="#1a1225" stop-opacity="0.8"/>
-                </linearGradient>
-                <filter id="glow">
-                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                    <feMerge>
-                        <feMergeNode in="coloredBlur"/>
-                        <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                </filter>
-            </defs>
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none; left: -9999px;">
+        <defs>
+            <linearGradient id="gold-g" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="50%" stop-color="#f3e5ab" stop-opacity="0.8"/><stop offset="100%" stop-color="#d4af37" stop-opacity="0.9"/>
+            </linearGradient>
+            <linearGradient id="cyan-glass" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#e0f7fa" stop-opacity="0.5"/><stop offset="100%" stop-color="#004d40" stop-opacity="0.3"/>
+            </linearGradient>
+            <filter id="glow"><feGaussianBlur stdDeviation="3" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+    </svg>
 
-            <path d="M20 120 C 20 50, 60 20, 100 20 C 140 20, 180 50, 180 120 L 180 300 L 20 300 Z" fill="#000"/>
+    <canvas id="starCanvas"></canvas>
+    <div id="vignette"></div>
+    <div class="flash-overlay" id="flash-screen"></div>
 
-            <path d="M10 120 C 10 40, 60 10, 100 10 C 140 10, 190 40, 190 120 L 190 310 L 175 310 L 175 120 C 175 55, 135 25, 100 25 C 65 25, 25 55, 25 120 L 25 310 L 10 310 Z" fill="url(#gold-frame)"/>
-            
-            <path d="M20 120 C 20 50, 60 20, 100 20 C 140 20, 180 50, 180 120 L 180 310 L 175 310 L 175 120 C 175 55, 135 25, 100 25 C 65 25, 25 55, 25 120 L 25 310 L 20 310 Z" fill="#111" opacity="0.6"/>
+    <div class="door-scene" id="door-scene" onclick="openDoor()">
+        <div class="door-hint">輕觸入陣</div>
+        
+        <div class="door-frame">
+            <svg class="frame-svg" viewBox="0 0 220 340">
+                <path d="M10 340 L 10 110 C 10 50, 60 10, 110 10 C 160 10, 210 50, 210 110 L 210 340 L 195 340 L 195 110 C 195 60, 155 25, 110 25 C 65 25, 25 60, 25 110 L 25 340 Z" fill="url(#gold-g)"/>
+                <line x1="110" y1="25" x2="110" y2="340" stroke="#fff" stroke-width="1.5" opacity="0.6" filter="url(#glow)"/>
+            </svg>
 
-            <g id="left-door">
-                <path d="M25 120 C 25 55, 65 25, 100 25 L 100 310 L 25 310 Z" fill="url(#glass-dark)" stroke="url(#gold-frame)" stroke-width="1.5"/>
-                <path d="M30 120 C 30 65, 60 35, 95 30 L 95 305 L 30 305 Z" fill="url(#glass-cyan)" opacity="0.3"/>
-                <line x1="25" y1="120" x2="100" y2="120" stroke="url(#gold-frame)" stroke-width="0.8" opacity="0.5"/>
-                <line x1="25" y1="215" x2="100" y2="215" stroke="url(#gold-frame)" stroke-width="0.8" opacity="0.5"/>
-                <circle cx="62.5" cy="167.5" r="20" fill="none" stroke="url(#gold-frame)" stroke-width="0.8" opacity="0.4"/>
-                <polygon points="62.5,147.5 82.5,167.5 62.5,187.5 42.5,167.5" fill="rgba(212,175,55,0.1)" stroke="url(#gold-frame)" stroke-width="0.5"/>
-                <circle cx="85" cy="167.5" r="6" fill="#000" stroke="url(#gold-frame)" stroke-width="2"/>
-                <circle cx="85" cy="167.5" r="2" fill="#fff" filter="url(#glow)"/>
-            </g>
+            <div class="door-panel door-left">
+                <svg class="svg-full" viewBox="0 0 110 340" preserveAspectRatio="none">
+                    <path d="M25 110 C 25 60, 65 25, 110 25 L 110 340 L 25 340 Z" fill="url(#cyan-glass)"/>
+                    <path d="M 65 140 Q 85 170 65 200 Q 45 170 65 140 Z" fill="none" stroke="url(#gold-g)" stroke-width="1" opacity="0.6"/>
+                    <path d="M 50 170 Q 65 150 80 170 Q 65 190 50 170 Z" fill="none" stroke="url(#gold-g)" stroke-width="1" opacity="0.6"/>
+                    <circle cx="65" cy="170" r="22" fill="none" stroke="url(#gold-g)" stroke-width="0.8" opacity="0.4"/>
+                    <circle cx="95" cy="170" r="7" fill="#111" stroke="url(#gold-g)" stroke-width="2"/>
+                    <circle cx="95" cy="170" r="2" fill="#fff" filter="url(#glow)"/>
+                </svg>
+            </div>
 
-            <g id="right-door">
-                <path d="M175 120 C 175 55, 135 25, 100 25 L 100 310 L 175 310 Z" fill="url(#glass-dark)" stroke="url(#gold-frame)" stroke-width="1.5"/>
-                <path d="M170 120 C 170 65, 140 35, 105 30 L 105 305 L 170 305 Z" fill="url(#glass-cyan)" opacity="0.3"/>
-                <line x1="175" y1="120" x2="100" y2="120" stroke="url(#gold-frame)" stroke-width="0.8" opacity="0.5"/>
-                <line x1="175" y1="215" x2="100" y2="215" stroke="url(#gold-frame)" stroke-width="0.8" opacity="0.5"/>
-                <circle cx="137.5" cy="167.5" r="20" fill="none" stroke="url(#gold-frame)" stroke-width="0.8" opacity="0.4"/>
-                <polygon points="137.5,147.5 157.5,167.5 137.5,187.5 117.5,167.5" fill="rgba(212,175,55,0.1)" stroke="url(#gold-frame)" stroke-width="0.5"/>
-                <circle cx="115" cy="167.5" r="6" fill="#000" stroke="url(#gold-frame)" stroke-width="2"/>
-                <circle cx="115" cy="167.5" r="2" fill="#fff" filter="url(#glow)"/>
-            </g>
+            <div class="door-panel door-right">
+                <svg class="svg-full" viewBox="0 0 110 340" preserveAspectRatio="none">
+                    <path d="M0 25 C 45 25, 85 60, 85 110 L 85 340 L 0 340 Z" fill="url(#cyan-glass)"/>
+                    <path d="M 45 140 Q 65 170 45 200 Q 25 170 45 140 Z" fill="none" stroke="url(#gold-g)" stroke-width="1" opacity="0.6"/>
+                    <path d="M 30 170 Q 45 150 60 170 Q 45 190 30 170 Z" fill="none" stroke="url(#gold-g)" stroke-width="1" opacity="0.6"/>
+                    <circle cx="45" cy="170" r="22" fill="none" stroke="url(#gold-g)" stroke-width="0.8" opacity="0.4"/>
+                    <circle cx="15" cy="170" r="7" fill="#111" stroke="url(#gold-g)" stroke-width="2"/>
+                    <circle cx="15" cy="170" r="2" fill="#fff" filter="url(#glow)"/>
+                </svg>
+            </div>
+        </div>
 
-            <line x1="100" y1="25" x2="100" y2="310" stroke="#fff" stroke-width="1.5" opacity="0.8" filter="url(#glow)"/>
+        <svg class="door-steps" viewBox="0 0 320 40">
+            <polygon points="40,10 280,10 300,25 20,25" fill="#1a1a1a" stroke="url(#gold-g)" stroke-width="1"/>
+            <polygon points="20,25 300,25 320,40 0,40" fill="#0a0a0a" stroke="url(#gold-g)" stroke-width="1"/>
+            <line x1="40" y1="10" x2="280" y2="10" stroke="#fff" opacity="0.3"/>
         </svg>
     </div>
 
+    <div class="q-panel" id="q-panel">
+        <div class="q-level">第一重 ． 破迷啟信</div>
+        <div class="q-text">娑婆信仰浩如煙海。若欲探尋解脫生死之本源，以法界觀之，何者或為正信佛教之核心？</div>
+        <div id="q-options">
+            <div class="option-btn" onclick="checkAnswer(false)"><svg class="opt-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg><span>祈求具備大威德之神明，賜予庇護與安樂。</span></div>
+            <div class="option-btn" onclick="checkAnswer(true)"><svg class="opt-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg><span>了知因果，依循覺者所揭示之空性自求解脫。</span></div>
+        </div>
+    </div>
+
+    <div class="toast-msg" id="toast"></div>
+
+<script>
+    // --- 星河引擎 ---
+    const canvas = document.getElementById('starCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let stars = [];
+    let warpSpeed = 1;
+
+    function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+    window.addEventListener('resize', resize); resize();
+
+    function initStars() {
+        stars = [];
+        for (let i = 0; i < 300; i++) {
+            stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, color: Math.random() > 0.5 ? '#8ba89c' : '#f3e5ab' });
+        }
+    }
+
+    function renderStars() {
+        ctx.fillStyle = 'rgba(1, 1, 3, 0.4)'; ctx.fillRect(0, 0, width, height);
+        ctx.globalCompositeOperation = 'screen';
+        stars.forEach(star => {
+            star.z -= warpSpeed;
+            if (star.z <= 0) { star.z = 2000; star.x = (Math.random() - 0.5) * 2000; star.y = (Math.random() - 0.5) * 2000; }
+            let scale = 400 / (400 + star.z);
+            let sx = (width / 2) + star.x * scale; let sy = (height / 2) + star.y * scale;
+            ctx.beginPath(); ctx.arc(sx, sy, Math.max(0.5, 2 * scale), 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${star.color === '#f3e5ab' ? '243,229,171' : '139,168,156'}, ${Math.min(1, scale * 2)})`; ctx.fill();
+        });
+        ctx.globalCompositeOperation = 'source-over';
+        requestAnimationFrame(renderStars);
+    }
+    initStars(); renderStars();
+
+    // --- 核心互動流程 ---
+    function openDoor() {
+        const scene = document.getElementById('door-scene');
+        scene.style.pointerEvents = 'none'; // 防連點
+        
+        // 1. 雙門向外敞開
+        scene.classList.add('opening');
+        
+        // 2. 星河加速，視角穿透門框
+        setTimeout(() => {
+            warpSpeed = 12; // 衝刺感
+            scene.classList.add('zooming');
+        }, 500);
+
+        // 3. 穿透後，星河平緩，浮現考題
+        setTimeout(() => {
+            warpSpeed = 1; 
+            document.getElementById('q-panel').classList.add('show');
+        }, 1500);
+    }
+
+    function checkAnswer(isCorrect) {
+        document.getElementById('q-panel').classList.remove('show');
+        
+        const toast = document.getElementById('toast');
+        const flash = document.getElementById('flash-screen');
+        
+        if (isCorrect) {
+            toast.innerText = "契合法理 ． 琉璃光現";
+            toast.style.color = "var(--gold)"; toast.style.textShadow = "0 0 20px var(--solid-gold)";
+            flash.style.opacity = 1;
+            setTimeout(() => flash.style.opacity = 0, 800);
+        } else {
+            toast.innerText = "一念無明 ． 業力重置";
+            toast.style.color = "#ff4444"; toast.style.textShadow = "0 0 20px #ff0000";
+            
+            let shake = setInterval(() => { document.body.style.transform = `translate(${(Math.random()-0.5)*10}px, ${(Math.random()-0.5)*10}px)`; }, 50);
+            setTimeout(() => { clearInterval(shake); document.body.style.transform = 'translate(0,0)'; }, 1000);
+        }
+        
+        toast.style.opacity = 1;
+        setTimeout(() => toast.style.opacity = 0, 2000);
+
+        // 演示結束，重置場景以便重複測試
+        setTimeout(() => {
+            const scene = document.getElementById('door-scene');
+            scene.classList.remove('zooming', 'opening');
+            scene.style.pointerEvents = 'auto';
+        }, 2500);
+    }
+</script>
 </body>
 </html>

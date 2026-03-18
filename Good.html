@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>八識迷城 ． 語音與邏輯修復版</title>
+    <title>八識迷城 ． 終極實裝版</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; }
         
@@ -13,21 +13,34 @@
             overflow: hidden; touch-action: none; width: 100vw; height: 100dvh;
         }
 
-        /* 星空引擎 */
+        /* ---------------- 星空引擎 ---------------- */
         canvas { display: block; position: absolute; inset: 0; z-index: 1; pointer-events: none; }
         #vignette { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(circle at center, transparent 10%, rgba(1, 1, 3, 0.98) 100%); }
 
-        /* 無常光弦 (紅光呼吸進化版) */
+        /* ---------------- 頂部能量光弦 ---------------- */
         #energy-wrap { position: absolute; top: 0; left: 0; width: 100%; height: 3px; z-index: 100; background: rgba(255,255,255,0.05); opacity: 0; transition: opacity 0.5s; }
         #energy-bar { height: 100%; width: 100%; background: linear-gradient(90deg, transparent, #d4af37 20%, #d4af37 80%, transparent); box-shadow: 0 0 15px #d4af37; transform-origin: center; }
         .critical-time { background: linear-gradient(90deg, transparent, #8b0000 20%, #8b0000 80%, transparent) !important; animation: breatheRed 0.4s infinite alternate; }
         @keyframes breatheRed { from { box-shadow: 0 0 10px #8b0000; height: 3px; } to { box-shadow: 0 0 30px #ff0000; height: 6px; } }
 
-        /* 宿業紅點 */
-        .karma-dot { position: absolute; top: 15px; right: 15px; width: 6px; height: 6px; background: #8b0000; border-radius: 50%; display: none; box-shadow: 0 0 10px #ff0000; animation: pulseKarma 1.5s infinite alternate; }
-        @keyframes pulseKarma { from { opacity: 0.3; transform: scale(1); } to { opacity: 1; transform: scale(1.5); } }
+        /* ---------------- 左上角：回道場 ---------------- */
+        #btn-back {
+            position: absolute; top: 25px; left: 25px; z-index: 100;
+            color: #8ba89c; font-size: 0.9rem; letter-spacing: 2px;
+            cursor: pointer; display: flex; align-items: center; gap: 8px; opacity: 0.8; transition: 0.3s;
+        }
+        #btn-back:active { opacity: 1; transform: scale(0.95); color: #d4af37; }
+        #btn-back svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
 
-        /* 法門場景 (90分金剛拱門) */
+        /* ---------------- 右下角：資料庫雙星芒統計 ---------------- */
+        #stats-container {
+            position: absolute; bottom: 25px; right: 25px; z-index: 100;
+            display: flex; flex-direction: column; gap: 15px; align-items: flex-end; opacity: 0.8; pointer-events: none;
+        }
+        .stat-item { display: flex; align-items: center; gap: 10px; color: #8ba89c; font-size: 0.8rem; letter-spacing: 2px; }
+        .stat-icon { width: 24px; height: 24px; filter: drop-shadow(0 0 5px rgba(212,175,55,0.3)); }
+
+        /* ---------------- 法門場景 (90分金剛拱門) ---------------- */
         #door-scene { position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%); width: 260px; height: 420px; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; cursor: pointer; pointer-events: auto; }
         #door-scene.zooming { transition: transform 1.5s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.8s; transform: translate(-50%, -50%) scale(8); opacity: 0; pointer-events: none; }
         .door-frame-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 11; pointer-events: none; }
@@ -41,10 +54,13 @@
 
         #door-hint { position: absolute; top: -45px; width: 100%; text-align: center; color: #f3e5ab; font-size: 0.95rem; letter-spacing: 4px; animation: pulse 2s infinite alternate; text-shadow: 0 0 15px rgba(212,175,55,0.6); }
 
-        /* 四維玉簡 */
+        /* ---------------- 題庫玉簡與宿業紅點 ---------------- */
         #q-panel { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -35%) scale(0.95); width: 90%; max-width: 500px; background: rgba(5, 8, 5, 0.92); backdrop-filter: blur(20px); border: 1px solid rgba(139, 168, 156, 0.3); border-radius: 16px; padding: 30px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.9); opacity: 0; pointer-events: none; transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 50; }
         #q-panel.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
         
+        .karma-dot { position: absolute; top: 15px; right: 15px; width: 6px; height: 6px; background: #8b0000; border-radius: 50%; display: none; box-shadow: 0 0 10px #ff0000; animation: pulseKarma 1.5s infinite alternate; }
+        @keyframes pulseKarma { from { opacity: 0.3; transform: scale(1); } to { opacity: 1; transform: scale(1.5); } }
+
         #q-level { color: #8ba89c; font-size: 0.85rem; letter-spacing: 4px; margin-bottom: 15px; text-align: center; border-bottom: 1px dashed rgba(139,168,156,0.2); padding-bottom: 15px; position: relative; }
         #voice-hint { color: #d4af37; font-size: 0.75rem; letter-spacing: 2px; position: absolute; right: 0; top: 0; animation: pulse 1s infinite alternate;}
         #q-text { color: #f3e5ab; font-size: 1.05rem; letter-spacing: 2px; line-height: 1.8; text-align: justify; margin-bottom: 25px; text-shadow: 0 0 10px rgba(212,175,55,0.15); }
@@ -53,9 +69,13 @@
         .option-btn:active { transform: scale(0.98); background: rgba(212,175,55,0.15); border-color: #d4af37; color: #fff; }
         .opt-dot { width: 18px; height: 18px; border: 1px solid rgba(139,168,156,0.5); border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
 
+        /* 結算專用區塊與寶劍 */
+        #cert-content { display: none; text-align: center; flex-direction: column; align-items: center; }
+        .sword-container { width: 100px; height: 220px; margin: 10px auto; filter: drop-shadow(0 0 20px rgba(212,175,55,0.4)); display: none; }
+
         /* 系統提示與按鈕 */
         #toast { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 1.3rem; letter-spacing: 6px; font-weight: bold; text-align: center; opacity: 0; z-index: 100; pointer-events: none; transition: opacity 0.5s; width: 100%; }
-        .btn-main { background: rgba(212, 175, 55, 0.1); border: 1px solid #d4af37; color: #f3e5ab; padding: 12px 30px; border-radius: 25px; font-size: 0.95rem; letter-spacing: 4px; cursor: pointer; transition: 0.3s; margin-top: 15px; display: none; margin-left: auto; margin-right: auto; }
+        .btn-main { background: rgba(212, 175, 55, 0.1); border: 1px solid #d4af37; color: #f3e5ab; padding: 12px 30px; border-radius: 25px; font-size: 0.95rem; letter-spacing: 4px; cursor: pointer; transition: 0.3s; display: block; margin: 20px auto 0 auto; }
         .btn-main:active { background: rgba(212,175,55,0.3); transform: scale(0.95); }
         .btn-danger { border-color: #8b0000; color: #ff8888; background: rgba(139,0,0,0.1); box-shadow: 0 0 15px rgba(139,0,0,0.3); }
 
@@ -68,14 +88,38 @@
     <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
         <defs>
             <linearGradient id="gold-bright" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="40%" stop-color="#f3e5ab" stop-opacity="1"/><stop offset="80%" stop-color="#d4af37" stop-opacity="1"/><stop offset="100%" stop-color="#8b6508" stop-opacity="0.9"/></linearGradient>
-            <linearGradient id="cyan-glass" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e0f7fa" stop-opacity="0.2"/><stop offset="50%" stop-color="#8ba89c" stop-opacity="0.1"/><stop offset="100%" stop-color="#004d40" stop-opacity="0.3"/></linearGradient>
+            <linearGradient id="gold-dark" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#8b6508"/><stop offset="50%" stop-color="#d4af37"/><stop offset="100%" stop-color="#8b6508"/></linearGradient>
+            <linearGradient id="cyan-glass" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e0f7fa" stop-opacity="0.3"/><stop offset="50%" stop-color="#8ba89c" stop-opacity="0.2"/><stop offset="100%" stop-color="#004d40" stop-opacity="0.5"/></linearGradient>
             <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <filter id="sword-glow"><feGaussianBlur stdDeviation="6" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
     </svg>
 
     <canvas id="starCanvas"></canvas>
     <div id="vignette"></div>
     <div id="energy-wrap"><div id="energy-bar"></div></div>
+
+    <div id="btn-back" onclick="returnToDaochang()">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        歸返道場
+    </div>
+
+    <div id="stats-container">
+        <div class="stat-item">
+            <span id="ui-total-q">破迷 0 題</span>
+            <svg class="stat-icon" viewBox="0 0 50 50">
+                <polygon points="25,5 45,25 25,45 5,25" fill="none" stroke="#8ba89c" stroke-width="2"/>
+                <circle cx="25" cy="25" r="8" fill="rgba(139,168,156,0.5)"/>
+            </svg>
+        </div>
+        <div class="stat-item">
+            <span id="ui-tier">初信</span>
+            <svg class="stat-icon" viewBox="0 0 50 50" id="ui-tier-icon">
+                <circle cx="25" cy="25" r="20" fill="none" stroke="#d0d0d0" stroke-width="1.5" stroke-dasharray="8 4"/>
+                <circle cx="25" cy="25" r="5" fill="#d0d0d0"/>
+            </svg>
+        </div>
+    </div>
 
     <div id="door-scene" onclick="triggerDoor()">
         <div id="door-hint">輕觸入陣</div>
@@ -92,34 +136,74 @@
     <div id="q-panel">
         <div class="karma-dot" id="karma-dot"></div>
         <div id="q-level"><span id="stage-text">陣法載入中</span> <span id="voice-hint"></span></div>
-        <div id="q-text"></div>
-        <div id="q-options"></div>
-        <div id="action-btns" style="display: flex; gap: 10px; justify-content: center;"></div>
+        
+        <div id="question-content">
+            <div id="q-text"></div>
+            <div id="q-options"></div>
+        </div>
+
+        <div id="cert-content">
+            <div class="sword-container" id="sword-svg">
+                <svg viewBox="0 0 100 240" class="svg-full">
+                    <polygon points="50,10 70,80 50,180 30,80" fill="url(#cyan-glass)" stroke="url(#gold-bright)" stroke-width="1"/>
+                    <polygon points="50,10 50,180 30,80" fill="rgba(255,255,255,0.15)"/> <line x1="50" y1="10" x2="50" y2="180" stroke="url(#gold-bright)" stroke-width="1.5" filter="url(#sword-glow)"/> <polygon points="20,170 80,170 65,190 35,190" fill="url(#gold-bright)"/>
+                    <polygon points="50,170 80,170 65,190 50,190" fill="rgba(0,0,0,0.2)"/> <rect x="44" y="190" width="12" height="35" fill="url(#gold-dark)"/>
+                    <polygon points="50,225 60,235 50,245 40,235" fill="url(#gold-bright)"/>
+                </svg>
+            </div>
+            <div id="cert-text" style="color:#8ba89c; line-height:1.8; margin-top:15px; text-align:center;"></div>
+        </div>
+
+        <div id="action-btns" style="display: flex; gap: 10px; justify-content: center; margin-top:20px;"></div>
     </div>
 
     <div id="toast"></div>
 
 <script>
-    // 演示兩題即滿分
+    // ================= 資料庫與 UI 同步 =================
+    let db = { points: 0, totalCorrect: 0, lastMatrixDate: "", treasures: { sword: 0 } };
+    try { 
+        const local = JSON.parse(localStorage.getItem('PX_V15.0'));
+        if (local && typeof local === 'object') { db = { ...db, ...local }; if(!db.treasures) db.treasures = {sword:0}; }
+    } catch(e) {}
+
+    const todayStr = new Date().toDateString();
+    let hasPlayedToday = (db.lastMatrixDate === todayStr);
+
+    function updateStatsUI() {
+        document.getElementById('ui-total-q').innerText = `破迷 ${db.totalCorrect} 題`;
+        
+        let tierText = "初信", color = "#d0d0d0";
+        if (db.points >= 200) { tierText = "深信"; color = "#8ba89c"; }
+        if (db.points >= 600) { tierText = "般若"; color = "#d4af37"; }
+        
+        document.getElementById('ui-tier').innerText = tierText;
+        document.getElementById('ui-tier').style.color = color;
+        const tierIcon = document.getElementById('ui-tier-icon');
+        tierIcon.innerHTML = `<circle cx="25" cy="25" r="20" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="8 4"/><circle cx="25" cy="25" r="5" fill="${color}" filter="url(#glow)"/>`;
+        
+        if (hasPlayedToday) {
+            document.getElementById('door-hint').innerText = "今日圓滿 ． 明日再來";
+            document.getElementById('door-hint').style.color = "#8ba89c";
+            document.getElementById('door-hint').style.animation = "none";
+        }
+    }
+    updateStatsUI();
+
+    // ================= 題庫設定 (演示版2題) =================
     const DEMO_TOTAL_Q = 2; 
 
     const questionBank = [
         { 
-            level: "第一重 ． 破迷", 
-            time: 15, // 語音結束後給予的思考時間
-            isKarma: true,
+            level: "第一重 ． 破迷", time: 15, isKarma: true,
             text: "娑婆信仰浩如煙海。我們娑婆世界佛教的本師教主是誰？", 
             options: [
-                { text: "阿彌陀佛", isCorrect: false },
-                { text: "釋迦牟尼佛", isCorrect: true },
-                { text: "彌勒菩薩", isCorrect: false },
-                { text: "觀世音菩薩", isCorrect: false }
+                { text: "阿彌陀佛", isCorrect: false }, { text: "釋迦牟尼佛", isCorrect: true },
+                { text: "彌勒菩薩", isCorrect: false }, { text: "觀世音菩薩", isCorrect: false }
             ] 
         },
         { 
-            level: "第二重 ． 正法", 
-            time: 15,
-            isKarma: false,
+            level: "第二重 ． 正法", time: 15, isKarma: false,
             text: "關於大乘行者之發菩提心，何者最契合實相？", 
             options: [
                 { text: "廣修布施供養，祈求自身來世生於善道。", isCorrect: false },
@@ -131,8 +215,7 @@
     ];
 
     const bossQuestion = {
-        level: "第十一重 ． 隱藏魔考", 
-        time: 15,
+        level: "第十一重 ． 隱藏魔考", time: 15,
         text: "極樂與娑婆，若以一真法界觀之，實相為何？",
         options: [
             { text: "淨土乃為根器愚鈍者所設之幻城。", isCorrect: false },
@@ -142,12 +225,10 @@
         ]
     };
 
-    let currentStage = 0; 
-    let correctCount = 0;
-    let isProcessing = false; // 全域防連點鎖
+    let currentStage = 0; let correctCount = 0; let isProcessing = false;
     let timerId = null, criticalTimerId = null;
 
-    // 星空引擎
+    // ================= 星空引擎 =================
     const canvas = document.getElementById('starCanvas');
     const ctx = canvas.getContext('2d');
     let width, height, stars = [], warpSpeed = 1;
@@ -189,12 +270,20 @@
         });
     }
 
+    // ================= 核心：開門與 iOS 語音解鎖 =================
     function triggerDoor() {
         if (isProcessing) return;
-        isProcessing = true; // 上鎖，防止點擊多次門
-        const scene = document.getElementById('door-scene');
-        document.getElementById('door-hint').style.display = 'none';
+        if (hasPlayedToday) { showToast("今日定課已圓滿", false); return; }
         
+        isProcessing = true; 
+        document.getElementById('door-hint').style.display = 'none';
+
+        // 【終極防 Bug】：點擊螢幕的當下，立刻發送一個空字串語音，解鎖 iOS 權限
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+        }
+
+        const scene = document.getElementById('door-scene');
         scene.classList.add('opening');
         setTimeout(() => { warpSpeed = 12; scene.classList.add('zooming'); }, 400);
         setTimeout(() => { 
@@ -202,13 +291,10 @@
             document.getElementById('q-panel').classList.add('show');
             const currentQ = (currentStage === DEMO_TOTAL_Q) ? bossQuestion : questionBank[currentStage];
             readVoiceAndStartTimer(currentQ.text, currentQ.time);
-            
-            // 門開完，玉簡浮現後，解開鎖讓使用者可以點擊選項
             isProcessing = false; 
         }, 1400);
     }
 
-    // 真實語音與時間邏輯
     function readVoiceAndStartTimer(text, seconds) {
         const wrap = document.getElementById('energy-wrap');
         const bar = document.getElementById('energy-bar');
@@ -219,44 +305,45 @@
         bar.classList.remove('critical-time');
         
         if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // 確保不會有多重語音疊加
+            window.speechSynthesis.cancel(); 
             let msg = new SpeechSynthesisUtterance(text);
-            msg.lang = 'zh-TW';
-            msg.rate = 1.1; // 稍微調快一點點
+            msg.lang = 'zh-TW'; msg.rate = 1.1; 
             
-            msg.onstart = () => { voiceHint.innerText = '🔊 語音導讀中...'; };
+            msg.onstart = () => { voiceHint.innerText = '語音導讀中...'; };
             
-            // 語音結束才開始無常倒數
             msg.onend = () => {
                 voiceHint.innerText = '';
                 startActualTimer(seconds);
             };
-            msg.onerror = () => { voiceHint.innerText = ''; startActualTimer(seconds); }; // 報錯時的防呆備案
+            // 蘋果 Safari 常見的 onend 偶發失效備案
+            msg.onerror = () => { voiceHint.innerText = ''; startActualTimer(seconds); }; 
             
             window.speechSynthesis.speak(msg);
+
+            // 終極備案：若超過 15 秒 onend 還沒觸發 (語音引擎當機)，強制啟動計時
+            setTimeout(() => { if(voiceHint.innerText !== '') { voiceHint.innerText = ''; startActualTimer(seconds); } }, 15000);
         } else {
-            // 瀏覽器不支援時的防呆備案
             setTimeout(() => startActualTimer(seconds), 3000);
         }
     }
 
     function startActualTimer(seconds) {
         const bar = document.getElementById('energy-bar');
+        
+        // 確保重新計算前強制重繪，否則 CSS 不會套用 transition
+        void bar.offsetWidth;
+        
         bar.style.transition = `transform ${seconds}s linear`;
         bar.style.transform = 'scaleX(0)';
 
-        criticalTimerId = setTimeout(() => {
-            bar.classList.add('critical-time');
-        }, Math.max(0, seconds - 4) * 1000); // 最後4秒發紅呼吸
-
+        criticalTimerId = setTimeout(() => { bar.classList.add('critical-time'); }, Math.max(0, seconds - 4) * 1000); 
         timerId = setTimeout(() => { handleFailure("無常到來 ． 陣法重置", false); }, seconds * 1000);
     }
 
     function processAnswer(isCorrect, isBoss) {
         if (isProcessing) return;
-        isProcessing = true; // 上鎖，防止連點多個選項
+        isProcessing = true; 
         
-        // 點選答案瞬間，立刻停止語音與計時器
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         clearTimeout(timerId); clearTimeout(criticalTimerId);
         document.getElementById('voice-hint').innerText = '';
@@ -266,10 +353,7 @@
         if (isCorrect) {
             if (!isBoss) correctCount++;
             showToast("契合法理", true);
-            setTimeout(() => {
-                if (isBoss) { showSettlement(true, true); } 
-                else { nextStage(); }
-            }, 1200);
+            setTimeout(() => { if (isBoss) { showSettlement(true, true); } else { nextStage(); } }, 1200);
         } else {
             if (isBoss) {
                 showToast("一念微細 ． 魔考未過", false);
@@ -291,12 +375,11 @@
         }, 2000);
     }
 
-    // 核心修復：這一步必須解開 isProcessing
     function nextStage() {
         currentStage++;
         const scene = document.getElementById('door-scene');
         scene.style.transition = 'none'; scene.classList.remove('zooming', 'opening');
-        void scene.offsetWidth; // 強制重繪
+        void scene.offsetWidth; 
         scene.style.transition = 'transform 1.5s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.8s';
         
         if (currentStage >= DEMO_TOTAL_Q) {
@@ -305,9 +388,7 @@
         } else {
             document.getElementById('door-hint').style.display = 'block';
             loadQuestion(currentStage);
-            
-            // 【致命錯誤已修復】：在這裡解開門的鎖！這樣您就可以再點擊第二次門了
-            isProcessing = false; 
+            isProcessing = false; // 解鎖！
         }
     }
 
@@ -315,12 +396,15 @@
         warpSpeed = 3;
         document.getElementById('karma-dot').style.display = 'none';
         document.getElementById('stage-text').innerText = "般若圓滿 ． 結界異動";
+        document.getElementById('question-content').style.display = 'block';
+        document.getElementById('cert-content').style.display = 'none';
+        
         document.getElementById('q-options').innerHTML = '';
         document.getElementById('q-text').innerHTML = `<div style="text-align:center; color:#ff4444; font-size:1.1rem; line-height:1.8;">行者，您已連續答對十題。<br>法界深處，【第十一重魔考】已然浮現。<br>此題玄奧，錯亦不扣分。<br><br><span style="color:#d4af37;">是否接受最終問心？</span></div>`;
-        const btnBox = document.getElementById('action-btns');
-        btnBox.innerHTML = `<button class="btn-main btn-danger" style="display:block;" onclick="startBoss()">直面魔考</button><button class="btn-main" style="display:block; border-color:#8ba89c; color:#8ba89c;" onclick="declineBoss()">見好就收</button>`;
+        
+        document.getElementById('action-btns').innerHTML = `<button class="btn-main btn-danger" onclick="startBoss()">直面魔考</button><button class="btn-main" style="border-color:#8ba89c; color:#8ba89c;" onclick="declineBoss()">見好就收</button>`;
         document.getElementById('q-panel').classList.add('show');
-        isProcessing = false; // 解開選項的鎖
+        isProcessing = false; 
     }
 
     function startBoss() {
@@ -341,24 +425,52 @@
         setTimeout(() => { showSettlement(true, false); }, 500);
     }
 
+    // ================= 終極結算與寫入資料庫 =================
     function showSettlement(isPerfect, passedBoss) {
         warpSpeed = 0.5; 
+        document.getElementById('question-content').style.display = 'none';
+        document.getElementById('cert-content').style.display = 'flex';
+        document.getElementById('karma-dot').style.display = 'none';
+        
         let basePoints = 10 + (correctCount * 4);
         let finalPoints = passedBoss ? basePoints + 10 : basePoints;
         
         document.getElementById('stage-text').innerText = "問心圓滿 ． 聚寶盆結算";
-        document.getElementById('q-options').innerHTML = '';
-        document.getElementById('karma-dot').style.display = 'none';
         
-        let html = `<div style="text-align:center; color:#8ba89c; line-height:1.8;">今日參陣，獲取基礎 10 分<br>答對 ${correctCount} 題，獲取 ${correctCount * 4} 分<br>`;
+        let html = `今日參陣，獲取基礎 10 分<br>答對 ${correctCount} 題，獲取 ${correctCount * 4} 分<br>`;
         if (passedBoss) html += `<span style="color:#ff8888;">第十一重魔考突破，額外 +10 分</span><br>`;
-        html += `<br><span style="color:#d4af37; font-size:1.6rem; font-weight:bold; text-shadow:0 0 20px rgba(212,175,55,0.5);">本次共得：${finalPoints} 分</span></div>`;
+        html += `<br><span style="color:#d4af37; font-size:1.6rem; font-weight:bold; text-shadow:0 0 20px rgba(212,175,55,0.5);">本次共得：${finalPoints} 分</span>`;
 
-        if (isPerfect) html += `<div style="margin-top:20px; padding:15px; border:1px dashed #d4af37; border-radius:10px; text-align:center; color:#f3e5ab; font-size:0.9rem;">🌟 般若圓滿！<br>法界特賜【幾何慧劍】一尊，已收入多寶閣。</div>`;
+        if (isPerfect) {
+            document.getElementById('sword-svg').style.display = 'block';
+            html += `<br><br><span style="color:#f3e5ab; font-size:0.9rem;">般若圓滿！<br>法界特賜【幾何慧劍】一尊，已收入多寶閣。</span>`;
+        }
         
-        document.getElementById('q-text').innerHTML = html;
-        document.getElementById('action-btns').innerHTML = `<button class="btn-main" style="display:block;" onclick="alert('匯入主系統')">資糧結集 ． 匯入主系統</button>`;
+        document.getElementById('cert-text').innerHTML = html;
+        document.getElementById('action-btns').innerHTML = `<button class="btn-main" onclick="finalizeDB(${finalPoints}, ${passedBoss ? correctCount+1 : correctCount}, ${isPerfect})">資糧結集 ． 匯入主系統</button>`;
         document.getElementById('q-panel').classList.add('show');
+    }
+
+    function finalizeDB(earnedPts, earnedCorrect, isPerfect) {
+        if (isProcessing) return; isProcessing = true;
+        
+        // 寫入資料庫
+        db.points += earnedPts;
+        db.totalCorrect += earnedCorrect;
+        if (isPerfect) db.treasures.sword += 1;
+        db.lastMatrixDate = todayStr;
+        
+        localStorage.setItem('PX_V15.0', JSON.stringify(db));
+        updateStatsUI();
+        
+        showToast("資糧已入庫", true);
+        setTimeout(() => { returnToDaochang(); }, 1500);
+    }
+
+    function returnToDaochang() {
+        // 模擬跳轉回首頁，此處僅刷新並還原狀態
+        // window.location.href = 'index.html?screen=3';
+        location.reload(); 
     }
 
     function showToast(text, isSuccess) {

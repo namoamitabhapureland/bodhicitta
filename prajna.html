@@ -386,7 +386,7 @@
         return { tier: 3, petals: pts < 2000 ? 7 : 8, text: "般若" };
     }
 
-    function updateTotemUI() {
+        function updateTotemUI() {
         const info = getMazeTier();
         for (let i = 1; i <= 8; i++) {
             let petal = document.getElementById('petal-' + i);
@@ -399,12 +399,17 @@
         }
         document.getElementById('ui-tier').innerText = info.text;
 
-                if (hasPlayedToday) {
+        // 【修復：答錯鎖定時的美學字體，並補上遺失的大括號】
+        if (hasPlayedToday) {
             const hint = document.getElementById('door-hint');
             hint.innerText = "一念流轉 ． 靜待明日";
             hint.className = "door-hint-fail"; // 套用漸層美學
             hint.style.animation = "none";
         }
+    } 
+    
+    updateTotemUI();
+
 
     updateTotemUI();
 
@@ -658,20 +663,27 @@
         }, 1500);
     }
 
-    function nextStage() {
+        function nextStage() {
         currentStage++;
-        const scene = document.getElementById('door-scene');
-        scene.style.transition = 'none'; scene.classList.remove('zooming', 'opening');
-        void scene.offsetWidth; 
-        scene.style.transition = 'transform 1.8s cubic-bezier(0.6, 0.05, 0.1, 1), opacity 1.2s';
         
+        // 判斷是否已答滿 10 題
         if (currentStage >= DEMO_TOTAL_Q) {
-            if (correctCount === DEMO_TOTAL_Q) { setTimeout(promptBossQuestion, 500); } 
-            else { showSettlement(false, false); }
+            if (correctCount === DEMO_TOTAL_Q) { 
+                setTimeout(promptBossQuestion, 500); 
+            } else { 
+                showSettlement(false, false); 
+            }
         } else {
-            document.getElementById('door-hint').style.display = 'block';
-            loadQuestion(currentStage);
-            isProcessing = false; 
+            // 【修復關鍵：自動載入下一題，不需要再點門】
+            document.getElementById('q-panel').classList.remove('show');
+            setTimeout(() => {
+                loadQuestion(currentStage);
+                document.getElementById('q-panel').classList.add('show');
+                
+                const currentQ = questionBank[currentStage];
+                readVoiceAndStartTimer(currentQ.text, currentQ.time);
+                isProcessing = false; 
+            }, 600); // 給一點過場延遲，讓玉簡重新浮現
         }
     }
 

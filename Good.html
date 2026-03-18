@@ -3,112 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>八識迷城 ． 核心氛圍</title>
+    <title>八識迷城 ． 核心骨架</title>
     <style>
         :root {
             --bg-deep: #010103;
             --gold: #f3e5ab;
             --solid-gold: #d4af37;
             --cyan: #8ba89c;
+            --danger: #8b0000;
         }
 
-        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; }
         
         body { 
             background: var(--bg-deep); color: #d0d0d0; 
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
             overflow: hidden; touch-action: none; width: 100vw; height: 100dvh;
-            perspective: 1200px;
         }
 
-        /* 1. 星空底層 */
-        canvas { display: block; position: absolute; inset: 0; z-index: 1; }
+        /* ---------------- 星空與底層 ---------------- */
+        canvas { display: block; position: absolute; inset: 0; z-index: 1; pointer-events: none; }
         #vignette {
             position: absolute; inset: 0; z-index: 2; pointer-events: none;
             background: radial-gradient(circle at center, transparent 10%, rgba(1, 1, 3, 0.95) 100%);
         }
+        .flash-overlay { 
+            position: absolute; inset: 0; z-index: 90; pointer-events: none; opacity: 0; 
+            transition: opacity 0.6s ease-out; background: rgba(243,229,171,0.85); 
+        }
 
-        /* 2. 法門場景 (包含階梯與門) */
-        .door-scene {
-            position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
-            width: 280px; height: 420px; z-index: 10;
-            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-            transition: transform 1.2s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.8s;
-            pointer-events: auto; cursor: pointer;
+        /* ---------------- 光之弦 (無常能量棒) ---------------- */
+        .energy-bar-wrap {
+            position: absolute; top: 0; left: 0; width: 100%; height: 3px; z-index: 100;
+            background: rgba(255,255,255,0.05); opacity: 0; transition: opacity 0.5s;
+        }
+        .energy-bar {
+            height: 100%; width: 100%; 
+            background: linear-gradient(90deg, transparent, var(--solid-gold) 20%, var(--solid-gold) 80%, transparent);
+            box-shadow: 0 0 15px var(--solid-gold);
+            transform-origin: center; /* 從兩側向中間縮短 */
+        }
+
+        /* ---------------- 法門圖層 (絕對置中，確保可點擊) ---------------- */
+        #door-layer {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            width: 240px; height: 380px; z-index: 10;
+            perspective: 1200px; cursor: pointer; pointer-events: auto;
+            transition: transform 1.5s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.8s;
         }
         
         /* 穿透特效 */
-        .door-scene.zooming {
-            transform: translate(-50%, -50%) scale(8); opacity: 0; pointer-events: none;
-        }
-
-        /* 階梯底座 */
-        .door-steps {
-            width: 320px; height: 40px; position: absolute; bottom: -20px; z-index: 15;
-        }
-
-        /* 門框本體 */
-        .door-frame {
-            position: absolute; bottom: 15px; width: 220px; height: 340px;
-            perspective: 1000px; z-index: 20;
-        }
-        
-        /* 門框 SVG (不受 3D 影響，永遠穩固) */
-        .frame-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 21; pointer-events: none; }
-
-        /* 左、右門扉 (用 HTML div 包覆 SVG，確保 iOS 旋轉不破圖) */
-        .door-panel {
-            position: absolute; bottom: 0; width: 50%; height: 100%;
-            transform-style: preserve-3d; transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 22; background: rgba(5, 15, 12, 0.6); backdrop-filter: blur(8px);
-        }
-        .door-left { left: 0; transform-origin: left; border-radius: 110px 0 0 0; border-right: 1px solid rgba(212,175,55,0.5); }
-        .door-right { right: 0; transform-origin: right; border-radius: 0 110px 0 0; border-left: 1px solid rgba(212,175,55,0.5); }
-
-        /* 開門動畫 */
-        .door-scene.opening .door-left { transform: rotateY(-105deg); background: rgba(212,175,55,0.1); }
-        .door-scene.opening .door-right { transform: rotateY(105deg); background: rgba(212,175,55,0.1); }
+        #door-layer.zooming { transform: translate(-50%, -50%) scale(8); opacity: 0; pointer-events: none; }
 
         .door-hint {
             position: absolute; top: -40px; width: 100%; text-align: center;
             color: var(--gold); font-size: 0.9rem; letter-spacing: 4px; 
-            animation: pulse 2s infinite alternate; text-shadow: 0 0 10px rgba(212,175,55,0.5);
+            animation: pulse 2s infinite alternate; text-shadow: 0 0 15px rgba(212,175,55,0.6);
+            pointer-events: none;
         }
 
-        /* 3. 題目玉簡 (貼近底部，絕不遮擋) */
+        /* 門框與門扉 (極簡純金 SVG 載體) */
+        .door-frame { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 11; pointer-events: none; }
+        
+        .door-panel {
+            position: absolute; bottom: 0; width: 50%; height: 100%; z-index: 12;
+            transform-style: preserve-3d; transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(1, 5, 8, 0.4); backdrop-filter: blur(5px);
+        }
+        .door-left { left: 0; transform-origin: left; border-radius: 120px 0 0 0; }
+        .door-right { right: 0; transform-origin: right; border-radius: 0 120px 0 0; }
+
+        /* 雙門敞開動畫 */
+        #door-layer.opening .door-left { transform: rotateY(-110deg); background: rgba(212,175,55,0.05); }
+        #door-layer.opening .door-right { transform: rotateY(110deg); background: rgba(212,175,55,0.05); }
+
+        .svg-full { width: 100%; height: 100%; display: block; overflow: visible; }
+
+        /* ---------------- 題目圖層 (底部懸浮，絕對不遮擋門) ---------------- */
+        #hud-layer {
+            position: absolute; inset: 0; z-index: 50; pointer-events: none; /* 穿透圖層，放過所有點擊 */
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            padding-bottom: 6%; 
+        }
+
         .q-panel {
-            position: absolute; bottom: 5%; left: 50%; transform: translate(-50%, 20px);
             width: 90%; max-width: 450px; background: rgba(5, 8, 5, 0.85); backdrop-filter: blur(15px);
             border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 20px;
             padding: 30px 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.9), inset 0 0 20px rgba(212,175,55,0.05);
-            opacity: 0; pointer-events: none; transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 50;
+            opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            pointer-events: none; /* 預設不可點 */
         }
-        .q-panel.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+        .q-panel.show { opacity: 1; transform: translateY(0); pointer-events: auto; /* 顯示時才可點擊內部選項 */ }
         
         .q-level { color: var(--cyan); font-size: 0.85rem; letter-spacing: 4px; margin-bottom: 15px; text-align: center; }
-        .q-text { color: var(--gold); font-size: 1.05rem; letter-spacing: 2px; line-height: 1.8; text-align: justify; margin-bottom: 25px; border-bottom: 1px solid rgba(139,168,156,0.3); padding-bottom: 20px; }
+        .q-text { color: var(--gold); font-size: 1.05rem; letter-spacing: 2px; line-height: 1.8; text-align: justify; margin-bottom: 25px; border-bottom: 1px solid rgba(139,168,156,0.2); padding-bottom: 20px; text-shadow: 0 0 10px rgba(212,175,55,0.2); }
 
         .option-btn {
             width: 100%; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(139,168,156,0.3);
-            border-radius: 12px; padding: 16px 20px; margin-bottom: 12px;
+            border-radius: 12px; padding: 15px 20px; margin-bottom: 12px;
             color: #d0d0d0; font-size: 0.95rem; letter-spacing: 1px; line-height: 1.6;
-            cursor: pointer; transition: all 0.3s; display: flex; align-items: flex-start; gap: 15px;
+            cursor: pointer; transition: all 0.3s; display: flex; align-items: flex-start; gap: 15px; text-align: left;
         }
         .option-btn:active { transform: scale(0.97); background: rgba(212,175,55,0.15); border-color: var(--solid-gold); color: var(--gold); }
         .opt-icon { width: 22px; height: 22px; flex-shrink: 0; stroke: rgba(139,168,156,0.6); fill: none; stroke-width: 1.5; margin-top: 2px;}
 
-        /* 系統提示 */
+        /* ---------------- 系統提示與結算 ---------------- */
         .toast-msg {
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 1.5rem; letter-spacing: 8px; font-weight: bold; text-align: center;
+            font-size: 1.4rem; letter-spacing: 6px; font-weight: bold; text-align: center;
             opacity: 0; z-index: 100; pointer-events: none; transition: opacity 0.5s; width: 100%;
         }
-        .flash-overlay { position: absolute; inset: 0; z-index: 90; pointer-events: none; opacity: 0; transition: opacity 0.5s; background: rgba(243,229,171,0.9); }
+
+        .btn-main {
+            background: transparent; border: 1px solid var(--solid-gold); color: var(--gold); 
+            padding: 12px 35px; border-radius: 30px; font-size: 1rem; letter-spacing: 4px; 
+            cursor: pointer; transition: 0.3s; box-shadow: inset 0 0 10px rgba(212,175,55,0.1); margin-top: 15px;
+        }
+        .btn-main:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
 
         @keyframes pulse { 0% { opacity: 0.4; } 100% { opacity: 1; } }
-
-        /* 門扉內部的 SVG 樣式 */
-        .svg-full { width: 100%; height: 100%; display: block; }
     </style>
 </head>
 <body>
@@ -116,12 +129,11 @@
     <svg style="position: absolute; width: 0; height: 0; pointer-events: none; left: -9999px;">
         <defs>
             <linearGradient id="gold-g" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="50%" stop-color="#f3e5ab" stop-opacity="0.8"/><stop offset="100%" stop-color="#d4af37" stop-opacity="0.9"/>
+                <stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="30%" stop-color="#f3e5ab" stop-opacity="0.8"/><stop offset="70%" stop-color="#d4af37" stop-opacity="0.9"/><stop offset="100%" stop-color="#8b6508" stop-opacity="0.8"/>
             </linearGradient>
             <linearGradient id="cyan-glass" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#e0f7fa" stop-opacity="0.5"/><stop offset="100%" stop-color="#004d40" stop-opacity="0.3"/>
+                <stop offset="0%" stop-color="#e0f7fa" stop-opacity="0.4"/><stop offset="100%" stop-color="#004d40" stop-opacity="0.2"/>
             </linearGradient>
-            <filter id="glow"><feGaussianBlur stdDeviation="3" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
     </svg>
 
@@ -129,58 +141,87 @@
     <div id="vignette"></div>
     <div class="flash-overlay" id="flash-screen"></div>
 
-    <div class="door-scene" id="door-scene" onclick="openDoor()">
-        <div class="door-hint">輕觸入陣</div>
-        
-        <div class="door-frame">
-            <svg class="frame-svg" viewBox="0 0 220 340">
-                <path d="M10 340 L 10 110 C 10 50, 60 10, 110 10 C 160 10, 210 50, 210 110 L 210 340 L 195 340 L 195 110 C 195 60, 155 25, 110 25 C 65 25, 25 60, 25 110 L 25 340 Z" fill="url(#gold-g)"/>
-                <line x1="110" y1="25" x2="110" y2="340" stroke="#fff" stroke-width="1.5" opacity="0.6" filter="url(#glow)"/>
-            </svg>
-
-            <div class="door-panel door-left">
-                <svg class="svg-full" viewBox="0 0 110 340" preserveAspectRatio="none">
-                    <path d="M25 110 C 25 60, 65 25, 110 25 L 110 340 L 25 340 Z" fill="url(#cyan-glass)"/>
-                    <path d="M 65 140 Q 85 170 65 200 Q 45 170 65 140 Z" fill="none" stroke="url(#gold-g)" stroke-width="1" opacity="0.6"/>
-                    <path d="M 50 170 Q 65 150 80 170 Q 65 190 50 170 Z" fill="none" stroke="url(#gold-g)" stroke-width="1" opacity="0.6"/>
-                    <circle cx="65" cy="170" r="22" fill="none" stroke="url(#gold-g)" stroke-width="0.8" opacity="0.4"/>
-                    <circle cx="95" cy="170" r="7" fill="#111" stroke="url(#gold-g)" stroke-width="2"/>
-                    <circle cx="95" cy="170" r="2" fill="#fff" filter="url(#glow)"/>
-                </svg>
-            </div>
-
-            <div class="door-panel door-right">
-                <svg class="svg-full" viewBox="0 0 110 340" preserveAspectRatio="none">
-                    <path d="M0 25 C 45 25, 85 60, 85 110 L 85 340 L 0 340 Z" fill="url(#cyan-glass)"/>
-                    <path d="M 45 140 Q 65 170 45 200 Q 25 170 45 140 Z" fill="none" stroke="url(#gold-g)" stroke-width="1" opacity="0.6"/>
-                    <path d="M 30 170 Q 45 150 60 170 Q 45 190 30 170 Z" fill="none" stroke="url(#gold-g)" stroke-width="1" opacity="0.6"/>
-                    <circle cx="45" cy="170" r="22" fill="none" stroke="url(#gold-g)" stroke-width="0.8" opacity="0.4"/>
-                    <circle cx="15" cy="170" r="7" fill="#111" stroke="url(#gold-g)" stroke-width="2"/>
-                    <circle cx="15" cy="170" r="2" fill="#fff" filter="url(#glow)"/>
-                </svg>
-            </div>
-        </div>
-
-        <svg class="door-steps" viewBox="0 0 320 40">
-            <polygon points="40,10 280,10 300,25 20,25" fill="#1a1a1a" stroke="url(#gold-g)" stroke-width="1"/>
-            <polygon points="20,25 300,25 320,40 0,40" fill="#0a0a0a" stroke="url(#gold-g)" stroke-width="1"/>
-            <line x1="40" y1="10" x2="280" y2="10" stroke="#fff" opacity="0.3"/>
-        </svg>
+    <div class="energy-bar-wrap" id="energy-wrap">
+        <div class="energy-bar" id="energy-bar"></div>
     </div>
 
-    <div class="q-panel" id="q-panel">
-        <div class="q-level">第一重 ． 破迷啟信</div>
-        <div class="q-text">娑婆信仰浩如煙海。若欲探尋解脫生死之本源，以法界觀之，何者或為正信佛教之核心？</div>
-        <div id="q-options">
-            <div class="option-btn" onclick="checkAnswer(false)"><svg class="opt-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg><span>祈求具備大威德之神明，賜予庇護與安樂。</span></div>
-            <div class="option-btn" onclick="checkAnswer(true)"><svg class="opt-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg><span>了知因果，依循覺者所揭示之空性自求解脫。</span></div>
+    <div id="door-layer" onclick="openDoor()">
+        <div class="door-hint" id="door-hint">輕觸入陣</div>
+        
+        <svg class="door-frame" viewBox="0 0 240 380">
+            <path d="M10 380 L 10 120 C 10 50, 60 10, 120 10 C 180 10, 230 50, 230 120 L 230 380 L 215 380 L 215 120 C 215 60, 175 25, 120 25 C 65 25, 25 60, 25 120 L 25 380 Z" fill="url(#gold-g)"/>
+            <line x1="120" y1="25" x2="120" y2="380" stroke="#fff" stroke-width="1.5" opacity="0.4"/>
+        </svg>
+
+        <div class="door-panel door-left">
+            <svg class="svg-full" viewBox="0 0 120 380" preserveAspectRatio="none">
+                <path d="M25 120 C 25 60, 65 25, 120 25 L 120 380 L 25 380 Z" fill="url(#cyan-glass)"/>
+                <line x1="25" y1="180" x2="120" y2="180" stroke="url(#gold-g)" stroke-width="0.8" opacity="0.6"/>
+                <circle cx="105" cy="190" r="4" fill="#000" stroke="url(#gold-g)" stroke-width="1.5"/>
+            </svg>
+        </div>
+
+        <div class="door-panel door-right">
+            <svg class="svg-full" viewBox="0 0 120 380" preserveAspectRatio="none">
+                <path d="M0 25 C 55 25, 95 60, 95 120 L 95 380 L 0 380 Z" fill="url(#cyan-glass)"/>
+                <line x1="0" y1="180" x2="95" y2="180" stroke="url(#gold-g)" stroke-width="0.8" opacity="0.6"/>
+                <circle cx="15" cy="190" r="4" fill="#000" stroke="url(#gold-g)" stroke-width="1.5"/>
+            </svg>
+        </div>
+    </div>
+
+    <div id="hud-layer">
+        <div class="q-panel" id="q-panel">
+            <div class="q-level" id="q-level">第一重 ． 破迷啟信</div>
+            <div class="q-text" id="q-text">題目載入中...</div>
+            <div id="q-options">
+                </div>
+            
+            <div id="cert-area" style="display: none; text-align: center; margin-top: 10px;">
+                <button class="btn-main" onclick="finishMatrix()">匯入資糧 ． 回歸道場</button>
+            </div>
         </div>
     </div>
 
     <div class="toast-msg" id="toast"></div>
 
 <script>
-    // --- 星河引擎 ---
+    // ================= 1. 獨立題庫模組 =================
+    const questionBank = [
+        {
+            level: "第一重 ． 破迷啟信",
+            timeLimit: 30, // 30秒
+            text: "娑婆信仰浩如煙海。若欲探尋解脫生死之本源，以法界觀之，何者或為正信佛教之核心？",
+            options: [
+                { text: "祈求具備大威德之神明，賜予庇護與安樂。", isCorrect: false },
+                { text: "了知因果，依循覺者所揭示之空性自求解脫。", isCorrect: true }
+            ]
+        },
+        {
+            level: "第二重 ． 淨土實相",
+            timeLimit: 20, 
+            text: "極樂世界拔除三毒。對於未曾深思空性之凡夫，若驟然登入此無有苦樂激盪之境，其最初體驗或許為何？",
+            options: [
+                { text: "於黃金七寶中，獲得永無止境之感官滿足與狂喜。", isCorrect: false },
+                { text: "面臨失去世俗刺激之不適應。彼處實為強迫直面空性之適應艙。", isCorrect: true }
+            ]
+        }
+    ];
+
+    // ================= 2. 系統變數與資料庫對接 =================
+    let currentStage = 0;
+    let isTransitioning = false;
+    let timerTimeout = null;
+    let earnedPoints = 0;
+
+    let db;
+    try {
+        db = JSON.parse(localStorage.getItem('PX_V15.0'));
+        if (!db || typeof db !== 'object') db = null;
+    } catch(e) {}
+    if (!db) db = { points: 0, totalNian: 0 };
+
+    // ================= 3. 穩固的星空引擎 =================
     const canvas = document.getElementById('starCanvas');
     const ctx = canvas.getContext('2d');
     let width, height;
@@ -203,6 +244,8 @@
         stars.forEach(star => {
             star.z -= warpSpeed;
             if (star.z <= 0) { star.z = 2000; star.x = (Math.random() - 0.5) * 2000; star.y = (Math.random() - 0.5) * 2000; }
+            else if (star.z > 2000) { star.z = 0; } // 業力倒退的保護
+            
             let scale = 400 / (400 + star.z);
             let sx = (width / 2) + star.x * scale; let sy = (height / 2) + star.y * scale;
             ctx.beginPath(); ctx.arc(sx, sy, Math.max(0.5, 2 * scale), 0, Math.PI * 2);
@@ -213,56 +256,194 @@
     }
     initStars(); renderStars();
 
-    // --- 核心互動流程 ---
-    function openDoor() {
-        const scene = document.getElementById('door-scene');
-        scene.style.pointerEvents = 'none'; // 防連點
+    // ================= 4. 核心互動邏輯 =================
+    
+    // 初始化第一關，但不顯示玉簡
+    function initMatrix() {
+        if (questionBank.length === 0) return;
+        loadStageData(0);
+    }
+
+    // 將資料預先載入 DOM
+    function loadStageData(index) {
+        const stageData = questionBank[index];
+        document.getElementById('q-level').innerText = stageData.level;
+        document.getElementById('q-text').innerText = stageData.text;
         
-        // 1. 雙門向外敞開
-        scene.classList.add('opening');
+        const optsContainer = document.getElementById('q-options');
+        optsContainer.innerHTML = '';
+        
+        // 選項洗牌
+        let shuffled = [...stageData.options].sort(() => Math.random() - 0.5);
+        shuffled.forEach(opt => {
+            const btn = document.createElement('div'); btn.className = 'option-btn';
+            btn.innerHTML = `<svg class="opt-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg><span>${opt.text}</span>`;
+            btn.onclick = () => handleAnswer(opt.isCorrect);
+            optsContainer.appendChild(btn);
+        });
+    }
+
+    // 點擊開門，啟動動畫與計時
+    function openDoor() {
+        if (isTransitioning) return;
+        isTransitioning = true;
+        
+        const doorLayer = document.getElementById('door-layer');
+        document.getElementById('door-hint').style.display = 'none';
+        doorLayer.style.pointerEvents = 'none'; // 防連點
+        
+        // 1. 雙門向外滑開
+        doorLayer.classList.add('opening');
         
         // 2. 星河加速，視角穿透門框
         setTimeout(() => {
-            warpSpeed = 12; // 衝刺感
-            scene.classList.add('zooming');
+            warpSpeed = 15; 
+            doorLayer.classList.add('zooming');
         }, 500);
 
-        // 3. 穿透後，星河平緩，浮現考題
+        // 3. 穿透後，星河平緩，浮現考題與光之弦
         setTimeout(() => {
             warpSpeed = 1; 
             document.getElementById('q-panel').classList.add('show');
+            startEnergyBar(questionBank[currentStage].timeLimit);
+            isTransitioning = false;
         }, 1500);
     }
 
-    function checkAnswer(isCorrect) {
-        document.getElementById('q-panel').classList.remove('show');
+    // 啟動光之弦 (計時器)
+    function startEnergyBar(seconds) {
+        clearTimeout(timerTimeout);
+        const energyWrap = document.getElementById('energy-wrap');
+        const energyBar = document.getElementById('energy-bar');
         
-        const toast = document.getElementById('toast');
+        if (seconds > 0) {
+            energyWrap.style.opacity = 1;
+            energyBar.style.transition = 'none'; 
+            energyBar.style.transform = 'scaleX(1)'; // 滿弦
+            
+            setTimeout(() => {
+                energyBar.style.transition = `transform ${seconds}s linear`;
+                energyBar.style.transform = 'scaleX(0)'; // 向中間縮短至無
+            }, 50);
+
+            timerTimeout = setTimeout(() => {
+                handleFail("無常到來 ． 陣法重置");
+            }, seconds * 1000);
+        } else {
+            energyWrap.style.opacity = 0;
+        }
+    }
+
+    // 處理作答
+    function handleAnswer(isCorrect) {
+        if (isTransitioning) return;
+        clearTimeout(timerTimeout);
+        document.getElementById('energy-wrap').style.opacity = 0;
+        document.getElementById('q-panel').classList.remove('show');
+        isTransitioning = true;
+
+        if (isCorrect) {
+            earnedPoints += 10;
+            showMsg("契合法理 ． 琉璃光現", true);
+            
+            setTimeout(() => {
+                currentStage++;
+                if (currentStage >= questionBank.length) {
+                    showFinalCert();
+                } else {
+                    resetDoorForNextStage();
+                }
+            }, 1500);
+        } else {
+            handleFail("一念無明 ． 業力反噬");
+        }
+    }
+
+    // 處理失敗 (業力反抽)
+    function handleFail(msgText) {
+        isTransitioning = true;
+        document.getElementById('q-panel').classList.remove('show');
+        document.getElementById('energy-wrap').style.opacity = 0;
+        
+        const vignette = document.getElementById('vignette');
         const flash = document.getElementById('flash-screen');
         
-        if (isCorrect) {
-            toast.innerText = "契合法理 ． 琉璃光現";
-            toast.style.color = "var(--gold)"; toast.style.textShadow = "0 0 20px var(--solid-gold)";
-            flash.style.opacity = 1;
-            setTimeout(() => flash.style.opacity = 0, 800);
+        // 恐怖氛圍
+        vignette.style.background = 'radial-gradient(circle at center, transparent 10%, rgba(50, 0, 0, 0.98) 100%)';
+        flash.style.background = 'rgba(139,0,0,0.5)'; flash.style.opacity = 1;
+        warpSpeed = -15; // 星空倒退吸入
+        
+        let shake = setInterval(() => { document.body.style.transform = `translate(${(Math.random()-0.5)*15}px, ${(Math.random()-0.5)*15}px)`; }, 50);
+        showMsg(msgText, false);
+
+        setTimeout(() => {
+            clearInterval(shake); document.body.style.transform = 'translate(0,0)';
+            flash.style.opacity = 0;
+            vignette.style.background = 'radial-gradient(circle at center, transparent 10%, rgba(1, 1, 3, 0.95) 100%)';
+            warpSpeed = 1; 
+            resetDoorForNextStage(); // 原地重來
+        }, 2500);
+    }
+
+    // 復原門框，準備下一題
+    function resetDoorForNextStage() {
+        const doorLayer = document.getElementById('door-layer');
+        doorLayer.style.transition = 'none'; // 瞬間歸位，不帶動畫
+        doorLayer.classList.remove('zooming', 'opening');
+        document.getElementById('door-hint').style.display = 'block';
+        
+        // 強制重繪後再加回動畫屬性
+        void doorLayer.offsetWidth; 
+        doorLayer.style.transition = 'transform 1.5s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.8s';
+        
+        loadStageData(currentStage);
+        doorLayer.style.pointerEvents = 'auto';
+        isTransitioning = false;
+    }
+
+    function showMsg(text, isSuccess) {
+        const toast = document.getElementById('toast');
+        const flash = document.getElementById('flash-screen');
+        toast.innerText = text;
+        
+        if (isSuccess) {
+            toast.style.color = "var(--gold)"; toast.style.textShadow = "0 0 15px var(--solid-gold)";
+            flash.style.background = "rgba(243,229,171,0.85)"; flash.style.opacity = 1;
+            setTimeout(() => flash.style.opacity = 0, 600);
         } else {
-            toast.innerText = "一念無明 ． 業力重置";
-            toast.style.color = "#ff4444"; toast.style.textShadow = "0 0 20px #ff0000";
-            
-            let shake = setInterval(() => { document.body.style.transform = `translate(${(Math.random()-0.5)*10}px, ${(Math.random()-0.5)*10}px)`; }, 50);
-            setTimeout(() => { clearInterval(shake); document.body.style.transform = 'translate(0,0)'; }, 1000);
+            toast.style.color = "var(--danger)"; toast.style.textShadow = "0 0 15px #ff0000";
         }
         
         toast.style.opacity = 1;
         setTimeout(() => toast.style.opacity = 0, 2000);
-
-        // 演示結束，重置場景以便重複測試
-        setTimeout(() => {
-            const scene = document.getElementById('door-scene');
-            scene.classList.remove('zooming', 'opening');
-            scene.style.pointerEvents = 'auto';
-        }, 2500);
     }
+
+    // 結算與寫入資料庫
+    function showFinalCert() {
+        warpSpeed = 0.5; // 進入祥和緩慢星空
+        const qPanel = document.getElementById('q-panel');
+        document.getElementById('q-level').innerText = "問心圓滿";
+        document.getElementById('q-text').innerHTML = `<div style="text-align:center;">本次破迷，獲取般若資糧：<br><span style="color:var(--solid-gold); font-size:1.5rem; font-weight:bold; text-shadow:0 0 15px var(--solid-gold);">+${earnedPoints} 點</span></div>`;
+        document.getElementById('q-options').innerHTML = '';
+        document.getElementById('cert-area').style.display = 'block';
+        
+        qPanel.classList.add('show');
+        isTransitioning = false;
+    }
+
+    function finishMatrix() {
+        // 安全寫入資料庫
+        db.points += earnedPoints;
+        localStorage.setItem('PX_V15.0', JSON.stringify(db));
+        
+        // 模擬跳轉回主系統首頁
+        // window.location.href = 'index.html?screen=3';
+        showMsg("資糧已存，跳轉道場...", true);
+    }
+
+    // 啟動系統
+    initMatrix();
+
 </script>
 </body>
 </html>

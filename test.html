@@ -1,278 +1,124 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>日行持業果反饋圖騰 ． 微型測試陣法</title>
+    <title>Eight-Petal Lotus Test</title>
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; padding: 0; background: #010103; color: #eee; font-family: "PingFang TC", "Microsoft JhengHei", serif; display: flex; justify-content: center; align-items: center; height: 100dvh; overflow: hidden; }
-
-        /* ---------------- 測試容器：模擬主系統右下角定位 ---------------- */
-        #test-container {
-            position: relative; width: 100vw; height: 100vh;
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { 
+            margin: 0; padding: 0; background: #010103; color: #eee; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            height: 100dvh; overflow: hidden; font-family: "PingFang TC", sans-serif;
         }
 
-        /* ---------------- 核心圖騰組件 ---------------- */
-        #daily-feedback-totem {
-            position: absolute; bottom: 30px; right: 30px; /* ✨ 定位：右下角 ✨ */
-            display: flex; flex-direction: column; align-items: flex-end; gap: 15px;
-            opacity: 0.9; cursor: pointer; user-select: none;
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-            z-index: 1000;
+        .totem-container {
+            display: flex; flex-direction: column; align-items: center; gap: 20px;
+            cursor: pointer;
+        }
+
+        .totem-svg-wrap {
+            width: 120px; height: 120px; position: relative;
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .totem-svg-wrap:active { transform: scale(0.95); }
+        
+        .totem-svg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(0 0 10px rgba(212,175,55,0.1)); }
+        
+        .lunar-ring { fill: none; stroke: #8ba89c; stroke-width: 0.8; stroke-dasharray: 2 4; opacity: 0.4; transition: 0.5s; }
+        
+        .maze-petal { 
+            fill: rgba(139,168,156,0.12); stroke: #8ba89c; stroke-width: 0.8; 
+            stroke-opacity: 0.3; transition: all 0.8s cubic-bezier(0.25, 0.1, 0.25, 1); 
+        }
+        .maze-petal.lit { 
+            fill: #f3e5ab; stroke: #fff; stroke-width: 1.2; 
+            filter: drop-shadow(0 0 8px #fff); opacity: 1; 
         }
         
-        #daily-feedback-totem:active { transform: scale(0.96); opacity: 1; }
-
-        /* ✨ 向量美學核心：幾何壇城與月輪 ✨ */
-        .totem-icon-wrap { width: 45px; height: 45px; position: relative; }
-        .totem-svg { width: 100%; height: 100%; display: block; overflow: visible; }
-        
-        /* 壇城（曼陀羅）核心：隨著等級進化 */
-        .mandala-core { fill: none; stroke: #d4af37; stroke-width: 1.2; filter: drop-shadow(0 0 5px rgba(212,175,55,0.4)); transition: all 0.8s ease; }
-        
-        /* 月輪軌道（三十日） */
-        .lunar-ring { fill: none; stroke: #8ba89c; stroke-width: 0.8; stroke-dasharray: 2 4; opacity: 0.5; }
-        
-        /* 每日幾何微粒（月相） */
-        .day-particle { fill: #8ba89c; transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1); opacity: 0.6; }
-        .day-particle.completed { fill: #f3e5ab; opacity: 1; filter: drop-shadow(0 0 6px #fff); }
-        
-        /* 今日光芒：幾何新月 */
-        .today-glow { fill: none; stroke: #fff; stroke-width: 1; opacity: 0; transition: opacity 0.5s; filter: drop-shadow(0 0 8px #fff); }
-        .totem-icon-wrap.active-today .today-glow { opacity: 0.8; animation: pulseToday 2.5s infinite alternate ease-in-out; }
-
-        @keyframes pulseToday { from { opacity: 0.4; } to { opacity: 0.9; } }
-        
-        /* ✨ 統一標題美學 ． 文字行持 ✨ */
-        .totem-text-wrap { display: flex; flex-direction: column; align-items: flex-end; color: #8ba89c; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; }
-        .level-title { font-weight: bold; margin-bottom: 4px; transition: color 0.5s; text-shadow: 0 0 5px rgba(212,175,55,0.1); }
-        .practice-status { color: rgba(139,168,156,0.7); font-size: 0.7rem; letter-spacing: 2px; }
-
-        /* 當前果位顏色演化 */
-        .faith { color: #8ba89c !important; }
-        .abiding { color: #a8c2b5 !important; }
-        .prajna { color: #d4af37 !important; text-shadow: 0 0 10px rgba(212,175,55,0.5) !important; }
-        
-        /* ✨ 究竟圓滿：圖騰莊嚴演化 (般若位) ✨ */
-        .totem-icon-wrap.prajna-level .mandala-core { stroke-width: 1.8; filter: drop-shadow(0 0 12px rgba(212,175,55,0.7)); animation: mandalaRotate 40s linear infinite; }
-        @keyframes mandalaRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-        /* ---------------- 測試面版 (手機上可隱藏) ---------------- */
-        #test-panel {
-            position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.8); border: 1px solid #333; padding: 15px; border-radius: 8px; z-index: 2000; display: flex; flex-direction: column; gap: 8px;
+        .maze-core { 
+            fill: none; stroke: #8ba89c; stroke-width: 1.5; opacity: 0.6; 
+            transition: all 0.8s ease; 
         }
-        .test-btn { background: #222; color: #eee; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+        .maze-core.lit { 
+            stroke: #d4af37; fill: rgba(212,175,55,0.3); 
+            filter: drop-shadow(0 0 15px #d4af37); opacity: 1;
+        }
+        
+        .center-seed { fill: #fff; opacity: 0.8; transition: all 0.5s; }
+        .maze-core.lit + .center-seed { filter: drop-shadow(0 0 8px #fff); transform: scale(1.2); transform-origin: 50px 50px; }
+
+        .status-text {
+            color: #8ba89c; font-size: 0.9rem; letter-spacing: 3px; 
+            text-transform: uppercase; transition: color 0.5s;
+        }
+        .status-text.prajna {
+            color: #d4af37; text-shadow: 0 0 10px rgba(212,175,55,0.5);
+        }
+
+        .instruction {
+            position: absolute; bottom: 40px; color: #555; font-size: 0.75rem; letter-spacing: 2px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="test-container">
-        
-        <div id="daily-feedback-totem" onclick="simulateDailyProgress()">
-            
-            <div class="totem-text-wrap">
-                <span id="level-title" class="level-title faith">初信位</span>
-                <span id="practice-status" class="practice-status">日行持：第 1 日</span>
-            </div>
-
-            <div class="totem-icon-wrap active-today" id="totem-icon">
-                <svg class="totem-svg" viewBox="0 0 100 100">
-                    <defs>
-                        <radialGradient id="pureGoldGrad" cx="50%" cy="50%" r="50%">
-                            <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
-                            <stop offset="30%" stop-color="#f3e5ab" stop-opacity="1"/>
-                            <stop offset="100%" stop-color="#d4af37" stop-opacity="1"/>
-                        </radialGradient>
-                    </defs>
-                    
-                    <circle cx="50" cy="50" r="46" class="lunar-ring" />
-                    
-                    <g id="mandala-group" class="mandala-core">
-                        <circle cx="50" cy="50" r="12" fill="none" stroke-width="0.8" stroke-dasharray="1 3"/>
-                        <path d="M50 35 C 58 45, 55 55, 50 56 C 45 55, 42 45, 50 35" stroke-width="1.2"/>
-                        <ellipse cx="50" cy="56" rx="10" ry="2.5" stroke-width="1" opacity="0.6"/>
-                    </g>
-                    
-                    <g id="lunar-particles-group"></g>
-                    
-                    <path id="today-moon-path" class="today-glow" d="M 50 12 Q 54 12, 54 8 Q 50 10, 46 8 Q 46 12, 50 12" />
-                </svg>
-            </div>
+    <div class="totem-container" onclick="simulateProgress()">
+        <div class="totem-svg-wrap">
+            <svg class="totem-svg" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="46" class="lunar-ring" id="ring"/>
+                
+                <g id="petals-group">
+                    <path id="petal-1" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(0 50 50)"/>
+                    <path id="petal-2" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(45 50 50)"/>
+                    <path id="petal-3" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(90 50 50)"/>
+                    <path id="petal-4" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(135 50 50)"/>
+                    <path id="petal-5" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(180 50 50)"/>
+                    <path id="petal-6" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(225 50 50)"/>
+                    <path id="petal-7" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(270 50 50)"/>
+                    <path id="petal-8" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(315 50 50)"/>
+                </g>
+                
+                <path id="maze-core" class="maze-core" d="M50 35 C 58 45, 55 55, 50 56 C 45 55, 42 45, 50 35"/>
+                <circle cx="50" cy="50" r="2" class="center-seed"/>
+            </svg>
         </div>
-        </div>
-
-    <div id="test-panel">
-        <div style="font-size:0.8rem; color:#888; margin-bottom:5px;">造物主權限 ． 等級觀照</div>
-        <button class="test-btn" onclick="setTestLevel('faith')">切換：信位</button>
-        <button class="test-btn" onclick="setTestLevel('abiding')">切換：住位 (成長)</button>
-        <button class="test-btn" onclick="setTestLevel('prajna')">切換：般若 (圓滿)</button>
-        <div style="font-size:0.7rem; color:#666; margin-top:5px;">(或直接點擊右下角圖騰模擬每日精進)</div>
+        <div id="status-text" class="status-text">Stage 0 / 8</div>
     </div>
 
-<script>
-    // ✨ 模擬識海數據 ✨
-    const SIM_TOTAL_DAYS = 30; // 模擬一個月週期
-    let simData = {
-        points: 0,
-        currentDay: 1, // 1~30
-        isCompletedToday: false,
-    };
+    <div class="instruction">Tap lotus to simulate progress</div>
 
-    // ✨ 初始化月輪軌道上的三十日幾何微粒 ✨
-    function initLunarParticles() {
-        const group = document.getElementById('lunar-particles-group');
-        group.innerHTML = "";
-        for (let i = 0; i < SIM_TOTAL_DAYS; i++) {
-            // 計算環形軌道上的角度（0~360度）
-            const angle = (i * (360 / SIM_TOTAL_DAYS) - 90) * (Math.PI / 180);
-            const r = 46; // 軌道半徑
-            const cx = 50 + r * Math.cos(angle);
-            const cy = 50 + r * Math.sin(angle);
+    <script>
+        let currentStage = 0;
+        const totalStages = 8;
+
+        function simulateProgress() {
+            if (navigator.vibrate) navigator.vibrate(15);
             
-            // ✨ 採用細緻的几何度量：微型六角形而非單純圓點 ✨
-            const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-            const side = 1.8; // 六角形邊長
-            let points = "";
-            for (let j = 0; j < 6; j++) {
-                const pAngle = j * (60 * (Math.PI / 180));
-                points += (cx + side * Math.cos(pAngle)) + "," + (cy + side * Math.sin(pAngle)) + " ";
-            }
-            polygon.setAttribute("points", points.trim());
-            polygon.className = "day-particle";
-            polygon.setAttribute("id", `day-particle-${i + 1}`);
+            currentStage++;
             
-            group.appendChild(polygon);
-        }
-    }
-
-    // ✨ ✨ ✨ 模擬核心邏輯：每日精進、生滅演化 ✨ ✨ ✨
-    function simulateDailyProgress() {
-        if (navigator.vibrate) navigator.vibrate(20); // 微弱震動反饋
-
-        if (simData.currentDay > SIM_TOTAL_DAYS) {
-            // 一月圓滿，重置週期
-            simData.currentDay = 1;
-            document.querySelectorAll('.day-particle').forEach(p => p.classList.remove('completed'));
-        }
-
-        // 1. ✨ 生滅演化：今日微粒由虛入實，蛻變為琉璃真金 ✨
-        const currentParticle = document.getElementById(`day-particle-${simData.currentDay}`);
-        if (currentParticle) {
-            currentParticle.classList.add('completed');
-        }
-
-        // 2. ✨ 資糧積累：模擬積分增加，觸發果位演化 ✨
-        simData.points += (20 + Math.random() * 30); // 隨機增加資糧
-        updateLevelEvolution();
-
-        // 3. ✨ 月輪推移：更新今日狀態與光芒位置 ✨
-        document.getElementById('practice-status').innerText = `日行持：第 ${simData.currentDay} 日`;
-        
-        // 更新今日幾何新月光芒的位置
-        updateTodayMoonPosition(simData.currentDay);
-
-        simData.currentDay++; saveSim();
-    }
-
-    // ✨ 更新今日幾何新月光芒的位置（與軌道上位置連動） ✨
-    function updateTodayMoonPosition(day) {
-        const angleDegree = ((day - 1) * (360 / SIM_TOTAL_DAYS) - 90);
-        const todayMoonPath = document.getElementById('today-moon-path');
-        // SVG旋轉角度
-        todayMoonPath.setAttribute("transform", `rotate(${angleDegree} 50 50)`);
-    }
-
-    // ✨ ✨ ✨ 果位壇城（曼陀羅）幾何幾何莊嚴演化 ✨ ✨ ✨
-    function updateLevelEvolution() {
-        const points = simData.points;
-        const levelTitle = document.getElementById('level-title');
-        const mandalaGroup = document.getElementById('mandala-group');
-        const totemIconWrap = document.getElementById('totem-icon');
-
-        // ✨ 般若真金漸層 (定義於SVG DEFS中) ✨
-        const pureGold = "url(#pureGoldGrad)";
-
-        if (points >= 1000) {
-            // ✨ ✨ ✨ 般若 (圓滿)：莊嚴壇城盛開，金色光芒與旋轉動畫 ✨ ✨ ✨
-            levelTitle.innerText = "般若果位";
-            levelTitle.className = "level-title prajna";
-            totemIconWrap.classList.add('prajna-level');
-            totemIconWrap.classList.remove('faith-level', 'abiding-level');
-
-            mandalaGroup.innerHTML = `
-                <circle cx="50" cy="50" r="14" fill="none" stroke="${pureGold}" stroke-width="0.6"/>
-                <polygon points="50,22 58,45 80,50 58,55 50,78 42,55 20,50 42,45" fill="none" stroke="${pureGold}" stroke-width="1.8" filter="drop-shadow(0 0 8px ${pureGold})"/>
-                <circle cx="50" cy="50" r="6" fill="${pureGold}" filter="drop-shadow(0 0 10px #fff)"/>
-                ${[...Array(12)].map((_,i) => `<line x1="50" y1="50" x2="50" y2="18" stroke="${pureGold}" stroke-width="0.4" transform="rotate(${i*30} 50 50)"/>`).join('')}
-                <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="60s" repeatCount="indefinite"/>
-            `;
-        } else if (points >= 300) {
-            // ✨ 住位 (成長)：苞芽轉為挺拔，金色框架與玉色承托 ✨
-            levelTitle.innerText = "挺拔住位";
-            levelTitle.className = "level-title abiding";
-            totemIconWrap.classList.remove('prajna-level', 'faith-level');
-            const goldColor = "#f3e5ab";
-
-            mandalaGroup.innerHTML = `
-                <ellipse cx="50" cy="50" rx="14" ry="14" fill="none" stroke="#a8c2b5" stroke-width="1.2" stroke-dasharray="3 3"/>
-                <path d="M50 25 C 65 50, 62 70, 50 72 C 38 70, 35 50, 50 25 Z" fill="none" stroke="${goldColor}" stroke-width="1.5" filter="drop-shadow(0 0 5px ${goldColor})"/>
-                <g stroke="${goldColor}" stroke-width="1" opacity="0.8">
-                    <line x1="50" y1="25" x2="50" y2="72"/>
-                    <line x1="38" y1="50" x2="62" y2="50"/>
-                </g>
-                <circle cx="50" cy="50" r="3" fill="#fff"/>
-            `;
-        } else {
-            // ✨ 信位 (苞芽)：最初信位，細緻玉色苞芽 ✨
-            levelTitle.innerText = "初心信位";
-            levelTitle.className = "level-title faith";
-            totemIconWrap.classList.remove('prajna-level', 'abiding-level');
-            const jadeColor = "#8ba89c";
-
-            mandalaGroup.innerHTML = `
-                <circle cx="50" cy="50" r="12" fill="none" stroke="${jadeColor}" stroke-width="0.8" stroke-dasharray="1 3"/>
-                <path d="M50 35 C 58 45, 55 55, 50 56 C 45 55, 42 45, 50 35" fill="none" stroke="${jadeColor}" stroke-width="1.2" filter="drop-shadow(0 0 5px rgba(139,168,156,0.3))"/>
-                <ellipse cx="50" cy="56" rx="10" ry="2.5" fill="none" stroke="${jadeColor}" stroke-width="1" opacity="0.6"/>
-                <circle cx="50" cy="45" r="1.5" fill="#fff"/>
-            `;
-        }
-    }
-
-    // ✨ 模擬識海存取 (Testing only) ✨
-    function saveSim() { localStorage.setItem('TOTEM_SIM', JSON.stringify(simData)); }
-    function loadSim() {
-        try {
-            const data = JSON.parse(localStorage.getItem('TOTEM_SIM'));
-            if (data && typeof data === 'object') {
-                simData = { ...simData, ...data };
-                // 恢復月輪上已完成的微粒
-                for (let i = 1; i < simData.currentDay; i++) {
-                    const p = document.getElementById(`day-particle-${i}`);
-                    if(p) p.classList.add('completed');
+            if (currentStage > totalStages) {
+                currentStage = 0;
+                document.querySelectorAll('.maze-petal').forEach(p => p.classList.remove('lit'));
+                document.getElementById('maze-core').classList.remove('lit');
+                document.getElementById('ring').style.stroke = '#8ba89c';
+                document.getElementById('status-text').className = 'status-text';
+            } else {
+                const petal = document.getElementById('petal-' + currentStage);
+                if (petal) petal.classList.add('lit');
+                
+                if (currentStage === totalStages) {
+                    document.getElementById('maze-core').classList.add('lit');
+                    document.getElementById('ring').style.stroke = '#d4af37';
+                    const statusText = document.getElementById('status-text');
+                    statusText.className = 'status-text prajna';
+                    statusText.innerText = "Prajna Perfected";
+                    return;
                 }
-                // 恢復今日光芒與文字狀態
-                updateTodayMoonPosition(Math.max(1, simData.currentDay - 1));
-                document.getElementById('practice-status').innerText = `日行持：第 ${Math.max(1, simData.currentDay - 1)} 日`;
-                updateLevelEvolution();
             }
-        } catch(e) {}
-    }
-
-    // ✨ 測試面板工具 ✨
-    function setTestLevel(level) {
-        if (level === 'faith') simData.points = 0;
-        else if (level === 'abiding') simData.points = 300;
-        else if (level === 'prajna') simData.points = 1000;
-        updateLevelEvolution();
-    }
-
-    // 啟動陣法
-    initLunarParticles();
-    loadSim(); 
-    if(simData.points === 0) updateLevelEvolution(); // 最初信位初始化
-    updateTodayMoonPosition(simData.currentDay > SIM_TOTAL_DAYS ? 1 : simData.currentDay);
-
-</script>
+            
+            document.getElementById('status-text').innerText = `Stage ${currentStage} / 8`;
+        }
+    </script>
 </body>
 </html>

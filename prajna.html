@@ -401,12 +401,29 @@
     const todayStr = new Date().toDateString();
     let hasPlayedToday = (db.lastMatrixDate === todayStr);
 
-    function getMazeTier() {
+        function getMazeTier() {
         const pts = db.points + db.tempBag;
-        if (pts < 200) return { tier: 1, petals: Math.min(3, Math.max(1, Math.floor(pts/66) + 1)), text: "初信" };
-        if (pts < 800) return { tier: 2, petals: Math.min(6, Math.max(4, Math.floor((pts-200)/200) + 4)), text: "深信" };
-        return { tier: 3, petals: pts < 2000 ? 7 : 8, text: "般若" };
+        
+        // 【初信階】 (0 ~ 4,999 分) - 約需 100 天全勤
+        if (pts < 5000) {
+            let p = 1;
+            if (pts >= 1500) p = 2;
+            if (pts >= 3000) p = 3;
+            return { tier: 1, petals: p, text: "初信" };
+        }
+        // 【深信階】 (5,000 ~ 14,999 分) - 約需 1 年全勤
+        if (pts < 15000) {
+            let p = 4;
+            if (pts >= 8000) p = 5;
+            if (pts >= 11000) p = 6;
+            return { tier: 2, petals: p, text: "深信" };
+        }
+        // 【般若階】 (15,000 分以上) - 約需 1 到 2 年全勤
+        let p = 7;
+        if (pts >= 30000) p = 8; // 滿 3 萬分才點亮第 8 瓣與蓮心
+        return { tier: 3, petals: p, text: "般若" };
     }
+
 
         function updateTotemUI() {
         const info = getMazeTier();
@@ -762,7 +779,7 @@
         isProcessing = false; 
     }
 
-    function startBoss() {
+        function startBoss() {
         if (isProcessing) return; isProcessing = true;
         document.getElementById('q-panel').classList.remove('show');
         setTimeout(() => {
@@ -770,10 +787,17 @@
             document.getElementById('stage-text').style.color = "#ff4444";
             loadQuestion(0, true);
             document.getElementById('q-panel').classList.add('show');
-            readVoiceAndStartTimer(bossQuestion.text, bossQuestion.time);
+            
+            // 【核心修復 1】：先解除鎖定，再去呼叫容易當機的語音！保證選項絕對能按。
             isProcessing = false; 
+            try { 
+                readVoiceAndStartTimer(bossQuestion.text, bossQuestion.time); 
+            } catch(e) { 
+                startActualTimer(bossQuestion.time); 
+            }
         }, 1000);
     }
+
 
     function declineBoss() {
         if (isProcessing) return; isProcessing = true;
@@ -782,7 +806,10 @@
     }
 
     /* ---------------- 資糧暫存與究竟圓滿結算 ---------------- */
-    function showSettlement(isPerfect, passedBoss) {
+      function showSettlement(isPerfect, passedBoss) {
+        // 【核心修復 2】：強制解除鎖定，否則最後的「匯入主系統」按鈕會按不下去！
+        isProcessing = false; 
+        
         warpSpeed = 0.2; 
         document.getElementById('question-content').style.display = 'none';
         document.getElementById('karma-dot').style.display = 'none';
@@ -800,7 +827,8 @@
         
         localStorage.setItem('PX_V15.0', JSON.stringify(db));
 
-        if ((db.points + db.tempBag) >= 600) {
+        // 總資糧滿 30,000 分，才可得琉璃法印！
+        if ((db.points + db.tempBag) >= 30000) {
             document.getElementById('cert-content').style.display = 'none';
             document.getElementById('grand-cert').style.display = 'flex';
         } else {
@@ -830,6 +858,7 @@
 
         document.getElementById('q-panel').classList.add('show');
     }
+
 
     function syncToMain() {
         if (isProcessing) return; isProcessing = true;

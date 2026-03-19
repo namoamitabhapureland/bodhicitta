@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Prajna Wisdom ‧ Awakening from Delusion</title>
+    <style>
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; }
+        
+        body { 
+            background: #010103; color: #d0d0d0; 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; width: 100vw; height: 100dvh;
+        }
+
+        /* ---------------- Void Flash ---------------- */
+        #void-flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 999; transition: opacity 0.8s ease-out, box-shadow 0.8s ease-out; }
+        .flash-gold { box-shadow: inset 0 0 150px rgba(212, 175, 55, 0.85); opacity: 1 !important; }
+        .flash-red { box-shadow: inset 0 0 180px rgba(139, 0, 0, 0.95); opacity: 1 !important; }
+
+        /* ---------------- Star Engine ---------------- */
+        canvas { display: block; position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+        #vignette { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(circle at center, transparent 10%, rgba(1, 1, 3, 0.98) 100%); }
+
+        /* ---------------- Energy String ---------------- */
+        #energy-wrap { position: absolute; top: 0; left: 0; width: 100%; height: 6px; z-index: 100; background: rgba(255,255,255,0.02); opacity: 0; transition: opacity 0.5s; border-radius: 20px 20px 0 0; overflow: hidden; }
+        #energy-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #d4af37, #f3e5ab, #d4af37); box-shadow: 0 0 15px rgba(212,175,55,0.8); transform-origin: left; }
+        .critical-time { background: linear-gradient(90deg, transparent, #ff4444 20%, #8b0000 50%, #ff4444 80%, transparent) !important; animation: breatheRed 0.4s infinite alternate; }
+        @keyframes breatheRed { from { box-shadow: 0 0 10px rgba(139,0,0,0.8); } to { box-shadow: 0 0 35px rgba(255,0,0,1); } }
+
+        /* ---------------- Navigation Buttons ---------------- */
+        #btn-back, #btn-info {
+            position: absolute; top: calc(max(20px, env(safe-area-inset-top, 20px))); 
+            z-index: 100; font-size: 0.75rem; letter-spacing: 2px; cursor: pointer; 
+            display: flex; align-items: center; gap: 6px; opacity: 0.6; transition: all 0.4s ease;
+            background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 20px;
+            backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.05);
+        }
+        #btn-back { left: 20px; color: #8ba89c; }
+        #btn-back:hover, #btn-back:active { opacity: 1; transform: scale(0.95); color: #d4af37; border-color: rgba(212,175,55,0.3); }
+        #btn-back svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+        #btn-info { right: 20px; color: #d4af37; border-color: rgba(212,175,55,0.15); }
+        #btn-info:hover, #btn-info:active { opacity: 1; transform: scale(0.95); filter: drop-shadow(0 0 8px #d4af37); background: rgba(212,175,55,0.05); }
+        #btn-info svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+        /* ---------------- Info Overlay ---------------- */
+        #info-overlay {
+            position: fixed; inset: 0; z-index: 9999; background: rgba(1, 1, 3, 0.85);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.6s ease;
+        }
+        #info-overlay.show { display: flex; opacity: 1; }
+        #info-content {
+            width: 85%; max-width: 480px; color: #b0c4de; font-size: 0.95rem; line-height: 2.2;
+            letter-spacing: 1px; text-align: justify; border-left: 1px solid rgba(212, 175, 55, 0.4); 
+            padding-left: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-weight: 300;
+        }
+        .info-title { color: #f3e5ab; font-size: 1.2rem; margin-bottom: 20px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(212,175,55,0.5); font-weight: 300; text-align: center; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 15px;}
+
+        /* ---------------- Door Scene ---------------- */
+        #door-scene { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; height: 460px; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; cursor: pointer; pointer-events: auto; }
+        #door-scene.zooming { transition: transform 1.8s cubic-bezier(0.6, 0.05, 0.1, 1), opacity 1.2s; transform: translate(-50%, -50%) scale(10); opacity: 0; pointer-events: none; }
+        
+        .door-frame-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 11; pointer-events: none; filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.2)); }
+        
+        #door-panel-container { position: absolute; top: 15px; left: 15px; right: 15px; bottom: 0; z-index: 12; display: flex; overflow: hidden; justify-content: center; pointer-events: none; border-radius: 125px 125px 0 0; }
+        
+        .door-panel { width: 50%; height: 100%; transition: transform 1.5s cubic-bezier(0.5, 0, 0.1, 1); position: relative; overflow: hidden; }
+        
+        .door-panel::before { 
+            content: ''; position: absolute; inset: 0; 
+            background: radial-gradient(circle at center, rgba(243, 229, 171, 0.25) 0%, rgba(212, 175, 55, 0.05) 80%);
+            backdrop-filter: blur(5px);
+            border-bottom: 0.8px solid rgba(243, 229, 171, 0.3);
+            animation: doorBreathe 4s infinite alternate ease-in-out;
+            transition: all 0.3s;
+        }
+        @keyframes doorBreathe { 0% { opacity: 0.85; filter: brightness(0.95); } 100% { opacity: 1; filter: brightness(1.2); } }
+
+        .door-smoke {
+            position: absolute; bottom: -70px; left: 50%; transform: translateX(-50%);
+            width: 480px; height: 120px; z-index: 13; pointer-events: none;
+            background: radial-gradient(ellipse at center, rgba(255,255,255,0.35) 0%, rgba(212,175,55,0.15) 50%, transparent 85%);
+            filter: blur(12px); animation: smokeDrift 6s infinite alternate ease-in-out;
+        }
+
+        .door-left { border-radius: 125px 0 0 0; }
+        .door-left::before { border-right: 1px solid rgba(255,255,255,0.6); box-shadow: 2px 0 15px rgba(212,175,55,0.4); }
+        .door-right { border-radius: 0 125px 0 0; }
+        .door-right::before { border-left: 1px solid rgba(255,255,255,0.6); box-shadow: -2px 0 15px rgba(212,175,55,0.4); }
+        
+        .lotus-seal { position: absolute; top: 50%; transform: translateY(-50%); width: 140px; height: 140px; z-index: 15; pointer-events: none; }
+        .door-left .lotus-seal { right: -70px; } 
+        .door-right .lotus-seal { left: -70px; } 
+
+        #door-scene.opening .door-left { transform: translateX(-100%); }
+        #door-scene.opening .door-right { transform: translateX(100%); }
+
+        #door-hint { position: absolute; top: -60px; width: 100%; text-align: center; color: #f3e5ab; font-size: 1.1rem; letter-spacing: 4px; animation: pulseGlow 2.5s infinite alternate; font-weight: 300; transition: all 0.5s; text-transform: uppercase;}
+        @keyframes pulseGlow { 0% { opacity: 0.5; text-shadow: 0 0 10px rgba(212,175,55,0.3); } 100% { opacity: 1; text-shadow: 0 0 25px rgba(243,229,171,0.8), 0 0 40px #fff; } }
+
+        /* ---------------- Question Panel ---------------- */
+        #q-panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -40%) scale(0.92); width: 92%; max-width: 540px; background: linear-gradient(145deg, rgba(15, 20, 25, 0.95), rgba(5, 8, 10, 0.98)); backdrop-filter: blur(25px); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 20px; padding: 40px 30px; box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 30px rgba(139, 168, 156, 0.05); opacity: 0; pointer-events: none; transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1); z-index: 50; }
+        #q-panel.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+        
+        #q-panel.karma-border { border: 1px solid rgba(184, 59, 59, 0.5); box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 30px rgba(184, 59, 59, 0.1); }
+        
+        .karma-dot { position: absolute; top: 20px; right: 20px; width: 6px; height: 6px; background: #ff4444; border-radius: 50%; display: none; box-shadow: 0 0 10px #ff0000, 0 0 20px #8b0000; animation: pulseKarma 1.2s infinite alternate; }
+        @keyframes pulseKarma { from { opacity: 0.4; transform: scale(0.8); } to { opacity: 1; transform: scale(1.3); } }
+
+        #q-level { color: #8ba89c; font-size: 0.75rem; letter-spacing: 3px; margin-bottom: 25px; text-align: center; border-bottom: 1px solid rgba(139,168,156,0.15); padding-bottom: 15px; position: relative; text-transform: uppercase; }
+        #voice-hint { color: #d4af37; font-size: 0.65rem; letter-spacing: 1px; position: absolute; right: 0; top: 0; animation: pulse 1.5s infinite alternate; opacity: 0.8;}
+        
+        #q-text { color: #f3e5ab; font-size: 1.05rem; letter-spacing: 1px; line-height: 1.8; text-align: justify; margin-bottom: 30px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-weight: 300; }
+
+        .option-btn { width: 100%; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(139,168,156,0.15); border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; color: #b0c4de; font-size: 0.9rem; letter-spacing: 0.5px; line-height: 1.5; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); text-align: left; display: flex; align-items: flex-start; gap: 12px; position: relative; overflow: hidden; }
+        .option-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.1), transparent); transition: 0.5s; }
+        .option-btn:hover::before { left: 100%; }
+        .option-btn:active { transform: scale(0.97); background: rgba(212,175,55,0.08); border-color: rgba(212,175,55,0.5); color: #fff; box-shadow: 0 0 20px rgba(212,175,55,0.1); }
+        
+        .opt-dot { width: 14px; height: 14px; border: 1.5px solid rgba(139,168,156,0.4); border-radius: 50%; flex-shrink: 0; margin-top: 3px; transition: 0.3s; position: relative; }
+        .option-btn:active .opt-dot { border-color: #d4af37; background: rgba(212,175,55,0.5); box-shadow: 0 0 10px #d4af37; }
+
+        #cert-content { display: none; text-align: center; flex-direction: column; align-items: center; animation: fadeIn 1s forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .sword-container { width: 100px; height: 220px; margin: 15px auto; filter: drop-shadow(0 0 25px rgba(212,175,55,0.5)); display: none; animation: floatSword 4s infinite ease-in-out; }
+        @keyframes floatSword { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        .btn-main { background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212,175,55,0.4); color: #f3e5ab; padding: 12px 30px; border-radius: 25px; font-size: 0.85rem; letter-spacing: 2px; cursor: pointer; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); display: block; margin: 20px auto 0 auto; backdrop-filter: blur(5px); text-transform: uppercase; }
+        .btn-main:hover { background: rgba(212,175,55,0.15); box-shadow: 0 0 20px rgba(212,175,55,0.2); }
+        .btn-main:active { transform: scale(0.95); }
+        
+        .btn-danger { border-color: rgba(255, 68, 68, 0.4); color: #ffaaaa; background: rgba(139,0,0,0.1); }
+        .btn-danger:hover { background: rgba(139,0,0,0.25); box-shadow: 0 0 25px rgba(255,68,68,0.3); }
+
+        @keyframes pulse { 0% { opacity: 0.3; } 100% { opacity: 1; } }
+        .svg-full { width: 100%; height: 100%; display: block; overflow: visible; }
+        
+        /* ---------------- Modal ---------------- */
+        .modal-wrap { 
+            position: fixed; inset: 0; z-index: 9999; 
+            background: rgba(1, 1, 3, 0.85); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
+            display: flex; justify-content: center; align-items: center; 
+            opacity: 0; pointer-events: none; transition: opacity 0.6s ease; 
+        }
+        .modal-wrap.show { opacity: 1; pointer-events: auto; }
+        
+        .modal-box { 
+            width: 85%; max-width: 360px; 
+            background: linear-gradient(145deg, rgba(15, 20, 25, 0.95), rgba(5, 8, 10, 0.98)); 
+            border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 16px; 
+            padding: 40px 30px; text-align: center; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(212,175,55,0.05); 
+            transform: translateY(20px); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); 
+        }
+        .modal-wrap.show .modal-box { transform: translateY(0); }
+        
+        .modal-title { 
+            color: #f3e5ab; font-size: 1.15rem; letter-spacing: 2px; 
+            margin-bottom: 20px; text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); 
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 15px; font-weight: 300; text-transform: uppercase;
+        }
+        .modal-text { 
+            color: #8ba89c; font-size: 0.9rem; letter-spacing: 1px; line-height: 1.8; 
+            margin-bottom: 30px; font-weight: 300; 
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="void-flash"></div>
+
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
+        <defs>
+            <linearGradient id="gold-frame" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fff" stop-opacity="0.9"/>
+                <stop offset="30%" stop-color="#d4af37" stop-opacity="1"/>
+                <stop offset="70%" stop-color="#b8860b" stop-opacity="1"/>
+                <stop offset="100%" stop-color="#5c400a" stop-opacity="0.9"/>
+            </linearGradient>
+            <linearGradient id="gold-bright" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="1"/><stop offset="50%" stop-color="#f3e5ab" stop-opacity="1"/><stop offset="100%" stop-color="#d4af37" stop-opacity="1"/></linearGradient>
+            <linearGradient id="gold-dark" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#5c400a"/><stop offset="50%" stop-color="#b8860b"/><stop offset="100%" stop-color="#5c400a"/></linearGradient>
+            <linearGradient id="cyan-glass" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e0f7fa" stop-opacity="0.8"/><stop offset="50%" stop-color="#00838f" stop-opacity="0.6"/><stop offset="100%" stop-color="#004d40" stop-opacity="0.9"/></linearGradient>
+            <filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <filter id="sword-glow"><feGaussianBlur stdDeviation="8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+    </svg>
+
+    <template id="lotus-seal-svg">
+        <svg viewBox="0 0 140 140" class="svg-full" filter="drop-shadow(0 0 15px rgba(212,175,55,0.6))">
+            <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(243,229,171,0.5)" stroke-width="1.5" stroke-dasharray="2 6"/>
+            <circle cx="70" cy="70" r="42" fill="none" stroke="rgba(212,175,55,0.8)" stroke-width="1.2"/>
+            <circle cx="70" cy="70" r="10" fill="url(#gold-bright)" filter="url(#glow)"/>
+            <g stroke="url(#gold-bright)" stroke-width="1">
+                <path d="M 70 18 C 88 42 88 55 70 63 C 52 55 52 42 70 18 Z" fill="rgba(255, 183, 197, 0.15)" />
+                <path d="M 70 18 C 88 42 88 55 70 63 C 52 55 52 42 70 18 Z" fill="rgba(174, 221, 243, 0.15)" transform="rotate(45 70 70)" />
+                <path d="M 70 18 C 88 42 88 55 70 63 C 52 55 52 42 70 18 Z" fill="rgba(168, 230, 207, 0.15)" transform="rotate(90 70 70)" />
+                <path d="M 70 18 C 88 42 88 55 70 63 C 52 55 52 42 70 18 Z" fill="rgba(255, 139, 148, 0.15)" transform="rotate(135 70 70)" />
+                <path d="M 70 18 C 88 42 88 55 70 63 C 52 55 52 42 70 18 Z" fill="rgba(204, 174, 243, 0.15)" transform="rotate(180 70 70)" />
+                <path d="M 70 18 C 88 42 88 55 70 63 C 52 55 52 42 70 18 Z" fill="rgba(174, 243, 221, 0.15)" transform="rotate(225 70 70)" />
+                <path d="M 70 18 C 88 42 88 55 70 63 C 52 55 52 42 70 18 Z" fill="rgba(255, 204, 153, 0.15)" transform="rotate(270 70 70)" />
+                <path d="M 70 18 C 88 42 88 55 70 63 C 52 55 52 42 70 18 Z" fill="rgba(235, 243, 174, 0.15)" transform="rotate(315 70 70)" />
+            </g>
+        </svg>
+    </template>
+
+    <canvas id="starCanvas"></canvas>
+    <div id="vignette"></div>
+
+    <div id="btn-back" onclick="returnToDaochang()">
+        <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Return
+    </div>
+
+    <div id="btn-info" onclick="toggleInfo(true)">
+        <svg viewBox="0 0 24 24">
+            <path d="M4 6h16M4 12h16M4 18h10" stroke-linecap="round"/>
+            <circle cx="18" cy="18" r="2" fill="currentColor" stroke="none" />
+        </svg>
+        Origins
+    </div>
+
+    <div id="door-scene" onclick="triggerDoor()">
+        <div id="door-hint">Tap to Enter</div>
+        <svg class="door-frame-svg" viewBox="0 0 280 460" preserveAspectRatio="none">
+            <path d="M10 460 L 10 140 C 10 60, 70 10, 140 10 C 210 10, 270 60, 270 140 L 270 460 L 250 460 L 250 140 C 250 75, 195 30, 140 30 C 85 30, 30 75, 30 140 L 30 460 Z" fill="url(#gold-frame)"/>
+            <path d="M15 460 L 15 140 C 15 65, 75 15, 140 15 C 205 15, 265 65, 265 140 L 265 460" fill="none" stroke="#fff" stroke-width="0.8" opacity="0.6"/>
+        </svg>
+        
+        <div class="door-smoke"></div>
+
+        <div id="door-panel-container">
+            <div class="door-panel door-left"><div class="lotus-seal"></div></div>
+            <div class="door-panel door-right"><div class="lotus-seal"></div></div>
+        </div>
+    </div>
+
+    <div id="q-panel">
+        <div id="energy-wrap"><div id="energy-bar"></div></div>
+        <div class="karma-dot" id="karma-dot"></div>
+        <div id="q-level"><span id="stage-text">Loading Matrix...</span> <span id="voice-hint"></span></div>
+        
+        <div id="question-content">
+            <div id="q-text"></div>
+            <div id="q-options"></div>
+        </div>
+
+        <div id="cert-content">
+            <div class="sword-container" id="sword-svg">
+                <svg viewBox="0 0 100 240" class="svg-full">
+                    <polygon points="50,5 75,70 50,190 25,70" fill="url(#cyan-glass)" stroke="url(#gold-bright)" stroke-width="1.2"/>
+                    <polygon points="50,5 50,190 25,70" fill="rgba(255,255,255,0.25)"/> 
+                    <line x1="50" y1="5" x2="50" y2="190" stroke="#fff" stroke-width="2" filter="url(#sword-glow)"/> 
+                    <polygon points="15,180 85,180 65,200 35,200" fill="url(#gold-frame)"/>
+                    <polygon points="50,180 85,180 65,200 50,200" fill="rgba(0,0,0,0.3)"/> 
+                    <rect x="43" y="200" width="14" height="30" fill="url(#gold-dark)"/>
+                    <polygon points="50,230 65,240 50,250 35,240" fill="url(#gold-bright)" filter="url(#glow)"/>
+                </svg>
+            </div>
+            <div id="cert-text" style="color:#a8c2b5; line-height:2.2; margin-top:20px; font-size:0.9rem; text-align:center; letter-spacing:1px;"></div>
+        </div>
+
+        <div id="action-btns" style="display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top:20px; width: 100%;"></div>
+    </div>
+
+    <div id="info-overlay" onclick="toggleInfo(false)">
+        <div id="info-content" onclick="event.stopPropagation()">
+            <div class="info-title">[ Prajna Matrix ‧ Shattering Illusions ]</div>
+            <div class="info-text">
+                "All conditioned phenomena are like dreams, illusions, bubbles, and shadows."<br><br>
+                This matrix is not a test of winning or losing, but a "polishing a brick to make a mirror" exercise for practitioners to wash away worldly fatigue and sharpen their concentration and wisdom. Ten levels of merit gathering, one hidden trial; only by observing the text with an "equanimous mind" can one see the unmoving true nature amidst the chaotic forms, transforming it into a "Sword of Geometric Wisdom" to sever ignorance.<br><br>
+                <span style="color:#FFD700;">[ Laws of Merit and Adornment ]</span><br>
+                1. Daily Cycle: Opens once a day. A practitioner spending one day and night in the Saha world may only enter the matrix once.<br>
+                2. Merit Transformation: The points obtained are manifestations of concentration, requiring 100 points to sync to the main system.<br>
+                3. Red Light Warning: Getting lost in the matrix breeds the fire of karma; one wrong answer (or timeout) automatically hides the matrix until tomorrow.
+            </div>
+        </div>
+    </div>
+
+    <div id="done-modal" class="modal-wrap">
+        <div class="modal-box">
+            <div class="modal-title">Today's Matrix is Closed</div>
+            <div class="modal-text">Thoughts flow ‧ Await tomorrow<br><br>Practitioner, you have entered the maze today.<br>Whether lost or awakened, it is all practice.<br>Please return tomorrow to pierce the illusion.</div>
+            <button class="btn-main" style="margin-top:0;" onclick="returnToDaochang()">Return to Dojo</button>
+        </div>
+    </div>
+
+<script>
+    // ==========================================
+    // ✨ Star Engine ✨
+    // ==========================================
+    const canvas = document.getElementById('starCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, stars = [], warpSpeed = 1;
+
+    function resize() { 
+        width = window.innerWidth; 
+        height = window.innerHeight; 
+        canvas.width = width; 
+        canvas.height = height; 
+    }
+    window.addEventListener('resize', resize); 
+    resize();
+
+    for (let i = 0; i < 300; i++) {
+        stars.push({ 
+            x: (Math.random() - 0.5) * 2000, 
+            y: (Math.random() - 0.5) * 2000, 
+            z: Math.random() * 2000, 
+            color: Math.random() > 0.5 ? '#8ba89c' : '#f3e5ab' 
+        });
+    }
+
+    function renderStars() {
+        ctx.fillStyle = 'rgba(1, 1, 3, 0.4)'; 
+        ctx.fillRect(0, 0, width, height); 
+        ctx.globalCompositeOperation = 'screen';
+        
+        stars.forEach(star => {
+            star.z -= warpSpeed;
+            if (star.z <= 0) { 
+                star.z = 2000; 
+                star.x = (Math.random() - 0.5) * 2000; 
+                star.y = (Math.random() - 0.5) * 2000; 
+            } else if (star.z > 2000) {
+                star.z = 0;
+            }
+            let scale = 400 / (400 + star.z);
+            ctx.beginPath(); 
+            ctx.arc((width / 2) + star.x * scale, (height / 2) + star.y * scale, Math.max(0.5, 2 * scale), 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${star.color === '#f3e5ab' ? '243,229,171' : '139,168,156'}, ${Math.min(1, scale * 2)})`; 
+            ctx.fill();
+        });
+        ctx.globalCompositeOperation = 'source-over'; 
+        requestAnimationFrame(renderStars);
+    }
+    renderStars();
+
+    // ==========================================
+    // ✨ Audio Engine ✨
+    // ==========================================
+    let audioCtx, tensionOsc, tensionGain, tensionInterval;
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    function playTensionSound() {
+        if (!audioCtx) return;
+        tensionOsc = audioCtx.createOscillator(); tensionGain = audioCtx.createGain();
+        tensionOsc.type = 'sine'; tensionOsc.frequency.setValueAtTime(45, audioCtx.currentTime);
+        tensionGain.gain.setValueAtTime(0, audioCtx.currentTime);
+        tensionOsc.connect(tensionGain); tensionGain.connect(audioCtx.destination);
+        tensionOsc.start();
+        let isHigh = false;
+        tensionInterval = setInterval(() => {
+            isHigh = !isHigh;
+            tensionGain.gain.setTargetAtTime(isHigh ? 0.3 : 0.05, audioCtx.currentTime + 0.1);
+            tensionOsc.frequency.setTargetAtTime(isHigh ? 55 : 45, audioCtx.currentTime + 0.1);
+        }, 400);
+    }
+    function stopTensionSound() {
+        if (tensionInterval) clearInterval(tensionInterval);
+        try { if (tensionGain) tensionGain.gain.setTargetAtTime(0, audioCtx.currentTime + 0.2); } catch(e) {}
+        try { if (tensionOsc) setTimeout(() => { try { tensionOsc.stop(); } catch(e) {} }, 300); } catch(e) {}
+    }
+    
+    function playWrongSound() {
+        initAudio(); 
+        if (!audioCtx) return;
+        
+        let t = audioCtx.currentTime;
+        let osc1 = audioCtx.createOscillator();
+        let osc2 = audioCtx.createOscillator();
+        let gainNode = audioCtx.createGain();
+        
+        osc1.type = 'sine'; osc1.frequency.setValueAtTime(120, t); 
+        osc2.type = 'triangle'; osc2.frequency.setValueAtTime(240, t); 
+        
+        gainNode.gain.setValueAtTime(0, t);
+        gainNode.gain.linearRampToValueAtTime(0.8, t + 0.05); 
+        gainNode.gain.exponentialRampToValueAtTime(0.001, t + 2.5); 
+        
+        osc1.connect(gainNode); osc2.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        osc1.start(t); osc2.start(t);
+        osc1.stop(t + 3); osc2.stop(t + 3);
+    }
+
+    const sealTemplate = document.getElementById('lotus-seal-svg').innerHTML;
+    document.querySelectorAll('.lotus-seal').forEach(el => el.innerHTML = sealTemplate);
+
+    // ==========================================
+    // ✨ Database & Logic ✨
+    // ==========================================
+    let db = { points: 0, totalCorrect: 0, lastMatrixDate: "", tempBag: 0, treasures: { sword: 0 }, clearedQ: [], failedQ: {} };
+    try { 
+        // Changed key to prevent collision with the Chinese version progress
+        const local = JSON.parse(localStorage.getItem('PX_EN_V15.0'));
+        if (local && typeof local === 'object') { 
+            db = { ...db, ...local }; 
+            if(!db.tempBag) db.tempBag = 0;
+            if(!db.treasures) db.treasures = {sword:0}; 
+            if(!db.clearedQ) db.clearedQ = []; 
+            if(!db.failedQ) db.failedQ = {}; 
+        }
+    } catch(e) {}
+
+    const todayStr = new Date().toDateString();
+    let hasPlayedToday = (db.lastMatrixDate === todayStr);
+
+    if (hasPlayedToday) {
+        setTimeout(() => {
+            const modal = document.getElementById('done-modal');
+            if (modal) modal.classList.add('show');
+        }, 600);
+        
+        document.addEventListener("DOMContentLoaded", () => {
+            const hint = document.getElementById('door-hint');
+            if (hint) hint.style.display = 'none';
+        });
+    }
+
+    const DEMO_TOTAL_Q = 10; 
+
+    // ✨ Basic Questions
+    const basicBank = [
+        { id: 'B01', time: 120, text: "Who is the fundamental teacher of Buddhism in the Saha world?", options: [{ text: "Shakyamuni Buddha", isCorrect: true }, { text: "Amitabha Buddha", isCorrect: false }, { text: "Medicine Buddha", isCorrect: false }, { text: "Maitreya Bodhisattva", isCorrect: false }] },
+        { id: 'B02', time: 120, text: "Among the fundamental 'Five Precepts' of Buddhism, which one primarily cultivates compassion?", options: [{ text: "No killing", isCorrect: true }, { text: "No stealing", isCorrect: false }, { text: "No lying", isCorrect: false }, { text: "No intoxicants", isCorrect: false }] },
+        { id: 'B03', time: 120, text: "What constitutes the 'Three Jewels' that practitioners take refuge in?", options: [{ text: "Buddha, Dharma, Sangha", isCorrect: true }, { text: "Heaven, Earth, Humanity", isCorrect: false }, { text: "Truth, Goodness, Beauty", isCorrect: false }, { text: "Precepts, Concentration, Wisdom", isCorrect: false }] }
+        // Note: Add more basic English questions here...
+    ];
+
+    // ✨ Sutra Questions
+    const sutraBank = [
+        { id: 'S01', time: 120, text: "The Diamond Sutra states: 'All appearances are illusory. If you see all appearances as non-appearances, then you see the (　　).'", options: [{ text: "Tathagata", isCorrect: true }, { text: "True Nature", isCorrect: false }, { text: "Ultimate Reality", isCorrect: false }, { text: "Dharma Body", isCorrect: false }] },
+        { id: 'S02', time: 120, text: "In the Heart Sutra, what follows the profound statement 'Form is emptiness, emptiness is form'?", options: [{ text: "Sensation, perception, volition, and consciousness are also like this.", isCorrect: true }, { text: "This is the empty nature of all dharmas.", isCorrect: false }, { text: "Neither arising nor ceasing, neither defiled nor pure.", isCorrect: false }, { text: "There is no suffering, no accumulation, no cessation, and no path.", isCorrect: false }] }
+        // Note: Add more profound English sutra questions here...
+    ];
+
+    const bossQuestion = {
+        id: 'BOSS_01', level: "11th ‧ Hidden Trial", time: 120,
+        text: "Looking at Ultimate Bliss and the Saha world from the perspective of the One True Dharma Realm, what is the ultimate reality?",
+        options: [
+            { text: "All illusions are the truth. Ultimate Bliss is not apart from one's own mind; the Mind-Only Pure Land receives Mind-Only beings.", isCorrect: true },
+            { text: "The Pure Land is an illusory city set up for those of dull capacities.", isCorrect: false },
+            { text: "Ultimate Bliss and Saha are both truly existent, hence one must loathe this land and seek that land.", isCorrect: false },
+            { text: "One must rely on Amitabha's divine power to forcibly establish a Pure Land outside the mind to abide in.", isCorrect: false }
+        ]
+    };
+
+    let questionBank = [];
+    
+    function generateDailyQuiz() {
+        const isDayOne = db.totalCorrect < 10;
+        let pool = isDayOne ? basicBank : sutraBank;
+        
+        let availableQ = pool.filter(q => !db.clearedQ.includes(q.id)).sort(() => Math.random() - 0.5);
+
+        if (availableQ.length < DEMO_TOTAL_Q) {
+            db.clearedQ = db.clearedQ.filter(id => !pool.find(q => q.id === id));
+            availableQ = [...pool].sort(() => Math.random() - 0.5);
+        }
+
+        questionBank = availableQ.slice(0, DEMO_TOTAL_Q);
+        
+        const stageName = isDayOne ? "Basic Practice" : "Prajna Scroll";
+        questionBank.forEach((q, i) => q.level = `Stage ${i+1} ‧ ${stageName}`);
+    }
+
+    let currentStage = 0; let correctCount = 0; let isProcessing = false;
+    let timerId = null, criticalTimerId = null;
+
+    function flashEffect(type) {
+        const vf = document.getElementById('void-flash');
+        vf.className = type === 'gold' ? 'flash-gold' : 'flash-red';
+        setTimeout(() => { vf.className = ''; }, 800);
+    }
+
+    function loadQuestion(index, isBoss = false) {
+        const q = isBoss ? bossQuestion : questionBank[index];
+        const qPanel = document.getElementById('q-panel');
+        
+        let isKarma = (db.failedQ && db.failedQ[q.id] >= 1);
+        
+        document.getElementById('karma-dot').style.display = isKarma ? 'block' : 'none';
+        if (isKarma) qPanel.classList.add('karma-border');
+        else qPanel.classList.remove('karma-border');
+
+        document.getElementById('stage-text').innerText = q.level;
+        document.getElementById('q-text').innerText = q.text;
+        document.getElementById('action-btns').innerHTML = ''; 
+        
+        const optsDiv = document.getElementById('q-options');
+        optsDiv.innerHTML = '';
+        
+        let shuffled = [...q.options].sort(() => Math.random() - 0.5);
+        shuffled.forEach(opt => {
+            const btn = document.createElement('div'); btn.className = 'option-btn';
+            btn.innerHTML = `<div class="opt-dot"></div><div>${opt.text}</div>`;
+            btn.onclick = () => processAnswer(opt.isCorrect, isBoss);
+            optsDiv.appendChild(btn);
+        });
+    }
+
+    function triggerDoor() {
+        if (isProcessing) return;
+        
+        if (hasPlayedToday) { 
+            const modal = document.getElementById('done-modal');
+            if (modal) modal.classList.add('show');
+            return; 
+        }
+        
+        isProcessing = true; 
+        initAudio(); 
+        
+        if (currentStage === 0 && correctCount === 0) {
+            generateDailyQuiz(); 
+        }
+        
+        const hint = document.getElementById('door-hint');
+        if (hint) hint.style.display = 'none';
+
+        if ('speechSynthesis' in window) window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+
+        const scene = document.getElementById('door-scene');
+        scene.classList.add('opening');
+        setTimeout(() => { warpSpeed = 12; scene.classList.add('zooming'); }, 400);
+        setTimeout(() => { 
+            warpSpeed = 1; 
+            document.getElementById('q-panel').classList.add('show');
+            document.getElementById('question-content').style.display = 'block';
+            document.getElementById('cert-content').style.display = 'none';
+            
+            loadQuestion(currentStage); 
+            
+            const currentQ = questionBank[currentStage];
+            readVoiceAndStartTimer(currentQ.text, currentQ.time);
+            isProcessing = false; 
+        }, 1600); 
+    }
+
+    window.sysUtterances = []; 
+    function readVoiceAndStartTimer(text, seconds) {
+        const thisStage = currentStage;
+        const wrap = document.getElementById('energy-wrap');
+        const bar = document.getElementById('energy-bar');
+        const voiceHint = document.getElementById('voice-hint');
+        
+        wrap.style.opacity = 1; 
+        bar.style.transition = 'none'; bar.style.transform = 'scaleX(1)';
+        bar.classList.remove('critical-time');
+        
+        try {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); 
+                let msg = new SpeechSynthesisUtterance(text);
+                msg.lang = 'en-US'; msg.rate = 1.0; // Changed to English Voice
+                window.sysUtterances.push(msg); 
+                
+                msg.onstart = () => { voiceHint.innerText = 'Reading...'; };
+                msg.onend = () => { 
+                    if (currentStage !== thisStage) return;
+                    voiceHint.innerText = ''; startActualTimer(seconds); 
+                };
+                msg.onerror = () => { 
+                    if (currentStage !== thisStage) return;
+                    voiceHint.innerText = ''; startActualTimer(seconds); 
+                }; 
+                
+                window.speechSynthesis.speak(msg);
+                
+                setTimeout(() => { 
+                    if(currentStage === thisStage && voiceHint.innerText !== '') { 
+                        voiceHint.innerText = ''; startActualTimer(seconds); 
+                    } 
+                }, 15000);
+            } else {
+                setTimeout(() => { if (currentStage === thisStage) startActualTimer(seconds); }, 3000);
+            }
+        } catch(err) {
+            voiceHint.innerText = '';
+            setTimeout(() => { if (currentStage === thisStage) startActualTimer(seconds); }, 1000);
+        }
+    }
+
+    function startActualTimer(seconds) {
+        if (isProcessing) return;
+        
+        clearTimeout(timerId); 
+        clearTimeout(criticalTimerId);
+
+        const bar = document.getElementById('energy-bar');
+        void bar.offsetWidth;
+        bar.style.transition = `transform ${seconds}s linear`;
+        bar.style.transform = 'scaleX(0)';
+
+        criticalTimerId = setTimeout(() => { 
+            bar.classList.add('critical-time'); 
+            try { playTensionSound(); } catch(e){}
+        }, Math.max(0, seconds - 4) * 1000); 
+        
+        timerId = setTimeout(() => { 
+            try { stopTensionSound(); playWrongSound(); } catch(e){} 
+            flashEffect('red');
+            showSettlement(false, false, true); 
+        }, seconds * 1000);
+    }
+
+    function processAnswer(isCorrect, isBoss) {
+        if (isProcessing) return;
+        isProcessing = true; 
+        
+        let qid = isBoss ? bossQuestion.id : questionBank[currentStage].id;
+
+        try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(e) {}
+        clearTimeout(timerId); clearTimeout(criticalTimerId);
+        try { stopTensionSound(); } catch(e) {}
+        
+        document.getElementById('voice-hint').innerText = '';
+        document.getElementById('energy-wrap').style.opacity = 0;
+        document.getElementById('q-panel').classList.remove('show');
+
+        if (isCorrect) {
+            if (!isBoss) correctCount++;
+            if (!db.clearedQ.includes(qid)) db.clearedQ.push(qid);
+            
+            flashEffect('gold');
+            setTimeout(() => { if (isBoss) { showSettlement(true, true); } else { nextStage(); } }, 1000);
+        } else {
+            db.failedQ[qid] = (db.failedQ[qid] || 0) + 1;
+            
+            flashEffect('red');
+            try { playWrongSound(); } catch(e) {}
+            
+            setTimeout(() => { showSettlement(false, false, true); }, 1500);
+        }
+    }
+
+    function nextStage() {
+        currentStage++;
+        
+        if (currentStage >= DEMO_TOTAL_Q) {
+            if (correctCount === DEMO_TOTAL_Q) { setTimeout(promptBossQuestion, 500); } 
+            else { showSettlement(false, false); }
+        } else {
+            document.getElementById('q-panel').classList.remove('show');
+            setTimeout(() => {
+                loadQuestion(currentStage);
+                document.getElementById('q-panel').classList.add('show');
+                
+                const currentQ = questionBank[currentStage];
+                isProcessing = false; 
+                try { readVoiceAndStartTimer(currentQ.text, currentQ.time); }
+                catch(e) { startActualTimer(currentQ.time); }
+            }, 600); 
+        }
+    }
+
+    function promptBossQuestion() {
+        warpSpeed = 3;
+        document.getElementById('karma-dot').style.display = 'none';
+        document.getElementById('q-panel').classList.remove('karma-border');
+        document.getElementById('stage-text').innerText = "Prajna Perfected ‧ Reality Shifts";
+        document.getElementById('stage-text').style.color = "#d4af37";
+        document.getElementById('question-content').style.display = 'block';
+        document.getElementById('cert-content').style.display = 'none';
+        
+        document.getElementById('q-options').innerHTML = '';
+        document.getElementById('q-text').innerHTML = `<div style="text-align:center; color:#ff8888; font-size:1.05rem; line-height:2.2; text-shadow: 0 0 10px rgba(255,0,0,0.3); font-weight: 300;">Practitioner, you have answered ten questions correctly.<br>Deep in the Dharma Realm, the <span style="font-weight:bold;">[11th Hidden Trial]</span> has emerged.<br>This question is profound; no points will be deducted for a wrong answer.<br><br><span style="color:#d4af37; font-size:1.15rem; letter-spacing: 2px;">Do you accept the ultimate inquiry?</span></div>`;
+        
+        document.getElementById('action-btns').innerHTML = `
+            <div style="display:flex; gap:15px; width:100%; justify-content:center;">
+                <button class="btn-main btn-danger" style="margin:0;" onclick="startBoss()">Face the Trial</button>
+                <button class="btn-main" style="margin:0; border-color:rgba(139,168,156,0.5); color:#8ba89c;" onclick="declineBoss()">Step Back</button>
+            </div>
+        `;
+        document.getElementById('q-panel').classList.add('show');
+        isProcessing = false; 
+    }
+
+    function startBoss() {
+        if (isProcessing) return; isProcessing = true;
+        document.getElementById('q-panel').classList.remove('show');
+        setTimeout(() => {
+            warpSpeed = 10; 
+            document.getElementById('stage-text').style.color = "#ff4444";
+            loadQuestion(0, true);
+            document.getElementById('q-panel').classList.add('show');
+            
+            isProcessing = false; 
+            try { 
+                readVoiceAndStartTimer(bossQuestion.text, bossQuestion.time); 
+            } catch(e) { 
+                startActualTimer(bossQuestion.time); 
+            }
+        }, 1000);
+    }
+
+    function declineBoss() {
+        if (isProcessing) return; isProcessing = true;
+        document.getElementById('q-panel').classList.remove('show');
+        setTimeout(() => { showSettlement(true, false); }, 500);
+    }
+
+    function showSettlement(isPerfect, passedBoss, isFail = false) {
+        isProcessing = false; 
+        warpSpeed = 0.2; 
+        document.getElementById('question-content').style.display = 'none';
+        document.getElementById('karma-dot').style.display = 'none';
+        document.getElementById('q-panel').classList.remove('karma-border');
+        
+        const stageText = document.getElementById('stage-text');
+        stageText.innerText = isFail ? "A Subtle Thought ‧ Matrix Terminated" : "Inquiry Complete ‧ Merits Gathered";
+        stageText.style.color = isFail ? "#ff6666" : "#8ba89c";
+        
+        let basePoints = 10 + (correctCount * 4);
+        let finalPoints = passedBoss ? basePoints + 10 : basePoints;
+        
+        db.tempBag += finalPoints;
+        db.totalCorrect += correctCount;
+        if (isPerfect) db.treasures.sword += 1;
+        db.lastMatrixDate = todayStr;
+        
+        localStorage.setItem('PX_EN_V15.0', JSON.stringify(db));
+
+        document.getElementById('cert-content').style.display = 'flex';
+        
+        let html = `Daily entry, base 10 points acquired<br>Answered <span style="color:#fff;">${correctCount}</span> correctly, <span style="color:#fff;">${correctCount * 4}</span> points acquired<br>`;
+        if (passedBoss) html += `<span style="color:#ff8888;">11th Hidden Trial Cleared, Bonus +10 points</span><br>`;
+        html += `<br><span style="color:#d4af37; font-size:1.4rem; font-weight:bold; text-shadow:0 0 25px rgba(212,175,55,0.6); letter-spacing: 2px;">Total Acquired: ${finalPoints} Points</span>`;
+
+        if (isFail) {
+            html += `<br><br><span style="color:#ff6666; font-size:0.9rem; letter-spacing: 1px;">The Bodhi path is long ‧ Please return tomorrow</span>`;
+        } else if (isPerfect) {
+            document.getElementById('sword-svg').style.display = 'block';
+            html += `<br><br><span style="color:#f3e5ab; font-size:0.95rem; letter-spacing: 1px;">Prajna Perfected!<br>Manifested [Sword of Geometric Wisdom], stored in the Treasure Pavilion.</span>`;
+        }
+        document.getElementById('cert-text').innerHTML = html;
+        
+        const actionDiv = document.getElementById('action-btns');
+        if (db.tempBag >= 100) {
+            actionDiv.innerHTML = `<button class="btn-main" style="margin:0;" onclick="syncToMain()">Gather Merits ‧ Sync to Main System</button>`;
+        } else {
+            actionDiv.innerHTML = `
+                <div style="color:#8ba89c; font-size:0.8rem; letter-spacing:1px; margin-bottom:10px;">Accumulating Merits ‧ Not Yet Sufficient (${db.tempBag}/100)</div>
+                <button class="btn-main" style="border-color:rgba(139,168,156,0.3); color:#8ba89c; margin:0;" onclick="returnToDaochang()">Close Matrix</button>
+            `;
+        }
+        document.getElementById('q-panel').classList.add('show');
+    }
+
+    function syncToMain() {
+        if (isProcessing) return; isProcessing = true;
+        db.points += db.tempBag; db.tempBag = 0;
+        localStorage.setItem('PX_EN_V15.0', JSON.stringify(db));
+        
+        document.getElementById('q-panel').classList.remove('show');
+        flashEffect('gold');
+        setTimeout(() => { returnToDaochang(); }, 1500);
+    }
+
+    function returnToDaochang() {
+        // ✨ Returns directly to your specified English Dojo URL
+        window.location.href = 'index_en.html?screen=3';
+    }
+
+    function toggleInfo(show) {
+        const el = document.getElementById('info-overlay');
+        if (show) {
+            el.style.display = 'flex';
+            setTimeout(() => el.classList.add('show'), 10);
+        } else {
+            el.classList.remove('show');
+            setTimeout(() => el.style.display = 'none', 600);
+        }
+    }
+</script>
+</body>
+</html>

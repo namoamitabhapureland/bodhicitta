@@ -333,7 +333,7 @@
 
         let currentTurn = 0; let isSpinning = false; let currentRotation = 0; let tickInterval;
 
-        async function triggerSpin() {
+             async function triggerSpin() {
             if(isSpinning || currentTurn >= 3) return;
             initAudio(); isSpinning = true; currentTurn++;
             
@@ -361,35 +361,25 @@
                 if(Math.random() < 0.1) score += 200; if(score > 1000) score = 1000;
                 
                 db.hwkinsEnergyTotal = (db.hwkinsEnergyTotal || 0) + score;
-                db.dailyWheelCount = 1; save();
+                db.dailyWheelCount = 1; 
                 
+                // ✨ Check if the One True Realm is unlocked (>= 12000) ✨
+                let isRealmUnlocked = false;
                 if (db.hwkinsEnergyTotal >= 12000) {
-                    db.hwkinsEnergyTotal = 0; save(); 
-                    await playFragment(); 
+                    db.hwkinsEnergyTotal = 0; // Reset energy
+                    isRealmUnlocked = true;
                 }
-                showEnergyResult(score);
+                save();
+                
+                // Pass the unlock signal to the result display function
+                showEnergyResult(score, isRealmUnlocked);
             }
         }
 
-        async function playFragment() {
-            const t = document.getElementById('fragment-theater');
-            const b = document.getElementById('f-bodhi'); const r = document.getElementById('f-ring'); const p = document.getElementById('f-pillar');
-            const zen = document.getElementById('f-text');
-            const quotes = ["All appearances are illusory", "The path of words is cut off", "In nothingness lies an inexhaustible treasure", "The Dharma is fundamentally no Dharma"];
-            zen.innerText = quotes[Math.floor(Math.random() * quotes.length)];
-            
-            t.style.display = 'flex'; await sleep(50); t.style.opacity = '1';
-            let type = Math.floor(Math.random() * 3); 
-            
-            if(type === 0) { b.style.opacity = '1'; b.style.transform = 'scale(3)'; b.style.boxShadow = '0 0 50px var(--solid-gold)'; await sleep(3000); b.style.opacity = '0'; }
-            else if (type === 1) { r.style.transition = 'all 3s'; r.style.opacity = '1'; r.style.transform = 'scale(1.2)'; await sleep(3000); r.style.opacity = '0'; }
-            else { p.style.transition = 'all 3s'; p.style.opacity = '1'; p.style.transform = 'scale(1.5)'; await sleep(3000); p.style.opacity = '0'; }
 
-            zen.style.opacity = '1'; await sleep(3000); zen.style.opacity = '0'; await sleep(1000);
-            t.style.opacity = '0'; await sleep(1000); t.style.display = 'none';
-        }
+        
 
-        function showEnergyResult(score) {
+               function showEnergyResult(score, isRealmUnlocked) {
             let preset = hwkinsDB.find(h => score >= h.min && score <= h.max) || hwkinsDB[1];
             let content = preset.contents[Math.floor(Math.random() * preset.contents.length)];
             
@@ -402,6 +392,22 @@
             card.style.boxShadow = `0 0 40px ${preset.color}, inset 0 0 15px #000`;
             card.style.border = `1px solid ${preset.border}`;
             
+            // ✨ Dynamic Button: Enter One True Realm if >= 12000 ✨
+            const closeBtn = document.getElementById('close-btn');
+            if (isRealmUnlocked) {
+                closeBtn.innerText = "✨ Enter One True Realm ✨";
+                closeBtn.style.color = "var(--solid-gold)";
+                closeBtn.style.borderColor = "var(--solid-gold)";
+                closeBtn.style.boxShadow = "0 0 15px rgba(212,175,55,0.4)";
+                closeBtn.onclick = () => navigateTo('realm_en.html');
+            } else {
+                closeBtn.innerText = "Collect the Mind";
+                closeBtn.style.color = "var(--cyan)";
+                closeBtn.style.borderColor = "var(--cyan)";
+                closeBtn.style.boxShadow = "none";
+                closeBtn.onclick = resetWheel;
+            }
+
             document.getElementById('wheel-container').style.transform = 'scale(0.8)';
             document.getElementById('wheel-container').style.opacity = '0.1';
             document.getElementById('instruction-text').style.opacity = '0';
@@ -416,6 +422,7 @@
                 scoreText.style.color = preset.border; scoreText.innerText = score + " Hz";
             }, 500); 
         }
+
 
         function resetWheel() {
             document.getElementById('result-layout').classList.remove('show');

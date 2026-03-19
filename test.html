@@ -1,124 +1,591 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eight-Petal Lotus Test</title>
+    <title>華嚴大世界 ． 宏觀法界</title>
     <style>
-        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --gold: #f3e5ab;
+            --solid-gold: #d4af37;
+            --cyan: #8ba89c; 
+            --bg-deep: #010103;
+        }
+
         body { 
-            margin: 0; padding: 0; background: #010103; color: #eee; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            height: 100dvh; overflow: hidden; font-family: "PingFang TC", sans-serif;
+            margin: 0; background: var(--bg-deep); color: #eee; 
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; 
+            overflow: hidden; touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent;
         }
 
-        .totem-container {
-            display: flex; flex-direction: column; align-items: center; gap: 20px;
-            cursor: pointer;
-        }
+        /* ---------------- 換頁黑幕 ---------------- */
+        #page-curtain { position: fixed; inset: 0; background: #000; z-index: 999999; pointer-events: none; transition: opacity 0.8s ease-in-out; opacity: 1; }
 
-        .totem-svg-wrap {
-            width: 120px; height: 120px; position: relative;
-            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        /* ---------------- 頂部導航按鈕 ---------------- */
+        .top-nav-btn {
+            position: absolute; top: 20px; 
+            background: rgba(0, 0, 0, 0.6); 
+            border: 1px solid rgba(212,175,55,0.6); 
+            color: var(--gold); 
+            padding: 8px 16px; border-radius: 25px; font-size: 0.85rem; font-weight: bold; letter-spacing: 1px; 
+            display: flex; align-items: center; gap: 6px; z-index: 100; cursor: pointer; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8), inset 0 0 10px rgba(212,175,55,0.15); 
+            backdrop-filter: blur(10px); transition: 0.3s;
         }
-        .totem-svg-wrap:active { transform: scale(0.95); }
+        .top-nav-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.25); border-color: var(--solid-gold); box-shadow: 0 0 20px rgba(212,175,55,0.5); }
         
-        .totem-svg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(0 0 10px rgba(212,175,55,0.1)); }
-        
-        .lunar-ring { fill: none; stroke: #8ba89c; stroke-width: 0.8; stroke-dasharray: 2 4; opacity: 0.4; transition: 0.5s; }
-        
-        .maze-petal { 
-            fill: rgba(139,168,156,0.12); stroke: #8ba89c; stroke-width: 0.8; 
-            stroke-opacity: 0.3; transition: all 0.8s cubic-bezier(0.25, 0.1, 0.25, 1); 
-        }
-        .maze-petal.lit { 
-            fill: #f3e5ab; stroke: #fff; stroke-width: 1.2; 
-            filter: drop-shadow(0 0 8px #fff); opacity: 1; 
-        }
-        
-        .maze-core { 
-            fill: none; stroke: #8ba89c; stroke-width: 1.5; opacity: 0.6; 
-            transition: all 0.8s ease; 
-        }
-        .maze-core.lit { 
-            stroke: #d4af37; fill: rgba(212,175,55,0.3); 
-            filter: drop-shadow(0 0 15px #d4af37); opacity: 1;
-        }
-        
-        .center-seed { fill: #fff; opacity: 0.8; transition: all 0.5s; }
-        .maze-core.lit + .center-seed { filter: drop-shadow(0 0 8px #fff); transform: scale(1.2); transform-origin: 50px 50px; }
+        #back-btn { left: 20px; }
+        #wheel-nav-btn { right: 20px; }
+        .mini-icon { width: 16px; height: 16px; filter: drop-shadow(0 0 4px rgba(243,229,171,0.5)); }
 
-        .status-text {
-            color: #8ba89c; font-size: 0.9rem; letter-spacing: 3px; 
-            text-transform: uppercase; transition: color 0.5s;
-        }
-        .status-text.prajna {
-            color: #d4af37; text-shadow: 0 0 10px rgba(212,175,55,0.5);
-        }
+        /* ---------------- 背景與光影 ---------------- */
+        .vairocana-light { position: absolute; inset: 0; background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.06) 0%, rgba(212,175,55,0.02) 40%, transparent 80%); z-index: 0; animation: divine-breath 12s infinite alternate ease-in-out; pointer-events: none; }
+        @keyframes divine-breath { 0% { opacity: 0.5; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.1); } }
+        #stardust-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 5; overflow: hidden; }
 
-        .instruction {
-            position: absolute; bottom: 40px; color: #555; font-size: 0.75rem; letter-spacing: 2px;
+        /* ---------------- 3D 宇宙場景 ---------------- */
+        #universe-container { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; perspective: 2000px; z-index: 2; }
+        #scene-3d { width: 0; height: 0; transform-style: preserve-3d; transform: rotateX(75deg) scale(0.9); will-change: transform; }
+        
+        #lotus-ocean { position: absolute; transform-style: preserve-3d; will-change: transform; }
+
+        .svg-glow { position: absolute; width: 1200px; height: 1200px; left: -600px; top: -600px; filter: drop-shadow(0 0 15px rgba(212,175,55,0.15)); z-index: 1; }
+        .ocean-dot-animated { transform-origin: center; animation: ocean-breathe 6s infinite alternate ease-in-out; }
+        @keyframes ocean-breathe { 0% { transform: scale(1.4); opacity: 0.3; } 100% { transform: scale(4.0); opacity: 0.9; filter: drop-shadow(0 0 20px rgba(255,255,255,0.9)); } }
+        .sea-label { font-size: 6px; fill: rgba(243,229,171,0.9); letter-spacing: 3px; font-weight: bold; text-shadow: 0 0 8px #000, 0 0 10px rgba(212,175,55,0.9); animation: text-pulse 4s infinite alternate ease-in-out; }
+        @keyframes text-pulse { 0% { opacity: 0.4; } 100% { opacity: 1; filter: drop-shadow(0 0 5px var(--gold)); } }
+
+        /* ---------------- 3D 蓮花與光柱 ---------------- */
+        #standing-lotus { position: absolute; top: 0; left: 0; transform-style: preserve-3d; z-index: 2; }
+        .petal-3d { position: absolute; bottom: 0; transform-origin: bottom center; transform-style: preserve-3d; pointer-events: none; }
+        .petal-svg { width: 100%; height: 100%; overflow: visible; }
+
+        #world-tower { position: absolute; top: 0; left: 0; width: 0; height: 0; transform-style: preserve-3d; z-index: 10; }
+        .central-beam { position: absolute; top: 0; left: -1.5px; width: 3px; height: 550px; background: linear-gradient(to bottom, rgba(255,255,255,0.9) 0%, rgba(212,175,55,0.8) 30%, rgba(139,168,156,0.1) 100%); box-shadow: 0 0 25px rgba(212,175,55,0.6), 0 0 10px #fff; transform-origin: top center; transform: rotateX(90deg); pointer-events: none; }
+
+        /* ---------------- 二十重世界 ---------------- */
+        .tier-layer { position: absolute; top: 0; left: 0; transform-style: preserve-3d; pointer-events: none; }
+        .tier-disk { position: absolute; border-radius: 50%; border-width: 1.5px; transform-style: preserve-3d; pointer-events: none; }
+        .tier-disk::before, .tier-disk::after { content: ''; position: absolute; background: currentColor; opacity: 0.3; }
+        .tier-disk::before { top: 50%; left: 0; width: 100%; height: 1px; margin-top: -0.5px; }
+        .tier-disk::after { top: 0; left: 50%; width: 1px; height: 100%; margin-left: -0.5px; }
+
+        .tier-dot { position: absolute; border-radius: 50%; cursor: pointer; transition: all 0.4s ease; transform-style: preserve-3d; pointer-events: auto; }
+        
+        /* 💡 第 13 層特化：娑婆/極樂 */
+        .tier-13-disk { border: 2px solid rgba(212,175,55,0.8) !important; background-color: rgba(212,175,55,0.2) !important; box-shadow: 0 0 20px rgba(212,175,55,0.3), inset 0 0 15px rgba(212,175,55,0.2); }
+        .tier-13-dot { background: #fff !important; border: 2px solid var(--solid-gold); box-shadow: 0 0 20px var(--gold) !important; animation: supernova 1.5s infinite alternate cubic-bezier(0.25, 0.1, 0.25, 1); pointer-events: auto; cursor: pointer; }
+        @keyframes supernova { 0% { transform: scale(1.5); box-shadow: 0 0 15px rgba(212,175,55,0.6); } 100% { transform: scale(3.6); box-shadow: 0 0 60px var(--solid-gold), 0 0 30px #fff; background: #ffe; } }
+
+        .tier-label { position: absolute; left: 20px; top: -12px; width: 320px; color: var(--gold); font-size: 1.05rem; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 10px #000, 0 0 15px rgba(243,229,171,0.5); transform-origin: left center; pointer-events: auto; cursor: pointer; will-change: transform; display: flex; align-items: center; white-space: nowrap; }
+        .tier-arrow { margin-right: 6px; font-size: 1.1rem; animation: arrow-breathe 2.5s infinite alternate ease-in-out; }
+        @keyframes arrow-breathe { 0% { transform: translateX(0px); opacity: 0.6; text-shadow: 0 0 5px var(--gold); } 100% { transform: translateX(4px); opacity: 1; text-shadow: 0 0 15px var(--solid-gold); } }
+
+        /* ---------------- 底部 UI 層與導覽按鈕 ---------------- */
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 15px; }
+        #touch-guide-elegant { display: flex; align-items: center; gap: 10px; color: rgba(243,229,171,0.8); font-size: 0.95rem; letter-spacing: 4px; font-weight: bold; pointer-events: none; animation: fade-guide 3s infinite alternate; text-shadow: 0 0 10px rgba(212,175,55,0.5); }
+        @keyframes fade-guide { 0% { opacity: 0.3; transform: translateY(5px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        .switch-btn {
+            background: rgba(15,15,15,0.8); border: 1px solid rgba(212,175,55,0.6); color: var(--gold);
+            padding: 14px 28px; border-radius: 30px; font-size: 1.05rem; font-weight: bold; letter-spacing: 3px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.6), inset 0 0 10px rgba(212,175,55,0.15);
         }
+        .switch-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.25); box-shadow: 0 0 30px rgba(212,175,55,0.5); }
+
+        /* ---------------- 彈跳視窗 ( Modal ) ---------------- */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(1, 1, 3, 0.85); backdrop-filter: blur(10px); z-index: 3000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .glass-card { width: 88%; max-width: 420px; background: linear-gradient(145deg, rgba(15,20,30,0.95), rgba(5,5,10,0.98)); border: 1.5px solid var(--solid-gold); border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.95), inset 0 0 20px rgba(212,175,55,0.15); transform: translateY(20px); transition: transform 0.4s; }
+        .modal-overlay.show .glass-card { transform: translateY(0); }
+        
+        .close-btn { position: absolute; top: 15px; right: 20px; color: #888; font-size: 1.8rem; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .close-btn:active { color: var(--gold); transform: scale(0.9); }
+        .content-text { color:#ddd; font-size:0.95rem; line-height:1.8; text-align:justify; margin: 20px 0; }
+        .highlight-text { color: var(--gold); font-weight: bold; }
+        .btn-enter { margin-top: 15px; padding: 14px 35px; border-radius: 40px; width: 100%; background: linear-gradient(145deg, #d4af37, #b08d2b); color: #000; font-weight: bold; border: none; font-size: 1rem; cursor: pointer; letter-spacing: 3px; box-shadow: 0 0 30px rgba(212,175,55,0.5); transition: 0.3s; }
+        .btn-enter:active { transform: scale(0.95); }
+
+        /* ---------------- 玉簡抽屜 ( Theory Drawer ) ---------------- */
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 88vh;
+            background: rgba(5, 5, 8, 0.95); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0;
+            transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+            scrollbar-width: none;
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.9)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(212,175,55,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        .close-drawer-text { color: var(--cyan); font-size: 0.85rem; letter-spacing: 2px; font-weight: bold; cursor: pointer; }
+
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        .main-title { text-align: center; color: var(--gold); font-size: 1.5rem; letter-spacing: 4px; margin-bottom: 20px; text-shadow: 0 0 15px rgba(212,175,55,0.5); font-weight: normal; line-height: 1.5;}
+        .disclaimer-text { font-size: 0.8rem; color: rgba(255, 255, 255, 0.4); text-align: justify; line-height: 1.6; margin: 0 auto 40px auto; font-style: italic; }
+
+        .chapter-box { margin-bottom: 50px; }
+        .chapter-header { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 15px; }
+        .chapter-icon { width: 28px; height: 28px; stroke: var(--solid-gold); fill: none; filter: drop-shadow(0 0 8px rgba(212,175,55,0.6)); }
+        .chapter-title { color: var(--solid-gold); font-size: 1.2rem; letter-spacing: 2px; font-weight: bold; margin: 0; }
+
+        .paragraph { font-size: 1rem; color: #ccc; text-align: justify; margin-bottom: 15px; line-height: 1.9; letter-spacing: 1px; }
+        
+        .sutra-quote { background: linear-gradient(90deg, rgba(212,175,55,0.1), transparent); border-left: 3px solid var(--solid-gold); padding: 15px; margin: 20px 0; font-style: italic; color: var(--gold); font-size: 1.05rem; letter-spacing: 1px; line-height: 1.6;}
+
+        .world-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin: 20px 0; }
+        .world-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(212,175,55,0.15); padding: 12px; border-radius: 8px; font-size: 0.9rem; color: #ddd; display: flex; align-items: center; gap: 10px; }
+        .world-num { color: var(--solid-gold); font-size: 0.8rem; font-weight: bold; opacity: 0.8; }
+        .world-13 { border: 1px solid var(--solid-gold); background: rgba(212,175,55,0.15); box-shadow: 0 0 15px rgba(212,175,55,0.2); font-weight: bold;}
+
     </style>
 </head>
 <body>
 
-    <div class="totem-container" onclick="simulateProgress()">
-        <div class="totem-svg-wrap">
-            <svg class="totem-svg" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="46" class="lunar-ring" id="ring"/>
-                
-                <g id="petals-group">
-                    <path id="petal-1" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(0 50 50)"/>
-                    <path id="petal-2" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(45 50 50)"/>
-                    <path id="petal-3" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(90 50 50)"/>
-                    <path id="petal-4" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(135 50 50)"/>
-                    <path id="petal-5" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(180 50 50)"/>
-                    <path id="petal-6" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(225 50 50)"/>
-                    <path id="petal-7" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(270 50 50)"/>
-                    <path id="petal-8" class="maze-petal" d="M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35" transform="rotate(315 50 50)"/>
-                </g>
-                
-                <path id="maze-core" class="maze-core" d="M50 35 C 58 45, 55 55, 50 56 C 45 55, 42 45, 50 35"/>
-                <circle cx="50" cy="50" r="2" class="center-seed"/>
-            </svg>
-        </div>
-        <div id="status-text" class="status-text">Stage 0 / 8</div>
+    <div id="page-curtain"></div>
+
+    <div id="back-btn" class="top-nav-btn" onclick="navigateTo('index.html?screen=3')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        回道場
     </div>
 
-    <div class="instruction">Tap lotus to simulate progress</div>
+    <div id="wheel-nav-btn" class="top-nav-btn" onclick="navigateTo('wheel.html')">
+        轉法輪
+        <svg class="mini-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="wheel-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#f3e5ab"/><stop offset="100%" stop-color="#d4af37"/>
+                </linearGradient>
+            </defs>
+            <circle cx="12" cy="12" r="10" fill="none" stroke="url(#wheel-gold)" stroke-width="1.5"/>
+            <circle cx="12" cy="12" r="8.5" fill="none" stroke="url(#wheel-gold)" stroke-width="0.5" stroke-dasharray="1 2"/>
+            <g stroke="url(#wheel-gold)" stroke-width="1.5" stroke-linecap="round">
+                <line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/><line x1="4.93" y1="19.07" x2="19.07" y2="4.93"/>
+            </g>
+            <circle cx="12" cy="12" r="2.5" fill="#020202" stroke="url(#wheel-gold)" stroke-width="1.5"/>
+            <circle cx="12" cy="12" r="1" fill="#f3e5ab"/>
+        </svg>
+    </div>
+
+    <div class="vairocana-light"></div>
+    <div id="stardust-overlay"></div>
+
+    <div id="universe-container">
+        <div id="scene-3d">
+            <div id="lotus-ocean">
+                <svg class="svg-glow" viewBox="0 0 200 200" id="ocean-svg" xmlns="http://www.w3.org/2000/svg">
+                    <g id="ocean-rings"></g>
+                    <g id="ocean-dots"></g>
+                    <g id="geometric-mandala"></g>
+                </svg>
+                <div id="standing-lotus"></div>
+                <div id="world-tower"><div class="central-beam"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ui-layer" id="ui-layer">
+        <div id="touch-guide-elegant">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+            </svg>
+            <span>撥動星盤 ． 俯瞰華藏</span>
+        </div>
+
+        <button class="switch-btn" onclick="openDrawer()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+            <span>華藏世界 義理總覽</span>
+        </button>
+    </div>
+
+    <div id="info-modal" class="modal-overlay">
+        <div class="glass-card">
+            <div class="close-btn" onclick="closeModal('info-modal')">×</div>
+            <h3 style="color:var(--gold); margin-top:10px; font-size: 1.4rem; letter-spacing: 3px;">第十三層<br><span style="font-size:1.1rem; color:#fff; text-shadow: 0 0 10px #fff;">娑婆與極樂</span></h3>
+            <p class="content-text">
+                您已觸及一真法界之核心。<br><br>
+                在無盡浩瀚的華藏世界海中，我們所在的<span class="highlight-text">娑婆世界</span>與阿彌陀佛的<span class="highlight-text">極樂世界</span>，皆安住於此第十三層維度。<br><br>
+                彌陀淨土是彌陀大悲設立的「中繼站」。一念迴光，先歸極樂確保不退轉，方能於此無盡宏觀宇宙中，圓滿普賢行願。
+            </p>
+            <button class="btn-enter" onclick="navigateTo('index.html?screen=3')">歸向彌陀淨土系統</button>
+        </div>
+    </div>
+
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeDrawer()">
+            <div class="close-bar"></div>
+            <div class="close-drawer-text">收起玉簡</div>
+        </div>
+
+        <div class="theory-container">
+            <h1 class="main-title">大方廣佛華嚴經<br><span style="font-size: 1.1rem; color: #8ba89c; display: block; margin-top: 8px;">華藏莊嚴世界海 ‧ 法海一滴</span></h1>
+            
+            <div class="disclaimer-text">
+                法海浩瀚，唯佛與佛乃能究盡。本文僅為一介在家居士，依經教邏輯與祖師大德之註疏，試圖探求如來真實義之修學略影。若有未盡或錯漏之處，皆屬個人智識之侷限，祈願三寶加被，同修共鑒。
+            </div>
+
+            <div class="chapter-box">
+                <div class="chapter-header">
+                    <svg class="chapter-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="22"/><line x1="2" y1="12" x2="8" y2="12"/><line x1="16" y1="12" x2="22" y2="12"/></svg>
+                    <h2 class="chapter-title">【卷一】無極光法身與宏微一如</h2>
+                </div>
+                <p class="paragraph">《華嚴經》乃釋迦牟尼佛於菩提樹下，夜覩明星成道時，於甚深禪定中為大菩薩所揭示之宇宙最高境界，被譽為「經中之王」。</p>
+                <p class="paragraph">其核心揭示了<span class="highlight">「一真法界、事事無礙」</span>之實相。世俗凡夫常以肉眼所見之浩瀚星空為「宏大」，殊不知可見之相皆是因緣和合之虛妄；以不可見之微塵為「渺小」，然無形之境方含藏一真法界之真。</p>
+                <div class="sutra-quote">「一即一切，一切即一。芥子納須彌，一念即永恆。」</div>
+                <p class="paragraph">《華嚴經》以「十」為表法，象徵虛空法界之無盡與圓滿。此無盡宏大之宇宙，皆是<span class="highlight">「無極光法身 ‧ 毘盧遮那佛」</span>（大日如來）清淨心體之化現。微塵剎土，無一不是如來法身之流露。</p>
+            </div>
+
+            <div class="chapter-box">
+                <div class="chapter-header">
+                    <svg class="chapter-icon" viewBox="0 0 24 24"><path d="M2 20h20M5 20v-4l4-4 4 4v4M11 12V4l4-2v10M15 6h4v6"/></svg>
+                    <h2 class="chapter-title">【卷二】二十重熾然寶光明世界</h2>
+                </div>
+                <p class="paragraph">於虛空大風輪之上，有十方無盡香水海。其核心名為<span class="highlight">「無邊妙華光香水海」</span>，海中生出千葉大蓮華。蓮華之上，承載著由下至上互相重疊之二十重世界種：</p>
+                
+                <div class="world-grid">
+                    <div class="world-item"><span class="world-num">01.</span>最勝光遍照 世界</div>
+                    <div class="world-item"><span class="world-num">02.</span>種種香蓮華妙莊嚴 世界</div>
+                    <div class="world-item"><span class="world-num">03.</span>一切寶莊嚴普照光 世界</div>
+                    <div class="world-item"><span class="world-num">04.</span>種種光明華莊嚴 世界</div>
+                    <div class="world-item"><span class="world-num">05.</span>普放妙華光 世界</div>
+                    <div class="world-item"><span class="world-num">06.</span>淨妙光明 世界</div>
+                    <div class="world-item"><span class="world-num">07.</span>眾華光莊嚴 世界</div>
+                    <div class="world-item"><span class="world-num">08.</span>出生威德光 世界</div>
+                    <div class="world-item"><span class="world-num">09.</span>出妙音聲 世界</div>
+                    <div class="world-item"><span class="world-num">10.</span>金剛幢 世界</div>
+                    <div class="world-item"><span class="world-num">11.</span>恆出現帝青寶光明 世界</div>
+                    <div class="world-item"><span class="world-num">12.</span>光明照耀 世界</div>
+                    <div class="world-item world-13">
+                        <span class="world-num" style="color:#fff;">13.</span><span style="color:var(--gold);">娑婆 世界 / 極樂 世界</span>
+                    </div>
+                    <div class="world-item"><span class="world-num">14.</span>寂靜離塵光 世界</div>
+                    <div class="world-item"><span class="world-num">15.</span>眾妙光明燈 世界</div>
+                    <div class="world-item"><span class="world-num">16.</span>清淨光遍照 世界</div>
+                    <div class="world-item"><span class="world-num">17.</span>寶莊嚴 世界</div>
+                    <div class="world-item"><span class="world-num">18.</span>離塵 世界</div>
+                    <div class="world-item"><span class="world-num">19.</span>清淨光普照 世界</div>
+                    <div class="world-item"><span class="world-num">20.</span>妙寶焰 世界</div>
+                </div>
+                
+                <p class="paragraph">此二十重宇宙中，最不可思議者乃<span class="highlight">第十三重</span>。本師釋迦牟尼佛於五濁惡世之「娑婆世界」度化剛強眾生；而同在此維度中，阿彌陀佛建立了「極樂世界」，作為十方眾生橫超三界之法界中繼站。</p>
+            </div>
+
+            <div class="chapter-box">
+                <div class="chapter-header">
+                    <svg class="chapter-icon" viewBox="0 0 24 24"><path d="M12 22s8-4.5 8-11.5S12 2 12 2 4 3.5 4 10.5 12 22 12 22z"/><path d="M12 13a3 3 0 100-6 3 3 0 000 6z"/></svg>
+                    <h2 class="chapter-title">【卷三】五十三參與雙聖導歸</h2>
+                </div>
+                <p class="paragraph">華藏大世界縱然宏大，若無「行願」亦無法契入。經中〈入法界品〉記載，<span class="highlight">善財童子</span>為求無上菩提，發起五十三次參訪大善知識之壯舉，象徵著修行者從凡夫邁向成佛的五十三個心性階位。</p>
+                <p class="paragraph">然華嚴之極致，非是懸浮於虛空，而是有其最真實之歸宿！善財童子參訪至最高境界之文殊與普賢兩大菩薩，此二大聖者，竟不約而同將華嚴最圓滿之果位，<span class="highlight">全數導向阿彌陀佛之極樂世界：</span></p>
+                <div class="sutra-quote">
+                    《文殊發願經》：<br>「願我命終時，除滅諸障礙，面見阿彌陀，往生安樂國。」<br><br>
+                    《華嚴經 ‧ 普賢行願品》：<br>「願我臨欲命終時，盡除一切諸障礙，面見彼佛阿彌陀，即得往生安樂剎。」
+                </div>
+            </div>
+
+            <div class="chapter-box" style="margin-bottom: 20px;">
+                <div class="chapter-header">
+                    <svg class="chapter-icon" viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.5S12 2 12 2s8 1.5 8 8.5S12 22 12 22z" /><path d="M12 22s-4-5-4-10 4-7 4-7 4 2 4 7-4 10-4 10z" /><line x1="12" y1="5" x2="12" y2="22" /></svg>
+                    <h2 class="chapter-title">【卷四】釋尊本懷 ‧ 淨土閉環</h2>
+                </div>
+                <p class="paragraph">華嚴經之絕唱為「普賢十大願王」，而此無盡行願，究竟於何處落實？本師釋迦牟尼佛之教法，首尾一如。其真實答案，早已刻印在《無量壽經》阿彌陀佛第四十八大願之「第二十二願」中：</p>
+                <div class="sutra-quote">「生我國者，究竟必至一生補處……咸共遵修普賢大士之德。」</div>
+                <p class="paragraph">娑婆世界退緣太多，極難契入華嚴。故阿彌陀佛大悲願力，開闢極樂淨土。此地實乃彌陀大悲為眾生設立之<span class="highlight">「菩薩道中繼站」</span>。一旦往生，即證不退轉，具足無量神通道力，無礙圓滿普賢菩薩之廣大行願。</p>
+                <p class="paragraph">本數位道場之設立，正是為協助行者預習極樂法性。一次十念對頻，即已身在華藏第十三重；淨念相繼，即是重走善財五十三參之菩提大道。</p>
+                <p class="paragraph"><span class="highlight">行普賢菩薩願 ． 歸彌陀極樂國。</span>若依經教理路推演，這或許正是本師出世度生、指引吾等歸鄉的究竟本懷之一。願以至誠之心，探求如來真實義。</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 40px;">
+                <button class="btn-enter" style="width:auto; padding: 12px 40px; font-size:0.9rem;" onclick="closeDrawer()">繼續觀想華藏</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        let currentStage = 0;
-        const totalStages = 8;
+        // 換頁過場
+        window.addEventListener('load', () => {
+            const curtain = document.getElementById('page-curtain');
+            if(curtain) curtain.style.opacity = '0';
+        });
 
-        function simulateProgress() {
-            if (navigator.vibrate) navigator.vibrate(15);
-            
-            currentStage++;
-            
-            if (currentStage > totalStages) {
-                currentStage = 0;
-                document.querySelectorAll('.maze-petal').forEach(p => p.classList.remove('lit'));
-                document.getElementById('maze-core').classList.remove('lit');
-                document.getElementById('ring').style.stroke = '#8ba89c';
-                document.getElementById('status-text').className = 'status-text';
-            } else {
-                const petal = document.getElementById('petal-' + currentStage);
-                if (petal) petal.classList.add('lit');
-                
-                if (currentStage === totalStages) {
-                    document.getElementById('maze-core').classList.add('lit');
-                    document.getElementById('ring').style.stroke = '#d4af37';
-                    const statusText = document.getElementById('status-text');
-                    statusText.className = 'status-text prajna';
-                    statusText.innerText = "Prajna Perfected";
-                    return;
-                }
-            }
-            
-            document.getElementById('status-text').innerText = `Stage ${currentStage} / 8`;
+        function navigateTo(url) {
+            document.getElementById('page-curtain').style.opacity = '1';
+            setTimeout(() => { window.location.href = url; }, 800);
         }
+
+        // ✨ 抽屜開關邏輯 ✨
+        let isDrawerOpen = false;
+        function openDrawer() {
+            document.getElementById('theory-drawer').classList.add('open');
+            isDrawerOpen = true; // 開啟時標記，以暫停背景 3D 動畫
+        }
+        function closeDrawer() {
+            document.getElementById('theory-drawer').classList.remove('open');
+            isDrawerOpen = false; // 關閉時恢復動畫
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        // ================= 建立 3D 場景 =================
+        const gold = "rgba(212,175,55,";
+        const cyan = "rgba(139,168,156,"; 
+
+        const oceanRings = document.getElementById('ocean-rings');
+        const geometricMandala = document.getElementById('geometric-mandala');
+        const oceanDots = document.getElementById('ocean-dots');
+
+        // 香水海波紋
+        for(let i = 1; i <= 10; i++) {
+            let radius = i * 9.5; let opacity = 1 - (i * 0.08); 
+            let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("cx", "100"); circle.setAttribute("cy", "100"); circle.setAttribute("r", radius);
+            circle.setAttribute("fill", "none"); circle.setAttribute("stroke", i % 2 === 0 ? `${cyan}${opacity})` : `${gold}${opacity})`);
+            circle.setAttribute("stroke-width", "0.3"); circle.setAttribute("stroke-dasharray", i % 3 === 0 ? "2 8" : "none"); 
+            oceanRings.appendChild(circle);
+        }
+
+        // 十方香水海發光點
+        const tenOceanColors = ['255,235,160', '160,230,255', '255,200,220', '180,240,190', '220,190,240', '255,250,220', '170,250,230', '255,215,170', '200,210,255', '240,255,210'];
+        for(let i = 0; i < 10; i++) {
+            let angle = (Math.PI * 2 / 10) * i - (Math.PI / 2);
+            let radius = 85.5; 
+            let cx = 100 + Math.cos(angle) * radius; let cy = 100 + Math.sin(angle) * radius;
+            let cRGB = tenOceanColors[i];
+            
+            let dotGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            dotGroup.classList.add("ocean-dot-animated");
+            dotGroup.style.transformOrigin = `${cx}px ${cy}px`;
+            dotGroup.style.animationDelay = `${i * 0.5}s`;
+
+            let glow = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            glow.setAttribute("cx", cx); glow.setAttribute("cy", cy); glow.setAttribute("r", "4.5");
+            glow.setAttribute("fill", `rgba(${cRGB},0.2)`); glow.setAttribute("stroke", `rgba(${cRGB},0.6)`); glow.setAttribute("stroke-width", "0.5");
+            dotGroup.appendChild(glow);
+
+            let dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            dot.setAttribute("cx", cx); dot.setAttribute("cy", cy); dot.setAttribute("r", "1.5");
+            dot.setAttribute("fill", "#fff");
+            dotGroup.appendChild(dot);
+            
+            oceanDots.appendChild(dotGroup);
+
+            if(i === 0) {
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", cx + 8); text.setAttribute("y", cy + 4);
+                text.setAttribute("class", "sea-label");
+                text.textContent = "香水海";
+                oceanDots.appendChild(text); 
+            }
+        }
+
+        // 幾何曼陀羅
+        function drawGeometricLayer(radius, count, colorStr, fillStr) {
+            let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            g.setAttribute("stroke", colorStr); g.setAttribute("fill", fillStr); g.setAttribute("stroke-width", "0.5");
+            for(let j=0; j<count; j++) {
+                let angle = (360 / count) * j;
+                let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                let d = `M100 ${100-radius} C ${100+radius*0.4} ${100-radius*0.4}, ${100+radius*0.4} ${100+radius*0.4}, 100 ${100+radius} C ${100-radius*0.4} ${100+radius*0.4}, ${100-radius*0.4} ${100-radius*0.4}, 100 ${100-radius}`;
+                path.setAttribute("d", d); path.setAttribute("transform", `rotate(${angle} 100 100)`);
+                g.appendChild(path);
+            }
+            return g;
+        }
+        geometricMandala.appendChild(drawGeometricLayer(85, 10, `${cyan}0.25)`, `${cyan}0.05)`));
+        geometricMandala.appendChild(drawGeometricLayer(55, 10, `${gold}0.35)`, `${gold}0.05)`));
+        geometricMandala.appendChild(drawGeometricLayer(30, 10, `${gold}0.6)`, `${gold}0.1)`));
+
+        // 3D 蓮花
+        const standingLotus = document.getElementById('standing-lotus');
+        function create3DPetal(angle, tiltX, gradientId, w, h, strokeOpacity) {
+            let petal = document.createElement('div');
+            petal.className = 'petal-3d';
+            petal.style.transform = `rotateZ(${angle}deg) rotateX(${tiltX}deg)`;
+            petal.style.width = `${w}px`; petal.style.height = `${h}px`; petal.style.left = `-${w/2}px`; 
+            petal.innerHTML = `
+                <svg viewBox="0 0 120 320" class="petal-svg" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="fade-grad" x1="0%" y1="100%" x2="0%" y2="0%">
+                            <stop offset="0%" stop-color="rgba(212,175,55, 0.6)" />
+                            <stop offset="40%" stop-color="rgba(243,229,171, 0.2)" />
+                            <stop offset="85%" stop-color="transparent" />
+                        </linearGradient>
+                        <linearGradient id="gold-grad" x1="0%" y1="100%" x2="0%" y2="0%">
+                            <stop offset="0%" stop-color="rgba(212,175,55, 0.8)" />
+                            <stop offset="60%" stop-color="rgba(255,255,255, 0.3)" />
+                            <stop offset="100%" stop-color="transparent" />
+                        </linearGradient>
+                        <linearGradient id="cyan-grad" x1="0%" y1="100%" x2="0%" y2="0%">
+                            <stop offset="0%" stop-color="rgba(139,168,156, 0.8)" />
+                            <stop offset="50%" stop-color="rgba(212,175,55, 0.5)" />
+                            <stop offset="100%" stop-color="rgba(255,255,255, 0.1)" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M 60 320 C 60 320, 0 180, 0 80 C 0 30, 60 0, 60 0 C 60 0, 120 30, 120 80 C 120 180, 60 320, 60 320 Z" 
+                          fill="url(#${gradientId})" stroke="rgba(212,175,55,${strokeOpacity})" stroke-width="1"/>
+                </svg>`;
+            return petal;
+        }
+
+        // 降低蓮花層數以優化效能，並提升透明質感
+        for(let i=0; i<16; i++) standingLotus.appendChild(create3DPetal(i * 22.5, -20, 'fade-grad', 150, 380, 0.15));
+        for(let i=0; i<8; i++) standingLotus.appendChild(create3DPetal(i * 45, -30, 'gold-grad', 120, 280, 0.25));
+        for(let i=0; i<8; i++) standingLotus.appendChild(create3DPetal((i * 45) + 22.5, -45, 'cyan-grad', 80, 160, 0.5));
+
+        // 二十重世界塔
+        const tower = document.getElementById('world-tower');
+        const tierData = [
+            { c: '230,200,100', d: false }, { c: '230,200,100', d: false }, { c: '230,200,100', d: false }, 
+            { c: '180,160,220', d: false }, { c: '180,160,220', d: false }, { c: '180,160,220', d: false }, { c: '180,160,220', d: false }, 
+            { c: '255,255,255', d: false }, { c: '255,255,255', d: false }, { c: '255,255,255', d: false }, 
+            { c: '100,200,220', d: false }, { c: '100,200,220', d: false }, 
+            { c: '255,230,150', d: false, is13: true }, 
+            { c: '100,200,220', d: false }, { c: '250,240,200', d: false }, 
+            { c: '150,220,255', d: true },  { c: '150,220,255', d: true },  { c: '150,220,255', d: true },  { c: '150,220,255', d: true },  
+            { c: '255,245,200', d: false }
+        ];
+
+        for(let i = 0; i < 20; i++) {
+            let data = tierData[i]; let level = i + 1;
+            let zHeight = level * 25; let radius = 20 + (level * 12); 
+
+            let tierGroup = document.createElement('div');
+            tierGroup.className = 'tier-layer';
+            tierGroup.style.transform = `translateZ(${zHeight}px)`;
+
+            let disk = document.createElement('div');
+            disk.className = 'tier-disk';
+            if (data.is13) disk.classList.add('tier-13-disk');
+            
+            disk.style.width = `${radius * 2}px`; disk.style.height = `${radius * 2}px`;
+            disk.style.left = `-${radius}px`; disk.style.top = `-${radius}px`;  
+            disk.style.borderColor = `rgba(${data.c}, 0.4)`; disk.style.backgroundColor = `rgba(${data.c}, 0.1)`; 
+            disk.style.color = `rgba(${data.c}, 0.3)`; if(data.d) disk.style.borderStyle = 'dashed'; 
+
+            let dot = document.createElement('div');
+            dot.className = 'tier-dot';
+            if (data.is13) dot.classList.add('tier-13-dot');
+            
+            let dotSize = 4 + (level * 0.6); 
+            dot.style.width = `${dotSize}px`; dot.style.height = `${dotSize}px`;
+            dot.style.left = `-${dotSize/2}px`; dot.style.top = `-${dotSize/2}px`;
+            
+            if(!data.is13) {
+                dot.style.background = `rgba(${data.c}, 0.8)`; dot.style.boxShadow = `0 0 10px rgba(${data.c}, 0.5)`;
+            }
+
+            if(data.is13) {
+                let label = document.createElement('div');
+                label.className = 'tier-label';
+                label.innerHTML = `<span class="tier-arrow">➨</span> 觀看第十三層：娑婆/極樂`;
+                tierGroup.appendChild(label); 
+                
+                dot.onclick = () => { document.getElementById('info-modal').classList.add('show'); if (navigator.vibrate) navigator.vibrate([30, 50, 30]); };
+                label.onclick = (e) => { e.stopPropagation(); document.getElementById('info-modal').classList.add('show'); if (navigator.vibrate) navigator.vibrate([30, 50, 30]); };
+            }
+
+            tierGroup.appendChild(disk);
+            tierGroup.appendChild(dot);
+            tower.appendChild(tierGroup);
+        }
+
+        // ================= 3D 星雲與互動邏輯 =================
+        let scene = document.getElementById('scene-3d');
+        let lotusOcean = document.getElementById('lotus-ocean');
+        let labels = document.querySelectorAll('.tier-label');
+        
+        let isDragging = false; let startX, startY;
+        let currentTilt = 75; let currentSpin = 0;    
+
+        function spawnStardust() {
+            if (Math.random() > 0.05) return; 
+            let dust = document.createElement('div');
+            dust.style.position = 'absolute';
+            dust.style.width = (Math.random() * 2 + 1.5) + 'px';
+            dust.style.height = dust.style.width;
+            dust.style.background = Math.random() > 0.5 ? 'var(--gold)' : 'var(--cyan)';
+            dust.style.borderRadius = '50%';
+            dust.style.boxShadow = `0 0 8px ${dust.style.background}`;
+            
+            let dx = Math.random() * 100 - 50; 
+            let dy = Math.random() * 35 - 17.5;
+            dust.style.left = `calc(50% + ${dx}px)`; 
+            dust.style.top = `calc(65% + ${dy}px)`;
+            dust.style.opacity = 0;
+            
+            document.getElementById('stardust-overlay').appendChild(dust);
+            
+            let height = Math.random() * 400 + 300; 
+            let duration = Math.random() * 10000 + 8000; 
+            
+            dust.animate([
+                { opacity: 0, transform: `translateY(0px) scale(0.5)` },
+                { opacity: 0.6, transform: `translateY(-${height * 0.4}px) scale(1.5)` },
+                { opacity: 0, transform: `translateY(-${height}px) scale(0)` }
+            ], { duration: duration, easing: 'ease-in-out', fill: 'forwards' });
+            
+            setTimeout(() => dust.remove(), duration);
+        }
+
+        function animateUniverse() {
+            // ✨ 關鍵效能優化：當抽屜打開時，暫停所有 DOM 3D 變更與星塵生成，釋放 iOS 算力
+            if(!isDrawerOpen) {
+                if(!isDragging) {
+                    currentSpin -= 0.05;
+                    lotusOcean.style.transform = `rotateZ(${currentSpin}deg)`;
+                    for(let i=0; i<labels.length; i++) {
+                        labels[i].style.transform = `rotateX(-90deg) rotateY(${-currentSpin}deg)`;
+                    }
+                }
+                spawnStardust(); 
+            }
+            requestAnimationFrame(animateUniverse);
+        }
+        animateUniverse();
+
+        document.addEventListener('pointerdown', (e) => {
+            if (isDrawerOpen) return;
+            isDragging = true;
+            startX = e.clientX || e.touches[0].clientX;
+            startY = e.clientY || e.touches[0].clientY;
+            document.getElementById('touch-guide-elegant').style.display = 'none'; 
+        });
+
+        document.addEventListener('pointermove', (e) => {
+            if (!isDragging || isDrawerOpen) return;
+            if(e.target.closest('.modal-overlay') || e.target.closest('button') || e.target.closest('.tier-label') || e.target.closest('.top-nav-btn')) return; 
+
+            let x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+            let y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+            let deltaX = x - startX; let deltaY = y - startY;
+
+            currentSpin += deltaX * 0.4;
+            lotusOcean.style.transform = `rotateZ(${currentSpin}deg)`;
+            
+            for(let i=0; i<labels.length; i++) {
+                labels[i].style.transform = `rotateX(-90deg) rotateY(${-currentSpin}deg)`;
+            }
+
+            currentTilt -= deltaY * 0.15;
+            if (currentTilt > 85) currentTilt = 85; if (currentTilt < 45) currentTilt = 45; 
+            scene.style.transform = `rotateX(${currentTilt}deg) scale(0.9)`;
+
+            startX = x; startY = y;
+        });
+
+        document.addEventListener('pointerup', () => { isDragging = false; });
+        document.addEventListener('pointercancel', () => { isDragging = false; });
+
+        // 防凍結：強制破除手機滑動返回的 BFCache 黑屏
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted) {
+                const curtain = document.getElementById('page-curtain');
+                if(curtain) curtain.style.opacity = '0';
+            }
+        });
     </script>
 </body>
 </html>

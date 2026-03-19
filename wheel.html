@@ -342,7 +342,7 @@
 
         let currentTurn = 0; let isSpinning = false; let currentRotation = 0; let tickInterval;
 
-        async function triggerSpin() {
+               async function triggerSpin() {
             if(isSpinning || currentTurn >= 3) return;
             initAudio(); isSpinning = true; currentTurn++;
             
@@ -370,35 +370,23 @@
                 if(Math.random() < 0.1) score += 200; if(score > 1000) score = 1000;
                 
                 db.hwkinsEnergyTotal = (db.hwkinsEnergyTotal || 0) + score;
-                db.dailyWheelCount = 1; save();
+                db.dailyWheelCount = 1; 
                 
+                // ✨ 檢查是否觸發一真法界機緣 (大於或等於皆會觸發) ✨
+                let isRealmUnlocked = false;
                 if (db.hwkinsEnergyTotal >= 12000) {
-                    db.hwkinsEnergyTotal = 0; save(); 
-                    await playFragment(); 
+                    db.hwkinsEnergyTotal = 0; // 重置能量
+                    isRealmUnlocked = true;
                 }
-                showEnergyResult(score);
+                save();
+                
+                // 將解鎖信號傳給顯示結果的函數
+                showEnergyResult(score, isRealmUnlocked);
             }
         }
 
-        async function playFragment() {
-            const t = document.getElementById('fragment-theater');
-            const b = document.getElementById('f-bodhi'); const r = document.getElementById('f-ring'); const p = document.getElementById('f-pillar');
-            const zen = document.getElementById('f-text');
-            const quotes = ["凡所有相，皆是虛妄", "言語道斷，心行處滅", "無一物中無盡藏", "法本法無法，無法法亦法"];
-            zen.innerText = quotes[Math.floor(Math.random() * quotes.length)];
-            
-            t.style.display = 'flex'; await sleep(50); t.style.opacity = '1';
-            let type = Math.floor(Math.random() * 3); 
-            
-            if(type === 0) { b.style.opacity = '1'; b.style.transform = 'scale(3)'; b.style.boxShadow = '0 0 50px var(--solid-gold)'; await sleep(3000); b.style.opacity = '0'; }
-            else if (type === 1) { r.style.transition = 'all 3s'; r.style.opacity = '1'; r.style.transform = 'scale(1.2)'; await sleep(3000); r.style.opacity = '0'; }
-            else { p.style.transition = 'all 3s'; p.style.opacity = '1'; p.style.transform = 'scale(1.5)'; await sleep(3000); p.style.opacity = '0'; }
 
-            zen.style.opacity = '1'; await sleep(3000); zen.style.opacity = '0'; await sleep(1000);
-            t.style.opacity = '0'; await sleep(1000); t.style.display = 'none';
-        }
-
-        function showEnergyResult(score) {
+                function showEnergyResult(score, isRealmUnlocked) {
             let preset = hwkinsDB.find(h => score >= h.min && score <= h.max) || hwkinsDB[1];
             let content = preset.contents[Math.floor(Math.random() * preset.contents.length)];
             
@@ -411,6 +399,22 @@
             card.style.boxShadow = `0 0 40px ${preset.color}, inset 0 0 15px #000`;
             card.style.border = `1px solid ${preset.border}`;
             
+            // ✨ 動態變更按鈕：若達成 12000 能量，轉為一真法界入口 ✨
+            const closeBtn = document.getElementById('close-btn');
+            if (isRealmUnlocked) {
+                closeBtn.innerText = "✨ 契入一真法界 ✨";
+                closeBtn.style.color = "var(--solid-gold)";
+                closeBtn.style.borderColor = "var(--solid-gold)";
+                closeBtn.style.boxShadow = "0 0 15px rgba(212,175,55,0.4)";
+                closeBtn.onclick = () => navigateTo('realm.html');
+            } else {
+                closeBtn.innerText = "收攝心念";
+                closeBtn.style.color = "var(--cyan)";
+                closeBtn.style.borderColor = "var(--cyan)";
+                closeBtn.style.boxShadow = "none";
+                closeBtn.onclick = resetWheel;
+            }
+
             document.getElementById('wheel-container').style.transform = 'scale(0.8)';
             document.getElementById('wheel-container').style.opacity = '0.1';
             document.getElementById('instruction-text').style.opacity = '0';
@@ -425,6 +429,7 @@
                 scoreText.style.color = preset.border; scoreText.innerText = score + " Hz";
             }, 500); 
         }
+
 
         function resetWheel() {
             document.getElementById('result-layout').classList.remove('show');

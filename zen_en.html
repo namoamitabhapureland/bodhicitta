@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zen Mind· Direct Pointing</title>
+    <style>
+        :root {
+            --bg-deep: #000000; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --silver: #e0e0e0;
+            --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+            overflow: hidden; touch-action: none; user-select: none; overscroll-behavior: none;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.85rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 350px;
+            background: transparent; border-left: 2px solid rgba(139,168,156,0.6); 
+            padding: 10px 20px; z-index: 100; transition: 1s; pointer-events: none;
+        }
+        .status-title { font-size: 1.1rem; font-weight: bold; color: var(--cyan); letter-spacing: 1px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); transition: 1s;}
+        .status-desc { font-size: 0.8rem; color: #bbb; line-height: 1.6; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); transition: 1s;}
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; transition: background 0.8s; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 12px; transition: opacity 1s;}
+        
+        .switch-btn {
+            width: 85%; max-width: 320px; justify-content: center;
+            background: linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(139,168,156,0.4); color: var(--cyan);
+            padding: 14px 20px; border-radius: 30px; font-size: 0.9rem; font-weight: bold; letter-spacing: 1px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(139,168,156,0.1);
+        }
+        .switch-btn:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(139,168,156,0.5); }
+        .switch-btn.gold-mode { border-color: rgba(212,175,55,0.5); color: var(--gold); }
+        
+        #theory-btn { border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,10,15,0.8); }
+
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(139,168,156,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(139,168,156,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        .humble-statement { font-size: 0.8rem; color: #b0b0b0; line-height: 1.7; text-align: justify; padding: 20px; border: 1px solid rgba(139,168,156,0.2); border-radius: 12px; background: rgba(10,15,20,0.3); margin-bottom: 50px; font-style: italic; }
+        
+        .main-title { color: var(--cyan); font-size: 1.3rem; letter-spacing: 2px; text-align: center; margin-bottom: 50px; text-shadow: 0 0 15px rgba(139,168,156,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); margin: 15px auto 0; }
+        
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 22px; height: 22px; stroke: var(--cyan); fill: none; stroke-width: 1.5; flex-shrink: 0;}
+        .c-title { color: var(--cyan); font-size: 1.05rem; letter-spacing: 0.5px; font-weight: bold; }
+        .c-text { color: var(--text-main); font-size: 0.9rem; line-height: 1.8; text-align: justify; padding-left: 37px; letter-spacing: 0.3px;}
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
+        .soft-highlight { color: var(--gold); border-bottom: 1px dotted rgba(212,175,55,0.6); }
+    </style>
+</head>
+<body>
+
+    <div class="back-btn" onclick="window.location.href='index_en.html?screen=3'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Dojo
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title" id="s-title">Crossing with a Reed · Two Obstacles</div>
+        <div class="status-desc" id="s-desc">"Seeing one's nature is not the end, but the beginning."<br>Cleansing the mind to pierce the mists of delusion.</div>
+    </div>
+
+    <section class="matrix-section" id="bg-section">
+        <canvas id="realmCanvas"></canvas>
+
+        <div class="ui-layer" id="ui-layer">
+            <button class="switch-btn" id="btn-reed" onclick="toggleRealm(0)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M2 12 Q 12 20 22 12" stroke-dasharray="2 4"/>
+                    <path d="M4 10 C 12 18, 16 10, 20 6" stroke="var(--gold)"/>
+                    <circle cx="20" cy="6" r="1.5" fill="var(--gold)"/>
+                </svg>
+                <span id="text-reed">Crossing with a Reed · Cultivation</span>
+            </button>
+            <button class="switch-btn gold-mode" id="btn-enso" onclick="toggleRealm(1)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 3 A 9 9 0 1 1 3 12" stroke-linecap="round"/>
+                    <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                </svg>
+                <span id="text-enso">Enso Void · Three Meditations</span>
+            </button>
+            
+            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                Exploring Nature & Cultivation
+            </button>
+            
+            <div style="color:rgba(139,168,156,0.6); font-size:0.7rem; letter-spacing:1px; margin-top:5px;" id="drag-hint">360° Swipe · Piercing the Void</div>
+        </div>
+    </section>
+
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()">
+            <div class="close-bar"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+                <div style="color:var(--cyan); font-size:0.8rem; font-weight:bold; cursor:pointer;" onclick="closeTheoryDrawer()">Close Scroll</div>
+                <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.8rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                    <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                    <span id="tts-text">Listen</span>
+                </div>
+            </div>
+        </div>
+        <div class="theory-container" id="theory-content-box">
+            <div class="humble-statement">The ocean of Dharma is boundless; only Buddhas can fully fathom its ultimate truth. This text is but a humble reflection from a lay practitioner, attempting to explore a glimpse of the Tathagata's true meaning based on scriptural logic and the commentaries of past masters. Any omissions or errors are solely due to the limitations of my own understanding. May the Three Jewels bestow their blessings, and may fellow practitioners kindly bear witness.</div>
+            
+            <h1 class="main-title">Zen Heart · Cultivation Post-Awakening</h1>
+            
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M2 12 Q 12 20 22 12"/><path d="M4 10 C 12 18, 16 10, 20 6"/></svg>
+                    <div class="c-title">I. Crossing with a Reed · Piercing the Two Obstacles</div>
+                </div>
+                <div class="c-text">Bodhidharma’s crossing with a reed was perhaps not a physical feat, but an act of riding the waves of the karmic ocean with a pure, empty nature. Zen often speaks of "Seeing one's nature and becoming a Buddha," yet this <span class="soft-highlight">seeing</span> is merely entering the Gateless Gate. Without cultivation post-awakening, one cannot cleanse the deep-seated Obstacles of Affliction and Obstacles to Knowledge.</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 3 A 9 9 0 1 1 3 12"/><circle cx="12" cy="12" r="2"/></svg>
+                    <div class="c-title">II. Enso Void · The Breath of Total Enlightenment</div>
+                </div>
+                <div class="c-text">In the Sutra of Perfect Enlightenment, Samatha, Samapatti, and Dhyana are the vessels to cleanse the Two Obstacles. This 3D Enso, seemingly broken yet complete, breathes within the void. It suggests that practicing perfect awareness within an imperfect world of birth and death is Zen itself.</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <div class="c-title">III. Void of Madhyamaka · Turning to the One Vehicle</div>
+                </div>
+                <div class="c-text">The Diamond Sutra states: "All phenomena are like a dream." While Zen inherits this realization of emptiness, it must not linger in nihilism. One must transition from self-liberation to the Great Vow of the Bodhisattva. All dharma paths ultimately lead back to the One Buddha Vehicle.</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    <div class="c-title">IV. Zen and Pure Land · The Horned Tiger</div>
+                </div>
+                <div class="c-text">Master Yongming Yanshou established the harmony of Zen and Pure Land, claiming: "With both Zen and Pure Land, one is like a tiger with horns." This metaphor implies that the clarity of self-effort and the compassion of Amida Buddha are not dual. Their union is the sturdiest refuge within the house on fire.</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><polygon points="12 2 2 22 22 22"/></svg>
+                    <div class="c-title">V. Transforming Consciousness · Every Breath is Mind</div>
+                </div>
+                <div class="c-text">Ultimately, transforming consciousness into wisdom is about aligning our wandering minds with the pure vows of Amida. In every single-minded recitation, it is the <span class="soft-highlight">mind</span> that is at work. When the boundary between the chanter and the Buddha vanishes, Zen and Pure Land are one.</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('realmCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    let currentRealm = 0; 
+    let time = 0;
+
+    let oceanParticles = [];
+    let mistParticles = [];
+    let zenBoatParticles = []; 
+    let currentBoatPos = { x: 0, z: 0 }; 
+    let ensoParticles = [];
+    
+    let angleX = 0.3, angleY = 0;
+    let isDragging = false;
+    let lastMouseX = 0, lastMouseY = 0;
+    let interactionRipple = 0; 
+
+    const FOV = 400; 
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+    }
+    window.addEventListener('resize', resize); resize();
+
+    function initEngines() {
+        oceanParticles = []; mistParticles = []; zenBoatParticles = [];
+        for(let x = -800; x <= 800; x += 50) {
+            for(let z = -800; z <= 800; z += 50) {
+                oceanParticles.push({ ox: x, oz: z });
+            }
+        }
+        for(let i=0; i<300; i++) {
+            mistParticles.push({
+                x: (Math.random()-0.5)*1500, y: Math.random()*-400 - 100, z: (Math.random()-0.5)*1500,
+                s: Math.random()*15 + 5, oA: Math.random()*Math.PI*2, speed: Math.random()*0.02 + 0.01
+            });
+        }
+        for(let z = -100; z <= 100; z += 4) { 
+            let t = (z + 100) / 200; 
+            let widthAtZ = Math.sin(t * Math.PI) * 8 + 1; 
+            for(let x = -widthAtZ; x <= widthAtZ; x += 3) { 
+                for(let y = 0; y >= -2; y -= 2) { 
+                    zenBoatParticles.push({ ox: x, oy: y, oz: z, oShift: Math.random() * Math.PI * 2 });
+                }
+            }
+        }
+        ensoParticles = [];
+        for(let i=0; i<1500; i++) {
+            let theta = Math.random() * Math.PI * 2;
+            if(theta > 0 && theta < 0.4 && Math.random() > 0.1) continue; 
+            let radius = 200 + (Math.random()-0.5)*40;
+            let thickZ = (Math.random()-0.5)*80;
+            let thickY = (Math.random()-0.5)*40;
+            ensoParticles.push({
+                baseR: radius, theta: theta, zOffset: thickZ, yOffset: thickY,
+                c: Math.random()>0.8 ? '#ffffff' : '#d4af37', s: Math.random()*2+0.5
+            });
+        }
+    }
+
+    function project3D(x, y, z) {
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+        let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
+        if(z2 < -FOV+10) return null;
+        let scale = FOV / (FOV + z2); 
+        return { x: (width/2) + x2*scale, y: (height/2) - y1*scale, scale: scale, z: z2 };
+    }
+
+    function renderReed() {
+        interactionRipple *= 0.95; 
+        currentBoatPos.x += Math.sin(time * 0.4) * 0.8; 
+        currentBoatPos.z += Math.cos(time * 0.3) * 1.0; 
+        let projected = [];
+        oceanParticles.forEach(p => {
+            let waveY = Math.sin(p.ox*0.01 + time)*20 + Math.cos(p.oz*0.01 + time)*20 + 150;
+            let proj = project3D(p.ox, waveY, p.oz);
+            if(proj) projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: 'rgba(139,168,156,0.4)', s: 1.5, type: 'ocean' });
+        });
+        mistParticles.forEach(p => {
+            p.x += Math.sin(p.oA + time)*2; p.z += Math.cos(p.oA + time)*2;
+            let proj = project3D(p.x, p.y, p.z);
+            if(proj) {
+                let alpha = Math.max(0, 0.4 - interactionRipple*0.8);
+                projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: `rgba(80,100,90,${alpha})`, s: p.s, type: 'mist' });
+            }
+        });
+        let boatPulse = Math.sin(time * 0.8) * 0.15 + 0.85; 
+        zenBoatParticles.forEach(p => {
+            let waveY = Math.sin((p.ox + currentBoatPos.x)*0.01 + time)*20 + 
+                        Math.cos((p.oz + currentBoatPos.z)*0.01 + time)*20 + 145; 
+            let floatY = p.oy + waveY; 
+            let proj = project3D(p.ox + currentBoatPos.x, floatY, p.oz + currentBoatPos.z);
+            if(proj) {
+                let particleAlpha = Math.sin(time * 3 + p.oShift) * 0.3 + 0.7; 
+                let finalAlpha = particleAlpha * boatPulse * proj.scale;
+                projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: `rgba(243,229,171,${finalAlpha})`, s: 2.2, type: 'boat' });
+            }
+        });
+        projected.sort((a,b) => b.z - a.z);
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.sc; if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.x, p.y, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if(p.type === 'boat') { ctx.shadowBlur = 15 * p.sc * boatPulse; ctx.shadowColor = '#f3e5ab'; }
+            else if(p.type === 'mist') { ctx.shadowBlur = 10; ctx.shadowColor = p.c; }
+            else ctx.shadowBlur = 0;
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function renderEnso() {
+        let breathScale = 1 + Math.sin(time * 0.8) * 0.15; 
+        let projected = [];
+        if(!isDragging) angleY -= 0.002; 
+        ensoParticles.forEach(p => {
+            let currentR = p.baseR * breathScale;
+            let px = Math.cos(p.theta) * currentR;
+            let py = Math.sin(p.theta) * currentR + p.yOffset;
+            let pz = p.zOffset;
+            let proj = project3D(px, py, pz);
+            if(proj) projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: p.c, s: p.s });
+        });
+        projected.sort((a,b) => b.z - a.z);
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.sc; if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.x, p.y, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            ctx.shadowBlur = 10 * p.sc; ctx.shadowColor = p.c;
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function animate() {
+        ctx.fillStyle = currentRealm === 0 ? 'rgba(1, 2, 4, 0.4)' : 'rgba(0, 0, 0, 0.4)';
+        ctx.fillRect(0, 0, width, height);
+        time += 0.02;
+        if (currentRealm === 0) renderReed(); else renderEnso();
+        requestAnimationFrame(animate);
+    }
+
+    function toggleRealm(type) {
+        if(currentRealm === type) return;
+        currentRealm = type;
+        let title = document.getElementById('s-title'); let desc = document.getElementById('s-desc');
+        let btnR = document.getElementById('btn-reed'); let btnE = document.getElementById('btn-enso');
+        let hint = document.getElementById('drag-hint');
+        if (type === 0) {
+            title.innerText = "Crossing with a Reed · Two Obstacles"; desc.innerHTML = "\"Seeing one's nature is not the end, but the beginning.\"<br>Cleansing the mind to pierce the mists of delusion.";
+            title.style.color = 'var(--cyan)'; 
+            btnR.style.background = 'rgba(10,20,15,0.9)'; btnR.style.color = 'var(--cyan)'; btnR.style.borderColor = 'var(--cyan)';
+            btnR.classList.remove('gold-mode');
+            btnE.style.background = 'linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95))'; btnE.style.color = 'var(--gold)'; btnE.style.borderColor = 'rgba(212,175,55,0.5)';
+            btnE.classList.add('gold-mode');
+            hint.innerText = "360° Swipe · Piercing the Void";
+            angleX = 0.3; angleY = 0; 
+        } else {
+            title.innerText = "Enso Void · Three Meditations"; desc.innerHTML = "\"Point directly to the human mind.\"<br>Observing the void within every breath.";
+            title.style.color = 'var(--gold)'; 
+            btnE.style.background = 'rgba(20,15,5,0.9)'; btnE.style.color = 'var(--solid-gold)'; btnE.style.borderColor = 'var(--solid-gold)';
+            btnE.classList.remove('gold-mode');
+            btnR.style.background = 'linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95))'; btnR.style.color = 'var(--cyan)'; btnR.style.borderColor = 'rgba(139,168,156,0.4)';
+            hint.innerText = "360° Swipe · Meditating on Breath";
+            angleX = 0; angleY = 0; 
+        }
+    }
+
+    function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+    function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+    document.getElementById('theory-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
+    document.getElementById('ui-layer').addEventListener('pointerdown', (e) => e.stopPropagation());
+
+    function onDown(e) { 
+        if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; 
+        isDragging = true; lastMouseX = e.touches?e.touches[0].clientX:e.clientX; lastMouseY = e.touches?e.touches[0].clientY:e.clientY; 
+        if(currentRealm === 0) { interactionRipple = 1; currentBoatPos.x += (Math.random()-0.5) * 5; currentBoatPos.z += (Math.random()-0.5) * 5; }
+    }
+    function onMove(e) { 
+        if (!isDragging) return; 
+        let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; 
+        angleY += (curX-lastMouseX)*0.01; angleX += (curY-lastMouseY)*0.01; 
+        angleX = Math.max(-Math.PI/4, Math.min(Math.PI/4, angleX)); 
+        lastMouseX=curX; lastMouseY=curY; 
+        if(currentRealm === 0) interactionRipple = 1; 
+    }
+    function onUp() { isDragging = false; }
+
+    canvas.addEventListener('mousedown', onDown); canvas.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
+
+    // ================= TTS Engine (English Version) =================
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("Speech not supported");
+        const btnText = document.getElementById('tts-text');
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel(); isPlayingTheory = false; btnText.innerText = "Listen";
+        } else {
+            let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text');
+            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('. ');
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead);
+            theoryUtterance.lang = 'en-US'; theoryUtterance.rate = 0.9;
+            theoryUtterance.onend = () => { isPlayingTheory = false; btnText.innerText = "Listen"; };
+            window.speechSynthesis.speak(theoryUtterance);
+            isPlayingTheory = true; btnText.innerText = "Stop";
+        }
+    }
+    const originalCloseTheoryDrawer = closeTheoryDrawer;
+    closeTheoryDrawer = function() { if (isPlayingTheory) toggleTheoryAudio(); originalCloseTheoryDrawer(); }
+
+    initEngines(); toggleRealm(0); animate();
+</script>
+</body>
+</html>

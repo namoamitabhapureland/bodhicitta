@@ -211,6 +211,51 @@
                 }
             }
         }
+                // ✨ 【多寶閣工程】凝縮扁舟：縮小一半，使其更像一葉輕舟或金色水滴
+        for(let z = -100; z <= 100; z += 4) { // 長度減半 (原本是 -200 到 200)
+            let t = (z + 100) / 200; 
+            let widthAtZ = Math.sin(t * Math.PI) * 8 + 1; // 寬度減半 (原本是 15)
+            
+            for(let x = -widthAtZ; x <= widthAtZ; x += 3) { // 增加粒子凝聚度
+                for(let y = 0; y >= -2; y -= 2) { 
+                    zenBoatParticles.push({
+                        ox: x, oy: y, oz: z, 
+                        oShift: Math.random() * Math.PI * 2 
+                    });
+                }
+            }
+        }
+
+        // ✨ 【多寶閣工程】凝縮法相：在舟身中央，凝聚達摩祖師參禪之幾何剪影 (圓頭+橢圓身)
+        zenFigureParticles = [];
+        let figCenterX = 0; let figCenterY = -15; let figCenterZ = 0; // 人形核心位置
+
+        // 1. 圓頭 (頭部)
+        for(let i=0; i<30; i++) {
+            let theta = Math.random()*Math.PI*2; let phi = Math.random()*Math.PI; let r=6;
+            zenFigureParticles.push({
+                ox: figCenterX + r*Math.sin(phi)*Math.cos(theta),
+                oy: figCenterY + r*Math.sin(phi)*Math.sin(theta) - 15, // 頭部稍微往上提
+                oz: figCenterZ + r*Math.cos(phi),
+                oShift: Math.random() * Math.PI * 2,
+                type: 'head'
+            });
+        }
+        // 2. 小長橢圓 (身體)
+        for(let z = -15; z <= 15; z += 3) {
+            let t = (z + 15) / 30;
+            let widthAtZ = Math.sin(t * Math.PI) * 10 + 2; // 橢圓身
+            for(let x = -widthAtZ; x <= widthAtZ; x += 3) {
+                for(let y = -2; y <= 25; y += 4) { // 橢圓厚度
+                    zenFigureParticles.push({
+                        ox: figCenterX + x, oy: figCenterY + y, oz: figCenterZ + z,
+                        oShift: Math.random() * Math.PI * 2,
+                        type: 'body'
+                    });
+                }
+            }
+        }
+
 
 
         ensoParticles = [];
@@ -283,6 +328,33 @@
                     c: `rgba(243,229,171,${finalAlpha})`, // 顏色調為更明亮的純金
                     s: 2.2, // 粒子稍微加大，增加水滴凝聚感
                     type: 'boat' 
+                });
+            }
+        
+        });
+
+        // ✨ 【多寶閣工程】渲染達摩法相：使其與扁舟、海浪完全同步呼吸漂動
+        zenFigureParticles.forEach(p => {
+            // 與扁舟完全同步的海浪物理起伏
+            let figWaveY = Math.sin((currentBoatPos.x)*0.01 + time)*20 + 
+                           Math.cos((currentBoatPos.z)*0.01 + time)*20 + 145; 
+            
+            // 人形在舟上的基礎高度，並伴隨舟身呼吸產生微小的上下動態 (悟後的生命力)
+            let baseFigY = p.oy + figWaveY - (1 - boatPulse)*20; 
+            
+            // 3D 座標加上主動移動
+            let proj = project3D(p.ox + currentBoatPos.x, baseFigY, p.oz + currentBoatPos.z);
+            
+            if(proj) {
+                let particleAlpha = Math.sin(time * 3 + p.oShift) * 0.2 + 0.8; 
+                let finalAlpha = particleAlpha * boatPulse * proj.scale;
+                
+                projected.push({ 
+                    x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, 
+                    // 頭部顏色稍微白亮一點，隱喻智慧；身體與扁舟同色
+                    c: p.type === 'head' ? `rgba(255,255,255,${finalAlpha})` : `rgba(243,229,171,${finalAlpha})`, 
+                    s: p.type === 'head' ? 2.5 : 2.2, // 頭部稍微凝聚一點
+                    type: 'boat_figure' // 使用特殊 type，與舟身分開渲染，確保層次
                 });
             }
         });

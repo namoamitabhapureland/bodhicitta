@@ -1690,20 +1690,49 @@ function getLotusSVG(rankType, nianCount = 0) {
         });
     }
 
-    // 星軌導航點連動邏輯
+       // ✨ 阿智精確校對版：星軌導航點連動邏輯
     window.addEventListener('DOMContentLoaded', () => {
-        const carousel = document.querySelector('.realm-carousel');
+        // 1. 處理頁面路由 (原有邏輯)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('screen') === '3') {
+            showScreen(3);
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // 2. 滾輪與點點精確對接
+        const carousel = document.getElementById('dharma-carousel'); // 對應 HTML 的 ID
         const dots = document.querySelectorAll('.carousel-dot');
-        if(carousel && dots.length > 0) {
+        
+        if (carousel && dots.length > 0) {
             carousel.addEventListener('scroll', () => {
                 let scrollLeft = carousel.scrollLeft;
-                let cardWidth = carousel.querySelector('.realm-card').offsetWidth + 15; // 15 是 gap
+                // 抓取您 HTML 實際使用的 class: rail-card
+                let card = carousel.querySelector('.rail-card');
+                if (!card) return; 
+                
+                let cardWidth = card.offsetWidth + 15; // 15 是 gap
                 let index = Math.round(scrollLeft / cardWidth);
-                dots.forEach(d => d.classList.remove('active'));
-                if(dots[index]) dots[index].classList.add('active');
+                
+                // 更新點點狀態
+                dots.forEach((d, i) => {
+                    if (i === index) {
+                        d.classList.add('active');
+                    } else {
+                        d.classList.remove('active');
+                    }
+                });
             });
+
+            // 支援電腦版滾輪左右滑動
+            carousel.addEventListener('wheel', (e) => {
+                if (e.deltaY !== 0) {
+                    e.preventDefault();
+                    carousel.scrollLeft += e.deltaY;
+                }
+            }, { passive: false });
         }
     });
+
 
     
     function confirmDedi() { document.getElementById('dedi-modal').style.display='none'; showScreen(3); }

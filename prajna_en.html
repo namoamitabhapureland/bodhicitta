@@ -101,6 +101,17 @@
         @keyframes pulseGlow { 0% { opacity: 0.5; text-shadow: 0 0 10px rgba(212,175,55,0.3); } 100% { opacity: 1; text-shadow: 0 0 25px rgba(243,229,171,0.8), 0 0 40px #fff; } }
 
         /* ---------------- Question Panel ---------------- */
+       /* ---------------- Prajna Eye (Hint) ---------------- */
+        #btn-hint {
+            position: absolute; bottom: 20px; right: 25px;
+            background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.4);
+            border-radius: 20px; padding: 6px 14px; color: #f3e5ab; font-size: 0.8rem;
+            display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.3s;
+            z-index: 60; backdrop-filter: blur(5px);
+        }
+        #btn-hint:active { transform: scale(0.95); background: rgba(212, 175, 55, 0.3); }
+        #btn-hint svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+
         #q-panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -40%) scale(0.92); width: 92%; max-width: 540px; background: linear-gradient(145deg, rgba(15, 20, 25, 0.95), rgba(5, 8, 10, 0.98)); backdrop-filter: blur(25px); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 20px; padding: 40px 30px; box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 30px rgba(139, 168, 156, 0.05); opacity: 0; pointer-events: none; transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1); z-index: 50; }
         #q-panel.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
         
@@ -247,6 +258,12 @@
         <div id="question-content">
             <div id="q-text"></div>
             <div id="q-options"></div>
+                    <!-- 這是新增的般若之眼按鈕 -->
+        <div id="btn-hint" onclick="useHint()" style="display:none;">
+            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            Insight (<span id="hint-count">0</span>)
+        </div>
+
         </div>
 
         <div id="cert-content">
@@ -399,7 +416,6 @@
     // ==========================================
     let db = { points: 0, totalCorrect: 0, lastMatrixDate: "", tempBag: 0, treasures: { sword: 0 }, clearedQ: [], failedQ: {} };
     try { 
-        // Changed key to prevent collision with the Chinese version progress
         const local = JSON.parse(localStorage.getItem('PX_EN_V15.0'));
         if (local && typeof local === 'object') { 
             db = { ...db, ...local }; 
@@ -410,8 +426,19 @@
         }
     } catch(e) {}
 
+    // ✨ 般若之眼：初始化與每日發放邏輯
+    if(db.prajnaHints === undefined) db.prajnaHints = 1; // 新手預設送 1 個
+    if(db.lastHintDate === undefined) db.lastHintDate = "";
+
     const todayStr = new Date().toDateString();
     let hasPlayedToday = (db.lastMatrixDate === todayStr);
+
+    // 每天只要打開系統，就多送 1 個般若之眼 (可無限累積)
+    if (db.lastHintDate !== todayStr) {
+        db.prajnaHints++;
+        db.lastHintDate = todayStr;
+        localStorage.setItem('PX_EN_V15.0', JSON.stringify(db));
+    }
 
     if (hasPlayedToday) {
         setTimeout(() => {
@@ -496,208 +523,110 @@
 ];
 
 
-    const bossQuestion = {
+    const bossQuestion = [
+        { 
+            id: 'BOSS_01', level: "11th ‧ Hidden Trial", time: 120,
+            text: "Looking at Ultimate Bliss and the Saha world from the perspective of the One True Dharma Realm, what is the ultimate reality?",
+            options: [
+                { text: "All illusions are the truth. Ultimate Bliss is not apart from one's own mind; the Mind-Only Pure Land receives Mind-Only beings.", isCorrect: true },
+                { text: "The Pure Land is an illusory city set up for those of dull capacities.", isCorrect: false },
+                { text: "Ultimate Bliss and Saha are both truly existent, hence one must loathe this land and seek that land.", isCorrect: false },
+                { text: "One must rely on Amitabha's divine power to forcibly establish a Pure Land outside the mind to abide in.", isCorrect: false }
+            ]
+        },
+        { 
+            id: 'BOSS_02', level: "11th ‧ Hidden Trial", time: 120, 
+            text: "In Nagarjuna's Mūlamadhyamakakārikā, he establishes the ultimate truth: \"Whatever is dependently co-arisen, that is explained to be emptiness. That, being a dependent designation, is itself the (　　).\"", 
+            options: [
+                { text: "Middle Way (Madhyamā Pratipad)", isCorrect: true }, 
+                { text: "Ultimate Truth (Paramārtha-satya)", isCorrect: false }, 
+                { text: "True Suchness (Tathatā)", isCorrect: false }, 
+                { text: "Absolute Void (Atyanta-śūnyatā)", isCorrect: false }
+            ] 
+        },
+        { 
+            id: 'BOSS_03', level: "11th ‧ Hidden Trial", time: 120, 
+            text: "The Awakening of Faith explains the profound principle of 'perfuming': \"Because the Dharma of True Suchness exists, it can perfume ignorance... causing the deluded mind to loathe the suffering of Samsara and seek Nirvana. This is called (　　).\"", 
+            options: [
+                { text: "The perfuming of True Suchness", isCorrect: true }, 
+                { text: "Arousing the Bodhi-mind", isCorrect: false }, 
+                { text: "Severing fundamental afflictions", isCorrect: false }, 
+                { text: "Realizing the Dharmakaya", isCorrect: false }
+            ] 
+        },
+        { 
+            id: 'BOSS_04', level: "11th ‧ Hidden Trial", time: 120, 
+            text: "The Surangama Sutra points out the root of cyclic existence: \"All sentient beings, since beginningless time, are subject to continuous rebirth because they do not know the (　　), and instead use their false thinking.\"", 
+            options: [
+                { text: "Ever-dwelling True Mind, the bright substance of the pure nature", isCorrect: true }, 
+                { text: "Wondrous True Suchness of the Tathagatagarbha", isCorrect: false }, 
+                { text: "Perfect Enlightenment which is originally unobtained", isCorrect: false }, 
+                { text: "Supreme Truth of the Original Mind", isCorrect: false }
+            ] 
+        },
+        { 
+            id: 'BOSS_05', level: "11th ‧ Hidden Trial", time: 120, 
+            text: "In the Platform Sutra, Master Huineng establishes his Dharma door based on three principles: \"(　　) as the main doctrine, (　　) as the substance, and (　　) as the basis.\"", 
+            options: [
+                { text: "No-thought, No-mark (formlessness), No-abiding (non-attachment)", isCorrect: true }, 
+                { text: "Sudden Enlightenment, True Suchness, Bodhi", isCorrect: false }, 
+                { text: "Emptiness, Compassion, Wisdom", isCorrect: false }, 
+                { text: "Prajna, Dharmakaya, Liberation", isCorrect: false }
+            ] 
+        },
+        { 
+            id: 'BOSS_06', level: "11th ‧ Hidden Trial", time: 120, 
+            text: "Nagarjuna demolishes dualistic views of Samsara and Nirvana in the Mūlamadhyamakakārikā, stating: \"The limit of Nirvana and the limit of Samsara, (　　).\"", 
+            options: [
+                { text: "Between these two limits, there is not the slightest difference", isCorrect: true }, 
+                { text: "Arise solely from discriminative thought", isCorrect: false }, 
+                { text: "Are fundamentally empty, establishing not a single mark", isCorrect: false }, 
+                { text: "Are like illusions, having no definite reality", isCorrect: false }
+            ] 
+        },
+        { 
+            id: 'BOSS_07', level: "11th ‧ Hidden Trial", time: 120, 
+            text: "In the Vimalakirti Sutra, heavenly flowers stick to the great disciples but fall off the Bodhisattvas. The Heavenly Maiden explains that the flowers stick because the disciples have not yet exhausted their (　　).", 
+            options: [
+                { text: "Habitual latencies (Vasanas) of discriminatory thoughts", isCorrect: true }, 
+                { text: "Hindrance of afflictions (Kleshavarana)", isCorrect: false }, 
+                { text: "Cognitive hindrances (Jneyavarana)", isCorrect: false }, 
+                { text: "Fundamental ignorance (Avidya)", isCorrect: false }
+            ] 
+        },
+        { 
+            id: 'BOSS_08', level: "11th ‧ Hidden Trial", time: 120, 
+            text: "Master Xuanzang's Cheng Weishi Lun defines the Alaya-vijnana (Eighth Consciousness) primarily by its characteristic of being (　　), serving as the root of both defiled and pure dharmas.", 
+            options: [
+                { text: "The active store, the passive store, and the object of attachment", isCorrect: true }, 
+                { text: "The manifestor, the perceiver, and the object perceived", isCorrect: false }, 
+                { text: "The fundamental, the dependent, and the perfused", isCorrect: false }, 
+                { text: "The total retribution, the ripening, and the neutral", isCorrect: false }
+            ] 
+        },
+        { 
+            id: 'BOSS_09', level: "11th ‧ Hidden Trial", time: 120, 
+            text: "Highlighting the perfectly unobstructed interpenetration of cause and effect in the Avatamsaka Sutra, it states: \"At the very moment of arousing the initial Bodhi-mind, one (　　).\"", 
+            options: [
+                { text: "Accomplishes Supreme Perfect Enlightenment", isCorrect: true }, 
+                { text: "Becomes a Bodhisattva", isCorrect: false }, 
+                { text: "Enters the path of Buddhahood", isCorrect: false }, 
+                { text: "Realizes the Dharmakaya", isCorrect: false }
+            ] 
+        },
+        { 
+            id: 'BOSS_10', level: "11th ‧ Hidden Trial", time: 120, 
+            text: "In the Sandhinirmocana Sutra, the Buddha tells Manjusri regarding the Ultimate Truth: \"The characteristic of all dharmas being (　　) is exactly the characteristic of the Ultimate Truth.\"", 
+            options: [
+                { text: "Non-dual (Advaya)", isCorrect: true }, 
+                { text: "Formless (Animitta)", isCorrect: false }, 
+                { text: "True Suchness (Tathata)", isCorrect: false }, 
+                { text: "Absolutely Empty (Atyanta-sunyata)", isCorrect: false }
+            ] 
+        }
+    ];
+
         
-        id: 'BOSS_01', level: "11th ‧ Hidden Trial", time: 120,
-        text: "Looking at Ultimate Bliss and the Saha world from the perspective of the One True Dharma Realm, what is the ultimate reality?",
-        options: [
-            { text: "All illusions are the truth. Ultimate Bliss is not apart from one's own mind; the Mind-Only Pure Land receives Mind-Only beings.", isCorrect: true },
-            { text: "The Pure Land is an illusory city set up for those of dull capacities.", isCorrect: false },
-            { text: "Ultimate Bliss and Saha are both truly existent, hence one must loathe this land and seek that land.", isCorrect: false },
-            { text: "One must rely on Amitabha's divine power to forcibly establish a Pure Land outside the mind to abide in.", isCorrect: false }
-        ]
-    },
-    { 
-        id: 'BOSS_02', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "In Nagarjuna's Mūlamadhyamakakārikā, he establishes the ultimate truth: \"Whatever is dependently co-arisen, that is explained to be emptiness. That, being a dependent designation, is itself the (　　).\"", 
-        options: [
-            { text: "Middle Way (Madhyamā Pratipad)", isCorrect: true }, 
-            { text: "Ultimate Truth (Paramārtha-satya)", isCorrect: false }, 
-            { text: "True Suchness (Tathatā)", isCorrect: false }, 
-            { text: "Absolute Void (Atyanta-śūnyatā)", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_03', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "The Awakening of Faith explains the profound principle of 'perfuming': \"Because the Dharma of True Suchness exists, it can perfume ignorance... causing the deluded mind to loathe the suffering of Samsara and seek Nirvana. This is called (　　).\"", 
-        options: [
-            { text: "The perfuming of True Suchness", isCorrect: true }, 
-            { text: "Arousing the Bodhi-mind", isCorrect: false }, 
-            { text: "Severing fundamental afflictions", isCorrect: false }, 
-            { text: "Realizing the Dharmakaya", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_04', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "The Surangama Sutra points out the root of cyclic existence: \"All sentient beings, since beginningless time, are subject to continuous rebirth because they do not know the (　　), and instead use their false thinking.\"", 
-        options: [
-            { text: "Ever-dwelling True Mind, the bright substance of the pure nature", isCorrect: true }, 
-            { text: "Wondrous True Suchness of the Tathagatagarbha", isCorrect: false }, 
-            { text: "Perfect Enlightenment which is originally unobtained", isCorrect: false }, 
-            { text: "Supreme Truth of the Original Mind", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_05', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "In the Platform Sutra, Master Huineng establishes his Dharma door based on three principles: \"(　　) as the main doctrine, (　　) as the substance, and (　　) as the basis.\"", 
-        options: [
-            { text: "No-thought, No-mark (formlessness), No-abiding (non-attachment)", isCorrect: true }, 
-            { text: "Sudden Enlightenment, True Suchness, Bodhi", isCorrect: false }, 
-            { text: "Emptiness, Compassion, Wisdom", isCorrect: false }, 
-            { text: "Prajna, Dharmakaya, Liberation", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_06', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "Nagarjuna demolishes dualistic views of Samsara and Nirvana in the Mūlamadhyamakakārikā, stating: \"The limit of Nirvana and the limit of Samsara, (　　).\"", 
-        options: [
-            { text: "Between these two limits, there is not the slightest difference", isCorrect: true }, 
-            { text: "Arise solely from discriminative thought", isCorrect: false }, 
-            { text: "Are fundamentally empty, establishing not a single mark", isCorrect: false }, 
-            { text: "Are like illusions, having no definite reality", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_07', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "In the Vimalakirti Sutra, heavenly flowers stick to the great disciples but fall off the Bodhisattvas. The Heavenly Maiden explains that the flowers stick because the disciples have not yet exhausted their (　　).", 
-        options: [
-            { text: "Habitual latencies (Vasanas) of discriminatory thoughts", isCorrect: true }, 
-            { text: "Hindrance of afflictions (Kleshavarana)", isCorrect: false }, 
-            { text: "Cognitive hindrances (Jneyavarana)", isCorrect: false }, 
-            { text: "Fundamental ignorance (Avidya)", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_08', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "Master Xuanzang's Cheng Weishi Lun defines the Alaya-vijnana (Eighth Consciousness) primarily by its characteristic of being (　　), serving as the root of both defiled and pure dharmas.", 
-        options: [
-            { text: "The active store, the passive store, and the object of attachment", isCorrect: true }, 
-            { text: "The manifestor, the perceiver, and the object perceived", isCorrect: false }, 
-            { text: "The fundamental, the dependent, and the perfused", isCorrect: false }, 
-            { text: "The total retribution, the ripening, and the neutral", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_09', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "Highlighting the perfectly unobstructed interpenetration of cause and effect in the Avatamsaka Sutra, it states: \"At the very moment of arousing the initial Bodhi-mind, one (　　).\"", 
-        options: [
-            { text: "Accomplishes Supreme Perfect Enlightenment", isCorrect: true }, 
-            { text: "Becomes a Bodhisattva", isCorrect: false }, 
-            { text: "Enters the path of Buddhahood", isCorrect: false }, 
-            { text: "Realizes the Dharmakaya", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_10', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "In the Sandhinirmocana Sutra, the Buddha tells Manjusri regarding the Ultimate Truth: \"The characteristic of all dharmas being (　　) is exactly the characteristic of the Ultimate Truth.\"", 
-        options: [
-            { text: "Non-dual (Advaya)", isCorrect: true }, 
-            { text: "Formless (Animitta)", isCorrect: false }, 
-            { text: "True Suchness (Tathata)", isCorrect: false }, 
-            { text: "Absolutely Empty (Atyanta-sunyata)", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_11', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "In the Maha Prajnaparamita Sastra, Nagarjuna elevates Prajnaparamita by declaring: \"Prajnaparamita is the (　　) of all Buddhas.\"", 
-        options: [
-            { text: "Mother", isCorrect: true }, 
-            { text: "Teacher", isCorrect: false }, 
-            { text: "Eye", isCorrect: false }, 
-            { text: "Heart", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_12', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "The Srimala Sutra defines the profound meaning of the Tathagatagarbha: \"The Tathagatagarbha is the storehouse of the Dharma Realm, the storehouse of the Dharmakaya, the storehouse of the supreme supramundane, and (　　).\"", 
-        options: [
-            { text: "The storehouse of inherently pure self-nature", isCorrect: true }, 
-            { text: "The storehouse of the perfect Sambhogakaya", isCorrect: false }, 
-            { text: "The storehouse of the ocean of merit", isCorrect: false }, 
-            { text: "The storehouse of boundless wisdom", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_13', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "The Lankavatara Sutra reveals the essence of the Mahayana teaching: \"The Buddha's words take (　　) as their central tenet, and the gateless as the Dharma gate.\"", 
-        options: [
-            { text: "Mind (Citta)", isCorrect: true }, 
-            { text: "Awakening (Bodhi)", isCorrect: false }, 
-            { text: "Emptiness (Sunyata)", isCorrect: false }, 
-            { text: "Ultimate Reality (Bhūtakoti)", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_14', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "Vasubandhu's Trimśikā-vijñaptimātratā (Thirty Verses) states: \"The metaphors of 'self' and 'dharmas' are conventionally applied to various manifestations. These manifestations depend upon the transformations of (　　).\"", 
-        options: [
-            { text: "Consciousness (Vijñāna)", isCorrect: true }, 
-            { text: "Mental factors (Caitta)", isCorrect: false }, 
-            { text: "Karmic forces", isCorrect: false }, 
-            { text: "Dependent Origination", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_15', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "The Lotus Sutra reveals the ultimate intention of all Buddhas: \"In the Buddha-lands of the ten directions, there is only the Dharma of (　　); there are not two, nor are there three.\"", 
-        options: [
-            { text: "The One Vehicle (Ekayana)", isCorrect: true }, 
-            { text: "The Bodhisattva Path", isCorrect: false }, 
-            { text: "The Great Vehicle (Mahayana)", isCorrect: false }, 
-            { text: "Ultimate Liberation", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_16', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "The Surangama Sutra balances sudden enlightenment with gradual practice: \"The principle is awakened to suddenly, and with awakening, illusions simultaneously vanish. But phenomena cannot be eliminated suddenly; they (　　).\"", 
-        options: [
-            { text: "Must be exhausted gradually through a sequence", isCorrect: true }, 
-            { text: "Are gradually cultivated through practice", isCorrect: false }, 
-            { text: "Require skillful means to be removed", isCorrect: false }, 
-            { text: "Are eliminated as karmic conditions mature", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_17', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "The Vimalakirti Sutra teaches that the foundation of a Bodhisattva's practice lies in their fundamental purity: \"The straightforward mind is (　　).\"", 
-        options: [
-            { text: "The place of enlightenment (Bodhimanda)", isCorrect: true }, 
-            { text: "The supreme Bodhi", isCorrect: false }, 
-            { text: "The Pure Land", isCorrect: false }, 
-            { text: "The Tathagata", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_18', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "Asvaghosa's Awakening of Faith defines the scope of Mahayana: \"The so-called Dharma is (　　). This encompasses all worldly and world-transcending dharmas.\"", 
-        options: [
-            { text: "The mind of sentient beings", isCorrect: true }, 
-            { text: "The Tathagatagarbha", isCorrect: false }, 
-            { text: "The Dharma of True Suchness", isCorrect: false }, 
-            { text: "The Alaya-vijnana", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_19', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "The Diamond Sutra verse warns against grasping at phenomena to find the ultimate truth: \"He who sees me by outward appearance and seeks me in sound, treads the (　　) and cannot perceive the Tathagata.\"", 
-        options: [
-            { text: "Heterodox path (Wrong path)", isCorrect: true }, 
-            { text: "Path of demons", isCorrect: false }, 
-            { text: "Path of false thoughts", isCorrect: false }, 
-            { text: "Path of conditioned dharmas", isCorrect: false }
-        ] 
-    },
-    { 
-        id: 'BOSS_20', level: "11th ‧ Hidden Trial", time: 120, 
-        text: "The Samdhinirmocana Sutra explains why the Buddha does not teach the profound Alaya-vijnana to the ignorant: \"The Adana consciousness is profound and subtle; all seeds flow like a rushing stream. I do not reveal it to the ignorant and ordinary, (　　).\"", 
-        options: [
-            { text: "Lest they discriminate and cling to it as a 'self'", isCorrect: true }, 
-            { text: "Lest they give rise to nihilistic views", isCorrect: false }, 
-            { text: "To prevent sentient beings from generating doubt and slander", isCorrect: false }, 
-            { text: "For fear that practitioners will attach to phenomena", isCorrect: false }
-        ] 
-    }
-    };
 
     let questionBank = [];
     
@@ -727,8 +656,47 @@
         setTimeout(() => { vf.className = ''; }, 800);
     }
 
+        let hintUsedOnCurrentQ = false;
+
+    // ✨ 刷新按鈕顯示狀態
+    function updateHintBtn() {
+        const btn = document.getElementById('btn-hint');
+        if (db.prajnaHints > 0 && !hintUsedOnCurrentQ) {
+            btn.style.display = 'flex';
+            document.getElementById('hint-count').innerText = db.prajnaHints;
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+
+    // ✨ 發動般若之眼 (作弊)
+    function useHint() {
+        if (db.prajnaHints <= 0 || hintUsedOnCurrentQ || isProcessing) return;
+        
+        db.prajnaHints--; // 扣除一個錦囊
+        hintUsedOnCurrentQ = true;
+        localStorage.setItem('PX_EN_V15.0', JSON.stringify(db));
+        updateHintBtn(); // 隱藏按鈕
+        
+        // 視覺特效：正確答案放金光，錯誤答案變暗並鎖死
+        const opts = document.querySelectorAll('.option-btn');
+        opts.forEach(btn => {
+            if (btn.getAttribute('data-correct') === 'true') {
+                btn.style.borderColor = '#d4af37';
+                btn.style.background = 'rgba(212, 175, 55, 0.25)';
+                btn.style.boxShadow = '0 0 20px rgba(212, 175, 55, 0.6)';
+            } else {
+                btn.style.opacity = '0.2';
+                btn.style.pointerEvents = 'none'; 
+            }
+        });
+    }
+
     function loadQuestion(index, isBoss = false) {
-        const q = isBoss ? bossQuestion : questionBank[index];
+        hintUsedOnCurrentQ = false;
+        updateHintBtn(); // 每次載入新題目，更新按鈕狀態
+        
+        const q = isBoss ? currentBossQ : questionBank[index];
         const qPanel = document.getElementById('q-panel');
         
         let isKarma = (db.failedQ && db.failedQ[q.id] >= 1);
@@ -747,48 +715,70 @@
         let shuffled = [...q.options].sort(() => Math.random() - 0.5);
         shuffled.forEach(opt => {
             const btn = document.createElement('div'); btn.className = 'option-btn';
+            btn.setAttribute('data-correct', opt.isCorrect); // ✨ 偷埋正確答案的標記
             btn.innerHTML = `<div class="opt-dot"></div><div>${opt.text}</div>`;
             btn.onclick = () => processAnswer(opt.isCorrect, isBoss);
             optsDiv.appendChild(btn);
         });
     }
 
-    function triggerDoor() {
+    function promptBossQuestion() {
+        warpSpeed = 3;
+        // ✨ 隨機抽取一題 Boss
+        currentBossQ = bossBank[Math.floor(Math.random() * bossBank.length)];
+        
+        document.getElementById('karma-dot').style.display = 'none';
+        document.getElementById('q-panel').classList.remove('karma-border');
+        document.getElementById('btn-hint').style.display = 'none'; // 提示畫面先隱藏按鈕
+        
+        document.getElementById('stage-text').innerText = "Prajna Perfected ‧ Reality Shifts";
+        document.getElementById('stage-text').style.color = "#d4af37";
+        document.getElementById('question-content').style.display = 'block';
+        document.getElementById('cert-content').style.display = 'none';
+        
+        document.getElementById('q-options').innerHTML = '';
+        document.getElementById('q-text').innerHTML = `<div style="text-align:center; color:#ff8888; font-size:1.05rem; line-height:2.2; text-shadow: 0 0 10px rgba(255,0,0,0.3); font-weight: 300;">Practitioner, you have answered ten questions correctly.<br>Deep in the Dharma Realm, the <span style="font-weight:bold;">[11th Hidden Trial]</span> has emerged.<br>This question is profound; no points will be deducted for a wrong answer.<br><br><span style="color:#d4af37; font-size:1.15rem; letter-spacing: 2px;">Do you accept the ultimate inquiry?</span></div>`;
+        
+        document.getElementById('action-btns').innerHTML = `
+            <div style="display:flex; gap:15px; width:100%; justify-content:center;">
+                <button class="btn-main btn-danger" style="margin:0;" onclick="startBoss()">Face the Trial</button>
+                <button class="btn-main" style="margin:0; border-color:rgba(139,168,156,0.5); color:#8ba89c;" onclick="declineBoss()">Step Back</button>
+            </div>
+        `;
+        document.getElementById('q-panel').classList.add('show');
+        isProcessing = false; 
+    }
+
+    function processAnswer(isCorrect, isBoss) {
         if (isProcessing) return;
-        
-        if (hasPlayedToday) { 
-            const modal = document.getElementById('done-modal');
-            if (modal) modal.classList.add('show');
-            return; 
-        }
-        
         isProcessing = true; 
-        initAudio(); 
         
-        if (currentStage === 0 && correctCount === 0) {
-            generateDailyQuiz(); 
+        // ✨ 修正：讀取當前的 Boss ID
+        let qid = isBoss ? currentBossQ.id : questionBank[currentStage].id;
+
+        try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(e) {}
+        clearTimeout(timerId); clearTimeout(criticalTimerId);
+        try { stopTensionSound(); } catch(e) {}
+        
+        document.getElementById('voice-hint').innerText = '';
+        document.getElementById('energy-wrap').style.opacity = 0;
+        document.getElementById('q-panel').classList.remove('show');
+        document.getElementById('btn-hint').style.display = 'none'; // 答題後隱藏按鈕
+
+        if (isCorrect) {
+            if (!isBoss) correctCount++;
+            if (!db.clearedQ.includes(qid)) db.clearedQ.push(qid);
+            
+            flashEffect('gold');
+            setTimeout(() => { if (isBoss) { showSettlement(true, true); } else { nextStage(); } }, 1000);
+        } else {
+            db.failedQ[qid] = (db.failedQ[qid] || 0) + 1;
+            
+            flashEffect('red');
+            try { playWrongSound(); } catch(e) {}
+            
+            setTimeout(() => { showSettlement(false, false, true); }, 1500);
         }
-        
-        const hint = document.getElementById('door-hint');
-        if (hint) hint.style.display = 'none';
-
-        if ('speechSynthesis' in window) window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
-
-        const scene = document.getElementById('door-scene');
-        scene.classList.add('opening');
-        setTimeout(() => { warpSpeed = 12; scene.classList.add('zooming'); }, 400);
-        setTimeout(() => { 
-            warpSpeed = 1; 
-            document.getElementById('q-panel').classList.add('show');
-            document.getElementById('question-content').style.display = 'block';
-            document.getElementById('cert-content').style.display = 'none';
-            
-            loadQuestion(currentStage); 
-            
-            const currentQ = questionBank[currentStage];
-            readVoiceAndStartTimer(currentQ.text, currentQ.time);
-            isProcessing = false; 
-        }, 1600); 
     }
 
     window.sysUtterances = []; 

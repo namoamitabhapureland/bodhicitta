@@ -160,15 +160,18 @@
     let time = 0;
 
     let oceanParticles = [];
-    let reedParticles = [];
     let mistParticles = [];
+    
+    // ✨ 【多寶閣工程】凝聚法相
+    let zenBoatParticles = []; // 凝縮後的金色扁舟粒子
+    let currentBoatPos = { x: 0, z: 0 }; // 扁舟在業海中的緩慢移動位置
     
     let ensoParticles = [];
     
     let angleX = 0.3, angleY = 0;
     let isDragging = false;
     let lastMouseX = 0, lastMouseY = 0;
-    let interactionRipple = 0; // 撥雲見日的力度
+    let interactionRipple = 0; 
 
     const FOV = 400; 
 
@@ -179,17 +182,14 @@
     window.addEventListener('resize', resize); resize();
 
     function initEngines() {
-        // 1. 一葦渡江 (Ocean & Mist & Reed)
-        oceanParticles = []; mistParticles = []; reedParticles = [];
+        oceanParticles = []; mistParticles = []; zenBoatParticles = [];
         
-        // 業海波濤 (銀青色)
         for(let x = -800; x <= 800; x += 50) {
             for(let z = -800; z <= 800; z += 50) {
                 oceanParticles.push({ ox: x, oz: z });
             }
         }
         
-        // 二障迷霧
         for(let i=0; i<300; i++) {
             mistParticles.push({
                 x: (Math.random()-0.5)*1500, y: Math.random()*-400 - 100, z: (Math.random()-0.5)*1500,
@@ -197,20 +197,24 @@
             });
         }
         
-        // 光之葦與心 (弧線)
-        for(let t=0; t<=1; t+=0.02) {
-            // 一條拋物線
-            let x = 0; let z = (t-0.5)*800; 
-            let y = Math.pow(t-0.5, 2) * 400 - 50;
-            reedParticles.push({ x: x, y: y, z: z, isMind: false });
+        // ✨ 【多寶閣工程】凝縮扁舟：構造長條狀、扁平幾何體 (純金微塵構成)
+        for(let z = -200; z <= 200; z += 5) { // 長條
+            let t = (z + 200) / 400; // normalized z from 0 to 1
+            let widthAtZ = Math.sin(t * Math.PI) * 15 + 2; // 扁舟中間寬兩頭窄
+            
+            for(let x = -widthAtZ; x <= widthAtZ; x += 4) { // 寬度
+                for(let y = 0; y >= -4; y -= 4) { // 極度扁平，只有一層厚度
+                    zenBoatParticles.push({
+                        ox: x, oy: y, oz: z, 
+                        oShift: Math.random() * Math.PI * 2 // 每個粒子的呼吸偏移
+                    });
+                }
+            }
         }
-        reedParticles.push({ x: 0, y: -90, z: 150, isMind: true }); // 覺知的心
 
-        // 2. 圓覺禪圓 (3D Enso)
         ensoParticles = [];
         for(let i=0; i<1500; i++) {
             let theta = Math.random() * Math.PI * 2;
-            // 故意留一個缺口 (0 到 0.4 rad 之間粒子極少)
             if(theta > 0 && theta < 0.4 && Math.random() > 0.1) continue; 
             
             let radius = 200 + (Math.random()-0.5)*40;
@@ -234,34 +238,49 @@
     }
 
     function renderReed() {
-        interactionRipple *= 0.95; // 迷霧隨時間恢復
+        interactionRipple *= 0.95; 
+        
+        // ✨ 【多寶閣工程】悟後起修：扁舟在業海中極其緩慢地主動移動
+        currentBoatPos.x += Math.sin(time * 0.1) * 0.05;
+        currentBoatPos.z += Math.cos(time * 0.15) * 0.08;
 
         let projected = [];
         
-        // 海浪
         oceanParticles.forEach(p => {
             let waveY = Math.sin(p.ox*0.01 + time)*20 + Math.cos(p.oz*0.01 + time)*20 + 150;
             let proj = project3D(p.ox, waveY, p.oz);
             if(proj) projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: 'rgba(139,168,156,0.4)', s: 1.5, type: 'ocean' });
         });
 
-        // 迷霧
         mistParticles.forEach(p => {
             p.x += Math.sin(p.oA + time)*2; p.z += Math.cos(p.oA + time)*2;
             let proj = project3D(p.x, p.y, p.z);
             if(proj) {
-                let alpha = Math.max(0, 0.4 - interactionRipple*0.8); // 互動撥開迷霧
+                let alpha = Math.max(0, 0.4 - interactionRipple*0.8);
                 projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: `rgba(80,100,90,${alpha})`, s: p.s, type: 'mist' });
             }
         });
 
-        // 光之葦與心
-        reedParticles.forEach(p => {
-            let floatY = p.y + Math.sin(time*1.5 + p.z*0.01)*15 + 130; 
-            let proj = project3D(p.x, floatY, p.z);
+        // ✨ 【多寶閣工程】渲染金色扁舟 (凝縮後的法相)
+        let boatPulse = Math.sin(time * 0.8) * 0.1 + 0.9; // 扁舟整體的光芒呼吸
+        zenBoatParticles.forEach(p => {
+            // 基礎上下漂浮
+            let floatY = p.oy + Math.sin(time*1.5 + (currentBoatPos.z + p.oz)*0.01)*10 + 130; 
+            
+            // 3D 座標加上主動移動
+            let proj = project3D(p.ox + currentBoatPos.x, floatY, p.oz + currentBoatPos.z);
+            
             if(proj) {
-                if(p.isMind) projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: '#ffffff', s: 6, type: 'mind' });
-                else projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: '#d4af37', s: 2, type: 'reed' });
+                // 每個粒子細微的粒子閃爍
+                let particleAlpha = Math.sin(time * 3 + p.oShift) * 0.2 + 0.8; 
+                let finalAlpha = particleAlpha * boatPulse * proj.scale;
+                
+                projected.push({ 
+                    x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, 
+                    c: `rgba(212,175,55,${finalAlpha})`, 
+                    s: 2, // 扁舟由細小粒子構成
+                    type: 'boat' 
+                });
             }
         });
 
@@ -271,19 +290,24 @@
         projected.forEach(p => {
             let fSize = p.s * p.sc; if(fSize < 0.2) return;
             ctx.beginPath(); ctx.arc(p.x, p.y, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
-            if(p.type === 'mind') { ctx.shadowBlur = 30; ctx.shadowColor = '#f3e5ab'; }
+            
+            if(p.type === 'boat') { 
+                ctx.shadowBlur = 15 * p.sc * boatPulse; // 扁舟整體的金色光暈
+                ctx.shadowColor = '#f3e5ab'; 
+            }
             else if(p.type === 'mist') { ctx.shadowBlur = 10; ctx.shadowColor = p.c; }
             else ctx.shadowBlur = 0;
+            
             ctx.fill();
         });
         ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
     }
 
     function renderEnso() {
-        let breathScale = 1 + Math.sin(time * 0.8) * 0.15; // 緩慢呼吸
+        let breathScale = 1 + Math.sin(time * 0.8) * 0.15; 
         let projected = [];
         
-        if(!isDragging) angleY -= 0.002; // 禪圓自行緩慢旋轉
+        if(!isDragging) angleY -= 0.002; 
 
         ensoParticles.forEach(p => {
             let currentR = p.baseR * breathScale;
@@ -328,7 +352,7 @@
         let hint = document.getElementById('drag-hint');
 
         if (type === 0) {
-            title.innerText = "一葦渡江 ． 破二障"; desc.innerHTML = "「見性非事畢，悟後起修初。」<br>清淨載心，劃破煩惱與所知之迷霧。";
+            title.innerText = "一葦渡江 ． 破二障"; desc.innerHTML = "「見性非事畢，悟後起修初。」<br>金色扁舟載心，劃破煩惱與所知之迷霧。";
             title.style.color = 'var(--cyan)'; panel.style.borderLeftColor = 'rgba(139,168,156,0.6)';
             
             btnR.style.background = 'rgba(10,20,15,0.9)'; btnR.style.color = 'var(--cyan)'; btnR.style.borderColor = 'var(--cyan)';
@@ -338,7 +362,7 @@
             btnE.classList.add('gold-mode');
             
             hint.innerText = "360° 滑動 ． 撥開虛空迷霧";
-            angleX = 0.3; angleY = 0; // 俯瞰視角
+            angleX = 0.3; angleY = 0; 
         } else {
             title.innerText = "無相禪圓 ． 圓覺三修"; desc.innerHTML = "「不立文字，直指人心。」<br>一呼一吸間，體悟似缺實圓之空性。";
             title.style.color = 'var(--gold)'; panel.style.borderLeftColor = 'var(--solid-gold)';
@@ -349,22 +373,25 @@
             btnR.style.background = 'linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95))'; btnR.style.color = 'var(--cyan)'; btnR.style.borderColor = 'rgba(139,168,156,0.4)';
             
             hint.innerText = "360° 滑動 ． 觀想立體禪呼吸";
-            angleX = 0; angleY = 0; // 平視視角
+            angleX = 0; angleY = 0; 
         }
     }
 
     function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
     function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
 
-    // 防止 iOS 穿透
     document.getElementById('theory-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
     document.getElementById('ui-layer').addEventListener('pointerdown', (e) => e.stopPropagation());
 
-    // 觸控互動
     function onDown(e) { 
         if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; 
         isDragging = true; lastMouseX = e.touches?e.touches[0].clientX:e.clientX; lastMouseY = e.touches?e.touches[0].clientY:e.clientY; 
-        if(currentRealm === 0) interactionRipple = 1; // 撥開迷霧
+        if(currentRealm === 0) {
+            interactionRipple = 1; 
+            // ✨ 指尖拨动业海时，扁舟产生额外的瞬时位移 (悟後的精進)
+            currentBoatPos.x += (Math.random()-0.5) * 5;
+            currentBoatPos.z += (Math.random()-0.5) * 5;
+        }
     }
     function onMove(e) { 
         if (!isDragging) return; 
@@ -379,7 +406,6 @@
     canvas.addEventListener('mousedown', onDown); canvas.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
     canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
 
-    // 啟動
     initEngines(); toggleRealm(0); animate();
 </script>
 </body>

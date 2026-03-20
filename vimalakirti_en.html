@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vimalakirti Sutra · The Non-Dual Gate</title>
+    <style>
+        :root {
+            --bg-deep: #010102; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --fire-red: #a83232;
+            --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+            overflow: hidden; touch-action: none; user-select: none; overscroll-behavior: none;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.85rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 350px;
+            background: transparent; border-left: 2px solid rgba(212,175,55,0.8); 
+            padding: 10px 20px; z-index: 100; transition: 1s; pointer-events: none;
+        }
+        .status-title { font-size: 1.1rem; font-weight: bold; color: var(--gold); letter-spacing: 1px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); transition: 1s;}
+        .status-desc { font-size: 0.8rem; color: #ddd; line-height: 1.6; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); transition: 1s;}
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; transition: background 0.8s; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+        #resonance-flash {
+            position: absolute; inset: 0; background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(212,175,55,0.2) 50%, transparent 100%);
+            z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.5s; mix-blend-mode: screen;
+        }
+        #resonance-text {
+            position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);
+            color: #fff; font-size: 1.5rem; font-weight: bold; letter-spacing: 4px;
+            text-shadow: 0 0 20px var(--solid-gold), 0 0 40px #fff; z-index: 51;
+            opacity: 0; pointer-events: none; transition: opacity 0.5s; white-space: nowrap;
+        }
+
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 12px; transition: opacity 1s;}
+        
+        .switch-btn {
+            width: 85%; max-width: 320px; justify-content: center;
+            background: linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(212,175,55,0.5); color: var(--gold);
+            padding: 14px 20px; border-radius: 30px; font-size: 0.9rem; font-weight: bold; letter-spacing: 1px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1);
+        }
+        .switch-btn:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(212,175,55,0.6); }
+        .switch-btn.cyan-mode { border-color: rgba(139,168,156,0.6); color: var(--cyan); box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(139,168,156,0.1); }
+        
+        #theory-btn { border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,10,15,0.8); }
+
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(212,175,55,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        
+        .humble-statement { font-size: 0.8rem; color: #b0b0b0; line-height: 1.7; text-align: justify; padding: 20px; border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; background: rgba(20,15,5,0.3); margin-bottom: 50px; font-style: italic;}
+        
+        .main-title { color: var(--gold); font-size: 1.3rem; letter-spacing: 2px; text-align: center; margin-bottom: 50px; text-shadow: 0 0 15px rgba(212,175,55,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--solid-gold), transparent); margin: 15px auto 0; }
+        
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 22px; height: 22px; stroke: var(--gold); fill: none; stroke-width: 1.5; flex-shrink: 0;}
+        .c-title { color: var(--gold); font-size: 1.05rem; letter-spacing: 0.5px; font-weight: bold; }
+        .c-text { color: var(--text-main); font-size: 0.9rem; line-height: 1.8; text-align: justify; padding-left: 37px; letter-spacing: 0.3px;}
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="back-btn" onclick="window.location.href='index.html?screen=3'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Dojo
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title" id="s-title">Mustard Seed · Infinite Vessel</div>
+        <div class="status-desc" id="s-desc">"When the mind is pure, the Buddha land is pure."<br>A tiny square room seemingly holds 32,000 lion thrones.</div>
+    </div>
+
+    <section class="matrix-section" id="bg-section">
+        <canvas id="realmCanvas"></canvas>
+        <div id="resonance-flash"></div>
+        <div id="resonance-text">NON-DUAL GATE</div>
+
+        <div class="ui-layer" id="ui-layer">
+            <button class="switch-btn" id="btn-fangzhang" onclick="toggleRealm(0)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="2 4"/>
+                    <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                </svg>
+                <span id="text-fangzhang">Mustard Seed · Infinite Vessel</span>
+            </button>
+            <button class="switch-btn cyan-mode" id="btn-buer" onclick="toggleRealm(1)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 2 C 16 8, 20 12, 12 22 C 4 12, 8 8, 12 2 Z"/>
+                    <circle cx="12" cy="16" r="2" fill="currentColor"/>
+                </svg>
+                <span id="text-buer">Lotus Fire · The Non-Dual Gate</span>
+            </button>
+            
+            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                Exploring the Non-Dual Reality
+            </button>
+            
+            <div style="color:rgba(212,175,55,0.6); font-size:0.7rem; letter-spacing:1px; margin-top:5px;" id="drag-hint">360° Swipe · Piercing Physical Illusions</div>
+        </div>
+    </section>
+
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()">
+            <div class="close-bar"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+                <div style="color:var(--cyan); font-size:0.8rem; font-weight:bold; cursor:pointer;" onclick="closeTheoryDrawer()">Close Scroll</div>
+                <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.8rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                    <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                    <span id="tts-text">Listen</span>
+                </div>
+            </div>
+        </div>
+        <div class="theory-container" id="theory-content-box">
+            <div class="humble-statement">The ocean of Dharma is boundless; only Buddhas can fully fathom its ultimate truth. This text is but a humble reflection from a lay practitioner, attempting to explore a glimpse of the Tathagata's true meaning based on scriptural logic and the commentaries of past masters. Any omissions or errors are solely due to the limitations of my own understanding. May the Three Jewels bestow their blessings, and may fellow practitioners kindly bear witness.</div>
+            
+            <h1 class="main-title">Vimalakirti Sutra · The Non-Dual Gate</h1>
+            
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><polyline points="14 2 14 8 20 8"/><path d="M2 15h10"/><path d="M9 18l3-3-3-3"/></svg>
+                    <div class="c-title">I. Dawn of Mahayana · The Lay Catalyst</div>
+                </div>
+                <div class="c-text">Tracing back to the early sectarian monastic schools, the sudden emergence of Mahayana texts and doctrines perhaps carried the profound vows of lay practitioners within the red dust. The monumental treatises of great beings like Asvaghosa and Nagarjuna could align flawlessly with the Tathagata's true meaning not merely through worldly intellect. Ancient masters hinted that such beings were perhaps Bodhisattvas returning by vow, manifesting in specific eras to bridge liberation and worldly compassion. This suggests that the Dharma has no fixed form; anyone, monastic or lay, who aligns with the Buddha's intent can turn the wheel of Mahayana.</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><circle cx="12" cy="12" r="4"/></svg>
+                    <div class="c-title">II. Entering the Red Dust · Pure Land of Mind</div>
+                </div>
+                <div class="c-text">The Vimalakirti Sutra states: "When the mind is pure, the Buddha land is pure." This perhaps reveals that the Pure Land is not in a distant realm, but within the mind itself. Residing in this world of five impurities, living as a householder with a family might seem contrary to liberation. Yet, maintaining awareness amidst the chaos of the red dust—practicing the Dharma without abandoning the world—is perhaps the most resilient foundation of the Bodhisattva path.</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><polygon points="12 2 22 22 2 22"/><circle cx="12" cy="15" r="2"/></svg>
+                    <div class="c-title">III. Mustard Seed · The Infinite Vessel</div>
+                </div>
+                <div class="c-text">Vimalakirti's square room, seemingly tiny, effortlessly contained the 32,000 enormous lion thrones of the Buddha Merupradiparaja. Such mythical phenomena were perhaps intended to shatter the rigid human attachment to "physical space and size." When we are no longer confined by the smallness of our physical bodies, the inner capacity of a pure mind can be as vast as the universe, embracing the majesty of all Dharma realms.</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <div class="c-title">IV. Affliction and Bodhi · The Non-Dual Gate</div>
+                </div>
+                <div class="c-text">People often view affliction and Bodhi, birth-and-death and Nirvana, as opposing extremes. Yet, the "Non-Dual Gate" perhaps suggests that these seemingly conflicting energies are inherently of the same emptiness. With a biased perspective, one only sees the chaos of the karmic ocean; but if one centralizes their view and enters non-duality, the restless dust of affliction and the pure light of Bodhi seemingly overlap in the present moment, transforming into a perfect lotus.</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    <div class="c-title">V. Turning to the Great · The One Vehicle</div>
+                </div>
+                <div class="c-text">While early teachings opened the door to self-liberation through the Four Noble Truths, the aspiration of Mahayana cannot stagnate at the Arhat's solitary Nirvana. Bodhisattvas must turn from the small to the great, enduring kalpas in Samsara to save sentient beings, awaiting the prophecy of Buddhahood. The ultimate destination of all these diverse practices is perhaps guiding towards the Pure Land and the "One Buddha Vehicle." Every responsibility we shoulder in the red dust today might be the provision for our future Buddhahood.</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/><line x1="12" y1="22" x2="12" y2="24"/><line x1="12" y1="2" x2="12" y2="0"/></svg>
+                    <div class="c-title">VI. The 13th Tier · Plucking Lotus from the Mud</div>
+                </div>
+                <div class="c-text">In the Kusumatalagarbha-vyuhalamkara-lokadhatu (Lotus Treasury World) depicted in the Avatamsaka Sutra, both the Saha world and the Pure Land of Ultimate Bliss seemingly reside on the 13th tier. Within the coordinates of the Dharma realm, these two lands are deeply interconnected and can easily overlap. Whether one can cross the vast distance between the ordinary and the sacred depends entirely on whether the practitioner's mind can resonate with the compassionate vows of Amida. Master Kumarajiva once used the metaphor of "plucking a lotus from foul mud," advising to take only the lotus and ignore the mud. This perhaps implies that while residing in this world of impurities, we should not cling to the surrounding filth, but rather focus on the lotus waiting to bloom within our own nature. When the mind's frequency aligns, the present Saha world might already be superimposed upon the pure Lotus Land of the 13th tier.</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('realmCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    let currentRealm = 0; 
+    let time = 0;
+
+    let fzCube = [];
+    let fzPillars = [];
+    let fzStars = [];
+    let buerParticles = [];
+    
+    let angleX = 0.2, angleY = 0.3;
+    let isDragging = false;
+    let lastMouseX = 0, lastMouseY = 0;
+
+    const FOV = 400; 
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+    }
+    window.addEventListener('resize', resize); resize();
+
+    function initEngines() {
+        fzCube = []; fzPillars = []; fzStars = [];
+        let S = 100; 
+        let pts = [ [-S,-S,-S], [S,-S,-S], [S,S,-S], [-S,S,-S], [-S,-S,S], [S,-S,S], [S,S,S], [-S,S,S] ];
+        let edges = [ [0,1], [1,2], [2,3], [3,0], [4,5], [5,6], [6,7], [7,4], [0,4], [1,5], [2,6], [3,7] ];
+        edges.forEach(e => fzCube.push({ p1: pts[e[0]], p2: pts[e[1]] }));
+
+        for(let i=0; i<32; i++) {
+            fzPillars.push({
+                x: (Math.random()-0.5)*S*1.5, z: (Math.random()-0.5)*S*1.5,
+                h: Math.random()*S*0.8 + S*0.2, oShift: Math.random()*Math.PI*2
+            });
+        }
+        for(let i=0; i<300; i++) {
+            fzStars.push({
+                x: (Math.random()-0.5)*S*1.8, y: (Math.random()-0.5)*S*1.8, z: (Math.random()-0.5)*S*1.8,
+                s: Math.random()*1.5 + 0.5, oShift: Math.random()*Math.PI*2
+            });
+        }
+
+        buerParticles = [];
+        for(let i=0; i<2000; i++) {
+            let theta = Math.random() * Math.PI * 2;
+            let pType = Math.random();
+            let radius = pType < 0.6 ? 130 * Math.abs(Math.sin(theta * 3)) + 20 : 180 + Math.random() * 25;
+            let baseX = radius * Math.cos(theta); let baseY = radius * Math.sin(theta);
+            let z = (Math.random() - 0.5) * 1800; 
+            let scale0 = FOV / (FOV + z);
+            let x3d = baseX / scale0; let y3d = baseY / scale0;
+            let isFire = Math.random() > 0.5;
+            buerParticles.push({
+                x: x3d, y: y3d, z: z, baseR: radius, theta: theta, 
+                c: isFire ? '#a83232' : '#8ba89c', isFire: isFire, s: Math.random() * 2 + 1
+            });
+        }
+    }
+
+    function project3D(x, y, z) {
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+        let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
+        if(z2 < -FOV+10) return null;
+        let scale = FOV / (FOV + z2); 
+        return { x: (width/2) + x2*scale, y: (height/2) - y1*scale - 40, scale: scale, z: z2 };
+    }
+
+    function renderFangzhang() {
+        if(!isDragging) angleY += 0.002;
+        ctx.globalCompositeOperation = 'screen';
+        
+        let projectedInner = [];
+        let breath = Math.sin(time)*0.5 + 0.5;
+
+        fzStars.forEach(p => {
+            let proj = project3D(p.x, p.y, p.z);
+            if(proj) projectedInner.push({ ...proj, c: '#ffffff', s: p.s, type: 'star' });
+        });
+
+        fzPillars.forEach(p => {
+            let pTop = project3D(p.x, -p.h/2, p.z);
+            let pBot = project3D(p.x, p.h/2, p.z);
+            if(pTop && pBot) {
+                projectedInner.push({ 
+                    x: pTop.x, y: pTop.y, z: pTop.z, botX: pBot.x, botY: pBot.y, 
+                    c: `rgba(243,229,171,${0.3 + Math.sin(time*2+p.oShift)*0.2})`, type: 'pillar' 
+                });
+            }
+        });
+
+        projectedInner.sort((a,b) => b.z - a.z);
+        projectedInner.forEach(p => {
+            if(p.type === 'star') {
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.s*p.scale*1.5, 0, Math.PI*2); 
+                ctx.fillStyle = `rgba(255,255,255,${0.4 + breath*0.6})`; ctx.fill();
+            } else if (p.type === 'pillar') {
+                ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.botX, p.botY);
+                ctx.strokeStyle = p.c; ctx.lineWidth = 4 * p.scale; ctx.stroke();
+            }
+        });
+
+        ctx.lineWidth = 1.5;
+        fzCube.forEach(edge => {
+            let p1 = project3D(edge.p1[0], edge.p1[1], edge.p1[2]);
+            let p2 = project3D(edge.p2[0], edge.p2[1], edge.p2[2]);
+            if(p1 && p2) {
+                ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
+                ctx.strokeStyle = 'rgba(212,175,55,0.6)'; ctx.shadowBlur = 10; ctx.shadowColor = '#d4af37'; ctx.stroke();
+            }
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function renderBuer() {
+        let deviation = Math.abs(angleX) + Math.abs(angleY);
+        let alignment = Math.max(0, 1 - deviation * 1.5); 
+
+        if(!isDragging) {
+            let driftSpeed = alignment > 0.8 ? 0.1 : 1;
+            angleY += Math.sin(time*0.5)*0.005 * driftSpeed;
+            angleX += Math.cos(time*0.3)*0.003 * driftSpeed;
+        }
+
+        let flashOverlay = document.getElementById('resonance-flash');
+        let textOverlay = document.getElementById('resonance-text');
+
+        if (alignment > 0.90) {
+            flashOverlay.style.opacity = '1'; textOverlay.style.opacity = '1';
+        } else {
+            flashOverlay.style.opacity = '0'; textOverlay.style.opacity = '0';
+        }
+
+        let coreProj = project3D(0, 0, 0);
+        if (coreProj) {
+            ctx.globalCompositeOperation = 'screen';
+            
+            let fireR = (40 + Math.sin(time * 3) * 20) * coreProj.scale * (1 - alignment + 0.1);
+            let fireA = Math.max(0, (0.6 + Math.sin(time * 3) * 0.3) * (1 - alignment));
+            if (fireA > 0.01) {
+                let grad = ctx.createRadialGradient(coreProj.x, coreProj.y, 0, coreProj.x, coreProj.y, fireR);
+                grad.addColorStop(0, `rgba(255, 80, 80, ${fireA})`);
+                grad.addColorStop(0.4, `rgba(168, 50, 50, ${fireA * 0.8})`);
+                grad.addColorStop(1, 'rgba(168, 50, 50, 0)');
+                ctx.beginPath(); ctx.arc(coreProj.x, coreProj.y, fireR, 0, Math.PI*2);
+                ctx.fillStyle = grad; ctx.fill();
+            }
+
+            let beat = Math.pow(Math.sin(time * 7), 4); 
+            let bodhiR = (12 + beat * 8) * coreProj.scale * (alignment + 0.1);
+            let bodhiA = Math.max(0, (0.8 + beat * 0.2) * alignment);
+            if (bodhiA > 0.01) {
+                ctx.shadowBlur = 40 * coreProj.scale * alignment; 
+                ctx.shadowColor = '#d4af37';
+                ctx.beginPath(); ctx.arc(coreProj.x, coreProj.y, bodhiR, 0, Math.PI*2);
+                ctx.fillStyle = `rgba(243, 229, 171, ${bodhiA})`; ctx.fill();
+                
+                ctx.beginPath(); ctx.arc(coreProj.x, coreProj.y, bodhiR * 0.4, 0, Math.PI*2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${bodhiA})`; ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
+        let projected = [];
+        buerParticles.forEach(p => {
+            let proj = project3D(p.x, p.y, p.z);
+            if(proj) {
+                let baseR = p.isFire ? 168 : 139; let baseG = p.isFire ? 50 : 168; let baseB = p.isFire ? 50 : 156;
+                let targetR = p.isFire ? 255 : 243; let targetG = p.isFire ? 255 : 229; let targetB = p.isFire ? 255 : 171;
+                
+                let r = Math.floor(baseR + (targetR - baseR) * alignment);
+                let g = Math.floor(baseG + (targetG - baseG) * alignment);
+                let b = Math.floor(baseB + (targetB - baseB) * alignment);
+                let a = 0.5 + alignment*0.5;
+
+                projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: `rgba(${r},${g},${b},${a})`, s: p.s, isAligned: alignment > 0.8 });
+            }
+        });
+
+        projected.sort((a,b) => b.z - a.z);
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.sc * (1 + alignment*1.5); 
+            if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.x, p.y, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if(p.isAligned) { ctx.shadowBlur = 10 * p.sc; ctx.shadowColor = p.c; } else { ctx.shadowBlur = 0; }
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function animate() {
+        ctx.fillStyle = 'rgba(1, 2, 3, 0.6)';
+        ctx.fillRect(0, 0, width, height);
+        time += 0.02;
+        if (currentRealm === 0) renderFangzhang(); else renderBuer();
+        requestAnimationFrame(animate);
+    }
+
+    function toggleRealm(type) {
+        if(currentRealm === type) return;
+        currentRealm = type;
+        
+        let panel = document.getElementById('status-panel');
+        let title = document.getElementById('s-title'); let desc = document.getElementById('s-desc');
+        let btnF = document.getElementById('btn-fangzhang'); let btnB = document.getElementById('btn-buer');
+        let hint = document.getElementById('drag-hint');
+
+        if (type === 0) {
+            title.innerText = "Mustard Seed · Infinite Vessel"; desc.innerHTML = "\"When the mind is pure, the Buddha land is pure.\"<br>A tiny square room seemingly holds 32,000 lion thrones.";
+            title.style.color = 'var(--gold)'; panel.style.borderLeftColor = 'rgba(212,175,55,0.8)';
+            btnF.style.background = 'rgba(20,15,5,0.9)'; btnF.style.color = 'var(--solid-gold)'; btnF.style.borderColor = 'var(--solid-gold)';
+            btnF.classList.remove('cyan-mode');
+            btnB.style.background = 'linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95))'; btnB.style.color = 'var(--cyan)'; btnB.style.borderColor = 'rgba(139,168,156,0.4)';
+            btnB.classList.add('cyan-mode');
+            hint.innerText = "360° Swipe · Piercing Physical Illusions";
+            angleX = 0.2; angleY = 0.3; 
+        } else {
+            title.innerText = "Lotus Fire · The Non-Dual Gate"; desc.innerHTML = "\"Affliction is Bodhi.\"<br>Find the absolute center to witness the lotus born from fire.";
+            title.style.color = 'var(--cyan)'; panel.style.borderLeftColor = 'rgba(139,168,156,0.8)';
+            btnB.style.background = 'rgba(10,20,15,0.9)'; btnB.style.color = 'var(--cyan)'; btnB.style.borderColor = 'var(--cyan)';
+            btnB.classList.remove('cyan-mode');
+            btnF.style.background = 'linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95))'; btnF.style.color = 'var(--gold)'; btnF.style.borderColor = 'rgba(212,175,55,0.4)';
+            hint.innerText = "360° Swipe · Seeking the Absolute Zero";
+            angleX = 0.5; angleY = -0.5; 
+        }
+    }
+
+    function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+    function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+    document.getElementById('theory-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
+    document.getElementById('ui-layer').addEventListener('pointerdown', (e) => e.stopPropagation());
+
+    function onDown(e) { 
+        if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; 
+        isDragging = true; lastMouseX = e.touches?e.touches[0].clientX:e.clientX; lastMouseY = e.touches?e.touches[0].clientY:e.clientY; 
+    }
+    function onMove(e) { 
+        if (!isDragging) return; 
+        let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; 
+        angleY += (curX-lastMouseX)*0.01; angleX += (curY-lastMouseY)*0.01; 
+        angleX = Math.max(-Math.PI/2, Math.min(Math.PI/2, angleX)); 
+        lastMouseX=curX; lastMouseY=curY; 
+    }
+    function onUp() { isDragging = false; }
+
+    canvas.addEventListener('mousedown', onDown); canvas.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
+
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("Speech synthesis is not supported on your device.");
+        
+        const btnText = document.getElementById('tts-text');
+        const btnIcon = document.getElementById('tts-icon');
+        
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel();
+            isPlayingTheory = false;
+            btnText.innerText = "Listen";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text, #theory-content-box .humble-statement');
+            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('. ');
+            
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead);
+            theoryUtterance.lang = 'en-US';
+            theoryUtterance.rate = 0.9; 
+
+            theoryUtterance.onend = () => {
+                isPlayingTheory = false;
+                btnText.innerText = "Listen";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+            };
+            
+            window.speechSynthesis.speak(theoryUtterance);
+            
+            isPlayingTheory = true;
+            btnText.innerText = "Stop";
+            btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    const originalCloseTheoryDrawer = closeTheoryDrawer;
+    closeTheoryDrawer = function() {
+        if (isPlayingTheory) toggleTheoryAudio(); 
+        originalCloseTheoryDrawer();
+    }
+
+    initEngines(); toggleRealm(0); animate();
+</script>
+</body>
+</html>

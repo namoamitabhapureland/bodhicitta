@@ -197,20 +197,21 @@
             });
         }
         
-        // ✨ 【多寶閣工程】凝縮扁舟：構造長條狀、扁平幾何體 (純金微塵構成)
-        for(let z = -200; z <= 200; z += 5) { // 長條
-            let t = (z + 200) / 400; // normalized z from 0 to 1
-            let widthAtZ = Math.sin(t * Math.PI) * 15 + 2; // 扁舟中間寬兩頭窄
+                // ✨ 【多寶閣工程】凝縮扁舟：縮小一半，使其更像一葉輕舟或金色水滴
+        for(let z = -100; z <= 100; z += 4) { // 長度減半 (原本是 -200 到 200)
+            let t = (z + 100) / 200; 
+            let widthAtZ = Math.sin(t * Math.PI) * 8 + 1; // 寬度減半 (原本是 15)
             
-            for(let x = -widthAtZ; x <= widthAtZ; x += 4) { // 寬度
-                for(let y = 0; y >= -4; y -= 4) { // 極度扁平，只有一層厚度
+            for(let x = -widthAtZ; x <= widthAtZ; x += 3) { // 增加粒子凝聚度
+                for(let y = 0; y >= -2; y -= 2) { 
                     zenBoatParticles.push({
                         ox: x, oy: y, oz: z, 
-                        oShift: Math.random() * Math.PI * 2 // 每個粒子的呼吸偏移
+                        oShift: Math.random() * Math.PI * 2 
                     });
                 }
             }
         }
+
 
         ensoParticles = [];
         for(let i=0; i<1500; i++) {
@@ -240,11 +241,12 @@
     function renderReed() {
         interactionRipple *= 0.95; 
         
-        // ✨ 【多寶閣工程】悟後起修：扁舟在業海中極其緩慢地主動移動
-        currentBoatPos.x += Math.sin(time * 0.1) * 0.05;
-        currentBoatPos.z += Math.cos(time * 0.15) * 0.08;
+        // ✨ 【多寶閣工程】悟後起修：讓扁舟像水滴般，在業海中自由且柔和地飄動
+        currentBoatPos.x += Math.sin(time * 0.4) * 0.8; // 自動的左右漂移
+        currentBoatPos.z += Math.cos(time * 0.3) * 1.0; // 自動的前後漂移
 
         let projected = [];
+       
         
         oceanParticles.forEach(p => {
             let waveY = Math.sin(p.ox*0.01 + time)*20 + Math.cos(p.oz*0.01 + time)*20 + 150;
@@ -261,28 +263,30 @@
             }
         });
 
-        // ✨ 【多寶閣工程】渲染金色扁舟 (凝縮後的法相)
-        let boatPulse = Math.sin(time * 0.8) * 0.1 + 0.9; // 扁舟整體的光芒呼吸
+               // ✨ 【多寶閣工程】渲染金色扁舟 (凝縮後的法相)
+        let boatPulse = Math.sin(time * 0.8) * 0.15 + 0.85; // 呼吸光芒變更明顯
         zenBoatParticles.forEach(p => {
-            // 基礎上下漂浮
-            let floatY = p.oy + Math.sin(time*1.5 + (currentBoatPos.z + p.oz)*0.01)*10 + 130; 
+            // ✨ 讓扁舟完全貼合海浪的物理起伏，產生「柔軟如水滴」的動態
+            let waveY = Math.sin((p.ox + currentBoatPos.x)*0.01 + time)*20 + 
+                        Math.cos((p.oz + currentBoatPos.z)*0.01 + time)*20 + 145; 
             
-            // 3D 座標加上主動移動
+            let floatY = p.oy + waveY; 
+            
             let proj = project3D(p.ox + currentBoatPos.x, floatY, p.oz + currentBoatPos.z);
             
             if(proj) {
-                // 每個粒子細微的粒子閃爍
-                let particleAlpha = Math.sin(time * 3 + p.oShift) * 0.2 + 0.8; 
+                let particleAlpha = Math.sin(time * 3 + p.oShift) * 0.3 + 0.7; 
                 let finalAlpha = particleAlpha * boatPulse * proj.scale;
                 
                 projected.push({ 
                     x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, 
-                    c: `rgba(212,175,55,${finalAlpha})`, 
-                    s: 2, // 扁舟由細小粒子構成
+                    c: `rgba(243,229,171,${finalAlpha})`, // 顏色調為更明亮的純金
+                    s: 2.2, // 粒子稍微加大，增加水滴凝聚感
                     type: 'boat' 
                 });
             }
         });
+
 
         projected.sort((a,b) => b.z - a.z);
 

@@ -1,1003 +1,545 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>般若智慧 ． 破迷開悟</title>
+    <title>龍華菩提 ． 賢劫千佛</title>
     <style>
-        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; }
+        :root {
+            --bg-deep: #010102; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --text-main: #d0d0d0;
+        }
         
         body { 
-            background: #010103; color: #d0d0d0; 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
-            overflow: hidden; touch-action: none; width: 100vw; height: 100dvh;
+            /* ✨ 防止 iOS 滑動穿透 (Overscroll) ✨ */
+            overflow: hidden; touch-action: none; user-select: none; overscroll-behavior: none;
         }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-        /* ---------------- 虛空瞬光 ---------------- */
-        #void-flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 999; transition: opacity 0.8s ease-out, box-shadow 0.8s ease-out; }
-        .flash-gold { box-shadow: inset 0 0 150px rgba(212, 175, 55, 0.85); opacity: 1 !important; }
-        .flash-red { box-shadow: inset 0 0 180px rgba(139, 0, 0, 0.95); opacity: 1 !important; }
-
-        /* ---------------- 星空引擎 ---------------- */
-        canvas { display: block; position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-        #vignette { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(circle at center, transparent 10%, rgba(1, 1, 3, 0.98) 100%); }
-
-        /* ---------------- 能量光弦 ---------------- */
-        #energy-wrap { position: absolute; top: 0; left: 0; width: 100%; height: 6px; z-index: 100; background: rgba(255,255,255,0.02); opacity: 0; transition: opacity 0.5s; border-radius: 20px 20px 0 0; overflow: hidden; }
-        #energy-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #d4af37, #f3e5ab, #d4af37); box-shadow: 0 0 15px rgba(212,175,55,0.8); transform-origin: left; }
-        .critical-time { background: linear-gradient(90deg, transparent, #ff4444 20%, #8b0000 50%, #ff4444 80%, transparent) !important; animation: breatheRed 0.4s infinite alternate; }
-        @keyframes breatheRed { from { box-shadow: 0 0 10px rgba(139,0,0,0.8); } to { box-shadow: 0 0 35px rgba(255,0,0,1); } }
-
-        /* ---------------- 導航按鈕 ---------------- */
-        #btn-back, #btn-info {
-            position: absolute; top: calc(max(20px, env(safe-area-inset-top, 20px))); 
-            z-index: 100; font-size: 0.75rem; letter-spacing: 2px; cursor: pointer; 
-            display: flex; align-items: center; gap: 6px; opacity: 0.6; transition: all 0.4s ease;
-            background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 20px;
-            backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.05);
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
         }
-        #btn-back { left: 20px; color: #8ba89c; }
-        #btn-back:hover, #btn-back:active { opacity: 1; transform: scale(0.95); color: #d4af37; border-color: rgba(212,175,55,0.3); }
-        #btn-back svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
 
-        #btn-info { right: 20px; color: #d4af37; border-color: rgba(212,175,55,0.15); }
-        #btn-info:hover, #btn-info:active { opacity: 1; transform: scale(0.95); filter: drop-shadow(0 0 8px #d4af37); background: rgba(212,175,55,0.05); }
-        #btn-info svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.5; }
-
-        /* ---------------- 說明欄彈出層 ---------------- */
-        #info-overlay {
-            position: fixed; inset: 0; z-index: 9999; background: rgba(1, 1, 3, 0.85);
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.6s ease;
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px;
+            background: transparent; border-left: 2px solid rgba(212,175,55,0.8); 
+            padding: 10px 20px; z-index: 100; transition: 1s; pointer-events: none;
         }
-        #info-overlay.show { display: flex; opacity: 1; }
-        #info-content {
-            width: 85%; max-width: 480px; color: #b0c4de; font-size: 0.95rem; line-height: 2.2;
-            letter-spacing: 2px; text-align: justify; border-left: 1px solid rgba(212, 175, 55, 0.4); 
-            padding-left: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-weight: 300;
+        .status-title { font-size: 1.15rem; font-weight: bold; color: var(--gold); letter-spacing: 2px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 15px rgba(0,0,0,1); }
+        .status-desc { font-size: 0.85rem; color: #ddd; line-height: 1.8; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,1); }
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; transition: background 0.8s; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+        #buddha-name-display {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            color: var(--gold); font-size: 2.2rem; font-weight: bold; letter-spacing: 8px;
+            text-shadow: 0 0 20px var(--solid-gold); z-index: 50;
+            opacity: 0; transition: opacity 1.5s ease-in-out, color 0.5s, text-shadow 0.5s;
+            white-space: nowrap; text-align: center; pointer-events: none;
         }
-        .info-title { color: #f3e5ab; font-size: 1.2rem; margin-bottom: 20px; letter-spacing: 4px; text-shadow: 0 0 15px rgba(212,175,55,0.5); font-weight: 300; }
-
-        /* ---------------- 法門場景大門 ---------------- */
-        #door-scene { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; height: 460px; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; cursor: pointer; pointer-events: auto; }
-        #door-scene.zooming { transition: transform 1.8s cubic-bezier(0.6, 0.05, 0.1, 1), opacity 1.2s; transform: translate(-50%, -50%) scale(10); opacity: 0; pointer-events: none; }
+        .buddha-rank { font-size: 1rem; color: var(--cyan); letter-spacing: 4px; margin-bottom: 12px; text-shadow: none; display: block;}
         
-        .door-frame-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 11; pointer-events: none; filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.2)); }
-        
-        #door-panel-container { position: absolute; top: 15px; left: 15px; right: 15px; bottom: 0; z-index: 12; display: flex; overflow: hidden; justify-content: center; pointer-events: none; border-radius: 125px 125px 0 0; }
-        
-        .door-panel { width: 50%; height: 100%; transition: transform 1.5s cubic-bezier(0.5, 0, 0.1, 1); position: relative; overflow: hidden; }
-        
-        .door-panel::before { 
-            content: ''; position: absolute; inset: 0; 
-            background: radial-gradient(circle at center, rgba(243, 229, 171, 0.25) 0%, rgba(212, 175, 55, 0.05) 80%);
-            backdrop-filter: blur(5px);
-            border-bottom: 0.8px solid rgba(243, 229, 171, 0.3);
-            animation: doorBreathe 4s infinite alternate ease-in-out;
-            transition: all 0.3s;
+        #universe-flash {
+            position: absolute; inset: 0; background: #fff; z-index: 99999; pointer-events: none;
+            opacity: 0; transition: opacity 1.5s ease-out;
         }
-        @keyframes doorBreathe { 0% { opacity: 0.85; filter: brightness(0.95); } 100% { opacity: 1; filter: brightness(1.2); } }
+        .flash-active { opacity: 1 !important; transition: opacity 0.1s ease-in !important; }
 
-        .door-smoke {
-            position: absolute; bottom: -70px; left: 50%; transform: translateX(-50%);
-            width: 480px; height: 120px; z-index: 13; pointer-events: none;
-            background: radial-gradient(ellipse at center, rgba(255,255,255,0.35) 0%, rgba(212,175,55,0.15) 50%, transparent 85%);
-            filter: blur(12px); animation: smokeDrift 6s infinite alternate ease-in-out;
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 12px; transition: opacity 1s;}
+        
+        .switch-btn {
+            width: 85%; max-width: 320px; justify-content: center;
+            background: linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(212,175,55,0.5); color: var(--gold);
+            padding: 14px 20px; border-radius: 30px; font-size: 1rem; font-weight: bold; letter-spacing: 2px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1);
         }
+        .switch-btn:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(212,175,55,0.6); }
+        #theory-btn { border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,15,10,0.8); }
 
-        .door-left { border-radius: 125px 0 0 0; }
-        .door-left::before { border-right: 1px solid rgba(255,255,255,0.6); box-shadow: 2px 0 15px rgba(212,175,55,0.4); }
-        .door-right { border-radius: 0 125px 0 0; }
-        .door-right::before { border-left: 1px solid rgba(255,255,255,0.6); box-shadow: -2px 0 15px rgba(212,175,55,0.4); }
-        
-        .lotus-seal { position: absolute; top: 50%; transform: translateY(-50%); width: 140px; height: 140px; z-index: 15; pointer-events: none; }
-        .door-left .lotus-seal { right: -70px; } 
-        .door-right .lotus-seal { left: -70px; } 
-
-        #door-scene.opening .door-left { transform: translateX(-100%); }
-        #door-scene.opening .door-right { transform: translateX(100%); }
-
-        #door-hint { position: absolute; top: -60px; width: 100%; text-align: center; color: #f3e5ab; font-size: 1.1rem; letter-spacing: 6px; animation: pulseGlow 2.5s infinite alternate; font-weight: 300; transition: all 0.5s; }
-        @keyframes pulseGlow { 0% { opacity: 0.5; text-shadow: 0 0 10px rgba(212,175,55,0.3); } 100% { opacity: 1; text-shadow: 0 0 25px rgba(243,229,171,0.8), 0 0 40px #fff; } }
-
-        /* ---------------- 般若之眼 (作弊提示按鈕) ---------------- */
-        #btn-hint {
-            position: absolute; bottom: 20px; right: 25px;
-            background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.4);
-            border-radius: 20px; padding: 6px 14px; color: #f3e5ab; font-size: 0.8rem;
-            display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.3s;
-            z-index: 60; backdrop-filter: blur(5px);
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
         }
-        #btn-hint:active { transform: scale(0.95); background: rgba(212, 175, 55, 0.3); }
-        #btn-hint svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; }
-
-        /* ---------------- 題庫玉簡面板 ---------------- */
-        #q-panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -40%) scale(0.92); width: 92%; max-width: 540px; background: linear-gradient(145deg, rgba(15, 20, 25, 0.95), rgba(5, 8, 10, 0.98)); backdrop-filter: blur(25px); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 20px; padding: 40px 30px; box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 30px rgba(139, 168, 156, 0.05); opacity: 0; pointer-events: none; transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1); z-index: 50; }
-        #q-panel.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+        #theory-drawer.open { transform: translateY(0); }
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(212,175,55,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        .close-btn { color: var(--cyan); font-size: 0.85rem; letter-spacing: 2px; font-weight: bold; cursor: pointer; }
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
         
-        #q-panel.karma-border { border: 1px solid rgba(184, 59, 59, 0.5); box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 30px rgba(184, 59, 59, 0.1); }
+        .humble-statement { font-size: 0.85rem; color: #b0b0b0; line-height: 1.8; text-align: justify; padding: 20px; border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; background: rgba(20,15,5,0.3); margin-bottom: 50px; font-style: normal; }
         
-        .karma-dot { position: absolute; top: 20px; right: 20px; width: 6px; height: 6px; background: #ff4444; border-radius: 50%; display: none; box-shadow: 0 0 10px #ff0000, 0 0 20px #8b0000; animation: pulseKarma 1.2s infinite alternate; }
-        @keyframes pulseKarma { from { opacity: 0.4; transform: scale(0.8); } to { opacity: 1; transform: scale(1.3); } }
-
-        #q-level { color: #8ba89c; font-size: 0.75rem; letter-spacing: 5px; margin-bottom: 25px; text-align: center; border-bottom: 1px solid rgba(139,168,156,0.15); padding-bottom: 15px; position: relative; text-transform: uppercase; transition: all 0.5s ease; }
-        #voice-hint { color: #d4af37; font-size: 0.65rem; letter-spacing: 2px; position: absolute; right: 0; top: 0; animation: pulse 1.5s infinite alternate; opacity: 0.8;}
+        .main-title { color: var(--gold); font-size: 1.5rem; letter-spacing: 3px; text-align: center; margin-bottom: 50px; text-shadow: 0 0 15px rgba(212,175,55,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--solid-gold), transparent); margin: 15px auto 0; }
         
-        #q-text { color: #f3e5ab; font-size: 1.05rem; letter-spacing: 2px; line-height: 2; text-align: justify; margin-bottom: 30px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-weight: 300; }
-
-        .option-btn { width: 100%; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(139,168,156,0.15); border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; color: #b0c4de; font-size: 0.9rem; letter-spacing: 1.5px; line-height: 1.7; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); text-align: left; display: flex; align-items: flex-start; gap: 12px; position: relative; overflow: hidden; }
-        .option-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.1), transparent); transition: 0.5s; }
-        .option-btn:hover::before { left: 100%; }
-        .option-btn:active { transform: scale(0.97); background: rgba(212,175,55,0.08); border-color: rgba(212,175,55,0.5); color: #fff; box-shadow: 0 0 20px rgba(212,175,55,0.1); }
-        
-        .opt-dot { width: 14px; height: 14px; border: 1.5px solid rgba(139,168,156,0.4); border-radius: 50%; flex-shrink: 0; margin-top: 5px; transition: 0.3s; position: relative; }
-        .option-btn:active .opt-dot { border-color: #d4af37; background: rgba(212,175,55,0.5); box-shadow: 0 0 10px #d4af37; }
-
-        #cert-content { display: none; text-align: center; flex-direction: column; align-items: center; animation: fadeIn 1s forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .sword-container { width: 100px; height: 220px; margin: 15px auto; filter: drop-shadow(0 0 25px rgba(212,175,55,0.5)); display: none; animation: floatSword 4s infinite ease-in-out; }
-        @keyframes floatSword { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-
-        .btn-main { background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212,175,55,0.4); color: #f3e5ab; padding: 12px 30px; border-radius: 25px; font-size: 0.85rem; letter-spacing: 4px; cursor: pointer; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); display: block; margin: 20px auto 0 auto; backdrop-filter: blur(5px); }
-        .btn-main:hover { background: rgba(212,175,55,0.15); box-shadow: 0 0 20px rgba(212,175,55,0.2); }
-        .btn-main:active { transform: scale(0.95); }
-        
-        .btn-danger { border-color: rgba(255, 68, 68, 0.4); color: #ffaaaa; background: rgba(139,0,0,0.1); }
-        .btn-danger:hover { background: rgba(139,0,0,0.25); box-shadow: 0 0 25px rgba(255,68,68,0.3); }
-
-        .svg-full { width: 100%; height: 100%; display: block; overflow: visible; }
-        
-        /* ---------------- 系統彈出框 ---------------- */
-        .modal-wrap { 
-            position: fixed; inset: 0; z-index: 9999; 
-            background: rgba(1, 1, 3, 0.85); 
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
-            display: flex; justify-content: center; align-items: center; 
-            opacity: 0; pointer-events: none; transition: opacity 0.6s ease; 
-        }
-        .modal-wrap.show { opacity: 1; pointer-events: auto; }
-        
-        .modal-box { 
-            width: 85%; max-width: 360px; 
-            background: linear-gradient(145deg, rgba(15, 20, 25, 0.95), rgba(5, 8, 10, 0.98)); 
-            border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 16px; 
-            padding: 40px 30px; text-align: center; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(212,175,55,0.05); 
-            transform: translateY(20px); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); 
-        }
-        .modal-wrap.show .modal-box { transform: translateY(0); }
-        
-        .modal-title { color: #f3e5ab; font-size: 1.25rem; letter-spacing: 6px; margin-bottom: 20px; text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 15px; font-weight: 300; }
-        .modal-text { color: #8ba89c; font-size: 0.95rem; letter-spacing: 3px; line-height: 2.2; margin-bottom: 30px; font-weight: 300; }
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 24px; height: 24px; stroke: var(--gold); fill: none; stroke-width: 1.5; filter: drop-shadow(0 0 5px rgba(212,175,55,0.4)); flex-shrink: 0;}
+        .c-title { color: var(--gold); font-size: 1.2rem; letter-spacing: 1.5px; font-weight: bold; }
+        .c-text { color: var(--text-main); font-size: 0.95rem; line-height: 1.9; text-align: justify; padding-left: 39px; letter-spacing: 0.8px;}
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
     </style>
 </head>
 <body>
 
-    <div id="void-flash"></div>
-
-    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
-        <defs>
-            <linearGradient id="gold-frame" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="30%" stop-color="#d4af37" stop-opacity="1"/><stop offset="70%" stop-color="#b8860b" stop-opacity="1"/><stop offset="100%" stop-color="#5c400a" stop-opacity="0.9"/></linearGradient>
-            <linearGradient id="gold-bright" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="1"/><stop offset="50%" stop-color="#f3e5ab" stop-opacity="1"/><stop offset="100%" stop-color="#d4af37" stop-opacity="1"/></linearGradient>
-            <linearGradient id="gold-dark" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#5c400a"/><stop offset="50%" stop-color="#b8860b"/><stop offset="100%" stop-color="#5c400a"/></linearGradient>
-            <linearGradient id="cyan-glass" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e0f7fa" stop-opacity="0.8"/><stop offset="50%" stop-color="#00838f" stop-opacity="0.6"/><stop offset="100%" stop-color="#004d40" stop-opacity="0.9"/></linearGradient>
-            <filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-            <filter id="sword-glow"><feGaussianBlur stdDeviation="8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        </defs>
-    </svg>
-
-    <template id="lotus-seal-svg">
-        <svg viewBox="0 0 140 140" class="svg-full" filter="drop-shadow(0 0 15px rgba(212,175,55,0.6))">
-            <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(243,229,171,0.5)" stroke-width="1.5" stroke-dasharray="2 6"/>
-            <circle cx="70" cy="70" r="42" fill="none" stroke="rgba(212,175,55,0.8)" stroke-width="1.2"/>
-            <circle cx="70" cy="70" r="10" fill="url(#gold-bright)" filter="url(#glow)"/>
-            <g stroke="url(#gold-bright)" stroke-width="1">
-                <path d="M 70 18 C 88 42 88 55 70 63 C 52 55 52 42 70 18 Z" fill="rgba(255, 183, 197, 0.15)" />
-                <path d="M 70 18 C 88 42 88 55 70 63 C 52 55 52 42 70 18 Z" fill="rgba(174, 221, 243, 0.15)" transform="rotate(45 70 70)" />
-                <path d="M 70 18 C 88 42 88 55 70 63 C 52 55 52 42 70 18 Z" fill="rgba(168, 230, 207, 0.15)" transform="rotate(90 70 70)" />
-                <path d="M 70 18 C 88 42 88 55 70 63 C 52 55 52 42 70 18 Z" fill="rgba(255, 139, 148, 0.15)" transform="rotate(135 70 70)" />
-                <path d="M 70 18 C 88 42 88 55 70 63 C 52 55 52 42 70 18 Z" fill="rgba(204, 174, 243, 0.15)" transform="rotate(180 70 70)" />
-                <path d="M 70 18 C 88 42 88 55 70 63 C 52 55 52 42 70 18 Z" fill="rgba(174, 243, 221, 0.15)" transform="rotate(225 70 70)" />
-                <path d="M 70 18 C 88 42 88 55 70 63 C 52 55 52 42 70 18 Z" fill="rgba(255, 204, 153, 0.15)" transform="rotate(270 70 70)" />
-                <path d="M 70 18 C 88 42 88 55 70 63 C 52 55 52 42 70 18 Z" fill="rgba(235, 243, 174, 0.15)" transform="rotate(315 70 70)" />
-            </g>
-        </svg>
-    </template>
-
-    <canvas id="starCanvas"></canvas>
-    <div id="vignette"></div>
-
-    <div id="btn-back" onclick="returnToDaochang()">
-        <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        返回道場
+    <div class="back-btn" onclick="window.location.href='index.html?screen=3'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        回道場
     </div>
 
-    <div id="btn-info" onclick="toggleInfo(true)">
-        <svg viewBox="0 0 24 24">
-            <path d="M4 6h16M4 12h16M4 18h10" stroke-linecap="round"/>
-            <circle cx="18" cy="18" r="2" fill="currentColor" stroke="none" />
-        </svg>
-        法門緣起
+    <div id="status-panel">
+        <div class="status-title" id="s-title">龍華菩提 ． 彌勒下生</div>
+        <div class="status-desc" id="s-desc">「乃至一稱南無佛，皆於龍華得度脫。」<br>乘願再來，赴法界約。</div>
     </div>
 
-    <div id="door-scene" onclick="triggerDoor()">
-        <div id="door-hint">請輕觸入陣</div>
-        <svg class="door-frame-svg" viewBox="0 0 280 460" preserveAspectRatio="none">
-            <path d="M10 460 L 10 140 C 10 60, 70 10, 140 10 C 210 10, 270 60, 270 140 L 270 460 L 250 460 L 250 140 C 250 75, 195 30, 140 30 C 85 30, 30 75, 30 140 L 30 460 Z" fill="url(#gold-frame)"/>
-            <path d="M15 460 L 15 140 C 15 65, 75 15, 140 15 C 205 15, 265 65, 265 140 L 265 460" fill="none" stroke="#fff" stroke-width="0.8" opacity="0.6"/>
-        </svg>
+    <section class="matrix-section" id="bg-section">
+        <div id="universe-flash"></div> 
+        <canvas id="realmCanvas"></canvas>
         
-        <div class="door-smoke"></div>
-
-        <div id="door-panel-container">
-            <div class="door-panel door-left"><div class="lotus-seal"></div></div>
-            <div class="door-panel door-right"><div class="lotus-seal"></div></div>
-        </div>
-    </div>
-
-    <div id="q-panel">
-        <div id="energy-wrap"><div id="energy-bar"></div></div>
-        <div class="karma-dot" id="karma-dot"></div>
-        <div id="q-level"><span id="stage-text">陣法載入中</span> <span id="voice-hint"></span></div>
-        
-        <div id="question-content">
-            <div id="q-text"></div>
-            <div id="q-options"></div>
-            <!-- ✨ 般若之眼按鈕 -->
-            <div id="btn-hint" onclick="useHint()" style="display:none;">
-                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                般若之眼 (<span id="hint-count">0</span>)
-            </div>
+        <div id="buddha-name-display">
+            <span class="buddha-rank" id="buddha-rank"></span>
+            <span id="buddha-name"></span>
         </div>
 
-        <div id="cert-content">
-            <div class="sword-container" id="sword-svg">
-                <svg viewBox="0 0 100 240" class="svg-full">
-                    <polygon points="50,5 75,70 50,190 25,70" fill="url(#cyan-glass)" stroke="url(#gold-bright)" stroke-width="1.2"/>
-                    <polygon points="50,5 50,190 25,70" fill="rgba(255,255,255,0.25)"/> 
-                    <line x1="50" y1="5" x2="50" y2="190" stroke="#fff" stroke-width="2" filter="url(#sword-glow)"/> 
-                    <polygon points="15,180 85,180 65,200 35,200" fill="url(#gold-frame)"/>
-                    <polygon points="50,180 85,180 65,200 50,200" fill="rgba(0,0,0,0.3)"/> 
-                    <rect x="43" y="200" width="14" height="30" fill="url(#gold-dark)"/>
-                    <polygon points="50,230 65,240 50,250 35,240" fill="url(#gold-bright)" filter="url(#glow)"/>
+        <div class="ui-layer" id="ui-layer">
+            <button class="switch-btn" id="btn-longhua" onclick="toggleRealm(0)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="10" r="9" stroke-dasharray="2 4" opacity="0.6"/>
+                    <path d="M12 2 C 17 6, 19 11, 12 16 C 5 11, 7 6, 12 2 Z"/>
+                    <path d="M5 19 C 8 16, 16 16, 19 19 C 15 22, 9 22, 5 19 Z"/>
+                    <path d="M9 17 C 10 15, 14 15, 15 17"/>
                 </svg>
-            </div>
-            <!-- ✨ 調整了中文結算文字的字體大小與字距 -->
-            <div id="cert-text" style="color:#a8c2b5; line-height:2.2; margin-top:20px; font-size:1.05rem; text-align:center; letter-spacing:2px;"></div>
+                <span id="text-longhua">仰望菩提 ． 赴龍華約</span>
+            </button>
+            <button class="switch-btn" id="btn-xianjie" onclick="toggleRealm(1)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <ellipse cx="12" cy="12" rx="11" ry="4" transform="rotate(30 12 12)" opacity="0.6"/>
+                    <ellipse cx="12" cy="12" rx="11" ry="4" transform="rotate(-30 12 12)" opacity="0.6"/>
+                    <path d="M12 7 C 15 10, 17 14, 12 17 C 7 14, 9 10, 12 7 Z"/>
+                    <circle cx="12" cy="3" r="1.5" fill="currentColor"/><circle cx="12" cy="21" r="1.5" fill="currentColor"/>
+                    <circle cx="3" cy="12" r="1.5" fill="currentColor"/><circle cx="21" cy="12" r="1.5" fill="currentColor"/>
+                </svg>
+                <span id="text-xianjie">觀想千佛 ． 無盡遞嬗</span>
+            </button>
+            
+            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                探究彌勒與賢劫千佛之約
+            </button>
+            
+            <div style="color:rgba(212,175,55,0.6); font-size:0.75rem; letter-spacing:2px; margin-top:5px;" id="drag-hint">360° 滑動觀想 ． 彌勒法界</div>
         </div>
+    </section>
 
-        <div id="action-btns" style="display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top:20px; width: 100%;"></div>
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()">
+            <div class="close-bar"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+                <div class="close-btn">收起古卷</div>
+                <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                    <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                    <span id="tts-text">聆聽法音</span>
+                </div>
+            </div>
+        </div>
+        <div class="theory-container" id="theory-content-box">
+            <div class="humble-statement">法海浩瀚，唯佛與佛乃能究盡。本文僅為一介在家居士，依經教邏輯與祖師大德之註疏，試圖探求如來真實義之修學略影。若有未盡或錯漏之處，皆屬個人智識之侷限，祈願三寶加被，同修共鑒。</div>
+            <h1 class="main-title">彌勒下生 ． 千佛接力</h1>
+            
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                    <div class="c-title">一、釋尊授記與龍華三會</div>
+                </div>
+                <div class="c-text">依《菩薩處胎經》等大乘教典所載，昔日釋尊於法會之中，將無上正等正覺之宏誓，深情付囑予彌勒大士。彌勒菩薩現居兜率內院，為一生補處。待因緣成熟之際，將下生娑婆，於高大如龍盤空之龍華菩提樹下成佛，開三大法會度化有緣：<br><br>
+                <span style="color:var(--cyan); font-weight:bold;">第一會</span>：度九十六億釋尊法運受五戒者。<br>
+                <span style="color:var(--cyan); font-weight:bold;">第二會</span>：度九十四億釋尊法運受三歸者。<br>
+                <span style="color:var(--cyan); font-weight:bold;">第三會</span>：度九十二億乃至一稱南無佛者。<br><br>
+                這份授記，或許不僅是單純的法脈交替，更是諸佛不捨眾生、生生不息之慈悲誓約。
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"/><circle cx="12" cy="14" r="3"/></svg>
+                    <div class="c-title">二、極樂托底與普賢之德</div>
+                </div>
+                <div class="c-text">昔玄奘大師乃唯識宗匠，神識清明具金剛之志，或能直趨兜率內院。然凡夫之心緒往往脆若琉璃，若無彌陀本願之攝受托底，泛游業海，或許宛如孤舟入巨浪，稍有不慎，便可能於隔陰之迷中隨波逐流。<br><br>經教中隱喻，極樂世界或許並非行者止步貪享之終極歸宿。往生淨土、證阿鞞跋致，似是為了讓行者能安穩蓄積菩提資糧。若依無量壽經彌陀第二十二願之深意，菩薩生彼國者，雖究竟必至一生補處；然若欲超越常倫，亦可披弘誓鎧，返入娑婆，修普賢之德。這或許暗示著，極樂乃是護念凡夫行菩薩道、迴入娑婆度有情的一處增上勝處。
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+            
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="10" ry="5"/><path d="M12 2v20"/></svg>
+                    <div class="c-title">三、法身常住與乘願再來</div>
+                </div>
+                <div class="c-text">縱觀法界，報化之身似皆示現生滅之相，或許唯有清淨法身方能常住不凋。依觀世音菩薩授記經所透漏之玄機，極樂世界阿彌陀佛雖壽量不可思議，然化緣若盡，亦可能示現入滅。佛入滅後，正法住世無量劫，待正法滅盡之際，觀世音菩薩將於七寶菩提樹下成等正覺，號曰普光功德山王如來。<br><br>這種無常中的相續，或許正訴說著法脈傳承的深意。由此深觀，吾等仰賴彌陀願力期盼換取不退轉之身，或許便能於機緣成熟時，更從容地赴那彌勒菩薩的龍華三會之約，乃至化身微塵，投身於賢劫千佛那浩瀚無垠的宇宙接力之中。
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+            
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <div class="c-title">四、賢劫千佛與無盡遞嬗</div>
+                </div>
+                <div class="c-text">依《賢劫經》所載，吾等所處之時空名為賢劫。於此漫長劫中，將有一千尊佛依序降生娑婆，或許正為了無間斷地度化有情。<br><br>佛法似宛如法界中永不熄滅之明燈。第九小劫有四佛出世，第十小劫彌勒下生，而第十五小劫更有九百九十四尊佛相繼示現，直至第二十小劫樓至佛，似將圓滿千佛之數。<br><br>吾等今日仰賴極樂托底，期盼換取不退轉之身，或許正是為預備此浩瀚之約。待未來機緣成熟，或能於此千佛相續之無盡遞嬗中，化身微塵乘願再來，甚至於未來際，綻放屬於吾等成佛之金蓮。
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- 說明欄彈出層 -->
-    <div id="info-overlay" onclick="toggleInfo(false)">
-        <div id="info-content" onclick="event.stopPropagation()">
-            <div class="info-title">【 般若陣法 ． 破迷開悟 】</div>
-            <div class="info-text">
-                「一切有為法，如夢幻泡影。」<br><br>
-                此陣法並非測驗輸贏，而是供行者洗滌塵勞、磨練定慧的「磨磚成鏡」之所。十重資糧，一重隱藏覺照；唯有以「平常心」觀照文字，方能在紛亂相中見不變之自性，化為「幾何慧劍」斬斷無明。<br><br>
-                <span style="color:#FFD700;">【 資糧與莊嚴法則 】</span><br>
-                1. 每日輪轉：一日一開。娑婆一日夜，行者僅能入陣一次。<br>
-                2. 資糧轉化：所獲分數皆為定力顯化，需滿 100 分方能匯入主系統。<br>
-                3. 紅光警示：迷失陣中即生業火，一念答錯（或超時），陣法自動隱沒，需待明日。
-            </div>
-        </div>
-    </div>
 
 <script>
-    // ==========================================
-    // ✨ 星空引擎 (Star Engine) ✨
-    // ==========================================
-    const canvas = document.getElementById('starCanvas');
+    const canvas = document.getElementById('realmCanvas');
     const ctx = canvas.getContext('2d');
-    let width, height, stars = [], warpSpeed = 1;
+    let width, height;
+    
+    let currentRealm = 0; 
+    let time = 0;
 
-    function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+    let lhParticles = [];
+    let lhRipples = [];
+    let angleX = 0.1, angleY = 0;
+    let isDragging = false;
+    let lastMouseX = 0, lastMouseY = 0;
+
+    let xjStars = [];
+    const FOV = 400; 
+    const timeline = [
+        { rank: "第九小劫 ． 第一尊", name: "拘留孫佛", highlight: false },
+        { rank: "第九小劫 ． 第二尊", name: "拘那含牟尼佛", highlight: false },
+        { rank: "第九小劫 ． 第三尊", name: "迦葉佛", highlight: false },
+        { rank: "第九小劫 ． 第四尊", name: "釋迦牟尼佛", highlight: true },
+        { rank: "第十小劫 ． 第五尊", name: "彌勒尊佛", highlight: true },
+        { isFastMode: true, rank: "第十五小劫", name: "994 尊佛相繼出世", lotusCount: 15 }, 
+        { rank: "第二十小劫 ． 第一千尊", name: "樓至佛 (盧至如來)", highlight: true, isLast: true }
+    ];
+    let xjStep = 0;
+    let xjFastCounter = 0;
+    let lotusState = { phase: 'waiting', timer: 0, z: 2000, scale: 0, opacity: 0, petals: [] };
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+    }
     window.addEventListener('resize', resize); resize();
 
-    for (let i = 0; i < 300; i++) {
-        stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, color: Math.random() > 0.5 ? '#8ba89c' : '#f3e5ab' });
-    }
-
-    function renderStars() {
-        ctx.fillStyle = 'rgba(1, 1, 3, 0.4)'; ctx.fillRect(0, 0, width, height); ctx.globalCompositeOperation = 'screen';
-        stars.forEach(star => {
-            star.z -= warpSpeed;
-            if (star.z <= 0) { star.z = 2000; star.x = (Math.random() - 0.5) * 2000; star.y = (Math.random() - 0.5) * 2000; } 
-            else if (star.z > 2000) { star.z = 0; }
-            let scale = 400 / (400 + star.z);
-            ctx.beginPath(); ctx.arc((width / 2) + star.x * scale, (height / 2) + star.y * scale, Math.max(0.5, 2 * scale), 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(${star.color === '#f3e5ab' ? '243,229,171' : '139,168,156'}, ${Math.min(1, scale * 2)})`; ctx.fill();
-        });
-        ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(renderStars);
-    }
-    renderStars();
-
-    // ==========================================
-    // ✨ 音效引擎 (Audio Engine) ✨
-    // ==========================================
-    let audioCtx, tensionOsc, tensionGain, tensionInterval;
-    function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
-    function playTensionSound() {
-        if (!audioCtx) return;
-        tensionOsc = audioCtx.createOscillator(); tensionGain = audioCtx.createGain();
-        tensionOsc.type = 'sine'; tensionOsc.frequency.setValueAtTime(45, audioCtx.currentTime);
-        tensionGain.gain.setValueAtTime(0, audioCtx.currentTime);
-        tensionOsc.connect(tensionGain); tensionGain.connect(audioCtx.destination); tensionOsc.start();
-        let isHigh = false;
-        tensionInterval = setInterval(() => {
-            isHigh = !isHigh; tensionGain.gain.setTargetAtTime(isHigh ? 0.3 : 0.05, audioCtx.currentTime + 0.1); tensionOsc.frequency.setTargetAtTime(isHigh ? 55 : 45, audioCtx.currentTime + 0.1);
-        }, 400);
-    }
-    function stopTensionSound() {
-        if (tensionInterval) clearInterval(tensionInterval);
-        try { if (tensionGain) tensionGain.gain.setTargetAtTime(0, audioCtx.currentTime + 0.2); } catch(e) {}
-        try { if (tensionOsc) setTimeout(() => { try { tensionOsc.stop(); } catch(e) {} }, 300); } catch(e) {}
-    }
-    function playWrongSound() {
-        initAudio(); if (!audioCtx) return;
-        let t = audioCtx.currentTime; let osc1 = audioCtx.createOscillator(); let osc2 = audioCtx.createOscillator(); let gainNode = audioCtx.createGain();
-        osc1.type = 'sine'; osc1.frequency.setValueAtTime(120, t); osc2.type = 'triangle'; osc2.frequency.setValueAtTime(240, t); 
-        gainNode.gain.setValueAtTime(0, t); gainNode.gain.linearRampToValueAtTime(0.8, t + 0.05); gainNode.gain.exponentialRampToValueAtTime(0.001, t + 2.5); 
-        osc1.connect(gainNode); osc2.connect(gainNode); gainNode.connect(audioCtx.destination);
-        osc1.start(t); osc2.start(t); osc1.stop(t + 3); osc2.stop(t + 3);
-    }
-
-    const sealTemplate = document.getElementById('lotus-seal-svg').innerHTML;
-    document.querySelectorAll('.lotus-seal').forEach(el => el.innerHTML = sealTemplate);
-
-    // ==========================================
-    // ✨ 涅槃記憶與因果資料庫 ✨
-    // ==========================================
-    let db = { points: 0, totalCorrect: 0, lastMatrixDate: "", tempBag: 0, treasures: { sword: 0 }, clearedQ: [], failedQ: {} };
-    try { 
-        const local = JSON.parse(localStorage.getItem('PX_V15.0'));
-        if (local && typeof local === 'object') { 
-            db = { ...db, ...local }; 
-            if(!db.tempBag) db.tempBag = 0; if(!db.treasures) db.treasures = {sword:0}; if(!db.clearedQ) db.clearedQ = []; if(!db.failedQ) db.failedQ = {}; 
+    function initEngines() {
+        lhParticles = []; lhRipples = [];
+        for (let i = 0; i < 600; i++) {
+            let t = i / 600; let radius = 35 * (1 - t) + 5; let spiral = t * Math.PI * 12;
+            let y = t * 250 - 100; 
+            lhParticles.push({
+                x: Math.cos(spiral)*radius + (Math.random()-0.5)*10, y: y, z: Math.sin(spiral)*radius + (Math.random()-0.5)*10,
+                baseY: y, color: Math.random()>0.4 ? '#8b5a2b' : '#d4af37', size: Math.random()*2+1, type: 'trunk', pulseOffset: Math.random()*Math.PI*2 
+            });
         }
-    } catch(e) {}
-
-    // ✨ 般若之眼：初始化與每日發放邏輯
-    if(db.prajnaHints === undefined) db.prajnaHints = 0; // 新手預設0，靠每日發放1顆
-    if(db.lastHintDate === undefined) db.lastHintDate = "";
-
-    const todayStr = new Date().toDateString();
-    
-    // 每日登入送1個 (可累積)
-    if (db.lastHintDate !== todayStr) {
-        db.prajnaHints++; 
-        db.lastHintDate = todayStr;
-        localStorage.setItem('PX_V15.0', JSON.stringify(db));
-    }
-
-    // ⚠️ 
-    let hasPlayedToday = (db.lastMatrixDate === todayStr);
-
-    if (hasPlayedToday) {
-        setTimeout(() => {
-            const modal = document.getElementById('done-modal');
-            if (modal) modal.classList.add('show');
-        }, 600);
-        document.addEventListener("DOMContentLoaded", () => {
-            const hint = document.getElementById('door-hint');
-            if (hint) hint.style.display = 'none';
-        });
-    }
-
-    const DEMO_TOTAL_Q = 10; 
-
-    // 第一階段：基礎定課 (請您自行貼上剩餘題目)
-    const basicBank = [
-    { id: 'C1', time: 120, text: "佛教中的「三寶」是指：", options: [{ text: "佛、法、僧", isCorrect: true }, { text: "天、地、人", isCorrect: false }, { text: "慈、悲、喜", isCorrect: false }, { text: "經、律、論", isCorrect: false }] },
-    { id: 'C2', time: 120, text: "「阿彌陀佛」名號的本願含義是：", options: [{ text: "無量光、無量壽", isCorrect: true }, { text: "大智慧、大神通", isCorrect: false }, { text: "無量財、無量福", isCorrect: false }, { text: "消災、延壽", isCorrect: false }] },
-    { id: 'C3', time: 120, text: "修行「五戒」的首要目的是：", options: [{ text: "防非止惡，自淨其意", isCorrect: true }, { text: "求取來生富貴", isCorrect: false }, { text: "獲得感應神通", isCorrect: false }, { text: "顯現身份高貴", isCorrect: false }] },
-    { id: 'C4', time: 120, text: "「四聖諦」中，揭示痛苦根源的是：", options: [{ text: "集諦 (Cause of Suffering)", isCorrect: true }, { text: "苦諦", isCorrect: false }, { text: "滅諦", isCorrect: false }, { text: "道諦", isCorrect: false }] },
-    { id: 'C5', time: 120, text: "在「六度」修行中，「布施」主要是為了對治：", options: [{ text: "貪慳 (Greed and Stinginess)", isCorrect: true }, { text: "嗔恚", isCorrect: false }, { text: "愚痴", isCorrect: false }, { text: "懈怠", isCorrect: false }] },
-    { id: 'C6', time: 120, text: "西方極樂世界是由哪位佛陀的願力所成就？", options: [{ text: "阿彌陀佛", isCorrect: true }, { text: "藥師佛", isCorrect: false }, { text: "釋迦牟尼佛", isCorrect: false }, { text: "彌勒菩薩", isCorrect: false }] },
-    { id: 'C7', time: 120, text: "淨土宗修行的「三資糧」是指：", options: [{ text: "信、願、行", isCorrect: true }, { text: "勤、苦、練", isCorrect: false }, { text: "戒、定、慧", isCorrect: false }, { text: "慈、悲、捨", isCorrect: false }] },
-    { id: 'C8', time: 120, text: "「八正道」的首要導向是：", options: [{ text: "正見 (Right View)", isCorrect: true }, { text: "正語", isCorrect: false }, { text: "正精進", isCorrect: false }, { text: "正定", isCorrect: false }] },
-    { id: 'C9', time: 120, text: "「輪迴」是指眾生在六道中：", options: [{ text: "依業受報，循環不息", isCorrect: true }, { text: "永遠消失", isCorrect: false }, { text: "隨機產生", isCorrect: false }, { text: "僅在人天往返", isCorrect: false }] },
-    { id: 'C10', time: 120, text: "念佛時，最核心的心態應是：", options: [{ text: "發菩提心，一心歸命", isCorrect: true }, { text: "追求名利", isCorrect: false }, { text: "心不在焉", isCorrect: false }, { text: "攀緣感應", isCorrect: false }] }
-];
-
-    // 第二階段：般若寶卷 (請您自行貼上剩餘題目)
-    const sutraBank = [
-    { id: 'S01', time: 120, text: "《金剛經》云：「凡所有相，皆是虛妄。若見諸相非相，則見（　　）。」", options: [{ text: "如來", isCorrect: true }, { text: "自性", isCorrect: false }, { text: "實相", isCorrect: false }, { text: "法身", isCorrect: false }] },
-    { id: 'S02', time: 120, text: "《心經》核心要義中，「色不異空，空不異色」下一句為何？", options: [{ text: "色即是空，空即是色", isCorrect: true }, { text: "受想行識，亦復如是", isCorrect: false }, { text: "是諸法空相", isCorrect: false }, { text: "不生不滅，不垢不淨", isCorrect: false }] },
-    { id: 'S03', time: 120, text: "【佛教史觀】佛陀入滅後，由大迦葉尊者召集五百阿羅漢進行「第一次結集」，其目的是：", options: [{ text: "結集經律，防範正法散佚", isCorrect: true }, { text: "選出下一任教主", isCorrect: false }, { text: "編纂大乘菩薩修行儀軌", isCorrect: false }, { text: "興建大型塔廟", isCorrect: false }] },
-    { id: 'S04', time: 120, text: "《六祖壇經》惠能大師言：「菩提本無樹，明鏡亦非台，本來無一物，何處惹（　　）。」", options: [{ text: "塵埃", isCorrect: true }, { text: "煩惱", isCorrect: false }, { text: "是非", isCorrect: false }, { text: "業障", isCorrect: false }] },
-    { id: 'S05', time: 120, text: "《妙法蓮華經》中，以「火宅喻」譬喻何理？", options: [{ text: "三界猶如火宅，眾生不知出離", isCorrect: true }, { text: "修行必經火劫方能成就", isCorrect: false }, { text: "心生瞋恨如同火燒功德林", isCorrect: false }, { text: "法滅盡時之景象", isCorrect: false }] },
-    { id: 'S06', time: 120, text: "【填空】《心經》中「五蘊皆空」的「空」，其真實義是：", options: [{ text: "緣起無自性 (Empty of self-nature)", isCorrect: true }, { text: "斷滅無所有 (Nihilism)", isCorrect: false }, { text: "意識的空白", isCorrect: false }, { text: "物質的消亡", isCorrect: false }] },
-    { id: 'S07', time: 120, text: "【填空】《金剛經》名句：『應無所住，而生其（　　）。』", options: [{ text: "心", isCorrect: true }, { text: "願", isCorrect: false }, { text: "慧", isCorrect: false }, { text: "念", isCorrect: false }] },
-    { id: 'S08', time: 120, text: "《維摩詰經》云：「隨其心淨，則（　　）。」", options: [{ text: "佛土淨", isCorrect: true }, { text: "眾生淨", isCorrect: false }, { text: "萬法淨", isCorrect: false }, { text: "業障淨", isCorrect: false }] },
-    { id: 'S09', time: 120, text: "【填空】『一切有為法，如夢幻泡影，如露亦如電，應作（　　）。』", options: [{ text: "如是觀", isCorrect: true }, { text: "如是思", isCorrect: false }, { text: "如是行", isCorrect: false }, { text: "如是受", isCorrect: false }] },
-    { id: 'S10', time: 120, text: "《楞嚴經》警示「知見立知，即無明本」，意指修行者不應：", options: [{ text: "於自性上添加主觀執見", isCorrect: true }, { text: "學習世俗知識", isCorrect: false }, { text: "建立正確知見", isCorrect: false }, { text: "觀察外界事物", isCorrect: false }] },
-    { id: 'S11', time: 120, text: "【填空】《金剛經》：『法尚應捨，何況（　　）。』", options: [{ text: "非法", isCorrect: true }, { text: "萬法", isCorrect: false }, { text: "世法", isCorrect: false }, { text: "有法", isCorrect: false }] },
-    { id: 'S12', time: 120, text: "《金剛經》云：「離一切諸相，則名（　　）。」", options: [{ text: "諸佛", isCorrect: true }, { text: "實相", isCorrect: false }, { text: "解脫", isCorrect: false }, { text: "法界", isCorrect: false }] },
-    { id: 'S13', time: 120, text: "《心經》云：「是諸法空相，不生不滅，不垢不淨，（　　）。」", options: [{ text: "不增不減", isCorrect: true }, { text: "不來不去", isCorrect: false }, { text: "無掛無礙", isCorrect: false }, { text: "空無所有", isCorrect: false }] },
-    { id: 'S14', time: 120, text: "《華嚴經》云：「若人欲了知，三世一切佛，應觀法界性，（　　）。」", options: [{ text: "一切唯心造", isCorrect: true }, { text: "萬法皆空寂", isCorrect: false }, { text: "因果不相換", isCorrect: false }, { text: "自性本清淨", isCorrect: false }] },
-    { id: 'S15', time: 120, text: "《圓覺經》云：「一切眾生種種幻化，皆生如來（　　）。」", options: [{ text: "圓覺妙心", isCorrect: true }, { text: "清淨法身", isCorrect: false }, { text: "慈悲願海", isCorrect: false }, { text: "智慧神力", isCorrect: false }] },
-    { id: 'S16', time: 120, text: "《楞嚴經》中，文殊菩薩選拔圓通，認為最契合此方根基的是：", options: [{ text: "耳根圓通", isCorrect: true }, { text: "念佛圓通", isCorrect: false }, { text: "意根圓通", isCorrect: false }, { text: "眼根圓通", isCorrect: false }] },
-    { id: 'S17', time: 120, text: "「若眾生心，憶佛念佛，現前當來，（　　）。」", options: [{ text: "必定值佛", isCorrect: true }, { text: "必得往生", isCorrect: false }, { text: "必證無生", isCorrect: false }, { text: "必開智慧", isCorrect: false }] },
-    { id: 'S18', time: 120, text: "維摩詰居士與文殊菩薩論「入不二法門」，最後維摩詰以（　　）示之。", options: [{ text: "默然無言", isCorrect: true }, { text: "演說妙法", isCorrect: false }, { text: "顯現神通", isCorrect: false }, { text: "拈花微笑", isCorrect: false }] },
-    { id: 'S19', time: 120, text: "《佛說阿彌陀經》中，極樂世界之眾生「常以清旦，各以衣祴盛眾妙華」，供養（　　）。", options: [{ text: "他方十萬億佛", isCorrect: true }, { text: "阿彌陀佛", isCorrect: false }, { text: "觀世音菩薩", isCorrect: false }, { text: "三寶諸賢聖", isCorrect: false }] },
-    { id: 'S20', time: 120, text: "《大乘起信論》指出，覺察「心源」的修行者被稱為：", options: [{ text: "究竟覺", isCorrect: true }, { text: "隨分覺", isCorrect: false }, { text: "相似覺", isCorrect: false }, { text: "始覺", isCorrect: false }] },
-    { id: 'S21', time: 120, text: "《楞嚴經》云：「狂心頓歇，（　　）。」", options: [{ text: "歇即菩提", isCorrect: true }, { text: "妄即真如", isCorrect: false }, { text: "便是清淨", isCorrect: false }, { text: "頓悟本心", isCorrect: false }] },
-    { id: 'S22', time: 120, text: "《華嚴經》云：「心如工畫師，能畫諸世間，五蘊悉從生，（　　）。」", options: [{ text: "無法而不造", isCorrect: true }, { text: "萬法皆如幻", isCorrect: false }, { text: "唯識無有境", isCorrect: false }, { text: "皆由業力轉", isCorrect: false }] },
-    { id: 'S23', time: 120, text: "《觀無量壽佛經》云：「是故汝等心想佛時，是心即是三十二相、八十隨形好。是心（　　），是心（　　）。」", options: [{ text: "作佛、是佛", isCorrect: true }, { text: "念佛、見佛", isCorrect: false }, { text: "清淨、無染", isCorrect: false }, { text: "離相、即佛", isCorrect: false }] },
-    { id: 'S24', time: 120, text: "《地藏菩薩本願經》言：「南閻浮提眾生，舉止動念，無不是（　　），無不是（　　）。」", options: [{ text: "業、罪", isCorrect: true }, { text: "幻、妄", isCorrect: false }, { text: "苦、集", isCorrect: false }, { text: "貪、癡", isCorrect: false }] },
-    { id: 'S25', time: 120, text: "龍樹菩薩於《大智度論》云：「佛法大海，信為能入，（　　）為能度。」", options: [{ text: "智", isCorrect: true }, { text: "慧", isCorrect: false }, { text: "悲", isCorrect: false }, { text: "願", isCorrect: false }] },
-    { id: 'S26', time: 120, text: "《維摩詰經》云：「直心是（　　）。」", options: [{ text: "道場", isCorrect: true }, { text: "菩提", isCorrect: false }, { text: "淨土", isCorrect: false }, { text: "如來", isCorrect: false }] },
-    { id: 'S27', time: 120, text: "《圓覺經》云：「知幻即離，不作方便；離幻即覺，（　　）。」", options: [{ text: "亦無漸次", isCorrect: true }, { text: "頓悟菩提", isCorrect: false }, { text: "本自清淨", isCorrect: false }, { text: "無有生滅", isCorrect: false }] },
-    { id: 'S28', time: 120, text: "《法華經》云：「十方佛土中，唯有（　　）法，無二亦無三，除佛方便說。」", options: [{ text: "一乘", isCorrect: true }, { text: "菩薩", isCorrect: false }, { text: "大乘", isCorrect: false }, { text: "解脫", isCorrect: false }] },
-    { id: 'S29', time: 120, text: "《佛遺教經》云：「制心一處，（　　）。」", options: [{ text: "無事不辦", isCorrect: true }, { text: "煩惱自斷", isCorrect: false }, { text: "萬緣皆息", isCorrect: false }, { text: "菩提自現", isCorrect: false }] },
-    { id: 'S30', time: 120, text: "《八大人覺經》第一覺悟：「世間無常，（　　）。」", options: [{ text: "國土危脆", isCorrect: true }, { text: "人命呼吸", isCorrect: false }, { text: "四大苦空", isCorrect: false }, { text: "萬法皆幻", isCorrect: false }] },
-    { id: 'S31', time: 120, text: "《金剛經》云：「過去心不可得，現在心不可得，（　　）不可得。」", options: [{ text: "未來心", isCorrect: true }, { text: "眾生心", isCorrect: false }, { text: "諸佛心", isCorrect: false }, { text: "菩提心", isCorrect: false }] },
-    { id: 'S32', time: 120, text: "《無量壽經》修行宗要：「發（　　），一向專念阿彌陀佛。」", options: [{ text: "菩提心", isCorrect: true }, { text: "清淨心", isCorrect: false }, { text: "至誠心", isCorrect: false }, { text: "深信願心", isCorrect: false }] },
-    { id: 'S33', time: 120, text: "《六祖壇經》云：「佛法在世間，不離世間覺；離世覓菩提，（　　）。」", options: [{ text: "恰如求兔角", isCorrect: true }, { text: "猶如水中月", isCorrect: false }, { text: "皆是癡妄想", isCorrect: false }, { text: "終不可得見", isCorrect: false }] },
-    { id: 'S34', time: 120, text: "《普賢行願品》言及十大願王之無盡：「而虛空界乃至煩惱（　　），我此願王無有窮盡。」", options: [{ text: "不可盡故", isCorrect: true }, { text: "皆本空寂", isCorrect: false }, { text: "實無所有", isCorrect: false }, { text: "本自無生", isCorrect: false }] },
-    { id: 'S35', time: 120, text: "《金剛經》偈頌：「若以色見我，以音聲求我，是人行（　　），不能見如來。」", options: [{ text: "邪道", isCorrect: true }, { text: "魔法", isCorrect: false }, { text: "妄想", isCorrect: false }, { text: "有為法", isCorrect: false }] },
-    { id: 'S36', time: 120, text: "《藥師琉璃光如來本願功德經》第二大願：「願我來世得菩提時，身如琉璃，（　　）。」", options: [{ text: "內外明徹", isCorrect: true }, { text: "光明廣大", isCorrect: false }, { text: "無有瑕穢", isCorrect: false }, { text: "清淨無染", isCorrect: false }] },
-    { id: 'S37', time: 120, text: "《四十二章經》警示：「慎勿信汝意，汝意（　　）。」", options: [{ text: "不可信", isCorrect: true }, { text: "皆是妄", isCorrect: false }, { text: "本空寂", isCorrect: false }, { text: "如幻影", isCorrect: false }] },
-    { id: 'S38', time: 120, text: "《心經》首句：「觀自在菩薩，行深般若波羅蜜多時，照見五蘊皆空，度（　　）。」", options: [{ text: "一切苦厄", isCorrect: true }, { text: "無邊煩惱", isCorrect: false }, { text: "生死輪迴", isCorrect: false }, { text: "一切眾生", isCorrect: false }] },
-    { id: 'S39', time: 120, text: "《華嚴經》警惕行者：「忘失菩提心，修諸善法，是名（　　）。」", options: [{ text: "魔業", isCorrect: true }, { text: "妄作", isCorrect: false }, { text: "有漏", isCorrect: false }, { text: "邪見", isCorrect: false }] },
-    { id: 'S40', time: 120, text: "《勝鬘經》論及如來藏之深義：「如來藏者，是法界藏、法身藏、出世間上上藏、（　　）。」", options: [{ text: "自性清淨藏", isCorrect: true }, { text: "圓滿報身藏", isCorrect: false }, { text: "功德寶海藏", isCorrect: false }, { text: "無量智慧藏", isCorrect: false }] },
-    { id: 'S41', time: 120, text: "《楞嚴經》開示理頓事漸：「理則頓悟，乘悟併銷；事非頓除，（　　）。」", options: [{ text: "因次第盡", isCorrect: true }, { text: "漸次而修", isCorrect: false }, { text: "需假方便", isCorrect: false }, { text: "隨緣消業", isCorrect: false }] },
-    { id: 'S42', time: 120, text: "《解深密經》論第八識：「阿陀那識甚深細，一切種子如瀑流。我於凡愚不開演，（　　）。」", options: [{ text: "恐彼分別執為我", isCorrect: true }, { text: "恐彼生起斷滅見", isCorrect: false }, { text: "為免眾生生疑謗", isCorrect: false }, { text: "唯恐行者著有法", isCorrect: false }] },
-    { id: 'S43', time: 120, text: "《佛遺教經》論少欲知足：「當知多欲之人，多求利故，（　　）。」", options: [{ text: "苦惱亦多", isCorrect: true }, { text: "煩惱無盡", isCorrect: false }, { text: "業障深重", isCorrect: false }, { text: "生死不絕", isCorrect: false }] },
-    { id: 'S44', time: 120, text: "《金剛經》四相觀：「無我相、無人相、無眾生相、（　　）。」", options: [{ text: "無壽者相", isCorrect: true }, { text: "無佛道相", isCorrect: false }, { text: "無法界相", isCorrect: false }, { text: "無生死相", isCorrect: false }] },
-    { id: 'S45', time: 120, text: "《楞伽經》揭示大乘綱宗：「佛語（　　）為宗，無門為法門。」", options: [{ text: "心", isCorrect: true }, { text: "覺", isCorrect: false }, { text: "空", isCorrect: false }, { text: "實相", isCorrect: false }] },
-    { id: 'S46', time: 120, text: "馬鳴菩薩《大乘起信論》：「所言法者，謂（　　）。是心則攝一切世間法、出世間法。」", options: [{ text: "眾生心", isCorrect: true }, { text: "如來藏", isCorrect: false }, { text: "真如法", isCorrect: false }, { text: "阿賴耶", isCorrect: false }] },
-    { id: 'S47', time: 120, text: "世親菩薩《唯識三十頌》：「由假說我法，有種種相轉，彼依（　　）變。」", options: [{ text: "識所", isCorrect: true }, { text: "心所", isCorrect: false }, { text: "業力", isCorrect: false }, { text: "緣起", isCorrect: false }] },
-    { id: 'S48', time: 120, text: "《華嚴經．普賢行願品》：「菩薩若能隨順眾生，則為隨順（　　）。」", options: [{ text: "供養諸佛", isCorrect: true }, { text: "大悲願力", isCorrect: false }, { text: "菩提大道", isCorrect: false }, { text: "法界實相", isCorrect: false }] },
-    { id: 'S49', time: 120, text: "《佛說阿彌陀經》往生要件：「不可以（　　）得生彼國。」", options: [{ text: "少善根福德因緣", isCorrect: true }, { text: "散亂稱名", isCorrect: false }, { text: "執著世間有為福", isCorrect: false }, { text: "聲聞緣覺乘心", isCorrect: false }] },
-    { id: 'S50', time: 120, text: "《佛說阿彌陀經》釋名：「其國眾生，無有眾苦，（　　），故名極樂。」", options: [{ text: "但受諸樂", isCorrect: true }, { text: "常受法樂", isCorrect: false }, { text: "唯有清淨", isCorrect: false }, { text: "無有煩惱", isCorrect: false }] }
-];
-
-
-    // 最終覺照 (大陣列 Boss 題庫，請您自行貼上剩餘題目)
-    const bossBank = [
-                { 
-            id: 'BOSS_01', level: "第十一重 ． 隱藏覺照", time: 120,
-            text: "極樂與娑婆，若以一真法界觀之，實相為何？",
-            options: [
-                { text: "全妄即真。極樂不離自心，以唯心淨土接引唯心眾生。", isCorrect: true },
-                { text: "淨土乃為根器愚鈍者所設之幻城。", isCorrect: false },
-                { text: "極樂與娑婆皆為實有，故須厭離此土欣求彼土。", isCorrect: false },
-                { text: "必須仰賴彌陀神力，於心外建立一淨土供安立。", isCorrect: false }
-            ]
-        },
-        { 
-            id: 'BOSS_02', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "龍樹菩薩於《中論》明示中道實相：「眾因緣生法，我說即是無，亦為是假名，亦是（　　）。」", 
-            options: [
-                { text: "中道義", isCorrect: true }, 
-                { text: "第一義", isCorrect: false }, 
-                { text: "實相法", isCorrect: false }, 
-                { text: "畢竟空", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_03', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "《大乘起信論》明言真如熏習之理：「以有真如法故，能熏習無明；以熏習因緣力故，則令妄心厭生死苦、求涅槃樂。此妄心有厭求因緣故，即（　　）。」", 
-            options: [
-                { text: "熏習真如", isCorrect: true }, 
-                { text: "發菩提心", isCorrect: false }, 
-                { text: "斷除煩惱", isCorrect: false }, 
-                { text: "證得法身", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_04', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "《楞嚴經》卷首，佛破阿難妄想識心，直指輪迴根本：「一切眾生，從無始來，生死相續，皆由不知（　　），用諸妄想，此想不真，故有輪轉。」", 
-            options: [
-                { text: "常住真心，性淨明體", isCorrect: true }, 
-                { text: "如來藏妙真如性", isCorrect: false }, 
-                { text: "圓滿菩提，歸無所得", isCorrect: false }, 
-                { text: "第一義諦，本覺真心", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_05', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "《六祖壇經》定慧品中，惠能大師立無相頌之根本：「善知識！我此法門，以（　　）為宗，以（　　）為體，以（　　）為本。」", 
-            options: [
-                { text: "無念、無相、無住", isCorrect: true }, 
-                { text: "頓悟、真如、菩提", isCorrect: false }, 
-                { text: "無我、無人、無心", isCorrect: false }, 
-                { text: "般若、法身、解脫", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_06', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "《中論．觀涅槃品》破除凡夫對涅槃之對立執著：「涅槃之實際，及與世間際，（　　）。」", 
-            options: [
-                { text: "如是二際者，無毫釐差別", isCorrect: true }, 
-                { text: "如是二際者，皆因分別生", isCorrect: false }, 
-                { text: "此二本來空，一相亦不立", isCorrect: false }, 
-                { text: "悉皆如幻化，無有決定實", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_07', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "《維摩詰所說經》中，天女散華，華至諸菩薩皆墮落，至大弟子便著不墮。天女謂：「結習未盡，華則著身。」此「結習」依經義深層指何法執？", 
-            options: [
-                { text: "畏生死想", isCorrect: true }, 
-                { text: "煩惱障蔽", isCorrect: false }, 
-                { text: "所知障礙", isCorrect: false }, 
-                { text: "根本無明", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_08', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "玄奘大師所譯之《成唯識論》探討第八識，指出「阿賴耶」之名義，專指其具有（　　）之特性，為染淨法之根本。", 
-            options: [
-                { text: "能藏、所藏、執藏", isCorrect: true }, 
-                { text: "變現、緣起、業感", isCorrect: false }, 
-                { text: "根本、依止、受熏", isCorrect: false }, 
-                { text: "總報、異熟、無記", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_09', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "《華嚴經》論及菩薩發心之極致功德：「初發心時，便成（　　）。」此語彰顯華嚴圓融無礙、因果交徹之理。", 
-            options: [
-                { text: "正覺", isCorrect: true }, 
-                { text: "菩薩", isCorrect: false }, 
-                { text: "佛道", isCorrect: false }, 
-                { text: "法身", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_10', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "《解深密經．勝義諦相品》中，佛告曼殊室利，勝義諦超越一切尋思境界：「一切法（　　）相，即是勝義諦相。」", 
-            options: [
-                { text: "無二", isCorrect: true }, 
-                { text: "無相", isCorrect: false }, 
-                { text: "真如", isCorrect: false }, 
-                { text: "畢竟空", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_11', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "《大智度論》卷三十四明言大乘般若之尊貴：「般若波羅蜜，是諸佛（　　）。」", 
-            options: [
-                { text: "母", isCorrect: true }, 
-                { text: "師", isCorrect: false }, 
-                { text: "眼", isCorrect: false }, 
-                { text: "心", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_12', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "《勝鬘經》論及如來藏之深義：「如來藏者，是法界藏、法身藏、出世間上上藏、（　　）。」", 
-            options: [
-                { text: "自性清淨藏", isCorrect: true }, 
-                { text: "圓滿報身藏", isCorrect: false }, 
-                { text: "功德寶海藏", isCorrect: false }, 
-                { text: "無量智慧藏", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_13', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "《楞伽經》揭示大乘綱宗：「佛語（　　）為宗，無門為法門。」", 
-            options: [
-                { text: "心", isCorrect: true }, 
-                { text: "覺", isCorrect: false }, 
-                { text: "空", isCorrect: false }, 
-                { text: "實相", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_14', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "世親菩薩《唯識三十頌》：「由假說我法，有種種相轉，彼依（　　）變。」", 
-            options: [
-                { text: "識所", isCorrect: true }, 
-                { text: "心所", isCorrect: false }, 
-                { text: "業力", isCorrect: false }, 
-                { text: "緣起", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_15', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "《法華經》揭示諸佛出世之究竟本懷：「十方佛土中，唯有（　　）法，無二亦無三，除佛方便說。」", 
-            options: [
-                { text: "一乘", isCorrect: true }, 
-                { text: "大乘", isCorrect: false }, 
-                { text: "菩薩", isCorrect: false }, 
-                { text: "解脫", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_16', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "《楞嚴經》開示理頓事漸之修行心要：「理則頓悟，乘悟併銷；事非頓除，（　　）。」", 
-            options: [
-                { text: "因次第盡", isCorrect: true }, 
-                { text: "漸次而修", isCorrect: false }, 
-                { text: "需假方便", isCorrect: false }, 
-                { text: "隨緣消業", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_17', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "《維摩詰經》論菩薩淨土之根本，云：「直心是（　　）。」", 
-            options: [
-                { text: "道場", isCorrect: true }, 
-                { text: "菩提", isCorrect: false }, 
-                { text: "淨土", isCorrect: false }, 
-                { text: "如來", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_18', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "馬鳴菩薩《大乘起信論》確立大乘法體：「所言法者，謂（　　）。是心則攝一切世間法、出世間法。」", 
-            options: [
-                { text: "眾生心", isCorrect: true }, 
-                { text: "如來藏", isCorrect: false }, 
-                { text: "真如法", isCorrect: false }, 
-                { text: "阿賴耶", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_19', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "《金剛經》偈頌破除凡夫向外馳求之相：「若以色見我，以音聲求我，是人行（　　），不能見如來。」", 
-            options: [
-                { text: "邪道", isCorrect: true }, 
-                { text: "魔法", isCorrect: false }, 
-                { text: "妄想", isCorrect: false }, 
-                { text: "有為法", isCorrect: false }
-            ] 
-        },
-        { 
-            id: 'BOSS_20', level: "第十一重 ． 隱藏覺照", time: 120, 
-            text: "《解深密經》說明佛陀為何不輕易為凡愚宣說第八識：「阿陀那識甚深細，一切種子如瀑流。我於凡愚不開演，（　　）。」", 
-            options: [
-                { text: "恐彼分別執為我", isCorrect: true }, 
-                { text: "恐彼生起斷滅見", isCorrect: false }, 
-                { text: "為免眾生生疑謗", isCorrect: false }, 
-                { text: "唯恐行者著有法", isCorrect: false }
-            ] 
+        for (let i = 0; i < 2000; i++) {
+            let theta = Math.random() * Math.PI * 2; let phi = Math.acos(Math.random()*2 - 1) / 1.4; 
+            let radius = Math.random() * 220 + 60; 
+            let colors = ['#097969', '#2e8b57', '#008b8b', '#f3e5ab'];
+            lhParticles.push({
+                x: radius*Math.sin(phi)*Math.cos(theta), y: radius*Math.cos(phi)+120, z: radius*Math.sin(phi)*Math.sin(theta), 
+                baseY: radius*Math.cos(phi)+120, baseRadius: radius, basePhi: phi, baseTheta: theta,
+                color: colors[Math.floor(Math.random()*colors.length)], size: Math.random()*3+1, type: 'canopy', pulseOffset: Math.random()*Math.PI*2 
+            });
         }
-    ];
+        lhRipples.push({ radius: 0, maxRadius: 600, speed: 1.2 });
+        lhRipples.push({ radius: 200, maxRadius: 600, speed: 1.2 });
+        lhRipples.push({ radius: 400, maxRadius: 600, speed: 1.2 });
 
-
-    let questionBank = [];
-    let currentBossQ = null;
-    let currentStage = 0; let correctCount = 0; let isProcessing = false;
-    let timerId = null, criticalTimerId = null;
-    let hintUsedOnCurrentQ = false;
-
-    // ✨ 刷新般若之眼按鈕
-    function updateHintBtn() {
-        const btn = document.getElementById('btn-hint');
-        if (db.prajnaHints > 0 && !hintUsedOnCurrentQ) {
-            btn.style.display = 'flex';
-            document.getElementById('hint-count').innerText = db.prajnaHints;
-        } else {
-            btn.style.display = 'none';
+        xjStars = []; lotusState.petals = [];
+        for (let i = 0; i < 800; i++) {
+            xjStars.push({
+                x: (Math.random()-0.5)*3000, y: (Math.random()-0.5)*3000, z: Math.random()*2000, 
+                speed: Math.random()*5+2, color: Math.random()>0.5 ? '#9fdfc8' : '#f3e5ab'
+            });
         }
+        for(let i=0; i<12; i++) lotusState.petals.push(i * (Math.PI * 2 / 12));
     }
 
-    // ✨ 發動般若之眼 (作弊提示)
-    function useHint() {
-        if (db.prajnaHints <= 0 || hintUsedOnCurrentQ || isProcessing) return;
+    function project3D(x, y, z) {
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+        let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
+        let scale = FOV / (FOV + z2 + 250); 
+        return { x: (width/2) + x2*scale, y: (height/2) - y1*scale - 80, scale: scale, z: z2 };
+    }
+
+    function renderLonghua() {
+        if(!isDragging) angleY += 0.0015; 
         
-        db.prajnaHints--; 
-        hintUsedOnCurrentQ = true;
-        localStorage.setItem('PX_V15.0', JSON.stringify(db));
-        updateHintBtn(); 
-        
-        const opts = document.querySelectorAll('.option-btn');
-        opts.forEach(btn => {
-            if (btn.getAttribute('data-correct') === 'true') {
-                btn.style.borderColor = '#d4af37';
-                btn.style.background = 'rgba(212, 175, 55, 0.25)';
-                btn.style.boxShadow = '0 0 20px rgba(212, 175, 55, 0.6)';
-            } else {
-                btn.style.opacity = '0.2';
-                btn.style.pointerEvents = 'none'; 
+        ctx.globalCompositeOperation = 'screen';
+        for (let r of lhRipples) {
+            r.radius += r.speed; if (r.radius > r.maxRadius) r.radius = 0;
+            let opacity = Math.max(0, 1 - Math.pow(r.radius / r.maxRadius, 1.5));
+            ctx.beginPath();
+            for (let i = 0; i <= 60; i++) {
+                let theta = (i/60)*Math.PI*2;
+                let proj = project3D(Math.cos(theta)*r.radius, -100, Math.sin(theta)*r.radius);
+                if (i===0) ctx.moveTo(proj.x, proj.y); else ctx.lineTo(proj.x, proj.y);
             }
+            ctx.lineWidth = 12; ctx.strokeStyle = `rgba(212, 175, 55, ${opacity * 0.25})`; ctx.stroke();
+            ctx.lineWidth = 2.5; ctx.shadowBlur = 20; ctx.shadowColor = `rgba(243, 229, 171, ${opacity})`;
+            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.7})`; ctx.stroke(); ctx.shadowBlur = 0;
+        }
+        ctx.globalCompositeOperation = 'source-over';
+
+        let projected = [];
+        lhParticles.forEach(p => {
+            let px=p.x, py=p.y, pz=p.z, sFac=1;
+            if (p.type === 'trunk') { py = p.baseY + Math.sin(time+p.pulseOffset)*2; } 
+            else if (p.type === 'canopy') {
+                sFac = 1 + Math.sin(time+p.pulseOffset)*0.03; let rad = p.baseRadius*sFac;
+                py = rad*Math.cos(p.basePhi) + 120 + Math.sin(time+p.pulseOffset)*1.5;
+                px = rad*Math.sin(p.basePhi)*Math.cos(p.baseTheta); pz = rad*Math.sin(p.basePhi)*Math.sin(p.baseTheta);
+            }
+            let proj = project3D(px, py, pz);
+            if (proj.z > -400) projected.push({ sx: proj.x, sy: proj.y, scale: proj.scale, z: proj.z, c: p.color, s: p.size*sFac, type: p.type });
         });
-    }
+        projected.sort((a,b) => b.z - a.z);
 
-    function generateDailyQuiz() {
-        const isDayOne = db.totalCorrect < 10;
-        let pool = isDayOne ? basicBank : sutraBank;
-        let availableQ = pool.filter(q => !db.clearedQ.includes(q.id)).sort(() => Math.random() - 0.5);
-        if (availableQ.length < DEMO_TOTAL_Q) {
-            db.clearedQ = db.clearedQ.filter(id => !pool.find(q => q.id === id));
-            availableQ = [...pool].sort(() => Math.random() - 0.5);
-        }
-        questionBank = availableQ.slice(0, DEMO_TOTAL_Q);
-        const stageName = isDayOne ? "基礎定課" : "般若寶卷";
-        questionBank.forEach((q, i) => q.level = `第 ${i+1} 重 ． ${stageName}`);
-    }
-
-    function flashEffect(type) {
-        const vf = document.getElementById('void-flash');
-        vf.className = type === 'gold' ? 'flash-gold' : 'flash-red';
-        setTimeout(() => { vf.className = ''; }, 800);
-    }
-
-    function loadQuestion(index, isBoss = false) {
-        hintUsedOnCurrentQ = false;
-        updateHintBtn(); 
-        
-        const q = isBoss ? currentBossQ : questionBank[index];
-        const qPanel = document.getElementById('q-panel');
-        
-        let isKarma = (db.failedQ && db.failedQ[q.id] >= 1);
-        document.getElementById('karma-dot').style.display = isKarma ? 'block' : 'none';
-        if (isKarma) qPanel.classList.add('karma-border'); else qPanel.classList.remove('karma-border');
-
-        // ✨ 恢復平時答題的字體設定，避免被結算畫面影響
-        const stageText = document.getElementById('stage-text');
-        stageText.style.fontSize = "";
-        stageText.style.fontWeight = "";
-        stageText.style.letterSpacing = "5px";
-
-        stageText.innerText = q.level;
-        document.getElementById('q-text').innerText = q.text;
-        document.getElementById('action-btns').innerHTML = ''; 
-        
-        const optsDiv = document.getElementById('q-options');
-        optsDiv.innerHTML = '';
-        
-        let shuffled = [...q.options].sort(() => Math.random() - 0.5);
-        shuffled.forEach(opt => {
-            const btn = document.createElement('div'); btn.className = 'option-btn';
-            btn.setAttribute('data-correct', opt.isCorrect); 
-            btn.innerHTML = `<div class="opt-dot"></div><div>${opt.text}</div>`;
-            btn.onclick = () => processAnswer(opt.isCorrect, isBoss);
-            optsDiv.appendChild(btn);
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.scale; if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.sx, p.sy, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if (p.type === 'canopy') { ctx.shadowBlur=8; ctx.shadowColor=p.c; } else ctx.shadowBlur=0;
+            ctx.fill();
         });
-    }
+        ctx.globalCompositeOperation = 'source-over'; ctx.shadowBlur=0;
 
-    function triggerDoor() {
-        if (isProcessing) return;
-        if (hasPlayedToday) { 
-            const modal = document.getElementById('done-modal');
-            if (modal) modal.classList.add('show');
-            return; 
-        }
-        isProcessing = true; initAudio(); 
-        
-        if (currentStage === 0 && correctCount === 0) { generateDailyQuiz(); }
-        
-        const hint = document.getElementById('door-hint');
-        if (hint) hint.style.display = 'none';
-
-        if ('speechSynthesis' in window) window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
-
-        const scene = document.getElementById('door-scene');
-        scene.classList.add('opening');
-        setTimeout(() => { warpSpeed = 12; scene.classList.add('zooming'); }, 400);
-        setTimeout(() => { 
-            warpSpeed = 1; 
-            document.getElementById('q-panel').classList.add('show');
-            document.getElementById('question-content').style.display = 'block';
-            document.getElementById('cert-content').style.display = 'none';
-            loadQuestion(currentStage); 
-            const currentQ = questionBank[currentStage];
-            readVoiceAndStartTimer(currentQ.text, currentQ.time);
-            isProcessing = false; 
-        }, 1600); 
-    }
-
-    window.sysUtterances = []; 
-    function readVoiceAndStartTimer(text, seconds) {
-        const thisStage = currentStage;
-        const wrap = document.getElementById('energy-wrap');
-        const bar = document.getElementById('energy-bar');
-        const voiceHint = document.getElementById('voice-hint');
-        
-        wrap.style.opacity = 1; bar.style.transition = 'none'; bar.style.transform = 'scaleX(1)'; bar.classList.remove('critical-time');
-        
-        try {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); 
-                let isAndroid = /Android/i.test(navigator.userAgent);
-                let textToSpeak = isAndroid ? text : text.replace(/阿/g, 'ㄚ');
-                let msg = new SpeechSynthesisUtterance(textToSpeak);
-                msg.lang = 'zh-TW'; msg.rate = 1.1; 
-                window.sysUtterances.push(msg); 
-                
-                msg.onstart = () => { voiceHint.innerText = '導讀中...'; };
-                msg.onend = () => { if (currentStage !== thisStage) return; voiceHint.innerText = ''; startActualTimer(seconds); };
-                msg.onerror = () => { if (currentStage !== thisStage) return; voiceHint.innerText = ''; startActualTimer(seconds); }; 
-                
-                window.speechSynthesis.speak(msg);
-                setTimeout(() => { if(currentStage === thisStage && voiceHint.innerText !== '') { voiceHint.innerText = ''; startActualTimer(seconds); } }, 15000);
-            } else { setTimeout(() => { if (currentStage === thisStage) startActualTimer(seconds); }, 3000); }
-        } catch(err) { voiceHint.innerText = ''; setTimeout(() => { if (currentStage === thisStage) startActualTimer(seconds); }, 1000); }
-    }
-
-    function startActualTimer(seconds) {
-        if (isProcessing) return;
-        clearTimeout(timerId); clearTimeout(criticalTimerId);
-        const bar = document.getElementById('energy-bar');
-        void bar.offsetWidth;
-        bar.style.transition = `transform ${seconds}s linear`; bar.style.transform = 'scaleX(0)';
-
-        criticalTimerId = setTimeout(() => { 
-            bar.classList.add('critical-time'); try { playTensionSound(); } catch(e){}
-        }, Math.max(0, seconds - 4) * 1000); 
-        
-        timerId = setTimeout(() => { 
-            try { stopTensionSound(); playWrongSound(); } catch(e){} 
-            flashEffect('red'); showSettlement(false, false, true); 
-        }, seconds * 1000);
-    }
-
-    function processAnswer(isCorrect, isBoss) {
-        if (isProcessing) return; isProcessing = true; 
-        let qid = isBoss ? currentBossQ.id : questionBank[currentStage].id;
-
-        try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(e) {}
-        clearTimeout(timerId); clearTimeout(criticalTimerId); try { stopTensionSound(); } catch(e) {}
-        
-        document.getElementById('voice-hint').innerText = '';
-        document.getElementById('energy-wrap').style.opacity = 0;
-        document.getElementById('q-panel').classList.remove('show');
-        document.getElementById('btn-hint').style.display = 'none';
-
-        if (isCorrect) {
-            if (!isBoss) correctCount++;
-            if (!db.clearedQ.includes(qid)) db.clearedQ.push(qid);
-            flashEffect('gold');
-            setTimeout(() => { if (isBoss) { showSettlement(true, true); } else { nextStage(); } }, 1000);
-        } else {
-            db.failedQ[qid] = (db.failedQ[qid] || 0) + 1;
-            flashEffect('red'); try { playWrongSound(); } catch(e) {}
-            setTimeout(() => { showSettlement(false, false, true); }, 1500);
+        let pulse = Math.sin(time)*1.5; 
+        let proj = project3D(0, -100+pulse, 0); 
+        if (proj.z > -400) {
+            let sc = proj.scale; ctx.shadowBlur = 30+pulse*2; ctx.shadowColor = 'rgba(243,229,171,0.8)'; ctx.fillStyle = 'rgba(212,175,55,0.9)'; 
+            ctx.beginPath(); ctx.ellipse(proj.x, proj.y+15*sc, (35+pulse*0.5)*sc, (10+pulse*0.2)*sc, 0,0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(proj.x, proj.y, (22+pulse*0.8)*sc, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(proj.x, proj.y-30*sc, (12+pulse*0.3)*sc, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0; 
         }
     }
 
-    function nextStage() {
-        currentStage++;
-        if (currentStage >= DEMO_TOTAL_Q) {
-            if (correctCount === DEMO_TOTAL_Q) { setTimeout(promptBossQuestion, 500); } else { showSettlement(false, false); }
-        } else {
-            document.getElementById('q-panel').classList.remove('show');
-            setTimeout(() => {
-                loadQuestion(currentStage); document.getElementById('q-panel').classList.add('show');
-                const currentQ = questionBank[currentStage]; isProcessing = false; 
-                try { readVoiceAndStartTimer(currentQ.text, currentQ.time); } catch(e) { startActualTimer(currentQ.time); }
-            }, 600); 
+    function drawPetal(ctx, size) {
+        ctx.beginPath(); ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(size*0.4, size*0.2, size*0.8, size*0.5, size, 0);
+        ctx.bezierCurveTo(size*0.8, -size*0.5, size*0.4, -size*0.2, 0, 0);
+        ctx.fill(); ctx.stroke();
+    }
+
+    // ✨ 修正：完整還原千佛蓮華渲染邏輯 ✨
+    function renderXianjie() {
+        ctx.globalCompositeOperation = 'screen'; 
+        let curData = timeline[xjStep];
+        let speedMult = curData.isFastMode ? 6 : 1;
+
+        // 星辰流動
+        xjStars.forEach(star => {
+            let sSpeed = curData.isFastMode ? star.speed*4 : star.speed;
+            star.z -= sSpeed;
+            if (star.z <= 0) { star.z = 2000; star.x = (Math.random()-0.5)*3000; star.y = (Math.random()-0.5)*3000; }
+            let sc = FOV / (FOV + star.z); let sx = (width/2) + star.x*sc; let sy = (height/2) + star.y*sc - 50;
+            let alpha = Math.min(1, sc*1.5);
+            ctx.beginPath(); ctx.arc(sx, sy, Math.max(0.1, 3*sc), 0, Math.PI*2);
+            ctx.fillStyle = `rgba(${star.color==='#f3e5ab'?'243,229,171':'159,223,200'}, ${alpha})`; ctx.fill();
+        });
+
+        const textDisplay = document.getElementById('buddha-name-display');
+        const rankEl = document.getElementById('buddha-rank'); const nameEl = document.getElementById('buddha-name');
+        
+        switch(lotusState.phase) {
+            case 'waiting':
+                lotusState.timer += speedMult;
+                if(lotusState.timer > 80) { 
+                    lotusState.phase = 'approaching'; lotusState.timer = 0; lotusState.z = 2500;
+                    if (xjFastCounter === 0) { 
+                        rankEl.innerText = curData.rank; nameEl.innerText = curData.name;
+                        if (curData.highlight) { nameEl.style.color = "#ffffff"; nameEl.style.textShadow = "0 0 20px #fff, 0 0 40px var(--cyan)"; } 
+                        else { nameEl.style.color = "var(--gold)"; nameEl.style.textShadow = "0 0 20px var(--solid-gold)"; }
+                    }
+                    if (!curData.isFastMode || xjFastCounter === 0) textDisplay.style.opacity = 1; 
+                } break;
+            case 'approaching':
+                lotusState.z -= (25*speedMult);
+                if(lotusState.z <= 200) { lotusState.phase = 'blooming'; lotusState.timer = 0; } break;
+            case 'blooming':
+                lotusState.timer += speedMult; lotusState.scale = Math.min(1, lotusState.timer/60); lotusState.opacity = Math.min(1, lotusState.timer/30);
+                if(lotusState.timer > (curData.isLast ? 300 : 150)) {
+                    if (curData.isLast) { 
+                        document.getElementById('universe-flash').classList.add('flash-active'); 
+                        setTimeout(() => document.getElementById('universe-flash').classList.remove('flash-active'), 150); 
+                    }
+                    lotusState.phase = 'dissolving'; lotusState.timer = 0;
+                    if (!curData.isFastMode || xjFastCounter >= curData.lotusCount-1) textDisplay.style.opacity = 0; 
+                } break;
+            case 'dissolving':
+                lotusState.timer += speedMult; lotusState.opacity = Math.max(0, 1-(lotusState.timer/60)); lotusState.scale += 0.01*speedMult;
+                if(lotusState.timer > 60) {
+                    lotusState.phase = 'waiting'; lotusState.timer = 0;
+                    if (curData.isFastMode) { 
+                        xjFastCounter++; 
+                        if (xjFastCounter >= curData.lotusCount) { xjFastCounter=0; xjStep=(xjStep+1)%timeline.length; } 
+                    } else { xjStep=(xjStep+1)%timeline.length; }
+                } break;
         }
-    }
 
-    function promptBossQuestion() {
-        warpSpeed = 3;
-        currentBossQ = bossBank[Math.floor(Math.random() * bossBank.length)];
-        
-        document.getElementById('karma-dot').style.display = 'none';
-        document.getElementById('q-panel').classList.remove('karma-border');
-        document.getElementById('btn-hint').style.display = 'none';
-        
-        document.getElementById('stage-text').innerText = "般若圓滿 ． 結界異動";
-        document.getElementById('stage-text').style.color = "#d4af37";
-        document.getElementById('stage-text').style.fontSize = ""; // 確保不被結算畫面影響
-        document.getElementById('stage-text').style.letterSpacing = "5px";
-        
-        document.getElementById('question-content').style.display = 'block';
-        document.getElementById('cert-content').style.display = 'none';
-        
-        document.getElementById('q-options').innerHTML = '';
-        document.getElementById('q-text').innerHTML = `<div style="text-align:center; color:#ff8888; font-size:1.15rem; line-height:2.2; text-shadow: 0 0 10px rgba(255,0,0,0.3); font-weight: 300;">行者，您已連續答對十題。<br>法界深處，<span style="font-weight:bold;">【第十一重覺照】</span>已然浮現。<br>此題玄奧，錯亦不扣分。<br><br><span style="color:#d4af37; font-size:1.25rem; letter-spacing: 5px;">是否接受最終問心？</span></div>`;
-        
-        document.getElementById('action-btns').innerHTML = `
-            <div style="display:flex; gap:15px; width:100%; justify-content:center;">
-                <button class="btn-main btn-danger" style="margin:0;" onclick="startBoss()">直面覺照</button>
-                <button class="btn-main" style="margin:0; border-color:rgba(139,168,156,0.5); color:#8ba89c;" onclick="declineBoss()">見好就收</button>
-            </div>
-        `;
-        document.getElementById('q-panel').classList.add('show');
-        isProcessing = false; 
-    }
-
-    function startBoss() {
-        if (isProcessing) return; isProcessing = true;
-        document.getElementById('q-panel').classList.remove('show');
-        setTimeout(() => {
-            warpSpeed = 10; 
-            document.getElementById('stage-text').style.color = "#ff4444";
-            loadQuestion(0, true);
-            document.getElementById('q-panel').classList.add('show');
+        // 畫蓮花
+        let cx = width/2, cy = height/2 - 80;
+        if (lotusState.phase === 'approaching') {
+            let sc = FOV/(FOV+lotusState.z); ctx.shadowBlur = 20; ctx.shadowColor = '#fff';
+            ctx.beginPath(); ctx.arc(cx, cy, 15*sc, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowBlur = 0;
+        } else if (lotusState.phase === 'blooming' || lotusState.phase === 'dissolving') {
+            ctx.save(); ctx.translate(cx, cy);
+            let rotSpeed = curData.isFastMode ? 0.015 : 0.005;
+            ctx.rotate((lotusState.timer*rotSpeed) * (lotusState.phase==='dissolving'?2:1));
+            let sMult = curData.isLast ? 1.3 : 1; let bSize = 120 * lotusState.scale * sMult;
             
-            isProcessing = false; 
-            try { readVoiceAndStartTimer(currentBossQ.text, currentBossQ.time); } catch(e) { startActualTimer(currentBossQ.time); }
-        }, 1000);
-    }
-
-    function declineBoss() {
-        if (isProcessing) return; isProcessing = true;
-        document.getElementById('q-panel').classList.remove('show');
-        setTimeout(() => { showSettlement(true, false); }, 500);
-    }
-
-    function showSettlement(isPerfect, passedBoss, isFail = false) {
-        isProcessing = false; warpSpeed = 0.2; 
-        document.getElementById('question-content').style.display = 'none';
-        document.getElementById('karma-dot').style.display = 'none';
-        document.getElementById('q-panel').classList.remove('karma-border');
-        document.getElementById('btn-hint').style.display = 'none';
-        
-        // ✨ 強制放大結算畫面的標題，增加氣勢
-        const stageText = document.getElementById('stage-text');
-        stageText.innerText = isFail ? "一念微細 ． 陣法中止" : "問心圓滿 ． 資糧結集";
-        stageText.style.color = isFail ? "#ff6666" : "#8ba89c";
-        stageText.style.fontSize = "1.25rem"; 
-        stageText.style.fontWeight = "bold";  
-        stageText.style.letterSpacing = "6px";
-        
-        let basePoints = 10 + (correctCount * 4);
-        let finalPoints = passedBoss ? basePoints + 10 : basePoints;
-        
-        db.tempBag += finalPoints; db.totalCorrect += correctCount;
-        if (isPerfect) db.treasures.sword += 1;
-        db.lastMatrixDate = todayStr;
-        localStorage.setItem('PX_V15.0', JSON.stringify(db));
-
-        document.getElementById('cert-content').style.display = 'flex';
-        
-        let html = `今日參陣，獲取基礎 10 分<br>答對 <span style="color:#fff;">${correctCount}</span> 題，獲取 <span style="color:#fff;">${correctCount * 4}</span> 分<br>`;
-        if (passedBoss) html += `<span style="color:#ff8888;">第十一重覺照突破，額外 +10 分</span><br>`;
-        html += `<br><span style="color:#d4af37; font-size:1.8rem; font-weight:bold; text-shadow:0 0 25px rgba(212,175,55,0.6); letter-spacing: 4px;">本次共得：${finalPoints} 分</span>`;
-
-        if (isFail) {
-            // ✨ 放大失敗提示文字
-            html += `<br><br><span style="color:#ff6666; font-size:1.05rem; letter-spacing: 2px;">菩提道長 ． 請明日再來</span>`;
-        } else if (isPerfect) {
-            document.getElementById('sword-svg').style.display = 'block';
-            // ✨ 放大寶劍獲取提示文字
-            html += `<br><br><span style="color:#f3e5ab; font-size:1.05rem; letter-spacing: 3px;">般若圓滿！<br>化現【幾何慧劍】一尊，已收入多寶閣。</span>`;
+            ctx.shadowBlur = 30; ctx.shadowColor = `rgba(212,175,55,${lotusState.opacity})`;
+            ctx.fillStyle = `rgba(243,229,171,${lotusState.opacity*0.2})`; ctx.strokeStyle = `rgba(255,255,255,${lotusState.opacity*0.8})`; ctx.lineWidth = 1.5;
+            for (let i=0; i<12; i++) {
+                ctx.save(); ctx.rotate(lotusState.petals[i]); drawPetal(ctx, bSize); ctx.restore();
+                ctx.save(); ctx.rotate(lotusState.petals[i]+Math.PI/12); drawPetal(ctx, bSize*0.6); ctx.restore();
+            }
+            ctx.beginPath(); ctx.arc(0, 0, 15*lotusState.scale*sMult, 0, Math.PI*2); ctx.fillStyle = `rgba(255,255,255,${lotusState.opacity})`; ctx.fill();
+            ctx.restore();
         }
-        document.getElementById('cert-text').innerHTML = html;
+        ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function animate() {
+        ctx.fillStyle = currentRealm === 0 ? 'rgba(2, 5, 2, 0.5)' : 'rgba(0, 0, 0, 0.4)';
+        ctx.fillRect(0, 0, width, height);
+        time += 0.03;
+        if (currentRealm === 0) renderLonghua(); else renderXianjie();
+        requestAnimationFrame(animate);
+    }
+
+    function toggleRealm(type) {
+        if(currentRealm === type) return;
+        currentRealm = type;
         
-        const actionDiv = document.getElementById('action-btns');
-        if (db.tempBag >= 100) {
-            actionDiv.innerHTML = `<button class="btn-main" style="margin:0;" onclick="syncToMain()">資糧結集 ． 匯入主系統</button>`;
+        let panel = document.getElementById('status-panel');
+        let title = document.getElementById('s-title'); let desc = document.getElementById('s-desc');
+        let btnL = document.getElementById('btn-longhua'); let btnX = document.getElementById('btn-xianjie');
+        let hint = document.getElementById('drag-hint');
+        let nameDisp = document.getElementById('buddha-name-display');
+
+        if (type === 0) {
+            title.innerText = "龍華菩提 ． 彌勒下生"; desc.innerHTML = "「乃至一稱南無佛，皆於龍華得度脫。」<br>乘願再來，赴法界約。";
+            btnL.style.background = 'rgba(10,30,20,0.9)'; btnL.style.color = 'var(--cyan)'; btnL.style.borderColor = 'var(--cyan)';
+            btnX.style.background = 'linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95))'; btnX.style.color = 'var(--gold)'; btnX.style.borderColor = 'rgba(212,175,55,0.5)';
+            hint.style.opacity = 1; nameDisp.style.opacity = 0;
+            lotusState.phase = 'waiting'; lotusState.timer = 0; xjStep = 0; xjFastCounter = 0;
         } else {
-            actionDiv.innerHTML = `
-                <div style="color:#8ba89c; font-size:0.9rem; letter-spacing:2px; margin-bottom:10px;">資糧累積中 ． 尚未具足 (${db.tempBag}/100)</div>
-                <button class="btn-main" style="border-color:rgba(139,168,156,0.3); color:#8ba89c; margin:0;" onclick="returnToDaochang()">關閉陣法</button>
-            `;
+            title.innerText = "賢劫千佛 ． 時空長河"; desc.innerHTML = "「第十五小劫，九百九十四佛出世。」<br>佛法火炬，傳承無盡。";
+            btnX.style.background = 'rgba(10,30,20,0.9)'; btnX.style.color = 'var(--cyan)'; btnX.style.borderColor = 'var(--cyan)';
+            btnL.style.background = 'linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95))'; btnL.style.color = 'var(--gold)'; btnL.style.borderColor = 'rgba(212,175,55,0.5)';
+            hint.style.opacity = 0; 
+            angleX = 0.1; angleY = 0;
         }
-        document.getElementById('q-panel').classList.add('show');
     }
 
-    function syncToMain() {
-        if (isProcessing) return; isProcessing = true;
-        db.points += db.tempBag; db.tempBag = 0;
-        localStorage.setItem('PX_V15.0', JSON.stringify(db));
-        document.getElementById('q-panel').classList.remove('show');
-        flashEffect('gold');
-        setTimeout(() => { returnToDaochang(); }, 1500);
+    function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+    function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+
+    // ✨ 修正：加入滑動鎖定機制 (防 iOS 穿透)
+    document.getElementById('theory-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
+    document.getElementById('ui-layer').addEventListener('pointerdown', (e) => e.stopPropagation());
+
+    function onDown(e) { 
+        if(currentRealm!==0 || e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; 
+        isDragging = true; lastMouseX = e.touches?e.touches[0].clientX:e.clientX; lastMouseY = e.touches?e.touches[0].clientY:e.clientY; 
+    }
+    function onMove(e) { 
+        if (!isDragging || currentRealm!==0) return; 
+        let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; 
+        angleY += (curX-lastMouseX)*0.01; angleX += (curY-lastMouseY)*0.01; 
+        angleX = Math.max(-Math.PI/4, Math.min(Math.PI/4, angleX)); 
+        lastMouseX=curX; lastMouseY=curY; 
+    }
+    function onUp() { isDragging = false; }
+
+    canvas.addEventListener('mousedown', onDown); canvas.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
+
+    // ================= ✨ 升級：雙平台全兼容 TTS (聆聽法音) ✨ =================
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+    window.sysUtterances = []; // 全域陣列防安卓垃圾回收
+
+    // 喚醒語音庫
+    if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = function() { speechSynthesis.getVoices(); };
     }
 
-    function returnToDaochang() { window.location.href = 'index.html?screen=3'; }
-
-    function toggleInfo(show) {
-        const el = document.getElementById('info-overlay');
-        if (show) {
-            el.style.display = 'flex';
-            setTimeout(() => el.classList.add('show'), 10);
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("您的設備不支援語音功能");
+        
+        const btnText = document.getElementById('tts-text');
+        const btnIcon = document.getElementById('tts-icon');
+        
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel();
+            isPlayingTheory = false;
+            btnText.innerText = "聆聽法音";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
         } else {
-            el.classList.remove('show');
-            setTimeout(() => el.style.display = 'none', 600);
+            let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text');
+            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('。');
+            textToRead = textToRead.replace(/一、/g, '第一章：').replace(/二、/g, '第二章：').replace(/三、/g, '第三章：').replace(/四、/g, '第四章：');
+            
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            textToRead = isAndroid ? textToRead : textToRead.replace(/阿/g, 'ㄚ');
+            
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead);
+            theoryUtterance.lang = 'zh-TW';
+            theoryUtterance.rate = 0.85; 
+
+            if (isAndroid) {
+                window.sysUtterances.push(theoryUtterance);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let zhVoice = voices.find(v => v.lang === 'zh-TW' && v.name.includes('Google')) || voices.find(v => v.lang.includes('zh'));
+                    if (zhVoice) theoryUtterance.voice = zhVoice;
+                }
+            }
+
+            theoryUtterance.onend = () => {
+                isPlayingTheory = false;
+                btnText.innerText = "聆聽法音";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                if(isAndroid) window.sysUtterances = window.sysUtterances.filter(u => u !== theoryUtterance);
+            };
+            
+            setTimeout(() => { window.speechSynthesis.speak(theoryUtterance); }, isAndroid ? 150 : 50);
+            
+            isPlayingTheory = true;
+            btnText.innerText = "停止聆聽";
+            btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
         }
     }
+
+    const originalCloseTheoryDrawer = closeTheoryDrawer;
+    closeTheoryDrawer = function() {
+        if (isPlayingTheory) toggleTheoryAudio(); 
+        originalCloseTheoryDrawer();
+    }
+
+    initEngines(); toggleRealm(0); animate();
 </script>
-
-<div id="done-modal" class="modal-wrap">
-    <div class="modal-box">
-        <div class="modal-title">今日陣法已閉</div>
-        <div class="modal-text">一念流轉 ． 靜待明日<br><br>行者今日已入迷城<br>無論迷悟，皆是修行<br>請明日再來，堪破幻網</div>
-        <button class="btn-main" style="margin-top:0;" onclick="returnToDaochang()">歸返道場</button>
-    </div>
-</div>
-
 </body>
 </html>

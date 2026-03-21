@@ -182,7 +182,7 @@
             }
         }
 
-                let audioCtx;
+        let audioCtx;
         function initAudio() {
             if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if(audioCtx.state === 'suspended') audioCtx.resume();
@@ -197,7 +197,6 @@
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.start(); osc.stop(audioCtx.currentTime + 0.08);
         }
-
 
         function buildWheelSVG() {
             const svgNS = "http://www.w3.org/2000/svg";
@@ -222,7 +221,7 @@
             }
         }
 
-                // ✨ 妙依升級版：霍金斯能量 x 法界觀照資料庫 (共 80條 - 無絕對相版) ✨
+                // ✨ 妙依大智升級版：霍金斯能量 x 法界觀照資料庫 (共 80條 - 無絕對相版) ✨
         const hwkinsDB = [
             // ==========================================
             // 【第一階：0 - 200 Hz】 
@@ -341,11 +340,11 @@
             }
         ];
 
-                let currentTurn = 0; let isSpinning = false; let currentRotation = 0;
+        let currentTurn = 0; let isSpinning = false; let currentRotation = 0; let tickInterval;
 
-        async function triggerSpin() {
+               async function triggerSpin() {
             if(isSpinning || currentTurn >= 3) return;
-            isSpinning = true; currentTurn++;
+            initAudio(); isSpinning = true; currentTurn++;
             
             const wheel = document.getElementById('dharma-wheel');
             const mainText = document.getElementById('main-text');
@@ -353,15 +352,16 @@
             
             wheel.classList.remove('spinning-glow'); void wheel.offsetWidth; wheel.classList.add('spinning-glow');
             
-            // ✨ 啟動完美的齒輪慣性音效 ✨
-            startWheelSound();
+            let tickDelay = 80;
+            tickInterval = setInterval(() => { playTick(); tickDelay += 10; }, tickDelay);
+            setTimeout(() => clearInterval(tickInterval), 2500);
 
             if(currentTurn === 1) { currentRotation += 1080; mainText.innerText = "初轉 ‧ 阿含"; subText.innerText = "碾摧粗重無明不善"; }
             else if (currentTurn === 2) { currentRotation += 1440; mainText.innerText = "二轉 ‧ 般若"; subText.innerText = "照見五蘊皆空"; }
             else if (currentTurn === 3) { currentRotation += 1800; mainText.innerText = "三轉 ‧ 唯識歸一"; subText.innerText = "萬法唯心，法界共振"; }
             
             wheel.style.transform = `rotate(${currentRotation}deg)`;
-            await sleep(2800); isSpinning = false;
+            await sleep(2800); clearInterval(tickInterval); isSpinning = false;
 
             if(currentTurn === 3) {
                 await sleep(500);
@@ -372,17 +372,18 @@
                 db.hwkinsEnergyTotal = (db.hwkinsEnergyTotal || 0) + score;
                 db.dailyWheelCount = 1; 
                 
+                // ✨ 檢查是否觸發一真法界機緣 (大於或等於皆會觸發) ✨
                 let isRealmUnlocked = false;
                 if (db.hwkinsEnergyTotal >= 12000) {
-                    db.hwkinsEnergyTotal = 0; 
+                    db.hwkinsEnergyTotal = 0; // 重置能量
                     isRealmUnlocked = true;
                 }
                 save();
                 
+                // 將解鎖信號傳給顯示結果的函數
                 showEnergyResult(score, isRealmUnlocked);
             }
         }
-
 
 
                 function showEnergyResult(score, isRealmUnlocked) {

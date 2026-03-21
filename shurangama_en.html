@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Surangama Awakening · The Eternal True Mind</title>
+    <style>
+        :root {
+            --bg-deep: #020205; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --silver: #e0e0e0;
+            --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+            /* ✨ 徹底封殺手機長按全選與放大鏡 ✨ */
+            overflow: hidden; touch-action: none; overscroll-behavior: none;
+            -webkit-touch-callout: none; /* iOS Safari */
+            -webkit-user-select: none;   /* Safari */
+            -khtml-user-select: none;    /* Konqueror HTML */
+            -moz-user-select: none;      /* Old versions of Firefox */
+            -ms-user-select: none;       /* Internet Explorer/Edge */
+            user-select: none;           /* Non-prefixed version */
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.85rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 350px;
+            background: transparent; border-left: 2px solid rgba(139,168,156,0.6); 
+            padding: 10px 20px; z-index: 100; transition: 1s; pointer-events: none;
+        }
+        .status-title { font-size: 1.1rem; font-weight: bold; color: var(--cyan); letter-spacing: 1px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); transition: 1s;}
+        .status-desc { font-size: 0.8rem; color: #bbb; line-height: 1.6; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); transition: 1s;}
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; transition: background 0.8s; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+        /* ✨ 楞嚴開悟爆光特效 (Flash) ✨ */
+        #lengyan-flash {
+            position: absolute; inset: 0; background: #ffffff; z-index: 50; opacity: 0;
+            pointer-events: none; transition: opacity 0.1s ease-out;
+        }
+
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 12px; transition: opacity 1s;}
+        
+        .switch-btn {
+            width: 85%; max-width: 320px; justify-content: center;
+            background: linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(139,168,156,0.4); color: var(--cyan);
+            padding: 14px 20px; border-radius: 30px; font-size: 0.9rem; font-weight: bold; letter-spacing: 1px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(139,168,156,0.1);
+        }
+        .switch-btn:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(139,168,156,0.5); }
+        .switch-btn.gold-mode { border-color: rgba(212,175,55,0.5); color: var(--gold); box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1); }
+        
+        #theory-btn { border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,10,15,0.8); }
+
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(139,168,156,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(139,168,156,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        
+        .humble-statement { font-size: 0.8rem; color: #b0b0b0; line-height: 1.7; text-align: justify; padding: 20px; border: 1px solid rgba(139,168,156,0.2); border-radius: 12px; background: rgba(10,15,20,0.3); margin-bottom: 50px; font-style: italic;}
+        
+        .main-title { color: var(--cyan); font-size: 1.3rem; letter-spacing: 2px; text-align: center; margin-bottom: 50px; text-shadow: 0 0 15px rgba(139,168,156,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); margin: 15px auto 0; }
+        
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 22px; height: 22px; stroke: var(--cyan); fill: none; stroke-width: 1.5; flex-shrink: 0; filter: drop-shadow(0 0 5px rgba(139,168,156,0.4));}
+        .c-title { color: var(--cyan); font-size: 1.05rem; letter-spacing: 0.5px; font-weight: bold; }
+        .c-text { color: var(--text-main); font-size: 0.9rem; line-height: 1.8; text-align: justify; padding-left: 37px; letter-spacing: 0.3px;}
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
+        .soft-highlight { color: var(--gold); border-bottom: 1px dotted rgba(212,175,55,0.6); padding-bottom: 1px; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="back-btn" onclick="window.location.href='index.html?screen=3'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Dojo
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title" id="s-title">Inward Hearing · Ear Element</div>
+        <div class="status-desc" id="s-desc">"Entering the stream and forgetting the source."<br>Press and hold to calm the noisy sound waves.</div>
+    </div>
+
+    <section class="matrix-section" id="bg-section">
+        <canvas id="realmCanvas"></canvas>
+        <div id="lengyan-flash"></div> 
+        
+        <div class="ui-layer" id="ui-layer">
+            <button class="switch-btn" id="btn-ergen" onclick="toggleRealm(0)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke-dasharray="2 4"/>
+                    <circle cx="12" cy="12" r="4" fill="currentColor"/>
+                </svg>
+                <span id="text-ergen">Inward Hearing · Avalokitesvara</span>
+            </button>
+            <button class="switch-btn gold-mode" id="btn-nianfo" onclick="toggleRealm(1)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="8" stroke="currentColor"/>
+                    <circle cx="12" cy="12" r="3" fill="var(--gold)"/>
+                </svg>
+                <span id="text-nianfo">Gathering Six Senses · Mahasthamaprapta</span>
+            </button>
+            
+            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                Exploring the Eternal True Mind
+            </button>
+            
+            <div style="color:rgba(139,168,156,0.6); font-size:0.7rem; letter-spacing:1px; margin-top:5px;" id="drag-hint">Press and Hold · Awaken the Mind</div>
+        </div>
+    </section>
+
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()">
+            <div class="close-bar"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+                <div style="color:var(--cyan); font-size:0.8rem; font-weight:bold; cursor:pointer;" onclick="closeTheoryDrawer()">Close Scroll</div>
+                <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.8rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                    <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                    <span id="tts-text">Listen</span>
+                </div>
+            </div>
+        </div>
+        <div class="theory-container" id="theory-content-box">
+            <div class="humble-statement">The ocean of Dharma is boundless; only Buddhas can fully fathom its ultimate truth. This text is but a humble reflection from a lay practitioner, attempting to explore a glimpse of the Tathagata's true meaning based on scriptural logic and the commentaries of past masters. Any omissions or errors are solely due to the limitations of my own understanding. May the Three Jewels bestow their blessings, and may fellow practitioners kindly bear witness.</div>
+            
+            <h1 class="main-title">Surangama Awakening · The Eternal True Mind</h1>
+            
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg>
+                    <div class="c-title">I. Surangama Samadhi · Three Stages of Cultivation</div>
+                </div>
+                <div class="c-text">Ancient masters often said, "Awakening is found in the Surangama." This Sutra acts as an anatomy of the Dharma realm, detailing the "Eternal True Mind"—the unborn and undying nature inherent in all. It outlines a rigorous path of cultivation: beginning with the "Path of Seeing" to recognize the pure nature; progressing through the "Path of Cultivation" to correct worldly habits; and culminating in the "Path of Realization," achieving ultimate Nirvana. This sequence illuminates the concrete journey from an ordinary being to perfect enlightenment.</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><circle cx="12" cy="12" r="4"/></svg>
+                    <div class="c-title">II. Universal Gateway · Entering the Stream</div>
+                </div>
+                <div class="c-text">Avalokitesvara Bodhisattva's "Perfect Penetration through the Ear Element" is perhaps the most accessible gateless gate for sentient beings in the Saha world. Instead of chasing external sounds, the Great Being directs hearing inward to perceive the "essence of hearing" itself. As one "enters the stream and forgets the source," the dualities of movement and stillness completely cease to arise. When the entanglement of the six senses stops, the boundary of consciousness dissolves, leaving only boundless, pure emptiness and the compassion of the universal Dharma realm.</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/></svg>
+                    <div class="c-title">III. Two Holy Attendants · Guiding to the Pure Land</div>
+                </div>
+                <div class="c-text">The Sutra details twenty-five sages recounting their paths to perfect penetration. The Buddha taught according to individual capacities; though the paths differ, the destination is the same. Avalokitesvara's "Ear Element" paired with Mahasthamaprapta's "Buddha-Recitation" perfectly align, as these two Great Beings are the attendants of Amida Buddha. This metaphor perhaps suggests that, regardless of the diverse methods, all Mahayana paths may ultimately guide practitioners to the Pure Land. Just as Sudhana, in his fifty-three visits, always began by declaring his "Unsurpassed Bodhi Mind," aligning one's mind with Amida's compassionate vows is perhaps the ultimate key to Buddhahood.</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <div class="c-title">IV. Illusions of Skandhas · Paths to the Same End</div>
+                </div>
+                <div class="c-text">As a practitioner deepens their Samadhi on the Path of Cultivation, they may encounter the "Fifty Demonic States" associated with the five Skandhas: form, feeling, perception, formation, and consciousness. These states are merely illusions manifested by the true mind. Clinging to them leads to demonic paths, but using them to extinguish sensory attachments allows one to realize emptiness, and the illusions naturally fade. The Buddha detailed these not to frighten, but to help practitioners shatter the obstacles of affliction and knowledge, realizing the eternal true mind where all dharmas return to one.</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/></svg>
+                    <div class="c-title">V. Mahasthamaprapta · Shaking the Great Thousand</div>
+                </div>
+                <div class="c-text">Fundamentally, the Dharma body of a Bodhisattva transcends the illusion of gender. However, as the teachings spread East, to accommodate the spiritual capacities of sentient beings, the image of these Great Beings largely manifested in female form. Ancient texts subtly note that when Mahasthamaprapta Bodhisattva steps upon the earth, the great thousand worlds seemingly shake. This Bodhisattva represents the power of wisdom and light, illuminating all beings, symbolizing the vigorous and mighty momentum of Mahayana Buddhism in shattering ignorance.</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="var(--gold)"/></svg>
+                    <div class="c-title">VI. Buddha-Recitation · Gathering Six Senses</div>
+                </div>
+                <div class="c-text">Among the twenty-five methods, "Perfect Penetration through Buddha-Recitation" is perhaps the ultimate skillful means of self-effort. The Great Being advocates "gathering the six senses and maintaining continuous pure mindfulness," using a single Buddha's name to absorb the wandering thoughts of the eyes, ears, nose, tongue, body, and mind, transforming the deluded consciousness into pure Buddha-nature. Seemingly lacking in complex techniques, it directly opens the mind. When reciting reaches a state of undisturbed focus, even just "ten recitations" in continuous succession—if the mind's frequency aligns with Amida's vows—can lead to rebirth in the Pure Land, entering the unconditioned, infinite light of Amitayus.</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('realmCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    let currentRealm = 0; 
+    let time = 0;
+
+    let ergenParticles = [];
+    let nianfoParticles = [];
+    
+    let angleX = 0.6, angleY = 0;
+    let isDragging = false;
+    
+    let silenceRadius = 0; 
+    let gravityForce = 0;  
+    let flashIntensity = 0; 
+
+    const FOV = 400; 
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+    }
+    window.addEventListener('resize', resize); resize();
+
+    function initEngines() {
+        ergenParticles = [];
+        for(let r = 20; r <= 800; r += 15) {
+            let count = Math.floor(r * 0.4);
+            for(let i=0; i<count; i++) {
+                let theta = (i / count) * Math.PI * 2;
+                ergenParticles.push({ baseX: r * Math.cos(theta), baseY: r * Math.sin(theta), dist: r, theta: theta, s: Math.random() * 1.5 + 0.5 });
+            }
+        }
+
+        nianfoParticles = [];
+        for(let i=0; i<1500; i++) {
+            nianfoParticles.push({
+                x: (Math.random() - 0.5) * 1200, y: (Math.random() - 0.5) * 1200, z: (Math.random() - 0.5) * 1200,
+                vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, vz: (Math.random() - 0.5) * 2,
+                hue: Math.random() * 360, isPurified: false, s: Math.random() * 2 + 1
+            });
+        }
+    }
+
+    function project3D(x, y, z) {
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+        let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
+        if(z2 < -FOV+10) return null;
+        let scale = FOV / (FOV + z2); 
+        return { x: (width/2) + x2*scale, y: (height/2) - y1*scale - 50, scale: scale, z: z2 };
+    }
+
+    function renderErgen() {
+        if(isDragging) silenceRadius += (600 - silenceRadius) * 0.05;
+        else silenceRadius *= 0.95;
+
+        if(!isDragging) angleY += 0.001; 
+
+        let projected = [];
+        ergenParticles.forEach(p => {
+            let waveZ = Math.sin(p.dist * 0.05 - time * 2) * 40;
+            let influence = Math.max(0, 1 - (p.dist / (silenceRadius + 1)));
+            waveZ *= (1 - influence); 
+            
+            let proj = project3D(p.baseX, p.baseY, waveZ);
+            if(proj) {
+                let r = Math.floor(139 + (255 - 139) * influence);
+                let g = Math.floor(168 + (255 - 168) * influence);
+                let b = Math.floor(156 + (255 - 156) * influence);
+                let a = 0.3 + influence * 0.7;
+
+                projected.push({ 
+                    x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, 
+                    c: `rgba(${r},${g},${b},${a})`, s: p.s * (1 + influence * 0.5), glow: influence > 0.5
+                });
+            }
+        });
+
+        projected.sort((a,b) => b.z - a.z);
+
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.sc; if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.x, p.y, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if(p.glow) { ctx.shadowBlur = 10 * p.sc; ctx.shadowColor = '#ffffff'; } else { ctx.shadowBlur = 0; }
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function renderNianfo() {
+        if(isDragging) gravityForce += (1 - gravityForce) * 0.05;
+        else gravityForce *= 0.95;
+
+        flashIntensity *= 0.92;
+        document.getElementById('lengyan-flash').style.opacity = flashIntensity;
+
+        if(!isDragging) angleY += 0.002;
+
+        let projected = [];
+        nianfoParticles.forEach(p => {
+            p.x += p.vx; p.y += p.vy; p.z += p.vz;
+            let distToCenter = Math.sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+            
+            if(gravityForce > 0.1) {
+                let pull = (gravityForce * 1500) / (distToCenter + 10);
+                p.vx -= (p.x / distToCenter) * pull; p.vy -= (p.y / distToCenter) * pull; p.vz -= (p.z / distToCenter) * pull;
+                p.vx *= 0.9; p.vy *= 0.9; p.vz *= 0.9;
+            } else {
+                p.vx += (Math.random()-0.5)*0.5; p.vy += (Math.random()-0.5)*0.5; p.vz += (Math.random()-0.5)*0.5;
+                if(p.vx > 3) p.vx = 3; if(p.vy > 3) p.vy = 3; if(p.vz > 3) p.vz = 3;
+            }
+
+            if(p.x > 600) p.x = -600; if(p.x < -600) p.x = 600;
+            if(p.y > 600) p.y = -600; if(p.y < -600) p.y = 600;
+            if(p.z > 600) p.z = -600; if(p.z < -600) p.z = 600;
+
+            if(distToCenter < 120 * gravityForce + 30) { p.isPurified = true; } 
+            else if (gravityForce < 0.2 && Math.random() > 0.98) { p.isPurified = false; }
+
+            let proj = project3D(p.x, p.y, p.z);
+            if(proj) {
+                let color = p.isPurified ? `rgba(243,229,171,${0.6 + gravityForce*0.4})` : `hsla(${p.hue}, 80%, 60%, 0.5)`;
+                projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: color, s: p.s, isGold: p.isPurified });
+            }
+        });
+
+        projected.sort((a,b) => b.z - a.z);
+
+        if(gravityForce > 0.05) {
+            let coreProj = project3D(0,0,0);
+            if(coreProj) {
+                ctx.globalCompositeOperation = 'screen';
+                let coreR = 50 * coreProj.scale * gravityForce * (1 + Math.sin(time*10)*0.1);
+                let grad = ctx.createRadialGradient(coreProj.x, coreProj.y, 0, coreProj.x, coreProj.y, coreR * 3);
+                grad.addColorStop(0, `rgba(255, 255, 255, ${gravityForce})`);
+                grad.addColorStop(0.2, `rgba(243, 229, 171, ${gravityForce * 0.8})`);
+                grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+                ctx.beginPath(); ctx.arc(coreProj.x, coreProj.y, coreR * 3, 0, Math.PI*2);
+                ctx.fillStyle = grad; ctx.fill();
+            }
+        }
+
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.sc * (1 + (p.isGold ? gravityForce : 0)); 
+            if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.x, p.y, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if(p.isGold && gravityForce > 0.5) { ctx.shadowBlur = 15 * p.sc; ctx.shadowColor = '#f3e5ab'; } 
+            else { ctx.shadowBlur = 0; }
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function animate() {
+        ctx.fillStyle = 'rgba(2, 2, 5, 0.5)';
+        ctx.fillRect(0, 0, width, height);
+        time += 0.02;
+        if (currentRealm === 0) renderErgen(); else renderNianfo();
+        requestAnimationFrame(animate);
+    }
+
+    function toggleRealm(type) {
+        if(currentRealm === type) return;
+        currentRealm = type;
+        stopAllSounds();
+
+        let title = document.getElementById('s-title'); let desc = document.getElementById('s-desc');
+        let btnE = document.getElementById('btn-ergen'); let btnN = document.getElementById('btn-nianfo');
+        let hint = document.getElementById('drag-hint');
+
+        if (type === 0) {
+            title.innerText = "Inward Hearing · Ear Element"; desc.innerHTML = "\"Entering the stream and forgetting the source.\"<br>Press and hold to calm the noisy sound waves.";
+            title.style.color = 'var(--cyan)';
+            btnE.style.background = 'rgba(10,20,15,0.9)'; btnE.style.color = 'var(--cyan)'; btnE.style.borderColor = 'var(--cyan)';
+            btnE.classList.remove('gold-mode');
+            btnN.style.background = 'linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95))'; btnN.style.color = 'var(--gold)'; btnN.style.borderColor = 'rgba(212,175,55,0.5)';
+            btnN.classList.add('gold-mode');
+            hint.innerText = "Press and Hold · Reveal the Quiet Emptiness";
+            angleX = 0.6; angleY = 0; 
+        } else {
+            title.innerText = "Gathering Senses · Recitation"; desc.innerHTML = "\"Directly opening the mind.\"<br>Hold to gather illusions into the pure golden light.";
+            title.style.color = 'var(--gold)';
+            btnN.style.background = 'rgba(20,15,5,0.9)'; btnN.style.color = 'var(--solid-gold)'; btnN.style.borderColor = 'var(--solid-gold)';
+            btnN.classList.remove('gold-mode');
+            btnE.style.background = 'linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95))'; btnE.style.color = 'var(--cyan)'; btnE.style.borderColor = 'rgba(139,168,156,0.4)';
+            hint.innerText = "Press and Hold · Consume Illusions with One Name";
+            angleX = 0.2; angleY = 0; 
+        }
+    }
+
+    function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+    function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+    document.getElementById('theory-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
+    document.getElementById('ui-layer').addEventListener('pointerdown', (e) => e.stopPropagation());
+
+    function onDown(e) { 
+        if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; 
+        
+        // ✨ 阻止手機端長按預設行為 (全選/放大鏡) ✨
+        if(e.cancelable && e.type.startsWith('touch')) { e.preventDefault(); }
+        
+        isDragging = true; 
+        if(currentRealm === 0) startErgenSound(); else startNianfoSound();
+    }
+    
+    function onUp() { 
+        if(!isDragging) return;
+        isDragging = false; 
+        if(currentRealm === 0) fadeErgenSound();
+        else {
+            fadeNianfoSound();
+            if(gravityForce > 0.8) {
+                flashIntensity = 1; 
+                document.getElementById('lengyan-flash').style.opacity = flashIntensity;
+            }
+        }
+    }
+
+    // 注意：觸控事件需關閉 passive 以允許 preventDefault
+    canvas.addEventListener('mousedown', onDown); window.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchstart', onDown, {passive: false}); window.addEventListener('touchend', onUp);
+
+    let audioCtx = null;
+    let ergenOsc = null; let ergenGain = null; 
+    let nianfoBuffer = null; let nianfoSource = null; let nianfoGain = null; 
+
+    function initAudioContext() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            createSyntheticNianfoBuffer(); 
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function startErgenSound() {
+        initAudioContext();
+        if(ergenOsc) return;
+        ergenOsc = audioCtx.createOscillator(); ergenOsc.type = 'sine'; ergenOsc.frequency.setValueAtTime(55, audioCtx.currentTime); 
+        ergenGain = audioCtx.createGain(); ergenGain.gain.setValueAtTime(0, audioCtx.currentTime); 
+        ergenGain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 2); 
+        ergenOsc.connect(ergenGain); ergenGain.connect(audioCtx.destination); ergenOsc.start();
+    }
+
+    function fadeErgenSound() {
+        if(!ergenGain || !ergenOsc) return;
+        ergenGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1); 
+        let oscToStop = ergenOsc; setTimeout(() => { oscToStop.stop(); }, 1100);
+        ergenOsc = null; ergenGain = null;
+    }
+
+    function startNianfoSound() {
+        initAudioContext();
+        if(!nianfoBuffer) return; 
+        if(nianfoSource) { nianfoSource.stop(); nianfoSource = null; }
+        nianfoSource = audioCtx.createBufferSource(); nianfoSource.buffer = nianfoBuffer; nianfoSource.loop = true; 
+        nianfoGain = audioCtx.createGain(); nianfoGain.gain.setValueAtTime(0, audioCtx.currentTime); 
+        nianfoGain.gain.linearRampToValueAtTime(0.7, audioCtx.currentTime + 1); 
+        nianfoSource.connect(nianfoGain); nianfoGain.connect(audioCtx.destination); nianfoSource.start();
+    }
+
+    function fadeNianfoSound() {
+        if(!nianfoGain || !nianfoSource) return;
+        nianfoGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.8); 
+        let sourceToStop = nianfoSource; setTimeout(() => { try { sourceToStop.stop(); } catch(e){} }, 900);
+        nianfoSource = null; nianfoGain = null;
+    }
+
+    function stopAllSounds() { if(ergenOsc) fadeErgenSound(); if(nianfoSource) fadeNianfoSound(); }
+
+    function createSyntheticNianfoBuffer() {
+        const length = audioCtx.sampleRate * 3; 
+        const buffer = audioCtx.createBuffer(1, length, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < length; i++) { data[i] = Math.sin(i * 0.015) * Math.exp(-i * 0.0001) * (1 + Math.sin(i * 0.00001)) * 0.2; }
+        nianfoBuffer = buffer;
+    }
+
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("Speech synthesis not supported");
+        const btnText = document.getElementById('tts-text'); const btnIcon = document.getElementById('tts-icon');
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel(); isPlayingTheory = false; btnText.innerText = "Listen";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            initAudioContext(); 
+            let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text, #theory-content-box .humble-statement');
+            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('. ');
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead); theoryUtterance.lang = 'en-US'; theoryUtterance.rate = 0.9; 
+            theoryUtterance.onend = () => {
+                isPlayingTheory = false; btnText.innerText = "Listen";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+            };
+            window.speechSynthesis.speak(theoryUtterance); isPlayingTheory = true; btnText.innerText = "Stop";
+            btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    const originalCloseTheoryDrawer = closeTheoryDrawer;
+    closeTheoryDrawer = function() { if (isPlayingTheory) toggleTheoryAudio(); originalCloseTheoryDrawer(); }
+
+    initEngines(); toggleRealm(0); animate();
+</script>
+</body>
+</html>

@@ -3,234 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>彌陀願海 · 琉璃法鏡</title>
+    <title>彌陀四十八願 ． 解鎖動畫</title>
     <style>
-        :root {
-            --gold: #d4af37;
-            --light-gold: #f3e5ab;
-            --deep-red: #8b0000;
-            --bg: #030303;
-            --glass: rgba(10, 15, 30, 0.6);
+        body {
+            margin: 0; padding: 0; background: #000; overflow: hidden;
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            user-select: none; -webkit-user-select: none;
         }
-
-        body, html {
-            margin: 0; padding: 0; background: var(--bg);
-            color: white; font-family: "Noto Serif TC", serif;
-            overflow: hidden;
-        }
-
-        /* Three.js 星空背景預留區 */
-        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-
-        /* 滾動容器：一捲一格 */
-        #vow-scroller {
-            height: 100vh;
-            overflow-y: scroll;
-            scroll-snap-type: y mandatory;
-            scroll-behavior: smooth;
-            position: relative; z-index: 2;
-        }
-
-        /* 每一願的區塊 */
-        .vow-section {
-            height: 100vh;
-            width: 100vw;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            scroll-snap-align: start;
-            position: relative;
-            perspective: 2000px;
-        }
-
-        /* 🏆 琉璃法鏡容器優化 */
-        .mirror-wrapper {
-            position: relative;
-            width: 380px; height: 380px;
-            display: flex; justify-content: center; align-items: center;
-            transition: all 1.5s cubic-bezier(0.23, 1, 0.32, 1);
-            transform: scale(0.8) translateY(50px) rotateX(15deg);
-            opacity: 0;
-        }
-
-        /* 激活狀態：進場點亮 */
-        .vow-section.active .mirror-wrapper {
-            transform: scale(1) translateY(0) rotateX(0deg);
-            opacity: 1;
-        }
-
-        /* 1. 琉璃鏡面核心 */
-        .glass-surface {
-            position: absolute; width: 100%; height: 100%;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 60%), var(--glass);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
-            z-index: 1;
-        }
-
-        /* 2. 動態流動金邊 (SVG) */
-        .gold-ring-svg {
-            position: absolute; width: 110%; height: 110%;
-            top: -5%; left: -5%;
-            z-index: 2;
-            pointer-events: none;
-        }
-        .ring-path {
-            stroke: var(--gold);
-            stroke-width: 2;
-            fill: none;
-            stroke-dasharray: 600;
-            stroke-dashoffset: 600;
-            stroke-linecap: round;
-            transition: stroke-dashoffset 2s ease-out 0.5s, stroke 1s;
-        }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
         
-        /* 激活時金邊流動 */
-        .vow-section.active .ring-path {
-            stroke-dashoffset: 0;
-            animation: ring-rotation 20s linear infinite 2.5s;
+        /* 爆光特效 */
+        #universe-flash {
+            position: absolute; inset: 0; background: #fff; z-index: 50; 
+            opacity: 0; pointer-events: none;
+        }
+        .flash-active {
+            animation: holy-flash 2.5s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+        }
+        @keyframes holy-flash {
+            0% { opacity: 0; background: #fff; }
+            10% { opacity: 1; background: #fff; box-shadow: inset 0 0 100px #d4af37; }
+            40% { opacity: 1; background: #f3e5ab; }
+            100% { opacity: 0; background: #000; }
         }
 
-        @keyframes ring-rotation {
-            from { transform: rotate(0deg); transform-origin: center; }
-            to { transform: rotate(360deg); transform-origin: center; }
+        /* 測試用的啟動按鈕 */
+        #start-btn {
+            position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%);
+            z-index: 100; background: transparent; border: 1px solid #d4af37;
+            color: #d4af37; padding: 15px 40px; font-size: 1.2rem; letter-spacing: 4px;
+            border-radius: 30px; cursor: pointer; backdrop-filter: blur(5px);
+            transition: all 0.5s; text-shadow: 0 0 10px rgba(212,175,55,0.5);
         }
-
-        /* 3. 法力場光暈 */
-        .mirror-glow {
-            position: absolute; width: 100%; height: 100%;
-            border-radius: 50%;
-            background: transparent;
-            z-index: 0;
-            transition: 1.5s;
-        }
-        .vow-section.active .mirror-glow {
-            box-shadow: 0 0 80px rgba(212, 175, 55, 0.4), 
-                        0 0 40px rgba(212, 175, 55, 0.2), 
-                        inset 0 0 60px rgba(212, 175, 55, 0.1);
-            animation: glow-breathing 4s infinite ease-in-out 2s;
-        }
-
-        @keyframes glow-breathing {
-            0%, 100% { opacity: 0.8; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.03); }
-        }
-
-        /* 願文內容 */
-        .vow-content {
-            z-index: 3; text-align: center;
-            display: flex; flex-direction: column; align-items: center;
-            cursor: pointer;
-        }
-        .vow-num {
-            font-size: 0.8rem; color: var(--deep-red);
-            letter-spacing: 3px; margin-bottom: 20px;
-            font-weight: bold;
-        }
-        .vow-name {
-            font-size: 2.4rem; letter-spacing: 10px;
-            color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5);
-            transition: color 1s;
-        }
-        .vow-section.active .vow-name { color: var(--light-gold); text-shadow: 0 0 20px var(--gold); }
-
-        /* 底部裝飾線 */
-        .deco-line {
-            width: 80px; height: 1px;
-            background: linear-gradient(90deg, transparent, var(--gold), transparent);
-            margin: 25px 0; opacity: 0.5;
-        }
-
-        /* 4. 金蓮花綻放動畫 (SVG) */
-        .lotus-svg-container {
-            width: 50px; height: 50px;
-            margin-top: 10px;
-        }
-        .blooming-lotus {
-            fill: var(--gold);
-            transform: scale(0);
-            transform-origin: center;
-            transition: transform 1.2s cubic-bezier(0.17, 0.89, 0.32, 1.49) 1.5s, filter 1s;
-        }
-        .vow-section.active .blooming-lotus {
-            transform: scale(1);
-            filter: drop-shadow(0 0 10px var(--gold));
-        }
-
+        #start-btn:hover { background: rgba(212,175,55,0.2); box-shadow: 0 0 20px rgba(212,175,55,0.4); }
     </style>
 </head>
 <body>
 
-<div id="bg-canvas"></div>
+    <canvas id="vowCanvas"></canvas>
+    <div id="universe-flash"></div>
+    <button id="start-btn" onclick="startUnlockSequence()">契入願海</button>
 
-<div id="vow-scroller">
-    </div>
+    <script>
+        const canvas = document.getElementById('vowCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        const FOV = 400;
 
-<script>
-    const vows = [
-        "國無惡道", "不復更生", "各得真金色", "形色無別", "設有姓名", "宿命通", "天眼通", "天耳通", "他心通", "神足通",
-        "遍供諸佛", "定成正覺", "光明無量", "觸光安樂", "壽命無量", "聲聞無數", "諸佛稱嘆", "十念必生", "臨終接引", "欲生果遂",
-        "悔過生西", "國無婦女", "厭女轉男", "蓮花化生", "天人禮敬", "聞名得福", "修殊勝行", "國無不善", "住正定聚", "樂如漏盡",
-        "不墮惡道", "身悉金色", "形貌端嚴", "成佛迅速", "聞名發心", "永離穢行", "善根增長", "聞名得忍", "具足根缺", "現證不退",
-        "國土嚴飾", "照見十方", "寶香普薰", "普等三昧", "定中供佛", "獲陀羅尼", "聞名永離", "獲三法忍", "同生極樂"
-    ];
-
-    const scroller = document.getElementById('vow-scroller');
-
-    // 蓮花 SVG 圖示代碼
-    const lotusSvg = `
-        <svg class="lotus-svg-container" viewBox="0 0 24 24">
-            <path class="blooming-lotus" d="M12 22C12 22 17 16 17 12C17 8 12 4 12 4C12 4 7 8 7 12C7 16 12 22 12 22Z" />
-            <path class="blooming-lotus" d="M12 22C12 22 22 18 22 12C22 8 17 8 12 12" opacity="0.4"/>
-            <path class="blooming-lotus" d="M12 22C12 22 2 18 2 12C2 8 7 8 12 12" opacity="0.4"/>
-        </svg>
-    `;
-
-    vows.forEach((name, i) => {
-        const section = document.createElement('div');
-        section.className = 'vow-section';
+        // 系統狀態：0=等待, 1=極速加速, 2=蓮花海成形
+        let phase = 0; 
+        let globalSpeed = 2;
         
-        section.innerHTML = `
-            <div class="mirror-wrapper">
-                <div class="mirror-glow"></div>
-                <div class="glass-surface"></div>
+        // 星辰/光軌粒子
+        let stars = [];
+        // 48 願蓮花陣列
+        let lotuses = [];
+        const lotusPetals = Array.from({length: 12}, (_, i) => i * (Math.PI * 2 / 12));
+
+        function resize() {
+            width = window.innerWidth; height = window.innerHeight;
+            canvas.width = width; canvas.height = height;
+        }
+        window.addEventListener('resize', resize); resize();
+
+        // 1. 初始化背景星辰
+        for (let i = 0; i < 600; i++) {
+            stars.push({
+                x: (Math.random() - 0.5) * 4000, 
+                y: (Math.random() - 0.5) * 4000, 
+                z: Math.random() * 2000,
+                baseSpeed: Math.random() * 5 + 2
+            });
+        }
+
+        // 2. 初始化 48 朵蓮花 (預先設定好它們的最終 3D 座標)
+        function initLotuses() {
+            lotuses = [];
+            for (let i = 0; i < 48; i++) {
+                // 利用黃金螺旋分布，產生錯落有致的星海排列
+                let angle = i * 2.4; 
+                let radius = 100 + i * 25;
                 
-                <svg class="gold-ring-svg" viewBox="0 0 100 100">
-                    <circle class="ring-path" cx="50" cy="50" r="48" transform="rotate(-90 50 50)"/>
-                </svg>
+                // 目標座標 (定格位置)
+                let tx = Math.cos(angle) * radius * (Math.random()*0.5 + 0.8);
+                let ty = Math.sin(angle) * radius * 0.6 * (Math.random()*0.5 + 0.8);
+                // Z 軸決定大小：越小代表越近(大)，越大代表越遠(小)
+                let tz = 100 + (Math.random() * 800); 
 
-                <div class="vow-content" onclick="openVowDetail(${i})">
-                    <span class="vow-num">— VOW ${(i+1).toString().padStart(2, '0')} —</span>
-                    <div class="vow-name">${name}</div>
-                    <div class="deco-line"></div>
-                    ${lotusSvg}
-                </div>
-            </div>
-        `;
-
-        scroller.appendChild(section);
-    });
-
-    // 監聽滾動，切換發亮狀態
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('active');
-            } else {
-                entry.target.classList.remove('active');
+                lotuses.push({
+                    id: i + 1,
+                    // 初始位置設定在極遠處，產生飛來的效果
+                    x: tx * 3, y: ty * 3, 
+                    z: 3000 + (i * 150), // 透過初始 Z 的差距，創造「陸續飛來」的時間差
+                    targetX: tx, targetY: ty, targetZ: tz,
+                    rot: Math.random() * Math.PI,
+                    rotSpeed: (Math.random() - 0.5) * 0.005,
+                    opacity: 0,
+                    isArrived: false
+                });
             }
-        });
-    }, { threshold: 0.6 });
+        }
 
-    document.querySelectorAll('.vow-section').forEach(section => observer.observe(section));
+        // 畫單片蓮花瓣
+        function drawPetal(ctx, size) {
+            ctx.beginPath(); ctx.moveTo(0, 0);
+            ctx.bezierCurveTo(size*0.4, size*0.2, size*0.8, size*0.5, size, 0);
+            ctx.bezierCurveTo(size*0.8, -size*0.5, size*0.4, -size*0.2, 0, 0);
+            ctx.fill(); ctx.stroke();
+        }
 
-    // 點擊願位的處理函數
-    function openVowDetail(index) {
-        alert(`契入第 ${index + 1} 願：${vows[index]}\n您寫的深刻內容將在此處浮現...`);
-    }
-</script>
+        // 畫整朵蓮花
+        function drawLotus(cx, cy, scale, opacity, rot) {
+            ctx.save(); 
+            ctx.translate(cx, cy);
+            ctx.rotate(rot);
+            let bSize = 60 * scale; // 基準大小
+            
+            // 優化效能：抵達後才加上重度發光效果
+            if (opacity > 0.8) {
+                ctx.shadowBlur = 15; 
+                ctx.shadowColor = `rgba(212,175,55,${opacity})`;
+            }
+            
+            ctx.fillStyle = `rgba(243,229,171,${opacity*0.15})`; 
+            ctx.strokeStyle = `rgba(255,255,255,${opacity*0.8})`; 
+            ctx.lineWidth = 1;
 
+            for (let i=0; i<12; i++) {
+                ctx.save(); ctx.rotate(lotusPetals[i]); drawPetal(ctx, bSize); ctx.restore();
+                ctx.save(); ctx.rotate(lotusPetals[i]+Math.PI/12); drawPetal(ctx, bSize*0.6); ctx.restore();
+            }
+            // 蓮心
+            ctx.beginPath(); ctx.arc(0, 0, 8*scale, 0, Math.PI*2); 
+            ctx.fillStyle = `rgba(255,255,255,${opacity})`; ctx.fill();
+            ctx.restore();
+        }
+
+        // 主渲染迴圈
+        function animate() {
+            // 背景殘影效果，營造速度感
+            ctx.fillStyle = phase === 1 ? 'rgba(0,0,0,0.2)' : 'rgba(5,5,5,0.4)';
+            ctx.fillRect(0, 0, width, height);
+            ctx.globalCompositeOperation = 'screen';
+
+            let cx = width / 2; let cy = height / 2;
+
+            // --- 星辰/光軌渲染 ---
+            stars.forEach(star => {
+                let sSpeed = star.baseSpeed * globalSpeed;
+                let oldZ = star.z;
+                star.z -= sSpeed;
+                
+                if (star.z <= 0) { 
+                    star.z = 2000; oldZ = 2000;
+                    star.x = (Math.random() - 0.5) * 4000; 
+                    star.y = (Math.random() - 0.5) * 4000; 
+                }
+
+                let sc = FOV / (FOV + star.z); 
+                let sx = cx + star.x * sc; let sy = cy + star.y * sc;
+
+                if (phase === 1) {
+                    // 加速期：畫光軌 (Lines)
+                    let oldSc = FOV / (FOV + oldZ);
+                    let oldSx = cx + star.x * oldSc; let oldSy = cy + star.y * oldSc;
+                    ctx.beginPath(); ctx.moveTo(oldSx, oldSy); ctx.lineTo(sx, sy);
+                    ctx.strokeStyle = `rgba(243,229,171, ${Math.min(1, sc*2)})`;
+                    ctx.lineWidth = sc * 2; ctx.stroke();
+                } else {
+                    // 平靜期：畫星點 (Dots)
+                    ctx.beginPath(); ctx.arc(sx, sy, Math.max(0.5, 2*sc), 0, Math.PI*2);
+                    ctx.fillStyle = `rgba(243,229,171, ${Math.min(0.8, sc)})`; ctx.fill();
+                }
+            });
+
+            // --- 狀態邏輯 ---
+            if (phase === 1) {
+                // 加速階段：不斷疊加 globalSpeed
+                globalSpeed *= 1.02; 
+                if (globalSpeed > 150) {
+                    // 觸發閃光與轉場
+                    document.getElementById('universe-flash').classList.add('flash-active');
+                    phase = 2;
+                    globalSpeed = 0.5; // 速度驟降，進入祥和的願海
+                    initLotuses();
+                }
+            } 
+            else if (phase === 2) {
+                // 願海階段：48 蓮花陸續飛入
+                lotuses.forEach(lotus => {
+                    // 緩動趨近目標 Z 軸 (製造飛來的感覺)
+                    if (lotus.z > lotus.targetZ) {
+                        lotus.z -= 15; // 飛行速度
+                        lotus.opacity = Math.min(1, lotus.opacity + 0.01);
+                    } else {
+                        lotus.isArrived = true;
+                        lotus.opacity = 1;
+                    }
+
+                    // 緩動趨近目標 X, Y
+                    lotus.x += (lotus.targetX - lotus.x) * 0.05;
+                    lotus.y += (lotus.targetY - lotus.y) * 0.05;
+                    lotus.rot += lotus.rotSpeed;
+
+                    // 投影到 2D 螢幕
+                    if (lotus.z > 0 && lotus.z < 2500) { // 太遠就不畫，省效能
+                        let lsc = FOV / (FOV + lotus.z);
+                        let lsx = cx + lotus.x * lsc;
+                        let lsy = cy + lotus.y * lsc;
+                        drawLotus(lsx, lsy, lsc, lotus.opacity, lotus.rot);
+                    }
+                });
+            }
+
+            ctx.globalCompositeOperation = 'source-over';
+            requestAnimationFrame(animate);
+        }
+
+        // 啟動函數
+        function startUnlockSequence() {
+            document.getElementById('start-btn').style.opacity = '0';
+            document.getElementById('start-btn').style.pointerEvents = 'none';
+            phase = 1; // 進入極速期
+            globalSpeed = 2;
+        }
+
+        animate();
+    </script>
 </body>
 </html>

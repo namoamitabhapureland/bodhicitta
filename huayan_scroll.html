@@ -2,119 +2,328 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>金蓮大願 - 尖瓣長短層次版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>彌陀大願海：實心金蓮與 48 願法陣</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; }
-        canvas { display: block; }
-        #loading-ui {
-            position: absolute; width: 100%; text-align: center;
-            top: 45%; color: #d4af37; font-family: serif; letter-spacing: 5px;
+        body { margin: 0; overflow: hidden; background-color: #050505; font-family: 'Noto Serif TC', serif; user-select: none; perspective: 1000px; }
+        #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
+        
+        #bloom-overlay {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle, #ffffff 0%, #d4af37 60%, #050505 100%);
+            opacity: 0; pointer-events: none; z-index: 10; transition: opacity 1.5s ease-in-out;
         }
+        
+        /* 啟動按鈕 */
+        #trigger-ui { position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%); z-index: 20; transition: opacity 1s; }
+        .vow-btn {
+            background: transparent; border: 1px solid #d4af37; color: #d4af37; padding: 15px 40px;
+            font-size: 1.2rem; letter-spacing: 4px; cursor: pointer; border-radius: 30px;
+            box-shadow: 0 0 15px rgba(212,175,55,0.2), inset 0 0 10px rgba(212,175,55,0.1); transition: all 0.5s;
+        }
+        .vow-btn:hover { background: rgba(212,175,55,0.1); box-shadow: 0 0 30px rgba(212,175,55,0.5); }
+        
+        /* 提示文字 */
+        #sea-ui {
+            position: absolute; top: 8%; width: 100%; text-align: center; color: #d4af37;
+            z-index: 5; opacity: 0; letter-spacing: 8px; font-size: 1.2rem;
+            text-shadow: 0 0 20px #d4af37; transition: opacity 3s; pointer-events: none;
+        }
+
+        /* 7x7 陣法容器 */
+        #matrix-wrapper {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 30; opacity: 0; pointer-events: none; transition: opacity 2s;
+            transform-style: preserve-3d;
+        }
+        #matrix-7x7 {
+            display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(7, 1fr); gap: 10px;
+            width: 90vw; height: 90vh; max-width: 950px; max-height: 950px;
+            transform: translateZ(0); transition: transform 0.2s ease-out;
+        }
+        .matrix-cell {
+            background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(8px);
+            border: 1px solid rgba(212,175,55,0.2); border-radius: 4px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            color: rgba(212,175,55,0.7); font-size: 0.85rem; letter-spacing: 1px; 
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5); transition: all 0.4s;
+            cursor: pointer; position: relative; overflow: hidden; text-align: center; padding: 5px;
+        }
+        .matrix-cell:hover {
+            border-color: #d4af37; color: #fff; background: rgba(40, 30, 10, 0.9);
+            box-shadow: 0 0 20px rgba(212,175,55,0.5); transform: translateZ(30px);
+        }
+        .cell-num { font-size: 0.65rem; color: #8b0000; margin-bottom: 2px; }
+        .matrix-cell:hover .cell-num { color: #d4af37; }
+
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <div id="loading-ui">妙依，蓮華化生中...</div>
+    <div id="canvas-container"></div>
+    <div id="bloom-overlay"></div>
+    
+    <div id="trigger-ui"><button class="vow-btn" onclick="initiateWarp()">資糧圓滿 · 契入願海</button></div>
+    <div id="sea-ui">請點擊中心大白蓮華<br><span style="font-size: 0.8rem; color:#888;">展開四十八願法陣</span></div>
+
+    <div id="matrix-wrapper">
+        <div id="matrix-7x7"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 
     <script>
-        // 1. 初始化環境
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        document.body.appendChild(renderer.domElement);
-
-        // 2. 光影配置 (展現金色質感)
-        const amb = new THREE.AmbientLight(0x442200, 2);
-        scene.add(amb);
-        const point = new THREE.PointLight(0xffeebb, 2, 1000);
-        point.position.set(20, 50, 30);
-        scene.add(point);
-
-        // 3. 核心：建立「頂部變尖」的花瓣
-        function createSharpPetal(length) {
-            const shape = new THREE.Shape();
-            const width = length * 0.35; // 根據長度自動調整寬度比例
-
-            shape.moveTo(0, 0); 
-            // 往尖端延伸 (貝茲曲線控制點靠近頂點，形成尖頭)
-            shape.bezierCurveTo(length * 0.3, width, length * 0.8, width * 0.2, length, 0);
-            shape.bezierCurveTo(length * 0.8, -width * 0.2, length * 0.3, -width, 0, 0);
-
-            const settings = { 
-                depth: 0.15, 
-                bevelEnabled: true, 
-                bevelThickness: 0.1, 
-                bevelSize: 0.1, 
-                bevelSegments: 3 
-            };
-            return new THREE.ExtrudeGeometry(shape, settings);
-        }
-
-        const lotus = new THREE.Group();
-        const goldMat = new THREE.MeshStandardMaterial({ 
-            color: 0xd4af37, 
-            metalness: 0.8, 
-            roughness: 0.2,
-            emissive: 0x331100,
-            side: THREE.DoubleSide
-        });
-
-        // 4. 定義三層：[長度, 數量, 翹起角度, 縮放]
-        const layerConfigs = [
-            { len: 8, count: 12, tilt: -0.15, yOffset: 0 },   // 最下層：最長
-            { len: 6, count: 10, tilt: -0.6,  yOffset: 0.5 }, // 中間層：中等
-            { len: 4, count: 8,  tilt: -1.2,  yOffset: 1.2 }  // 最上層：最短
+        /**
+         * 彌陀四十八願 名單數據
+         */
+        const vows = [
+            "國無惡道", "不復更生", "各得真金色", "形色無別", "設有姓名", "宿命通", "天眼通", "天耳通", "他心通", "神足通",
+            "遍供諸佛", "定成正覺", "光明無量", "觸光安樂", "壽命無量", "聲聞無數", "諸佛稱嘆", "十念必生", "臨終接引", "欲生果遂",
+            "悔過生西", "國無婦女", "厭女轉男", "蓮花化生", "天人禮敬", "聞名得福", "修殊勝行", "國無不善", "住正定聚", "樂如漏盡",
+            "不墮惡道", "身悉金色", "形貌端嚴", "成佛迅速", "聞名發心", "永離穢行", "善根增長", "聞名得忍", "具足根缺", "現證不退",
+            "國土嚴飾", "照見十方", "寶香普薰", "普等三昧", "定中供佛", "獲陀羅尼", "聞名永離", "獲三法忍", "同生極樂"
         ];
 
-        layerConfigs.forEach(config => {
-            const geo = createSharpPetal(config.len);
-            for (let i = 0; i < config.count; i++) {
-                const mesh = new THREE.Mesh(geo, goldMat);
-                const pivot = new THREE.Group();
-                
-                mesh.rotation.x = config.tilt; 
-                mesh.position.y = config.yOffset;
-                
-                pivot.rotation.y = (Math.PI * 2 / config.count) * i;
-                pivot.add(mesh);
-                lotus.add(pivot);
-            }
-        });
+        // --- 1. 核心初始化 ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050505, 0.001);
 
-        // 5. 加上中心蓮台
-        const core = new THREE.Mesh(
-            new THREE.CylinderGeometry(1.2, 0.8, 0.8, 32),
-            new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0xff8800 })
-        );
-        core.position.y = 0.5;
-        lotus.add(core);
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 5000);
+        camera.position.z = 1000;
 
-        scene.add(lotus);
-        camera.position.set(0, 10, 18);
-        camera.lookAt(0, 0, 0);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.toneMapping = THREE.ReinhardToneMapping;
+        container.appendChild(renderer.domElement);
 
-        // 移除載入文字
-        document.getElementById('loading-ui').style.display = 'none';
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; 
+        controls.enabled = false;
 
-        // 6. 動畫迴圈
-        function animate() {
-            requestAnimationFrame(animate);
-            lotus.rotation.y += 0.003; 
-            renderer.render(scene, camera);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        const pointLight = new THREE.PointLight(0xd4af37, 2, 2000);
+        scene.add(pointLight);
+
+        // Bloom 後處理
+        const renderScene = new THREE.RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.8, 0.4, 0.85);
+        const composer = new THREE.EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+
+        // --- 2. 蓮花建模邏輯 ---
+        function createPetalShape(size) {
+            const shape = new THREE.Shape();
+            shape.moveTo(0, 0);
+            shape.bezierCurveTo(size*0.4, size*0.2, size*0.8, size*0.5, size, 0);
+            shape.bezierCurveTo(size*0.8, -size*0.5, size*0.4, -size*0.2, 0, 0);
+            return shape;
         }
 
-        if (typeof THREE !== 'undefined') {
-            animate();
+        function buildLotus(baseSize, isMain) {
+            const group = new THREE.Group();
+            const shape = createPetalShape(baseSize);
+            const extrudeSettings = { depth: baseSize*0.05, bevelEnabled: true, bevelSize: baseSize*0.02, bevelThickness: baseSize*0.02 };
+            const petalGeo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+            
+            const material = new THREE.MeshStandardMaterial({
+                color: isMain ? 0xffffff : 0xcc9900,
+                emissive: isMain ? 0xfff0bb : 0x660000,
+                emissiveIntensity: 1.2,
+                metalness: 0.8, roughness: 0.2
+            });
+
+            for (let j = 0; j < 2; j++) {
+                const count = 12;
+                const scale = j === 0 ? 1 : 0.7;
+                for (let i = 0; i < count; i++) {
+                    const petal = new THREE.Mesh(petalGeo, material);
+                    const pivot = new THREE.Group();
+                    petal.rotation.z = j === 0 ? Math.PI/6 : Math.PI/3;
+                    petal.scale.set(scale, scale, scale);
+                    petal.position.z = -extrudeSettings.depth/2;
+                    pivot.add(petal);
+                    pivot.rotation.y = (Math.PI*2 / count) * i;
+                    group.add(pivot);
+                }
+            }
+            return group;
+        }
+
+        // --- 3. 生成粒子與場景物件 ---
+        let warpParticles, starParticles, mainLotus;
+        const lotuses = [];
+        const lotusGroup = new THREE.Group();
+
+        function initObjects() {
+            // 隧道粒子
+            const warpGeo = new THREE.BufferGeometry();
+            const warpPos = [];
+            for(let i=0; i<3000; i++){
+                const ang = Math.random()*Math.PI*2;
+                const rad = 100 + Math.random()*600;
+                warpPos.push(Math.cos(ang)*rad, Math.sin(ang)*rad, (Math.random()-0.5)*3000);
+            }
+            warpGeo.setAttribute('position', new THREE.Float32BufferAttribute(warpPos, 3));
+            warpParticles = new THREE.Points(warpGeo, new THREE.PointsMaterial({color:0xd4af37, size:2.5, transparent:true, blending: THREE.AdditiveBlending}));
+            scene.add(warpParticles);
+
+            // 星空粒子
+            const starGeo = new THREE.BufferGeometry();
+            const starPos = [];
+            for(let i=0; i<2000; i++) starPos.push((Math.random()-0.5)*4000, (Math.random()-0.5)*4000, (Math.random()-0.5)*4000);
+            starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+            starParticles = new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xffffff, size:1.5, opacity:0.4, transparent:true}));
+            starParticles.visible = false;
+            scene.add(starParticles);
+
+            // 蓮花群
+            mainLotus = buildLotus(130, true);
+            mainLotus.rotation.x = -Math.PI/4;
+            mainLotus.userData = { isMain: true, speed: 0.002, offset: 0 };
+            lotusGroup.add(mainLotus);
+            lotuses.push(mainLotus);
+
+            for(let i=0; i<47; i++) {
+                const l = buildLotus(15 + Math.random()*20, false);
+                const r = 300 + Math.random()*800;
+                const a = Math.random()*Math.PI*2;
+                l.position.set(Math.cos(a)*r, (Math.random()-0.5)*400, Math.sin(a)*r - 200);
+                l.userData = { isMain: false, speed: (Math.random()-0.5)*0.01, offset: Math.random()*Math.PI };
+                lotusGroup.add(l);
+                lotuses.push(l);
+            }
+            lotusGroup.visible = false;
+            scene.add(lotusGroup);
+        }
+        initObjects();
+
+        // --- 4. 狀態與動畫邏輯 ---
+        let state = { warping: false, transitioning: false, inSea: false, matrix: false };
+        let warpSpeed = 0;
+        const clock = new THREE.Clock();
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        function initiateWarp() {
+            document.getElementById('trigger-ui').style.opacity = '0';
+            setTimeout(() => document.getElementById('trigger-ui').style.display = 'none', 1000);
+            state.warping = true;
+            warpSpeed = 5;
+        }
+
+        // 點擊判定
+        window.addEventListener('mousedown', (e) => {
+            if (!state.inSea || state.matrix) return;
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const hits = raycaster.intersectObjects(mainLotus.children, true);
+            if (hits.length > 0) openMatrix();
+        });
+
+        // 矩陣傾斜效果
+        window.addEventListener('mousemove', (e) => {
+            if (!state.matrix) return;
+            const rx = (window.innerHeight/2 - e.pageY) / 35;
+            const ry = (window.innerWidth/2 - e.pageX) / -35;
+            document.getElementById('matrix-7x7').style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+        });
+
+        function openMatrix() {
+            state.matrix = true;
+            document.getElementById('sea-ui').style.opacity = '0';
+            const wrapper = document.getElementById('matrix-wrapper');
+            const grid = document.getElementById('matrix-7x7');
+            wrapper.style.pointerEvents = 'auto';
+            wrapper.style.opacity = '1';
+            
+            grid.innerHTML = '';
+            vows.forEach((v, i) => {
+                const cell = document.createElement('div');
+                cell.className = 'matrix-cell';
+                cell.innerHTML = `<div class="cell-num">${i+1}</div><div style="font-weight:bold">${v}</div>`;
+                grid.appendChild(cell);
+            });
+
+            controls.autoRotateSpeed = 0.2;
+            bloomPass.strength = 1.0;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            const time = clock.getElapsedTime();
+
+            if (state.warping || state.transitioning) {
+                if (state.warping) warpSpeed *= 1.03;
+                
+                // 粒子前移
+                const pos = warpParticles.geometry.attributes.position.array;
+                for(let i=2; i<pos.length; i+=3) {
+                    pos[i] += warpSpeed;
+                    if(pos[i] > 1000) pos[i] -= 3000;
+                }
+                warpParticles.geometry.attributes.position.needsUpdate = true;
+                camera.fov = THREE.MathUtils.lerp(camera.fov, 140, 0.04);
+                camera.updateProjectionMatrix();
+
+                // 速度達標，啟動過渡
+                if (warpSpeed > 200 && !state.transitioning) {
+                    state.warping = false;
+                    state.transitioning = true;
+                    document.getElementById('bloom-overlay').style.opacity = '1';
+                    
+                    setTimeout(() => {
+                        warpParticles.visible = false;
+                        starParticles.visible = true;
+                        lotusGroup.visible = true;
+                        camera.position.set(0, 200, 600);
+                        camera.lookAt(0,0,0);
+                        camera.fov = 60;
+                        camera.updateProjectionMatrix();
+                        controls.enabled = true;
+                        controls.autoRotate = true;
+                        document.getElementById('bloom-overlay').style.opacity = '0';
+                        document.getElementById('sea-ui').style.opacity = '1';
+                        state.inSea = true;
+                        state.transitioning = false;
+                    }, 1500);
+                }
+            }
+
+            if (state.inSea) {
+                lotuses.forEach(l => {
+                    l.rotation.y += l.userData.speed;
+                    const s = 1 + Math.sin(time*2 + l.userData.offset) * 0.05;
+                    l.scale.set(s,s,s);
+                });
+                starParticles.rotation.y += 0.0002;
+            }
+
+            controls.update();
+            composer.render();
         }
 
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
         });
+
+        animate();
     </script>
 </body>
 </html>

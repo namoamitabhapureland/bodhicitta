@@ -2,234 +2,301 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>探索華嚴之美 ． 法海一滴</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>彌陀第一願：時空穿越與蓮池海會</title>
     <style>
-        :root {
-            --gold: #f3e5ab;
-            --solid-gold: #d4af37;
-            --gold-dark: #b8860b;
-            --bg-deep: #050505;
-            --glass: rgba(20, 20, 20, 0.85);
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050505;
+            font-family: 'Noto Serif TC', serif;
+            user-select: none;
         }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { 
-            margin: 0; padding: 0; background: var(--bg-deep); color: #ddd; 
-            font-family: "PingFang TC", "Microsoft JhengHei", serif; 
-            display: flex; flex-direction: column; align-items: center;
-            overflow-x: hidden; line-height: 1.8;
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
         }
-
-        /* ✨ 換頁黑幕 ✨ */
-        #page-curtain { position: fixed; inset: 0; background: #000; z-index: 999999; pointer-events: none; transition: opacity 0.8s ease-in-out; opacity: 1; }
-
-        body::before {
-            content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: radial-gradient(circle at 50% 0%, rgba(212,175,55,0.05) 0%, transparent 60%),
-                        url('data:image/svg+xml,%3Csvg width="400" height="400" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noise)" opacity="0.03"/%3E%3C/svg%3E');
-            z-index: -1; pointer-events: none;
+        /* 時空爆裂的純白/純金濾鏡 */
+        #bloom-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle, #ffffff 0%, #d4af37 60%, #050505 100%);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+            transition: opacity 2s cubic-bezier(0.25, 1, 0.5, 1);
         }
-
-        .top-bar {
-            width: 100%; position: sticky; top: 0; left: 0; background: rgba(5,5,5,0.9);
-            backdrop-filter: blur(15px); border-bottom: 1px solid rgba(212,175,55,0.2);
-            padding: 15px 20px; display: flex; align-items: center; z-index: 1000;
+        /* 啟動按鈕 (模擬達到 10,000 聲的觸發器) */
+        #trigger-ui {
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            text-align: center;
+            transition: opacity 1s;
         }
-        .back-btn {
-            color: var(--gold); display: flex; align-items: center; gap: 8px; font-size: 0.95rem;
-            cursor: pointer; text-decoration: none; font-weight: bold; letter-spacing: 1px; transition: 0.3s;
+        .vow-btn {
+            background: transparent;
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            letter-spacing: 4px;
+            cursor: pointer;
+            border-radius: 30px;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2), inset 0 0 10px rgba(212, 175, 55, 0.1);
+            transition: all 0.5s;
+            text-transform: uppercase;
         }
-        .back-btn:active { transform: scale(0.95); opacity: 0.8; }
-        
-        .scroll-container { width: 92%; max-width: 680px; padding: 40px 0 80px 0; }
-
-        .main-title {
-            text-align: center; color: var(--gold); font-size: 1.7rem; letter-spacing: 5px; 
-            margin-bottom: 25px; text-shadow: 0 0 20px rgba(212,175,55,0.5); font-weight: normal;
+        .vow-btn:hover {
+            background: rgba(212, 175, 55, 0.1);
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.5), inset 0 0 20px rgba(212, 175, 55, 0.3);
+            text-shadow: 0 0 8px #d4af37;
         }
-        .disclaimer-text {
-            font-size: 0.8rem; color: rgba(255, 255, 255, 0.4); text-align: justify; 
-            line-height: 1.6; margin: 0 auto 50px auto; width: 95%;
+        /* 進入願海後的提示文字 */
+        #sea-ui {
+            position: absolute;
+            top: 10%;
+            width: 100%;
+            text-align: center;
+            color: #d4af37;
+            z-index: 5;
+            opacity: 0;
+            letter-spacing: 8px;
+            font-size: 1.5rem;
+            text-shadow: 0 0 20px #d4af37;
+            transition: opacity 3s ease-in;
+            pointer-events: none;
         }
-
-        .chapter-box { margin-bottom: 60px; position: relative; }
-        .chapter-header {
-            display: flex; align-items: center; justify-content: center; gap: 15px; 
-            margin-bottom: 25px; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 15px;
-        }
-        .chapter-icon { width: 32px; height: 32px; filter: drop-shadow(0 0 8px rgba(212,175,55,0.6)); }
-        .chapter-title { color: var(--solid-gold); font-size: 1.25rem; letter-spacing: 4px; font-weight: bold; margin: 0; }
-
-        .paragraph { font-size: 1.05rem; color: #ccc; text-align: justify; margin-bottom: 20px; letter-spacing: 1px; }
-        .highlight { color: var(--gold); font-weight: bold; }
-        
-        .sutra-quote {
-            background: linear-gradient(90deg, rgba(212,175,55,0.1), transparent);
-            border-left: 3px solid var(--solid-gold); padding: 15px 20px; margin: 25px 0;
-            font-style: italic; color: var(--gold); font-size: 1.1rem; letter-spacing: 2px;
-        }
-
-        .world-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin: 25px 0; }
-        .world-item {
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(212,175,55,0.15);
-            padding: 12px 15px; border-radius: 8px; font-size: 0.95rem; color: #ddd;
-            display: flex; align-items: center; gap: 10px;
-        }
-        .world-num { color: var(--solid-gold); font-size: 0.8rem; font-weight: bold; opacity: 0.7; }
-        .world-13 { border: 1px solid var(--solid-gold); background: rgba(212,175,55,0.1); box-shadow: 0 0 15px rgba(212,175,55,0.2); }
-
-        .bottom-action { text-align: center; margin-top: 60px; padding-top: 40px; border-top: 1px solid #333; }
-        .btn-main {
-            background: linear-gradient(145deg, #d4af37, #b08d2b); color: #000;
-            border: none; padding: 16px 35px; border-radius: 40px; font-size: 1.05rem; 
-            font-weight: bold; letter-spacing: 4px; cursor: pointer;
-            box-shadow: 0 0 30px rgba(212,175,55,0.5); transition: 0.3s;
-            display: inline-flex; align-items: center; gap: 10px;
-        }
-        .btn-main:active { transform: scale(0.96); box-shadow: 0 0 50px rgba(243,229,171,0.8); }
-
-        .divider { width: 100%; display: flex; justify-content: center; margin: 40px 0; opacity: 0.5; }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
 
-    <div id="page-curtain"></div>
-
-    <div class="top-bar">
-        <div class="back-btn" onclick="navigateTo('huayan.html')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            返回華嚴大世界
-        </div>
+    <div id="canvas-container"></div>
+    <div id="bloom-overlay"></div>
+    
+    <div id="trigger-ui">
+        <button class="vow-btn" id="start-warp" onclick="initiateWarp()">資糧圓滿 · 契入願海</button>
     </div>
 
-    <div class="scroll-container">
-        <h1 class="main-title">大方廣佛華嚴經<br><span style="font-size: 1.1rem; color: #888; display: block; margin-top: 8px;">華藏莊嚴世界海 ‧ 法海一滴</span></h1>
-        
-        <div class="disclaimer-text">
-            法海浩瀚，唯佛與佛乃能究盡。本文僅為一介在家居士，依經教邏輯與祖師大德之註疏，試圖探求如來真實義之修學略影。若有未盡或錯漏之處，皆屬個人智識之侷限，祈願三寶加被，同修共鑒。
-        </div>
-
-        <div class="chapter-box">
-            <div class="chapter-header">
-                <svg class="chapter-icon" viewBox="0 0 24 24" fill="none" stroke="var(--solid-gold)" stroke-width="1.5">
-                    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/>
-                    <line x1="12" y1="2" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="22"/>
-                    <line x1="2" y1="12" x2="8" y2="12"/><line x1="16" y1="12" x2="22" y2="12"/>
-                    <line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/>
-                    <line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/>
-                </svg>
-                <h2 class="chapter-title">【卷一】無極光法身與宏微一如</h2>
-            </div>
-            <p class="paragraph">《華嚴經》乃釋迦牟尼佛於菩提樹下，夜覩明星成道時，於甚深禪定中為大菩薩所揭示之宇宙最高境界，被譽為「經中之王」。</p>
-            <p class="paragraph">其核心揭示了<span class="highlight">「一真法界、事事無礙」</span>之實相。世俗凡夫常以肉眼所見之浩瀚星空為「宏大」，殊不知可見之相皆是因緣和合之虛妄；以不可見之微塵為「渺小」，然無形之境方含藏一真法界之真。</p>
-            <div class="sutra-quote">「一即一切，一切即一。芥子納須彌，一念即永恆。」</div>
-            <p class="paragraph">《華嚴經》以「十」為表法，象徵虛空法界之無盡與圓滿。此無盡宏大之宇宙，皆是<span class="highlight">「無極光法身 ‧ 毘盧遮那佛」</span>（大日如來）清淨心體之化現。微塵剎土，無一不是如來法身之流露。</p>
-        </div>
-
-        <div class="divider">
-            <svg width="60" height="20" viewBox="0 0 60 20" fill="none" stroke="var(--gold)" stroke-width="1"><line x1="0" y1="10" x2="25" y2="10"/><circle cx="30" cy="10" r="3" fill="var(--gold)"/><line x1="35" y1="10" x2="60" y2="10"/></svg>
-        </div>
-
-        <div class="chapter-box">
-            <div class="chapter-header">
-                <svg class="chapter-icon" viewBox="0 0 24 24" fill="none" stroke="var(--solid-gold)" stroke-width="1.5">
-                    <path d="M2 20h20M5 20v-4l4-4 4 4v4M11 12V4l4-2v10M15 6h4v6"/>
-                </svg>
-                <h2 class="chapter-title">【卷二】二十重熾然寶光明世界</h2>
-            </div>
-            <p class="paragraph">於虛空大風輪之上，有十方無盡香水海。其核心名為<span class="highlight">「無邊妙華光香水海」</span>，海中生出千葉大蓮華。蓮華之上，承載著由下至上互相重疊之二十重世界種：</p>
-            
-            <div class="world-grid">
-                <div class="world-item"><span class="world-num">01.</span>最勝光遍照 世界</div>
-                <div class="world-item"><span class="world-num">02.</span>種種香蓮華妙莊嚴 世界</div>
-                <div class="world-item"><span class="world-num">03.</span>一切寶莊嚴普照光 世界</div>
-                <div class="world-item"><span class="world-num">04.</span>種種光明華莊嚴 世界</div>
-                <div class="world-item"><span class="world-num">05.</span>普放妙華光 世界</div>
-                <div class="world-item"><span class="world-num">06.</span>淨妙光明 世界</div>
-                <div class="world-item"><span class="world-num">07.</span>眾華光莊嚴 世界</div>
-                <div class="world-item"><span class="world-num">08.</span>出生威德光 世界</div>
-                <div class="world-item"><span class="world-num">09.</span>出妙音聲 世界</div>
-                <div class="world-item"><span class="world-num">10.</span>金剛幢 世界</div>
-                <div class="world-item"><span class="world-num">11.</span>恆出現帝青寶光明 世界</div>
-                <div class="world-item"><span class="world-num">12.</span>光明照耀 世界</div>
-                <div class="world-item world-13">
-                    <span class="world-num" style="color:#fff;">13.</span><span style="color:var(--gold); font-weight:bold;">娑婆 世界 / 極樂 世界</span>
-                </div>
-                <div class="world-item"><span class="world-num">14.</span>寂靜離塵光 世界</div>
-                <div class="world-item"><span class="world-num">15.</span>眾妙光明燈 世界</div>
-                <div class="world-item"><span class="world-num">16.</span>清淨光遍照 世界</div>
-                <div class="world-item"><span class="world-num">17.</span>寶莊嚴 世界</div>
-                <div class="world-item"><span class="world-num">18.</span>離塵 世界</div>
-                <div class="world-item"><span class="world-num">19.</span>清淨光普照 世界</div>
-                <div class="world-item"><span class="world-num">20.</span>妙寶焰 世界</div>
-            </div>
-            
-            <p class="paragraph">此二十重宇宙中，最不可思議者乃<span class="highlight">第十三重</span>。本師釋迦牟尼佛於五濁惡世之「娑婆世界」度化剛強眾生；而同在此維度中，阿彌陀佛建立了「極樂世界」，作為十方眾生橫超三界之法界中繼站。</p>
-        </div>
-
-        <div class="divider">
-            <svg width="60" height="20" viewBox="0 0 60 20" fill="none" stroke="var(--gold)" stroke-width="1"><line x1="0" y1="10" x2="25" y2="10"/><circle cx="30" cy="10" r="3" fill="var(--gold)"/><line x1="35" y1="10" x2="60" y2="10"/></svg>
-        </div>
-
-        <div class="chapter-box">
-            <div class="chapter-header">
-                <svg class="chapter-icon" viewBox="0 0 24 24" fill="none" stroke="var(--solid-gold)" stroke-width="1.5">
-                    <path d="M12 22s8-4.5 8-11.5S12 2 12 2 4 3.5 4 10.5 12 22 12 22z"/>
-                    <path d="M12 13a3 3 0 100-6 3 3 0 000 6z"/>
-                </svg>
-                <h2 class="chapter-title">【卷三】五十三參與雙聖導歸</h2>
-            </div>
-            <p class="paragraph">華藏大世界縱然宏大，若無「行願」亦無法契入。經中〈入法界品〉記載，<span class="highlight">善財童子</span>為求無上菩提，發起五十三次參訪大善知識之壯舉，象徵著修行者從凡夫邁向成佛的五十三個心性階位。</p>
-            <p class="paragraph">然華嚴之極致，非是懸浮於虛空，而是有其最真實之歸宿！善財童子參訪至最高境界之文殊與普賢兩大菩薩，此二大聖者，竟不約而同將華嚴最圓滿之果位，<span class="highlight">全數導向阿彌陀佛之極樂世界：</span></p>
-            
-            <div class="sutra-quote" style="font-size: 1.05rem;">
-                《文殊發願經》：<br>「願我命終時，除滅諸障礙，面見阿彌陀，往生安樂國。」<br><br>
-                《華嚴經 ‧ 普賢行願品》：<br>「願我臨欲命終時，盡除一切諸障礙，面見彼佛阿彌陀，即得往生安樂剎。」
-            </div>
-        </div>
-
-        <div class="divider">
-            <svg width="60" height="20" viewBox="0 0 60 20" fill="none" stroke="var(--gold)" stroke-width="1"><line x1="0" y1="10" x2="25" y2="10"/><circle cx="30" cy="10" r="3" fill="var(--gold)"/><line x1="35" y1="10" x2="60" y2="10"/></svg>
-        </div>
-
-        <div class="chapter-box">
-            <div class="chapter-header">
-                <svg class="chapter-icon" viewBox="0 0 24 24" fill="none" stroke="var(--solid-gold)" stroke-width="1.5">
-                    <path d="M12 22s-8-4.5-8-11.5S12 2 12 2s8 1.5 8 8.5S12 22 12 22z" />
-                    <path d="M12 22s-4-5-4-10 4-7 4-7 4 2 4 7-4 10-4 10z" />
-                    <line x1="12" y1="5" x2="12" y2="22" />
-                </svg>
-                <h2 class="chapter-title">【卷四】釋尊本懷 ‧ 淨土閉環</h2>
-            </div>
-            <p class="paragraph">華嚴經之絕唱為「普賢十大願王」，而此無盡行願，究竟於何處落實？本師釋迦牟尼佛之教法，首尾一如。其真實答案，早已刻印在《無量壽經》阿彌陀佛第四十八大願之「第二十二願」中：</p>
-            <div class="sutra-quote">
-                「生我國者，究竟必至一生補處……咸共遵修普賢大士之德。」
-            </div>
-            <p class="paragraph">娑婆世界退緣太多，極難契入華嚴。故阿彌陀佛大悲願力，開闢極樂淨土。此地實乃彌陀大悲為眾生設立之<span class="highlight">「菩薩道中繼站」</span>。一旦往生，即證不退轉，具足無量神通道力，無礙圓滿普賢菩薩之廣大行願。</p>
-            <p class="paragraph">本數位道場之設立，正是為協助行者預習極樂法性。一次十念對頻，即已身在華藏第十三重；淨念相繼，即是重走善財五十三參之菩提大道。</p>
-            <p class="paragraph"><span class="highlight">行普賢菩薩願 ． 歸彌陀極樂國。</span>若依經教理路推演，這或許正是本師出世度生、指引吾等歸鄉的究竟本懷之一。願以至誠之心，探求如來真實義。</p>
-        </div>
-
-        <div class="bottom-action">
-            <button class="btn-main" onclick="navigateTo('index.html?screen=3')">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"/></svg>
-                歸向彌陀淨土系統
-            </button>
-        </div>
-
+    <div id="sea-ui">
+        <div>彌陀大願海</div>
+        <div style="font-size: 0.9rem; margin-top: 10px; color:#888; letter-spacing: 4px;">拖曳以觀想無邊淨土</div>
     </div>
 
     <script>
-        window.addEventListener('load', () => {
-            const curtain = document.getElementById('page-curtain');
-            if(curtain) curtain.style.opacity = '0';
+        // --- 智的結界核心設定 ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050505, 0.002); // 極簡黑的深邃霧氣
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 2000);
+        camera.position.z = 400;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = false;
+        controls.enabled = false; // 初始鎖定視角，進入蓮花海後再解鎖
+
+        // --- 第一階段：金光隧道 (The Warp) ---
+        let warpParticles;
+        const particleCount = 5000;
+        let warpSpeed = 0;
+        let isWarping = false;
+        let warpProgress = 0;
+
+        function createWarpTunnel() {
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            for (let i = 0; i < particleCount; i++) {
+                // 將粒子散佈在圓柱體周圍，留出中心隧道
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 20 + Math.random() * 300;
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
+                const z = (Math.random() - 0.5) * 1000;
+                vertices.push(x, y, z);
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            
+            const material = new THREE.PointsMaterial({
+                color: 0xd4af37, // 佛光金
+                size: 2,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+            warpParticles = new THREE.Points(geometry, material);
+            scene.add(warpParticles);
+        }
+        createWarpTunnel();
+
+        // --- 第三階段：3D 全息蓮花海 (The Lotus Sea) ---
+        const lotuses = [];
+        const lotusGroup = new THREE.Group();
+        scene.add(lotusGroup);
+        lotusGroup.visible = false; // 初始隱藏
+
+        // 建立科技禪意「線框蓮花」模型
+        function createCyberLotus() {
+            const lotus = new THREE.Group();
+            const petalGeo = new THREE.ConeGeometry(0.5, 3, 4);
+            petalGeo.translate(0, 1.5, 0); // 將軸心移至底部
+            
+            const petalMat = new THREE.MeshBasicMaterial({ 
+                color: 0xd4af37, 
+                wireframe: true, 
+                transparent: true, 
+                opacity: 0.6 
+            });
+
+            // 三層花瓣
+            for(let layer = 0; layer < 3; layer++) {
+                const numPetals = 6 + layer * 2;
+                const angleStep = (Math.PI * 2) / numPetals;
+                const tilt = 0.3 + layer * 0.4; // 越外層越展開
+                
+                for(let i = 0; i < numPetals; i++) {
+                    const petal = new THREE.Mesh(petalGeo, petalMat);
+                    petal.rotation.y = angleStep * i;
+                    petal.rotation.z = tilt;
+                    lotus.add(petal);
+                }
+            }
+            // 莊嚴紅的蓮花核心 (業力消融點)
+            const coreGeo = new THREE.OctahedronGeometry(0.6, 0);
+            const coreMat = new THREE.MeshBasicMaterial({ color: 0x8b0000, wireframe: true });
+            const core = new THREE.Mesh(coreGeo, coreMat);
+            lotus.add(core);
+
+            return lotus;
+        }
+
+        function buildLotusSea() {
+            // 生成 48 朵願力蓮花，散佈於 3D 空間
+            for(let i = 0; i < 48; i++) {
+                const lotus = createCyberLotus();
+                // 隨機分佈在球體空間中
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos((Math.random() * 2) - 1);
+                const radius = 50 + Math.random() * 250;
+                
+                lotus.position.x = radius * Math.sin(phi) * Math.cos(theta);
+                lotus.position.y = (Math.random() - 0.5) * 100; // 壓扁 Y 軸形成「海面」感
+                lotus.position.z = radius * Math.sin(phi) * Math.sin(theta);
+                
+                // 給予每朵蓮花不同的呼吸跳動頻率
+                lotus.userData = {
+                    pulseOffset: Math.random() * Math.PI * 2,
+                    rotationSpeed: (Math.random() - 0.5) * 0.01
+                };
+                
+                // 將它們轉向中心 (象徵萬法歸宗)
+                lotus.lookAt(0, 0, 0);
+                // 稍微翻轉使其朝上
+                lotus.rotateX(Math.PI / 2);
+
+                lotuses.push(lotus);
+                lotusGroup.add(lotus);
+            }
+        }
+        buildLotusSea();
+
+        // --- 動畫與過渡邏輯 ---
+        function initiateWarp() {
+            document.getElementById('trigger-ui').style.opacity = '0';
+            isWarping = true;
+            warpSpeed = 2; // 初始低速前進
+        }
+
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+
+            // 1. 金光隧道加速邏輯
+            if (isWarping && warpParticles.visible) {
+                warpSpeed *= 1.02; // 指數級加速
+                camera.fov = THREE.MathUtils.lerp(camera.fov, 120, 0.05); // 視野拉伸產生強烈速度感
+                camera.updateProjectionMatrix();
+
+                const positions = warpParticles.geometry.attributes.position.array;
+                for (let i = 2; i < positions.length; i += 3) {
+                    positions[i] += warpSpeed; // 粒子向鏡頭衝來
+                    if (positions[i] > camera.position.z) {
+                        positions[i] -= 1000; // 循環回到遠處
+                    }
+                }
+                warpParticles.geometry.attributes.position.needsUpdate = true;
+
+                // 2. 臨界點：時空爆裂 (The Bloom)
+                if (warpSpeed > 150 && warpProgress === 0) {
+                    warpProgress = 1;
+                    const bloom = document.getElementById('bloom-overlay');
+                    bloom.style.opacity = '1'; // 畫面閃白/閃金
+
+                    // 在閃白最高峰時，切換場景維度
+                    setTimeout(() => {
+                        warpParticles.visible = false; // 移除隧道
+                        scene.fog.color.setHex(0x050505); // 確保深色禪意底色
+                        scene.fog.density = 0.003;
+                        
+                        camera.position.set(0, 150, 300); // 抬高視角俯視蓮花海
+                        camera.lookAt(0, 0, 0);
+                        camera.fov = 60; // 恢復正常視野
+                        camera.updateProjectionMatrix();
+
+                        lotusGroup.visible = true; // 展現 3D 蓮花海
+                        controls.enabled = true;   // 允許手動旋轉縮放
+                        controls.autoRotate = true; // 開啟緩慢自轉
+                        controls.autoRotateSpeed = 0.5;
+
+                        bloom.style.opacity = '0'; // 迷霧退去
+                        document.getElementById('sea-ui').style.opacity = '1'; // 顯示文字
+                    }, 1500);
+                }
+            }
+
+            // 3. 蓮花海的呼吸與轉動邏輯
+            if (lotusGroup.visible) {
+                lotuses.forEach(lotus => {
+                    // 自轉
+                    lotus.rotation.y += lotus.userData.rotationSpeed;
+                    // 呼吸跳動 (Lotus Pulse)
+                    const scale = 1 + Math.sin(time * 2 + lotus.userData.pulseOffset) * 0.1;
+                    lotus.scale.set(scale, scale, scale);
+                });
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // 視窗自適應
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        function navigateTo(url) {
-            document.getElementById('page-curtain').style.opacity = '1';
-            setTimeout(() => { window.location.href = url; }, 800);
-        }
+        animate();
     </script>
 </body>
 </html>

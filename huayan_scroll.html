@@ -2,15 +2,16 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>彌陀大願海：橫向翹曲金蓮</title>
+    <title>彌陀大願海：橫向盛開金蓮</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #050505; font-family: 'Noto Serif TC', serif; }
         #canvas-container { width: 100vw; height: 100vh; }
         #trigger-ui { position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%); z-index: 20; }
         .vow-btn {
             background: rgba(212,175,55,0.1); border: 1px solid #d4af37; color: #d4af37; padding: 12px 35px;
-            font-size: 1.1rem; cursor: pointer; border-radius: 25px; letter-spacing: 2px;
+            font-size: 1.1rem; cursor: pointer; border-radius: 25px; letter-spacing: 2px; transition: 0.3s;
         }
+        .vow-btn:hover { background: rgba(212,175,55,0.3); box-shadow: 0 0 20px #d4af37; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -20,124 +21,4 @@
     <div id="trigger-ui"><button class="vow-btn" onclick="startWarp()">進入願海 · 觀蓮</button></div>
     <div id="canvas-container"></div>
 
-    <script>
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 5000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        camera.position.set(0, 400, 800);
-
-        scene.add(new THREE.AmbientLight(0x664422, 1.5));
-        const sun = new THREE.DirectionalLight(0xffffff, 1.2);
-        sun.position.set(5, 10, 7);
-        scene.add(sun);
-
-        // --- 修正後的橫向翹曲花瓣幾何 ---
-        function createCorrectPetal(size) {
-            const shape = new THREE.Shape();
-            // 貝茲曲線：形成一個寬闊的橫向水滴狀
-            shape.moveTo(0, 0);
-            shape.bezierCurveTo(size * 0.5, size * 0.1, size, size * 0.4, size, 0);
-            shape.bezierCurveTo(size, -size * 0.4, size * 0.5, -size * 0.1, 0, 0);
-
-            const extrudeSettings = { 
-                depth: size * 0.08, 
-                bevelEnabled: true, 
-                bevelSize: size * 0.05, 
-                bevelThickness: size * 0.05,
-                bevelSegments: 3
-            };
-            return new THREE.ExtrudeGeometry(shape, extrudeSettings);
-        }
-
-        function buildLotus(baseSize, isMain) {
-            const group = new THREE.Group();
-            const petalGeo = createCorrectPetal(baseSize);
-            const material = new THREE.MeshStandardMaterial({
-                color: isMain ? 0xffffff : 0xd4af37,
-                emissive: 0x8b4513, // 根部透出的深沉金紅
-                emissiveIntensity: 0.5,
-                metalness: 0.7, 
-                roughness: 0.3,
-                side: THREE.DoubleSide
-            });
-
-            // 構建三層花瓣，角度逐層上翹
-            const layers = [
-                { count: 12, tilt: -Math.PI / 12, scale: 1.0 }, // 最外層：幾乎平鋪
-                { count: 10, tilt: -Math.PI / 6, scale: 0.8 },  // 中間層：開始上翹
-                { count: 8, tilt: -Math.PI / 3, scale: 0.6 }    // 最內層：明顯上翹
-            ];
-
-            layers.forEach((layer, layerIdx) => {
-                for (let i = 0; i < layer.count; i++) {
-                    const petal = new THREE.Mesh(petalGeo, material);
-                    const pivot = new THREE.Group();
-                    
-                    // 關鍵修正：橫向旋轉與往上翹 (Tilt)
-                    petal.rotation.x = layer.tilt; 
-                    petal.scale.set(layer.scale, layer.scale, layer.scale);
-                    
-                    // 讓花瓣繞著中心 Y 軸旋轉排列
-                    pivot.rotation.y = (Math.PI * 2 / layer.count) * i + (layerIdx * 0.2);
-                    pivot.add(petal);
-                    group.add(pivot);
-                }
-            });
-
-            // 蓮台中心
-            const core = new THREE.Mesh(
-                new THREE.SphereGeometry(baseSize * 0.2, 24, 24),
-                new THREE.MeshStandardMaterial({ color: 0xffcc00, emissive: 0xffaa00 })
-            );
-            core.scale.y = 0.5; // 扁平化蓮台
-            group.add(core);
-
-            return group;
-        }
-
-        const lotusGroup = new THREE.Group();
-        const mainLotus = buildLotus(160, true);
-        lotusGroup.add(mainLotus);
-        scene.add(lotusGroup);
-        lotusGroup.visible = false;
-
-        // 星空
-        const starGeo = new THREE.BufferGeometry();
-        const starPos = [];
-        for(let i=0; i<1500; i++) starPos.push((Math.random()-0.5)*4000, (Math.random()-0.5)*4000, (Math.random()-0.5)*4000);
-        starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-        scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0xffffff, size: 1.5})));
-
-        let warping = false;
-        window.startWarp = function() {
-            warping = true;
-            document.getElementById('trigger-ui').style.opacity = 0;
-            setTimeout(()=> document.getElementById('trigger-ui').style.display='none', 500);
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            if(warping) {
-                camera.position.z -= 8;
-                if(camera.position.z < 800) {
-                    warping = false;
-                    lotusGroup.visible = true;
-                }
-            }
-            lotusGroup.rotation.y += 0.003;
-            renderer.render(scene, camera);
-        }
-        animate();
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-    </script>
-</body>
-</html>
+    

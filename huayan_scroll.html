@@ -3,146 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>彌陀願海 · 七七法陣</title>
+    <title>彌陀願海 · 星寰陣法</title>
     <style>
         :root {
             --gold: #d4af37;
-            --deep-red: #8b0000;
-            --bg-dark: #050505;
-            --glow: rgba(212, 175, 55, 0.3);
+            --rim-light: rgba(212, 175, 55, 0.3);
+            --void-bg: #050505;
         }
 
-        body { margin: 0; background: var(--bg-dark); overflow: hidden; font-family: "Noto Serif TC", serif; }
+        body, html { margin: 0; padding: 0; background: var(--void-bg); color: white; font-family: "Noto Serif TC", serif; overflow-x: hidden; }
 
-        /* 陣法容器優化 */
-        #matrix-wrapper {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            display: flex; justify-content: center; align-items: center;
-            z-index: 30; opacity: 1; /* 初始設為1便於開發調試 */
-            perspective: 1200px;
-            background: radial-gradient(circle at center, rgba(20,0,0,0.5) 0%, transparent 70%);
+        /* 願海大容器 - 增加高度讓用戶可以滾動觀想 */
+        #vow-universe {
+            position: relative;
+            min-height: 200vh; /* 讓內容有延展空間 */
+            background: radial-gradient(circle at center, #1a0505 0%, #050505 80%);
+            display: flex; flex-direction: column; align-items: center;
         }
 
-        #matrix-7x7 {
-            display: grid; 
-            grid-template-columns: repeat(7, 1fr); 
-            grid-template-rows: repeat(7, 1fr); 
-            gap: 8px;
-            width: 92vw; height: 92vh; 
-            max-width: 850px; max-height: 850px;
-            transform-style: preserve-3d;
-            transition: transform 0.8s cubic-bezier(0.2, 0, 0.2, 1);
+        /* 頂部標題區 */
+        .vow-header {
+            padding: 100px 20px 40px; text-align: center; z-index: 10;
+        }
+        .vow-header h1 { font-size: 2.2rem; letter-spacing: 8px; color: var(--gold); margin-bottom: 10px; font-weight: 300; }
+        .vow-header p { color: #666; font-size: 0.9rem; letter-spacing: 2px; }
+
+        /* 願位容器：不再擁擠 */
+        .vow-constellation {
+            position: relative; width: 100%; max-width: 1200px;
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 40px;
+            padding: 60px 20px; z-index: 5;
         }
 
-        /* 單個願位格子 */
-        .matrix-cell {
-            background: rgba(15, 15, 15, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(212, 175, 55, 0.15);
-            border-radius: 2px;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            color: rgba(212, 175, 55, 0.6); 
-            font-size: 0.8rem; letter-spacing: 2px;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer; position: relative; overflow: hidden;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        /* 願位單元：像星點般的設計 */
+        .vow-node {
+            width: 120px; height: 120px;
+            position: relative; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        /* 懸浮效果：向行者浮現 */
-        .matrix-cell:hover {
+        /* 願位的光環 */
+        .node-circle {
+            position: absolute; width: 100%; height: 100%;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 50%;
+            transition: all 0.6s;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        /* 願位文字：改為橫書但精緻 */
+        .node-text {
+            z-index: 2; font-size: 0.9rem; color: #aaa; text-align: center;
+            letter-spacing: 1px; transition: 0.4s;
+            padding: 0 10px; line-height: 1.4;
+        }
+
+        .node-num {
+            position: absolute; top: -10px; font-size: 0.6rem; color: #8b0000;
+            font-family: serif; letter-spacing: 1px;
+        }
+
+        /* 懸浮：綻放佛光 */
+        .vow-node:hover { transform: scale(1.15); }
+        .vow-node:hover .node-circle {
             border-color: var(--gold);
-            color: #fff;
-            background: rgba(30, 20, 10, 0.8);
-            transform: translateZ(50px);
-            z-index: 10;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.8), 0 0 20px var(--glow);
+            background: rgba(212, 175, 55, 0.05);
+            box-shadow: 0 0 30px var(--rim-light);
         }
+        .vow-node:hover .node-text { color: white; text-shadow: 0 0 10px var(--gold); }
 
-        /* 編號標註 */
-        .cell-num { 
-            font-size: 0.6rem; 
-            color: var(--deep-red); 
-            margin-bottom: 4px; 
-            opacity: 0.8;
-            font-family: serif;
+        /* 裝飾性連線（可選） */
+        .vow-line {
+            position: absolute; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.1), transparent);
+            height: 1px; z-index: 1; pointer-events: none;
         }
-
-        /* 願文名稱：直書感 */
-        .vow-name {
-            writing-mode: vertical-rl;
-            text-orientation: upright;
-            line-height: 1.2;
-            height: 4.5em;
-            display: flex; align-items: center;
-        }
-
-        /* 中心特殊位次：大白蓮華/彌陀本尊 */
-        .cell-center {
-            border: 2px solid var(--gold);
-            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 80%);
-            color: #fff;
-            box-shadow: 0 0 30px rgba(255,255,255,0.1);
-        }
-        .cell-center .cell-num { color: var(--gold); }
-
-        /* 掃光動畫效果 */
-        .matrix-cell::after {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.05), transparent);
-            transform: rotate(45deg); transition: 0.8s; opacity: 0;
-        }
-        .matrix-cell:hover::after { opacity: 1; transform: rotate(45deg) translate(20%, 20%); }
-
     </style>
 </head>
 <body>
 
-    <div id="matrix-wrapper">
-        <div id="matrix-7x7"></div>
+<div id="vow-universe">
+    <div class="vow-header">
+        <h1>彌陀四十八願海</h1>
+        <p>每一願，皆是通往極樂的指引</p>
     </div>
 
-    <script>
-        const vows = [
-            "國無惡道", "不復更生", "各得真金色", "形色無別", "設有姓名", "宿命通", "天眼通", 
-            "天耳通", "他心通", "神足通", "遍供諸佛", "定成正覺", "光明無量", "觸光安樂", 
-            "壽命無量", "聲聞無數", "諸佛稱嘆", "十念必生", "臨終接引", "欲生果遂", 
-            "悔過生西", "國無婦女", "厭女轉男", "蓮花化生", "彌陀本願", /* 25格中心 */
-            "天人禮敬", "聞名得福", "修殊勝行", "國無不善", "住正定聚", "樂如漏盡",
-            "不墮惡道", "身悉金色", "形貌端嚴", "成佛迅速", "聞名發心", "永離穢行", 
-            "善根增長", "聞名得忍", "具足根缺", "現證不退", "國土嚴飾", "照見十方", 
-            "寶香普薰", "普等三昧", "定中供佛", "獲陀羅尼", "聞名永離", "獲三法忍"
-        ];
+    <div class="vow-constellation" id="vow-list">
+        </div>
+</div>
 
-        const container = document.getElementById('matrix-7x7');
+<script>
+    const vows = [
+        "國無惡道", "不復更生", "各得真金色", "形色無別", "設有姓名", "宿命通", "天眼通", "天耳通", "他心通", "神足通",
+        "遍供諸佛", "定成正覺", "光明無量", "觸光安樂", "壽命無量", "聲聞無數", "諸佛稱嘆", "十念必生", "臨終接引", "欲生果遂",
+        "悔過生西", "國無婦女", "厭女轉男", "蓮花化生", "天人禮敬", "聞名得福", "修殊勝行", "國無不善", "住正定聚", "樂如漏盡",
+        "不墮惡道", "身悉金色", "形貌端嚴", "成佛迅速", "聞名發心", "永離穢行", "善根增長", "聞名得忍", "具足根缺", "現證不退",
+        "國土嚴飾", "照見十方", "寶香普薰", "普等三昧", "定中供佛", "獲陀羅尼", "聞名永離", "獲三法忍", "同生極樂"
+    ];
 
-        vows.forEach((name, index) => {
-            const cell = document.createElement('div');
-            cell.className = 'matrix-cell';
-            if (index === 24) cell.classList.add('cell-center');
-            
-            // 編號格式：如 01, 02...
-            const numStr = (index + 1).toString().padStart(2, '0');
-            
-            cell.innerHTML = `
-                <span class="cell-num">${numStr}</span>
-                <span class="vow-name">${name}</span>
-            `;
+    const listContainer = document.getElementById('vow-list');
 
-            // 點擊觸發邏輯：導向具體的願文內容
-            cell.onclick = () => {
-                console.log(`契入第 ${index + 1} 願：${name}`);
-                // 這裡可以觸發跳轉，例如：navigateTo(`vow_detail.html?id=${index+1}`);
-            };
+    vows.forEach((name, i) => {
+        const node = document.createElement('div');
+        node.className = 'vow-node';
+        
+        // 增加一點隨機的位移，讓它看起來更像自然星群，不那麼死板
+        const randomShift = (Math.random() - 0.5) * 20;
+        node.style.marginTop = `${randomShift}px`;
 
-            container.appendChild(cell);
-        });
+        node.innerHTML = `
+            <div class="node-circle"></div>
+            <div class="node-num">${(i+1).toString().padStart(2, '0')}</div>
+            <div class="node-text">${name}</div>
+        `;
 
-        // 簡單的陀螺儀/滑鼠視差效果
-        window.addEventListener('mousemove', (e) => {
-            const x = (e.clientX / window.innerWidth - 0.5) * 15;
-            const y = (e.clientY / window.innerHeight - 0.5) * -15;
-            container.style.transform = `rotateX(${y}deg) rotateY(${x}deg)`;
-        });
-    </script>
+        node.onclick = () => {
+            // 這裡連接到您的跳轉或彈窗
+            alert(`契入願海：${name}\n此處即將展現您對該願的深刻體悟...`);
+        };
+
+        listContainer.appendChild(node);
+    });
+</script>
+
 </body>
 </html>

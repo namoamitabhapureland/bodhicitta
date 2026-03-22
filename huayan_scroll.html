@@ -3,93 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>彌陀願海 · 星寰陣法</title>
+    <title>彌陀願海 · 圓金法鏡</title>
     <style>
         :root {
             --gold: #d4af37;
-            --rim-light: rgba(212, 175, 55, 0.3);
-            --void-bg: #050505;
+            --deep-red: #8b0000;
+            --bg: #050505;
         }
 
-        body, html { margin: 0; padding: 0; background: var(--void-bg); color: white; font-family: "Noto Serif TC", serif; overflow-x: hidden; }
+        body, html {
+            margin: 0; padding: 0; background: var(--bg);
+            color: white; font-family: "Noto Serif TC", serif;
+            overflow: hidden; /* 由容器接管捲動 */
+        }
 
-        /* 願海大容器 - 增加高度讓用戶可以滾動觀想 */
-        #vow-universe {
+        /* 滾動容器：一捲一格 */
+        #vow-scroller {
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        /* 每一願的區塊 */
+        .vow-section {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            scroll-snap-align: start;
             position: relative;
-            min-height: 200vh; /* 讓內容有延展空間 */
-            background: radial-gradient(circle at center, #1a0505 0%, #050505 80%);
-            display: flex; flex-direction: column; align-items: center;
+            perspective: 1000px;
         }
 
-        /* 頂部標題區 */
-        .vow-header {
-            padding: 100px 20px 40px; text-align: center; z-index: 10;
-        }
-        .vow-header h1 { font-size: 2.2rem; letter-spacing: 8px; color: var(--gold); margin-bottom: 10px; font-weight: 300; }
-        .vow-header p { color: #666; font-size: 0.9rem; letter-spacing: 2px; }
-
-        /* 願位容器：不再擁擠 */
-        .vow-constellation {
-            position: relative; width: 100%; max-width: 1200px;
-            display: flex; flex-wrap: wrap; justify-content: center; gap: 40px;
-            padding: 60px 20px; z-index: 5;
-        }
-
-        /* 願位單元：像星點般的設計 */
-        .vow-node {
-            width: 120px; height: 120px;
-            position: relative; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        /* 願位的光環 */
-        .node-circle {
-            position: absolute; width: 100%; height: 100%;
-            border: 1px solid rgba(212, 175, 55, 0.2);
+        /* 圓金框容器 */
+        .gold-mirror {
+            width: 320px;
+            height: 320px;
             border-radius: 50%;
-            transition: all 0.6s;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            border: 2px solid rgba(212, 175, 55, 0.2);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+            background: radial-gradient(circle, rgba(20,0,0,0.3) 0%, transparent 70%);
+            cursor: pointer;
+            transform: scale(0.8) rotateX(20deg);
+            opacity: 0.3;
         }
 
-        /* 願位文字：改為橫書但精緻 */
-        .node-text {
-            z-index: 2; font-size: 0.9rem; color: #aaa; text-align: center;
-            letter-spacing: 1px; transition: 0.4s;
-            padding: 0 10px; line-height: 1.4;
-        }
-
-        .node-num {
-            position: absolute; top: -10px; font-size: 0.6rem; color: #8b0000;
-            font-family: serif; letter-spacing: 1px;
-        }
-
-        /* 懸浮：綻放佛光 */
-        .vow-node:hover { transform: scale(1.15); }
-        .vow-node:hover .node-circle {
+        /* 當進入視野時的發亮狀態 */
+        .vow-section.active .gold-mirror {
+            transform: scale(1) rotateX(0deg);
+            opacity: 1;
             border-color: var(--gold);
-            background: rgba(212, 175, 55, 0.05);
-            box-shadow: 0 0 30px var(--rim-light);
+            box-shadow: 0 0 50px rgba(212, 175, 55, 0.3), inset 0 0 30px rgba(212, 175, 55, 0.2);
         }
-        .vow-node:hover .node-text { color: white; text-shadow: 0 0 10px var(--gold); }
 
-        /* 裝飾性連線（可選） */
-        .vow-line {
-            position: absolute; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.1), transparent);
-            height: 1px; z-index: 1; pointer-events: none;
+        /* 願文名稱 */
+        .vow-name {
+            font-size: 1.8rem;
+            letter-spacing: 6px;
+            color: #ddd;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+            transition: 1s;
+        }
+        .vow-section.active .vow-name { color: var(--gold); }
+
+        .vow-num {
+            position: absolute; top: 60px;
+            font-size: 0.8rem; color: var(--deep-red);
+            letter-spacing: 2px;
+        }
+
+        /* 底部金蓮花圖示 */
+        .mini-lotus {
+            position: absolute; bottom: 50px;
+            width: 30px; height: 30px;
+            fill: var(--gold);
+            opacity: 0.5;
+            transition: 1s;
+        }
+        .vow-section.active .mini-lotus {
+            opacity: 1;
+            filter: drop-shadow(0 0 5px var(--gold));
+            transform: scale(1.2);
+        }
+
+        /* 提示文字 */
+        .hint-text {
+            position: absolute; bottom: 30px;
+            font-size: 0.7rem; color: #444;
+            letter-spacing: 2px;
         }
     </style>
 </head>
 <body>
 
-<div id="vow-universe">
-    <div class="vow-header">
-        <h1>彌陀四十八願海</h1>
-        <p>每一願，皆是通往極樂的指引</p>
+<div id="vow-scroller">
     </div>
-
-    <div class="vow-constellation" id="vow-list">
-        </div>
-</div>
 
 <script>
     const vows = [
@@ -100,29 +115,50 @@
         "國土嚴飾", "照見十方", "寶香普薰", "普等三昧", "定中供佛", "獲陀羅尼", "聞名永離", "獲三法忍", "同生極樂"
     ];
 
-    const listContainer = document.getElementById('vow-list');
+    const scroller = document.getElementById('vow-scroller');
+
+    // 蓮花 SVG 圖示代碼
+    const lotusSvg = `
+        <svg class="mini-lotus" viewBox="0 0 24 24">
+            <path d="M12 22C12 22 17 16 17 12C17 8 12 4 12 4C12 4 7 8 7 12C7 16 12 22 12 22Z" />
+            <path d="M12 22C12 22 22 18 22 12C22 8 17 8 12 12" opacity="0.4"/>
+            <path d="M12 22C12 22 2 18 2 12C2 8 7 8 12 12" opacity="0.4"/>
+        </svg>
+    `;
 
     vows.forEach((name, i) => {
-        const node = document.createElement('div');
-        node.className = 'vow-node';
+        const section = document.createElement('div');
+        section.className = 'vow-section';
         
-        // 增加一點隨機的位移，讓它看起來更像自然星群，不那麼死板
-        const randomShift = (Math.random() - 0.5) * 20;
-        node.style.marginTop = `${randomShift}px`;
-
-        node.innerHTML = `
-            <div class="node-circle"></div>
-            <div class="node-num">${(i+1).toString().padStart(2, '0')}</div>
-            <div class="node-text">${name}</div>
+        section.innerHTML = `
+            <div class="gold-mirror">
+                <span class="vow-num">VOW ${(i+1).toString().padStart(2, '0')}</span>
+                <div class="vow-name">${name}</div>
+                ${lotusSvg}
+            </div>
+            <div class="hint-text">SCROLL TO OBSERVE</div>
         `;
 
-        node.onclick = () => {
-            // 這裡連接到您的跳轉或彈窗
-            alert(`契入願海：${name}\n此處即將展現您對該願的深刻體悟...`);
+        section.onclick = () => {
+            // 點擊後的跳轉或開啟您的內容
+            alert(`契入願海：${name}\n此處將展現您的觀想內容...`);
         };
 
-        listContainer.appendChild(node);
+        scroller.appendChild(section);
     });
+
+    // 監聽滾動，切換發亮狀態
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+            } else {
+                entry.target.classList.remove('active');
+            }
+        });
+    }, { threshold: 0.6 });
+
+    document.querySelectorAll('.vow-section').forEach(section => observer.observe(section));
 </script>
 
 </body>

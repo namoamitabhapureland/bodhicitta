@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>彌陀四十八願 ． 解鎖動畫</title>
+    <title>彌陀四十八願 ． 震撼解鎖</title>
     <style>
         body {
             margin: 0; padding: 0; background: #000; overflow: hidden;
@@ -12,19 +12,19 @@
         }
         canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
         
-        /* 爆光特效 */
+        /* ✨ 楞嚴開悟爆光特效 (Flash) - 增強金光感 ✨ */
         #universe-flash {
             position: absolute; inset: 0; background: #fff; z-index: 50; 
             opacity: 0; pointer-events: none;
         }
         .flash-active {
-            animation: holy-flash 2.5s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+            animation: holy-flash 2s cubic-bezier(0.1, 0.8, 0.1, 1) forwards;
         }
         @keyframes holy-flash {
             0% { opacity: 0; background: #fff; }
-            10% { opacity: 1; background: #fff; box-shadow: inset 0 0 100px #d4af37; }
-            40% { opacity: 1; background: #f3e5ab; }
-            100% { opacity: 0; background: #000; }
+            15% { opacity: 1; background: #fff; box-shadow: inset 0 0 150px #ffd700; }
+            30% { opacity: 1; background: #f3e5ab; } /* 琥珀金 */
+            100% { opacity: 0; background: #080808; }
         }
 
         /* 測試用的啟動按鈕 */
@@ -34,31 +34,34 @@
             color: #d4af37; padding: 15px 40px; font-size: 1.2rem; letter-spacing: 4px;
             border-radius: 30px; cursor: pointer; backdrop-filter: blur(5px);
             transition: all 0.5s; text-shadow: 0 0 10px rgba(212,175,55,0.5);
+            box-shadow: 0 0 15px rgba(212,175,55,0.2);
         }
-        #start-btn:hover { background: rgba(212,175,55,0.2); box-shadow: 0 0 20px rgba(212,175,55,0.4); }
+        #start-btn:hover { background: rgba(212,175,55,0.2); box-shadow: 0 0 30px rgba(212,175,55,0.5); }
     </style>
 </head>
 <body>
 
     <canvas id="vowCanvas"></canvas>
     <div id="universe-flash"></div>
-    <button id="start-btn" onclick="startUnlockSequence()">契入願海</button>
+    <button id="start-btn" onclick="startUnlockSequence()">契入大願海</button>
 
     <script>
         const canvas = document.getElementById('vowCanvas');
         const ctx = canvas.getContext('2d');
         let width, height;
-        const FOV = 400;
+        const FOV = 400; // 視場深度
 
-        // 系統狀態：0=等待, 1=極速加速, 2=蓮花海成形
+        // 系統狀態：0=等待, 1=金光加速(大勢至), 2=閃光轉場, 3=蓮花噴湧與退位(千佛劫)
         let phase = 0; 
-        let globalSpeed = 2;
+        let globalSpeed = 1;
+        let speedMult = 1; // 模擬大勢至的加速系數
         
-        // 星辰/光軌粒子
         let stars = [];
-        // 48 願蓮花陣列
         let lotuses = [];
         const lotusPetals = Array.from({length: 12}, (_, i) => i * (Math.PI * 2 / 12));
+
+        // 呼吸動畫變數
+        let breathingProgress = 0;
 
         function resize() {
             width = window.innerWidth; height = window.innerHeight;
@@ -66,40 +69,52 @@
         }
         window.addEventListener('resize', resize); resize();
 
-        // 1. 初始化背景星辰
-        for (let i = 0; i < 600; i++) {
-            stars.push({
-                x: (Math.random() - 0.5) * 4000, 
-                y: (Math.random() - 0.5) * 4000, 
-                z: Math.random() * 2000,
-                baseSpeed: Math.random() * 5 + 2
-            });
+        // 1. 初始化背景星辰 (增加數量，營造厚度)
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < 1000; i++) {
+                stars.push({
+                    x: (Math.random() - 0.5) * 4000, 
+                    y: (Math.random() - 0.5) * 4000, 
+                    z: Math.random() * 2000,
+                    baseSpeed: Math.random() * 3 + 1,
+                    // 隨機賦予金黃或翠綠，參考千佛劫色調
+                    color: Math.random() > 0.2 ? '#f3e5ab' : '#9fdfc8' 
+                });
+            }
         }
+        initStars();
 
-        // 2. 初始化 48 朵蓮花 (預先設定好它們的最終 3D 座標)
+        // 2. 初始化 48 朵蓮花 (核心變化：噴湧算法)
         function initLotuses() {
             lotuses = [];
             for (let i = 0; i < 48; i++) {
-                // 利用黃金螺旋分布，產生錯落有致的星海排列
+                // 目標座標 (定格位置 - 呈現大中小散落)
                 let angle = i * 2.4; 
-                let radius = 100 + i * 25;
-                
-                // 目標座標 (定格位置)
-                let tx = Math.cos(angle) * radius * (Math.random()*0.5 + 0.8);
-                let ty = Math.sin(angle) * radius * 0.6 * (Math.random()*0.5 + 0.8);
-                // Z 軸決定大小：越小代表越近(大)，越大代表越遠(小)
-                let tz = 100 + (Math.random() * 800); 
+                let radius = 150 + i * 20;
+                let tx = Math.cos(angle) * radius * 1.2;
+                let ty = Math.sin(angle) * radius * 0.7;
+                // Z 軸決定定格時的大小：100(近/大) ~ 1000(遠/小)
+                let tz = 100 + (Math.random() * 900); 
 
                 lotuses.push({
                     id: i + 1,
-                    // 初始位置設定在極遠處，產生飛來的效果
-                    x: tx * 3, y: ty * 3, 
-                    z: 3000 + (i * 150), // 透過初始 Z 的差距，創造「陸續飛來」的時間差
+                    // ✨ 初始位置：全部集中在畫布中心，Z軸極近，模擬從前方「噴」出來
+                    x: (Math.random() - 0.5) * 50, // 稍微分散，避免完全重合
+                    y: (Math.random() - 0.5) * 50, 
+                    z: 10, // 極近
+                    
+                    // 中間態 (噴湧的最遠點)
+                    surgeZ: -FOV + 50, // 衝到螢幕最前面
+                    
+                    // 目標態 (退位後的定格點)
                     targetX: tx, targetY: ty, targetZ: tz,
+                    
+                    // 物理屬性
                     rot: Math.random() * Math.PI,
-                    rotSpeed: (Math.random() - 0.5) * 0.005,
+                    rotSpeed: (Math.random() - 0.5) * 0.01,
                     opacity: 0,
-                    isArrived: false
+                    state: 'surging' // surging=噴湧, retreating=退位, settle=定格
                 });
             }
         }
@@ -112,49 +127,77 @@
             ctx.fill(); ctx.stroke();
         }
 
-        // 畫整朵蓮花
-        function drawLotus(cx, cy, scale, opacity, rot) {
+        // ✨ 畫整朵蓮花 - 增加呼吸與強烈金光 ✨
+        function drawLotus(cx, cy, scale, opacity, rot, isBreathing) {
             ctx.save(); 
             ctx.translate(cx, cy);
-            ctx.rotate(rot);
-            let bSize = 60 * scale; // 基準大小
             
-            // 優化效能：抵達後才加上重度發光效果
-            if (opacity > 0.8) {
-                ctx.shadowBlur = 15; 
-                ctx.shadowColor = `rgba(212,175,55,${opacity})`;
+            // ✨ 應用呼吸動畫 (整體縮放 1 ~ 1.08)
+            if (isBreathing) {
+                let breatheScale = 1 + Math.sin(breathingProgress) * 0.04;
+                ctx.scale(breatheScale, breatheScale);
+                // ✨ 呼吸時透明度也隨之變化
+                opacity = 0.7 + Math.sin(breathingProgress) * 0.3;
             }
+
+            ctx.rotate(rot);
+            let bSize = 80 * scale; // 基準大小 (增大，更震撼)
             
-            ctx.fillStyle = `rgba(243,229,171,${opacity*0.15})`; 
-            ctx.strokeStyle = `rgba(255,255,255,${opacity*0.8})`; 
-            ctx.lineWidth = 1;
+            // ✨ 強烈爆發感 - 螢幕疊加與重度發光
+            ctx.shadowBlur = isBreathing ? 20 : 50; 
+            ctx.shadowColor = `rgba(255, 215, 0, ${opacity})`; // 純金光
+            
+            // 蓮瓣顏色 - 金白漸變
+            ctx.fillStyle = `rgba(243,229,171,${opacity*0.2})`; // 琥珀
+            ctx.strokeStyle = `rgba(255,255,255,${opacity*0.9})`; // 白金邊
+            ctx.lineWidth = 1.5 * scale;
 
             for (let i=0; i<12; i++) {
                 ctx.save(); ctx.rotate(lotusPetals[i]); drawPetal(ctx, bSize); ctx.restore();
+                // 內層花瓣
                 ctx.save(); ctx.rotate(lotusPetals[i]+Math.PI/12); drawPetal(ctx, bSize*0.6); ctx.restore();
             }
-            // 蓮心
-            ctx.beginPath(); ctx.arc(0, 0, 8*scale, 0, Math.PI*2); 
-            ctx.fillStyle = `rgba(255,255,255,${opacity})`; ctx.fill();
+            // 蓮心 - 極亮
+            ctx.beginPath(); ctx.arc(0, 0, 10*scale, 0, Math.PI*2); 
+            ctx.fillStyle = `rgba(255,255,255,${opacity})`; 
+            ctx.shadowBlur = 30; ctx.shadowColor = '#fff';
+            ctx.fill();
             ctx.restore();
         }
 
         // 主渲染迴圈
         function animate() {
-            // 背景殘影效果，營造速度感
-            ctx.fillStyle = phase === 1 ? 'rgba(0,0,0,0.2)' : 'rgba(5,5,5,0.4)';
+            // 背景殘影效果 - 加速期殘影更重
+            ctx.fillStyle = phase === 1 ? 'rgba(0,0,0,0.3)' : 'rgba(5,5,5,0.5)';
             ctx.fillRect(0, 0, width, height);
+            
+            // ✨ 全程開啟螢幕疊加，保證金光燦爛 ✨
             ctx.globalCompositeOperation = 'screen';
 
             let cx = width / 2; let cy = height / 2;
+            breathingProgress += 0.03; // 呼吸速度
+
+            // --- ✨ Phase 1: 大勢至金光加速 ---
+            if (phase === 1) {
+                speedMult *= 1.03; // 指數級加速
+                if (speedMult > 120) {
+                    // 觸發閃光
+                    document.getElementById('universe-flash').classList.add('flash-active');
+                    phase = 2; // 進入轉場
+                    // 閃光瞬間初始化蓮花，保證噴湧效果
+                    initLotuses();
+                    // 閃光後星辰重置為平靜
+                    setTimeout(() => { phase = 3; speedMult = 0.3; }, 500);
+                }
+            }
 
             // --- 星辰/光軌渲染 ---
             stars.forEach(star => {
-                let sSpeed = star.baseSpeed * globalSpeed;
+                let sSpeed = star.baseSpeed * globalSpeed * speedMult;
                 let oldZ = star.z;
                 star.z -= sSpeed;
                 
-                if (star.z <= 0) { 
+                if (star.z <= -FOV) { 
                     star.z = 2000; oldZ = 2000;
                     star.x = (Math.random() - 0.5) * 4000; 
                     star.y = (Math.random() - 0.5) * 4000; 
@@ -163,57 +206,88 @@
                 let sc = FOV / (FOV + star.z); 
                 let sx = cx + star.x * sc; let sy = cy + star.y * sc;
 
-                if (phase === 1) {
-                    // 加速期：畫光軌 (Lines)
-                    let oldSc = FOV / (FOV + oldZ);
-                    let oldSx = cx + star.x * oldSc; let oldSy = cy + star.y * oldSc;
-                    ctx.beginPath(); ctx.moveTo(oldSx, oldSy); ctx.lineTo(sx, sy);
-                    ctx.strokeStyle = `rgba(243,229,171, ${Math.min(1, sc*2)})`;
-                    ctx.lineWidth = sc * 2; ctx.stroke();
-                } else {
-                    // 平靜期：畫星點 (Dots)
-                    ctx.beginPath(); ctx.arc(sx, sy, Math.max(0.5, 2*sc), 0, Math.PI*2);
-                    ctx.fillStyle = `rgba(243,229,171, ${Math.min(0.8, sc)})`; ctx.fill();
+                if (star.z > -FOV && star.z < 2000) {
+                    if (phase === 1) {
+                        // ✨ 加速期：呈現大勢至般的金光粒子流
+                        let oldSc = FOV / (FOV + oldZ);
+                        let oldSx = cx + star.x * oldSc; let oldSy = cy + star.y * oldSc;
+                        ctx.beginPath(); ctx.moveTo(oldSx, oldSy); ctx.lineTo(sx, sy);
+                        // 金黃色光軌，越近越亮
+                        ctx.strokeStyle = `rgba(243, 229, 171, ${Math.min(1, sc*2)})`;
+                        ctx.lineWidth = sc * 3; 
+                        ctx.stroke();
+                    } else {
+                        // 平靜期：祥和星海
+                        ctx.beginPath(); ctx.arc(sx, sy, Math.max(0.5, 2.5*sc), 0, Math.PI*2);
+                        // 千佛劫色調
+                        let colorRGB = star.color === '#f3e5ab' ? '243,229,171' : '159,223,200';
+                        ctx.fillStyle = `rgba(${colorRGB}, ${Math.min(0.8, sc)})`; 
+                        ctx.fill();
+                    }
                 }
             });
 
-            // --- 狀態邏輯 ---
-            if (phase === 1) {
-                // 加速階段：不斷疊加 globalSpeed
-                globalSpeed *= 1.02; 
-                if (globalSpeed > 150) {
-                    // 觸發閃光與轉場
-                    document.getElementById('universe-flash').classList.add('flash-active');
-                    phase = 2;
-                    globalSpeed = 0.5; // 速度驟降，進入祥和的願海
-                    initLotuses();
-                }
-            } 
-            else if (phase === 2) {
-                // 願海階段：48 蓮花陸續飛入
-                lotuses.forEach(lotus => {
-                    // 緩動趨近目標 Z 軸 (製造飛來的感覺)
-                    if (lotus.z > lotus.targetZ) {
-                        lotus.z -= 15; // 飛行速度
-                        lotus.opacity = Math.min(1, lotus.opacity + 0.01);
-                    } else {
-                        lotus.isArrived = true;
-                        lotus.opacity = 1;
+            // --- ✨ Phase 3: 千佛劫震撼噴湧 -> 退位定格 ---
+            if (phase === 3) {
+                let allSettled = true;
+                
+                lotuses.forEach((lotus, index) => {
+                    // 透過 Index 製造微小的噴湧時間差
+                    let delay = index * 2; 
+
+                    if (lotus.state === 'surging') {
+                        // ✨ 噴湧階段：極速趨近螢幕 (Z減小)
+                        lotus.z -= 80; // 極快的速度
+                        lotus.opacity = Math.min(1, lotus.opacity + 0.1);
+                        
+                        // 旋轉也爆發
+                        lotus.rot += lotus.rotSpeed * 10;
+
+                        if (lotus.z <= lotus.surgeZ) {
+                            lotus.state = 'retreating'; // 到達最靠前點，開始退位
+                        }
+                        allSettled = false;
+                    } 
+                    else if (lotus.state === 'retreating') {
+                        // ✨ 退位階段：緩慢退回到目標 Z 軸 (Z增大)
+                        // 使用緩動算法，先快後慢，更有質感
+                        let dz = lotus.targetZ - lotus.z;
+                        lotus.z += dz * 0.02; 
+                        
+                        // X, Y 也緩動趨近目標
+                        lotus.x += (lotus.targetX - lotus.x) * 0.03;
+                        lotus.y += (lotus.targetY - lotus.y) * 0.03;
+                        
+                        // 旋轉恢復正常
+                        lotus.rot += lotus.rotSpeed;
+
+                        if (Math.abs(dz) < 1) {
+                            lotus.z = lotus.targetZ;
+                            lotus.state = 'settle'; // 定格
+                        }
+                        allSettled = false;
+                    }
+                    else if (lotus.state === 'settle') {
+                        // ✨ 定格階段：保持在目標位置，僅進行旋轉
+                        lotus.rot += lotus.rotSpeed * 0.3; // 緩慢自轉
                     }
 
-                    // 緩動趨近目標 X, Y
-                    lotus.x += (lotus.targetX - lotus.x) * 0.05;
-                    lotus.y += (lotus.targetY - lotus.y) * 0.05;
-                    lotus.rot += lotus.rotSpeed;
-
                     // 投影到 2D 螢幕
-                    if (lotus.z > 0 && lotus.z < 2500) { // 太遠就不畫，省效能
+                    if (lotus.z > -FOV && lotus.z < 2500) { 
                         let lsc = FOV / (FOV + lotus.z);
                         let lsx = cx + lotus.x * lsc;
                         let lsy = cy + lotus.y * lsc;
-                        drawLotus(lsx, lsy, lsc, lotus.opacity, lotus.rot);
+                        
+                        // 只有定格狀態才開啟呼吸動畫，省效能且視覺更好
+                        let isBreathing = (lotus.state === 'settle');
+                        drawLotus(lsx, lsy, lsc, lotus.opacity, lotus.rot, isBreathing);
                     }
                 });
+                
+                // 如果全部定格，可以降低 globalSpeed，營造最終的寧靜海
+                if (allSettled) {
+                    globalSpeed = 0.2;
+                }
             }
 
             ctx.globalCompositeOperation = 'source-over';
@@ -224,8 +298,8 @@
         function startUnlockSequence() {
             document.getElementById('start-btn').style.opacity = '0';
             document.getElementById('start-btn').style.pointerEvents = 'none';
-            phase = 1; // 進入極速期
-            globalSpeed = 2;
+            phase = 1; // 進入大勢至加速期
+            speedMult = 1;
         }
 
         animate();

@@ -2,72 +2,81 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>彌陀願海 - 橫向翹曲金蓮</title>
+    <title>金蓮大願 - 尖瓣長短層次版</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; }
-        #ui { position: absolute; top: 20px; width: 100%; text-align: center; color: #d4af37; z-index: 100; font-family: serif; }
         canvas { display: block; }
+        #loading-ui {
+            position: absolute; width: 100%; text-align: center;
+            top: 45%; color: #d4af37; font-family: serif; letter-spacing: 5px;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <div id="ui">
-        <h2>金蓮願海：實心橫向瓣</h2>
-        <p>若畫面全黑，請稍候 3 秒載入核心庫</p>
-    </div>
+    <div id="loading-ui">妙依，蓮華化生中...</div>
 
     <script>
-        // 1. 基本場景設置
+        // 1. 初始化環境
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
         document.body.appendChild(renderer.domElement);
 
-        // 2. 燈光 (讓金屬質感顯現)
-        const light = new THREE.PointLight(0xffffff, 1.5, 1000);
-        light.position.set(10, 20, 15);
-        scene.add(light);
-        scene.add(new THREE.AmbientLight(0x443311));
+        // 2. 光影配置 (展現金色質感)
+        const amb = new THREE.AmbientLight(0x442200, 2);
+        scene.add(amb);
+        const point = new THREE.PointLight(0xffeebb, 2, 1000);
+        point.position.set(20, 50, 30);
+        scene.add(point);
 
-        // 3. 建立「橫向往上翹」的花瓣幾何
-        function createPetal() {
+        // 3. 核心：建立「頂部變尖」的花瓣
+        function createSharpPetal(length) {
             const shape = new THREE.Shape();
-            // 橫向拉長的水滴形 (X軸為長，Y軸為寬)
-            shape.moveTo(0, 0);
-            shape.bezierCurveTo(2, 1, 4, 1, 5, 0);
-            shape.bezierCurveTo(4, -1, 2, -1, 0, 0);
+            const width = length * 0.35; // 根據長度自動調整寬度比例
 
-            const settings = { depth: 0.2, bevelEnabled: true, bevelSize: 0.1 };
-            const geo = new THREE.ExtrudeGeometry(shape, settings);
-            return geo;
+            shape.moveTo(0, 0); 
+            // 往尖端延伸 (貝茲曲線控制點靠近頂點，形成尖頭)
+            shape.bezierCurveTo(length * 0.3, width, length * 0.8, width * 0.2, length, 0);
+            shape.bezierCurveTo(length * 0.8, -width * 0.2, length * 0.3, -width, 0, 0);
+
+            const settings = { 
+                depth: 0.15, 
+                bevelEnabled: true, 
+                bevelThickness: 0.1, 
+                bevelSize: 0.1, 
+                bevelSegments: 3 
+            };
+            return new THREE.ExtrudeGeometry(shape, settings);
         }
 
         const lotus = new THREE.Group();
-        const petalGeo = createPetal();
         const goldMat = new THREE.MeshStandardMaterial({ 
             color: 0xd4af37, 
-            metalness: 0.7, 
+            metalness: 0.8, 
             roughness: 0.2,
-            emissive: 0x442200 
+            emissive: 0x331100,
+            side: THREE.DoubleSide
         });
 
-        // 4. 分三層排列花瓣 (每一層往上翹的角度不同)
-        const layers = [
-            { count: 12, tilt: -0.2, scale: 1.0 }, // 底層：平展
-            { count: 10, tilt: -0.6, scale: 0.8 }, // 中層：微翹
-            { count: 8,  tilt: -1.2, scale: 0.6 }  // 內層：包心
+        // 4. 定義三層：[長度, 數量, 翹起角度, 縮放]
+        const layerConfigs = [
+            { len: 8, count: 12, tilt: -0.15, yOffset: 0 },   // 最下層：最長
+            { len: 6, count: 10, tilt: -0.6,  yOffset: 0.5 }, // 中間層：中等
+            { len: 4, count: 8,  tilt: -1.2,  yOffset: 1.2 }  // 最上層：最短
         ];
 
-        layers.forEach(config => {
+        layerConfigs.forEach(config => {
+            const geo = createSharpPetal(config.len);
             for (let i = 0; i < config.count; i++) {
-                const mesh = new THREE.Mesh(petalGeo, goldMat);
+                const mesh = new THREE.Mesh(geo, goldMat);
                 const pivot = new THREE.Group();
                 
-                // 調整姿態：橫向往上翹
                 mesh.rotation.x = config.tilt; 
-                mesh.scale.set(config.scale, config.scale, config.scale);
+                mesh.position.y = config.yOffset;
                 
                 pivot.rotation.y = (Math.PI * 2 / config.count) * i;
                 pivot.add(mesh);
@@ -75,30 +84,32 @@
             }
         });
 
+        // 5. 加上中心蓮台
+        const core = new THREE.Mesh(
+            new THREE.CylinderGeometry(1.2, 0.8, 0.8, 32),
+            new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0xff8800 })
+        );
+        core.position.y = 0.5;
+        lotus.add(core);
+
         scene.add(lotus);
-        camera.position.set(0, 8, 15);
+        camera.position.set(0, 10, 18);
         camera.lookAt(0, 0, 0);
 
-        // 5. 動畫迴圈
+        // 移除載入文字
+        document.getElementById('loading-ui').style.display = 'none';
+
+        // 6. 動畫迴圈
         function animate() {
             requestAnimationFrame(animate);
-            lotus.rotation.y += 0.005; // 蓮花自轉
+            lotus.rotation.y += 0.003; 
             renderer.render(scene, camera);
         }
 
-        // 6. 偵錯輔助：如果核心庫載入失敗，會跳出警告
-        window.onerror = function(msg) {
-            document.getElementById('ui').innerHTML = "<h1 style='color:red'>載入失敗：" + msg + "</h1>";
-        };
-
-        // 啟動
         if (typeof THREE !== 'undefined') {
             animate();
-        } else {
-            document.getElementById('ui').innerHTML = "<h1>核心庫無法載入，請檢查網路</h1>";
         }
 
-        // 視窗縮放
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();

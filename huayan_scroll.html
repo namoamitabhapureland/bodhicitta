@@ -30,7 +30,7 @@
             text-shadow: 0 0 20px #d4af37; transition: opacity 3s; pointer-events: none;
         }
 
-        /* 7x7 陣法容器 - 具備 3D 重力互動 */
+        /* 7x7 陣法容器 */
         #matrix-wrapper {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
             display: flex; justify-content: center; align-items: center;
@@ -40,7 +40,7 @@
         #matrix-7x7 {
             display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(7, 1fr); gap: 12px;
             width: 85vw; height: 85vh; max-width: 900px; max-height: 900px;
-            transform: translateZ(0); transition: transform 0.1s ease-out; /* 用於游標重力互動 */
+            transform: translateZ(0); transition: transform 0.1s ease-out;
         }
         .matrix-cell {
             background: rgba(5, 5, 5, 0.6); backdrop-filter: blur(4px);
@@ -50,13 +50,11 @@
             box-shadow: inset 0 0 10px rgba(0,0,0,0.8); transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
             cursor: pointer; position: relative; overflow: hidden;
         }
-        /* 霓虹般緩慢亮起的 Hover 效果 */
         .matrix-cell:hover {
             border-color: #d4af37; color: #fff; background: rgba(30, 20, 0, 0.8);
             box-shadow: 0 0 25px rgba(212,175,55,0.6), inset 0 0 20px rgba(212,175,55,0.3);
             text-shadow: 0 0 10px #d4af37; transform: translateZ(20px) scale(1.05);
         }
-        /* 內部呼吸光暈 */
         .matrix-cell::after {
             content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0;
             background: radial-gradient(circle, rgba(212,175,55,0.4) 0%, transparent 70%);
@@ -66,15 +64,15 @@
         
         .cell-num { font-size: 0.7rem; color: #8b0000; margin-bottom: 4px; transition: 0.6s; }
         .matrix-cell:hover .cell-num { color: #d4af37; }
-
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 </head>
 <body>
@@ -90,7 +88,7 @@
     </div>
 
     <script>
-        // --- 1. 初始化 3D 核心與 Bloom 後處理 ---
+        // --- 初始化場景與光效 ---
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x050505, 0.0012);
@@ -101,27 +99,27 @@
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.toneMapping = THREE.ReinhardToneMapping; // 讓發光色彩更柔和
+        renderer.toneMapping = THREE.ReinhardToneMapping; 
         container.appendChild(renderer.domElement);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true; controls.enabled = false;
 
-        // 加入燈光使實體材質產生立體感
-        const ambientLight = new THREE.AmbientLight(0x401010, 2); // 偏紅的暗環境光
+        const ambientLight = new THREE.AmbientLight(0x401010, 2); 
         scene.add(ambientLight);
         const centerLight = new THREE.PointLight(0xd4af37, 3, 1500);
         scene.add(centerLight);
 
-        // Bloom 發光效果設定
+        // 光暈渲染器
         const renderScene = new THREE.RenderPass(scene, camera);
         const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 2.5, 0.5, 0.1);
         const composer = new THREE.EffectComposer(renderer);
         composer.addPass(renderScene);
         composer.addPass(bloomPass);
 
-        // --- 2. 實心圓潤貝茲金蓮建構邏輯 ---
-        function createBezierShape(size) {
+        // --- 效能優化：建立全局唯一的基礎花瓣幾何體 ---
+        function createStandardBezierShape() {
+            const size = 1; // 基準大小
             const shape = new THREE.Shape();
             shape.moveTo(0, 0);
             shape.bezierCurveTo(size*0.4, size*0.2, size*0.8, size*0.5, size, 0);
@@ -129,44 +127,39 @@
             return shape;
         }
 
+        const globalPetalGeo = new THREE.ExtrudeGeometry(createStandardBezierShape(), {
+            depth: 0.05,
+            bevelEnabled: true,
+            bevelSegments: 2, // 降低段數以提升效能
+            steps: 1,
+            bevelSize: 0.02,
+            bevelThickness: 0.02
+        });
+
+        // --- 組裝實心蓮花 ---
         function buildSolidLotus(baseSize, isMain) {
             const group = new THREE.Group();
-            const shape = createBezierShape(baseSize);
             
-            // 擠出幾何體 (厚度與圓滑邊緣)
-            const extrudeSettings = {
-                depth: baseSize * 0.05, // 賦予肉身厚度
-                bevelEnabled: true,
-                bevelSegments: 4,
-                steps: 1,
-                bevelSize: baseSize * 0.02, // 邊角打磨大小
-                bevelThickness: baseSize * 0.02
-            };
-            const petalGeo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-            
-            // 實心金屬發光材質
             const material = new THREE.MeshStandardMaterial({
-                color: isMain ? 0xffffff : 0xaa7700, // 基礎色
-                emissive: isMain ? 0xffea99 : 0x8b0000, // 發光色 (主蓮花純金，副蓮花透紅)
+                color: isMain ? 0xffffff : 0xaa7700,
+                emissive: isMain ? 0xffea99 : 0x8b0000, 
                 emissiveIntensity: isMain ? 1.5 : 0.8,
                 roughness: 0.2, metalness: 0.9, side: THREE.DoubleSide
             });
 
-            // 雙層花瓣
             for (let layer = 0; layer < 2; layer++) {
                 const numPetals = 12;
-                const scale = layer === 0 ? 1 : 0.65;
+                const layerScale = layer === 0 ? 1 : 0.65;
                 const tilt = layer === 0 ? Math.PI/7 : Math.PI/3;
 
                 for (let i = 0; i < numPetals; i++) {
-                    const petal = new THREE.Mesh(petalGeo, material);
+                    const petal = new THREE.Mesh(globalPetalGeo, material);
                     const angle = (Math.PI * 2 / numPetals) * i + (layer * Math.PI/12);
                     
                     const pivot = new THREE.Group();
                     petal.rotation.z = tilt;
-                    petal.scale.set(scale, scale, scale);
-                    // 修正擠出造成的 Z 軸偏移，使其回到中心
-                    petal.position.z = -extrudeSettings.depth / 2; 
+                    petal.scale.set(layerScale, layerScale, layerScale);
+                    petal.position.z = -0.025; // 對齊厚度中心
                     
                     pivot.add(petal);
                     pivot.rotation.y = angle;
@@ -174,27 +167,27 @@
                 }
             }
             
-            // 核心：金色小圓形實心
-            const coreGeo = new THREE.SphereGeometry(baseSize * 0.2, 32, 32);
+            const coreGeo = new THREE.SphereGeometry(0.15, 16, 16);
             const coreMat = new THREE.MeshStandardMaterial({ 
                 color: 0xffcc00, emissive: 0xd4af37, emissiveIntensity: 2 
             });
             const core = new THREE.Mesh(coreGeo, coreMat);
-            // 將核心稍微往上提，對齊花瓣根部
-            core.position.y = baseSize * 0.1;
+            core.position.y = 0.08;
             group.add(core);
+
+            // 根據傳入的 baseSize 放大整個群組
+            group.scale.set(baseSize, baseSize, baseSize);
 
             return group;
         }
 
-        // --- 3. 場景生成 ---
+        // --- 建立場景物件 ---
         let warpParticles, starParticles;
         const lotuses = [];
         const lotusGroup = new THREE.Group();
         let mainLotus;
 
         function initSceneElements() {
-            // 金光隧道
             const warpGeo = new THREE.BufferGeometry();
             const warpVerts = [];
             for (let i=0; i<3000; i++) {
@@ -206,7 +199,6 @@
             warpParticles = new THREE.Points(warpGeo, new THREE.PointsMaterial({ color: 0xd4af37, size: 3, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending }));
             scene.add(warpParticles);
 
-            // 靜謐星空
             const starGeo = new THREE.BufferGeometry();
             const starVerts = [];
             for (let i=0; i<2500; i++) {
@@ -220,16 +212,16 @@
             scene.add(lotusGroup);
             lotusGroup.visible = false;
 
-            // 專屬主蓮花 (巨大化，baseSize = 120)
+            // 建立 1 朵大蓮花
             mainLotus = buildSolidLotus(120, true);
             mainLotus.rotation.x = -Math.PI / 3; 
             mainLotus.userData = { isMain: true, pulseOffset: 0, speed: 0.0015 };
             lotusGroup.add(mainLotus);
             lotuses.push(mainLotus);
 
-            // 47 朵副蓮花 (小尺寸)
+            // 建立 47 朵小蓮花
             for(let i=0; i<47; i++) {
-                const size = 12 + Math.random() * 18; // 大小差異明顯
+                const size = 12 + Math.random() * 18; 
                 const lotus = buildSolidLotus(size, false);
                 
                 const theta = Math.random() * Math.PI * 2;
@@ -245,7 +237,7 @@
         }
         initSceneElements();
 
-        // --- 4. 互動與陣法邏輯 ---
+        // --- 互動與動畫 ---
         let warpSpeed = 0, isWarping = false, inLotusSea = false, matrixActive = false;
         const clock = new THREE.Clock();
         const raycaster = new THREE.Raycaster();
@@ -253,11 +245,13 @@
         const matrixWrapper = document.getElementById('matrix-wrapper');
         const matrixElement = document.getElementById('matrix-7x7');
 
-        function initiateWarp() {
+        // 按鈕觸發
+        window.initiateWarp = function() {
             document.getElementById('trigger-ui').style.opacity = '0';
             isWarping = true; warpSpeed = 4;
-        }
+        };
 
+        // 點擊蓮花觸發法陣
         window.addEventListener('click', (event) => {
             if (!inLotusSea || matrixActive) return;
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -268,11 +262,11 @@
             if (intersects.length > 0) activate7x7Matrix();
         });
 
-        // 重力互動 (Parallax) - 滑鼠移動時矩陣產生微小傾斜
+        // 法陣重力傾斜
         document.addEventListener('mousemove', (e) => {
             if (!matrixActive) return;
-            const xAxis = (window.innerWidth / 2 - e.pageX) / 40; // 左右傾斜角度
-            const yAxis = (window.innerHeight / 2 - e.pageY) / 40; // 上下傾斜角度
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 40; 
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 40; 
             matrixElement.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
         });
 
@@ -282,7 +276,6 @@
             matrixWrapper.style.pointerEvents = 'auto';
             matrixWrapper.style.opacity = '1';
             
-            // 生成 48 願 + 1 總願
             matrixElement.innerHTML = '';
             for(let i=1; i<=49; i++) {
                 const cell = document.createElement('div');
@@ -308,10 +301,9 @@
                 matrixElement.appendChild(cell);
             }
             
-            // 鏡頭推近大蓮花並虛化背景
             scene.fog.density = 0.0035;
-            controls.autoRotateSpeed = 0.1; // 變慢
-            bloomPass.strength = 1.0; // 降低背景光暈，凸顯 UI
+            controls.autoRotateSpeed = 0.1; 
+            bloomPass.strength = 1.0; 
         }
 
         function animate() {
@@ -362,7 +354,7 @@
             }
 
             controls.update();
-            composer.render(); // 使用 composer 渲染 Bloom 效果
+            composer.render(); 
         }
 
         window.addEventListener('resize', () => {

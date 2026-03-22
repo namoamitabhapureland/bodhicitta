@@ -3,19 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>彌陀願海 · 圓金法鏡</title>
+    <title>彌陀願海 · 琉璃法鏡</title>
     <style>
         :root {
             --gold: #d4af37;
+            --light-gold: #f3e5ab;
             --deep-red: #8b0000;
-            --bg: #050505;
+            --bg: #030303;
+            --glass: rgba(10, 15, 30, 0.6);
         }
 
         body, html {
             margin: 0; padding: 0; background: var(--bg);
             color: white; font-family: "Noto Serif TC", serif;
-            overflow: hidden; /* 由容器接管捲動 */
+            overflow: hidden;
         }
+
+        /* Three.js 星空背景預留區 */
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
         /* 滾動容器：一捲一格 */
         #vow-scroller {
@@ -23,85 +28,142 @@
             overflow-y: scroll;
             scroll-snap-type: y mandatory;
             scroll-behavior: smooth;
+            position: relative; z-index: 2;
         }
 
         /* 每一願的區塊 */
         .vow-section {
             height: 100vh;
             width: 100vw;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
             scroll-snap-align: start;
             position: relative;
-            perspective: 1000px;
+            perspective: 2000px;
         }
 
-        /* 圓金框容器 */
-        .gold-mirror {
-            width: 320px;
-            height: 320px;
-            border-radius: 50%;
-            border: 2px solid rgba(212, 175, 55, 0.2);
+        /* 🏆 琉璃法鏡容器優化 */
+        .mirror-wrapper {
             position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1);
-            background: radial-gradient(circle, rgba(20,0,0,0.3) 0%, transparent 70%);
+            width: 380px; height: 380px;
+            display: flex; justify-content: center; align-items: center;
+            transition: all 1.5s cubic-bezier(0.23, 1, 0.32, 1);
+            transform: scale(0.8) translateY(50px) rotateX(15deg);
+            opacity: 0;
+        }
+
+        /* 激活狀態：進場點亮 */
+        .vow-section.active .mirror-wrapper {
+            transform: scale(1) translateY(0) rotateX(0deg);
+            opacity: 1;
+        }
+
+        /* 1. 琉璃鏡面核心 */
+        .glass-surface {
+            position: absolute; width: 100%; height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 60%), var(--glass);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+            z-index: 1;
+        }
+
+        /* 2. 動態流動金邊 (SVG) */
+        .gold-ring-svg {
+            position: absolute; width: 110%; height: 110%;
+            top: -5%; left: -5%;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .ring-path {
+            stroke: var(--gold);
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 600;
+            stroke-dashoffset: 600;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 2s ease-out 0.5s, stroke 1s;
+        }
+        
+        /* 激活時金邊流動 */
+        .vow-section.active .ring-path {
+            stroke-dashoffset: 0;
+            animation: ring-rotation 20s linear infinite 2.5s;
+        }
+
+        @keyframes ring-rotation {
+            from { transform: rotate(0deg); transform-origin: center; }
+            to { transform: rotate(360deg); transform-origin: center; }
+        }
+
+        /* 3. 法力場光暈 */
+        .mirror-glow {
+            position: absolute; width: 100%; height: 100%;
+            border-radius: 50%;
+            background: transparent;
+            z-index: 0;
+            transition: 1.5s;
+        }
+        .vow-section.active .mirror-glow {
+            box-shadow: 0 0 80px rgba(212, 175, 55, 0.4), 
+                        0 0 40px rgba(212, 175, 55, 0.2), 
+                        inset 0 0 60px rgba(212, 175, 55, 0.1);
+            animation: glow-breathing 4s infinite ease-in-out 2s;
+        }
+
+        @keyframes glow-breathing {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.03); }
+        }
+
+        /* 願文內容 */
+        .vow-content {
+            z-index: 3; text-align: center;
+            display: flex; flex-direction: column; align-items: center;
             cursor: pointer;
-            transform: scale(0.8) rotateX(20deg);
-            opacity: 0.3;
         }
-
-        /* 當進入視野時的發亮狀態 */
-        .vow-section.active .gold-mirror {
-            transform: scale(1) rotateX(0deg);
-            opacity: 1;
-            border-color: var(--gold);
-            box-shadow: 0 0 50px rgba(212, 175, 55, 0.3), inset 0 0 30px rgba(212, 175, 55, 0.2);
-        }
-
-        /* 願文名稱 */
-        .vow-name {
-            font-size: 1.8rem;
-            letter-spacing: 6px;
-            color: #ddd;
-            text-shadow: 0 0 10px rgba(0,0,0,0.8);
-            transition: 1s;
-        }
-        .vow-section.active .vow-name { color: var(--gold); }
-
         .vow-num {
-            position: absolute; top: 60px;
             font-size: 0.8rem; color: var(--deep-red);
-            letter-spacing: 2px;
+            letter-spacing: 3px; margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .vow-name {
+            font-size: 2.4rem; letter-spacing: 10px;
+            color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5);
+            transition: color 1s;
+        }
+        .vow-section.active .vow-name { color: var(--light-gold); text-shadow: 0 0 20px var(--gold); }
+
+        /* 底部裝飾線 */
+        .deco-line {
+            width: 80px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            margin: 25px 0; opacity: 0.5;
         }
 
-        /* 底部金蓮花圖示 */
-        .mini-lotus {
-            position: absolute; bottom: 50px;
-            width: 30px; height: 30px;
+        /* 4. 金蓮花綻放動畫 (SVG) */
+        .lotus-svg-container {
+            width: 50px; height: 50px;
+            margin-top: 10px;
+        }
+        .blooming-lotus {
             fill: var(--gold);
-            opacity: 0.5;
-            transition: 1s;
+            transform: scale(0);
+            transform-origin: center;
+            transition: transform 1.2s cubic-bezier(0.17, 0.89, 0.32, 1.49) 1.5s, filter 1s;
         }
-        .vow-section.active .mini-lotus {
-            opacity: 1;
-            filter: drop-shadow(0 0 5px var(--gold));
-            transform: scale(1.2);
+        .vow-section.active .blooming-lotus {
+            transform: scale(1);
+            filter: drop-shadow(0 0 10px var(--gold));
         }
 
-        /* 提示文字 */
-        .hint-text {
-            position: absolute; bottom: 30px;
-            font-size: 0.7rem; color: #444;
-            letter-spacing: 2px;
-        }
     </style>
 </head>
 <body>
+
+<div id="bg-canvas"></div>
 
 <div id="vow-scroller">
     </div>
@@ -119,10 +181,10 @@
 
     // 蓮花 SVG 圖示代碼
     const lotusSvg = `
-        <svg class="mini-lotus" viewBox="0 0 24 24">
-            <path d="M12 22C12 22 17 16 17 12C17 8 12 4 12 4C12 4 7 8 7 12C7 16 12 22 12 22Z" />
-            <path d="M12 22C12 22 22 18 22 12C22 8 17 8 12 12" opacity="0.4"/>
-            <path d="M12 22C12 22 2 18 2 12C2 8 7 8 12 12" opacity="0.4"/>
+        <svg class="lotus-svg-container" viewBox="0 0 24 24">
+            <path class="blooming-lotus" d="M12 22C12 22 17 16 17 12C17 8 12 4 12 4C12 4 7 8 7 12C7 16 12 22 12 22Z" />
+            <path class="blooming-lotus" d="M12 22C12 22 22 18 22 12C22 8 17 8 12 12" opacity="0.4"/>
+            <path class="blooming-lotus" d="M12 22C12 22 2 18 2 12C2 8 7 8 12 12" opacity="0.4"/>
         </svg>
     `;
 
@@ -131,18 +193,22 @@
         section.className = 'vow-section';
         
         section.innerHTML = `
-            <div class="gold-mirror">
-                <span class="vow-num">VOW ${(i+1).toString().padStart(2, '0')}</span>
-                <div class="vow-name">${name}</div>
-                ${lotusSvg}
-            </div>
-            <div class="hint-text">SCROLL TO OBSERVE</div>
-        `;
+            <div class="mirror-wrapper">
+                <div class="mirror-glow"></div>
+                <div class="glass-surface"></div>
+                
+                <svg class="gold-ring-svg" viewBox="0 0 100 100">
+                    <circle class="ring-path" cx="50" cy="50" r="48" transform="rotate(-90 50 50)"/>
+                </svg>
 
-        section.onclick = () => {
-            // 點擊後的跳轉或開啟您的內容
-            alert(`契入願海：${name}\n此處將展現您的觀想內容...`);
-        };
+                <div class="vow-content" onclick="openVowDetail(${i})">
+                    <span class="vow-num">— VOW ${(i+1).toString().padStart(2, '0')} —</span>
+                    <div class="vow-name">${name}</div>
+                    <div class="deco-line"></div>
+                    ${lotusSvg}
+                </div>
+            </div>
+        `;
 
         scroller.appendChild(section);
     });
@@ -159,6 +225,11 @@
     }, { threshold: 0.6 });
 
     document.querySelectorAll('.vow-section').forEach(section => observer.observe(section));
+
+    // 點擊願位的處理函數
+    function openVowDetail(index) {
+        alert(`契入第 ${index + 1} 願：${vows[index]}\n您寫的深刻內容將在此處浮現...`);
+    }
 </script>
 
 </body>

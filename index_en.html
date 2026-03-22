@@ -832,8 +832,9 @@
     <textarea id="dedi-box" placeholder="Please enter your dedication, repentance, or vows...&#10;&#10;May the merit and virtue accrued from this work,&#10;Adorn the Buddha's Pure Land,&#10;Repaying the four kinds of kindness above,&#10;And aiding those suffering in the paths below.&#10;May those who see and hear of this,&#10;All bring forth the Bodhi Mind,&#10;And when this physical body is exhausted,&#10;Be born together in the Land of Ultimate Bliss." style="width:100%; height:280px; background:#050505; border:1.8px solid var(--gold); border-radius:22px; color:#eee; padding:22px; outline:none; font-size:0.95rem; line-height:1.8; transition: opacity 0.5s;"></textarea>
     <div style="color:#666; font-size:0.75rem; margin-top:12px; text-align:center;">Note: Serverless system. Your vows transmit directly to the Dharma Realm.</div>
     <button id="dedi-btn" class="btn-main" style="margin-top: 25px;" onclick="startDedicationEffect()">Dedicate to the Dharma Realm</button>
-        <div id="vow-48-module" class="vow-wrapper">
+       <div id="vow-48-module" class="vow-wrapper">
     <style>
+        /* 模組外殼 */
         .vow-wrapper {
             width: 100%; margin-top: 35px; margin-bottom: 20px;
             position: relative; border-radius: 20px; overflow: hidden;
@@ -845,11 +846,31 @@
         .vow-sealed { box-shadow: inset 0 0 30px rgba(60, 10, 10, 0.4); border-color: rgba(139, 0, 0, 0.2) !important; }
         .vow-unlocked { box-shadow: 0 0 30px rgba(212,175,55,0.15), inset 0 0 30px rgba(212,175,55,0.1); border-color: #d4af37 !important; }
 
+        /* 蓮花動畫 */
         #vow-icon { width: 60px; height: 60px; margin-bottom: 15px; transition: all 1.5s; }
         .lotus-pulse { animation: lotus-breathing 4s infinite ease-in-out; }
         @keyframes lotus-breathing {
             0%, 100% { transform: scale(1); opacity: 0.6; }
             50% { transform: scale(1.08); opacity: 1; }
+        }
+
+        /* 內置莊嚴彈窗樣式 */
+        #vow-internal-lock {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 10001;
+            display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(8px);
+        }
+        #vow-internal-lock.show { display: flex; }
+        .lock-content {
+            background: #0a0a0a; border: 1px solid #333; padding: 40px 30px;
+            border-radius: 24px; text-align: center; max-width: 85%;
+            box-shadow: 0 20px 50px rgba(0,0,0,1);
+        }
+        .lock-btn {
+            background: linear-gradient(135deg, #8b0000, #4a0000); color: #fff;
+            border: none; padding: 12px 30px; border-radius: 25px;
+            font-weight: bold; cursor: pointer; margin-top: 20px; letter-spacing: 1px;
         }
     </style>
 
@@ -863,55 +884,62 @@
     </svg>
     
     <div id="vow-title" style="color:#555; font-weight:bold; letter-spacing:2px; transition: 1s;">THE 48 VOWS REALM</div>
-    <div id="vow-desc" style="color:#444; font-size:0.8rem; margin-top:8px; transition: 1s; text-align:center;">Accumulate Merit to Reveal</div>
+    <div id="vow-desc" style="color:#444; font-size:0.8rem; margin-top:8px; transition: 1s;">Accumulate Merit to Reveal</div>
+
+    <div id="vow-internal-lock" onclick="this.classList.remove('show')">
+        <div class="lock-content" onclick="event.stopPropagation()">
+            <svg width="45" height="45" viewBox="0 0 24 24" fill="none" stroke="#8b0000" stroke-width="1.5" style="margin-bottom:20px;">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <div style="font-weight:bold; letter-spacing:3px; margin-bottom:15px; color:#f3e5ab; font-size:1.2rem;">REALM SEALED</div>
+            <div id="vow-status-text" style="font-size:0.9rem; line-height:1.8; color:#bbb; margin-bottom:15px;">
+                Accumulating Merit...
+            </div>
+            <button class="lock-btn" onclick="document.getElementById('vow-internal-lock').classList.remove('show')">CONTINUE</button>
+        </div>
+    </div>
 
     <script>
         (function updateVowVisual() {
             setTimeout(() => {
-                // 讀取主系統數值 (測試時您可以手動改成 5500)
                 let nian = (typeof db !== 'undefined') ? (db.totalNian || 0) : 0;
-                
                 const mod = document.getElementById('vow-48-module');
                 const petals = document.querySelectorAll('.vow-petal');
                 const core = document.getElementById('vow-lock-core');
                 const title = document.getElementById('vow-title');
                 const desc = document.getElementById('vow-desc');
+                const statusText = document.getElementById('vow-status-text');
 
                 const faithColors = ['#600000', '#8b0000', '#a52a2a', '#b8860b', '#cd7f32', '#808000', '#556b2f', '#4682b4', '#6a5acd', '#9ca3af'];
 
-                // 點擊事件：直接觸發您主系統的 lock-warning
                 mod.onclick = function() {
                     if (nian >= 5000) {
-                        if(document.getElementById('page-transition-curtain')) document.getElementById('page-transition-curtain').style.opacity = '1';
+                        const curtain = document.getElementById('page-transition-curtain');
+                        if(curtain) curtain.style.opacity = '1';
                         setTimeout(() => { window.location.href = '48vows_en.html'; }, 800);
                     } else {
-                        // 💡 調用主系統的彈窗
-                        const warning = document.getElementById('lock-warning');
-                        if(warning) warning.classList.add('show');
+                        statusText.innerHTML = `Current Merit: <span style="color:#fff;">${nian}</span><br>Required: <span style="color:#fff;">5,000</span> (Ten Faiths)<br>Keep reciting to reveal the Vow Ocean.`;
+                        document.getElementById('vow-internal-lock').classList.add('show');
                         if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
                     }
                 };
 
                 if (nian >= 5000) {
                     mod.className = 'vow-wrapper vow-unlocked';
-                    petals.forEach(p => {
-                        p.setAttribute('stroke', '#f3e5ab');
-                        p.style.filter = "drop-shadow(0 0 10px rgba(243,229,171,0.5))";
-                    });
+                    petals.forEach(p => { p.setAttribute('stroke', '#f3e5ab'); p.style.filter = "drop-shadow(0 0 10px rgba(243,229,171,0.5))"; });
                     document.getElementById('vow-core-target').innerHTML = '<circle cx="12" cy="12" r="3.5" fill="#f3e5ab" filter="blur(1px)"><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle><circle cx="12" cy="12" r="1.5" fill="#fff" />';
                     title.innerText = "VOW OCEAN REVEALED";
                     title.style.color = "#f3e5ab";
                     desc.innerHTML = "Infinite Life Realm Opened.";
-                    desc.style.color = "#aaa";
                 } else {
                     let stage = Math.floor(nian / 500);
                     let currentColor = faithColors[stage] || faithColors[0];
                     mod.className = 'vow-wrapper vow-sealed';
-                    // 遍歷所有花瓣並著色
                     petals.forEach(p => p.setAttribute('stroke', currentColor));
                     core.setAttribute('stroke', currentColor);
                     title.innerText = `THE 48 VOWS (STAGE ${stage + 1})`;
-                    desc.innerHTML = `Merit: ${nian} / 5000<br>Purifying the Faith Heart...`;
+                    desc.innerHTML = `Merit: ${nian} / 5000`;
                 }
             }, 800);
         })();

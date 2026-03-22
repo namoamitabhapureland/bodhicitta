@@ -3,79 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>彌陀第一願：時空穿越與蓮池海會</title>
+    <title>彌陀第一願：專屬蓮台與 7x7 陣法</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #050505;
-            font-family: 'Noto Serif TC', serif;
-            user-select: none;
-        }
-        #canvas-container {
-            width: 100vw;
-            height: 100vh;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-        }
-        /* 時空爆裂的純白/純金濾鏡 */
+        body { margin: 0; overflow: hidden; background-color: #050505; font-family: 'Noto Serif TC', serif; user-select: none; }
+        #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
         #bloom-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
             background: radial-gradient(circle, #ffffff 0%, #d4af37 60%, #050505 100%);
-            opacity: 0;
-            pointer-events: none;
-            z-index: 10;
-            transition: opacity 2s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 0; pointer-events: none; z-index: 10; transition: opacity 2s cubic-bezier(0.25, 1, 0.5, 1);
         }
-        /* 啟動按鈕 (模擬達到 10,000 聲的觸發器) */
-        #trigger-ui {
-            position: absolute;
-            bottom: 10%;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 20;
-            text-align: center;
-            transition: opacity 1s;
-        }
+        /* 啟動按鈕 */
+        #trigger-ui { position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%); z-index: 20; transition: opacity 1s; }
         .vow-btn {
-            background: transparent;
-            border: 1px solid #d4af37;
-            color: #d4af37;
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            letter-spacing: 4px;
-            cursor: pointer;
-            border-radius: 30px;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2), inset 0 0 10px rgba(212, 175, 55, 0.1);
-            transition: all 0.5s;
-            text-transform: uppercase;
+            background: transparent; border: 1px solid #d4af37; color: #d4af37; padding: 15px 40px;
+            font-size: 1.2rem; letter-spacing: 4px; cursor: pointer; border-radius: 30px;
+            box-shadow: 0 0 15px rgba(212,175,55,0.2), inset 0 0 10px rgba(212,175,55,0.1); transition: all 0.5s;
         }
-        .vow-btn:hover {
-            background: rgba(212, 175, 55, 0.1);
-            box-shadow: 0 0 30px rgba(212, 175, 55, 0.5), inset 0 0 20px rgba(212, 175, 55, 0.3);
-            text-shadow: 0 0 8px #d4af37;
-        }
-        /* 進入願海後的提示文字 */
+        .vow-btn:hover { background: rgba(212,175,55,0.1); box-shadow: 0 0 30px rgba(212,175,55,0.5); }
+        
+        /* 提示文字 */
         #sea-ui {
-            position: absolute;
-            top: 10%;
-            width: 100%;
-            text-align: center;
-            color: #d4af37;
-            z-index: 5;
-            opacity: 0;
-            letter-spacing: 8px;
-            font-size: 1.5rem;
-            text-shadow: 0 0 20px #d4af37;
-            transition: opacity 3s ease-in;
-            pointer-events: none;
+            position: absolute; top: 8%; width: 100%; text-align: center; color: #d4af37;
+            z-index: 5; opacity: 0; letter-spacing: 8px; font-size: 1.2rem;
+            text-shadow: 0 0 20px #d4af37; transition: opacity 3s; pointer-events: none;
         }
+
+        /* 7x7 陣法容器 (預設隱藏) */
+        #matrix-7x7 {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            width: 80vw; height: 80vh; z-index: 30; opacity: 0; pointer-events: none;
+            display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(7, 1fr); gap: 10px;
+            transition: all 2s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .matrix-cell {
+            border: 1px solid rgba(212,175,55,0.3); border-radius: 8px;
+            display: flex; justify-content: center; align-items: center; color: rgba(212,175,55,0.8);
+            font-size: 0.9rem; letter-spacing: 2px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+            transition: all 0.5s; cursor: pointer;
+        }
+        .matrix-cell:hover { border-color: #d4af37; color: #fff; box-shadow: 0 0 15px rgba(212,175,55,0.5), inset 0 0 20px rgba(139,0,0,0.6); }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -85,211 +51,236 @@
     <div id="canvas-container"></div>
     <div id="bloom-overlay"></div>
     
-    <div id="trigger-ui">
-        <button class="vow-btn" id="start-warp" onclick="initiateWarp()">資糧圓滿 · 契入願海</button>
-    </div>
+    <div id="trigger-ui"><button class="vow-btn" onclick="initiateWarp()">資糧圓滿 · 契入願海</button></div>
+    <div id="sea-ui">請點擊您的專屬大白蓮華<br><span style="font-size: 0.8rem; color:#888;">展開 48 願法陣</span></div>
 
-    <div id="sea-ui">
-        <div>彌陀大願海</div>
-        <div style="font-size: 0.9rem; margin-top: 10px; color:#888; letter-spacing: 4px;">拖曳以觀想無邊淨土</div>
-    </div>
+    <div id="matrix-7x7"></div>
 
     <script>
-        // --- 智的結界核心設定 ---
+        // --- 初始化 3D 核心 ---
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x050505, 0.002); // 極簡黑的深邃霧氣
+        scene.fog = new THREE.FogExp2(0x050505, 0.0015);
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 2000);
-        camera.position.z = 400;
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 3000);
+        camera.position.z = 500;
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
         container.appendChild(renderer.domElement);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.autoRotate = false;
-        controls.enabled = false; // 初始鎖定視角，進入蓮花海後再解鎖
+        controls.enableDamping = true; controls.enabled = false;
 
-        // --- 第一階段：金光隧道 (The Warp) ---
-        let warpParticles;
-        const particleCount = 5000;
-        let warpSpeed = 0;
-        let isWarping = false;
-        let warpProgress = 0;
-
-        function createWarpTunnel() {
-            const geometry = new THREE.BufferGeometry();
-            const vertices = [];
-            for (let i = 0; i < particleCount; i++) {
-                // 將粒子散佈在圓柱體周圍，留出中心隧道
-                const angle = Math.random() * Math.PI * 2;
-                const radius = 20 + Math.random() * 300;
-                const x = Math.cos(angle) * radius;
-                const y = Math.sin(angle) * radius;
-                const z = (Math.random() - 0.5) * 1000;
-                vertices.push(x, y, z);
-            }
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            
-            const material = new THREE.PointsMaterial({
-                color: 0xd4af37, // 佛光金
-                size: 2,
-                transparent: true,
-                opacity: 0.8,
-                blending: THREE.AdditiveBlending
-            });
-            warpParticles = new THREE.Points(geometry, material);
-            scene.add(warpParticles);
+        // --- 將妙依的 2D 貝茲曲線轉為 3D Shape ---
+        function createBezierPetal(size) {
+            const shape = new THREE.Shape();
+            shape.moveTo(0, 0);
+            shape.bezierCurveTo(size*0.4, size*0.2, size*0.8, size*0.5, size, 0);
+            shape.bezierCurveTo(size*0.8, -size*0.5, size*0.4, -size*0.2, 0, 0);
+            return new THREE.ShapeGeometry(shape);
         }
-        createWarpTunnel();
 
-        // --- 第三階段：3D 全息蓮花海 (The Lotus Sea) ---
-        const lotuses = [];
-        const lotusGroup = new THREE.Group();
-        scene.add(lotusGroup);
-        lotusGroup.visible = false; // 初始隱藏
-
-        // 建立科技禪意「線框蓮花」模型
-        function createCyberLotus() {
-            const lotus = new THREE.Group();
-            const petalGeo = new THREE.ConeGeometry(0.5, 3, 4);
-            petalGeo.translate(0, 1.5, 0); // 將軸心移至底部
+        // --- 建立單朵蓮花模型 ---
+        function build3DLotus(baseSize, isMain) {
+            const group = new THREE.Group();
+            const petalGeo = createBezierPetal(baseSize);
             
-            const petalMat = new THREE.MeshBasicMaterial({ 
-                color: 0xd4af37, 
-                wireframe: true, 
-                transparent: true, 
-                opacity: 0.6 
+            // 主蓮花為極亮白金，副蓮花為佛光金帶透明
+            const matColor = isMain ? 0xffffff : 0xd4af37;
+            const matOpacity = isMain ? 0.9 : 0.6;
+            const material = new THREE.MeshBasicMaterial({ 
+                color: matColor, side: THREE.DoubleSide, transparent: true, opacity: matOpacity,
+                wireframe: true // 保持科技禪意的線框感，若要實體可改為 false
             });
 
-            // 三層花瓣
-            for(let layer = 0; layer < 3; layer++) {
-                const numPetals = 6 + layer * 2;
-                const angleStep = (Math.PI * 2) / numPetals;
-                const tilt = 0.3 + layer * 0.4; // 越外層越展開
-                
-                for(let i = 0; i < numPetals; i++) {
-                    const petal = new THREE.Mesh(petalGeo, petalMat);
-                    petal.rotation.y = angleStep * i;
-                    petal.rotation.z = tilt;
-                    lotus.add(petal);
+            // 雙層花瓣 (對應您的 12 片邏輯)
+            for (let layer = 0; layer < 2; layer++) {
+                const numPetals = 12;
+                const scale = layer === 0 ? 1 : 0.6;
+                const tilt = layer === 0 ? Math.PI/6 : Math.PI/3; // 開合角度 (旋轉 Z 軸)
+
+                for (let i = 0; i < numPetals; i++) {
+                    const petal = new THREE.Mesh(petalGeo, material);
+                    const angle = (Math.PI * 2 / numPetals) * i + (layer * Math.PI/12); // 第二層錯開角度
+                    
+                    // 利用 Pivot 群組來正確控制旋轉軸心
+                    const pivot = new THREE.Group();
+                    petal.rotation.z = tilt; // 花瓣向外翹
+                    petal.scale.set(scale, scale, scale);
+                    pivot.add(petal);
+                    pivot.rotation.y = angle; // 繞著中心排列
+                    
+                    group.add(pivot);
                 }
             }
-            // 莊嚴紅的蓮花核心 (業力消融點)
-            const coreGeo = new THREE.OctahedronGeometry(0.6, 0);
-            const coreMat = new THREE.MeshBasicMaterial({ color: 0x8b0000, wireframe: true });
-            const core = new THREE.Mesh(coreGeo, coreMat);
-            lotus.add(core);
+            
+            // 底部發光核心
+            const coreGeo = new THREE.SphereGeometry(baseSize * 0.15, 8, 8);
+            const coreMat = new THREE.MeshBasicMaterial({ color: isMain ? 0xffffff : 0x8b0000 });
+            group.add(new THREE.Mesh(coreGeo, coreMat));
 
-            return lotus;
+            return group;
         }
 
-        function buildLotusSea() {
-            // 生成 48 朵願力蓮花，散佈於 3D 空間
-            for(let i = 0; i < 48; i++) {
-                const lotus = createCyberLotus();
-                // 隨機分佈在球體空間中
-                const theta = Math.random() * Math.PI * 2;
-                const phi = Math.acos((Math.random() * 2) - 1);
-                const radius = 50 + Math.random() * 250;
-                
-                lotus.position.x = radius * Math.sin(phi) * Math.cos(theta);
-                lotus.position.y = (Math.random() - 0.5) * 100; // 壓扁 Y 軸形成「海面」感
-                lotus.position.z = radius * Math.sin(phi) * Math.sin(theta);
-                
-                // 給予每朵蓮花不同的呼吸跳動頻率
-                lotus.userData = {
-                    pulseOffset: Math.random() * Math.PI * 2,
-                    rotationSpeed: (Math.random() - 0.5) * 0.01
-                };
-                
-                // 將它們轉向中心 (象徵萬法歸宗)
-                lotus.lookAt(0, 0, 0);
-                // 稍微翻轉使其朝上
-                lotus.rotateX(Math.PI / 2);
+        // --- 場景元素建立 ---
+        let warpParticles, starParticles;
+        const lotuses = [];
+        const lotusGroup = new THREE.Group();
+        let mainLotus; // 使用者專屬蓮花
 
-                lotuses.push(lotus);
+        function initSceneElements() {
+            // 1. 金光隧道 (Warp)
+            const warpGeo = new THREE.BufferGeometry();
+            const warpVerts = [];
+            for (let i=0; i<3000; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 50 + Math.random() * 400;
+                warpVerts.push(Math.cos(angle)*radius, Math.sin(angle)*radius, (Math.random()-0.5)*2000);
+            }
+            warpGeo.setAttribute('position', new THREE.Float32BufferAttribute(warpVerts, 3));
+            warpParticles = new THREE.Points(warpGeo, new THREE.PointsMaterial({ color: 0xd4af37, size: 2, transparent: true, opacity: 0.8 }));
+            scene.add(warpParticles);
+
+            // 2. 靜謐星空 (Starry Sea)
+            const starGeo = new THREE.BufferGeometry();
+            const starVerts = [];
+            for (let i=0; i<2000; i++) {
+                starVerts.push((Math.random()-0.5)*3000, (Math.random()-0.5)*3000, (Math.random()-0.5)*3000);
+            }
+            starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVerts, 3));
+            starParticles = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xf3e5ab, size: 1.5, transparent: true, opacity: 0.4 }));
+            starParticles.visible = false;
+            scene.add(starParticles);
+
+            scene.add(lotusGroup);
+            lotusGroup.visible = false;
+
+            // 3. 建立主蓮花 (特大、置中)
+            mainLotus = build3DLotus(80, true);
+            mainLotus.rotation.x = -Math.PI / 4; // 稍微傾斜面向鏡頭
+            mainLotus.userData = { isMain: true, pulseOffset: 0, speed: 0.002 };
+            lotusGroup.add(mainLotus);
+            lotuses.push(mainLotus);
+
+            // 4. 建立 47 朵星空副蓮花 (大中小錯落)
+            for(let i=0; i<47; i++) {
+                const size = 15 + Math.random() * 25; // 大中小
+                const lotus = build3DLotus(size, false);
+                
+                const theta = Math.random() * Math.PI * 2;
+                const radius = 150 + Math.random() * 600; // 散佈在周圍
+                lotus.position.set( Math.cos(theta)*radius, (Math.random()-0.5)*300, Math.sin(theta)*radius - 200 );
+                
+                lotus.rotation.x = -Math.PI / 2 + (Math.random()*0.4 - 0.2); // 大致朝上，略帶傾斜
+                lotus.userData = { isMain: false, pulseOffset: Math.random()*Math.PI*2, speed: (Math.random()-0.5)*0.01 };
+                
                 lotusGroup.add(lotus);
+                lotuses.push(lotus);
             }
         }
-        buildLotusSea();
+        initSceneElements();
 
-        // --- 動畫與過渡邏輯 ---
+        // --- 動畫流與 7x7 陣法觸發 ---
+        let warpSpeed = 0, isWarping = false, inLotusSea = false;
+        const clock = new THREE.Clock();
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
         function initiateWarp() {
             document.getElementById('trigger-ui').style.opacity = '0';
-            isWarping = true;
-            warpSpeed = 2; // 初始低速前進
+            isWarping = true; warpSpeed = 3;
         }
 
-        const clock = new THREE.Clock();
+        // 點擊事件監聽
+        window.addEventListener('click', (event) => {
+            if (!inLotusSea) return;
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+
+            // 檢測是否點擊到主蓮花 (檢測其子網格)
+            const intersects = raycaster.intersectObjects(mainLotus.children, true);
+            if (intersects.length > 0) {
+                activate7x7Matrix();
+            }
+        });
+
+        function activate7x7Matrix() {
+            // 蓮花海淡出，陣法浮現
+            document.getElementById('sea-ui').style.opacity = '0';
+            const matrix = document.getElementById('matrix-7x7');
+            matrix.style.pointerEvents = 'auto';
+            matrix.style.opacity = '1';
+            matrix.style.transform = 'translate(-50%, -50%) scale(1)';
+            
+            // 生成 48 格佔位符 (最後一格留空或作總願)
+            matrix.innerHTML = '';
+            for(let i=1; i<=49; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'matrix-cell';
+                if(i <= 48) cell.innerText = `第 ${i} 願`;
+                matrix.appendChild(cell);
+            }
+            
+            // 鏡頭推近中心並變暗
+            scene.fog.density = 0.005;
+        }
 
         function animate() {
             requestAnimationFrame(animate);
             const time = clock.getElapsedTime();
 
-            // 1. 金光隧道加速邏輯
             if (isWarping && warpParticles.visible) {
-                warpSpeed *= 1.02; // 指數級加速
-                camera.fov = THREE.MathUtils.lerp(camera.fov, 120, 0.05); // 視野拉伸產生強烈速度感
+                warpSpeed *= 1.03;
+                camera.fov = THREE.MathUtils.lerp(camera.fov, 140, 0.05);
                 camera.updateProjectionMatrix();
 
                 const positions = warpParticles.geometry.attributes.position.array;
                 for (let i = 2; i < positions.length; i += 3) {
-                    positions[i] += warpSpeed; // 粒子向鏡頭衝來
-                    if (positions[i] > camera.position.z) {
-                        positions[i] -= 1000; // 循環回到遠處
-                    }
+                    positions[i] += warpSpeed;
+                    if (positions[i] > camera.position.z) positions[i] -= 2000;
                 }
                 warpParticles.geometry.attributes.position.needsUpdate = true;
 
-                // 2. 臨界點：時空爆裂 (The Bloom)
-                if (warpSpeed > 150 && warpProgress === 0) {
-                    warpProgress = 1;
+                if (warpSpeed > 180) {
+                    isWarping = false;
                     const bloom = document.getElementById('bloom-overlay');
-                    bloom.style.opacity = '1'; // 畫面閃白/閃金
+                    bloom.style.opacity = '1';
 
-                    // 在閃白最高峰時，切換場景維度
                     setTimeout(() => {
-                        warpParticles.visible = false; // 移除隧道
-                        scene.fog.color.setHex(0x050505); // 確保深色禪意底色
-                        scene.fog.density = 0.003;
+                        warpParticles.visible = false;
+                        starParticles.visible = true;
+                        lotusGroup.visible = true;
                         
-                        camera.position.set(0, 150, 300); // 抬高視角俯視蓮花海
+                        camera.position.set(0, 100, 350); // 拉近觀看主蓮花
                         camera.lookAt(0, 0, 0);
-                        camera.fov = 60; // 恢復正常視野
-                        camera.updateProjectionMatrix();
+                        camera.fov = 60; camera.updateProjectionMatrix();
 
-                        lotusGroup.visible = true; // 展現 3D 蓮花海
-                        controls.enabled = true;   // 允許手動旋轉縮放
-                        controls.autoRotate = true; // 開啟緩慢自轉
-                        controls.autoRotateSpeed = 0.5;
-
-                        bloom.style.opacity = '0'; // 迷霧退去
-                        document.getElementById('sea-ui').style.opacity = '1'; // 顯示文字
+                        controls.enabled = true; controls.autoRotate = true; controls.autoRotateSpeed = 0.3;
+                        bloom.style.opacity = '0';
+                        document.getElementById('sea-ui').style.opacity = '1';
+                        inLotusSea = true;
                     }, 1500);
                 }
             }
 
-            // 3. 蓮花海的呼吸與轉動邏輯
-            if (lotusGroup.visible) {
+            if (inLotusSea) {
                 lotuses.forEach(lotus => {
-                    // 自轉
-                    lotus.rotation.y += lotus.userData.rotationSpeed;
-                    // 呼吸跳動 (Lotus Pulse)
-                    const scale = 1 + Math.sin(time * 2 + lotus.userData.pulseOffset) * 0.1;
+                    lotus.rotation.y += lotus.userData.speed;
+                    // 主蓮花呼吸幅度大，副蓮花小
+                    const pulseMult = lotus.userData.isMain ? 0.08 : 0.05;
+                    const scale = 1 + Math.sin(time * 2 + lotus.userData.pulseOffset) * pulseMult;
                     lotus.scale.set(scale, scale, scale);
                 });
+                // 星辰微動
+                starParticles.rotation.y -= 0.0005;
             }
 
             controls.update();
             renderer.render(scene, camera);
         }
 
-        // 視窗自適應
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();

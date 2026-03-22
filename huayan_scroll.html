@@ -3,210 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>彌陀大願海：修正版</title>
+    <title>彌陀願海 · 七七法陣</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #050505; font-family: 'Noto Serif TC', serif; user-select: none; }
-        #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
-        #bloom-overlay {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: radial-gradient(circle, #ffffff 0%, #d4af37 60%, #050505 100%);
-            opacity: 0; pointer-events: none; z-index: 10; transition: opacity 1.5s;
+        :root {
+            --gold: #d4af37;
+            --deep-red: #8b0000;
+            --bg-dark: #050505;
+            --glow: rgba(212, 175, 55, 0.3);
         }
-        #trigger-ui { position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%); z-index: 20; }
-        .vow-btn {
-            background: transparent; border: 1px solid #d4af37; color: #d4af37; padding: 15px 40px;
-            font-size: 1.2rem; cursor: pointer; border-radius: 30px; box-shadow: 0 0 15px rgba(212,175,55,0.2);
-        }
-        #sea-ui {
-            position: absolute; top: 8%; width: 100%; text-align: center; color: #d4af37;
-            z-index: 5; opacity: 0; letter-spacing: 4px; pointer-events: none; transition: opacity 2s;
-        }
+
+        body { margin: 0; background: var(--bg-dark); overflow: hidden; font-family: "Noto Serif TC", serif; }
+
+        /* 陣法容器優化 */
         #matrix-wrapper {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             display: flex; justify-content: center; align-items: center;
-            z-index: 30; opacity: 0; pointer-events: none; transition: opacity 2s;
-            perspective: 1000px;
+            z-index: 30; opacity: 1; /* 初始設為1便於開發調試 */
+            perspective: 1200px;
+            background: radial-gradient(circle at center, rgba(20,0,0,0.5) 0%, transparent 70%);
         }
+
         #matrix-7x7 {
-            display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;
-            width: 90vw; height: 90vh; max-width: 800px; max-height: 800px;
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            grid-template-rows: repeat(7, 1fr); 
+            gap: 8px;
+            width: 92vw; height: 92vh; 
+            max-width: 850px; max-height: 850px;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.2, 0, 0.2, 1);
         }
+
+        /* 單個願位格子 */
         .matrix-cell {
-            background: rgba(20, 20, 20, 0.85); border: 1px solid rgba(212,175,55,0.3);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: #d4af37; font-size: 0.75rem; transition: 0.3s;
+            background: rgba(15, 15, 15, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            border-radius: 2px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            color: rgba(212, 175, 55, 0.6); 
+            font-size: 0.8rem; letter-spacing: 2px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer; position: relative; overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
         }
-        .matrix-cell:hover { background: #d4af37; color: #000; }
+
+        /* 懸浮效果：向行者浮現 */
+        .matrix-cell:hover {
+            border-color: var(--gold);
+            color: #fff;
+            background: rgba(30, 20, 10, 0.8);
+            transform: translateZ(50px);
+            z-index: 10;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8), 0 0 20px var(--glow);
+        }
+
+        /* 編號標註 */
+        .cell-num { 
+            font-size: 0.6rem; 
+            color: var(--deep-red); 
+            margin-bottom: 4px; 
+            opacity: 0.8;
+            font-family: serif;
+        }
+
+        /* 願文名稱：直書感 */
+        .vow-name {
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            line-height: 1.2;
+            height: 4.5em;
+            display: flex; align-items: center;
+        }
+
+        /* 中心特殊位次：大白蓮華/彌陀本尊 */
+        .cell-center {
+            border: 2px solid var(--gold);
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 80%);
+            color: #fff;
+            box-shadow: 0 0 30px rgba(255,255,255,0.1);
+        }
+        .cell-center .cell-num { color: var(--gold); }
+
+        /* 掃光動畫效果 */
+        .matrix-cell::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.05), transparent);
+            transform: rotate(45deg); transition: 0.8s; opacity: 0;
+        }
+        .matrix-cell:hover::after { opacity: 1; transform: rotate(45deg) translate(20%, 20%); }
+
     </style>
 </head>
 <body>
 
-    <div id="canvas-container"></div>
-    <div id="bloom-overlay"></div>
-    <div id="trigger-ui"><button class="vow-btn" onclick="initiateWarp()">資糧圓滿 · 契入願海</button></div>
-    <div id="sea-ui">請點擊中心大白蓮華<br><span style="font-size: 0.8rem; color:#888;">展開四十八願法陣</span></div>
-    <div id="matrix-wrapper"><div id="matrix-7x7"></div></div>
-
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <div id="matrix-wrapper">
+        <div id="matrix-7x7"></div>
+    </div>
 
     <script>
-        const vows = ["國無惡道","不復更生","各得真金色","形色無別","設有姓名","宿命通","天眼通","天耳通","他心通","神足通","遍供諸佛","定成正覺","光明無量","觸光安樂","壽命無量","聲聞無數","諸佛稱嘆","十念必生","臨終接引","欲生果遂","悔過生西","國無婦女","厭女轉男","蓮花化生","天人禮敬","聞名得福","修殊勝行","國無不善","住正定聚","樂如漏盡","不墮惡道","身悉金色","形貌端嚴","成佛迅速","聞名發心","永離穢行","善根增長","聞名得忍","具足根缺","現證不退","國土嚴飾","照見十方","寶香普薰","普等三昧","定中供佛","獲陀羅尼","聞名永離","獲三法忍","同生極樂"];
+        const vows = [
+            "國無惡道", "不復更生", "各得真金色", "形色無別", "設有姓名", "宿命通", "天眼通", 
+            "天耳通", "他心通", "神足通", "遍供諸佛", "定成正覺", "光明無量", "觸光安樂", 
+            "壽命無量", "聲聞無數", "諸佛稱嘆", "十念必生", "臨終接引", "欲生果遂", 
+            "悔過生西", "國無婦女", "厭女轉男", "蓮花化生", "彌陀本願", /* 25格中心 */
+            "天人禮敬", "聞名得福", "修殊勝行", "國無不善", "住正定聚", "樂如漏盡",
+            "不墮惡道", "身悉金色", "形貌端嚴", "成佛迅速", "聞名發心", "永離穢行", 
+            "善根增長", "聞名得忍", "具足根缺", "現證不退", "國土嚴飾", "照見十方", 
+            "寶香普薰", "普等三昧", "定中供佛", "獲陀羅尼", "聞名永離", "獲三法忍"
+        ];
 
-        // 初始化場景
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x050505, 0.001);
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 5000);
-        camera.position.z = 1000;
+        const container = document.getElementById('matrix-7x7');
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-        // 核心修正：確保這些類別存在於 THREE 命名空間
-        let composer;
-        try {
-            const renderScene = new THREE.RenderPass(scene, camera);
-            const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-            composer = new THREE.EffectComposer(renderer);
-            composer.addPass(renderScene);
-            composer.addPass(bloomPass);
-        } catch (e) {
-            console.error("後處理加載失敗，切換回基本渲染:", e);
-        }
-
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enabled = false;
-
-        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-        const light = new THREE.PointLight(0xd4af37, 2, 2000);
-        scene.add(light);
-
-        // 建模蓮花
-        function buildLotus(size, isMain) {
-            const group = new THREE.Group();
-            const shape = new THREE.Shape();
-            shape.moveTo(0, 0);
-            shape.bezierCurveTo(size*0.4, size*0.2, size*0.8, size*0.5, size, 0);
-            shape.bezierCurveTo(size*0.8, -size*0.5, size*0.4, -size*0.2, 0, 0);
+        vows.forEach((name, index) => {
+            const cell = document.createElement('div');
+            cell.className = 'matrix-cell';
+            if (index === 24) cell.classList.add('cell-center');
             
-            const geo = new THREE.ExtrudeGeometry(shape, { depth: size*0.05, bevelEnabled: true, bevelSize: size*0.02 });
-            const mat = new THREE.MeshStandardMaterial({
-                color: isMain ? 0xffffff : 0xaa7700,
-                emissive: isMain ? 0xffea99 : 0x440000,
-                metalness: 0.7, roughness: 0.2
-            });
+            // 編號格式：如 01, 02...
+            const numStr = (index + 1).toString().padStart(2, '0');
+            
+            cell.innerHTML = `
+                <span class="cell-num">${numStr}</span>
+                <span class="vow-name">${name}</span>
+            `;
 
-            for(let j=0; j<2; j++) {
-                for(let i=0; i<12; i++) {
-                    const p = new THREE.Mesh(geo, mat);
-                    const pivot = new THREE.Group();
-                    p.rotation.z = j === 0 ? Math.PI/6 : Math.PI/3;
-                    p.scale.set(j===0?1:0.7, j===0?1:0.7, j===0?1:0.7);
-                    pivot.add(p);
-                    pivot.rotation.y = (Math.PI*2/12)*i;
-                    group.add(pivot);
-                }
-            }
-            return group;
-        }
+            // 點擊觸發邏輯：導向具體的願文內容
+            cell.onclick = () => {
+                console.log(`契入第 ${index + 1} 願：${name}`);
+                // 這裡可以觸發跳轉，例如：navigateTo(`vow_detail.html?id=${index+1}`);
+            };
 
-        let warpParticles, starParticles, mainLotus, lotuses = [];
-        const lotusGroup = new THREE.Group();
-
-        // 初始物件
-        const warpGeo = new THREE.BufferGeometry();
-        const warpPos = [];
-        for(let i=0; i<3000; i++) warpPos.push(Math.random()*1200-600, Math.random()*1200-600, Math.random()*3000-1500);
-        warpGeo.setAttribute('position', new THREE.Float32BufferAttribute(warpPos, 3));
-        warpParticles = new THREE.Points(warpGeo, new THREE.PointsMaterial({color:0xd4af37, size:2}));
-        scene.add(warpParticles);
-
-        mainLotus = buildLotus(120, true);
-        mainLotus.rotation.x = -Math.PI/4;
-        lotusGroup.add(mainLotus);
-        lotuses.push(mainLotus);
-        lotusGroup.visible = false;
-        scene.add(lotusGroup);
-
-        // 狀態
-        let warpActive = false, transitioning = false, inSea = false, warpSpeed = 0;
-
-        function initiateWarp() {
-            document.getElementById('trigger-ui').style.opacity = '0';
-            warpActive = true; warpSpeed = 5;
-        }
-
-        function openMatrix() {
-            document.getElementById('sea-ui').style.opacity = '0';
-            const wrapper = document.getElementById('matrix-wrapper');
-            const grid = document.getElementById('matrix-7x7');
-            wrapper.style.pointerEvents = 'auto';
-            wrapper.style.opacity = '1';
-            grid.innerHTML = vows.map((v, i) => `<div class="matrix-cell"><div>${i+1}</div><b>${v}</b></div>`).join('');
-        }
-
-        window.addEventListener('mousedown', (e) => {
-            if(!inSea) return;
-            const mouse = new THREE.Vector2((e.clientX/window.innerWidth)*2-1, -(e.clientY/window.innerHeight)*2+1);
-            const ray = new THREE.Raycaster();
-            ray.setFromCamera(mouse, camera);
-            if(ray.intersectObjects(mainLotus.children, true).length > 0) openMatrix();
+            container.appendChild(cell);
         });
 
-        function animate() {
-            requestAnimationFrame(animate);
-            const time = performance.now() * 0.001;
-
-            if(warpActive || transitioning) {
-                if(warpActive) warpSpeed *= 1.03;
-                const pos = warpParticles.geometry.attributes.position.array;
-                for(let i=2; i<pos.length; i+=3) {
-                    pos[i] += warpSpeed;
-                    if(pos[i] > 1000) pos[i] -= 3000;
-                }
-                warpParticles.geometry.attributes.position.needsUpdate = true;
-                
-                if(warpSpeed > 200 && !transitioning) {
-                    warpActive = false; transitioning = true;
-                    document.getElementById('bloom-overlay').style.opacity = '1';
-                    setTimeout(() => {
-                        warpParticles.visible = false;
-                        lotusGroup.visible = true;
-                        camera.position.set(0, 200, 600);
-                        camera.lookAt(0,0,0);
-                        document.getElementById('bloom-overlay').style.opacity = '0';
-                        document.getElementById('sea-ui').style.opacity = '1';
-                        inSea = true; transitioning = false;
-                        controls.enabled = true; controls.autoRotate = true;
-                    }, 1500);
-                }
-            }
-
-            if(inSea) {
-                mainLotus.scale.setScalar(1 + Math.sin(time*2)*0.05);
-                mainLotus.rotation.y += 0.005;
-            }
-
-            if(composer) composer.render();
-            else renderer.render(scene, camera);
-        }
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            if(composer) composer.setSize(window.innerWidth, window.innerHeight);
+        // 簡單的陀螺儀/滑鼠視差效果
+        window.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 15;
+            const y = (e.clientY / window.innerHeight - 0.5) * -15;
+            container.style.transform = `rotateX(${y}deg) rotateY(${x}deg)`;
         });
-
-        animate();
     </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>無量光隧道 ． 彌陀接引</title>
+    <title>無量光隧道 ． 蓮花願海</title>
     <style>
         :root {
             --bg-deep: #050205; 
@@ -11,237 +11,313 @@
             --solid-gold: #d4af37; 
             --pure-light: #ffffff;
         }
-          body { 
-            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+        body { 
+            margin: 0; background: var(--bg-deep); color: #fff; 
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
-            /* ✨ 徹底封殺手機長按全選與放大鏡 ✨ */
             overflow: hidden; touch-action: none; overscroll-behavior: none;
-            -webkit-touch-callout: none; /* iOS Safari */
-            -webkit-user-select: none;   /* Safari */
-            -khtml-user-select: none;    /* Konqueror HTML */
-            -moz-user-select: none;      /* Old versions of Firefox */
-            -ms-user-select: none;       /* Internet Explorer/Edge */
-            user-select: none;           /* Non-prefixed version */
+            -webkit-user-select: none; user-select: none;
         }
-        * { box-sizing: border-box; }
+        canvas { display: block; width: 100vw; height: 100vh; }
 
-        #canvas-container { position: absolute; inset: 0; width: 100%; height: 100%; }
-        canvas { display: block; width: 100%; height: 100%; }
-
-        /* ✨ 完美繼承大勢至的開悟爆光特效 ✨ */
-        #lengyan-flash {
-            position: absolute; inset: 0; background: #ffffff; z-index: 50; opacity: 0;
-            pointer-events: none; transition: opacity 0.1s ease-out;
+        /* --- 轉場閃光層 --- */
+        #flash-overlay {
+            position: absolute; inset: 0; background: #fff; z-index: 100; opacity: 0;
+            pointer-events: none; transition: opacity 0.3s ease-in-out;
         }
+        .flash-active { opacity: 1 !important; }
 
+        /* --- 初始 UI --- */
         #hint-ui {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: var(--gold); font-family: "PingFang TC", serif;
-            text-align: center; letter-spacing: 4px; pointer-events: none;
-            transition: opacity 0.8s; z-index: 10;
+            color: var(--gold); text-align: center; letter-spacing: 4px; 
+            pointer-events: none; transition: opacity 0.8s; z-index: 10;
         }
         .title { font-size: 1.5rem; font-weight: bold; text-shadow: 0 0 20px var(--solid-gold); margin-bottom: 10px; }
-        .subtitle { font-size: 0.9rem; color: #aaa; letter-spacing: 2px; }
+        .subtitle { font-size: 0.9rem; color: #aaa; }
+
+        /* --- 願文側欄 (Vow Drawer) --- */
+        #vow-drawer {
+            position: fixed; bottom: -100%; left: 0; width: 100%; height: 40%;
+            background: rgba(10, 5, 10, 0.95); border-top: 1px solid var(--solid-gold);
+            z-index: 200; transition: bottom 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 30px; box-sizing: border-box; text-align: center;
+        }
+        #vow-drawer.active { bottom: 0; }
+        #vow-num { color: var(--solid-gold); font-size: 1.2rem; margin-bottom: 10px; display: block; }
+        #vow-text { line-height: 1.8; color: var(--gold); font-size: 1rem; }
+        .close-btn { 
+            position: absolute; top: 15px; right: 20px; color: #aaa; 
+            font-size: 1.5rem; cursor: pointer; padding: 10px;
+        }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-    <div id="canvas-container">
-        <canvas id="gatewayCanvas"></canvas>
-    </div>
-    
-    <div id="lengyan-flash"></div>
+    <canvas id="mainCanvas"></canvas>
+    <div id="flash-overlay"></div>
 
     <div id="hint-ui">
-        <div class="title">無量光海 ． 慈悲接引</div>
-        <div class="subtitle">長按凝聚大願 ． 鬆手契入極樂</div>
+        <div class="title">無量光隧道</div>
+        <div class="subtitle">長按凝聚大願 ． 鬆手契入蓮池</div>
+    </div>
+
+    <div id="vow-drawer">
+        <div class="close-btn" onclick="closeVow()">×</div>
+        <span id="vow-num">第 1 願</span>
+        <div id="vow-text">阿彌陀佛，大願法語加持中...</div>
     </div>
 
 <script>
-    const canvas = document.getElementById('gatewayCanvas');
+    const canvas = document.getElementById('mainCanvas');
     const ctx = canvas.getContext('2d');
-    const flashLayer = document.getElementById('lengyan-flash');
+    const flashLayer = document.getElementById('flash-overlay');
     const hintUI = document.getElementById('hint-ui');
 
     let width, height;
-    
-    // 狀態機: 0=待機, 1=長按凝聚(大勢至引力), 2=光隧道躍遷, 3=極樂平息
-    let state = 0; 
-    let charge = 0; 
-    let isHolding = false;
     let time = 0;
-    
-    // 躍遷核心半徑
-    let coreRadius = 0;
-
-    // 光塵粒子
-    let particles = [];
     const FOV = 400;
+
+    /** 狀態機: 0=待機, 1=蓄力, 2=躍遷(隧道), 3=進入蓮花海(360度互動) **/
+    let state = 0; 
+    let charge = 0;
+    let isHolding = false;
+
+    // 蓮花海視角與數據
+    let angleX = 0, angleY = 0;
+    let isDragging = false;
+    let lastMouseX, lastMouseY;
+    let stars = [];
+    let lotuses = [];
+    const petalAngles = Array.from({length: 12}, (_, i) => i * (Math.PI * 2 / 12));
 
     function resize() {
         width = window.innerWidth; height = window.innerHeight;
         canvas.width = width; canvas.height = height;
-        initParticles();
+        initStars();
     }
     window.addEventListener('resize', resize);
 
-    function initParticles() {
-        particles = [];
-        for(let i=0; i<1200; i++) {
-            particles.push({
-                x: (Math.random() - 0.5) * 3000,
-                y: (Math.random() - 0.5) * 3000,
-                z: Math.random() * 2000 + 100,
+    function initStars() {
+        stars = [];
+        for(let i=0; i<600; i++) {
+            stars.push({
+                x: (Math.random() - 0.5) * 4000,
+                y: (Math.random() - 0.5) * 4000,
+                z: Math.random() * 2000,
                 baseSpeed: Math.random() * 2 + 0.5
             });
         }
     }
 
-    function render() {
-        time += 0.05;
-        let centerX = width / 2;
-        let centerY = height / 2;
+    function initLotusSea() {
+        lotuses = [];
+        // 使用黃金螺旋分佈 48 朵蓮花在球體上
+        let phi = Math.PI * (3 - Math.sqrt(5)); 
+        let radius = 800;
+        for(let i=0; i<48; i++) {
+            let y = 1 - (i / 47) * 2; 
+            let r = Math.sqrt(1 - y * y);
+            let theta = phi * i;
+            lotuses.push({
+                id: i + 1,
+                x: Math.cos(theta) * r * radius,
+                y: y * radius,
+                z: Math.sin(theta) * r * radius,
+                baseS: 15,
+                phase: Math.random() * Math.PI * 2,
+                color: (i % 3 === 0) ? '#ffb7c5' : (i % 3 === 1 ? '#d4af37' : '#ffffff'),
+                screenX: 0, screenY: 0, screenRadius: 0
+            });
+        }
+    }
 
-        // 狀態邏輯更新
-        if (state === 0 || state === 1) {
-            if (isHolding) {
-                state = 1;
-                charge += 1; 
-                if (charge > 100) charge = 100;
+    function drawPetal(ctx, size) {
+        ctx.beginPath(); ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(size*0.4, size*0.2, size*0.8, size*0.5, size, 0);
+        ctx.bezierCurveTo(size*0.8, -size*0.5, size*0.4, -size*0.2, 0, 0);
+        ctx.fill(); ctx.stroke();
+    }
+
+    function project3D(x, y, z) {
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX);
+        let cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+        let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
+        if(z2 < -FOV + 50) return null;
+        let scale = FOV / (FOV + z2);
+        return { x: width/2 + x2*scale, y: height/2 - y1*scale, scale: scale, z: z2 };
+    }
+
+    function update() {
+        time += 0.02;
+
+        if (state < 3) { // 隧道階段邏輯
+            if (isHolding && state < 2) {
+                state = 1; charge += 1.5;
+                if (charge >= 100) { state = 2; charge = 100; }
                 hintUI.style.opacity = 0;
-            } else {
-                charge -= 1.5; 
-                if (charge <= 0) {
-                    charge = 0;
-                    state = 0;
-                    hintUI.style.opacity = 1;
+            } else if (!isHolding && state === 1) {
+                charge -= 2;
+                if (charge <= 0) { charge = 0; state = 0; hintUI.style.opacity = 1; }
+            }
+            
+            if (state === 2) { // 躍遷加速
+                charge += 5;
+                if (charge > 500) { // 觸發閃光轉場
+                    flashLayer.classList.add('flash-active');
+                    setTimeout(() => {
+                        state = 3;
+                        initLotusSea();
+                        flashLayer.classList.remove('flash-active');
+                    }, 400);
                 }
             }
-            coreRadius = charge * 1.2; // 蓄力時的核心大小
-        } 
-        else if (state === 2) {
-            // 光隧道躍遷：核心光丸以指數級速度膨脹，吞噬螢幕
-            coreRadius += (coreRadius * 0.15) + 5; 
-            
-            // 當光丸超越螢幕邊界，觸發白光爆發
-            if (coreRadius > Math.max(width, height) * 0.8) {
-                flashLayer.style.transition = 'opacity 0.1s ease-out';
-                flashLayer.style.opacity = 1;
-                
-                // 進入平息狀態
-                state = 3;
-                setTimeout(() => {
-                    flashLayer.style.transition = 'opacity 2.5s ease-in-out';
-                    flashLayer.style.opacity = 0;
-                }, 400);
-            }
+        } else { // 蓮花海自轉
+            if(!isDragging) angleY -= 0.002;
         }
+    }
 
-        // 繪製背景 (深邃宇宙)
+    function render() {
+        update();
         ctx.fillStyle = 'rgba(5, 2, 8, 0.4)';
         ctx.fillRect(0, 0, width, height);
-
-        // 繪製 3D 光塵粒子
         ctx.globalCompositeOperation = 'screen';
-        particles.forEach(p => {
-            let pSpeed = p.baseSpeed;
-            
-            if (state === 1) {
-                // 蓄力時：粒子被吸向中央 (大勢至引力)
-                p.z -= pSpeed * (charge * 0.2); 
-            } else if (state === 2) {
-                // 躍遷時：粒子化為光速隧道線條
-                p.z -= pSpeed * 60; 
-            } else if (state === 3) {
-                // 極樂平息：緩慢漂浮
-                p.z -= pSpeed * 0.5;
-            }
 
-            // 粒子循環
-            if (p.z < 10) {
-                p.z = 2000;
-                p.x = (Math.random() - 0.5) * 3000;
-                p.y = (Math.random() - 0.5) * 3000;
-            }
-
-            let scale = FOV / p.z;
-            let px = centerX + p.x * scale;
-            let py = centerY + p.y * scale;
-
-            if (state === 2) {
-                // 光隧道尾跡
-                let prevScale = FOV / (p.z + pSpeed * 60);
-                let prevPx = centerX + p.x * prevScale;
-                let prevPy = centerY + p.y * prevScale;
-
+        if (state <= 2) {
+            // --- 繪製隧道粒子 ---
+            stars.forEach(s => {
+                let speedMult = (state === 2) ? 60 : (charge * 0.2 + 1);
+                s.z -= s.baseSpeed * speedMult;
+                if(s.z < 0) s.z = 2000;
+                let sc = FOV / s.z;
+                let px = width/2 + s.x * sc, py = height/2 + s.y * sc;
+                
                 ctx.beginPath();
-                ctx.moveTo(prevPx, prevPy);
-                ctx.lineTo(px, py);
-                ctx.lineWidth = scale * 2.5;
-                ctx.strokeStyle = '#f3e5ab';
-                ctx.shadowBlur = 10 * scale;
-                ctx.shadowColor = '#d4af37';
-                ctx.stroke();
-            } else {
-                // 圓形光塵
-                let fSize = Math.max(0.5, scale * 3);
-                ctx.beginPath();
-                ctx.arc(px, py, fSize, 0, Math.PI*2);
-                ctx.fillStyle = charge > 50 ? '#ffffff' : '#f3e5ab';
-                ctx.shadowBlur = 8;
-                ctx.shadowColor = '#d4af37';
-                ctx.fill();
-            }
-        });
+                if(state === 2) { // 隧道拉線
+                    let oldSc = FOV / (s.z + s.baseSpeed * 60);
+                    ctx.moveTo(width/2 + s.x * oldSc, height/2 + s.y * oldSc);
+                    ctx.lineTo(px, py);
+                    ctx.strokeStyle = varColor('--gold');
+                    ctx.stroke();
+                } else {
+                    ctx.arc(px, py, sc*2, 0, Math.PI*2);
+                    ctx.fillStyle = charge > 70 ? '#fff' : varColor('--gold');
+                    ctx.fill();
+                }
+            });
 
-        // 繪製中央高貴的「彌陀光丸」與隧道發光體
-        if (state === 1 || state === 2) {
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, coreRadius * 2, 0, Math.PI*2);
-            
-            let grad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, coreRadius * 2);
-            grad.addColorStop(0, '#ffffff'); // 純白極亮核心
-            grad.addColorStop(0.3, '#f3e5ab'); // 柔和金光
-            grad.addColorStop(1, 'rgba(212, 175, 55, 0)'); // 融於虛空
-            
-            ctx.fillStyle = grad;
-            ctx.fill();
-
-            // 蓄力高於 50% 時，中心出現更神聖的光暈呼吸
-            if (state === 1 && charge > 50) {
-                let pulse = Math.sin(time * 8) * 10;
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, coreRadius * 0.5 + pulse, 0, Math.PI*2);
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                ctx.shadowBlur = 30;
-                ctx.shadowColor = '#ffffff';
-                ctx.fill();
+            // 繪製核心光丸
+            if (charge > 10) {
+                let grad = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, charge * 2);
+                grad.addColorStop(0, '#fff');
+                grad.addColorStop(1, 'transparent');
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.arc(width/2, height/2, charge * 2, 0, Math.PI*2); ctx.fill();
             }
+        } 
+        else if (state === 3) {
+            // --- 繪製蓮花海 ---
+            let elements = [];
+            stars.forEach(s => {
+                let proj = project3D(s.x, s.y, s.z);
+                if(proj) elements.push({ type: 'star', proj, el: s });
+            });
+            lotuses.forEach(l => {
+                let floatY = l.y + Math.sin(time + l.phase) * 15;
+                let proj = project3D(l.x, floatY, l.z);
+                if(proj) elements.push({ type: 'lotus', proj, el: l });
+            });
+
+            elements.sort((a,b) => b.proj.z - a.proj.z);
+
+            elements.forEach(item => {
+                let {proj, el} = item;
+                if(item.type === 'star') {
+                    ctx.globalAlpha = Math.max(0.1, 1 - proj.z/2000);
+                    ctx.beginPath(); ctx.arc(proj.x, proj.y, el.baseSpeed * proj.scale, 0, Math.PI*2);
+                    ctx.fillStyle = '#f3e5ab'; ctx.fill();
+                } else {
+                    let beat = Math.sin(time * 3 + el.phase);
+                    let size = el.baseS * proj.scale * (1 + beat * 0.1);
+                    el.screenX = proj.x; el.screenY = proj.y; el.screenRadius = size * 1.5;
+                    
+                    ctx.save();
+                    ctx.translate(proj.x, proj.y);
+                    ctx.rotate(time * 0.2 + el.phase);
+                    ctx.shadowBlur = 15; ctx.shadowColor = el.color;
+                    ctx.fillStyle = `rgba(${hexToRgb(el.color)}, 0.7)`;
+                    ctx.strokeStyle = "#fff";
+                    for(let i=0; i<12; i++) {
+                        ctx.save(); ctx.rotate(petalAngles[i]); drawPetal(ctx, size); ctx.restore();
+                    }
+                    ctx.restore();
+                }
+            });
+            ctx.globalAlpha = 1;
         }
-        
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.shadowBlur = 0;
 
+        ctx.globalCompositeOperation = 'source-over';
         requestAnimationFrame(render);
     }
 
-    // --- 觸控與滑鼠事件 ---
-    function handleDown(e) {
-        if(state === 0 || state === 1) isHolding = true;
+    // --- 輔助函式 ---
+    function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+    function hexToRgb(hex) {
+        let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : "255,255,255";
     }
 
-    function handleUp(e) {
-        isHolding = false;
-        // 蓄力超過 70% 放手，觸發光隧道躍遷
-        if ((state === 1 && charge > 70) || charge >= 100) {
-            state = 2; // 進入光速隧道狀態
+    // --- 交互控制 ---
+    function handleDown(e) {
+        if (state < 3) isHolding = true;
+        else {
+            isDragging = true;
+            lastMouseX = e.touches ? e.touches[0].clientX : e.clientX;
+            lastMouseY = e.touches ? e.touches[0].clientY : e.clientY;
         }
     }
 
+    function handleUp(e) {
+        if (state < 3) {
+            if (state === 1 && charge > 80) state = 2;
+            isHolding = false;
+        } else if (isDragging) {
+            isDragging = false;
+        } else {
+            // 點擊偵測
+            let x = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+            let y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+            lotuses.forEach(l => {
+                let dist = Math.hypot(x - l.screenX, y - l.screenY);
+                if (dist < Math.max(30, l.screenRadius)) openVow(l.id);
+            });
+        }
+    }
+
+    function handleMove(e) {
+        if (!isDragging || state !== 3) return;
+        let x = e.touches ? e.touches[0].clientX : e.clientX;
+        let y = e.touches ? e.touches[0].clientY : e.clientY;
+        angleY += (x - lastMouseX) * 0.005;
+        angleX += (y - lastMouseY) * 0.005;
+        angleX = Math.max(-Math.PI/3, Math.min(Math.PI/3, angleX));
+        lastMouseX = x; lastMouseY = y;
+    }
+
+    function openVow(id) {
+        document.getElementById('vow-num').innerText = `阿彌陀佛 ． 第 ${id} 願`;
+        document.getElementById('vow-text').innerText = `這是在蓮花海中為您開啟的第 ${id} 願莊嚴空間。四十八願度眾生，九品含靈登彼岸。願此光影令君心生歡喜，契入無量光壽之境。`;
+        document.getElementById('vow-drawer').classList.add('active');
+    }
+
+    function closeVow() { document.getElementById('vow-drawer').classList.remove('active'); }
+
     canvas.addEventListener('mousedown', handleDown);
     window.addEventListener('mouseup', handleUp);
+    window.addEventListener('mousemove', handleMove);
     canvas.addEventListener('touchstart', handleDown, {passive: false});
     window.addEventListener('touchend', handleUp);
+    window.addEventListener('touchmove', handleMove, {passive: false});
 
     resize();
     render();

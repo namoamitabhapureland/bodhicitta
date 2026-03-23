@@ -2,47 +2,118 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>彌陀四十八願 ． 大勢至爆發解鎖</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>無量壽經 ． 四十八願蓮邦</title>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; touch-action: none; }
-        canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-        #lengyan-flash {
-            position: absolute; inset: 0; background: #fff; z-index: 100; opacity: 0;
-            pointer-events: none; transition: opacity 0.1s;
+        :root {
+            --bg-deep: #020205; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --lotus-pink: #ffb7c5;
+            --text-main: #d0d0d0;
         }
-        #ui {
-            position: absolute; bottom: 10%; width: 100%; text-align: center; z-index: 200;
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; overscroll-behavior: none;
+            -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none;
+            -moz-user-select: none; -ms-user-select: none; user-select: none;
         }
-        button {
-            background: rgba(0,0,0,0.6); color: #d4af37; border: 1px solid #d4af37;
-            padding: 12px 30px; border-radius: 30px; cursor: pointer; font-size: 1.1rem;
-            letter-spacing: 2px; backdrop-filter: blur(5px);
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 350px;
+            background: transparent; border-left: 2px solid rgba(212,175,55,0.6); 
+            padding: 10px 20px; z-index: 100; pointer-events: none;
+        }
+        .status-title { font-size: 1.15rem; font-weight: bold; color: var(--gold); letter-spacing: 2px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); }
+        .status-desc { font-size: 0.85rem; color: #bbb; line-height: 1.8; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
+
+        .matrix-section { position: absolute; inset: 0; background: radial-gradient(circle at center, #0a0a1a 0%, #000000 100%); overflow: hidden; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+        .hint-text {
+            position: absolute; bottom: 30px; width: 100%; text-align: center;
+            color: rgba(243, 229, 171, 0.6); font-size: 0.8rem; letter-spacing: 2px; z-index: 10; pointer-events: none;
+        }
+
+        /* 願文展示視窗 (隱藏狀態) */
+        #vow-drawer {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -45%); width: 85vw; max-width: 500px;
+            background: rgba(10, 8, 5, 0.95); backdrop-filter: blur(15px);
+            border: 1px solid rgba(212,175,55,0.5); border-radius: 15px; 
+            padding: 30px; z-index: 2000; opacity: 0; pointer-events: none; transition: all 0.5s ease;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9), inset 0 0 20px rgba(212,175,55,0.1);
+        }
+        #vow-drawer.active { transform: translate(-50%, -50%); opacity: 1; pointer-events: auto; }
+        
+        .vow-header { border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 15px; margin-bottom: 20px; text-align: center; }
+        .vow-number { font-size: 0.9rem; color: var(--cyan); letter-spacing: 2px; margin-bottom: 5px; }
+        .vow-title { font-size: 1.3rem; color: var(--gold); font-weight: bold; letter-spacing: 1.5px; }
+        .vow-content { font-size: 0.95rem; color: var(--text-main); line-height: 1.9; text-align: justify; margin-bottom: 30px; min-height: 100px;}
+        
+        .close-btn {
+            display: block; width: 100%; background: transparent; border: 1px solid var(--gold);
+            color: var(--gold); padding: 10px; border-radius: 25px; font-size: 0.9rem; letter-spacing: 2px;
+            cursor: pointer; transition: all 0.3s; text-align: center;
         }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-    <div id="lengyan-flash"></div>
-    <canvas id="realmCanvas"></canvas>
-    <div id="ui">
-        <button id="start-btn" onpointerdown="startUnlock()">長按 ． 凝聚願海</button>
+    <div class="back-btn" onclick="window.location.href='index.html'">
+        回主系統
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title" id="s-title">星海蓮邦 ． 四十八願</div>
+        <div class="status-desc" id="s-desc">「十信滿心，萬念歸一。」<br>無量光壽遍照法界，四十八大願化為星海蓮台。</div>
+    </div>
+
+    <section class="matrix-section">
+        <canvas id="realmCanvas"></canvas>
+        <div class="hint-text">360° 滑動星海 ． 點擊蓮花觀願</div>
+    </section>
+
+    <!-- 願文視窗 -->
+    <div id="vow-drawer">
+        <div class="vow-header">
+            <div class="vow-number" id="vow-num">第 O 願</div>
+            <div class="vow-title" id="vow-name">願名載入中</div>
+        </div>
+        <div class="vow-content" id="vow-text">
+            總工程師，這裡是願文的佔位區塊。未來我們將把四十八願的玄妙法語，一字一句地安放於此。
+        </div>
+        <div class="close-btn" onclick="closeVow()">收起法卷</div>
     </div>
 
 <script>
     const canvas = document.getElementById('realmCanvas');
     const ctx = canvas.getContext('2d');
-    let width, height, time = 0;
-
-    // 狀態機：0: 平穩流動, 1: 強烈凝聚, 2: 爆發噴湧與定格
-    let mode = 0;
-    let gravityForce = 0;
-    let flashIntensity = 0;
-
-    let stars = [];
+    let width, height;
+    
+    let time = 0;
+    
+    // 3D 攝影機控制
+    let angleX = 0.2, angleY = 0;
+    let isDragging = false;
+    let lastMouseX = 0, lastMouseY = 0;
+    
+    // 實體陣列
     let lotuses = [];
-    const FOV = 400;
-    let angleX = 0.2, angleY = 0; // 沿用大勢至視角
+    let stars = [];
+
+    const FOV = 600; 
 
     function resize() {
         width = window.innerWidth; height = window.innerHeight;
@@ -50,14 +121,41 @@
     }
     window.addEventListener('resize', resize); resize();
 
-    // 初始化星辰（五十陰魔 -> 轉化態）
-    for(let i=0; i<1000; i++) {
-        stars.push({
-            x: (Math.random() - 0.5) * 1500, y: (Math.random() - 0.5) * 1500, z: (Math.random() - 0.5) * 1500,
-            vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, vz: (Math.random() - 0.5) * 2,
-            hue: Math.random() * 60 + 20, // 初始偏暖色
-            isGold: false, s: Math.random() * 2 + 1
-        });
+    function initEngines() {
+        // 1. 生成千佛劫星海 (背景)
+        for(let i=0; i<600; i++) {
+            stars.push({
+                x: (Math.random() - 0.5) * 3000,
+                y: (Math.random() - 0.5) * 3000,
+                z: (Math.random() - 0.5) * 3000,
+                s: Math.random() * 1.5 + 0.5,
+                c: Math.random() > 0.8 ? '#f3e5ab' : '#ffffff'
+            });
+        }
+
+        // 2. 生成 48 朵向量蓮花
+        // 使用黃金螺旋 (Spherical Fibonacci) 讓 48 朵蓮花均勻分布在一個巨大球體中
+        let phi = Math.PI * (3 - Math.sqrt(5)); 
+        let radius = 800; 
+
+        for(let i=0; i<48; i++) {
+            let y = 1 - (i / 47) * 2; 
+            let r = Math.sqrt(1 - y * y);
+            let theta = phi * i;
+
+            let px = Math.cos(theta) * r * radius;
+            let py = y * radius;
+            let pz = Math.sin(theta) * r * radius;
+
+            lotuses.push({
+                id: i + 1,
+                x: px, y: py, z: pz,
+                baseS: Math.random() * 8 + 10, // 大小不一
+                phase: Math.random() * Math.PI * 2, // 呼吸相位
+                c: (i % 3 === 0) ? '#ffb7c5' : ((i % 3 === 1) ? '#d4af37' : '#ffffff'), // 粉、金、白
+                hovered: false
+            });
+        }
     }
 
     function project3D(x, y, z) {
@@ -69,128 +167,150 @@
         return { x: (width/2) + x2*scale, y: (height/2) - y1*scale, scale: scale, z: z2 };
     }
 
-    function initLotuses() {
-        lotuses = [];
-        for (let i = 0; i < 48; i++) {
-            let angle = i * 2.4; let radius = 160 + i * 18;
-            lotuses.push({
-                x: 0, y: 0, z: 0, // 從中心噴出
-                targetX: Math.cos(angle) * radius * 1.2,
-                targetY: Math.sin(angle) * radius * 0.7,
-                targetZ: 100 + (Math.random() * 800),
-                opacity: 0, 
-                v: (Math.random() * 0.05 + 0.02), // 噴射速度因子
-                rot: Math.random() * Math.PI,
-                settled: false
-            });
-        }
-    }
-
-    function drawLotus(ctx, x, y, sc, opacity, rot, isBreathing) {
+    // ✨ 繪製純向量幾何蓮花 (絕無表情符號)
+    function drawVectorLotus(ctx, cx, cy, size, color, isHovered, beat) {
         ctx.save();
-        ctx.translate(x, y);
-        if(isBreathing) {
-            let b = 1 + Math.sin(time * 3) * 0.05;
-            ctx.scale(sc * b, sc * b);
-            opacity *= (0.8 + Math.sin(time * 3) * 0.2);
-        } else {
-            ctx.scale(sc, sc);
+        ctx.translate(cx, cy);
+        
+        let dynamicSize = size * (1 + beat * 0.1);
+        if(isHovered) dynamicSize *= 1.3; // 互動放大
+
+        ctx.shadowBlur = isHovered ? 30 : 15;
+        ctx.shadowColor = color;
+        ctx.fillStyle = color;
+        ctx.globalAlpha = isHovered ? 1 : 0.8;
+
+        // 畫蓮花瓣 (利用貝茲曲線)
+        for(let i=0; i<8; i++) {
+            ctx.rotate(Math.PI / 4);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(dynamicSize*0.5, -dynamicSize*0.8, 0, -dynamicSize*1.5);
+            ctx.quadraticCurveTo(-dynamicSize*0.5, -dynamicSize*0.8, 0, 0);
+            ctx.fill();
         }
-        ctx.rotate(rot);
-        ctx.shadowBlur = 20 * sc; ctx.shadowColor = "gold";
-        ctx.fillStyle = `rgba(243, 229, 171, ${opacity * 0.3})`;
-        ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
-        ctx.lineWidth = 2;
-        // 簡約蓮瓣繪製
-        for(let r=0; r<Math.PI*2; r+=Math.PI/6) {
-            ctx.beginPath(); ctx.rotate(Math.PI/6);
-            ctx.ellipse(30, 0, 30, 12, 0, 0, Math.PI*2);
-            ctx.fill(); ctx.stroke();
-        }
+
+        // 中心蓮蓬發光點
+        ctx.beginPath();
+        ctx.arc(0, 0, dynamicSize*0.3, 0, Math.PI*2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+
         ctx.restore();
     }
 
-    function animate() {
-        ctx.fillStyle = 'rgba(2, 2, 5, 0.4)';
-        ctx.fillRect(0, 0, width, height);
-        time += 0.02;
+    function renderRealm() {
+        if(!isDragging) angleY -= 0.001; // 星海緩緩自轉
 
-        // 處理閃光
-        flashIntensity *= 0.9;
-        document.getElementById('lengyan-flash').style.opacity = flashIntensity;
+        let projectedElements = [];
 
-        // 邏輯控制
-        if(mode === 1) {
-            gravityForce += (1.2 - gravityForce) * 0.04;
-            if(gravityForce > 1.15) { // 自動觸發爆發
-                mode = 2;
-                flashIntensity = 1;
-                initLotuses();
-                document.getElementById('start-btn').style.display = 'none';
-            }
-        }
-
-        ctx.globalCompositeOperation = 'screen';
-
-        // 1. 星辰渲染 (大勢至風格)
+        // 處理星塵
         stars.forEach(p => {
-            if(mode === 1) {
-                let dist = Math.sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
-                let pull = (gravityForce * 2000) / (dist + 50);
-                p.vx -= (p.x / dist) * pull; p.vy -= (p.y / dist) * pull; p.vz -= (p.z / dist) * pull;
-                p.vx *= 0.85; p.vy *= 0.85; p.vz *= 0.85;
-                if(dist < 50) p.isGold = true;
-            } else {
-                p.x += p.vx; p.y += p.vy; p.z += p.vz;
-            }
-
             let proj = project3D(p.x, p.y, p.z);
-            if(proj) {
-                let color = p.isGold ? `rgba(243,229,171,${0.5 + gravityForce*0.5})` : `hsla(${p.hue}, 70%, 50%, 0.3)`;
-                ctx.beginPath(); ctx.arc(proj.x, proj.y, p.s * proj.scale, 0, Math.PI*2);
-                ctx.fillStyle = color; ctx.fill();
-            }
+            if(proj) projectedElements.push({ type: 'star', proj: proj, el: p });
         });
 
-        // 2. 核心金光爆發感
-        if(mode === 1) {
-            let core = project3D(0,0,0);
-            if(core) {
-                let r = 80 * core.scale * gravityForce;
-                let g = ctx.createRadialGradient(core.x, core.y, 0, core.x, core.y, r*2);
-                g.addColorStop(0, '#fff'); g.addColorStop(0.3, '#f3e5ab'); g.addColorStop(1, 'transparent');
-                ctx.fillStyle = g; ctx.beginPath(); ctx.arc(core.x, core.y, r*2, 0, Math.PI*2); ctx.fill();
+        // 處理 48 蓮花
+        lotuses.forEach(p => {
+            // 讓蓮花自身在原位有輕微的浮動
+            let floatY = p.y + Math.sin(time + p.phase) * 20;
+            let proj = project3D(p.x, floatY, p.z);
+            if(proj) projectedElements.push({ type: 'lotus', proj: proj, el: p });
+        });
+
+        // 依深度排序 (Z-buffer)
+        projectedElements.sort((a,b) => b.proj.z - a.proj.z);
+
+        // 繪製
+        projectedElements.forEach(item => {
+            let proj = item.proj;
+            if(proj.scale < 0.05) return;
+
+            if(item.type === 'star') {
+                ctx.globalAlpha = Math.min(1, Math.max(0.1, 1 - (proj.z / 2000)));
+                ctx.beginPath(); ctx.arc(proj.x, proj.y, item.el.s * proj.scale, 0, Math.PI*2);
+                ctx.fillStyle = item.el.c; ctx.fill();
+                ctx.globalAlpha = 1;
+            } 
+            else if(item.type === 'lotus') {
+                let lotus = item.el;
+                let beat = Math.sin(time * 2 + lotus.phase);
+                
+                // 儲存螢幕 2D 座標供點擊偵測使用
+                lotus.screenX = proj.x;
+                lotus.screenY = proj.y;
+                lotus.screenRadius = lotus.baseS * proj.scale * 1.5;
+
+                drawVectorLotus(ctx, proj.x, proj.y, lotus.baseS * proj.scale, lotus.c, lotus.hovered, beat);
             }
-        }
+        });
+    }
 
-        // 3. 48願蓮花噴湧 (千佛劫 + 呼吸)
-        if(mode === 2) {
-            lotuses.forEach(l => {
-                // 噴湧算法：向目標坐標緩動
-                l.x += (l.targetX - l.x) * 0.05;
-                l.y += (l.targetY - l.y) * 0.05;
-                l.z += (l.targetZ - l.z) * 0.05;
-                l.opacity = Math.min(1, l.opacity + 0.02);
-                l.rot += 0.01;
-
-                let proj = project3D(l.x, l.y, l.z);
-                if(proj) {
-                    let isSettle = Math.abs(l.z - l.targetZ) < 10;
-                    drawLotus(ctx, proj.x, proj.y, proj.scale, l.opacity, l.rot, isSettle);
-                }
-            });
-            angleY += 0.002; // 願海緩緩轉動
-        }
-
-        ctx.globalCompositeOperation = 'source-over';
+    function animate() {
+        ctx.clearRect(0, 0, width, height); // 背景由 CSS 處理
+        time += 0.02;
+        renderRealm();
         requestAnimationFrame(animate);
     }
 
-    function startUnlock() {
-        mode = 1;
+    // ================= 互動控制 =================
+    
+    function onDown(e) { 
+        if(e.target.closest('#vow-drawer') || e.target.closest('.back-btn')) return; 
+        isDragging = true; 
+        lastMouseX = e.touches?e.touches[0].clientX:e.clientX; 
+        lastMouseY = e.touches?e.touches[0].clientY:e.clientY; 
+    }
+    
+    function onMove(e) { 
+        if (!isDragging) return; 
+        let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; 
+        angleY += (curX-lastMouseX)*0.005; angleX += (curY-lastMouseY)*0.005; 
+        angleX = Math.max(-Math.PI/2, Math.min(Math.PI/2, angleX)); 
+        lastMouseX=curX; lastMouseY=curY; 
+    }
+    
+    function onUp(e) { 
+        if(isDragging) { isDragging = false; return; } // 如果是滑動結束，不觸發點擊
+        
+        // 點擊偵測 (Raycasting 簡化版)
+        let clickX = e.changedTouches?e.changedTouches[0].clientX:e.clientX; 
+        let clickY = e.changedTouches?e.changedTouches[0].clientY:e.clientY; 
+        
+        // 從近到遠找被點擊的蓮花
+        let clickedLotus = null;
+        for(let i=0; i<lotuses.length; i++) {
+            let lotus = lotuses[i];
+            if(lotus.screenX && lotus.screenY) {
+                let dist = Math.hypot(clickX - lotus.screenX, clickY - lotus.screenY);
+                if(dist < Math.max(20, lotus.screenRadius)) {
+                    // 找到了，若有多個重疊，因為我們迴圈順序，可能需要優化 Z 軸判斷，但目前簡單處理
+                    clickedLotus = lotus;
+                }
+            }
+        }
+
+        if(clickedLotus) openVow(clickedLotus.id);
     }
 
-    animate();
+    canvas.addEventListener('mousedown', onDown); window.addEventListener('mousemove', onMove); canvas.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchstart', onDown, {passive: true}); window.addEventListener('touchmove', onMove, {passive: true}); canvas.addEventListener('touchend', onUp);
+
+    // ================= 願文視窗控制 =================
+    function openVow(id) {
+        document.getElementById('vow-num').innerText = `第 ${id} 願`;
+        // 這裡預留給總工程師未來填入真實願文
+        document.getElementById('vow-name').innerText = `願名預留區`;
+        document.getElementById('vow-text').innerText = `阿彌陀佛！總工程師妙依居士，這裡是第 ${id} 願的法語空間。未來我們將建立四十八願的資料庫，當點擊這朵蓮花時，精準對應的無量壽經願文將會在此莊嚴展現。`;
+        
+        document.getElementById('vow-drawer').classList.add('active');
+    }
+
+    function closeVow() {
+        document.getElementById('vow-drawer').classList.remove('active');
+    }
+
+    initEngines(); animate();
 </script>
 </body>
 </html>

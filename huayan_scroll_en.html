@@ -1,4 +1,235 @@
-<!DOCTYPE html>
+<!DOCTYPE <!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>彌陀大願 ． 極樂蓮邦</title>
+    <style>
+        :root {
+            --bg-deep: #020205; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; user-select: none;
+        }
+
+        /* 介面層級切換 */
+        .page { position: absolute; inset: 0; display: none; z-index: 100; pointer-events: none; }
+        .page.active { display: flex; flex-direction: column; align-items: center; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); pointer-events: auto;
+        }
+
+        /* 第一頁 UI */
+        #status-panel { margin-top: 80px; text-align: center; }
+        .status-title { font-size: 1.5rem; color: var(--gold); letter-spacing: 5px; margin-bottom: 10px; }
+        .status-desc { font-size: 0.9rem; color: #888; }
+
+        .long-press-area {
+            position: absolute; bottom: 15%; width: 100%; display: flex; flex-direction: column; align-items: center;
+        }
+        .progress-circle {
+            width: 80px; height: 80px; border: 2px solid rgba(212,175,55,0.2); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; margin-bottom: 15px;
+            position: relative;
+        }
+        .progress-bar {
+            position: absolute; inset: -2px; border: 2px solid var(--gold); border-radius: 50%;
+            clip-path: inset(100% 0 0 0); transition: clip-path 0.1s linear;
+        }
+        .hint-text { color: var(--gold); font-size: 0.9rem; letter-spacing: 2px; }
+
+        /* 第二頁 UI */
+        .second-page-btn {
+            position: absolute; bottom: 10%; width: 85%; max-width: 320px;
+            background: rgba(10,15,10,0.8); border: 1px solid var(--gold);
+            color: var(--gold); padding: 16px; border-radius: 30px;
+            font-weight: bold; cursor: pointer; pointer-events: auto; text-align: center;
+        }
+
+        .matrix-section { position: absolute; inset: 0; background: #000; z-index: 1; }
+        canvas { width: 100%; height: 100%; }
+        #lengyan-flash { position: absolute; inset: 0; background: #fff; z-index: 50; opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="back-btn" onclick="window.location.href='index.html?screen=3'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        回道場
+    </div>
+
+    <div id="page1" class="page active">
+        <div id="status-panel">
+            <div class="status-title">彌陀願力接引</div>
+            <div class="status-desc">「萬念歸一 ． 契入願海」</div>
+        </div>
+        <div class="long-press-area">
+            <div class="progress-circle">
+                <div class="progress-bar" id="p-bar"></div>
+                <div style="font-size: 0.7rem; color: var(--gold);">長按</div>
+            </div>
+            <div class="hint-text">靜心長按五秒</div>
+        </div>
+    </div>
+
+    <div id="page2" class="page">
+        <div class="second-page-btn" onclick="alert('開啟法卷內容...')">探究彌陀無量願海</div>
+    </div>
+
+    <section class="matrix-section">
+        <canvas id="realmCanvas"></canvas>
+        <div id="lengyan-flash"></div> 
+    </section>
+
+<script>
+    const canvas = document.getElementById('realmCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, time = 0;
+    let currentRealm = 0; // 0: 接引, 1: 願海
+
+    // 互動控制
+    let isPressing = false;
+    let pressTimer = 0;
+    const REQUIRED_TIME = 5000; // 5秒
+    let gravityForce = 0;
+    let isTransitioning = false;
+
+    let particles = [];
+    const FOV = 400;
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+    }
+    window.addEventListener('resize', resize); resize();
+
+    function initParticles() {
+        particles = [];
+        for(let i=0; i<1200; i++) {
+            particles.push({
+                x: (Math.random()-0.5)*1000, y: (Math.random()-0.5)*1000, z: (Math.random()-0.5)*1000,
+                vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2, vz: (Math.random()-0.5)*2,
+                c: Math.random() > 0.5 ? '#f3e5ab' : '#d4af37',
+                s: Math.random() * 2 + 1
+            });
+        }
+    }
+
+    function project3D(x, y, z) {
+        let scale = FOV / (FOV + z);
+        return { x: (width/2) + x*scale, y: (height/2) - y*scale, scale: scale };
+    }
+
+    // ✨ 妙依：這是調整後的蓮花，會從極小呼吸放大
+    function drawGiantLotus(proj, beat, blend) {
+        if(!proj) return;
+        ctx.save();
+        ctx.translate(proj.x, proj.y);
+        
+        // 呼吸邏輯：基礎 0.2 + 隨時間變動 0.3 + 蓄力增強
+        let breathingScale = 0.2 + (Math.sin(time * 1.5) + 1) * 0.15;
+        let s = proj.scale * (breathingScale + blend * 2.5); 
+        ctx.scale(s, s);
+        
+        ctx.shadowBlur = 15 + blend * 40;
+        ctx.shadowColor = '#d4af37';
+        
+        for(let i=0; i<12; i++) {
+            ctx.rotate((Math.PI * 2) / 12);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(15, -30, 0, -60);
+            ctx.quadraticCurveTo(-15, -30, 0, 0);
+            ctx.fillStyle = `rgba(212, 175, 55, ${0.6 + blend * 0.4})`;
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    function animate() {
+        ctx.fillStyle = '#020205';
+        ctx.fillRect(0, 0, width, height);
+        time += 0.02;
+
+        if (isPressing && !isTransitioning) {
+            pressTimer += 16.6; // 約 60fps
+            gravityForce += (1 - gravityForce) * 0.03;
+            let progress = Math.min(pressTimer / REQUIRED_TIME, 1);
+            document.getElementById('p-bar').style.clipPath = `inset(${(1 - progress) * 100}% 0 0 0)`;
+        } else {
+            gravityForce *= 0.92; // 釋放後的「混亂」效果
+            document.getElementById('p-bar').style.clipPath = `inset(100% 0 0 0)`;
+        }
+
+        // 粒子邏輯
+        particles.forEach(p => {
+            if (gravityForce > 0.05) {
+                let d = Math.sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+                let pull = (gravityForce * 2000) / (d + 10);
+                p.vx -= (p.x/d)*pull; p.vy -= (p.y/d)*pull; p.vz -= (p.z/d)*pull;
+                p.vx *= 0.92; p.vy *= 0.92; p.vz *= 0.92;
+            } else {
+                p.vx += (Math.random()-0.5)*0.2; p.x += p.vx;
+                p.vy += (Math.random()-0.5)*0.2; p.y += p.vy;
+                p.vz += (Math.random()-0.5)*0.2; p.z += p.vz;
+            }
+            
+            let proj = project3D(p.x, p.y, p.z);
+            if(proj) {
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, p.s * proj.scale, 0, Math.PI*2);
+                ctx.fillStyle = p.c;
+                ctx.fill();
+            }
+        });
+
+        // 繪製蓮花
+        let coreProj = project3D(0, 0, 0);
+        drawGiantLotus(coreProj, Math.sin(time), gravityForce);
+
+        requestAnimationFrame(animate);
+    }
+
+    // 觸發切換
+    function goToSecondPage() {
+        isTransitioning = true;
+        document.getElementById('page1').classList.remove('active');
+        // 等待粒子稍微擴散（混亂）一秒後顯示第二頁
+        setTimeout(() => {
+            document.getElementById('page2').classList.add('active');
+            isTransitioning = false;
+        }, 1200);
+    }
+
+    // 事件監聽
+    canvas.addEventListener('pointerdown', () => { if(!isTransitioning) { isPressing = true; pressTimer = 0; } });
+    window.addEventListener('pointerup', () => {
+        if (isPressing && pressTimer >= REQUIRED_TIME) {
+            goToSecondPage();
+        }
+        isPressing = false;
+    });
+
+    initParticles();
+    animate();
+</script>
+</body>
+</html>
+
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">

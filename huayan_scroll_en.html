@@ -1,101 +1,336 @@
-<div id="vow-48-module" class="vow-wrapper">
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>破空之門 ． 躍遷極樂</title>
     <style>
-        .vow-wrapper {
-            width: 100%; margin-top: 35px; margin-bottom: 20px;
-            position: relative; border-radius: 20px; overflow: hidden;
-            background: #050505; border: 1px solid #222;
-            transition: all 1.5s cubic-bezier(0.25, 0.1, 0.25, 1);
-            display: flex; flex-direction: column; align-items: center;
-            padding: 35px 20px; cursor: pointer;
+        :root {
+            --bg-deep: #050505; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
         }
-        /* 封印狀態：深沉內斂 */
-        .vow-sealed { box-shadow: inset 0 0 30px rgba(60, 10, 10, 0.4); border-color: rgba(139, 0, 0, 0.2) !important; }
-        /* 顯現狀態：金光攝受 */
-        .vow-unlocked { box-shadow: 0 0 30px rgba(212,175,55,0.15), inset 0 0 30px rgba(212,175,55,0.1); border-color: #d4af37 !important; }
+        body { 
+            margin: 0; background: var(--bg-deep); overflow: hidden; 
+            touch-action: none; overscroll-behavior: none; user-select: none;
+            -webkit-touch-callout: none;
+        }
+        * { box-sizing: border-box; }
 
-        #vow-icon { width: 60px; height: 60px; margin-bottom: 15px; transition: all 1.5s; }
-        .lotus-pulse { animation: lotus-breathing 4s infinite ease-in-out; }
-        @keyframes lotus-breathing {
-            0%, 100% { transform: scale(1); opacity: 0.6; }
-            50% { transform: scale(1.08); opacity: 1; }
+        /* 畫布與震動容器 */
+        #canvas-container {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+        }
+        canvas { display: block; width: 100%; height: 100%; }
+
+        /* 爆光層 */
+        #flash-layer {
+            position: absolute; inset: 0; background: #ffffff; 
+            z-index: 100; opacity: 0; pointer-events: none;
         }
 
-        /* 莊嚴提示框 */
-        .vow-toast {
-            position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(20, 0, 0, 0.9); color: #f3e5ab;
-            padding: 18px 25px; border-radius: 15px; border: 1px solid #8b0000;
-            font-size: 0.9rem; text-align: center; z-index: 10000;
-            pointer-events: none; opacity: 0; transition: all 0.8s;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+        /* UI 文字 */
+        #hint-ui {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: var(--gold); font-family: "PingFang TC", serif;
+            text-align: center; letter-spacing: 4px; pointer-events: none;
+            transition: opacity 0.5s; z-index: 10;
         }
+        .title { font-size: 1.5rem; font-weight: bold; text-shadow: 0 0 20px var(--solid-gold); margin-bottom: 10px; }
+        .subtitle { font-size: 0.9rem; color: #aaa; }
     </style>
+</head>
+<body oncontextmenu="return false;">
 
-    <svg id="vow-icon" class="lotus-pulse" viewBox="0 0 24 24" fill="none" stroke-width="1.2">
-        <path id="vow-lotus-path" d="M12 22C12 22 17 16 17 12C17 8 12 4 12 4C12 4 7 8 7 12C7 16 12 22 12 22Z" stroke="#8b0000" />
-        <path d="M12 22C12 22 22 18 22 12C22 8 17 8 12 12" stroke="#8b0000" opacity="0.3"/>
-        <path d="M12 22C12 22 2 18 2 12C2 8 7 8 12 12" stroke="#8b0000" opacity="0.3"/>
-        <g id="vow-core-target">
-            <circle id="vow-lock-core" cx="12" cy="12" r="2.5" fill="#050505" stroke="#8b0000" stroke-width="1.5" />
-        </g>
-    </svg>
+    <div id="canvas-container">
+        <canvas id="gatewayCanvas"></canvas>
+    </div>
     
-    <div id="vow-title" style="color:#555; font-weight:bold; letter-spacing:2px; transition: 1s;">THE 48 VOWS REALM</div>
-    <div id="vow-desc" style="color:#444; font-size:0.8rem; margin-top:8px; transition: 1s;">Accumulate Merit to Reveal</div>
+    <div id="flash-layer"></div>
 
-    <script>
-        function showVowToast(msg) {
-            const toast = document.createElement('div');
-            toast.className = 'vow-toast';
-            toast.innerHTML = `<div style="color:#d4af37;margin-bottom:8px;font-weight:bold;">【 Realm Sealed 】</div>${msg}`;
-            document.body.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '1'; toast.style.top = '38%'; }, 100);
-            setTimeout(() => { toast.style.opacity = '0'; }, 3000);
-            setTimeout(() => { toast.remove(); }, 4000);
+    <div id="hint-ui">
+        <div class="title">一萬願力 ． 破空之門</div>
+        <div class="subtitle">長按凝聚金光 ． 鬆手粉碎虛空</div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('gatewayCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('canvas-container');
+    const flashLayer = document.getElementById('flash-layer');
+    const hintUI = document.getElementById('hint-ui');
+
+    let width, height;
+    
+    // 狀態機: 0=待機, 1=蓄力裂空, 2=爆發躍遷(光速), 3=極樂平息
+    let state = 0; 
+    let charge = 0; // 0 to 100
+    let isHolding = false;
+    let time = 0;
+
+    // 裂痕路徑與躍遷粒子
+    let cracks = [];
+    let warpParticles = [];
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+        initCracks();
+        initWarpParticles();
+    }
+    window.addEventListener('resize', resize);
+
+    // 1. 生成碎裂的閃電/裂痕路徑
+    function initCracks() {
+        cracks = [];
+        const numMainBranches = 12; // 12條主裂痕
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        for(let i=0; i<numMainBranches; i++) {
+            let angle = (i / numMainBranches) * Math.PI * 2 + (Math.random()*0.5 - 0.25);
+            generateCrackBranch(centerX, centerY, angle, 0, 5, 100);
+        }
+    }
+
+    // 遞迴生成裂痕分支
+    function generateCrackBranch(x, y, angle, depth, maxDepth, length) {
+        if(depth > maxDepth) return;
+        
+        let path = [{x: x, y: y}];
+        let currentX = x; let currentY = y;
+        let segments = Math.floor(Math.random() * 5 + 5);
+        
+        for(let i=0; i<segments; i++) {
+            let segLen = length / segments;
+            let jitter = (Math.random() - 0.5) * 1.5; // 裂痕曲折度
+            currentX += Math.cos(angle + jitter) * segLen;
+            currentY += Math.sin(angle + jitter) * segLen;
+            path.push({x: currentX, y: currentY});
+        }
+        
+        cracks.push({
+            path: path,
+            depth: depth,
+            // 根據深度決定這條裂痕要在蓄力達幾%時才開始出現
+            activationThreshold: depth * 15 + Math.random() * 10 
+        });
+
+        // 產生分支
+        if(Math.random() > 0.4 && depth < maxDepth) {
+            let branchAngle1 = angle + (Math.random() * 0.8 + 0.2);
+            let branchAngle2 = angle - (Math.random() * 0.8 + 0.2);
+            generateCrackBranch(currentX, currentY, branchAngle1, depth + 1, maxDepth, length * 0.8);
+            if(Math.random() > 0.5) {
+                generateCrackBranch(currentX, currentY, branchAngle2, depth + 1, maxDepth, length * 0.8);
+            }
+        }
+    }
+
+    // 2. 生成躍遷粒子 (3D Starfield)
+    function initWarpParticles() {
+        warpParticles = [];
+        for(let i=0; i<800; i++) {
+            warpParticles.push({
+                x: (Math.random() - 0.5) * 2000,
+                y: (Math.random() - 0.5) * 2000,
+                z: Math.random() * 2000,
+                speed: 0
+            });
+        }
+    }
+
+    function render() {
+        time += 0.05;
+
+        // --- 邏輯更新 ---
+        if (state === 0 || state === 1) {
+            if (isHolding) {
+                state = 1;
+                charge += 0.8; // 蓄力速度
+                if (charge > 100) charge = 100;
+                hintUI.style.opacity = 0;
+            } else {
+                charge -= 2; // 退蓄力
+                if (charge <= 0) {
+                    charge = 0;
+                    state = 0;
+                    hintUI.style.opacity = 1;
+                }
+            }
+
+            // 畫面震動 (根據蓄力值)
+            if (charge > 10) {
+                let shakeAmt = (charge / 100) * 15;
+                let dx = (Math.random() - 0.5) * shakeAmt;
+                let dy = (Math.random() - 0.5) * shakeAmt;
+                container.style.transform = `translate(${dx}px, ${dy}px)`;
+            } else {
+                container.style.transform = `translate(0px, 0px)`;
+            }
         }
 
-        (function updateVowVisual() {
-            setTimeout(() => {
-                let nian = 5500;
-                const mod = document.getElementById('vow-48-module');
-                const path = document.getElementById('vow-lotus-path');
-                const core = document.getElementById('vow-lock-core');
-                const title = document.getElementById('vow-title');
-                const desc = document.getElementById('vow-desc');
+        // --- 繪圖 ---
+        if (state === 0 || state === 1) {
+            // 黑底
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.3)';
+            ctx.fillRect(0, 0, width, height);
 
-                // 十信位色彩演化 (每 500 聲換一階)
-                const faithColors = ['#600000', '#8b0000', '#a52a2a', '#b8860b', '#cd7f32', '#808000', '#556b2f', '#4682b4', '#6a5acd', '#9ca3af'];
+            // 繪製裂痕
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
 
-                mod.onclick = function() {
-                    if (nian >= 5000) {
-                        if(document.getElementById('page-transition-curtain')) document.getElementById('page-transition-curtain').style.opacity = '1';
-                        setTimeout(() => { window.location.href = '48vows_en.html'; }, 800);
-                    } else {
-                        if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
-                        showVowToast(`Current Merit: ${nian}<br>Required: 5,000 (Ten Faiths)`);
+            cracks.forEach(crack => {
+                if (charge > crack.activationThreshold) {
+                    // 計算這條裂痕該畫多長
+                    let localProgress = (charge - crack.activationThreshold) / 20; 
+                    if (localProgress > 1) localProgress = 1;
+
+                    let ptsToDraw = Math.max(2, Math.floor(crack.path.length * localProgress));
+
+                    ctx.beginPath();
+                    ctx.moveTo(crack.path[0].x, crack.path[0].y);
+                    for(let i=1; i<ptsToDraw; i++) {
+                        ctx.lineTo(crack.path[i].x, crack.path[i].y);
                     }
-                };
 
-                if (nian >= 5000) {
-                    mod.className = 'vow-wrapper vow-unlocked';
-                    path.setAttribute('stroke', '#f3e5ab');
-                    path.style.filter = "drop-shadow(0 0 15px rgba(243,229,171,0.6))";
-                    document.getElementById('vow-core-target').innerHTML = '<circle cx="12" cy="12" r="3.5" fill="#f3e5ab" filter="blur(1px)"><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle><circle cx="12" cy="12" r="1.5" fill="#fff" />';
-                    title.innerText = "VOW OCEAN REVEALED";
-                    title.style.color = "#f3e5ab";
-                    desc.innerHTML = "Infinite Life Realm Opened.";
-                    desc.style.color = "#aaa";
-                } else {
-                    let stage = Math.floor(nian / 500);
-                    let currentColor = faithColors[stage] || faithColors[0];
-                    mod.className = 'vow-wrapper vow-sealed';
-                    path.setAttribute('stroke', currentColor);
-                    path.style.filter = `drop-shadow(0 0 10px ${currentColor}44)`;
-                    core.setAttribute('stroke', currentColor);
-                    title.innerText = `THE 48 VOWS (STAGE ${stage + 1})`;
-                    desc.innerHTML = `Merit: ${nian} / 5000<br>Purifying the Faith Heart...`;
+                    // 越主幹越粗，發光越強
+                    let thickness = Math.max(0.5, 5 - crack.depth);
+                    ctx.lineWidth = thickness + (Math.random() * (charge/30)); // 閃爍感
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.shadowBlur = 10 + (charge/2);
+                    ctx.shadowColor = '#d4af37';
+                    ctx.stroke();
+
+                    // 疊加純金核心線
+                    ctx.lineWidth = thickness * 0.5;
+                    ctx.strokeStyle = '#f3e5ab';
+                    ctx.stroke();
                 }
-            }, 600);
-        })();
-    </script>
-</div>
+            });
+
+            // 中心核心光芒
+            if (charge > 0) {
+                ctx.beginPath();
+                ctx.arc(width/2, height/2, charge * 1.5, 0, Math.PI*2);
+                let grad = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, charge * 1.5);
+                grad.addColorStop(0, '#ffffff');
+                grad.addColorStop(0.3, '#f3e5ab');
+                grad.addColorStop(1, 'rgba(212,175,55,0)');
+                ctx.fillStyle = grad;
+                ctx.shadowBlur = charge * 2;
+                ctx.fill();
+            }
+
+        } else if (state === 2 || state === 3) {
+            // 躍遷與極樂星海
+            container.style.transform = `translate(0px, 0px)`;
+            
+            // 背景變為深邃金色星空
+            ctx.fillStyle = 'rgba(10, 5, 0, 0.4)';
+            ctx.fillRect(0, 0, width, height);
+
+            let centerX = width / 2;
+            let centerY = height / 2;
+            let fov = 300;
+
+            warpParticles.forEach(p => {
+                // 躍遷時極速，平息時緩慢
+                p.speed = state === 2 ? 80 : 1.5;
+                p.z -= p.speed;
+
+                if (p.z < 1) {
+                    p.z = 2000;
+                    p.x = (Math.random() - 0.5) * 2000;
+                    p.y = (Math.random() - 0.5) * 2000;
+                }
+
+                let scale = fov / p.z;
+                let px = centerX + p.x * scale;
+                let py = centerY + p.y * scale;
+
+                // 如果是極速躍遷，畫線條 (尾跡)；如果是平息，畫點
+                if (state === 2) {
+                    let prevScale = fov / (p.z + p.speed * 2);
+                    let prevPx = centerX + p.x * prevScale;
+                    let prevPy = centerY + p.y * prevScale;
+
+                    ctx.beginPath();
+                    ctx.moveTo(prevPx, prevPy);
+                    ctx.lineTo(px, py);
+                    ctx.lineWidth = scale * 3;
+                    ctx.strokeStyle = p.speed > 10 ? '#ffffff' : '#f3e5ab';
+                    ctx.shadowBlur = 15 * scale;
+                    ctx.shadowColor = '#d4af37';
+                    ctx.stroke();
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(px, py, Math.max(0.5, scale * 3), 0, Math.PI*2);
+                    ctx.fillStyle = '#f3e5ab';
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#d4af37';
+                    ctx.fill();
+                }
+            });
+
+            // 畫一個遠處的極樂法輪/光環
+            if(state === 3) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 200 + Math.sin(time)*10, 0, Math.PI*2);
+                ctx.strokeStyle = 'rgba(212,175,55,0.2)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        requestAnimationFrame(render);
+    }
+
+    // --- 觸控事件 ---
+    function handleDown(e) {
+        if(state === 0 || state === 1) isHolding = true;
+    }
+
+    function handleUp(e) {
+        isHolding = false;
+        
+        // 蓄力超過 60% 放手，觸發粉碎虛空躍遷
+        if ((state === 1 && charge > 60) || charge >= 100) {
+            triggerShatter();
+        }
+    }
+
+    // ✨ 核心過場：粉碎虛空 ✨
+    function triggerShatter() {
+        state = 2; // 進入躍遷
+        
+        // 白光爆發
+        flashLayer.style.transition = 'opacity 0.1s';
+        flashLayer.style.opacity = 1;
+
+        // 0.5秒後白光消退，露出極速躍遷的星海
+        setTimeout(() => {
+            flashLayer.style.transition = 'opacity 1.5s ease-out';
+            flashLayer.style.opacity = 0;
+            
+            // 2.5秒後，躍遷降速，化為平靜極樂星海
+            setTimeout(() => {
+                state = 3;
+                
+                // 這裡就是未來切換到 48 蓮花矩陣的入口
+                // setTimeout(() => { window.location.href = 'vows48.html'; }, 3000);
+                
+            }, 2500);
+        }, 300);
+    }
+
+    canvas.addEventListener('mousedown', handleDown);
+    window.addEventListener('mouseup', handleUp);
+    canvas.addEventListener('touchstart', handleDown, {passive: false});
+    window.addEventListener('touchend', handleUp);
+
+    resize();
+    render();
+</script>
+</body>
+</html>

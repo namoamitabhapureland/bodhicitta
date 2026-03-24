@@ -121,6 +121,10 @@
             <div class="close-bar"></div>
             <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
                 <div style="color:var(--cyan); font-size:0.85rem; letter-spacing:2px; font-weight:bold; cursor:pointer;" onclick="closeTheoryDrawer()">收起法卷</div>
+                <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                    <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                    <span id="tts-text">聆聽法音</span>
+                </div>
             </div>
         </div>
         <div class="theory-container" id="theory-content-box">
@@ -142,7 +146,7 @@
                     <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><circle cx="12" cy="12" r="4"/></svg>
                     <div class="c-title">二、四十八願 ． 化生蓮邦</div>
                 </div>
-                <div class="c-text">阿彌陀佛於因地發四十八大願，願願皆為拔濟眾生。此無邊願力化作極樂世界之莊嚴海浪，承載著十方念佛眾生。海浪中心，一朵清淨之大金蓮與四朵伴生蓮花緩緩轉動，象徵著行者自性中本具之無上菩提心，與彌陀願海同頻共振。</div>
+                <div class="c-text">阿彌陀佛於因地發四十八大願，願願皆為拔濟眾生。此無邊願力化作極樂世界之莊嚴海浪，承載著十方念佛眾生。海浪之中，四十八朵清淨之金蓮緩緩轉動，交相輝映，象徵著行者自性中本具之無上菩提心，與彌陀願海同頻共振。</div>
             </div>
         </div>
     </div>
@@ -155,20 +159,21 @@
     let currentRealm = 0; // 0: 彌陀接引, 1: 探彌陀48願海
     let time = 0;
 
-    // 粒子系統
+    // 粒子系統與蓮花陣列
     let jieyinParticles = [];
     let yuanhaiParticles = [];
+    let lotusMatrix = []; // 儲存 48 朵金蓮
     
     let angleX = 0.6, angleY = 0;
     let isDragging = false;
     let lastMouseX = 0, lastMouseY = 0;
     
     // 物理狀態變數
-    let charge = 0;         // 蓄力值 (0-100)，約5秒滿
+    let charge = 0;         // 蓄力值 (0-100)
     let gravityForce = 0;   // 接引的引力
     let flashIntensity = 0; // 爆光強度
     let waveColorBlend = 0; // 願海顏色過渡 (0=青灰, 1=純金)
-    let transitioning = false; // 是否正在過場
+    let transitioning = false;
 
     const FOV = 400; 
 
@@ -202,6 +207,24 @@
                 });
             }
         }
+
+        // 3. 建立 48 朵金蓮矩陣
+        lotusMatrix = [];
+        // 主金蓮 (第 1 朵)
+        lotusMatrix.push({
+            r: 0, theta: 0, orbitSpeed: 0, rotateSpeed: 0.2, scale: 1.0, phase: 0
+        });
+        // 伴生中小金蓮 (第 2 到 48 朵)
+        for(let i=1; i<48; i++) {
+            lotusMatrix.push({
+                r: 60 + Math.random() * 350,               // 軌道半徑分佈
+                theta: Math.random() * Math.PI * 2,        // 初始角度
+                orbitSpeed: (Math.random() - 0.5) * 0.015, // 公轉速度 (有正有負)
+                rotateSpeed: (Math.random() - 0.5) * 0.8,  // 自轉速度
+                scale: 0.15 + Math.random() * 0.35,        // 縮放比例 (主蓮的 15% 到 50%)
+                phase: Math.random() * Math.PI * 2         // 獨立呼吸相位
+            });
+        }
     }
 
     function project3D(x, y, z) {
@@ -213,7 +236,7 @@
         return { x: (width/2) + x2*scale, y: (height/2) - y1*scale - 50, scale: scale, z: z2 };
     }
 
-    // ✨ 繪製純金蓮花 (主蓮與伴蓮通用)
+    // ✨ 繪製純金蓮花 (純向量)
     function drawGiantLotus(proj, beat, blend, rotation, scaleMult) {
         if(!proj) return;
         ctx.save();
@@ -221,7 +244,7 @@
         
         let s = proj.scale * (3.5 * scaleMult + beat * 0.15 * scaleMult + blend * 0.5 * scaleMult); 
         ctx.scale(s, s);
-        ctx.rotate(rotation); // 旋轉蓮花
+        ctx.rotate(rotation); 
         
         ctx.shadowBlur = (15 + blend * 20) * scaleMult; 
         ctx.shadowColor = '#d4af37';
@@ -270,16 +293,15 @@
         ctx.restore();
     }
 
-    // --- 實作：彌陀願力接引 (第一階段) ---
+    // --- 彌陀願力接引 ---
     function renderJieyin() {
-        // 蓄力與引力邏輯
         if(isDragging && !transitioning) {
-            charge += 0.35; // 約 5 秒可達 100
+            charge += 0.35; 
             if(charge > 100) charge = 100;
-            gravityForce = charge / 100; // 引力與蓄力同步
+            gravityForce = charge / 100; 
         } else if (!transitioning) {
-            charge = 0; // 一鬆手立即歸零重新計算
-            gravityForce *= 0.90; // 放手後引力極速衰退，導致粒子散亂混亂
+            charge = 0; 
+            gravityForce *= 0.90; 
         }
 
         flashIntensity *= 0.92;
@@ -299,7 +321,6 @@
                 p.vx -= (p.x / distToCenter) * pull; p.vy -= (p.y / distToCenter) * pull; p.vz -= (p.z / distToCenter) * pull;
                 p.vx *= 0.9; p.vy *= 0.9; p.vz *= 0.9;
             } else {
-                // 引力消失，粒子恢復散亂
                 p.vx += (Math.random()-0.5)*0.5; p.vy += (Math.random()-0.5)*0.5; p.vz += (Math.random()-0.5)*0.5;
                 if(p.vx > 3) p.vx = 3; if(p.vy > 3) p.vy = 3; if(p.vz > 3) p.vz = 3;
             }
@@ -318,7 +339,6 @@
 
         projected.sort((a,b) => b.z - a.z);
 
-        // 中心小金點與蓄力光丸
         let coreProj = project3D(0,0,0);
         if(coreProj) {
             ctx.globalCompositeOperation = 'screen';
@@ -343,9 +363,8 @@
         ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
     }
 
-    // --- 實作：探彌陀48願海 (第二階段) ---
+    // --- 探彌陀48願海 ---
     function renderYuanhai() {
-        // 滑動時顏色過渡到純金
         waveColorBlend += ((isDragging ? 1 : 0) - waveColorBlend) * 0.05;
 
         if(!isDragging) {
@@ -356,7 +375,6 @@
         let projected = [];
         yuanhaiParticles.forEach(p => {
             let waveZ = Math.sin(p.dist * 0.05 - time * 2) * 40;
-            
             let proj = project3D(p.baseX, p.baseY, waveZ);
             if(proj) {
                 let r = Math.floor(139 + (243 - 139) * waveColorBlend);
@@ -382,24 +400,27 @@
         });
         ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
 
-        // ✨ 繪製主金蓮與伴生小蓮花
-        let beat = Math.sin(time * 2);
-        
-        // 主金蓮 (中心)
-        let coreProj = project3D(0, 0, 10); 
-        drawGiantLotus(coreProj, beat, waveColorBlend, time * 0.2, 1.0); // 主蓮緩緩正轉
-        
-        // 4朵伴生小蓮花 (環繞)
-        for(let i=0; i<4; i++) {
-            let angle = (i * Math.PI / 2) + time * 0.3; // 軌道旋轉
-            let radius = 130 + Math.sin(time * 1.5 + i) * 15; // 軌道呼吸
-            let lx = Math.cos(angle) * radius;
-            let lz = Math.sin(angle) * radius + 10;
+        // ✨ 繪製 48 朵金蓮矩陣 ✨
+        // 為了 3D 正確遮擋，將蓮花也做深度排序
+        let projectedLotuses = [];
+        lotusMatrix.forEach(lotus => {
+            lotus.theta += lotus.orbitSpeed; // 公轉
+            // 讓蓮花隨著海浪軌道起伏
+            let waveOffset = Math.sin(lotus.r * 0.05 - time * 2) * 40;
+            let lx = Math.cos(lotus.theta) * lotus.r;
+            let lz = Math.sin(lotus.theta) * lotus.r + waveOffset + 10; // 稍微浮於水面
             
-            let smallProj = project3D(lx, 0, lz);
-            // 小蓮花逆轉，且大小為 0.4 倍
-            drawGiantLotus(smallProj, beat + i, waveColorBlend, -time * 0.5 + i, 0.4); 
-        }
+            let proj = project3D(lx, 0, lz);
+            if(proj) projectedLotuses.push({ proj: proj, lotus: lotus });
+        });
+
+        projectedLotuses.sort((a,b) => b.proj.z - a.proj.z);
+
+        projectedLotuses.forEach(item => {
+            let beat = Math.sin(time * 2 + item.lotus.phase); // 獨立呼吸
+            let rotation = time * item.lotus.rotateSpeed;     // 獨立自轉
+            drawGiantLotus(item.proj, beat, waveColorBlend, rotation, item.lotus.scale);
+        });
     }
 
     function animate() {
@@ -429,7 +450,7 @@
             angleX = 0.2; angleY = 0; 
             charge = 0; gravityForce = 0;
         } else {
-            title.innerText = "探彌陀48願海"; desc.innerHTML = "「清淨海浪，大願金蓮。」<br>360度滑動螢幕，點亮願海金光。";
+            title.innerText = "探彌陀48願海"; desc.innerHTML = "「清淨海浪，大願金蓮。」<br>360度滑動螢幕，點亮四十八大願。";
             title.style.color = 'var(--cyan)';
             hintContainer.style.display = 'none';
             theoryBtn.style.display = 'flex';
@@ -455,7 +476,6 @@
         if (!isDragging) return; 
         let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; 
         
-        // 只有在願海模式下才允許 360 滑動旋轉
         if(currentRealm === 1) {
             angleY += (curX-lastMouseX)*0.01; 
             angleX += (curY-lastMouseY)*0.01; 
@@ -468,13 +488,13 @@
         if(!isDragging) return;
         isDragging = false; 
         
-        // 彌陀接引：蓄力超過 90 (約近5秒) 放手，觸發爆光與過場
+        // 彌陀接引：蓄力超過 90 (約五秒) 放手，觸發爆光與過場
         if(currentRealm === 0 && charge > 90 && !transitioning) {
             flashIntensity = 1; 
             document.getElementById('lengyan-flash').style.opacity = flashIntensity;
             transitioning = true;
             
-            // 讓引力自然衰退 (回到混亂畫面)，並等待 3.5 秒後跳轉
+            // 引力自然衰退混亂，等待 3.5 秒後跳轉蓮海
             setTimeout(() => {
                 if(currentRealm === 0) toggleRealm(1);
                 transitioning = false;
@@ -486,6 +506,52 @@
 
     canvas.addEventListener('mousedown', onDown); window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
     canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
+
+    // ================= ✨ TTS 語音導航系統 ✨ =================
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+    window.sysUtterances = []; 
+
+    if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = function() { speechSynthesis.getVoices(); };
+    }
+
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("您的設備不支援語音功能");
+        const btnText = document.getElementById('tts-text'); const btnIcon = document.getElementById('tts-icon');
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel(); isPlayingTheory = false; btnText.innerText = "聆聽法音";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text, #theory-content-box .humble-statement');
+            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('。');
+            textToRead = textToRead.replace(/一、/g, '第一章：').replace(/二、/g, '第二章：').replace(/三、/g, '第三章：');
+            
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            textToRead = isAndroid ? textToRead : textToRead.replace(/阿/g, 'ㄚ');
+            
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead); theoryUtterance.lang = 'zh-TW'; theoryUtterance.rate = 0.85; 
+            if (isAndroid) {
+                window.sysUtterances.push(theoryUtterance);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let zhVoice = voices.find(v => v.lang === 'zh-TW' && v.name.includes('Google')) || voices.find(v => v.lang.includes('zh'));
+                    if (zhVoice) theoryUtterance.voice = zhVoice;
+                }
+            }
+            theoryUtterance.onend = () => {
+                isPlayingTheory = false; btnText.innerText = "聆聽法音";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                if(isAndroid) window.sysUtterances = window.sysUtterances.filter(u => u !== theoryUtterance);
+            };
+            setTimeout(() => { window.speechSynthesis.speak(theoryUtterance); }, isAndroid ? 150 : 50);
+            isPlayingTheory = true; btnText.innerText = "停止聆聽";
+            btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    const originalCloseTheoryDrawer = closeTheoryDrawer;
+    closeTheoryDrawer = function() { if (isPlayingTheory) toggleTheoryAudio(); originalCloseTheoryDrawer(); }
 
     initEngines(); toggleRealm(0); animate();
 </script>

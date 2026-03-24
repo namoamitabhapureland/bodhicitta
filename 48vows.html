@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>彌陀大願 ． 極樂蓮邦</title>
+    <style>
+        :root {
+            --bg-deep: #020205; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --silver: #e0e0e0;
+            --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; overscroll-behavior: none;
+            -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none;
+            -moz-user-select: none; -ms-user-select: none; user-select: none;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px;
+            background: transparent; border-left: 2px solid rgba(212,175,55,0.6); 
+            padding: 10px 20px; z-index: 100; transition: 1s; pointer-events: none;
+        }
+        .status-title { font-size: 1.15rem; font-weight: bold; color: var(--gold); letter-spacing: 2px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); transition: 1s;}
+        .status-desc { font-size: 0.85rem; color: #bbb; line-height: 1.8; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); transition: 1s;}
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; transition: background 0.8s; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+        #lengyan-flash {
+            position: absolute; inset: 0; background: #ffffff; z-index: 50; opacity: 0;
+            pointer-events: none; transition: opacity 0.1s ease-out;
+        }
+
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 12px; transition: opacity 1s;}
+        
+        .switch-btn {
+            width: 85%; max-width: 320px; justify-content: center;
+            background: linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(212,175,55,0.5); color: var(--gold);
+            padding: 14px 20px; border-radius: 30px; font-size: 1rem; font-weight: bold; letter-spacing: 2px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1);
+        }
+        .switch-btn:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(212,175,55,0.5); }
+        
+        #theory-btn { border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,10,15,0.9); display: none; }
+        
+        #hold-hint {
+            color: rgba(212,175,55,0.8); font-size: 1rem; letter-spacing: 3px; font-weight: bold;
+            text-shadow: 0 0 10px rgba(212,175,55,0.5); padding: 15px; text-align: center;
+        }
+
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(139,168,156,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(139,168,156,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        
+        .humble-statement { font-size: 0.85rem; color: #b0b0b0; line-height: 1.8; text-align: justify; padding: 20px; border: 1px solid rgba(139,168,156,0.2); border-radius: 12px; background: rgba(10,15,20,0.3); margin-bottom: 50px; }
+        
+        .main-title { color: var(--cyan); font-size: 1.5rem; letter-spacing: 3px; text-align: center; margin-bottom: 50px; text-shadow: 0 0 15px rgba(139,168,156,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); margin: 15px auto 0; }
+        
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 24px; height: 24px; stroke: var(--cyan); fill: none; stroke-width: 1.5; filter: drop-shadow(0 0 5px rgba(139,168,156,0.4)); flex-shrink: 0;}
+        .c-title { color: var(--cyan); font-size: 1.15rem; letter-spacing: 1.5px; font-weight: bold; }
+        .c-text { color: var(--text-main); font-size: 0.95rem; line-height: 1.9; text-align: justify; padding-left: 39px; letter-spacing: 0.8px;}
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="back-btn" onclick="window.location.href='index.html'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        回道場
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title" id="s-title">彌陀願力接引</div>
+        <div class="status-desc" id="s-desc">「萬念歸一，光芒四射。」<br>長按螢幕凝聚金光，放手契入極樂。</div>
+    </div>
+
+    <section class="matrix-section" id="bg-section">
+        <canvas id="realmCanvas"></canvas>
+        <div id="lengyan-flash"></div> 
+        
+        <div class="ui-layer" id="ui-layer">
+            <div id="hold-hint">長按螢幕十秒 放開啟動接引</div>
+            
+            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                探究彌陀無量願海
+            </button>
+        </div>
+   </section>
+
+<div id="theory-drawer">
+    <div class="drawer-header" onclick="closeTheoryDrawer()">
+        <div class="close-bar"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+            <div style="color:var(--cyan); font-size:0.85rem; letter-spacing:2px; font-weight:bold; cursor:pointer;" onclick="closeTheoryDrawer()">收起法卷</div>
+            <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                <span id="tts-text">聆聽法音</span>
+            </div>
+        </div>
+    </div>
+    <div class="theory-container" id="theory-content-box">
+        <div class="humble-statement">法海浩瀚，唯佛與佛乃能究盡。本文僅為一介在家居士，依經教邏輯與祖師大德之註疏，試圖探求如來真實義之修學略影。若有未盡或錯漏之處，皆屬個人智識之侷限，祈願三寶加被，同修共鑒。</div>
+        
+        <h1 class="main-title">覺海澄觀 ． 彌陀淨土之實相與菩提心要</h1>
+        
+        <div style="color:rgba(255,255,255,0.8); font-size:0.95rem; line-height:1.8; margin-bottom: 2rem; text-align: justify; text-justify: inter-ideograph;">
+            《無量壽經》梵文原典迭經譯傳，異本中所載法藏比丘因地發願之數，有二十四至四十九之別。經歷代祖師大德判釋與文獻考覈，今以魏譯四十八願為上求佛道、下化眾生之主流圭臬。四十八願實乃極樂淨土之締造樞機，盡攝彌陀之悲智雙運。
+        </div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <div class="c-title">第一篇　清淨法界與色身圓融</div>
+            </div>
+            <div class="c-text">國無惡道與不墮惡趣之願，極樂之境從本源蠲除三塗之業感。此乃無盡之護念，俾令修行者靈命根基永不退墮。而身悉金色、形無好醜，實為泯除形相之妄別，當攀緣與高下之心失其所依，方能與一真法界冥契交感。至若光明無量與壽命無量，其真義斷非世俗貪戀之長生。無量光，宛如法身遍照之圓融，一即一切；而無量壽，實乃開演一處無退轉之勝妙境地，護持往生者於無盡歲月中圓滿菩提。待彌陀化緣既畢，入於涅槃，觀音大士紹繼佛位，此無量壽之宏旨，即在護持願力之永恆傳續。而壽命隨願修短，更微顯此土實乃菩薩道之棲神化驛，行者若資糧具足，隨時皆可倒駕慈航，重返十方無量世界。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <div class="c-title">第二篇　不更惡道之真機</div>
+            </div>
+            <div class="c-text">第二願「不更三惡道」緊攝於第一願「國無惡道」與「無量壽」之後，實乃法界最深密之對比與呼應。此願特以極樂之「人、天」為授記標的，乃「以小示大」之勝妙權巧。首層真機，即為迴入十方大千世界度化群迷之大士預設不壞之防護網：縱然隨緣受生，亦絕不流轉於重濁業境。更深層之奧祕，在於凡曾生極樂者，阿賴耶識深處已然凝結彌陀本願之無漏種子，於無盡之迴入受生中，生生世世自然絕緣於三惡趣之牽引，無有退轉。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+               <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <circle cx="12" cy="12" r="4"/>
+                    <path d="M12 2v6"/><path d="M12 16v6"/><path d="M2 12h6"/><path d="M16 12h6"/>
+                </svg>
+                <div class="c-title">第三篇　聲聞迴心與一佛乘之歸宿</div>
+            </div>
+            <div class="c-text">國中聲聞無數，印證原始佛教實為覺悟之初基。然獨善其身終難契入究竟涅槃，當聲聞眾沐浴於極樂法性，心隨境轉，便如《法華》所云，迴小向大，發菩提心，匯入一佛乘之浩瀚。而邊地疑城之設，猶如法界最慈悲之韜光之所，令夾帶世俗微細惑障之眾生，於無苦之境緩緩洗滌蛻變。一旦契入，便蒙不住定聚必至滅度之加被，彷彿頓超一大阿僧祇劫，直證初地之不退轉。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+
+               <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                </svg>
+                <div class="c-title">第四篇　純善無漏與轉染成淨之妙用</div>
+            </div>
+            <div class="c-text">極樂國土不聞不善之名，所受快樂如漏盡比丘。此樂非感官之短暫生滅，乃常寂光中之大寂靜。國土清淨照見十方，令行者諦觀空性而不失明了。衣服隨念而至，於此清淨法界中，念起物現乃法爾如是之理。諸天敬禮，猶如立一轉染成淨之法界常軌，令菩提心無限賡續。寶樹中能見十方佛國，宛若帝網重重，累世宿命與十方苦難皆可洞鑑無礙，令行者常興悲智，不失度生之宏願。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <div class="c-title">第五篇　破除相執與轉身受記</div>
+            </div>
+            <div class="c-text">轉女成男之深旨，實非僅局於極樂本國之化現。極樂本無性別之相，皆為純粹無礙之金剛法軀。此願真機乃十方世界之女性，若深厭女身業縛，蒙此願力加被，盡此一報身後，來世即永不受女身。若以菩薩道進程觀之，無論南傳嚴定男身受記，或北傳蒙佛授記後須示現男身以圓滿佛道，彌陀此願實為十方發心大士預先拔除宿業藩籬。國中菩薩智慧辯才不可限量，更充實行者應對華嚴大世界無量眾生心性流轉之軟實力，乃踐行普賢大願最堅實之渡世津梁。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                <div class="c-title">第六篇　神足徹視與法界藏識之交融</div>
+            </div>
+            <div class="c-text">此五神通之願，旨趣印證極樂聖眾了達「身」非「我」之幻相，無貪計我執，自絕貪瞋癡之妄念。彌陀深智為令往生者慧命相續，必假蓮胎化生之淨妙色身為依託。臨命終時，憑彌陀願力牽引，將娑婆之幻我轉識成智。於彼境中，行者神識可與法界藏識（阿賴耶）無礙交融，宿命因緣互攝互照。極樂聖眾皆得洞鑒三世因果，彼此心念交參，淨妙法身更具神足飛舉之能，天眼徹視、天耳遙聞，皆臻至圓滿無漏。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-8m0 0V4m0 8h8m-8 0H4"/></svg>
+                <div class="c-title">第七篇　平等法相與普賢妙供</div>
+            </div>
+            <div class="c-text">身具三十二大丈夫相與那羅延金剛不壞之軀，實乃承繼「形無好醜」之深密義理。國中所謂「人、天、聲聞、菩薩」，皆屬隨順他方世界之方便假名，其實無二無別，正為徹底泯除娑婆眾生之分別妄見。而一食之頃供養十方諸佛，供具隨心如意，此皆契入普賢大願之自然流露。彼土既無造作，亦無世俗之營求交易，萬物皆為清淨心識之化現，以供養之行，任運圓滿福慧之資糧。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 22h20L12 2z"/></svg>
+                <div class="c-title">第八篇　實有報土與香光勝緣</div>
+            </div>
+            <div class="c-text">極樂國土萬物嚴淨光麗，寶香普熏十方，見菩提樹即獲無生法忍。此殊勝境界印證彌陀淨土乃「實有報土」，絕非偏空之唯心所現。行者褪去娑婆粗重病苦，得金剛之軀處於至美之境，實乃彌陀深智：藉眾生殘存之微細「我執」與感官覺受，轉化為向道之勝緣。寶樹之無量光，交攝華嚴之常寂光，於光影交錯間，昭示修行與光之甚深密意，令行者於無垢相中，直悟清淨本心。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.36-6.36l-1.41 1.41M6.05 17.95l-1.41 1.41m14.14 0l-1.41-1.41M6.05 6.05L4.64 4.64"/></svg>
+                <div class="c-title">第九篇　光頻化育與演說無礙</div>
+            </div>
+            <div class="c-text">蒙佛光照觸而身心柔軟，萬物皆能隨願演說妙法。此法界之光，其頻率足以拔濟心靈，實為無量光與常寂光之同體，亦即「菩提心不滅」之永恆法身。菩薩欲修何法，皆能隨願得聞。國中菩薩演說法要必契一切智，其所具備之智慧神通，乃為斷除生死洪流、踐行普賢度生大願，絕非世俗有漏之業通。此智辯無礙，實為廣度群迷之無上利器。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                <div class="c-title">第十篇　法界印可與中繼攝受</div>
+            </div>
+            <div class="c-text">諸佛稱嘆，猶如十方如來對此化驛之同聲印可。最末之聞名得益、生尊貴家與獲三法忍，乃彌陀為彼等乘願再來之大權菩薩，所設之遙相攝受誓願。他方高僧大德聞彌陀名號即得諸根具足。極樂實為法界之「中繼大站」，彼等無懼生死之行者，焉知非昔日早經極樂薰修、迴入他方世界之大士？其於娑婆聽聞聖號，便能喚醒阿賴耶識中之印記，縱處五濁惡世，亦能於轉識成智剎那，重獲不退轉之深慧定力。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                <div class="c-title">第十一篇　本願海會與菩提心宗</div>
+            </div>
+            <div class="c-text">第十八、十九、二十願，實為接引眾生之核心樞機。極樂非僅個人拔苦，實為孕育度生菩薩之法界搖籃。第十八願以「至心信樂」為宗，此乃首要之基。深信極樂與娑婆法則之迥異，唯依佛力，不假造作。早植善根，方能於臨命終時絕慮斷疑，無礙往生；第十九願「發菩提心」，實乃契入法界之究竟大乘正因。考諸《無量壽經》三輩往生之樞機，無論品位高下，咸以「發無上菩提心」為首要津梁；復觀《華嚴》奧旨，善財童子南詢五十三參，其發軔之初，亦必先發此無上大覺之心。蓋因菩提心乃諸佛之本源、成佛之真種。行者唯有立此宏大誓願，方能與彌陀悲願之海同頻交感，令心識不昧，蒙佛攝受，直登阿惟越致（不退轉）之寂滅尊位；第二十願「至心迴向」普攝群機，將世出世間一切善根，悉數匯入彌陀願海。善導大師云：「以佛願力，五逆十惡，罪滅得生。」道盡彌陀無條件之究竟慈悲。學佛終極乃是成佛，而奧義盡在《金剛經》：「應滅度無量眾生，實無眾生得滅度者。」此大空性見，方是極樂菩薩乘願再來之真實底氣。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15l-2 5-9-5 9-5 2 5zM12 15l2-5 9 5-9 5-2-5zM12 10V2"/></svg>
+                <div class="c-title">第十二篇　一生補處與普賢大行</div>
+            </div>
+            <div class="c-text">第二十二願實乃四十八願之巔頂與化育標的。生彼國者究竟必至一生補處，此乃必成正覺之絕對授記。然其甚深奧義，更在於「超出常倫諸地之行，現前修習普賢之德」。極樂菩薩證此位次，絕非耽溺淨土安樂，而是披弘誓大鎧，迴入十方濁惡之世，示現八相成道，廣濟群迷。行普賢願，歸彌陀土，隱然相合世尊出世度生之究竟本懷。這更是菩薩不住生死、不住涅槃，將法身遍入十方無量世界之大悲極致。四十八願，至此方顯周遍法界之圓滿無礙。</div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    const canvas = document.getElementById('realmCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    let currentRealm = 0; // 0: 彌陀接引, 1: 探彌陀48願海
+    let time = 0;
+
+    // 粒子系統與蓮花陣列
+    let jieyinParticles = [];
+    let yuanhaiParticles = [];
+    let lotusMatrix = []; // 儲存 48 朵金蓮
+    
+    let angleX = 0.6, angleY = 0;
+    let isDragging = false;
+    let lastMouseX = 0, lastMouseY = 0;
+    
+    // 物理狀態變數
+    let charge = 0;         // 蓄力值 (0-100)
+    let gravityForce = 0;   // 接引的引力
+    let flashIntensity = 0; // 爆光強度
+    let waveColorBlend = 0; // 願海顏色過渡 (0=青灰, 1=純金)
+    let transitioning = false;
+
+    const FOV = 400; 
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+    }
+    window.addEventListener('resize', resize); resize();
+
+    function initEngines() {
+        // 1. 彌陀願力接引：金色光塵
+        jieyinParticles = [];
+        for(let i=0; i<1500; i++) {
+            jieyinParticles.push({
+                x: (Math.random() - 0.5) * 1200, y: (Math.random() - 0.5) * 1200, z: (Math.random() - 0.5) * 1200,
+                vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, vz: (Math.random() - 0.5) * 2,
+                c: Math.random() > 0.5 ? '#f3e5ab' : '#d4af37', 
+                s: Math.random() * 2 + 1
+            });
+        }
+
+        // 2. 探彌陀願海：海浪波紋
+        yuanhaiParticles = [];
+        for(let r = 20; r <= 800; r += 15) {
+            let count = Math.floor(r * 0.4);
+            for(let i=0; i<count; i++) {
+                let theta = (i / count) * Math.PI * 2;
+                yuanhaiParticles.push({ 
+                    baseX: r * Math.cos(theta), baseY: r * Math.sin(theta), dist: r, theta: theta, 
+                    s: Math.random() * 1.5 + 0.5 
+                });
+            }
+        }
+
+        // 3. 建立 48 朵金蓮矩陣
+        lotusMatrix = [];
+        // 主金蓮 (第 1 朵)
+        lotusMatrix.push({
+            r: 0, theta: 0, orbitSpeed: 0, rotateSpeed: 0.2, scale: 1.0, phase: 0
+        });
+        // 伴生中小金蓮 (第 2 到 48 朵)
+        for(let i=1; i<48; i++) {
+            lotusMatrix.push({
+                r: 60 + Math.random() * 350,               // 軌道半徑分佈
+                theta: Math.random() * Math.PI * 2,        // 初始角度
+                orbitSpeed: (Math.random() - 0.5) * 0.015, // 公轉速度 (有正有負)
+                rotateSpeed: (Math.random() - 0.5) * 0.8,  // 自轉速度
+                scale: 0.15 + Math.random() * 0.35,        // 縮放比例 (主蓮的 15% 到 50%)
+                phase: Math.random() * Math.PI * 2         // 獨立呼吸相位
+            });
+        }
+    }
+
+    function project3D(x, y, z) {
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+        let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
+        if(z2 < -FOV+10) return null;
+        let scale = FOV / (FOV + z2); 
+        return { x: (width/2) + x2*scale, y: (height/2) - y1*scale - 50, scale: scale, z: z2 };
+    }
+
+    // ✨ 繪製純金蓮花 (純向量)
+    function drawGiantLotus(proj, beat, blend, rotation, scaleMult) {
+        if(!proj) return;
+        ctx.save();
+        ctx.translate(proj.x, proj.y);
+        
+        let s = proj.scale * (3.5 * scaleMult + beat * 0.15 * scaleMult + blend * 0.5 * scaleMult); 
+        ctx.scale(s, s);
+        ctx.rotate(rotation); 
+        
+        ctx.shadowBlur = (15 + blend * 20) * scaleMult; 
+        ctx.shadowColor = '#d4af37';
+        
+        let petalCount = 12; 
+        for(let i=0; i<petalCount; i++) {
+            ctx.rotate((Math.PI * 2) / petalCount);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(15, -30, 0, -60);
+            ctx.quadraticCurveTo(-15, -30, 0, 0);
+            
+            let grad = ctx.createLinearGradient(0, 0, 0, -60);
+            grad.addColorStop(0, '#d4af37');
+            let tipR = Math.floor(243 + (255 - 243) * blend);
+            let tipG = Math.floor(229 + (255 - 229) * blend);
+            let tipB = Math.floor(171 + (255 - 171) * blend);
+            grad.addColorStop(1, `rgba(${tipR}, ${tipG}, ${tipB}, 1)`); 
+            
+            ctx.fillStyle = grad;
+            ctx.fill();
+            
+            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.stroke();
+        }
+        
+        for(let i=0; i<petalCount; i++) {
+            ctx.rotate(((Math.PI * 2) / petalCount) + 0.1);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(8, -15, 0, -35);
+            ctx.quadraticCurveTo(-8, -15, 0, 0);
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = 0.6 + blend * 0.4;
+            ctx.fill();
+        }
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, 6, 0, Math.PI*2);
+        ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = 1;
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        
+        ctx.restore();
+    }
+
+    // --- 彌陀願力接引 ---
+    function renderJieyin() {
+        if(isDragging && !transitioning) {
+            charge += 0.35; 
+            if(charge > 100) charge = 100;
+            gravityForce = charge / 100; 
+        } else if (!transitioning) {
+            charge = 0; 
+            gravityForce *= 0.90; 
+        }
+
+        flashIntensity *= 0.92;
+        if(flashIntensity > 0.01) {
+            document.getElementById('lengyan-flash').style.opacity = flashIntensity;
+        }
+
+        if(!isDragging) angleY += 0.002;
+
+        let projected = [];
+        jieyinParticles.forEach(p => {
+            p.x += p.vx; p.y += p.vy; p.z += p.vz;
+            let distToCenter = Math.sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+            
+            if(gravityForce > 0.1) {
+                let pull = (gravityForce * 1500) / (distToCenter + 10);
+                p.vx -= (p.x / distToCenter) * pull; p.vy -= (p.y / distToCenter) * pull; p.vz -= (p.z / distToCenter) * pull;
+                p.vx *= 0.9; p.vy *= 0.9; p.vz *= 0.9;
+            } else {
+                p.vx += (Math.random()-0.5)*0.5; p.vy += (Math.random()-0.5)*0.5; p.vz += (Math.random()-0.5)*0.5;
+                if(p.vx > 3) p.vx = 3; if(p.vy > 3) p.vy = 3; if(p.vz > 3) p.vz = 3;
+            }
+
+            if(p.x > 600) p.x = -600; if(p.x < -600) p.x = 600;
+            if(p.y > 600) p.y = -600; if(p.y < -600) p.y = 600;
+            if(p.z > 600) p.z = -600; if(p.z < -600) p.z = 600;
+
+            let proj = project3D(p.x, p.y, p.z);
+            if(proj) {
+                let isBright = distToCenter < 120 * gravityForce + 30;
+                let color = isBright ? `rgba(255,255,255,${0.6 + gravityForce*0.4})` : p.c;
+                projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: color, s: p.s, isBright: isBright });
+            }
+        });
+
+        projected.sort((a,b) => b.z - a.z);
+
+        let coreProj = project3D(0,0,0);
+        if(coreProj) {
+            ctx.globalCompositeOperation = 'screen';
+            let coreR = (5 + 45 * gravityForce) * coreProj.scale * (1 + Math.sin(time*10)*0.1);
+            let grad = ctx.createRadialGradient(coreProj.x, coreProj.y, 0, coreProj.x, coreProj.y, coreR * 3);
+            grad.addColorStop(0, `rgba(255, 255, 255, ${Math.max(0.5, gravityForce)})`);
+            grad.addColorStop(0.3, `rgba(243, 229, 171, ${Math.max(0.4, gravityForce * 0.8)})`);
+            grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+            ctx.beginPath(); ctx.arc(coreProj.x, coreProj.y, coreR * 3, 0, Math.PI*2);
+            ctx.fillStyle = grad; ctx.fill();
+        }
+
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.sc * (1 + (p.isBright ? gravityForce : 0)); 
+            if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.x, p.y, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if(p.isBright && gravityForce > 0.5) { ctx.shadowBlur = 15 * p.sc; ctx.shadowColor = '#ffffff'; } 
+            else { ctx.shadowBlur = 0; }
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+    }
+
+    // --- 探彌陀48願海 ---
+    function renderYuanhai() {
+        waveColorBlend += ((isDragging ? 1 : 0) - waveColorBlend) * 0.05;
+
+        if(!isDragging) {
+            angleY += 0.001; 
+            angleX += (0.6 - angleX) * 0.02;
+        }
+
+        let projected = [];
+        yuanhaiParticles.forEach(p => {
+            let waveZ = Math.sin(p.dist * 0.05 - time * 2) * 40;
+            let proj = project3D(p.baseX, p.baseY, waveZ);
+            if(proj) {
+                let r = Math.floor(139 + (243 - 139) * waveColorBlend);
+                let g = Math.floor(168 + (229 - 168) * waveColorBlend);
+                let b = Math.floor(156 + (171 - 156) * waveColorBlend);
+                let a = 0.3 + waveColorBlend * 0.5; 
+
+                projected.push({ 
+                    x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, 
+                    c: `rgba(${r},${g},${b},${a})`, s: p.s * (1 + waveColorBlend * 0.5)
+                });
+            }
+        });
+
+        projected.sort((a,b) => b.z - a.z);
+
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.sc; if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.x, p.y, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if(waveColorBlend > 0.5) { ctx.shadowBlur = 5 * p.sc; ctx.shadowColor = '#d4af37'; } else { ctx.shadowBlur = 0; }
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+
+        // ✨ 繪製 48 朵金蓮矩陣 ✨
+        // 為了 3D 正確遮擋，將蓮花也做深度排序
+        let projectedLotuses = [];
+        lotusMatrix.forEach(lotus => {
+            lotus.theta += lotus.orbitSpeed; // 公轉
+            // 讓蓮花隨著海浪軌道起伏
+            let waveOffset = Math.sin(lotus.r * 0.05 - time * 2) * 40;
+            let lx = Math.cos(lotus.theta) * lotus.r;
+            let lz = Math.sin(lotus.theta) * lotus.r + waveOffset + 10; // 稍微浮於水面
+            
+            let proj = project3D(lx, 0, lz);
+            if(proj) projectedLotuses.push({ proj: proj, lotus: lotus });
+        });
+
+        projectedLotuses.sort((a,b) => b.proj.z - a.proj.z);
+
+        projectedLotuses.forEach(item => {
+            let beat = Math.sin(time * 2 + item.lotus.phase); // 獨立呼吸
+            let rotation = time * item.lotus.rotateSpeed;     // 獨立自轉
+            drawGiantLotus(item.proj, beat, waveColorBlend, rotation, item.lotus.scale);
+        });
+    }
+
+    function animate() {
+        ctx.fillStyle = 'rgba(2, 2, 5, 0.5)';
+        ctx.fillRect(0, 0, width, height);
+        time += 0.02;
+
+        if (currentRealm === 0) renderJieyin(); 
+        else renderYuanhai();
+        
+        requestAnimationFrame(animate);
+    }
+
+    function toggleRealm(type) {
+        if(currentRealm === type) return;
+        currentRealm = type;
+        
+        let title = document.getElementById('s-title'); let desc = document.getElementById('s-desc');
+        let hintContainer = document.getElementById('hold-hint');
+        let theoryBtn = document.getElementById('theory-btn');
+
+        if (type === 0) {
+            title.innerText = "彌陀願力接引"; desc.innerHTML = "「萬念歸一，光芒四射。」<br>長按螢幕凝聚金光，放手契入極樂。";
+            title.style.color = 'var(--gold)';
+            hintContainer.style.display = 'block';
+            theoryBtn.style.display = 'none';
+            angleX = 0.2; angleY = 0; 
+            charge = 0; gravityForce = 0;
+        } else {
+            title.innerText = "探彌陀無量願海"; desc.innerHTML = "「清淨海浪，大願金蓮。」<br>360度滑動螢幕，點亮無量大願海。";
+            title.style.color = 'var(--cyan)';
+            hintContainer.style.display = 'none';
+
+            theoryBtn.style.display = 'flex';
+            angleX = 0.6; angleY = 0; 
+        }
+    }
+
+    function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+    function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+
+    document.getElementById('theory-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
+    document.getElementById('ui-layer').addEventListener('pointerdown', (e) => e.stopPropagation());
+
+    // --- 互動偵測 ---
+    function onDown(e) { 
+        if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; 
+        isDragging = true; 
+        lastMouseX = e.touches?e.touches[0].clientX:e.clientX; 
+        lastMouseY = e.touches?e.touches[0].clientY:e.clientY; 
+    }
+    
+    function onMove(e) { 
+        if (!isDragging) return; 
+        let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; 
+        
+        if(currentRealm === 1) {
+            angleY += (curX-lastMouseX)*0.01; 
+            angleX += (curY-lastMouseY)*0.01; 
+            angleX = Math.max(-Math.PI/2, Math.min(Math.PI/2, angleX)); 
+        }
+        lastMouseX=curX; lastMouseY=curY; 
+    }
+    
+    function onUp() { 
+        if(!isDragging) return;
+        isDragging = false; 
+        
+        // 彌陀接引：蓄力超過 90 (約五秒) 放手，觸發爆光與過場
+        if(currentRealm === 0 && charge > 90 && !transitioning) {
+            flashIntensity = 1; 
+            document.getElementById('lengyan-flash').style.opacity = flashIntensity;
+            transitioning = true;
+            
+            // 引力自然衰退混亂，等待 3.5 秒後跳轉蓮海
+            setTimeout(() => {
+                if(currentRealm === 0) toggleRealm(1);
+                transitioning = false;
+                charge = 0; 
+                gravityForce = 0;
+            }, 3500);
+        }
+    }
+
+    canvas.addEventListener('mousedown', onDown); window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
+
+    // ================= ✨ TTS 語音導航系統 ✨ =================
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+    window.sysUtterances = []; 
+
+    if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = function() { speechSynthesis.getVoices(); };
+    }
+
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("您的設備不支援語音功能");
+        const btnText = document.getElementById('tts-text'); const btnIcon = document.getElementById('tts-icon');
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel(); isPlayingTheory = false; btnText.innerText = "聆聽法音";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text, #theory-content-box .humble-statement');
+            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('。');
+            textToRead = textToRead.replace(/一、/g, '第一章：').replace(/二、/g, '第二章：').replace(/三、/g, '第三章：');
+            
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            textToRead = isAndroid ? textToRead : textToRead.replace(/阿/g, 'ㄚ');
+            
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead); theoryUtterance.lang = 'zh-TW'; theoryUtterance.rate = 0.85; 
+            if (isAndroid) {
+                window.sysUtterances.push(theoryUtterance);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let zhVoice = voices.find(v => v.lang === 'zh-TW' && v.name.includes('Google')) || voices.find(v => v.lang.includes('zh'));
+                    if (zhVoice) theoryUtterance.voice = zhVoice;
+                }
+            }
+            theoryUtterance.onend = () => {
+                isPlayingTheory = false; btnText.innerText = "聆聽法音";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                if(isAndroid) window.sysUtterances = window.sysUtterances.filter(u => u !== theoryUtterance);
+            };
+            setTimeout(() => { window.speechSynthesis.speak(theoryUtterance); }, isAndroid ? 150 : 50);
+            isPlayingTheory = true; btnText.innerText = "停止聆聽";
+            btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    const originalCloseTheoryDrawer = closeTheoryDrawer;
+    closeTheoryDrawer = function() { if (isPlayingTheory) toggleTheoryAudio(); originalCloseTheoryDrawer(); }
+
+    initEngines(); toggleRealm(0); animate();
+</script>
+</body>
+</html>

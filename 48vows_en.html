@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Amitabha's Great Vows · Pure Land of Ultimate Bliss</title>
+    <style>
+        :root {
+            --bg-deep: #020205; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --silver: #e0e0e0;
+            --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+            overflow: hidden; touch-action: none; overscroll-behavior: none;
+            -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none;
+            -moz-user-select: none; -ms-user-select: none; user-select: none;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px;
+            background: transparent; border-left: 2px solid rgba(212,175,55,0.6); 
+            padding: 10px 20px; z-index: 100; transition: 1s; pointer-events: none;
+        }
+        .status-title { font-size: 1.15rem; font-weight: bold; color: var(--gold); letter-spacing: 2px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); transition: 1s;}
+        .status-desc { font-size: 0.85rem; color: #bbb; line-height: 1.8; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); transition: 1s;}
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; transition: background 0.8s; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+        #lengyan-flash {
+            position: absolute; inset: 0; background: #ffffff; z-index: 50; opacity: 0;
+            pointer-events: none; transition: opacity 0.1s ease-out;
+        }
+
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 12px; transition: opacity 1s;}
+        
+        .switch-btn {
+            width: 85%; max-width: 360px; justify-content: center;
+            background: linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(212,175,55,0.5); color: var(--gold);
+            padding: 14px 20px; border-radius: 30px; font-size: 0.95rem; font-weight: bold; letter-spacing: 1px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1);
+        }
+        .switch-btn:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(212,175,55,0.5); }
+        
+        #theory-btn { border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,10,15,0.9); display: none; }
+        
+        #hold-hint {
+            color: rgba(212,175,55,0.8); font-size: 0.95rem; letter-spacing: 2px; font-weight: bold;
+            text-shadow: 0 0 10px rgba(212,175,55,0.5); padding: 15px; text-align: center;
+        }
+
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(139,168,156,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(139,168,156,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        
+        .humble-statement { font-size: 0.85rem; color: #b0b0b0; line-height: 1.8; text-align: justify; padding: 20px; border: 1px solid rgba(139,168,156,0.2); border-radius: 12px; background: rgba(10,15,20,0.3); margin-bottom: 50px; }
+        
+        .main-title { color: var(--cyan); font-size: 1.35rem; letter-spacing: 2px; text-align: center; margin-bottom: 50px; text-shadow: 0 0 15px rgba(139,168,156,0.3); line-height: 1.5;}
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); margin: 15px auto 0; }
+        
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 24px; height: 24px; stroke: var(--cyan); fill: none; stroke-width: 1.5; filter: drop-shadow(0 0 5px rgba(139,168,156,0.4)); flex-shrink: 0;}
+        .c-title { color: var(--cyan); font-size: 1.1rem; letter-spacing: 1px; font-weight: bold; }
+        .c-text { color: var(--text-main); font-size: 0.95rem; line-height: 1.9; text-align: justify; padding-left: 39px; letter-spacing: 0.5px;}
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="back-btn" onclick="window.location.href='index_en.html'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Bodhimanda
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title" id="s-title">Amitabha's Guiding Light</div>
+        <div class="status-desc" id="s-desc">"All thoughts gather into one, radiating boundless light."<br>Hold screen to gather golden light, release to enter Ultimate Bliss.</div>
+    </div>
+
+    <section class="matrix-section" id="bg-section">
+        <canvas id="realmCanvas"></canvas>
+        <div id="lengyan-flash"></div> 
+        
+        <div class="ui-layer" id="ui-layer">
+            <div id="hold-hint">Hold screen for 10 seconds, release to activate guidance</div>
+            
+            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                Explore the Infinite Vow Ocean
+            </button>
+        </div>
+   </section>
+
+<div id="theory-drawer">
+    <div class="drawer-header" onclick="closeTheoryDrawer()">
+        <div class="close-bar"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+            <div style="color:var(--cyan); font-size:0.85rem; letter-spacing:1px; font-weight:bold; cursor:pointer;" onclick="closeTheoryDrawer()">Close Dharma Scroll</div>
+            <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                <span id="tts-text">Listen to Dharma</span>
+            </div>
+        </div>
+    </div>
+    <div class="theory-container" id="theory-content-box">
+        <div class="humble-statement">The ocean of Dharma is vast and profound; only fully comprehended by Buddhas. This text is but a humble attempt by a lay practitioner, relying on the logic of sutras and the commentaries of ancestral masters, to explore a glimpse of the Tathagata's true meaning for cultivation. Any omissions or errors are entirely due to the limitations of personal intellect. May the Three Jewels bless us, and may fellow practitioners examine this together.</div>
+        
+        <h1 class="main-title">Clear Contemplation of the Awakening Ocean<br>The True Mark of Amitabha's Pure Land and the Essence of Bodhicitta</h1>
+        
+        <div style="color:rgba(255,255,255,0.8); font-size:0.95rem; line-height:1.8; margin-bottom: 2rem; text-align: justify;">
+            The original Sanskrit texts of the <em>Infinite Life Sutra</em> have undergone various translations, and different versions record the number of vows made by Dharmakara Bodhisattva in his causal stage as ranging from 24 to 49. Through the judgment and textual research of past ancestral masters, the 48 Vows of the Wei translation are now regarded as the mainstream standard for seeking the Buddha Way above and transforming sentient beings below. The 48 Vows are the very foundation of the Pure Land of Ultimate Bliss, encompassing the perfect union of Amitabha's infinite compassion and wisdom.
+        </div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <div class="c-title">Chapter 1: The Pure Dharma Realm and the Perfect Harmony of Form</div>
+            </div>
+            <div class="c-text">The vows of "No Evil Destinies" and "Not Falling into Evil Destinies" eradicate the karmic resonance of the three lower realms from their very source. This is boundless protection, ensuring the spiritual foundation of practitioners never regresses. That bodies are entirely golden in color, without distinction of beauty or ugliness, is to eliminate the false discrimination of physical forms. When the mind of grasping and the perception of superiority and inferiority lose their basis, one can profoundly resonate with the One True Dharma Realm. As for infinite light and infinite life, their true meaning is absolutely not a worldly attachment to longevity. Infinite light is like the perfect integration of the Dharma Body shining everywhere; one is all. Infinite life, in reality, establishes an eternal realm of non-retrogression, protecting reborn beings through endless eons until their Bodhi is perfected. When Amitabha's affinity for transforming beings concludes and he enters Nirvana, Avalokitesvara Bodhisattva will succeed the Buddha's position. The grand purpose of this infinite life is to protect the eternal continuation of vow power. The fact that lifespans can be shortened or lengthened at will further reveals this land is truly a spiritual waystation for the Bodhisattva path. If practitioners possess sufficient merits, they can turn the ship of compassion around at any time, returning to the infinite worlds of the ten directions.</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <div class="c-title">Chapter 2: The True Mechanism of Never Returning to Evil Destinies</div>
+            </div>
+            <div class="c-text">The second vow, "Never Returning to the Three Evil Destinies," closely follows the first vow of "No Evil Destinies" and "Infinite Life," forming the deepest contrast and resonance in the Dharma realm. This vow specifically targets the "humans and devas" of Ultimate Bliss for prophecy, which is a wondrous and expedient means of "revealing the great through the small." The first level of true mechanism is establishing an indestructible safety net for great beings who return to the vast universe to save deluded sentient beings: even if they undergo rebirth according to conditions, they will absolutely never flow into heavy, turbid karmic realms. The deeper mystery lies in the fact that for anyone who has ever been born in Ultimate Bliss, the flawless seeds of Amitabha's original vow have already condensed deep within their Alaya-vijnana (storehouse consciousness). Throughout endless returns and rebirths, life after life, they are naturally insulated from the pull of the three evil destinies, experiencing no retrogression.</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+               <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <circle cx="12" cy="12" r="4"/>
+                    <path d="M12 2v6"/><path d="M12 16v6"/><path d="M2 12h6"/><path d="M16 12h6"/>
+                </svg>
+                <div class="c-title">Chapter 3: The Turning of Sravakas and the Destination of the One Buddha Vehicle</div>
+            </div>
+            <div class="c-text">The presence of countless Sravakas (Hearers) in the land confirms that original Buddhism is indeed the foundational stage of awakening. Yet, merely perfecting oneself ultimately struggles to reach absolute Nirvana. When the assembly of Sravakas is bathed in the Dharma nature of Ultimate Bliss, their minds shift with the environment. Just as stated in the <em>Lotus Sutra</em>, they turn from the small to the great, give rise to Bodhicitta, and merge into the vastness of the One Buddha Vehicle. The establishment of the Borderland and the City of Doubt is like the most compassionate concealed shelter in the Dharma realm, allowing sentient beings carrying subtle, worldly doubts and karmic hindrances to slowly cleanse and transform in a realm without suffering. Once they enter, they are blessed to be established in the definitely assured group, as if transcending a great asankhya kalpa in an instant, directly realizing the non-retrogression of the First Ground.</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+               <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                </svg>
+                <div class="c-title">Chapter 4: Pure Goodness, Outflow-Free, and Transforming Pollution into Purity</div>
+            </div>
+            <div class="c-text">In the land of Ultimate Bliss, even the names of unwholesome things are unheard of, and the joy experienced is like that of an outflow-free Bhikkhu. This joy is not the temporary arising and ceasing of sensory stimulation, but the great tranquility within the Eternal Serene Light. The pure land reflects the ten directions, allowing practitioners to clearly contemplate emptiness without losing profound understanding. Clothing arrives at a mere thought; in this pure Dharma realm, phenomena appearing upon a thought is the natural law of Dharma. Devatas paying homage establishes a standard track of transforming pollution into purity in the Dharma realm, allowing Bodhicitta to continue infinitely. Within the jeweled trees, one can see the Buddha lands of the ten directions, like Indra's Net reflecting upon itself. Past karmic conditions and the suffering of the ten directions can be clearly observed without obstruction, inspiring practitioners to constantly give rise to compassion and wisdom, never losing their great vow to save beings.</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <div class="c-title">Chapter 5: Breaking Form Attachments and the Prophecy of Body Transformation</div>
+            </div>
+            <div class="c-text">The profound purpose of transforming the female form into male is truly not limited to manifestations within the land of Ultimate Bliss itself. Ultimate Bliss inherently has no gender distinctions; all possess pure, unobstructed vajra Dharma bodies. The true mechanism of this vow is for women in the worlds of the ten directions: if they deeply detest the karmic bindings of the female form, by the blessing of this vow, after exhausting this one retribution body, they will never receive a female body in future lives. Looking at the progression of the Bodhisattva path—whether it is the strict Southern tradition requiring a male body for prophecy, or the Northern tradition requiring the manifestation of a male body to perfect Buddhahood after receiving a prophecy—Amitabha's vow is actually uprooting the karmic barriers of past lives in advance for Bodhisattvas of the ten directions. The immeasurable wisdom and eloquence of the Bodhisattvas in the land further enrich the practitioner's soft power to respond to the flowing mind-natures of countless sentient beings in the Flower Adornment (Avatamsaka) cosmos. This is the firmest bridge for practicing the great vows of Samantabhadra.</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                <div class="c-title">Chapter 6: Divine Swiftness, Penetrating Vision, and Blending with Storehouse Consciousness</div>
+            </div>
+            <div class="c-text">The vows of the five spiritual powers aim to confirm that the holy assembly of Ultimate Bliss fully understands the illusion that the "body" is not the "self." Without craving or attachment to self, they naturally sever the deluded thoughts of greed, anger, and ignorance. Amitabha's profound wisdom, to ensure the continuation of the spiritual life of those reborn, necessarily relies on the pure and wondrous physical form born by transformation from a lotus as a basis. At the moment of death, guided by Amitabha's vow power, the illusory self of the Saha world is transformed from consciousness into wisdom. In that realm, the practitioner's spiritual consciousness can seamlessly blend with the Dharma realm's storehouse consciousness (Alaya-vijnana), and past life causes and conditions mutually reflect and absorb each other. The holy assembly of Ultimate Bliss can all clearly discern the karma of the three times; their mind-thoughts mutually interpenetrate. The pure and wondrous Dharma body further possesses the ability of divine flight. Heavenly vision and heavenly hearing both reach flawless perfection.</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-8m0 0V4m0 8h8m-8 0H4"/></svg>
+                <div class="c-title">Chapter 7: Equal Dharma Marks and Samantabhadra's Wondrous Offerings</div>
+            </div>
+            <div class="c-text">Possessing the thirty-two marks of a great man and the indestructible vajra body of Narayana is truly the continuation of the profound meaning of "no distinction of beauty or ugliness." The so-called "humans, devas, Sravakas, and Bodhisattvas" in the land are merely expedient names conforming to the habits of other worlds; in reality, there is no duality and no difference. This is precisely to completely eradicate the discriminatory delusions of sentient beings in the Saha world. Making offerings to the Buddhas of the ten directions in the time it takes to eat a meal, with offering implements appearing at will—this is the natural outflow of entering Samantabhadra's great vows. Since that land has no fabrication, nor any worldly seeking or transaction, all things are manifestations of pure consciousness. Through the act of offering, one naturally and perfectly accumulates the provisions of merit and wisdom.</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 22h20L12 2z"/></svg>
+                <div class="c-title">Chapter 8: The True Reward Land and the Supreme Condition of Fragrance and Light</div>
+            </div>
+            <div class="c-text">All things in the land of Ultimate Bliss are majestic, pure, and brilliantly beautiful; jeweled fragrances universally perfume the ten directions, and seeing the Bodhi tree grants the realization of the non-arising of dharmas. This supreme state proves that Amitabha's Pure Land is a "True Reward Land," absolutely not merely a manifestation of subjective emptiness. Practitioners shed the heavy, coarse suffering and illnesses of the Saha world and obtain vajra bodies dwelling in a realm of ultimate beauty. This is truly Amitabha's profound wisdom: using the subtle residual "self-attachment" and sensory perceptions of sentient beings to transform them into supreme conditions directed toward the Way. The boundless light of the jeweled trees intertwines with the Eternal Serene Light of the Flower Adornment cosmos. Amidst the interplay of light and shadow, the profound secret meaning of cultivation and light is revealed, allowing practitioners to directly realize their pure original mind amidst stainless marks.</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.36-6.36l-1.41 1.41M6.05 17.95l-1.41 1.41m14.14 0l-1.41-1.41M6.05 6.05L4.64 4.64"/></svg>
+                <div class="c-title">Chapter 9: Nurturing through Light Frequencies and Unhindered Eloquence</div>
+            </div>
+            <div class="c-text">When touched by the Buddha's light, body and mind become gentle and soft; all things can speak the wondrous Dharma according to one's wish. This light of the Dharma realm has a frequency sufficient to rescue the soul. It is actually of the same essence as the Infinite Light and the Eternal Serene Light, representing the eternal Dharma body of "indestructible Bodhicitta." Whatever Dharma a Bodhisattva wishes to practice, they can hear it at will. The Bodhisattvas in the land, when expounding the essence of Dharma, must accord with omniscient wisdom. The wisdom and spiritual powers they possess are meant to sever the torrent of birth and death and to practice Samantabhadra's great vow to save beings; they are absolutely not the flawed, worldly karmic powers. This unhindered wisdom and eloquence is the supreme weapon for broadly saving deluded beings.</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                <div class="c-title">Chapter 10: The Seal of the Dharma Realm and the Intermediate Reception</div>
+            </div>
+            <div class="c-text">The praise of all Buddhas is like the simultaneous seal of approval from Tathagatas in all ten directions for this spiritual waystation. The final vows concerning obtaining benefits upon hearing the name, being born into noble families, and attaining the three Dharma tolerances, are Amitabha's remote vows of reception for those great Bodhisattvas who return riding upon their vows. Eminent monks and great virtues in other realms obtain perfect faculties simply upon hearing Amitabha's name. Ultimate Bliss is truly the "Great Intermediate Station" of the Dharma realm. For those practitioners fearless of birth and death, how do we know they are not great beings who previously cultivated in Ultimate Bliss and have returned to other worlds? Hearing the holy name in the Saha world can awaken the imprint within their Alaya-vijnana. Even amidst the evil world of the five turbidities, they can regain the profound wisdom and concentration of non-retrogression in the instant they transform consciousness into wisdom.</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                <div class="c-title">Chapter 11: The Assembly of the Original Vow Ocean and the Core of Bodhicitta</div>
+            </div>
+            <div class="c-text">The 18th, 19th, and 20th vows are the core mechanisms for receiving sentient beings. Ultimate Bliss is not merely about uprooting personal suffering; it is the Dharma realm's cradle for nurturing Bodhisattvas who save beings. The 18th vow is centered on "sincere faith and joy"—this is the primary foundation. One must deeply believe in the stark difference between the laws of Ultimate Bliss and the Saha world, relying solely on Buddha power without artificial contrivance. Only by planting good roots early can one cut off anxieties and doubts at the moment of death, achieving unhindered rebirth. The 19th vow, "bringing forth Bodhicitta," is the ultimate Mahayana cause for entering the Dharma realm. Examining the core principles of the three grades of rebirth in the <em>Infinite Life Sutra</em>, regardless of the level, all take "bringing forth the unsurpassed Bodhicitta" as the primary bridge. Looking further into the profound meaning of the <em>Flower Adornment Sutra</em>, when the youth Sudhana embarked on his fifty-three visitations to the south, his very first step required bringing forth this mind of supreme awakening. This is because Bodhicitta is the source of all Buddhas and the true seed of attaining Buddhahood. Only by establishing this grand vow can a practitioner resonate at the same frequency as Amitabha's ocean of compassionate vows, keeping their consciousness unclouded, receiving the Buddha's embrace, and directly ascending to the tranquil, honored position of Avaivartika (non-retrogression). The 20th vow, "sincere dedication," universally gathers all capacities, directing all mundane and supramundane good roots into Amitabha's vow ocean. Master Shandao said, "By the Buddha's vow power, those who commit the five grave offenses and ten evil deeds can extinguish their sins and attain rebirth." This expresses Amitabha's unconditional, ultimate compassion. The ultimate goal of studying Buddhism is to become a Buddha, and the profound meaning is found in the <em>Diamond Sutra</em>: "I must liberate all countless sentient beings, yet in reality, no sentient beings are liberated." Only this perspective of great emptiness forms the true underlying strength for the Bodhisattvas of Ultimate Bliss returning upon their vows.</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15l-2 5-9-5 9-5 2 5zM12 15l2-5 9 5-9 5-2-5zM12 10V2"/></svg>
+                <div class="c-title">Chapter 12: One Life to Replacement and the Great Conduct of Samantabhadra</div>
+            </div>
+            <div class="c-text">The 22nd vow is truly the pinnacle and nurturing target of the 48 Vows. Those born in that land will ultimately reach the stage of becoming a Buddha in their next life (One Life to Replacement). This is an absolute prophecy of definitely attaining perfect enlightenment. Yet its profound meaning lies even more in "surpassing the practices of the ordinary stages, manifesting the cultivation of the virtues of Samantabhadra." When Bodhisattvas of Ultimate Bliss attain this stage, they absolutely do not indulge in the peace and joy of the Pure Land. Instead, they don the great armor of vast vows, return to the turbid and evil worlds of the ten directions, manifest the eight stages of attaining the Way, and broadly save deluded beings. Practicing the vows of Samantabhadra while returning to Amitabha's land subtly aligns with the World-Honored One's ultimate original intent for appearing in the world to save beings. This is further the ultimate manifestation of great compassion, where a Bodhisattva abides neither in birth and death nor in Nirvana, pervading the Dharma body into the infinite worlds of the ten directions. The 48 Vows, at this point, truly reveal their perfect, unobstructed omnipresence throughout the Dharma realm.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    const canvas = document.getElementById('realmCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    let currentRealm = 0; // 0: Amitabha Guidance, 1: 48 Vows Ocean
+    let time = 0;
+
+    let jieyinParticles = [];
+    let yuanhaiParticles = [];
+    let lotusMatrix = []; 
+    
+    let angleX = 0.6, angleY = 0;
+    let isDragging = false;
+    let lastMouseX = 0, lastMouseY = 0;
+    
+    let charge = 0;         
+    let gravityForce = 0;   
+    let flashIntensity = 0; 
+    let waveColorBlend = 0; 
+    let transitioning = false;
+
+    const FOV = 400; 
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+    }
+    window.addEventListener('resize', resize); resize();
+
+    function initEngines() {
+        jieyinParticles = [];
+        for(let i=0; i<1500; i++) {
+            jieyinParticles.push({
+                x: (Math.random() - 0.5) * 1200, y: (Math.random() - 0.5) * 1200, z: (Math.random() - 0.5) * 1200,
+                vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, vz: (Math.random() - 0.5) * 2,
+                c: Math.random() > 0.5 ? '#f3e5ab' : '#d4af37', 
+                s: Math.random() * 2 + 1
+            });
+        }
+
+        yuanhaiParticles = [];
+        for(let r = 20; r <= 800; r += 15) {
+            let count = Math.floor(r * 0.4);
+            for(let i=0; i<count; i++) {
+                let theta = (i / count) * Math.PI * 2;
+                yuanhaiParticles.push({ 
+                    baseX: r * Math.cos(theta), baseY: r * Math.sin(theta), dist: r, theta: theta, 
+                    s: Math.random() * 1.5 + 0.5 
+                });
+            }
+        }
+
+        lotusMatrix = [];
+        lotusMatrix.push({
+            r: 0, theta: 0, orbitSpeed: 0, rotateSpeed: 0.2, scale: 1.0, phase: 0
+        });
+        for(let i=1; i<48; i++) {
+            lotusMatrix.push({
+                r: 60 + Math.random() * 350,               
+                theta: Math.random() * Math.PI * 2,        
+                orbitSpeed: (Math.random() - 0.5) * 0.015, 
+                rotateSpeed: (Math.random() - 0.5) * 0.8,  
+                scale: 0.15 + Math.random() * 0.35,        
+                phase: Math.random() * Math.PI * 2         
+            });
+        }
+    }
+
+    function project3D(x, y, z) {
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+        let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
+        if(z2 < -FOV+10) return null;
+        let scale = FOV / (FOV + z2); 
+        return { x: (width/2) + x2*scale, y: (height/2) - y1*scale - 50, scale: scale, z: z2 };
+    }
+
+    function drawGiantLotus(proj, beat, blend, rotation, scaleMult) {
+        if(!proj) return;
+        ctx.save();
+        ctx.translate(proj.x, proj.y);
+        
+        let s = proj.scale * (3.5 * scaleMult + beat * 0.15 * scaleMult + blend * 0.5 * scaleMult); 
+        ctx.scale(s, s);
+        ctx.rotate(rotation); 
+        
+        ctx.shadowBlur = (15 + blend * 20) * scaleMult; 
+        ctx.shadowColor = '#d4af37';
+        
+        let petalCount = 12; 
+        for(let i=0; i<petalCount; i++) {
+            ctx.rotate((Math.PI * 2) / petalCount);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(15, -30, 0, -60);
+            ctx.quadraticCurveTo(-15, -30, 0, 0);
+            
+            let grad = ctx.createLinearGradient(0, 0, 0, -60);
+            grad.addColorStop(0, '#d4af37');
+            let tipR = Math.floor(243 + (255 - 243) * blend);
+            let tipG = Math.floor(229 + (255 - 229) * blend);
+            let tipB = Math.floor(171 + (255 - 171) * blend);
+            grad.addColorStop(1, `rgba(${tipR}, ${tipG}, ${tipB}, 1)`); 
+            
+            ctx.fillStyle = grad;
+            ctx.fill();
+            
+            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.stroke();
+        }
+        
+        for(let i=0; i<petalCount; i++) {
+            ctx.rotate(((Math.PI * 2) / petalCount) + 0.1);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(8, -15, 0, -35);
+            ctx.quadraticCurveTo(-8, -15, 0, 0);
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = 0.6 + blend * 0.4;
+            ctx.fill();
+        }
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, 6, 0, Math.PI*2);
+        ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = 1;
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        
+        ctx.restore();
+    }
+
+    function renderJieyin() {
+        if(isDragging && !transitioning) {
+            charge += 0.35; 
+            if(charge > 100) charge = 100;
+            gravityForce = charge / 100; 
+        } else if (!transitioning) {
+            charge = 0; 
+            gravityForce *= 0.90; 
+        }
+
+        flashIntensity *= 0.92;
+        if(flashIntensity > 0.01) {
+            document.getElementById('lengyan-flash').style.opacity = flashIntensity;
+        }
+
+        if(!isDragging) angleY += 0.002;
+
+        let projected = [];
+        jieyinParticles.forEach(p => {
+            p.x += p.vx; p.y += p.vy; p.z += p.vz;
+            let distToCenter = Math.sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+            
+            if(gravityForce > 0.1) {
+                let pull = (gravityForce * 1500) / (distToCenter + 10);
+                p.vx -= (p.x / distToCenter) * pull; p.vy -= (p.y / distToCenter) * pull; p.vz -= (p.z / distToCenter) * pull;
+                p.vx *= 0.9; p.vy *= 0.9; p.vz *= 0.9;
+            } else {
+                p.vx += (Math.random()-0.5)*0.5; p.vy += (Math.random()-0.5)*0.5; p.vz += (Math.random()-0.5)*0.5;
+                if(p.vx > 3) p.vx = 3; if(p.vy > 3) p.vy = 3; if(p.vz > 3) p.vz = 3;
+            }
+
+            if(p.x > 600) p.x = -600; if(p.x < -600) p.x = 600;
+            if(p.y > 600) p.y = -600; if(p.y < -600) p.y = 600;
+            if(p.z > 600) p.z = -600; if(p.z < -600) p.z = 600;
+
+            let proj = project3D(p.x, p.y, p.z);
+            if(proj) {
+                let isBright = distToCenter < 120 * gravityForce + 30;
+                let color = isBright ? `rgba(255,255,255,${0.6 + gravityForce*0.4})` : p.c;
+                projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: color, s: p.s, isBright: isBright });
+            }
+        });
+
+        projected.sort((a,b) => b.z - a.z);
+
+        let coreProj = project3D(0,0,0);
+        if(coreProj) {
+            ctx.globalCompositeOperation = 'screen';
+            let coreR = (5 + 45 * gravityForce) * coreProj.scale * (1 + Math.sin(time*10)*0.1);
+            let grad = ctx.createRadialGradient(coreProj.x, coreProj.y, 0, coreProj.x, coreProj.y, coreR * 3);
+            grad.addColorStop(0, `rgba(255, 255, 255, ${Math.max(0.5, gravityForce)})`);
+            grad.addColorStop(0.3, `rgba(243, 229, 171, ${Math.max(0.4, gravityForce * 0.8)})`);
+            grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+            ctx.beginPath(); ctx.arc(coreProj.x, coreProj.y, coreR * 3, 0, Math.PI*2);
+            ctx.fillStyle = grad; ctx.fill();
+        }
+
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.sc * (1 + (p.isBright ? gravityForce : 0)); 
+            if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.x, p.y, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if(p.isBright && gravityForce > 0.5) { ctx.shadowBlur = 15 * p.sc; ctx.shadowColor = '#ffffff'; } 
+            else { ctx.shadowBlur = 0; }
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function renderYuanhai() {
+        waveColorBlend += ((isDragging ? 1 : 0) - waveColorBlend) * 0.05;
+
+        if(!isDragging) {
+            angleY += 0.001; 
+            angleX += (0.6 - angleX) * 0.02;
+        }
+
+        let projected = [];
+        yuanhaiParticles.forEach(p => {
+            let waveZ = Math.sin(p.dist * 0.05 - time * 2) * 40;
+            let proj = project3D(p.baseX, p.baseY, waveZ);
+            if(proj) {
+                let r = Math.floor(139 + (243 - 139) * waveColorBlend);
+                let g = Math.floor(168 + (229 - 168) * waveColorBlend);
+                let b = Math.floor(156 + (171 - 156) * waveColorBlend);
+                let a = 0.3 + waveColorBlend * 0.5; 
+
+                projected.push({ 
+                    x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, 
+                    c: `rgba(${r},${g},${b},${a})`, s: p.s * (1 + waveColorBlend * 0.5)
+                });
+            }
+        });
+
+        projected.sort((a,b) => b.z - a.z);
+
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.sc; if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.x, p.y, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if(waveColorBlend > 0.5) { ctx.shadowBlur = 5 * p.sc; ctx.shadowColor = '#d4af37'; } else { ctx.shadowBlur = 0; }
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+
+        let projectedLotuses = [];
+        lotusMatrix.forEach(lotus => {
+            lotus.theta += lotus.orbitSpeed; 
+            let waveOffset = Math.sin(lotus.r * 0.05 - time * 2) * 40;
+            let lx = Math.cos(lotus.theta) * lotus.r;
+            let lz = Math.sin(lotus.theta) * lotus.r + waveOffset + 10; 
+            
+            let proj = project3D(lx, 0, lz);
+            if(proj) projectedLotuses.push({ proj: proj, lotus: lotus });
+        });
+
+        projectedLotuses.sort((a,b) => b.proj.z - a.proj.z);
+
+        projectedLotuses.forEach(item => {
+            let beat = Math.sin(time * 2 + item.lotus.phase); 
+            let rotation = time * item.lotus.rotateSpeed;     
+            drawGiantLotus(item.proj, beat, waveColorBlend, rotation, item.lotus.scale);
+        });
+    }
+
+    function animate() {
+        ctx.fillStyle = 'rgba(2, 2, 5, 0.5)';
+        ctx.fillRect(0, 0, width, height);
+        time += 0.02;
+
+        if (currentRealm === 0) renderJieyin(); 
+        else renderYuanhai();
+        
+        requestAnimationFrame(animate);
+    }
+
+    function toggleRealm(type) {
+        if(currentRealm === type) return;
+        currentRealm = type;
+        
+        let title = document.getElementById('s-title'); let desc = document.getElementById('s-desc');
+        let hintContainer = document.getElementById('hold-hint');
+        let theoryBtn = document.getElementById('theory-btn');
+
+        if (type === 0) {
+            title.innerText = "Amitabha's Guiding Light"; 
+            desc.innerHTML = "\"All thoughts gather into one, radiating boundless light.\"<br>Hold screen to gather golden light, release to enter Ultimate Bliss.";
+            title.style.color = 'var(--gold)';
+            hintContainer.style.display = 'block';
+            theoryBtn.style.display = 'none';
+            angleX = 0.2; angleY = 0; 
+            charge = 0; gravityForce = 0;
+        } else {
+            title.innerText = "Explore Infinite Vows"; 
+            desc.innerHTML = "\"Pure ocean waves, great vow golden lotuses.\"<br>Swipe 360° to illuminate the infinite vow ocean.";
+            title.style.color = 'var(--cyan)';
+            hintContainer.style.display = 'none';
+
+            theoryBtn.style.display = 'flex';
+            angleX = 0.6; angleY = 0; 
+        }
+    }
+
+    function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+    function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+
+    document.getElementById('theory-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
+    document.getElementById('ui-layer').addEventListener('pointerdown', (e) => e.stopPropagation());
+
+    function onDown(e) { 
+        if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; 
+        isDragging = true; 
+        lastMouseX = e.touches?e.touches[0].clientX:e.clientX; 
+        lastMouseY = e.touches?e.touches[0].clientY:e.clientY; 
+    }
+    
+    function onMove(e) { 
+        if (!isDragging) return; 
+        let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; 
+        
+        if(currentRealm === 1) {
+            angleY += (curX-lastMouseX)*0.01; 
+            angleX += (curY-lastMouseY)*0.01; 
+            angleX = Math.max(-Math.PI/2, Math.min(Math.PI/2, angleX)); 
+        }
+        lastMouseX=curX; lastMouseY=curY; 
+    }
+    
+    function onUp() { 
+        if(!isDragging) return;
+        isDragging = false; 
+        
+        if(currentRealm === 0 && charge > 90 && !transitioning) {
+            flashIntensity = 1; 
+            document.getElementById('lengyan-flash').style.opacity = flashIntensity;
+            transitioning = true;
+            
+            setTimeout(() => {
+                if(currentRealm === 0) toggleRealm(1);
+                transitioning = false;
+                charge = 0; 
+                gravityForce = 0;
+            }, 3500);
+        }
+    }
+
+    canvas.addEventListener('mousedown', onDown); window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
+
+    // ================= ✨ English TTS System ✨ =================
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+    window.sysUtterances = []; 
+
+    if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = function() { speechSynthesis.getVoices(); };
+    }
+
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("Your device does not support Text-to-Speech functionality.");
+        const btnText = document.getElementById('tts-text'); const btnIcon = document.getElementById('tts-icon');
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel(); isPlayingTheory = false; btnText.innerText = "Listen to Dharma";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text, #theory-content-box .humble-statement');
+            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('. ');
+            
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead); 
+            theoryUtterance.lang = 'en-US'; 
+            theoryUtterance.rate = 0.85; 
+            
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            if (isAndroid) {
+                window.sysUtterances.push(theoryUtterance);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let enVoice = voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) || voices.find(v => v.lang.includes('en'));
+                    if (enVoice) theoryUtterance.voice = enVoice;
+                }
+            }
+            theoryUtterance.onend = () => {
+                isPlayingTheory = false; btnText.innerText = "Listen to Dharma";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                if(isAndroid) window.sysUtterances = window.sysUtterances.filter(u => u !== theoryUtterance);
+            };
+            setTimeout(() => { window.speechSynthesis.speak(theoryUtterance); }, isAndroid ? 150 : 50);
+            isPlayingTheory = true; btnText.innerText = "Stop Listening";
+            btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    const originalCloseTheoryDrawer = closeTheoryDrawer;
+    closeTheoryDrawer = function() { if (isPlayingTheory) toggleTheoryAudio(); originalCloseTheoryDrawer(); }
+
+    initEngines(); toggleRealm(0); animate();
+</script>
+</body>
+</html>

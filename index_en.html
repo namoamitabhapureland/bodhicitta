@@ -590,32 +590,6 @@
     <div style="text-align:center; margin-top:20px;">
         <span class="gold-btn" style="font-size: 0.75rem;" onclick="document.getElementById('guide-modal').style.display='flex'">SYSTEM GUIDE</span>
     </div>
-    </div>
-
-<div id="p2p-modal-en" class="modal">
-    <div style="width:92%; max-width:400px; padding:30px; border:1.8px solid var(--gold); background:#000; border-radius:30px; text-align:center;">
-        <svg style="width:48px; height:48px; margin-bottom:20px; filter:drop-shadow(0 0 10px var(--gold));" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5">
-            <path d="M17 1l4 4-4 4M3 23l-4-4 4-4M13 12h9M11 12H2M15 6H9M15 18H9" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <h3 style="color:var(--gold); letter-spacing:2px; margin-bottom:10px;">Merit Synchronizer</h3>
-        <p id="p2p-status-msg" style="color:#888; font-size:0.8rem; margin-bottom:20px;">Establishing P2P Bridge...</p>
-        
-        <textarea id="p2p-key-output" placeholder="Paste connection key here..." style="width:100%; height:100px; background:#0a0a0a; border:1.1px solid #333; border-radius:12px; color:var(--cyan); padding:10px; font-family:monospace; font-size:0.75rem; margin-bottom:15px; outline:none;"></textarea>
-
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <button class="gold-btn" style="flex:1;" onclick="P2PEngine.startConnection()">Sender</button>
-            <button class="gold-btn" style="flex:1;" onclick="P2PEngine.receiveKey(document.getElementById('p2p-key-output').value)">Receiver</button>
-        </div>
-        
-        <button class="gold-btn" style="width:100%; margin-bottom:15px; background:var(--gold); color:#000;" onclick="P2PEngine.finalize(document.getElementById('p2p-key-output').value)">Connect & Sync</button>
-        
-        <button class="btn-main" style="background:#222 !important; border-color:#444;" onclick="document.getElementById('p2p-modal-en').style.display='none'">Close Portal</button>
-    </div>
-    <button class="btn-main" style="font-size:0.85rem; flex:1; border-color:var(--cyan); color:var(--cyan);" 
-        onclick="document.getElementById('p2p-modal-en').style.display='flex'">
-    P2P Sync Portal
-</button>
-
 </div>
 
 <div id="screen-2" class="container">
@@ -1750,90 +1724,6 @@ function importProgress(i) { const reader = new FileReader(); reader.onload = (e
 
 checkNewDay(); if(db.name) document.getElementById('user-name').value = db.name;
 updateUI();
-
-/* * Pure Land System - P2P Transfer Engine (English Version)
- * Author: Ah Zhi (Thinking Mode)
- * Logic: Manual Signaling + Direct LocalStorage Injection
- */
-const P2PEngine = {
-    pc: null,
-    dataChannel: null,
-    dbKey: 'PX_EN_V15.0',
-
-    // 初始化連線實體
-    initPC: function(isIniter) {
-        this.pc = new RTCPeerConnection({
-            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-        });
-
-        // 蒐集連線候選資訊 (ICE Candidates)
-        this.pc.onicecandidate = e => {
-            if (!e.candidate) {
-                const sdp = btoa(JSON.stringify(this.pc.localDescription));
-                document.getElementById('p2p-key-output').value = sdp;
-                this.updateStatus("Key Generated. Please send it to the other device.");
-            }
-        };
-
-        if (isIniter) {
-            this.dataChannel = this.pc.createDataChannel("meritSync");
-            this.setupChannel(this.dataChannel);
-        } else {
-            this.pc.ondatachannel = e => this.setupChannel(e.channel);
-        }
-    },
-
-    // 建立發起密鑰 (Phone A)
-    startConnection: async function() {
-        this.initPC(true);
-        const offer = await this.pc.createOffer();
-        await this.pc.setLocalDescription(offer);
-    },
-
-    // 接收並產生回應密鑰 (Phone B)
-    receiveKey: async function(encodedOffer) {
-        this.initPC(false);
-        const offer = JSON.parse(atob(encodedOffer));
-        await this.pc.setRemoteDescription(offer);
-        const answer = await this.pc.createAnswer();
-        await this.pc.setLocalDescription(answer);
-    },
-
-    // 完成最終握手 (Phone A 填入 Phone B 的回應)
-    finalize: async function(encodedAnswer) {
-        const answer = JSON.parse(atob(encodedAnswer));
-        await this.pc.setRemoteDescription(answer);
-    },
-
-    // 數據傳輸管道設定
-    setupChannel: function(channel) {
-        channel.onopen = () => {
-            this.updateStatus("Connection Established! Synchronizing...");
-            const currentData = localStorage.getItem(this.dbKey);
-            channel.send(currentData); // 呼吸間完成傳輸
-        };
-
-        channel.onmessage = e => {
-            // 無痛注入邏輯
-            try {
-                const receivedDB = JSON.parse(e.data);
-                if (receivedDB && receivedDB.totalNian !== undefined) {
-                    localStorage.setItem(this.dbKey, e.data);
-                    this.updateStatus("Merit Synchronized Successfully!");
-                    setTimeout(() => location.reload(), 1500); // 自動重載顯化
-                }
-            } catch(err) {
-                this.updateStatus("Sync Failed: Invalid Data.");
-            }
-        };
-    },
-
-    updateStatus: function(msg) {
-        const statusEl = document.getElementById('p2p-status-msg');
-        if (statusEl) statusEl.innerText = msg;
-    }
-};
-
 
 window.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);

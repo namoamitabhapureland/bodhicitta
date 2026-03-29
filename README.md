@@ -4,7 +4,7 @@ Overview / 總覽
 This ecosystem is a holistic environment where Spiritual Cultivation (Bodhicitta), Digital Security (Vajra Treasury), and Material Management (Accounting) converge. We provide tools for the modern practitioner to accumulate merit (資糧) and maintain mindfulness in the Saha World.
 本計畫是一個全方位的數位生態系，將精神修行（菩提心）、數位安全（金剛藏）與物質管理（記帳）共生結合。我們為現代修行者提供在娑婆世界中累積資糧、保持正念的工具。
 1. Bodhicitta & Amitabha Pure Land System / 彌陀淨土修持系統
-A transformative platform for Nianfo (Buddha Recitation) and Bodhicitta cultivation. The system visualizes the practitioner’s progress from the Initial Aspiration (初發心) to the Tenth Ground (十地位).
+A transformative platform for Nianfo (Buddha Recitation) and Bodhicitta cultivation. The system visualizes the practitioner’s progress from the Initial Aspiration (初發心) to the Tenth Bhumi(十地位).
 專為念佛與發菩提心設計的轉化平台。系統將行者的修持進度從「初發心」到「十地位」進行具象化呈現。
 Features / 特色
 • Arousing Bodhicitta (發菩提心): The core of daily practice. Anchor yourself amidst worldly noise, wielding the sword of wisdom to energize your spiritual journey. / 每日定課樞紐。於入世喧囂中安住，執菩提智慧寶劍，為自性注入源源不絕的能量。

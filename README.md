@@ -39,9 +39,7 @@ To ensure maximum accessibility and speed for search engines:
 • Privacy Standard: Zero tracking, No Cookies, No Ads. / 零追蹤、無 Cookies、零廣告。
 • SEO Keywords (EN): Namo Amitabha, Pure Land Buddhism, Vajra security, offline password manager, private accounting app, ad-free health tracker, minimalist web tools, serverless finance.
 • 關鍵字 (中文): 阿彌陀佛、彌陀淨土、金剛藏、佛教、離線密碼管理、隱私記帳軟體、無廣告健康管理、血糖血壓紀錄、極簡設計網頁應用。
-The 99/100 Principle / 九十九分哲學
-We strive for 99% excellence in design and logic, leaving 1% for external critique. This keeps the system humble and in a state of constant, entropic refinement for the benefit of the world.
-我們在設計與邏輯上追求九十九分的卓越，留下一分餘地接受世人批判。這使系統保持謙卑，並在熵減的過程中持續優化，為世界帶來正法與便利。
+
 License / 授權
 Creative Commons (CC) - Perpetual Free Use.
 Free to use, share, and redistribute. No ads, no commercial tracking.

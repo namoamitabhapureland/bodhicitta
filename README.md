@@ -1,9 +1,17 @@
 Minimalist Privacy-First Ecosystem: Material, Spiritual & Security Symbiosis
 極簡隱私工具生態系：物質、精神與安全的共生建構
 Overview / 總覽
-This project is a holistic digital environment where Material Management (Accounting/Health), Spiritual Practice (Bodhicitta), and Digital Security (Vajra Treasury) coexist. We provide tools for daily discipline, soul purification, and data sovereignty. All interfaces follow a strict vector-based aesthetic—clean, professional, and distraction-free.
-本計畫是一個全方位的數位生態系，將物質管理（記帳/健康）、精神修行（菩提心）與數位安全（金剛藏）共生結合。我們提供日常自律、心靈淨化與數據主權的工具。所有介面均遵循嚴格的向量極簡美學，確保專業且無干擾的使用體驗。
-1. Bodhicitta & Amitabha Pure Land System / 菩提心與彌陀淨土系統
+This ecosystem is a holistic environment where Spiritual Cultivation (Bodhicitta), Digital Security (Vajra Treasury), and Material Management (Accounting) converge. We provide tools for the modern practitioner to accumulate merit (資糧) and maintain mindfulness in the Saha World.
+本計畫是一個全方位的數位生態系，將精神修行（菩提心）、數位安全（金剛藏）與物質管理（記帳）共生結合。我們為現代修行者提供在娑婆世界中累積資糧、保持正念的工具。
+1. Bodhicitta & Amitabha Pure Land System / 彌陀淨土修持系統
+A transformative platform for Nianfo (Buddha Recitation) and Bodhicitta cultivation. The system visualizes the practitioner’s progress from the Initial Aspiration (初發心) to the Tenth Ground (十地位).
+專為念佛與發菩提心設計的轉化平台。系統將行者的修持進度從「初發心」到「十地位」進行具象化呈現。
+Features / 特色
+• Arousing Bodhicitta (發菩提心): The core of daily practice. Anchor yourself amidst worldly noise, wielding the sword of wisdom to energize your spiritual journey. / 每日定課樞紐。於入世喧囂中安住，執菩提智慧寶劍，為自性注入源源不絕的能量。
+• Lapis Treasure Pavilion (琉璃多寶閣): A visual manifestation of formless giving. Manifest sacred Dharma treasures then dissolve them into the void to dedicate merits. / 護念親友之專屬化城。藉由實修顯化法相，復於祈福時歸零歸空，成就無相大佈施。
+Progression Mechanics / 修證玄機
+• Accelerated Merit (資糧升等): Reflecting the Infinite Life Sutra, one day of practice in this world surpasses a hundred years in the Pure Land. Every "Ten Recitations" (十念法) marks a real transformation of the self. / 依《無量壽經》，於此修善一日一夜，勝在無量壽國為善百歲。每一次十念圓滿，皆是心性轉化的真實刻度。
+
 A dedicated space for mindfulness and the propagation of Dharma. Built for perpetual free distribution under CC licensing, ensuring the Dharma flows without barriers.
 專為清淨心與正法流傳而建。採 CC 授權永久免費流傳，確保法音宣流無礙。
 • Bilingual Access / 雙語入口:

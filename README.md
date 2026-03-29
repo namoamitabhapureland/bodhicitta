@@ -2,7 +2,7 @@ Minimalist Privacy-First Ecosystem: Material, Spiritual & Security Symbiosis
 極簡隱私工具生態系：物質、精神與安全的共生建構
 Overview / 總覽
 This project is a holistic digital environment where Material Management (Accounting/Health), Spiritual Practice (Bodhicitta), and Digital Security (Vajra Treasury) coexist. We provide tools for daily discipline, soul purification, and data sovereignty. All interfaces follow a strict vector-based aesthetic—clean, professional, and distraction-free.
-本計畫是一個全方位的數位生態系，將物質管理（記帳/健康）、**精神修行（菩提心）與數位安全（金剛藏）共生結合。我們提供日常自律、心靈淨化與數據主權的工具。所有介面均遵循嚴格的向量極簡美學，確保專業且無干擾的使用體驗。
+本計畫是一個全方位的數位生態系，將物質管理（記帳/健康）、精神修行（菩提心）與數位安全（金剛藏）共生結合。我們提供日常自律、心靈淨化與數據主權的工具。所有介面均遵循嚴格的向量極簡美學，確保專業且無干擾的使用體驗。
 1. Bodhicitta & Amitabha Pure Land System / 菩提心與彌陀淨土系統
 A dedicated space for mindfulness and the propagation of Dharma. Built for perpetual free distribution under CC licensing, ensuring the Dharma flows without barriers.
 專為清淨心與正法流傳而建。採 CC 授權永久免費流傳，確保法音宣流無礙。

@@ -3,17 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>淨流 ‧ 琉璃萬德 - 立體冰晶壇城</title>
+    <title>淨流 ‧ 琉璃萬德 - 一葦壇城實裝版</title>
     <style>
         :root {
-            --bg-deep: #020306;
+            --bg-deep: #010204;
             --gold: #f3e5ab; 
             --solid-gold: #d4af37; 
             --cyan: #8ba89c; 
-            /* 水晶切面專用色 - 冰冷透明 */
-            --cry-highlight: rgba(255, 255, 255, 0.4);
-            --cry-body: rgba(200, 220, 255, 0.08);
-            --cry-shadow: rgba(0, 0, 0, 0.5);
         }
         
         body { 
@@ -24,8 +20,8 @@
             touch-action: pan-y; 
         }
 
-        /* 菩提心三千世界底座 - 加強模糊與深邃感 */
-        #realmCanvas { position: fixed; inset: 0; z-index: -1; filter: blur(2px); }
+        /* 一葦渡江動態底座 */
+        #realmCanvas { position: fixed; inset: 0; z-index: -1; transition: filter 1s; }
 
         #header {
             padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-end;
@@ -34,96 +30,106 @@
         .lv-tag { letter-spacing: 3px; color: var(--gold); font-size: 1rem; font-weight: bold; }
         .info-tag { font-size: 0.75rem; color: var(--cyan); letter-spacing: 1px; margin-top: 5px; }
 
-        /* 加強透視深度 */
+        /* 3D 空間 */
         #scene {
             flex: 1; display: flex; justify-content: center; align-items: center;
-            perspective: 2000px; overflow: hidden; position: relative; z-index: 10;
+            perspective: 1200px; overflow: hidden; position: relative; z-index: 10;
         }
+        
         #carousel {
-            width: 50px; height: 180px; position: relative;
+            width: 50px; height: 160px; position: relative;
             transform-style: preserve-3d; transition: transform 0.1s ease-out;
         }
 
-        /* ✨ 真正的立體六角水晶柱 (Isometric Hexagonal Prism) */
-        .crystal {
-            position: absolute; top: 0; left: 0; width: 50px; height: 180px;
-            cursor: pointer; transform-style: preserve-3d;
+        /* 中央大金蓮 */
+        #center-lotus {
+            position: absolute; top: 50%; left: 50%; width: 120px; height: 120px;
+            margin-top: -60px; margin-left: -60px;
+            transform: translateZ(0); /* 絕對中心 */
+            display: flex; justify-content: center; align-items: center;
+            pointer-events: none;
+        }
+        #center-lotus svg {
+            width: 100%; height: 100%; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.6));
+            animation: lotusBreath 4s infinite alternate ease-in-out;
+        }
+        @keyframes lotusBreath {
+            from { transform: scale(1); filter: brightness(1) drop-shadow(0 0 15px rgba(212, 175, 55, 0.4)); }
+            to { transform: scale(1.1); filter: brightness(1.3) drop-shadow(0 0 30px rgba(212, 175, 55, 0.8)); }
+        }
+
+        /* 琉璃容器 (妥協後的極致長方形玻璃質感) */
+        .vessel {
+            position: absolute; top: 0; left: 0; width: 50px; height: 160px;
+            cursor: pointer;
+            border: 1.5px solid rgba(243, 229, 171, 0.3); border-top: none; border-radius: 0 0 15px 15px;
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px);
+            box-shadow: inset 4px 0 10px rgba(255,255,255,0.1), inset -4px 0 10px rgba(0,0,0,0.6);
+            display: flex; flex-direction: column-reverse; align-items: center; padding-bottom: 5px; gap: 3px;
             transition: filter 0.3s, transform 0.3s;
         }
-        
-        /*正面 (玻璃通透感)*/
-        .v-face {
-            position: absolute; inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 100%);
-            backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.1);
-            display: flex; flex-direction: column-reverse; align-items: center; 
-            padding-bottom: 8px; gap: 3px; box-sizing: border-box; z-index: 2;
+        .vessel::before {
+            content: ''; position: absolute; top: -3px; left: -3px; right: -3px; height: 6px;
+            border: 1.5px solid rgba(243, 229, 171, 0.6); border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 5;
+        }
+        .vessel.selected {
+            border-color: rgba(243, 229, 171, 0.9);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.6), inset 0 0 15px rgba(255,255,255,0.2);
+            transform: translateY(-10px);
         }
 
-        /*正面切面高光與陰影*/
-        .v-face::before {
-            content:''; position: absolute; left: 0; top: 0; height: 100%; width: 30%;
-            background: linear-gradient(to right, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+        /* 雙軌資糧：外層圓球 (色) + 內層幾何 (相) */
+        .orb {
+            width: 24px; height: 24px; border-radius: 50%; position: relative;
+            box-shadow: inset -3px -3px 8px rgba(0,0,0,0.6), inset 3px 3px 8px rgba(255,255,255,0.7);
+            z-index: 2; flex-shrink: 0; transition: all 0.3s;
+            display: flex; justify-content: center; align-items: center;
         }
-        .v-face::after {
-            content:''; position: absolute; right: 0; top: 0; height: 100%; width: 30%;
-            background: linear-gradient(to left, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0) 100%);
+        /* 內部幾何形狀 */
+        .shape-inner {
+            width: 10px; height: 10px; background: rgba(255,255,255,0.8);
+            box-shadow: 0 0 5px rgba(255,255,255,0.5);
+        }
+        .shape-circle { border-radius: 50%; }
+        .shape-square { border-radius: 2px; }
+        .shape-triangle { clip-path: polygon(50% 0%, 0% 100%, 100% 100%); background: rgba(255,255,255,0.9); }
+        .shape-diamond { transform: rotate(45deg); }
+
+        .vessel.selected .orb:last-child {
+            transform: translateY(-8px); filter: brightness(1.3);
+            box-shadow: 0 0 15px currentColor, inset -3px -3px 8px rgba(0,0,0,0.5), inset 3px 3px 8px rgba(255,255,255,0.8);
         }
 
-        /*立體側面與頂部*/
-        .crystal-3d { position: absolute; inset: 0; transform-style: preserve-3d; z-index: 1; }
-        
-        /*頂部六角切面*/
-        .crystal-3d::before {
-            content:''; position: absolute; top: -14px; left: 0; width: 50px; height: 28px;
-            background: rgba(255,255,255,0.1);
-            clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
-            transform: rotateX(90deg) translateZ(0px); /* 貼合頂部 */
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        /* 側面幾何 */
-        .crystal-3d::after {
-            content:''; position: absolute; top: -14px; right: -7px; width: 14px; height: 180px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(255,255,255,0.1) 50%, rgba(0,0,0,0.4) 100%);
-            transform: rotateY(60deg) translateZ(0px); /* 貼合側面 */
-            border-right: 1px solid rgba(255,255,255,0.1);
-        }
-
-        /* 容器選取狀態 */
-        .crystal.selected .v-face {
-            border-color: rgba(243, 229, 171, 0.8);
-            box-shadow: 0 0 25px rgba(212, 175, 55, 0.4), inset 0 0 15px rgba(255,255,255,0.1);
-            transform: translateZ(20px); /* 向前浮出 */
-        }
-        .crystal.selected { transform: translateY(-10px); }
-
-        /* ✨ 淺色清透資糧 (靜態幾何塊) */
-        .gem-block {
-            width: 80%; height: 25%; position: relative; transition: all 0.3s ease;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.3), 0 1px 3px rgba(255,255,255,0.2);
-            border-radius: 4px;
-            opacity: 0.8; /* 增加透明度 */
-        }
-
-        /* 躍遷前奏：晶塊收縮 */
-        .crystal.selected .gem-block:last-child {
-            border-radius: 50%; width: 28px; height: 28px; margin: 0 auto;
-            transform: translateY(-10px); filter: brightness(1.2); opacity: 1;
-            box-shadow: 0 0 15px currentColor, inset -3px -3px 8px rgba(0,0,0,0.5);
-        }
-
-        /* 躍遷光球 (動態) */
+        /* 躍遷光球 */
         .orb-jump {
-            position: fixed; width: 28px; height: 28px; border-radius: 50%;
-            box-shadow: 0 0 25px currentColor, inset -3px -3px 8px rgba(0,0,0,0.5);
+            position: fixed; width: 24px; height: 24px; border-radius: 50%;
+            box-shadow: 0 0 25px currentColor, inset -3px -3px 8px rgba(0,0,0,0.5), inset 3px 3px 8px rgba(255,255,255,0.8);
             z-index: 1000; pointer-events: none;
+            display: flex; justify-content: center; align-items: center;
         }
 
-        #footer { padding: 15px; display: flex; justify-content: center; z-index: 10; }
-        .reset-btn {
-            background: rgba(255,255,255,0.03); border: 1px solid var(--cyan); color: var(--cyan);
-            padding: 8px 25px; border-radius: 20px; font-size: 0.85rem; letter-spacing: 2px; cursor: pointer;
+        /* RPG 玉簡對話框 */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.5s;
+        }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-box {
+            width: 85%; max-width: 360px; background: rgba(5,10,15,0.9); border: 1px solid var(--solid-gold); 
+            border-radius: 10px; padding: 30px; text-align: center; box-shadow: 0 0 40px rgba(0,0,0,0.8);
+        }
+        .modal-title { color: var(--gold); font-size: 1.15rem; letter-spacing: 4px; margin-bottom: 15px; }
+        .modal-text { color: var(--text-main); font-size: 0.95rem; letter-spacing: 2px; line-height: 1.8; margin-bottom: 30px; }
+        .rpg-btn {
+            width: 100%; height: 45px; display: flex; justify-content: center; align-items: center;
+            border-radius: 25px; border: 1px solid rgba(212,175,55,0.6); color: var(--gold);
+            letter-spacing: 4px; font-size: 0.95rem; cursor: pointer;
+        }
+
+        #footer { padding: 15px; display: flex; justify-content: space-between; z-index: 10; }
+        .tool-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--cyan); color: var(--cyan);
+            padding: 8px 15px; border-radius: 20px; font-size: 0.8rem; letter-spacing: 2px; cursor: pointer;
         }
     </style>
 </head>
@@ -133,104 +139,179 @@
 
 <div id="header">
     <div>
-        <div class="lv-tag" id="lv-display">立體壇城 ‧ 冰晶壇城</div>
-        <div class="info-tag">轉動法輪，理順清透資糧</div>
+        <div class="lv-tag" id="lv-display">第 1 關</div>
+        <div class="info-tag">理順色相，歸於一處</div>
     </div>
 </div>
 
 <div id="scene">
-    <div id="carousel"></div>
+    <div id="carousel">
+        <div id="center-lotus">
+            <svg viewBox="0 0 200 200">
+                <defs>
+                    <radialGradient id="lotusGrad" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#fff" />
+                        <stop offset="70%" stop-color="#f3e5ab" />
+                        <stop offset="100%" stop-color="#d4af37" stop-opacity="0" />
+                    </radialGradient>
+                </defs>
+                <g transform="translate(100, 100)">
+                    <path d="M0,0 C10,-20 25,-40 0,-70 C-25,-40 -10,-20 0,0" fill="url(#lotusGrad)" opacity="0.9"></path>
+                    <path d="M0,0 C10,-20 25,-40 0,-70 C-25,-40 -10,-20 0,0" fill="url(#lotusGrad)" transform="rotate(60)" opacity="0.7"></path>
+                    <path d="M0,0 C10,-20 25,-40 0,-70 C-25,-40 -10,-20 0,0" fill="url(#lotusGrad)" transform="rotate(120)" opacity="0.7"></path>
+                    <path d="M0,0 C10,-20 25,-40 0,-70 C-25,-40 -10,-20 0,0" fill="url(#lotusGrad)" transform="rotate(180)" opacity="0.7"></path>
+                    <path d="M0,0 C10,-20 25,-40 0,-70 C-25,-40 -10,-20 0,0" fill="url(#lotusGrad)" transform="rotate(240)" opacity="0.7"></path>
+                    <path d="M0,0 C10,-20 25,-40 0,-70 C-25,-40 -10,-20 0,0" fill="url(#lotusGrad)" transform="rotate(300)" opacity="0.7"></path>
+                </g>
+            </svg>
+        </div>
+    </div>
 </div>
 
 <div id="footer">
-    <div class="reset-btn" onclick="initLevel()">重整陣列</div>
+    <div class="tool-btn" onclick="initLevel()">重整法輪</div>
+    <div class="tool-btn" style="border-color:#e63946; color:#e63946;" onclick="triggerHellEvent()">觸發業力海</div>
+    <div class="tool-btn" style="border-color:var(--solid-gold); color:var(--gold);" onclick="forceWin()">直接過關</div>
+</div>
+
+<div class="modal-overlay" id="rpg-modal">
+    <div class="modal-box">
+        <div class="modal-title" id="rpg-title"></div>
+        <div class="modal-text" id="rpg-text"></div>
+        <div class="rpg-btn" onclick="closeModal()">心領神會</div>
+    </div>
 </div>
 
 <script>
-    // 清透淺色系色彩
-    const PASTEL_COLORS = ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#a0c4ff', '#bdb2ff', '#ffc6ff'];
-    const MAX_GEMS = 4;
-    const TOTAL_VESSELS = 12; // 測試用
-
+    // 色相雙軌資料庫設定
+    const PALETTE = ['#e63946', '#2a9d8f', '#00b4d8', '#d4af37', '#9b5de5', '#fb8500', '#f4a261'];
+    const SHAPES = ['circle', 'square', 'triangle', 'diamond'];
+    const MAX_ORBS = 4;
+    
     let db = {
-        crystals: [], selectedIdx: null, isAnimating: false,
-        carouselRotY: 0, radius: 0
+        level: 1, vessels: [], selectedIdx: null, isAnimating: false,
+        carouselRotY: 0, radius: 0,
+        envState: 'normal' // normal 或 hell
     };
 
-    // 三千世界背景引擎
+    // ✨ 一葦渡江動態背景引擎 (含環境狀態切換)
+    let waveParams = { baseSpeed: 0.01, amp: 20, color: 'rgba(139,168,156,0.3)', bg: 'rgba(1,2,4,0.4)' };
+    
     function initBackground() {
         const cvs = document.getElementById('realmCanvas');
         const ctx = cvs.getContext('2d');
-        let w, h; let stars = [];
+        let w, h; let ocean = []; let time = 0;
         const resize = () => { w = cvs.width = window.innerWidth; h = cvs.height = window.innerHeight; };
         window.addEventListener('resize', resize); resize();
-        for(let i=0; i<100; i++) stars.push({ x: Math.random()*w, y: Math.random()*h, s: Math.random()*2, a: Math.random()*Math.PI*2, speed: Math.random()*0.3+0.05 });
+        
+        for(let x = -800; x <= 800; x += 60) {
+            for(let z = -800; z <= 800; z += 60) ocean.push({ ox: x, oz: z });
+        }
+        
+        function project3D(x, y, z) {
+            let z2 = y*0.2 + z*0.9; // 簡單的透視角度
+            if(z2 < -400) return null;
+            let scale = 400 / (400 + z2); 
+            return { x: w/2 + x*scale, y: h/2 + 100 - (y*0.9 - z*0.2)*scale, sc: scale };
+        }
+
         function draw() {
-            ctx.fillStyle = 'rgba(2, 3, 6, 0.4)'; ctx.fillRect(0, 0, w, h);
-            stars.forEach(p => {
-                p.y -= p.speed; p.x += Math.sin(p.a)*0.2; p.a += 0.01;
-                if(p.y < 0) p.y = h;
-                ctx.fillStyle = `rgba(139, 168, 156, ${0.1 + Math.random()*0.3})`; // 淺青黛色星雲
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = waveParams.bg; ctx.fillRect(0, 0, w, h);
+            time += waveParams.baseSpeed;
+            
+            ctx.globalCompositeOperation = 'screen';
+            ocean.forEach(p => {
+                let waveY = Math.sin(p.ox*0.01 + time)*waveParams.amp + Math.cos(p.oz*0.01 + time)*waveParams.amp;
+                let proj = project3D(p.ox, waveY, p.oz);
+                if(proj) {
+                    let fSize = 2 * proj.sc;
+                    ctx.beginPath(); ctx.arc(proj.x, proj.y, fSize, 0, Math.PI*2);
+                    ctx.fillStyle = waveParams.color; ctx.fill();
+                }
             });
+            ctx.globalCompositeOperation = 'source-over';
             requestAnimationFrame(draw);
         }
         draw();
     }
 
-    function initLevel() {
-        const carousel = document.getElementById('carousel');
-        carousel.innerHTML = '';
-        db.crystals = []; db.selectedIdx = null; db.isAnimating = false;
-        db.carouselRotY = 0; carousel.style.transform = `rotateY(0deg)`;
+    // ✨ 500關動態生成演算法
+    function generateLevelData(lv) {
+        // 難度曲線設計
+        let totalVessels = Math.min(24, 4 + Math.floor(lv / 5)); // 容器數量隨關卡增加
+        let colorTypes = Math.min(7, 2 + Math.floor(lv / 10));   // 顏色種類
+        let shapeTypes = lv >= 5 ? Math.min(4, 1 + Math.floor(lv / 20)) : 1; // 5關後開始出現形狀變數
         
-        // 加大半徑，增加法輪開闊感
-        db.radius = Math.round((50 / 2) / Math.tan(Math.PI / TOTAL_VESSELS)) + 50;
-
         let pool = [];
-        for(let i=0; i<TOTAL_VESSELS - 2; i++) {
-            for(let j=0; j<MAX_GEMS; j++) pool.push(PASTEL_COLORS[i % PASTEL_COLORS.length]);
+        let itemsNeeded = (totalVessels - 2) * MAX_ORBS; // 留兩個空瓶
+        
+        // 生成色相組合
+        let combinations = [];
+        for(let c=0; c<colorTypes; c++) {
+            for(let s=0; s<shapeTypes; s++) {
+                combinations.push({ c: PALETTE[c], s: SHAPES[s] });
+            }
         }
-        pool.sort(() => Math.random() - 0.5);
-
-        for (let i = 0; i < TOTAL_VESSELS; i++) {
-            let content = (i < TOTAL_VESSELS - 2) ? pool.splice(0, MAX_GEMS) : [];
-            db.crystals.push(content);
-            
-            // ✨ 立體容器 DOM 結構
-            const crystal = document.createElement('div');
-            crystal.className = 'crystal'; crystal.id = `cry-${i}`;
-            
-            const crystal3D = document.createElement('div');
-            crystal3D.className = 'crystal-3d';
-            
-            const face = document.createElement('div');
-            face.className = 'v-face';
-            
-            crystal.appendChild(crystal3D);
-            crystal.appendChild(face);
-            
-            let theta = (360 / TOTAL_VESSELS) * i;
-            crystal.style.transform = `rotateY(${theta}deg) translateZ(${db.radius}px)`;
-            
-            crystal.onclick = () => handleTap(i, theta);
-            carousel.appendChild(crystal);
-            renderGems(i);
+        
+        // 填充池子
+        let comboIdx = 0;
+        for(let i=0; i<itemsNeeded / MAX_ORBS; i++) {
+            let targetCombo = combinations[comboIdx % combinations.length];
+            for(let j=0; j<MAX_ORBS; j++) pool.push({ ...targetCombo });
+            comboIdx++;
         }
-        updateShading();
+        
+        pool.sort(() => Math.random() - 0.5); // 打亂
+        
+        let vessels = [];
+        for(let i=0; i<totalVessels; i++) {
+            vessels.push(i < totalVessels - 2 ? pool.splice(0, MAX_ORBS) : []);
+        }
+        return vessels;
     }
 
-    function renderGems(idx) {
-        const face = document.getElementById(`cry-${idx}`).querySelector('.v-face');
-        face.innerHTML = '';
-        db.crystals[idx].forEach(color => {
-            const gem = document.createElement('div');
-            gem.className = 'gem-block'; gem.style.backgroundColor = color; gem.style.color = color;
-            face.appendChild(gem);
+    function initLevel() {
+        const carousel = document.getElementById('carousel');
+        // 保留金蓮，清除法器
+        Array.from(carousel.children).forEach(c => { if(c.id !== 'center-lotus') c.remove(); });
+        
+        db.vessels = generateLevelData(db.level);
+        db.selectedIdx = null; db.isAnimating = false;
+        db.carouselRotY = 0; carousel.style.transform = `rotateY(0deg)`;
+        
+        const total = db.vessels.length;
+        db.radius = Math.round((60 / 2) / Math.tan(Math.PI / total)) + 40;
+
+        for (let i = 0; i < total; i++) {
+            const v = document.createElement('div');
+            v.className = 'vessel'; v.id = `vsl-${i}`;
+            let theta = (360 / total) * i;
+            v.style.transform = `rotateY(${theta}deg) translateZ(${db.radius}px)`;
+            v.onclick = () => handleTap(i, theta);
+            carousel.appendChild(v);
+            renderOrbs(i);
+        }
+        updateShading();
+        document.getElementById('lv-display').innerText = `第 ${db.level} 關`;
+    }
+
+    function renderOrbs(idx) {
+        const v = document.getElementById(`vsl-${idx}`);
+        v.querySelectorAll('.orb').forEach(o => o.remove());
+        db.vessels[idx].forEach(data => {
+            const orb = document.createElement('div');
+            orb.className = 'orb'; orb.style.backgroundColor = data.c; orb.style.color = data.c;
+            
+            // 加入內部幾何相
+            const shape = document.createElement('div');
+            shape.className = `shape-inner shape-${data.s}`;
+            orb.appendChild(shape);
+            
+            v.appendChild(orb);
         });
     }
 
-    // 3D 旋轉控制
+    // 3D 旋轉引擎
     let isDragging = false, startX = 0;
     const scene = document.getElementById('scene');
     const carousel = document.getElementById('carousel');
@@ -249,32 +330,35 @@
     scene.addEventListener('touchstart', onPointerDown, {passive: true}); window.addEventListener('touchmove', onPointerMove, {passive: true}); window.addEventListener('touchend', onPointerUp);
 
     function updateShading() {
-        document.querySelectorAll('.crystal').forEach((c, i) => {
-            let theta = (360 / TOTAL_VESSELS) * i;
+        const total = db.vessels.length;
+        document.querySelectorAll('.vessel').forEach((c, i) => {
+            let theta = (360 / total) * i;
             let currentAngle = (theta + db.carouselRotY) % 360;
             if(currentAngle < 0) currentAngle += 360;
             let dist = Math.min(currentAngle, 360 - currentAngle);
-            if(dist > 90) { c.style.filter = 'brightness(0.2) blur(3px)'; c.style.pointerEvents = 'none'; } 
+            if(dist > 90) { c.style.filter = 'brightness(0.3) blur(2px)'; c.style.pointerEvents = 'none'; } 
             else { c.style.filter = 'brightness(1) blur(0px)'; c.style.pointerEvents = 'auto'; }
         });
     }
 
+    // 色相躍遷
     async function handleTap(idx, theta) {
         if (db.isAnimating || isDragging) return;
-        const targetEl = document.getElementById(`cry-${idx}`);
+        const targetEl = document.getElementById(`vsl-${idx}`);
         
         if (db.selectedIdx === null) {
-            if (db.crystals[idx].length === 0) return;
+            if (db.vessels[idx].length === 0) return;
             db.selectedIdx = idx; targetEl.classList.add('selected');
         } else {
             const fromIdx = db.selectedIdx; const toIdx = idx;
-            const fromEl = document.getElementById(`cry-${fromIdx}`);
+            const fromEl = document.getElementById(`vsl-${fromIdx}`);
             if (fromIdx === toIdx) { fromEl.classList.remove('selected'); db.selectedIdx = null; return; }
 
-            const fromArr = db.crystals[fromIdx]; const toArr = db.crystals[toIdx];
-            const moveColor = fromArr[fromArr.length - 1];
+            const fromArr = db.vessels[fromIdx]; const toArr = db.vessels[toIdx];
+            const moveData = fromArr[fromArr.length - 1];
 
-            if (toArr.length < MAX_GEMS && (toArr.length === 0 || toArr[toArr.length-1] === moveColor)) {
+            // ✨ 色相雙軌判定：如果目標不為空，必須顏色與形狀皆相同才能裝入
+            if (toArr.length < MAX_ORBS && (toArr.length === 0 || (toArr[toArr.length-1].c === moveData.c && toArr[toArr.length-1].s === moveData.s))) {
                 db.isAnimating = true; fromEl.classList.remove('selected');
                 
                 db.carouselRotY = -theta;
@@ -284,33 +368,37 @@
 
                 await new Promise(r => setTimeout(r, 450));
 
-                const poppedColor = fromArr.pop();
-                const fromFace = fromEl.querySelector('.v-face');
-                const fromGems = fromFace.querySelectorAll('.gem-block');
-                const topGemEl = fromGems[fromGems.length - 1];
+                const poppedData = fromArr.pop();
+                const fromOrbs = fromEl.querySelectorAll('.orb');
+                const topOrbEl = fromOrbs[fromOrbs.length - 1];
                 
-                const fromRect = topGemEl.getBoundingClientRect();
-                topGemEl.style.opacity = '0';
+                const fromRect = topOrbEl.getBoundingClientRect();
+                topOrbEl.style.opacity = '0';
 
-                const targetFace = targetEl.querySelector('.v-face');
-                const toRect = targetFace.getBoundingClientRect();
-                const destX = toRect.left + (toRect.width - 28) / 2;
-                const destY = toRect.bottom - 8 - 43 * (toArr.length + 1); // 适配新尺寸
+                const toRect = targetEl.getBoundingClientRect();
+                const destX = toRect.left + (toRect.width - 24) / 2;
+                const destY = toRect.bottom - 5 - 28 * (toArr.length + 1);
 
-                await animateOrbJump(fromRect.left, fromRect.top, destX, destY, poppedColor);
+                await animateOrbJump(fromRect.left, fromRect.top, destX, destY, poppedData);
                 
-                toArr.push(poppedColor);
-                renderGems(fromIdx); renderGems(toIdx);
+                toArr.push(poppedData);
+                renderOrbs(fromIdx); renderOrbs(toIdx);
+                checkWin();
             } else { fromEl.classList.remove('selected'); }
             db.selectedIdx = null; db.isAnimating = false;
         }
     }
 
-    function animateOrbJump(startX, startY, endX, endY, color) {
+    function animateOrbJump(startX, startY, endX, endY, data) {
         return new Promise(resolve => {
             const jumper = document.createElement('div');
             jumper.className = 'orb-jump';
-            jumper.style.backgroundColor = color; jumper.style.color = color;
+            jumper.style.backgroundColor = data.c; jumper.style.color = data.c;
+            
+            const shape = document.createElement('div');
+            shape.className = `shape-inner shape-${data.s}`;
+            jumper.appendChild(shape);
+            
             document.body.appendChild(jumper);
 
             const controlY = Math.min(startY, endY) - 150; 
@@ -318,12 +406,60 @@
 
             const animation = jumper.animate([
                 { transform: `translate(${startX}px, ${startY}px) scale(1)` },
-                { transform: `translate(${startX + deltaX*0.5}px, ${controlY}px) scale(1.3)` },
+                { transform: `translate(${startX + deltaX*0.5}px, ${controlY}px) scale(1.2)` },
                 { transform: `translate(${endX}px, ${endY}px) scale(1)` }
             ], { duration: 400, easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)', fill: 'forwards' });
 
             animation.onfinish = () => { jumper.remove(); resolve(); };
         });
+    }
+
+    // ✨ 業力亂流事件 (動態改變背景環境)
+    function triggerHellEvent() {
+        db.envState = 'hell';
+        waveParams = { baseSpeed: 0.05, amp: 40, color: 'rgba(230, 57, 70, 0.4)', bg: 'rgba(20, 2, 5, 0.8)' };
+        document.getElementById('realmCanvas').style.filter = 'contrast(1.5)';
+        
+        setTimeout(() => {
+            document.getElementById('rpg-title').innerText = "業海翻騰";
+            document.getElementById('rpg-text').innerText = "心念散亂，引發地獄業海波濤。請攝心專注，理順資糧以平息亂流。";
+            document.getElementById('rpg-modal').classList.add('show');
+        }, 1000);
+    }
+
+    function closeModal() {
+        document.getElementById('rpg-modal').classList.remove('show');
+        // 恢復平靜背景
+        db.envState = 'normal';
+        waveParams = { baseSpeed: 0.01, amp: 20, color: 'rgba(139,168,156,0.3)', bg: 'rgba(1,2,4,0.4)' };
+        document.getElementById('realmCanvas').style.filter = 'none';
+    }
+
+    // ✨ 里程碑機制與圓滿判定
+    function checkWin() {
+        const win = db.vessels.every(v => v.length === 0 || (v.length === MAX_ORBS && v.every(item => item.c === v[0].c && item.s === v[0].s)));
+        if (win) handleWin();
+    }
+    
+    function forceWin() { handleWin(); }
+
+    function handleWin() {
+        db.level++;
+        // 檢查是否為里程碑關卡 (10, 50, 100...)
+        if (db.level === 10 || db.level % 50 === 0) {
+            document.getElementById('rpg-title').innerText = `境界突破 ‧ 第 ${db.level} 重`;
+            document.getElementById('rpg-text').innerText = "萬德莊嚴，法輪常轉。行者資糧深厚，即將進入更深層的形相考驗，請保持正念。";
+            document.getElementById('rpg-modal').classList.add('show');
+            // 關閉 Modal 時會呼叫 closeModal，可在那裡掛載 initLevel()
+            document.querySelector('.rpg-btn').onclick = () => {
+                closeModal();
+                setTimeout(initLevel, 500);
+                document.querySelector('.rpg-btn').onclick = closeModal; // 復原綁定
+            };
+        } else {
+            // 普通關卡直接重整進入下一關
+            setTimeout(initLevel, 1000);
+        }
     }
 
     initBackground(); initLevel();

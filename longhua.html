@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>淨流 ‧ 琉璃萬德 - 法界穿梭版</title>
+    <title>淨流 ‧ 琉璃萬德 - 多寶塔完整版</title>
     <style>
         :root {
             --bg-deep: #010204;
@@ -17,65 +17,112 @@
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
             overflow: hidden; height: 100dvh; display: flex; flex-direction: column;
             -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
-            touch-action: none;
+            touch-action: pan-y; 
         }
 
-        /* 菩提心三千世界 - Z軸穿梭底座 */
-        #realmCanvas { position: fixed; inset: 0; z-index: -1; }
+        /* 背景：菩提星海穿梭 + 業力海波濤 */
+        #realmCanvas { position: fixed; inset: 0; z-index: -1; transition: filter 1s; }
 
         #header {
             padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-end;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.15); z-index: 10; backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.15); z-index: 10; backdrop-filter: blur(5px);
         }
         .lv-tag { letter-spacing: 3px; color: var(--gold); font-size: 1rem; font-weight: bold; }
+        .info-tag { font-size: 0.75rem; color: var(--cyan); letter-spacing: 1px; margin-top: 5px; }
 
-        /* 3D 場景 */
+        /* ✨ 3D 場景核心 */
         #scene {
-            flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            flex: 1; display: flex; justify-content: center; align-items: center;
             perspective: 1500px; overflow: hidden; position: relative; z-index: 10;
         }
 
-        /* 中央多層金蓮 */
-        #lotus-mandala {
-            position: absolute; width: 140px; height: 140px; pointer-events: none;
-            transform: translateZ(-200px); /* 位於中央深處 */
+        /* 統一的旋轉主軸 (多寶塔) */
+        #carousel {
+            width: 60px; height: 160px; position: relative;
+            transform-style: preserve-3d; transition: transform 0.1s ease-out;
         }
 
-        /* 旋轉圓環容器 - 分層排版 */
-        .tier-ring {
-            position: relative; transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s, filter 0.5s;
-            margin: -20px 0; /* 讓層與層之間更緊湊 */
+        /* 中央大金蓮 - 層次重疊版 */
+        #center-lotus {
+            position: absolute; top: 50%; left: 50%; width: 150px; height: 150px;
+            margin-top: -75px; margin-left: -75px;
+            transform: translateZ(0); display: flex; justify-content: center; align-items: center; pointer-events: none;
         }
-        /* 聚焦效果：未選中層淡化並縮小 */
-        .tier-ring.unfocused { opacity: 0.4; transform: scale(0.8) translateZ(-300px); filter: blur(3px); }
-        .tier-ring.focused { opacity: 1; transform: scale(1.1) translateZ(100px); filter: blur(0px); }
+        #center-lotus svg {
+            width: 100%; height: 100%; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.8));
+            animation: lotusBreath 4s infinite alternate ease-in-out;
+        }
+        @keyframes lotusBreath {
+            from { transform: scale(1); filter: brightness(1) drop-shadow(0 0 15px rgba(212, 175, 55, 0.5)); }
+            to { transform: scale(1.1); filter: brightness(1.3) drop-shadow(0 0 30px rgba(212, 175, 55, 0.9)); }
+        }
 
-        /* 六角晶體容器 - 徹底直角化 */
+        /* ✨ 徹底極簡透明長方框 (無試管圓角) */
         .vessel {
-            position: absolute; width: 48px; height: 130px; cursor: pointer;
-            border: 1px solid rgba(243, 229, 171, 0.4);
-            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(8px);
-            display: flex; flex-direction: column-reverse; align-items: center; 
-            padding-bottom: 5px; gap: 4px; box-sizing: border-box;
-            transition: border-color 0.3s, transform 0.3s;
+            position: absolute; top: 0; left: 0; width: 56px; height: 180px;
+            cursor: pointer;
+            border: 1.5px solid rgba(243, 229, 171, 0.3); border-top: none; 
+            border-radius: 4px; /* 極微小的倒角，視覺上是直角長方形 */
+            background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(6px);
+            box-shadow: inset 4px 0 10px rgba(255,255,255,0.05), inset -4px 0 10px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column-reverse; align-items: center; padding-bottom: 5px; gap: 4px;
+            transition: filter 0.3s, transform 0.3s;
+            box-sizing: border-box;
         }
-        .vessel.selected { border-color: var(--gold); box-shadow: 0 0 20px var(--solid-gold); }
+        .vessel.selected {
+            border-color: rgba(243, 229, 171, 1);
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.6), inset 0 0 15px rgba(255,255,255,0.2);
+        }
 
-        /* 資糧球與幾何相 - 顯著放大 */
+        /* ✨ 放大的資糧球與幾何相 */
         .orb {
-            width: 32px; height: 32px; border-radius: 50%; position: relative;
+            width: 34px; height: 34px; border-radius: 50%; position: relative;
             box-shadow: inset -4px -4px 10px rgba(0,0,0,0.6), inset 4px 4px 10px rgba(255,255,255,0.7);
+            z-index: 2; flex-shrink: 0; transition: all 0.3s;
             display: flex; justify-content: center; align-items: center;
         }
-        .shape-inner { width: 14px; height: 14px; background: rgba(255,255,255,0.9); }
-        .shape-square { border-radius: 2px; }
-        .shape-triangle { clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+        /* 內部幾何形狀 - 清晰可見 */
+        .shape-inner { width: 14px; height: 14px; background: rgba(255,255,255,0.9); box-shadow: 0 0 5px rgba(255,255,255,0.5); }
+        .shape-circle { border-radius: 50%; }
+        .shape-square { border-radius: 3px; }
+        .shape-triangle { clip-path: polygon(50% 0%, 0% 100%, 100% 100%); background: rgba(255,255,255,0.95); }
+        .shape-diamond { transform: rotate(45deg); }
 
-        #footer { padding: 15px; display: flex; justify-content: space-around; z-index: 10; }
-        .nav-btn {
+        .vessel.selected .orb:last-child {
+            transform: translateY(-10px); filter: brightness(1.3);
+            box-shadow: 0 0 20px currentColor, inset -4px -4px 10px rgba(0,0,0,0.5), inset 4px 4px 10px rgba(255,255,255,0.8);
+        }
+
+        /* 躍遷光球 */
+        .orb-jump {
+            position: fixed; width: 34px; height: 34px; border-radius: 50%;
+            box-shadow: 0 0 30px currentColor, inset -4px -4px 10px rgba(0,0,0,0.5), inset 4px 4px 10px rgba(255,255,255,0.8);
+            z-index: 1000; pointer-events: none; display: flex; justify-content: center; align-items: center;
+        }
+
+        /* RPG 玉簡對話框 */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+            z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.5s;
+        }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-box {
+            width: 85%; max-width: 360px; background: rgba(5,10,15,0.95); border: 1px solid var(--solid-gold); 
+            border-radius: 12px; padding: 30px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.9);
+        }
+        .modal-title { color: var(--gold); font-size: 1.2rem; letter-spacing: 4px; margin-bottom: 15px; }
+        .modal-text { color: var(--text-main); font-size: 0.95rem; letter-spacing: 2px; line-height: 1.8; margin-bottom: 30px; }
+        .rpg-btn {
+            width: 100%; height: 45px; display: flex; justify-content: center; align-items: center;
+            border-radius: 25px; border: 1px solid rgba(212,175,55,0.6); color: var(--gold);
+            letter-spacing: 4px; font-size: 0.95rem; cursor: pointer; transition: 0.3s;
+        }
+        .rpg-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        #footer { padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .tool-btn {
             background: rgba(255,255,255,0.05); border: 1px solid var(--cyan); color: var(--cyan);
-            padding: 8px 20px; border-radius: 20px; font-size: 0.8rem; cursor: pointer;
+            padding: 10px 18px; border-radius: 20px; font-size: 0.85rem; letter-spacing: 2px; cursor: pointer;
         }
     </style>
 </head>
@@ -84,157 +131,345 @@
 <canvas id="realmCanvas"></canvas>
 
 <div id="header">
-    <div class="lv-tag">法界漫遊 ‧ 第 24 重</div>
+    <div>
+        <div class="lv-tag" id="lv-display">第 1 關</div>
+        <div class="info-tag">理順色相，歸於一處</div>
+    </div>
 </div>
 
 <div id="scene">
-    <div id="lotus-mandala">
-        <svg viewBox="0 0 200 200">
-            <defs>
-                <radialGradient id="lotusGrad" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stop-color="#fff" />
-                    <stop offset="60%" stop-color="#f3e5ab" />
-                    <stop offset="100%" stop-color="#d4af37" stop-opacity="0" />
-                </radialGradient>
-            </defs>
-            <g transform="translate(100, 100)">
-                <g class="lotus-layer" id="layer-back"></g>
-                <g class="lotus-layer" id="layer-mid" style="transform: scale(0.8) rotate(15deg)"></g>
-                <g class="lotus-layer" id="layer-front" style="transform: scale(0.6) rotate(30deg)"></g>
-            </g>
-        </svg>
+    <div id="carousel">
+        <div id="center-lotus">
+            <svg viewBox="0 0 200 200" id="lotus-svg">
+                <defs>
+                    <radialGradient id="lotusGrad" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#fff" />
+                        <stop offset="60%" stop-color="#f3e5ab" />
+                        <stop offset="100%" stop-color="#d4af37" stop-opacity="0" />
+                    </radialGradient>
+                </defs>
+                <g transform="translate(100, 100)" id="lotus-group"></g>
+            </svg>
+        </div>
     </div>
-    
-    <div id="ring-container" style="transform-style: preserve-3d; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;"></div>
 </div>
 
 <div id="footer">
-    <div class="nav-btn" onclick="switchTier('top')">觀照上層</div>
-    <div class="nav-btn" onclick="switchTier('mid')">中心法輪</div>
-    <div class="nav-btn" onclick="switchTier('bottom')">底座資糧</div>
+    <div class="tool-btn" onclick="initLevel()">重整法輪</div>
+    <div class="tool-btn" style="border-color:#e63946; color:#e63946;" onclick="triggerHellEvent()">遭遇業力海</div>
+    <div class="tool-btn" style="border-color:var(--solid-gold); color:var(--gold);" onclick="forceNextLevel()">直接下一關</div>
+</div>
+
+<div class="modal-overlay" id="rpg-modal">
+    <div class="modal-box">
+        <div class="modal-title" id="rpg-title"></div>
+        <div class="modal-text" id="rpg-text"></div>
+        <div class="rpg-btn" id="rpg-confirm" onclick="closeModal()">心領神會</div>
+    </div>
 </div>
 
 <script>
-    const COLORS = ['#e63946', '#2a9d8f', '#00b4d8', '#d4af37', '#9b5de5'];
-    const SHAPES = ['square', 'triangle'];
+    // 色相雙軌系統
+    const PALETTE = ['#e63946', '#2a9d8f', '#00b4d8', '#d4af37', '#9b5de5', '#fb8500', '#f4a261'];
+    const SHAPES = ['circle', 'square', 'triangle', 'diamond'];
+    const MAX_ORBS = 4;
     
     let db = {
-        level: 24, tiers: { top: [], mid: [], bottom: [] },
-        currentFocus: 'mid', carouselRotY: 0,
+        level: 1, vessels: [], selectedIdx: null, isAnimating: false,
+        carouselRotY: 0, radius: 0, envState: 'normal',
         stars: [], time: 0
     };
 
-    // ✨ 菩提星體 Z 軸穿梭引擎
+    // ✨ 三千世界 Z 軸穿梭 + 業力波濤
+    let waveParams = { speed: 0.01, amp: 20, c: 'rgba(139,168,156,0.3)' };
+    
     function initBackground() {
         const cvs = document.getElementById('realmCanvas');
         const ctx = cvs.getContext('2d');
-        let w, h;
+        let w, h; let ocean = []; 
         const resize = () => { w = cvs.width = window.innerWidth; h = cvs.height = window.innerHeight; };
         window.addEventListener('resize', resize); resize();
-
-        for(let i=0; i<150; i++) {
-            db.stars.push({ x: (Math.random()-0.5)*w*2, y: (Math.random()-0.5)*h*2, z: Math.random()*2000, s: Math.random()*2+1 });
-        }
+        
+        // 星雲
+        for(let i=0; i<100; i++) db.stars.push({ x: (Math.random()-0.5)*2000, y: (Math.random()-0.5)*2000, z: Math.random()*2000, s: Math.random()*2+1 });
+        // 海浪
+        for(let x = -1000; x <= 1000; x += 80) { for(let z = -800; z <= 800; z += 80) ocean.push({ ox: x, oz: z }); }
 
         function draw() {
-            ctx.fillStyle = '#010204'; ctx.fillRect(0, 0, w, h);
-            db.time += 0.01;
+            ctx.fillStyle = db.envState === 'hell' ? 'rgba(15,2,5,0.8)' : 'rgba(1,2,4,0.6)'; 
+            ctx.fillRect(0, 0, w, h);
+            db.time += waveParams.speed;
             
+            // 畫星雲穿梭
             db.stars.forEach(s => {
-                s.z -= 10; // 星體向使用者飛來
+                s.z -= (db.envState === 'hell' ? 20 : 5); 
                 if(s.z <= 0) s.z = 2000;
-                
-                let scale = 1000 / (1000 + s.z);
-                let px = w/2 + s.x * scale;
-                let py = h/2 + s.y * scale;
-                
+                let sc = 800 / (800 + s.z);
+                let px = w/2 + s.x * sc; let py = h/2 + s.y * sc;
                 if(px > 0 && px < w && py > 0 && py < h) {
-                    ctx.fillStyle = `rgba(139, 168, 156, ${scale})`;
-                    ctx.beginPath(); ctx.arc(px, py, s.s * scale * 2, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = db.envState === 'hell' ? `rgba(230,57,70,${sc})` : `rgba(212,175,55,${sc})`;
+                    ctx.beginPath(); ctx.arc(px, py, s.s * sc, 0, Math.PI*2); ctx.fill();
                 }
             });
+
+            // 畫底層波濤
+            ctx.globalCompositeOperation = 'screen';
+            ocean.forEach(p => {
+                let waveY = Math.sin(p.ox*0.01 + db.time)*waveParams.amp + Math.cos(p.oz*0.01 + db.time)*waveParams.amp;
+                let z2 = waveY*0.2 + p.oz*0.9;
+                if(z2 < -400) return;
+                let sc = 400 / (400 + z2); 
+                let px = w/2 + p.ox*sc; let py = h/2 + 150 - (waveY*0.9 - p.oz*0.2)*sc;
+                ctx.beginPath(); ctx.arc(px, py, 2.5 * sc, 0, Math.PI*2);
+                ctx.fillStyle = waveParams.c; ctx.fill();
+            });
+            ctx.globalCompositeOperation = 'source-over';
             requestAnimationFrame(draw);
         }
         draw();
     }
 
-    // ✨ 萬德金蓮層次繪製
+    // ✨ 繪製豐滿大金蓮
     function drawLotus() {
-        const paths = ["layer-back", "layer-mid", "layer-front"];
-        paths.forEach(id => {
-            const g = document.getElementById(id);
-            for(let i=0; i<12; i++) {
-                const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                p.setAttribute("d", "M0,0 C15,-25 35,-50 0,-85 C-35,-50 -15,-25 0,0");
-                p.setAttribute("fill", "url(#lotusGrad)");
-                p.setAttribute("transform", `rotate(${i*30})`);
-                g.appendChild(p);
-            }
-        });
+        const group = document.getElementById('lotus-group');
+        group.innerHTML = '';
+        for(let i=0; i<12; i++) {
+            let p1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            p1.setAttribute("d", "M0,0 C15,-30 35,-60 0,-90 C-35,-60 -15,-30 0,0");
+            p1.setAttribute("fill", "url(#lotusGrad)"); p1.setAttribute("transform", `rotate(${i*30})`); p1.setAttribute("opacity", "0.8");
+            
+            let p2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            p2.setAttribute("d", "M0,0 C10,-20 20,-40 0,-60 C-20,-40 -10,-20 0,0");
+            p2.setAttribute("fill", "url(#lotusGrad)"); p2.setAttribute("transform", `rotate(${i*30 + 15}) scale(0.8)`); p2.setAttribute("opacity", "0.9");
+            
+            group.appendChild(p1); group.appendChild(p2);
+        }
     }
 
-    // ✨ 多層圓柱初始化
-    function initMandala() {
-        const container = document.getElementById('ring-container');
-        container.innerHTML = '';
-        const tierNames = ['top', 'mid', 'bottom'];
+    // ✨ 演算法：500關動態生成與多層排版
+    function generateLevelData(lv) {
+        let totalVessels = Math.min(36, 4 + Math.floor(lv / 3)); 
+        let colorTypes = Math.min(7, 2 + Math.floor(lv / 8));   
+        let shapeTypes = lv >= 5 ? Math.min(4, 1 + Math.floor(lv / 15)) : 1; 
         
-        tierNames.forEach(name => {
-            const ring = document.createElement('div');
-            ring.className = `tier-ring ${name === db.currentFocus ? 'focused' : 'unfocused'}`;
-            ring.id = `ring-${name}`;
+        let pool = [];
+        let emptyVessels = totalVessels > 12 ? 3 : 2; // 容器多時給3個空瓶緩衝
+        let itemsNeeded = (totalVessels - emptyVessels) * MAX_ORBS; 
+        
+        let combinations = [];
+        for(let c=0; c<colorTypes; c++) {
+            for(let s=0; s<shapeTypes; s++) combinations.push({ c: PALETTE[c], s: SHAPES[s] });
+        }
+        
+        let comboIdx = 0;
+        for(let i=0; i<itemsNeeded / MAX_ORBS; i++) {
+            let targetCombo = combinations[comboIdx % combinations.length];
+            for(let j=0; j<MAX_ORBS; j++) pool.push({ ...targetCombo });
+            comboIdx++;
+        }
+        pool.sort(() => Math.random() - 0.5); 
+        
+        let vessels = [];
+        for(let i=0; i<totalVessels; i++) vessels.push(i < totalVessels - emptyVessels ? pool.splice(0, MAX_ORBS) : []);
+        return vessels;
+    }
+
+    // ✨ 核心：上中下立體多寶塔排版
+    function initLevel() {
+        const carousel = document.getElementById('carousel');
+        Array.from(carousel.children).forEach(c => { if(c.id !== 'center-lotus') c.remove(); });
+        
+        db.vessels = generateLevelData(db.level);
+        db.selectedIdx = null; db.isAnimating = false;
+        db.carouselRotY = 0; carousel.style.transform = `rotateY(0deg)`;
+        
+        const total = db.vessels.length;
+        
+        // 決定有幾層 (最多每層 12 個，避免擁擠)
+        const maxPerRow = 12;
+        const rows = Math.ceil(total / maxPerRow);
+        const vesselsPerRow = Math.ceil(total / rows); // 平均分配
+        
+        db.radius = Math.round((60 / 2) / Math.tan(Math.PI / vesselsPerRow)) + 60; // 擴大半徑
+
+        for (let i = 0; i < total; i++) {
+            const v = document.createElement('div');
+            v.className = 'vessel'; v.id = `vsl-${i}`;
             
-            const num = 10; // 每層 10 瓶
-            const radius = 180;
+            // 計算此法器在哪一層、哪個角度
+            let rowIdx = Math.floor(i / vesselsPerRow);
+            let colIdx = i % vesselsPerRow;
             
-            for(let i=0; i<num; i++) {
-                const v = document.createElement('div');
-                v.className = 'vessel';
-                let theta = (360 / num) * i;
-                v.style.transform = `rotateY(${theta}deg) translateZ(${radius}px)`;
-                
-                // 填充示範球
-                for(let j=0; j<3; j++) {
-                    const o = document.createElement('div');
-                    o.className = 'orb'; o.style.backgroundColor = COLORS[Math.floor(Math.random()*5)];
-                    const s = document.createElement('div');
-                    s.className = `shape-inner shape-${SHAPES[Math.floor(Math.random()*2)]}`;
-                    o.appendChild(s);
-                    v.appendChild(o);
-                }
-                ring.appendChild(v);
-            }
-            container.appendChild(ring);
+            let theta = (360 / vesselsPerRow) * colIdx;
+            
+            // 垂直位移 (Y軸分層)
+            let yOffset = 0;
+            if (rows === 2) yOffset = rowIdx === 0 ? -110 : 110; // 兩層：上下排開
+            if (rows === 3) yOffset = (rowIdx - 1) * 200; // 三層：-200, 0, 200
+            
+            v.style.transform = `rotateY(${theta}deg) translateY(${yOffset}px) translateZ(${db.radius}px)`;
+            
+            // 將 theta 與 yOffset 存入元素供後續計算
+            v.dataset.theta = theta; 
+            v.onclick = () => handleTap(i, theta);
+            carousel.appendChild(v);
+            renderOrbs(i);
+        }
+        updateShading();
+        document.getElementById('lv-display').innerText = `第 ${db.level} 關`;
+    }
+
+    function renderOrbs(idx) {
+        const v = document.getElementById(`vsl-${idx}`);
+        v.querySelectorAll('.orb').forEach(o => o.remove());
+        db.vessels[idx].forEach(data => {
+            const orb = document.createElement('div');
+            orb.className = 'orb'; orb.style.backgroundColor = data.c; orb.style.color = data.c;
+            const shape = document.createElement('div');
+            shape.className = `shape-inner shape-${data.s}`;
+            orb.appendChild(shape);
+            v.appendChild(orb);
         });
     }
 
-    // ✨ 切換層級並執行放大效果
-    function switchTier(name) {
-        db.currentFocus = name;
-        document.querySelectorAll('.tier-ring').forEach(r => {
-            const id = r.id.split('-')[1];
-            r.className = `tier-ring ${id === name ? 'focused' : 'unfocused'}`;
-        });
-    }
-
-    // ✨ 360度撥轉 (同步所有層)
+    // ✨ 3D 多寶塔同軸拖曳
     let isDragging = false, startX = 0;
-    document.addEventListener('touchstart', (e) => { isDragging = true; startX = e.touches[0].clientX; });
-    document.addEventListener('touchmove', (e) => {
-        if(!isDragging) return;
-        let x = e.touches[0].clientX;
-        db.carouselRotY += (x - startX) * 0.4; startX = x;
-        document.querySelectorAll('.tier-ring').forEach(r => {
-            r.style.transform = r.classList.contains('focused') 
-                ? `scale(1.1) translateZ(100px) rotateY(${db.carouselRotY}deg)` 
-                : `scale(0.8) translateZ(-300px) rotateY(${db.carouselRotY}deg)`;
-        });
-    });
-    document.addEventListener('touchend', () => isDragging = false);
+    const scene = document.getElementById('scene');
+    const carousel = document.getElementById('carousel');
 
-    initBackground();
-    drawLotus();
-    initMandala();
+    function onPointerDown(e) { isDragging = true; startX = e.clientX || e.touches[0].clientX; carousel.style.transition = 'none'; }
+    function onPointerMove(e) {
+        if (!isDragging) return;
+        let x = e.clientX || e.touches[0].clientX;
+        db.carouselRotY += (x - startX) * 0.4; startX = x;
+        carousel.style.transform = `rotateY(${db.carouselRotY}deg)`;
+        updateShading();
+    }
+    function onPointerUp() { if(!isDragging) return; isDragging = false; carousel.style.transition = 'transform 0.5s ease-out'; }
+    
+    scene.addEventListener('mousedown', onPointerDown); window.addEventListener('mousemove', onPointerMove); window.addEventListener('mouseup', onPointerUp);
+    scene.addEventListener('touchstart', onPointerDown, {passive: true}); window.addEventListener('touchmove', onPointerMove, {passive: true}); window.addEventListener('touchend', onPointerUp);
+
+    function updateShading() {
+        document.querySelectorAll('.vessel').forEach(c => {
+            let theta = parseFloat(c.dataset.theta);
+            let currentAngle = (theta + db.carouselRotY) % 360;
+            if(currentAngle < 0) currentAngle += 360;
+            let dist = Math.min(currentAngle, 360 - currentAngle);
+            if(dist > 90) { c.style.filter = 'brightness(0.2) blur(3px)'; c.style.pointerEvents = 'none'; } 
+            else { c.style.filter = 'brightness(1) blur(0px)'; c.style.pointerEvents = 'auto'; }
+        });
+    }
+
+    // ✨ 色相躍遷與拋物線
+    async function handleTap(idx, theta) {
+        if (db.isAnimating || isDragging) return;
+        const targetEl = document.getElementById(`vsl-${idx}`);
+        
+        if (db.selectedIdx === null) {
+            if (db.vessels[idx].length === 0) return;
+            db.selectedIdx = idx; targetEl.classList.add('selected');
+        } else {
+            const fromIdx = db.selectedIdx; const toIdx = idx;
+            const fromEl = document.getElementById(`vsl-${fromIdx}`);
+            if (fromIdx === toIdx) { fromEl.classList.remove('selected'); db.selectedIdx = null; return; }
+
+            const fromArr = db.vessels[fromIdx]; const toArr = db.vessels[toIdx];
+            const moveData = fromArr[fromArr.length - 1];
+
+            // 嚴格校對色相
+            if (toArr.length < MAX_ORBS && (toArr.length === 0 || (toArr[toArr.length-1].c === moveData.c && toArr[toArr.length-1].s === moveData.s))) {
+                db.isAnimating = true; fromEl.classList.remove('selected');
+                
+                db.carouselRotY = -theta;
+                carousel.style.transition = 'transform 0.4s ease-in-out';
+                carousel.style.transform = `rotateY(${db.carouselRotY}deg)`;
+                updateShading();
+
+                await new Promise(r => setTimeout(r, 450));
+
+                const poppedData = fromArr.pop();
+                const fromOrbs = fromEl.querySelectorAll('.orb');
+                const topOrbEl = fromOrbs[fromOrbs.length - 1];
+                
+                const fromRect = topOrbEl.getBoundingClientRect();
+                topOrbEl.style.opacity = '0';
+
+                const toRect = targetEl.getBoundingClientRect();
+                const destX = toRect.left + (toRect.width - 34) / 2;
+                const destY = toRect.bottom - 5 - 38 * (toArr.length + 1);
+
+                await animateOrbJump(fromRect.left, fromRect.top, destX, destY, poppedData);
+                
+                toArr.push(poppedData);
+                renderOrbs(fromIdx); renderOrbs(toIdx);
+                checkWin();
+            } else { fromEl.classList.remove('selected'); }
+            db.selectedIdx = null; db.isAnimating = false;
+        }
+    }
+
+    function animateOrbJump(startX, startY, endX, endY, data) {
+        return new Promise(resolve => {
+            const jumper = document.createElement('div');
+            jumper.className = 'orb-jump';
+            jumper.style.backgroundColor = data.c; jumper.style.color = data.c;
+            const shape = document.createElement('div');
+            shape.className = `shape-inner shape-${data.s}`;
+            jumper.appendChild(shape);
+            document.body.appendChild(jumper);
+
+            // 計算拋物線
+            const controlY = Math.min(startY, endY) - 150; 
+            const deltaX = endX - startX;
+
+            const animation = jumper.animate([
+                { transform: `translate(${startX}px, ${startY}px) scale(1)` },
+                { transform: `translate(${startX + deltaX*0.5}px, ${controlY}px) scale(1.3)` },
+                { transform: `translate(${endX}px, ${endY}px) scale(1)` }
+            ], { duration: 400, easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)', fill: 'forwards' });
+
+            animation.onfinish = () => { jumper.remove(); resolve(); };
+        });
+    }
+
+    // ✨ RPG 與過關機制
+    function checkWin() {
+        const win = db.vessels.every(v => v.length === 0 || (v.length === MAX_ORBS && v.every(item => item.c === v[0].c && item.s === v[0].s)));
+        if (win) forceNextLevel();
+    }
+    
+    function forceNextLevel() {
+        db.level++;
+        if (db.level === 10 || db.level % 50 === 0) {
+            document.getElementById('rpg-title').innerText = `境界突破 ‧ 第 ${db.level} 重`;
+            document.getElementById('rpg-text').innerText = "萬德莊嚴，法輪常轉。行者資糧深厚，請保持正念，繼續理順三千大千世界之色相。";
+            document.getElementById('rpg-modal').classList.add('show');
+            document.getElementById('rpg-confirm').onclick = () => { closeModal(); setTimeout(initLevel, 500); };
+        } else {
+            initLevel();
+        }
+    }
+
+    function triggerHellEvent() {
+        db.envState = 'hell';
+        waveParams = { speed: 0.05, amp: 40, c: 'rgba(230,57,70,0.4)' };
+        document.getElementById('realmCanvas').style.filter = 'contrast(1.5)';
+        setTimeout(() => {
+            document.getElementById('rpg-title').innerText = "業力顯前";
+            document.getElementById('rpg-text').innerText = "六根攀緣引發地獄業海波濤。請攝心專注，方能平息亂流。";
+            document.getElementById('rpg-modal').classList.add('show');
+            document.getElementById('rpg-confirm').onclick = () => {
+                closeModal(); db.envState = 'normal';
+                waveParams = { speed: 0.01, amp: 20, c: 'rgba(139,168,156,0.3)' };
+                document.getElementById('realmCanvas').style.filter = 'none';
+            };
+        }, 800);
+    }
+
+    function closeModal() { document.getElementById('rpg-modal').classList.remove('show'); }
+
+    drawLotus(); initBackground(); initLevel();
 </script>
 </body>
 </html>

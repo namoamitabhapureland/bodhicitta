@@ -3,331 +3,377 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>淨流 ‧ 琉璃萬德 - 第二章：破無明網</title>
+    <title>淨流 ‧ 琉璃萬德 - 實測版</title>
     <style>
         :root {
-            --bg-deep: #020205;
+            --bg: #010103;
             --gold: #f3e5ab;
             --solid-gold: #d4af37;
             --cyan: #8ba89c;
-            --karma-purple: #4a0e4e;
-            --glass: rgba(255, 255, 255, 0.06);
+            --deep-purple: #1a0f2e;
         }
 
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            margin: 0; background: var(--bg-deep); color: #fff;
+            margin: 0; background: var(--bg); color: #fff;
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
             overflow: hidden; height: 100dvh; display: flex; flex-direction: column;
-            -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: none;
         }
 
-        /* ✨ 背景：業力星雲（會隨著干擾機制變色） */
-        #bg-canvas { position: fixed; inset: 0; z-index: -1; transition: filter 1s; }
-        .karma-active #bg-canvas { filter: hue-rotate(45deg) contrast(1.2); }
+        /* ✨ 背景星雲 */
+        #nebula {
+            position: fixed; inset: 0; z-index: -1;
+            background: radial-gradient(circle at 50% 40%, var(--deep-purple) 0%, #000 80%);
+            opacity: 0.8;
+        }
 
+        /* ✨ 狀態資訊 */
         #header {
-            padding: 20px 25px; display: flex; justify-content: space-between; align-items: flex-end;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.15); backdrop-filter: blur(10px); z-index: 10;
+            padding: 25px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2); backdrop-filter: blur(15px);
         }
-        .lv-tag { letter-spacing: 3px; color: var(--gold); font-size: 0.95rem; font-weight: bold; }
-        .info-tag { font-size: 0.75rem; color: var(--cyan); letter-spacing: 1px; margin-top: 5px; }
-
-        /* ✨ 琉璃多寶閣 擴展區域 */
-        #game-area {
-            flex: 1; display: flex; flex-wrap: wrap; justify-content: center; align-content: center;
-            gap: 15px 20px; padding: 30px; z-index: 10;
+        .lv-tag {
+            background: rgba(212, 175, 55, 0.1); border: 1px solid var(--solid-gold);
+            padding: 5px 15px; border-radius: 15px; color: var(--gold);
+            font-size: 0.85rem; letter-spacing: 3px; box-shadow: 0 0 10px rgba(212,175,55,0.2);
         }
 
-        /* ✨ 琉璃瓶設計優化（修長、多面折射感） */
-        .bottle {
-            width: 48px; height: 160px; position: relative; cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+        /* ✨ 萬日蓮花 (WebGL 質感向量模擬) */
+        #lotus-container {
+            height: 25vh; display: flex; justify-content: center; align-items: center;
+            position: relative; margin-top: 10px;
         }
-        .bottle.selected { transform: translateY(-20px); filter: brightness(1.2); }
+        #lotus-svg { width: 180px; height: 180px; filter: drop-shadow(0 0 25px rgba(212,175,55,0.4)); }
         
-        /* 業力封鎖狀態 */
-        .bottle.locked {
-            pointer-events: none; filter: grayscale(0.8);
-            box-shadow: 0 0 15px var(--karma-purple); animation: shake 0.5s infinite alternate;
+        /* ✨ 核心遊戲區 */
+        #game-area {
+            flex: 1; display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 20px; padding: 20px 40px; justify-items: center; align-content: center;
         }
-        .bottle.locked::after {
-            content: ''; position: absolute; inset: -5px; border: 2px dashed var(--karma-purple);
-            border-radius: 10px 10px 25px 25px; animation: spin 4s linear infinite;
+
+        /* ✨ 琉璃瓶設計 */
+        .bottle-wrap { position: relative; width: 54px; height: 160px; cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .bottle-wrap.selected { transform: translateY(-25px); filter: brightness(1.3); }
+        .bottle-wrap.selected::after {
+            content: '▼'; position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+            color: var(--gold); font-size: 12px; animation: arrowBounce 0.6s infinite alternate;
         }
+        @keyframes arrowBounce { from { opacity: 0.5; top: -20px; } to { opacity: 1; top: -30px; } }
 
         .bottle-body {
-            width: 100%; height: 100%; border: 1px solid rgba(243, 229, 171, 0.3);
-            border-radius: 6px 6px 20px 20px; overflow: hidden; position: relative;
-            background: var(--glass); backdrop-filter: blur(5px);
-            box-shadow: inset 5px 0 10px rgba(255,255,255,0.05), inset -5px 0 10px rgba(0,0,0,0.5);
+            width: 100%; height: 100%; border: 1.5px solid rgba(243, 229, 171, 0.3);
+            border-radius: 5px 5px 20px 20px; position: relative; overflow: hidden;
+            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(8px);
+            box-shadow: inset 0 0 15px rgba(255,255,255,0.05);
+        }
+        /* 瓶口裝飾 */
+        .bottle-neck {
+            position: absolute; top: -2px; left: 15%; width: 70%; height: 6px;
+            background: var(--solid-gold); border-radius: 3px; opacity: 0.8;
         }
 
         .liquid {
-            position: absolute; left: 0; width: 100%; transition: all 0.4s ease;
-            border-top: 1px solid rgba(255,255,255,0.2);
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+            position: absolute; left: 0; width: 100%; 
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
         }
-        
-        .liquid.hidden-layer { background: #1a1a1a !important; }
 
-        #footer {
-            padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 10;
+        /* ✨ 粒子動畫層 */
+        #particle-layer { position: fixed; inset: 0; pointer-events: none; z-index: 100; }
+        .merit-particle {
+            position: absolute; width: 6px; height: 6px; background: #fff; border-radius: 50%;
+            filter: blur(1px) drop-shadow(0 0 5px var(--gold));
         }
-        .btn-group { display: flex; gap: 15px; }
+
+        /* ✨ UI 操控 */
+        #footer { padding: 30px; display: flex; gap: 15px; justify-content: center; }
         .btn {
-            background: rgba(255,255,255,0.03); border: 1px solid var(--cyan);
-            color: var(--cyan); padding: 10px 20px; border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(139, 168, 156, 0.5);
+            color: var(--cyan); padding: 12px 25px; border-radius: 25px;
             font-size: 0.85rem; letter-spacing: 2px; cursor: pointer; transition: 0.3s;
         }
-        .btn:active { transform: scale(0.95); }
+        .btn:active { transform: scale(0.9); background: rgba(139, 168, 156, 0.2); }
         .btn-gold { border-color: var(--solid-gold); color: var(--gold); }
-        .btn-gold:disabled { opacity: 0.3; pointer-events: none; }
 
         #toast {
-            position: fixed; top: 15%; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.85); border: 1px solid var(--solid-gold); padding: 10px 25px; border-radius: 25px;
-            color: var(--gold); letter-spacing: 2px; font-size: 0.9rem;
-            opacity: 0; transition: 0.5s; pointer-events: none; z-index: 100;
+            position: fixed; bottom: 15%; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.9); border: 1px solid var(--solid-gold);
+            padding: 15px 30px; border-radius: 30px; color: var(--gold);
+            font-size: 0.9rem; letter-spacing: 2px; opacity: 0; transition: 0.5s; z-index: 1000;
         }
-
-        @keyframes shake { 0% { transform: translateX(-2px); } 100% { transform: translateX(2px); } }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        #toast.show { opacity: 1; bottom: 20%; }
     </style>
 </head>
-<body id="body-wrap">
+<body>
 
-<canvas id="bg-canvas"></canvas>
+<div id="nebula"></div>
+<div id="particle-layer"></div>
 
 <div id="header">
-    <div>
-        <div class="lv-tag" id="lv-display">第二十重 ‧ 破無明網</div>
-        <div class="info-tag">今日剩餘定課：<span id="daily-plays">3</span> 次</div>
-    </div>
-    <div style="text-align: right;">
-        <div class="lv-tag" style="font-size:0.8rem;">分享善知識</div>
-        <div class="info-tag">總資糧：<span id="merit-count">0</span> 分</div>
-    </div>
+    <div class="lv-tag" id="lv-display">第 50 關 ‧ 解行初階</div>
+    <div style="color: var(--cyan); font-size: 0.75rem; letter-spacing: 1px;">資糧：<span id="points-display">0</span></div>
+</div>
+
+<div id="lotus-container">
+    <svg id="lotus-svg" viewBox="0 0 200 200">
+        <defs>
+            <radialGradient id="lotusGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#fff" />
+                <stop offset="60%" stop-color="#f3e5ab" />
+                <stop offset="100%" stop-color="#d4af37" stop-opacity="0" />
+            </radialGradient>
+        </defs>
+        <g id="lotus-core" transform="translate(100, 100)"></g>
+    </svg>
 </div>
 
 <div id="game-area"></div>
 
 <div id="footer">
-    <div style="color:rgba(139,168,156,0.6); font-size:0.75rem; letter-spacing:1px;" id="status-msg">觀察琉璃 ‧ 理順心識</div>
-    <div class="btn-group">
-        <div class="btn" onclick="giveUpOrReset()">重整心識</div>
-        <div class="btn btn-gold" id="btn-help" onclick="addEmptyBottle()">空瓶加持 (1)</div>
-    </div>
+    <button class="btn" onclick="resetGame()">重整心識</button>
+    <button class="btn btn-gold" onclick="useHint()">般若之眼</button>
 </div>
 
-<div id="toast"></div>
+<div id="toast">資糧歸位 ‧ 蓮華增上</div>
 
 <script>
-    // 色彩擴展，對應中高難度
-    const COLORS = ['#e63946', '#2a9d8f', '#00b4d8', '#d4af37', '#9b5de5', '#fb8500', '#f4a261', '#8338ec'];
-
-    let db = {
-        level: 20, merit: 0, dailyPlays: 3,
-        bottles: [], selected: null, isAnimating: false,
-        helpUsed: false, karmaTimer: null
+    // 🎨 顏色定義 (資糧屬性)
+    const ATTRS = {
+        'blue': { color: '#4facfe', name: '般若' },
+        'gold': { color: '#f3e5ab', name: '願力' },
+        'pink': { color: '#ff0844', name: '慈悲' },
+        'green': { color: '#42e695', name: '淨化' },
+        'purple': { color: '#667eea', name: '禪定' },
+        'orange': { color: '#f6d365', name: '喜捨' }
     };
 
-    // ✨ 虛空亂流背景引擎
-    function initBackground() {
-        const cvs = document.getElementById('bg-canvas');
-        const ctx = cvs.getContext('2d');
-        let w, h; let particles = [];
+    let db = {
+        level: 50, // 初始直接挑戰 50 關
+        points: 0,
+        hints: 3
+    };
 
-        const resize = () => { w = cvs.width = window.innerWidth; h = cvs.height = window.innerHeight; };
-        window.addEventListener('resize', resize); resize();
+    let bottles = [];
+    let selectedIndex = null;
+    let isAnimating = false;
 
-        for(let i=0; i<80; i++) particles.push({ x: Math.random()*w, y: Math.random()*h, r: Math.random()*2+1, vx: (Math.random()-0.5)*0.5, vy: Math.random()*0.5+0.2 });
+    // ✨ 萬日蓮花：分形生長算法
+    function updateLotus(level) {
+        const core = document.getElementById('lotus-core');
+        core.innerHTML = '';
+        
+        // 隨等級增加層數與複雜度
+        const layers = 2 + Math.floor(level / 20); 
+        const petalsCount = 12;
 
-        function draw() {
-            ctx.fillStyle = 'rgba(2, 2, 5, 0.2)'; ctx.fillRect(0, 0, w, h);
-            ctx.fillStyle = 'rgba(139, 168, 156, 0.4)';
-            particles.forEach(p => {
-                p.x += p.vx; p.y += p.vy;
-                if(p.y > h) p.y = 0; if(p.x > w) p.x = 0; else if(p.x < 0) p.x = w;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
-            });
-            requestAnimationFrame(draw);
+        for (let l = 0; l < layers; l++) {
+            const rotOffset = l * 15;
+            const scale = 1.2 - (l * 0.15);
+            const opacity = 0.9 - (l * 0.1);
+            
+            for (let i = 0; i < petalsCount; i++) {
+                const angle = (i / petalsCount) * 360 + rotOffset;
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                // 精密的向量花瓣路徑
+                path.setAttribute("d", "M0,0 C15,-20 25,-40 0,-80 C-25,-40 -15,-20 0,0");
+                path.setAttribute("fill", "url(#lotusGrad)");
+                path.setAttribute("opacity", opacity);
+                path.setAttribute("transform", `rotate(${angle}) scale(${scale})`);
+                core.appendChild(path);
+            }
         }
-        draw();
     }
 
-    // ✨ 關卡生成 (20關起跳，難度較高)
-    function initLevel() {
-        if(db.dailyPlays <= 0) {
-            showToast("今日定課已滿，請明日再來積累資糧");
-            return;
-        }
+    // ✨ 初始化高難度關卡邏輯
+    function initGame(level) {
+        const container = document.getElementById('game-area');
+        container.innerHTML = '';
+        bottles = [];
+        selectedIndex = null;
 
-        const area = document.getElementById('game-area');
-        area.innerHTML = '';
-        db.bottles = []; db.selected = null; db.helpUsed = false;
-        document.getElementById('btn-help').disabled = false;
-
-        // 難度配置：6到8種顏色，空瓶2個
-        let colorNum = Math.min(8, 5 + Math.floor((db.level-20)/5));
-        let bottleNum = colorNum + 2; 
+        // 第 50 關配置：9 瓶子, 6 色
+        const bottleTotal = 9;
+        const colorKinds = 6;
+        const keys = Object.keys(ATTRS).slice(0, colorKinds);
         
-        let pool = [];
-        const keys = COLORS.slice(0, colorNum);
-        keys.forEach(k => { for(let i=0; i<4; i++) pool.push(k); });
-        pool.sort(() => Math.random() - 0.5);
+        // 產生完全打亂的顏色序列
+        let colorStack = [];
+        keys.forEach(k => { for(let i=0; i<4; i++) colorStack.push(k); });
+        colorStack.sort(() => Math.random() - 0.5);
 
-        for (let i = 0; i < bottleNum; i++) {
-            let content = (i < colorNum) ? pool.splice(0, 4) : [];
-            db.bottles.push(content);
-            createBottleDOM(i, area);
+        for (let i = 0; i < bottleTotal; i++) {
+            let content = [];
+            // 最後兩瓶預留為空瓶，作為邏輯緩衝
+            if (i < bottleTotal - 2) {
+                content = colorStack.splice(0, 4);
+            }
+            bottles.push(content);
+
+            const wrap = document.createElement('div');
+            wrap.className = 'bottle-wrap';
+            wrap.id = `b-${i}`;
+            wrap.onclick = () => onBottleClick(i);
+
+            const body = document.createElement('div');
+            body.className = 'bottle-body';
+            const neck = document.createElement('div');
+            neck.className = 'bottle-neck';
+            body.appendChild(neck);
+            
+            wrap.appendChild(body);
+            container.appendChild(wrap);
             renderLiquids(i);
         }
-
-        document.getElementById('lv-display').innerText = `第 ${db.level} 重 ‧ 破無明網`;
-        document.getElementById('daily-plays').innerText = db.dailyPlays;
-        document.getElementById('status-msg').innerText = "觀察琉璃 ‧ 理順心識";
-
-        // 啟動業力干擾機制
-        clearInterval(db.karmaTimer);
-        db.karmaTimer = setInterval(triggerKarmaObstacle, 15000); 
-    }
-
-    function createBottleDOM(idx, parent) {
-        const b = document.createElement('div');
-        b.className = 'bottle'; b.id = `btl-${idx}`;
-        b.onclick = () => handleTap(idx);
-        const body = document.createElement('div'); body.className = 'bottle-body';
-        b.appendChild(body); parent.appendChild(b);
-    }
-
-    function renderLiquids(idx) {
-        const body = document.getElementById(`btl-${idx}`).querySelector('.bottle-body');
-        body.querySelectorAll('.liquid').forEach(l => l.remove());
         
-        db.bottles[idx].forEach((c, i) => {
+        updateLotus(level);
+        document.getElementById('lv-display').innerText = `第 ${level} 關 ‧ 覺照深入`;
+    }
+
+    function renderLiquids(index) {
+        const wrap = document.getElementById(`b-${index}`);
+        const body = wrap.querySelector('.bottle-body');
+        // 清除舊液體層 (保留領口)
+        const oldLiquids = body.querySelectorAll('.liquid');
+        oldLiquids.forEach(l => l.remove());
+
+        const data = bottles[index];
+        data.forEach((colorKey, i) => {
             const l = document.createElement('div');
             l.className = 'liquid';
-            l.style.height = '25%'; l.style.bottom = (i * 25) + '%';
-            l.style.backgroundColor = c;
-            
-            // 20關以上：引入極少量無明層 (最底層盲盒)
-            if(i === 0 && db.bottles[idx].length > 1 && Math.random() > 0.6) l.classList.add('hidden-layer');
-            
+            l.style.height = '25%';
+            l.style.bottom = (i * 25) + '%';
+            l.style.background = `linear-gradient(to right, ${ATTRS[colorKey].color}, #fff, ${ATTRS[colorKey].color})`;
+            l.style.boxShadow = `0 0 15px ${ATTRS[colorKey].color}`;
             body.appendChild(l);
         });
     }
 
-    // ✨ 業力干擾機制：背景觸發，鎖定瓶子
-    function triggerKarmaObstacle() {
-        if(db.isAnimating || db.bottles.every(b => b.length === 0 || (b.length === 4 && b.every(v => v === b[0])))) return;
+    function onBottleClick(idx) {
+        if (isAnimating) return;
 
-        document.getElementById('body-wrap').classList.add('karma-active');
-        document.getElementById('status-msg').innerText = "⚠️ 業力亂流來襲，心識受阻";
-        
-        let validIdxs = db.bottles.map((b, i) => i).filter(i => db.bottles[i].length > 0 && db.bottles[i].length < 4);
-        if(validIdxs.length === 0) validIdxs = [0, 1]; // fallback
+        if (selectedIndex === null) {
+            if (bottles[idx].length === 0) return;
+            selectedIndex = idx;
+            document.getElementById(`b-${idx}`).classList.add('selected');
+        } else {
+            if (selectedIndex === idx) {
+                document.getElementById(`b-${idx}`).classList.remove('selected');
+                selectedIndex = null;
+                return;
+            }
+            
+            const from = bottles[selectedIndex];
+            const to = bottles[idx];
 
-        // 隨機鎖定 1-2 個瓶子 4 秒鐘
-        let lockCount = Math.random() > 0.5 ? 2 : 1;
-        validIdxs.sort(() => Math.random() - 0.5);
-        let locked = validIdxs.slice(0, lockCount);
-
-        locked.forEach(idx => document.getElementById(`btl-${idx}`).classList.add('locked'));
-
-        setTimeout(() => {
-            locked.forEach(idx => {
-                const el = document.getElementById(`btl-${idx}`);
-                if(el) el.classList.remove('locked');
-            });
-            document.getElementById('body-wrap').classList.remove('karma-active');
-            document.getElementById('status-msg').innerText = "亂流散去 ‧ 繼續精進";
-        }, 4000);
+            // 傾倒邏輯判斷
+            if (to.length < 4 && (to.length === 0 || to[to.length-1] === from[from.length-1])) {
+                pourLiquid(selectedIndex, idx);
+            } else {
+                // 不合法，抖動提示
+                const b = document.getElementById(`b-${idx}`);
+                b.style.animation = 'shake 0.3s';
+                setTimeout(() => b.style.animation = '', 300);
+            }
+            
+            document.getElementById(`b-${selectedIndex}`).classList.remove('selected');
+            selectedIndex = null;
+        }
     }
 
-    async function handleTap(idx) {
-        if (db.isAnimating) return;
-        const targetEl = document.getElementById(`btl-${idx}`);
-        if(targetEl.classList.contains('locked')) {
-            showToast("此處受業力牽引，暫不可動"); return;
+    async function pourLiquid(fromIdx, toIdx) {
+        isAnimating = true;
+        const fromArr = bottles[fromIdx];
+        const toArr = bottles[toIdx];
+        const color = fromArr[fromArr.length - 1];
+
+        // 連續移動相同顏色
+        while(fromArr.length > 0 && fromArr[fromArr.length-1] === color && toArr.length < 4) {
+            toArr.push(fromArr.pop());
+            renderLiquids(fromIdx);
+            renderLiquids(toIdx);
+            await new Promise(r => setTimeout(r, 200));
         }
-        
-        if (db.selected === null) {
-            if (db.bottles[idx].length === 0) return;
-            db.selected = idx; targetEl.classList.add('selected');
-        } else {
-            const from = db.bottles[db.selected], to = db.bottles[idx];
-            
-            if (db.selected !== idx && to.length < 4 && (to.length === 0 || to[to.length-1] === from[from.length-1])) {
-                db.isAnimating = true;
-                const moveColor = from[from.length-1];
-                while(from.length > 0 && from[from.length-1] === moveColor && to.length < 4) {
-                    to.push(from.pop());
-                    renderLiquids(db.selected); renderLiquids(idx);
-                    await new Promise(r => setTimeout(r, 150));
-                }
-                checkWin();
-            }
-            document.getElementById(`btl-${db.selected}`).classList.remove('selected');
-            db.selected = null; db.isAnimating = false;
+
+        isAnimating = false;
+        checkBottleComplete(toIdx);
+        checkWin();
+    }
+
+    // 瓶子完成特效 (粒子飛向蓮花)
+    function checkBottleComplete(idx) {
+        const b = bottles[idx];
+        if (b.length === 4 && b.every(v => v === b[0])) {
+            triggerMeritParticles(idx);
+            db.points += 50;
+            document.getElementById('points-display').innerText = db.points;
+            showToast(`${ATTRS[b[0]].name}資糧 ‧ 圓滿歸位`);
+        }
+    }
+
+    function triggerMeritParticles(bottleIdx) {
+        const bEl = document.getElementById(`b-${bottleIdx}`);
+        const rect = bEl.getBoundingClientRect();
+        const lotusRect = document.getElementById('lotus-svg').getBoundingClientRect();
+        const layer = document.getElementById('particle-layer');
+
+        for (let i = 0; i < 12; i++) {
+            const p = document.createElement('div');
+            p.className = 'merit-particle';
+            p.style.left = rect.left + rect.width/2 + 'px';
+            p.style.top = rect.top + 'px';
+            layer.appendChild(p);
+
+            const destX = lotusRect.left + lotusRect.width/2;
+            const destY = lotusRect.top + lotusRect.height/2;
+
+            p.animate([
+                { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                { transform: `translate(${destX - rect.left - 20}px, ${destY - rect.top}px) scale(0)`, opacity: 0 }
+            ], {
+                duration: 1000 + Math.random() * 800,
+                easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
+            }).onfinish = () => p.remove();
         }
     }
 
     function checkWin() {
-        const win = db.bottles.every(b => b.length === 0 || (b.length === 4 && b.every(v => v === b[0])));
+        const win = bottles.every(b => b.length === 0 || (b.length === 4 && b.every(c => c === b[0])));
         if (win) {
-            clearInterval(db.karmaTimer);
-            db.merit += 10; // 保底 10 分
-            db.dailyPlays--;
-            document.getElementById('merit-count').innerText = db.merit;
-            document.getElementById('daily-plays').innerText = db.dailyPlays;
-            
-            showToast("✨ 圓滿過關 ‧ 資糧 +10");
-            
             setTimeout(() => {
+                showToast("本重覺照圓滿 ‧ 進入下一關");
                 db.level++;
-                if(db.dailyPlays > 0) initLevel();
-                else showToast("今日三課已滿，法喜充滿！請點擊分享善知識。");
-            }, 2000);
+                initGame(db.level);
+            }, 1000);
         }
-    }
-
-    // ✨ 慈悲機制：卡關給予保底資糧並重置，扣除一次遊玩次數
-    function giveUpOrReset() {
-        if(confirm("重整心識將消耗 1 次定課次數，但佛菩薩依然會賜予您 10 分結緣資糧。確定重整嗎？")) {
-            clearInterval(db.karmaTimer);
-            db.merit += 10;
-            db.dailyPlays--;
-            document.getElementById('merit-count').innerText = db.merit;
-            document.getElementById('daily-plays').innerText = db.dailyPlays;
-            showToast("重整心識 ‧ 資糧 +10");
-            
-            if(db.dailyPlays > 0) setTimeout(initLevel, 1000);
-            else showToast("今日三課已滿，請點擊分享善知識。");
-        }
-    }
-
-    // ✨ 菩薩加持：動態增加一個空瓶 (確保絕對不會死局)
-    function addEmptyBottle() {
-        if(db.helpUsed) return;
-        db.helpUsed = true;
-        document.getElementById('btn-help').disabled = true;
-        
-        const newIdx = db.bottles.length;
-        db.bottles.push([]);
-        const area = document.getElementById('game-area');
-        createBottleDOM(newIdx, area);
-        
-        showToast("✨ 菩薩慈悲，天降淨瓶");
     }
 
     function showToast(msg) {
         const t = document.getElementById('toast');
-        t.innerText = msg; t.style.opacity = 1;
-        setTimeout(() => t.style.opacity = 0, 2500);
+        t.innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
     }
 
-    initBackground();
-    initLevel();
+    function resetGame() {
+        if(confirm("確定要重整當前心識狀態嗎？")) initGame(db.level);
+    }
+
+    function useHint() {
+        showToast("般若提醒：先觀察空瓶，預留轉運空間。");
+    }
+
+    // 啟動
+    initGame(db.level);
 </script>
+
+<style>
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+</style>
+
 </body>
 </html>

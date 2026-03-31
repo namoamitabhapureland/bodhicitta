@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>淨流 ‧ 琉璃萬德 - 菩提觀心・三分法水</title>
+    <title>淨流 ‧ 琉璃萬德 - 菩提觀心・正法水</title>
     <style>
         :root {
             --bg-deep: #010204;
             --gold: #f3e5ab; 
             --solid-gold: #d4af37; 
             --cyan: #8ba89c; 
+            
+            /* 法水主題色 (躍遷水滴用) */
+            --color-red: #ff4d4d; --color-cyan: #00e5ff; --color-gold: #ffe066;
+            --color-purple: #d8b4fe; --color-green: #80ed99; --color-orange: #ffb703; --color-pink: #ffb7c5;
         }
         
         body { 
@@ -21,112 +25,72 @@
 
         #bgCanvas { position: fixed; inset: 0; z-index: 0; }
 
-        #header {
-            padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-end;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.15); z-index: 10; position: relative;
-            background: rgba(2, 3, 6, 0.6); backdrop-filter: blur(5px);
-        }
+        #header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid rgba(212, 175, 55, 0.15); z-index: 10; position: relative; background: rgba(2, 3, 6, 0.4); backdrop-filter: blur(5px); }
         .lv-tag { letter-spacing: 3px; color: var(--gold); font-size: 1rem; font-weight: bold; }
         .info-tag { font-size: 0.75rem; color: var(--cyan); letter-spacing: 1px; margin-top: 5px; }
 
-        /* ✨ 實裝：中心無相菩提心 (移除醜圖與虛線，僅餘呼吸光點) */
+        /* ✨ 實裝：中心唯餘一光，如菩提心跳動放大 (無圖、無虛線) */
         #center-point {
-            position: absolute; width: 10px; height: 10px; background: #fff;
-            border-radius: 50%; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 5; pointer-events: none;
-            filter: drop-shadow(0 0 15px #fff) drop-shadow(0 0 30px #d4af37);
-            animation: beat 3s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+            position: absolute; top: 50%; left: 50%;
+            width: 12px; height: 12px; background: #fff; border-radius: 50%;
+            transform: translate(-50%, -50%); z-index: 5; pointer-events: none;
+            filter: drop-shadow(0 0 15px #fff) drop-shadow(0 0 35px #d4af37);
+            animation: breathe 3s infinite alternate ease-in-out;
         }
-        @keyframes beat {
-            0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0.6; }
-            100% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+        @keyframes breathe {
+            0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.5; filter: drop-shadow(0 0 10px #fff); }
+            100% { transform: translate(-50%, -50%) scale(1.4); opacity: 1; filter: drop-shadow(0 0 25px #fff) drop-shadow(0 0 50px #d4af37); }
         }
 
-        #scene {
-            flex: 1; display: flex; justify-content: center; align-items: center;
-            perspective: 1200px; overflow: hidden; position: relative; z-index: 10;
+        #scene { flex: 1; display: flex; justify-content: center; align-items: center; perspective: 1200px; overflow: hidden; position: relative; z-index: 10; }
+        #carousel { width: 80px; height: 180px; position: relative; transform-style: preserve-3d; transition: transform 0.1s ease-out; }
+
+        /* 法尊淨瓶容器 (純粹定位用) */
+        .vessel {
+            position: absolute; top: 0; left: -10px; width: 100px; height: 150px;
+            cursor: pointer; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         
-        #carousel {
-            width: 80px; height: 180px; position: relative;
-            transform-style: preserve-3d; transition: transform 0.1s ease-out;
-        }
-
-        /* ✨ 莊嚴 SVG 淨瓶與三分等分法水 */
-        .vessel {
-            position: absolute; top: 0; left: 0; width: 80px; height: 180px;
-            cursor: pointer; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-            perspective: none; /* 保持瓶子本身 2D */
-        }
-
-        /* ✨ 實裝：您的白色框線描邊與底部金線曲線 */
-        .bottle-border {
-            position: absolute; inset: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none;
-            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+        .bottle-svg {
+            position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none;
             transition: filter 0.3s;
         }
 
-        /* ✨ 實裝：精準對齊的 SVG 遮罩，用於填充法水 */
-        .vessel-mask {
-            position: absolute; inset: 0; z-index: 1;
-            /* 三分法水填充區域 (排除第四等分瓶頸) */
-            /* 坐標約： bottleneck base 42,50 到瓶底 */
-            clip-path: polygon(28% 30%, 72% 30%, 72% 63.3%, 60% 83.3%, 50% 90%, 40% 83.3%, 28% 63.3%);
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(3px);
-            display: flex; flex-direction: column-reverse; /* 水從底部往上 */
-            overflow: hidden;
-        }
+        /* 點擊提舉發光 */
+        .vessel.selected { transform: translateY(-15px); }
+        .vessel.selected .bottle-svg { filter: drop-shadow(0 0 15px rgba(243, 229, 171, 0.8)); }
 
-        /* 琉璃玻璃表面反光 (無模糊) */
-        .bottle-glass {
-            position: absolute; inset: 10%; z-index: 2; pointer-events: none;
-            border-left: 1px solid rgba(255, 255, 255, 0.15); border-right: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 10% / 50%;
-        }
-
-        /* ✨ 等分法水區塊 (三分法水) */
-        .water-segment {
-            width: 100%; height: 33.3%; /* 每份佔 1/3，共 3 份裝滿 Body */
-            box-shadow: inset 0 2px 5px rgba(255,255,255,0.2), inset 0 -3px 8px rgba(0,0,0,0.5);
-            transition: height 0.4s ease, background-color 0.3s;
-            position: relative;
-        }
-        
-        /* ✨ 實裝：水漸層與折射質感 (來自您的代碼風格) */
-        .water-segment::after {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 25%, rgba(0,0,0,0.2) 100%);
-            pointer-events: none;
-        }
-        
-        /* 最上層水面高光 */
-        .water-segment:last-child {
-            box-shadow: inset 0 8px 10px rgba(255,255,255,0.7), inset 0 -3px 8px rgba(0,0,0,0.5);
-            border-top: 2px solid rgba(255,255,255,0.8);
-        }
-
-        /* 提舉效果 */
-        .vessel.selected { transform: translateY(-18px); }
-        .vessel.selected .bottle-border { filter: drop-shadow(0 0 15px rgba(243, 229, 171, 0.8)); }
-        .vessel.selected .vessel-mask { filter: brightness(1.3); }
-
-        /* 躍遷水滴 (三分法水俐落躍遷) */
+        /* 躍遷水滴 (使用主題色) */
         .drop-jump {
-            position: fixed; width: 35px; height: 35px; border-radius: 50%;
-            box-shadow: 0 0 35px currentColor, inset -5px -5px 12px rgba(0,0,0,0.3), inset 5px 5px 12px #fff;
-            z-index: 1000; pointer-events: none; opacity: 1;
-            display: flex; justify-content: center; align-items: center;
-        }
-        .drop-jump::after {
-            content:''; position: absolute; width:10px; height:10px; background:#fff; border-radius:50%; opacity:0.8; filter:blur(1px);
+            position: fixed; width: 20px; height: 20px; border-radius: 50%;
+            box-shadow: inset -3px -3px 8px rgba(0,0,0,0.5), inset 3px 3px 8px rgba(255,255,255,0.9);
+            z-index: 1000; pointer-events: none;
         }
 
         #footer { padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; z-index: 10; position: relative; }
-        .tool-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--cyan); color: var(--cyan); padding: 10px 18px; border-radius: 20px; font-size: 0.85rem; letter-spacing: 2px; cursor: pointer; backdrop-filter: blur(5px); }
+        .tool-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--cyan); color: var(--cyan); padding: 10px 18px; border-radius: 20px; font-size: 0.85rem; letter-spacing: 2px; cursor: pointer; backdrop-filter: blur(5px); transition: 0.3s; }
+        .tool-btn:active { transform: scale(0.95); background: rgba(139, 168, 156, 0.2); }
     </style>
 </head>
 <body>
+
+<svg style="width:0; height:0; position:absolute;">
+    <defs>
+        <linearGradient id="grad-red" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ff4d4d"/><stop offset="100%" stop-color="#800000"/></linearGradient>
+        <linearGradient id="grad-cyan" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#00e5ff"/><stop offset="100%" stop-color="#004d40"/></linearGradient>
+        <linearGradient id="grad-gold" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffe066"/><stop offset="100%" stop-color="#8b6508"/></linearGradient>
+        <linearGradient id="grad-purple" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#d8b4fe"/><stop offset="100%" stop-color="#4a148c"/></linearGradient>
+        <linearGradient id="grad-green" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#80ed99"/><stop offset="100%" stop-color="#1b5e20"/></linearGradient>
+        <linearGradient id="grad-orange" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffb703"/><stop offset="100%" stop-color="#e65100"/></linearGradient>
+        <linearGradient id="grad-pink" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffb7c5"/><stop offset="100%" stop-color="#880e4f"/></linearGradient>
+        
+        <linearGradient id="glass-glare" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.3)"/>
+            <stop offset="40%" stop-color="rgba(255,255,255,0)"/>
+            <stop offset="100%" stop-color="rgba(0,0,0,0.4)"/>
+        </linearGradient>
+    </defs>
+</svg>
 
 <canvas id="bgCanvas"></canvas>
 
@@ -139,7 +103,6 @@
 
 <div id="scene">
     <div id="center-point"></div>
-
     <div id="carousel"></div>
 </div>
 
@@ -149,7 +112,7 @@
 </div>
 
 <script>
-    // 音效
+    // 音效引擎
     let audioCtx = null;
     function initAudio() { try { if (!audioCtx) { const AC = window.AudioContext || window.webkitAudioContext; if(AC) audioCtx = new AC(); } if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); } catch(e) {} }
     function playTone(freq, type, duration, vol) { try { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration); } catch(e) {} }
@@ -158,7 +121,7 @@
     function playErrorSound() { playTone(200, 'sawtooth', 0.2, 0.2); } 
     function playWinSound() { playTone(432, 'sine', 2.0, 0.4); } 
 
-    // 背景引擎
+    // 背景星空與清晰光球
     const canvas = document.getElementById('bgCanvas'); const ctx = canvas.getContext('2d');
     let cw, ch, stars = [], colorOrbs = [];
     const orbColors = ['rgba(230, 57, 70, 0.5)', 'rgba(0, 180, 216, 0.5)', 'rgba(212, 175, 55, 0.5)', 'rgba(155, 93, 229, 0.5)'];
@@ -178,27 +141,32 @@
     drawBg();
 
     // --------------------------------------------------
-    // 遊戲邏輯：三分法水，頸部無蓋
+    // ✨ 核心實裝：還原您的莊嚴 SVG 淨瓶 
     // --------------------------------------------------
-    const COLORS = [
-        'rgba(230, 57, 70, 0.95)',  // 紅
-        'rgba(42, 157, 143, 0.95)', // 綠
-        'rgba(0, 180, 216, 0.95)',  // 藍
-        'rgba(212, 175, 55, 0.95)', // 金
-        'rgba(155, 93, 229, 0.95)', // 紫
-        'rgba(251, 133, 0, 0.95)',  // 橘
-        'rgba(255, 183, 197, 0.95)' // 粉
-    ];
-    // ✨ 理解您的第四等分即瓶蓋邏輯：
-    // 資料庫設定最大容量為 3。最上方的第四等分（瓶頸）永遠透明無水。
-    const MAX_CAPACITY = 3; 
+    const COLORS = ['red', 'cyan', 'gold', 'purple', 'green', 'orange', 'pink'];
+    const MAX_CAPACITY = 4; 
 
-    // ✨ 實裝：還原您的莊嚴 SVG 淨瓶 (白色描邊 + 底部金曲線)
-    function getBottleSVG() {
+    // 生成完美的 SVG 瓶身
+    function getBottleSVG(idx) {
         return `
-        <svg class="bottle-border" viewBox="0 0 100 150" preserveAspectRatio="none">
-            <path d="M45,25 L55,25 L58,50 L72,95 L60,125 L40,125 L28,95 L42,50 Z" fill="none" stroke="#fff" stroke-width="2"/>
-            <path d="M60,125 Q50,135 40,125 Z" fill="none" stroke="#d4af37" stroke-width="2.5" stroke-linecap="round"/>
+        <svg viewBox="0 0 100 150" class="bottle-svg">
+            <defs>
+                <clipPath id="mask-${idx}">
+                    <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" />
+                </clipPath>
+            </defs>
+
+            <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="rgba(255,255,255,0.05)" />
+
+            <g id="water-${idx}" clip-path="url(#mask-${idx})"></g>
+
+            <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="url(#glass-glare)" pointer-events="none"/>
+            <ellipse cx="50" cy="95" rx="22" ry="6" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" pointer-events="none"/>
+            <ellipse cx="50" cy="95" rx="22" ry="6" fill="rgba(255,255,255,0.15)" pointer-events="none"/>
+
+            <path d="M45,25 L55,25 L58,50 L72,95 L60,125 L40,125 L28,95 L42,50 Z" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round" pointer-events="none"/>
+            
+            <path d="M40,125 Q50,135 60,125" fill="none" stroke="#d4af37" stroke-width="3" stroke-linecap="round" pointer-events="none"/>
         </svg>`;
     }
 
@@ -223,17 +191,19 @@
         
         const total = db.vessels.length;
         const rows = total > 10 ? 2 : 1; const perRow = Math.ceil(total / rows); 
-        db.radius = Math.round((80 / 2) / Math.tan(Math.PI / perRow)) + 65; 
+        // 依照淨瓶比例調整半徑，避免互撞
+        db.radius = Math.round((100 / 2) / Math.tan(Math.PI / perRow)) + 65; 
 
         for (let i = 0; i < total; i++) {
             const v = document.createElement('div'); v.className = 'vessel'; v.id = `vsl-${i}`;
             let rowIdx = Math.floor(i / perRow); let colIdx = i % perRow;
             let theta = (360 / perRow) * colIdx;
-            let yOffset = rows === 2 ? (rowIdx === 0 ? -110 : 110) : 0; 
+            let yOffset = rows === 2 ? (rowIdx === 0 ? -100 : 100) : 0; 
             v.style.transform = `rotateY(${theta}deg) translateY(${yOffset}px) translateZ(${db.radius}px)`;
             v.dataset.theta = theta; 
-            // 注入：淨瓶框 ＋ 玻璃反光 ＋ 法水遮罩
-            v.innerHTML = getBottleSVG() + `<div class="bottle-glass"></div><div class="vessel-mask" id="mask-${i}"></div>`;
+            
+            // 注入 SVG 淨瓶
+            v.innerHTML = getBottleSVG(i);
             v.onclick = () => handleTap(i, theta);
             carousel.appendChild(v);
             renderWater(i);
@@ -242,17 +212,48 @@
         document.getElementById('lv-display').innerText = `第 ${db.level} 關`;
     }
 
+    // ✨ 實裝：動態等分漸層水 (精準對齊您的四等分邏輯)
     function renderWater(idx) {
-        const mask = document.getElementById(`mask-${idx}`); mask.innerHTML = '';
-        db.vessels[idx].forEach(color => {
-            const seg = document.createElement('div');
-            seg.className = 'water-segment'; 
-            seg.style.backgroundColor = color; 
-            mask.appendChild(seg); // column-reverse: 底層水沉在最底
+        const waterGroup = document.getElementById(`water-${idx}`);
+        waterGroup.innerHTML = '';
+        const arr = db.vessels[idx];
+        
+        // 總高度從瓶底 Y=130 到瓶頂 Y=25 (共 105px)
+        // 4 等分，每等分高度 26.25px
+        // slot 0 (最底): y=103.75, h=26.25
+        // slot 1 (下身): y=77.5, h=26.25
+        // slot 2 (上身): y=51.25, h=26.25
+        // slot 3 (瓶頸): y=25, h=26.25 (這裡平常是空缺無蓋的)
+        const slots = [
+            { y: 103.75, h: 27 },
+            { y: 77.5, h: 26.5 },
+            { y: 51.25, h: 26.5 },
+            { y: 25, h: 26.5 }
+        ];
+
+        arr.forEach((colorId, i) => {
+            const slot = slots[i];
+            
+            // 填入漸層色塊
+            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute("x", "0"); rect.setAttribute("y", slot.y);
+            rect.setAttribute("width", "100"); rect.setAttribute("height", slot.h);
+            rect.setAttribute("fill", `url(#grad-${colorId})`);
+            waterGroup.appendChild(rect);
+            
+            // 為當前最高水位畫一條折射白線
+            if (i === arr.length - 1) {
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", "10"); line.setAttribute("y1", slot.y);
+                line.setAttribute("x2", "90"); line.setAttribute("y2", slot.y);
+                line.setAttribute("stroke", "rgba(255,255,255,0.8)");
+                line.setAttribute("stroke-width", "1.5");
+                waterGroup.appendChild(line);
+            }
         });
     }
 
-    // 觸控引擎
+    // 滑動防干擾
     let isDragging = false, startX = 0, dragDelta = 0; const carousel = document.getElementById('carousel');
     document.addEventListener('pointerdown', e => { if (db.isAnimating || e.target.closest('.tool-btn')) return; initAudio(); isDragging = true; startX = e.clientX; dragDelta = 0; carousel.style.transition = 'none'; });
     document.addEventListener('pointermove', e => { if (!isDragging) return; let delta = e.clientX - startX; dragDelta += Math.abs(delta); db.carouselRotY += delta * 0.4; startX = e.clientX; carousel.style.transform = `rotateY(${db.carouselRotY}deg)`; updateShading(); });
@@ -265,11 +266,11 @@
             if(currentAngle < 0) currentAngle += 360;
             let dist = Math.min(currentAngle, 360 - currentAngle);
             if(dist > 85) { c.style.filter = 'brightness(0.3) opacity(0.6)'; } 
-            else { c.style.filter = c.classList.contains('selected') ? 'brightness(1.2)' : 'brightness(1) opacity(1)'; }
+            else { c.style.filter = c.classList.contains('selected') ? 'brightness(1.3)' : 'brightness(1) opacity(1)'; }
         });
     }
 
-    // 三分法水躍遷邏輯
+    // 倒水躍遷
     async function handleTap(idx, theta) {
         initAudio();
         if (db.isAnimating || dragDelta > 5) return; 
@@ -293,12 +294,14 @@
 
                     const poppedColor = fromArr.pop(); renderWater(fromIdx); 
 
-                    // 躍遷水滴：俐落飛躍
                     const fromRect = fromEl.getBoundingClientRect();
-                    const destX = targetEl.getBoundingClientRect().left + (targetEl.getBoundingClientRect().width - 35) / 2;
-                    const destY = targetEl.getBoundingClientRect().bottom - 40 - (toArr.length * 30); // 目標水面高度
+                    const destX = targetEl.getBoundingClientRect().left + (targetEl.getBoundingClientRect().width - 20) / 2;
+                    // 水滴飛向目標水位高度
+                    const slots = [103.75, 77.5, 51.25, 25];
+                    const targetY_SVG = slots[toArr.length];
+                    const destY = targetEl.getBoundingClientRect().top + (targetY_SVG / 150) * targetEl.getBoundingClientRect().height;
 
-                    await animateDropJump(fromRect.left + 20, fromRect.top + 30, destX, destY, poppedColor);
+                    await animateDropJump(fromRect.left + 40, fromRect.top + 40, destX, destY, poppedColor);
                     
                     toArr.push(poppedColor); renderWater(toIdx);
                     checkWin();
@@ -308,17 +311,18 @@
         }
     }
 
-    function animateDropJump(startX, startY, endX, endY, color) {
+    function animateDropJump(startX, startY, endX, endY, colorId) {
         return new Promise(resolve => {
             const jumper = document.createElement('div');
-            jumper.className = 'drop-jump'; jumper.style.backgroundColor = color; jumper.style.color = color;
+            jumper.className = 'drop-jump'; 
+            jumper.style.background = `var(--color-${colorId})`; 
             document.body.appendChild(jumper);
-            const controlY = Math.min(startY, endY) - 160; const deltaX = endX - startX;
+            const controlY = Math.min(startY, endY) - 150; const deltaX = endX - startX;
             try {
                 const animation = jumper.animate([
                     { transform: `translate(${startX}px, ${startY}px) scale(1)`, opacity: 1 },
                     { transform: `translate(${startX + deltaX*0.5}px, ${controlY}px) scale(1.3)`, opacity: 1 },
-                    { transform: `translate(${endX}px, ${endY}px) scale(0.6)`, opacity: 0.8 }
+                    { transform: `translate(${endX}px, ${endY}px) scale(0.5)`, opacity: 0 }
                 ], { duration: 350, easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)', fill: 'forwards' });
                 animation.onfinish = () => { jumper.remove(); resolve(); };
             } catch(e) { jumper.remove(); resolve(); }

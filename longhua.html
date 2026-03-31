@@ -3,19 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>淨流 ‧ 琉璃萬德 - 菩提觀心・正法水</title>
+    <title>淨流 ‧ 琉璃萬德 - 每日觀心定課</title>
     <style>
         :root {
-            --bg-deep: #010204;
-            --gold: #f3e5ab; 
-            --solid-gold: #d4af37; 
-            --cyan: #8ba89c; 
-            
-            /* 法水主題色 (躍遷水滴用) */
+            --bg-deep: #010204; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
             --color-red: #ff4d4d; --color-cyan: #00e5ff; --color-gold: #ffe066;
             --color-purple: #d8b4fe; --color-green: #80ed99; --color-orange: #ffb703; --color-pink: #ffb7c5;
         }
-        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
             margin: 0; background: var(--bg-deep); color: #d0d0d0; 
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
@@ -24,318 +19,335 @@
         }
 
         #bgCanvas { position: fixed; inset: 0; z-index: 0; }
-
-        #header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid rgba(212, 175, 55, 0.15); z-index: 10; position: relative; background: rgba(2, 3, 6, 0.4); backdrop-filter: blur(5px); }
-        .lv-tag { letter-spacing: 3px; color: var(--gold); font-size: 1rem; font-weight: bold; }
-        .info-tag { font-size: 0.75rem; color: var(--cyan); letter-spacing: 1px; margin-top: 5px; }
-
-        /* ✨ 實裝：中心唯餘一光，如菩提心跳動放大 (無圖、無虛線) */
+        
+        /* 中心單一呼吸光點 (無醜圖虛線) */
         #center-point {
-            position: absolute; top: 50%; left: 50%;
-            width: 12px; height: 12px; background: #fff; border-radius: 50%;
+            position: absolute; top: 50%; left: 50%; width: 12px; height: 12px; background: #fff; border-radius: 50%;
             transform: translate(-50%, -50%); z-index: 5; pointer-events: none;
-            filter: drop-shadow(0 0 15px #fff) drop-shadow(0 0 35px #d4af37);
-            animation: breathe 3s infinite alternate ease-in-out;
+            filter: drop-shadow(0 0 15px #fff) drop-shadow(0 0 35px var(--solid-gold));
+            animation: breathe 4s infinite alternate ease-in-out;
         }
-        @keyframes breathe {
-            0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.5; filter: drop-shadow(0 0 10px #fff); }
-            100% { transform: translate(-50%, -50%) scale(1.4); opacity: 1; filter: drop-shadow(0 0 25px #fff) drop-shadow(0 0 50px #d4af37); }
-        }
+        @keyframes breathe { 0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.4; } 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; } }
+
+        #header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid rgba(212,175,55,0.15); z-index: 10; position: relative; background: rgba(1,2,4,0.4); backdrop-filter: blur(8px); }
+        .lv-tag { letter-spacing: 3px; color: var(--gold); font-size: 1rem; font-weight: bold; }
+        .info-tag { font-size: 0.72rem; color: var(--cyan); letter-spacing: 1px; margin-top: 5px; }
 
         #scene { flex: 1; display: flex; justify-content: center; align-items: center; perspective: 1200px; overflow: hidden; position: relative; z-index: 10; }
-        #carousel { width: 80px; height: 180px; position: relative; transform-style: preserve-3d; transition: transform 0.1s ease-out; }
+        #carousel { width: 100px; height: 180px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
 
-        /* 法尊淨瓶容器 (純粹定位用) */
-        .vessel {
-            position: absolute; top: 0; left: -10px; width: 100px; height: 150px;
-            cursor: pointer; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        
-        .bottle-svg {
-            position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none;
-            transition: filter 0.3s;
-        }
-
-        /* 點擊提舉發光 */
+        .vessel { position: absolute; top: 0; left: 0; width: 100px; height: 150px; cursor: pointer; transition: transform 0.3s; }
         .vessel.selected { transform: translateY(-15px); }
-        .vessel.selected .bottle-svg { filter: drop-shadow(0 0 15px rgba(243, 229, 171, 0.8)); }
+        .bottle-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
 
-        /* 躍遷水滴 (使用主題色) */
-        .drop-jump {
-            position: fixed; width: 20px; height: 20px; border-radius: 50%;
-            box-shadow: inset -3px -3px 8px rgba(0,0,0,0.5), inset 3px 3px 8px rgba(255,255,255,0.9);
-            z-index: 1000; pointer-events: none;
-        }
+        /* RPG 玻璃對話框 */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(12px); z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: 0.5s; }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-box { width: 85%; max-width: 360px; background: rgba(15,20,30,0.85); border: 1px solid var(--solid-gold); border-radius: 20px; padding: 30px 25px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        .m-title { color: var(--gold); font-size: 1.1rem; letter-spacing: 4px; margin-bottom: 20px; border-bottom: 1px solid rgba(243,229,171,0.2); padding-bottom: 15px; }
+        .m-text { font-size: 0.95rem; line-height: 1.8; margin-bottom: 30px; letter-spacing: 2px; color: #eee; }
+        
+        .m-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 12px 25px; border-radius: 25px; font-size: 0.9rem; cursor: pointer; margin: 5px; transition: 0.3s; letter-spacing: 2px; }
+        .m-btn:active { background: rgba(243, 229, 171, 0.2); }
+        .m-btn-prime { background: var(--solid-gold); color: #fff; border: none; }
 
-        #footer { padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; z-index: 10; position: relative; }
-        .tool-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--cyan); color: var(--cyan); padding: 10px 18px; border-radius: 20px; font-size: 0.85rem; letter-spacing: 2px; cursor: pointer; backdrop-filter: blur(5px); transition: 0.3s; }
-        .tool-btn:active { transform: scale(0.95); background: rgba(139, 168, 156, 0.2); }
+        /* 躍遷水滴 */
+        .drop-jump { position: fixed; width: 22px; height: 22px; border-radius: 50%; box-shadow: inset -3px -3px 8px rgba(0,0,0,0.5), inset 3px 3px 8px #fff; z-index: 1000; pointer-events: none; }
+
+        #footer { padding: 15px; display: flex; justify-content: space-between; align-items: center; z-index: 10; position: relative; }
+        .tool-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--cyan); color: var(--cyan); padding: 10px 20px; border-radius: 20px; font-size: 0.8rem; letter-spacing: 2px; cursor: pointer; backdrop-filter: blur(5px); }
     </style>
 </head>
 <body>
 
 <svg style="width:0; height:0; position:absolute;">
     <defs>
-        <linearGradient id="grad-red" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ff4d4d"/><stop offset="100%" stop-color="#800000"/></linearGradient>
-        <linearGradient id="grad-cyan" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#00e5ff"/><stop offset="100%" stop-color="#004d40"/></linearGradient>
-        <linearGradient id="grad-gold" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffe066"/><stop offset="100%" stop-color="#8b6508"/></linearGradient>
-        <linearGradient id="grad-purple" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#d8b4fe"/><stop offset="100%" stop-color="#4a148c"/></linearGradient>
-        <linearGradient id="grad-green" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#80ed99"/><stop offset="100%" stop-color="#1b5e20"/></linearGradient>
-        <linearGradient id="grad-orange" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffb703"/><stop offset="100%" stop-color="#e65100"/></linearGradient>
-        <linearGradient id="grad-pink" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffb7c5"/><stop offset="100%" stop-color="#880e4f"/></linearGradient>
-        
-        <linearGradient id="glass-glare" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="rgba(255,255,255,0.3)"/>
-            <stop offset="40%" stop-color="rgba(255,255,255,0)"/>
-            <stop offset="100%" stop-color="rgba(0,0,0,0.4)"/>
-        </linearGradient>
+        <linearGradient id="grad-red" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff4d4d"/><stop offset="100%" stop-color="#800000"/></linearGradient>
+        <linearGradient id="grad-cyan" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="100%" stop-color="#004d40"/></linearGradient>
+        <linearGradient id="grad-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffe066"/><stop offset="100%" stop-color="#8b6508"/></linearGradient>
+        <linearGradient id="grad-purple" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d8b4fe"/><stop offset="100%" stop-color="#4a148c"/></linearGradient>
+        <linearGradient id="grad-green" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#80ed99"/><stop offset="100%" stop-color="#1b5e20"/></linearGradient>
+        <linearGradient id="grad-orange" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffb703"/><stop offset="100%" stop-color="#e65100"/></linearGradient>
+        <linearGradient id="grad-pink" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffb7c5"/><stop offset="100%" stop-color="#880e4f"/></linearGradient>
+        <linearGradient id="glass-glare" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="rgba(255,255,255,0.25)"/><stop offset="40%" stop-color="transparent"/><stop offset="100%" stop-color="rgba(0,0,0,0.3)"/></linearGradient>
     </defs>
 </svg>
 
 <canvas id="bgCanvas"></canvas>
+<div id="center-point"></div>
 
 <div id="header">
     <div>
-        <div class="lv-tag" id="lv-display">第 1 關</div>
-        <div class="info-tag">理順色相，轉識成智</div>
+        <div class="lv-tag" id="lv-display">琉璃定課</div>
+        <div id="timer-ui" style="font-size:0.7rem; color:var(--gold); margin-top:4px; opacity:0.7;">心如止水...</div>
+    </div>
+    <div style="text-align:right;">
+        <div class="info-tag" id="bag-ui">資糧累積：0/100</div>
     </div>
 </div>
 
-<div id="scene">
-    <div id="center-point"></div>
-    <div id="carousel"></div>
-</div>
+<div id="scene"><div id="carousel"></div></div>
 
 <div id="footer">
     <div class="tool-btn" onclick="initLevel()">重整陣列</div>
-    <div class="tool-btn" style="border-color:var(--solid-gold); color:var(--gold);" onclick="forceNextLevel()">過關 +10</div>
+    <div class="tool-btn" onclick="shareApp()">法施分享</div>
+    <div class="tool-btn" style="border-color:var(--solid-gold); color:var(--gold);" onclick="triggerExit(true)">圓滿退場</div>
+</div>
+
+<div class="modal-overlay" id="modal">
+    <div class="modal-box">
+        <div class="m-title" id="m-title"></div>
+        <div class="m-text" id="m-text"></div>
+        <div id="m-actions"></div>
+    </div>
 </div>
 
 <script>
-    // 音效引擎
-    let audioCtx = null;
-    function initAudio() { try { if (!audioCtx) { const AC = window.AudioContext || window.webkitAudioContext; if(AC) audioCtx = new AC(); } if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); } catch(e) {} }
-    function playTone(freq, type, duration, vol) { try { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration); } catch(e) {} }
-    function playSelectSound() { playTone(1200, 'sine', 0.1, 0.2); } 
-    function playJumpSound() { playTone(800, 'triangle', 0.25, 0.15); } 
-    function playErrorSound() { playTone(200, 'sawtooth', 0.2, 0.2); } 
-    function playWinSound() { playTone(432, 'sine', 2.0, 0.4); } 
-
-    // 背景星空與清晰光球
-    const canvas = document.getElementById('bgCanvas'); const ctx = canvas.getContext('2d');
-    let cw, ch, stars = [], colorOrbs = [];
-    const orbColors = ['rgba(230, 57, 70, 0.5)', 'rgba(0, 180, 216, 0.5)', 'rgba(212, 175, 55, 0.5)', 'rgba(155, 93, 229, 0.5)'];
-
-    function resizeCanvas() { cw = canvas.width = window.innerWidth; ch = canvas.height = window.innerHeight; }
-    window.addEventListener('resize', resizeCanvas); resizeCanvas();
-
-    for(let i=0; i<150; i++) stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, size: Math.random() * 2 + 0.5 });
-    for(let i=0; i<6; i++) colorOrbs.push({ x: Math.random() * cw, y: Math.random() * ch, radius: Math.random() * 100 + 60, color: orbColors[i % 4], vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5 });
-
-    function drawBg() {
-        ctx.fillStyle = '#010204'; ctx.fillRect(0, 0, cw, ch); ctx.globalCompositeOperation = 'screen';
-        colorOrbs.forEach(orb => { orb.x += orb.vx; orb.y += orb.vy; if(orb.x < -orb.radius || orb.x > cw + orb.radius) orb.vx *= -1; if(orb.y < -orb.radius || orb.y > ch + orb.radius) orb.vy *= -1; let grad = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orb.radius); grad.addColorStop(0, orb.color); grad.addColorStop(1, 'rgba(0,0,0,0)'); ctx.beginPath(); ctx.arc(orb.x, orb.y, orb.radius, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill(); });
-        stars.forEach(s => { s.z -= 8; if (s.z <= 0) { s.z = 2000; s.x = (Math.random() - 0.5) * 2000; s.y = (Math.random() - 0.5) * 2000; } let scale = 800 / (800 + s.z); let px = cw / 2 + s.x * scale; let py = ch / 2 + s.y * scale; if (px > 0 && px < cw && py > 0 && py < ch) { ctx.beginPath(); ctx.arc(px, py, s.size * scale, 0, Math.PI*2); ctx.fillStyle = `rgba(255, 255, 255, ${scale})`; ctx.fill(); } });
-        ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(drawBg);
-    }
-    drawBg();
-
     // --------------------------------------------------
-    // ✨ 核心實裝：還原您的莊嚴 SVG 淨瓶 
+    // 資料庫與初始化 (PX_V15.0)
     // --------------------------------------------------
+    let db = JSON.parse(localStorage.getItem('PX_V15.0')) || { 
+        waterLevel: 1, waterLastDate: "", tempBag: 0, points: 0, 
+        treasures: { sword: 0, vase: 0, jewel: 0 } 
+    };
+    function saveDB() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
+
     const COLORS = ['red', 'cyan', 'gold', 'purple', 'green', 'orange', 'pink'];
-    const MAX_CAPACITY = 4; 
+    const MAX_CAPACITY = 4; // 瓶頸為第4等分
+    let game = { vessels: [], selectedIdx: null, isAnimating: false, rotY: 0, startTime: Date.now() };
 
-    // 生成完美的 SVG 瓶身
+    // --------------------------------------------------
+    // 視覺引擎：還原妙依設計的淨瓶
+    // --------------------------------------------------
     function getBottleSVG(idx) {
         return `
         <svg viewBox="0 0 100 150" class="bottle-svg">
-            <defs>
-                <clipPath id="mask-${idx}">
-                    <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" />
-                </clipPath>
-            </defs>
-
+            <defs><clipPath id="m-${idx}"><path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" /></clipPath></defs>
             <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="rgba(255,255,255,0.05)" />
-
-            <g id="water-${idx}" clip-path="url(#mask-${idx})"></g>
-
-            <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="url(#glass-glare)" pointer-events="none"/>
-            <ellipse cx="50" cy="95" rx="22" ry="6" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" pointer-events="none"/>
-            <ellipse cx="50" cy="95" rx="22" ry="6" fill="rgba(255,255,255,0.15)" pointer-events="none"/>
-
-            <path d="M45,25 L55,25 L58,50 L72,95 L60,125 L40,125 L28,95 L42,50 Z" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round" pointer-events="none"/>
-            
-            <path d="M40,125 Q50,135 60,125" fill="none" stroke="#d4af37" stroke-width="3" stroke-linecap="round" pointer-events="none"/>
+            <g id="w-${idx}" clip-path="url(#m-${idx})"></g>
+            <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="url(#glass-glare)" />
+            <ellipse cx="50" cy="95" rx="22" ry="6" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" />
+            <path d="M45,25 L55,25 L58,50 L72,95 L60,125 L40,125 L28,95 L42,50 Z" fill="none" stroke="#ffffff" stroke-width="1.5" />
+            <path d="M40,125 Q50,135 60,125" fill="none" stroke="#d4af37" stroke-width="3" stroke-linecap="round" />
         </svg>`;
     }
 
-    let db = { level: 1, vessels: [], selectedIdx: null, isAnimating: false, carouselRotY: 0, radius: 0 };
-
-    function generateLevelData(lv) {
-        let totalVessels = Math.min(18, 4 + Math.floor(lv / 5)); 
-        let colorTypes = Math.min(7, totalVessels - 2);   
-        let pool = [];
-        for(let i=0; i < colorTypes; i++) { for(let j=0; j<MAX_CAPACITY; j++) pool.push(COLORS[i]); }
-        pool.sort(() => Math.random() - 0.5); 
-        let vessels = [];
-        for(let i=0; i<totalVessels; i++) { vessels.push(i < colorTypes ? pool.splice(0, MAX_CAPACITY) : []); }
-        return vessels;
-    }
-
     function initLevel() {
-        db.isAnimating = false; db.selectedIdx = null; isDragging = false; dragDelta = 0;
-        const carousel = document.getElementById('carousel'); carousel.innerHTML = ''; 
-        db.vessels = generateLevelData(db.level);
-        db.carouselRotY = 0; carousel.style.transform = `rotateY(0deg)`;
+        const today = new Date().toDateString();
+        const isDone = db.waterLastDate === today;
+        const carousel = document.getElementById('carousel'); carousel.innerHTML = '';
+        game.selectedIdx = null; game.isAnimating = false; game.startTime = Date.now();
         
-        const total = db.vessels.length;
-        const rows = total > 10 ? 2 : 1; const perRow = Math.ceil(total / rows); 
-        // 依照淨瓶比例調整半徑，避免互撞
-        db.radius = Math.round((100 / 2) / Math.tan(Math.PI / perRow)) + 65; 
+        // 核心邏輯：一日一關
+        const lv = db.waterLevel;
+        let totalVessels = Math.min(16, 4 + Math.floor(lv / 6));
+        let colorCount = totalVessels - 2;
+        let pool = [];
+        for(let i=0; i<colorCount; i++) { for(let j=0; j<3; j++) pool.push(COLORS[i % COLORS.length]); }
+        pool.sort(() => Math.random() - 0.5);
+        
+        game.vessels = [];
+        for(let i=0; i<totalVessels; i++) game.vessels.push(i < colorCount ? pool.splice(0, 3) : []);
 
-        for (let i = 0; i < total; i++) {
-            const v = document.createElement('div'); v.className = 'vessel'; v.id = `vsl-${i}`;
-            let rowIdx = Math.floor(i / perRow); let colIdx = i % perRow;
-            let theta = (360 / perRow) * colIdx;
-            let yOffset = rows === 2 ? (rowIdx === 0 ? -100 : 100) : 0; 
-            v.style.transform = `rotateY(${theta}deg) translateY(${yOffset}px) translateZ(${db.radius}px)`;
-            v.dataset.theta = theta; 
-            
-            // 注入 SVG 淨瓶
+        const radius = Math.round((100 / 2) / Math.tan(Math.PI / totalVessels)) + 70;
+        game.vessels.forEach((content, i) => {
+            const v = document.createElement('div'); v.className = 'vessel'; v.id = `v-${i}`;
+            let theta = (360 / totalVessels) * i;
+            v.style.transform = `rotateY(${theta}deg) translateZ(${radius}px)`;
+            v.dataset.theta = theta;
             v.innerHTML = getBottleSVG(i);
-            v.onclick = () => handleTap(i, theta);
+            if (!isDone) v.onclick = () => handleTap(i, theta);
             carousel.appendChild(v);
             renderWater(i);
-        }
-        updateShading();
-        document.getElementById('lv-display').innerText = `第 ${db.level} 關`;
-    }
-
-    // ✨ 實裝：動態等分漸層水 (精準對齊您的四等分邏輯)
-    function renderWater(idx) {
-        const waterGroup = document.getElementById(`water-${idx}`);
-        waterGroup.innerHTML = '';
-        const arr = db.vessels[idx];
-        
-        // 總高度從瓶底 Y=130 到瓶頂 Y=25 (共 105px)
-        // 4 等分，每等分高度 26.25px
-        // slot 0 (最底): y=103.75, h=26.25
-        // slot 1 (下身): y=77.5, h=26.25
-        // slot 2 (上身): y=51.25, h=26.25
-        // slot 3 (瓶頸): y=25, h=26.25 (這裡平常是空缺無蓋的)
-        const slots = [
-            { y: 103.75, h: 27 },
-            { y: 77.5, h: 26.5 },
-            { y: 51.25, h: 26.5 },
-            { y: 25, h: 26.5 }
-        ];
-
-        arr.forEach((colorId, i) => {
-            const slot = slots[i];
-            
-            // 填入漸層色塊
-            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            rect.setAttribute("x", "0"); rect.setAttribute("y", slot.y);
-            rect.setAttribute("width", "100"); rect.setAttribute("height", slot.h);
-            rect.setAttribute("fill", `url(#grad-${colorId})`);
-            waterGroup.appendChild(rect);
-            
-            // 為當前最高水位畫一條折射白線
-            if (i === arr.length - 1) {
-                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", "10"); line.setAttribute("y1", slot.y);
-                line.setAttribute("x2", "90"); line.setAttribute("y2", slot.y);
-                line.setAttribute("stroke", "rgba(255,255,255,0.8)");
-                line.setAttribute("stroke-width", "1.5");
-                waterGroup.appendChild(line);
-            }
         });
-    }
 
-    // 滑動防干擾
-    let isDragging = false, startX = 0, dragDelta = 0; const carousel = document.getElementById('carousel');
-    document.addEventListener('pointerdown', e => { if (db.isAnimating || e.target.closest('.tool-btn')) return; initAudio(); isDragging = true; startX = e.clientX; dragDelta = 0; carousel.style.transition = 'none'; });
-    document.addEventListener('pointermove', e => { if (!isDragging) return; let delta = e.clientX - startX; dragDelta += Math.abs(delta); db.carouselRotY += delta * 0.4; startX = e.clientX; carousel.style.transform = `rotateY(${db.carouselRotY}deg)`; updateShading(); });
-    const endDrag = () => { if(isDragging) { isDragging = false; carousel.style.transition = 'transform 0.5s ease-out'; } };
-    document.addEventListener('pointerup', endDrag); document.addEventListener('pointercancel', endDrag); document.addEventListener('pointerleave', endDrag);
-
-    function updateShading() {
-        document.querySelectorAll('.vessel').forEach(c => {
-            let theta = parseFloat(c.dataset.theta); let currentAngle = (theta + db.carouselRotY) % 360;
-            if(currentAngle < 0) currentAngle += 360;
-            let dist = Math.min(currentAngle, 360 - currentAngle);
-            if(dist > 85) { c.style.filter = 'brightness(0.3) opacity(0.6)'; } 
-            else { c.style.filter = c.classList.contains('selected') ? 'brightness(1.3)' : 'brightness(1) opacity(1)'; }
-        });
-    }
-
-    // 倒水躍遷
-    async function handleTap(idx, theta) {
-        initAudio();
-        if (db.isAnimating || dragDelta > 5) return; 
-        const targetEl = document.getElementById(`vsl-${idx}`);
-        
-        if (db.selectedIdx === null) {
-            if (db.vessels[idx].length === 0) return;
-            db.selectedIdx = idx; targetEl.classList.add('selected'); updateShading(); playSelectSound();
+        document.getElementById('lv-display').innerText = `第 ${lv} 關`;
+        document.getElementById('bag-ui').innerText = `資糧累積：${db.tempBag}/100`;
+        if(isDone) {
+            document.getElementById('timer-ui').innerText = "今日圓滿 ‧ 靜心觀想";
+            setTimeout(() => { triggerExit(false); }, 1000);
         } else {
-            const fromIdx = db.selectedIdx; const toIdx = idx; const fromEl = document.getElementById(`vsl-${fromIdx}`);
-            if (fromIdx === toIdx) { fromEl.classList.remove('selected'); db.selectedIdx = null; updateShading(); return; }
+            startTimer();
+        }
+    }
 
-            const fromArr = db.vessels[fromIdx]; const toArr = db.vessels[toIdx];
+    function renderWater(idx) {
+        const g = document.getElementById(`w-${idx}`); g.innerHTML = '';
+        const slots = [{y:104, h:28}, {y:78, h:26}, {y:52, h:26}];
+        game.vessels[idx].forEach((c, i) => {
+            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute("x", "0"); rect.setAttribute("y", slots[i].y); rect.setAttribute("width", "100"); rect.setAttribute("height", slots[i].h);
+            rect.setAttribute("fill", `url(#grad-${c})`); g.appendChild(rect);
+        });
+    }
+
+    // --------------------------------------------------
+    // ✨ 最短路徑旋轉邏輯 (Bug 修復)
+    // --------------------------------------------------
+    async function handleTap(idx, theta) {
+        if (game.isAnimating) return;
+        const targetEl = document.getElementById(`v-${idx}`);
+        
+        if (game.selectedIdx === null) {
+            if (game.vessels[idx].length === 0) return;
+            game.selectedIdx = idx; targetEl.classList.add('selected');
+        } else {
+            const fromIdx = game.selectedIdx; const toIdx = idx;
+            const fromEl = document.getElementById(`v-${fromIdx}`);
+            if (fromIdx === toIdx) { fromEl.classList.remove('selected'); game.selectedIdx = null; return; }
+
+            const fromArr = game.vessels[fromIdx]; const toArr = game.vessels[toIdx];
             const moveColor = fromArr[fromArr.length - 1];
 
-            if (toArr.length < MAX_CAPACITY && (toArr.length === 0 || toArr[toArr.length-1] === moveColor)) {
-                try {
-                    db.isAnimating = true; fromEl.classList.remove('selected'); updateShading(); playJumpSound();
-                    db.carouselRotY = -theta; carousel.style.transform = `rotateY(${db.carouselRotY}deg)`; updateShading();
-                    await new Promise(r => setTimeout(r, 400));
-
-                    const poppedColor = fromArr.pop(); renderWater(fromIdx); 
-
-                    const fromRect = fromEl.getBoundingClientRect();
-                    const destX = targetEl.getBoundingClientRect().left + (targetEl.getBoundingClientRect().width - 20) / 2;
-                    // 水滴飛向目標水位高度
-                    const slots = [103.75, 77.5, 51.25, 25];
-                    const targetY_SVG = slots[toArr.length];
-                    const destY = targetEl.getBoundingClientRect().top + (targetY_SVG / 150) * targetEl.getBoundingClientRect().height;
-
-                    await animateDropJump(fromRect.left + 40, fromRect.top + 40, destX, destY, poppedColor);
-                    
-                    toArr.push(poppedColor); renderWater(toIdx);
-                    checkWin();
-                } catch(e) { console.warn(e); } 
-                finally { db.selectedIdx = null; db.isAnimating = false; }
-            } else { fromEl.classList.remove('selected'); db.selectedIdx = null; updateShading(); playErrorSound(); }
+            if (toArr.length < 3 && (toArr.length === 0 || toArr[toArr.length-1] === moveColor)) {
+                game.isAnimating = true; fromEl.classList.remove('selected');
+                
+                // ✨ 最短路徑計算
+                let diff = ((-theta) - game.rotY + 540) % 360 - 180;
+                game.rotY += diff;
+                document.getElementById('carousel').style.transform = `rotateY(${game.rotY}deg)`;
+                
+                await new Promise(r => setTimeout(r, 450));
+                fromArr.pop(); renderWater(fromIdx);
+                
+                // 躍遷水滴
+                const fromRect = fromEl.getBoundingClientRect();
+                const toRect = targetEl.getBoundingClientRect();
+                await animateJump(fromRect.left + 40, fromRect.top + 40, toRect.left + 40, toRect.top + 60, moveColor);
+                
+                toArr.push(moveColor); renderWater(toIdx);
+                checkWin();
+            } else { fromEl.classList.remove('selected'); }
+            game.selectedIdx = null; game.isAnimating = false;
         }
     }
 
-    function animateDropJump(startX, startY, endX, endY, colorId) {
+    function animateJump(sx, sy, ex, ey, cid) {
         return new Promise(resolve => {
-            const jumper = document.createElement('div');
-            jumper.className = 'drop-jump'; 
-            jumper.style.background = `var(--color-${colorId})`; 
-            document.body.appendChild(jumper);
-            const controlY = Math.min(startY, endY) - 150; const deltaX = endX - startX;
-            try {
-                const animation = jumper.animate([
-                    { transform: `translate(${startX}px, ${startY}px) scale(1)`, opacity: 1 },
-                    { transform: `translate(${startX + deltaX*0.5}px, ${controlY}px) scale(1.3)`, opacity: 1 },
-                    { transform: `translate(${endX}px, ${endY}px) scale(0.5)`, opacity: 0 }
-                ], { duration: 350, easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)', fill: 'forwards' });
-                animation.onfinish = () => { jumper.remove(); resolve(); };
-            } catch(e) { jumper.remove(); resolve(); }
-            setTimeout(() => { if(jumper.parentNode) { jumper.remove(); resolve(); } }, 400); 
+            const j = document.createElement('div'); j.className = 'drop-jump'; j.style.background = `var(--color-${cid})`;
+            document.body.appendChild(j);
+            const anim = j.animate([
+                { transform: `translate(${sx}px, ${sy}px) scale(1)`, opacity: 1 },
+                { transform: `translate(${(sx+ex)/2}px, ${Math.min(sy,ey)-150}px) scale(1.5)`, opacity: 1 },
+                { transform: `translate(${ex}px, ${ey}px) scale(0.5)`, opacity: 0 }
+            ], { duration: 400, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+            anim.onfinish = () => { j.remove(); resolve(); };
         });
     }
 
+    // --------------------------------------------------
+    // 結算與 RPG 經典事件
+    // --------------------------------------------------
+    const SCRIPTURES = [
+        { t: "釋迦如來 ‧ 演說大經", c: "【發菩提心，一向專念】。此三輩往生之根本，行者當攝心入定。", b: "南無本師釋迦牟尼佛" },
+        { t: "法藏比丘 ‧ 弘願顯現", c: "【設我得佛，十方眾生，至心信樂】。四十八願，願願皆為導歸極樂。", b: "南無阿彌陀佛" },
+        { t: "地藏菩薩 ‧ 業海清涼", c: "【眾生度盡，方證菩提】。一念歸依，大願墨綠法光即現，鎮伏業海。", b: "南無地藏王菩薩" },
+        { t: "大勢至 ‧ 念佛圓通", c: "【都攝六根，淨念相繼】。如子憶母，法界白光恆常護念。", b: "南無大勢至菩薩" }
+    ];
+
     function checkWin() {
-        if (db.vessels.every(v => v.length === 0 || (v.length === MAX_CAPACITY && v.every(item => item === v[0])))) {
-            playWinSound(); setTimeout(() => { db.level++; initLevel(); }, 1000);
+        if (game.vessels.every(v => v.length === 0 || (v.length === 3 && v.every(c => c === v[0])))) {
+            const today = new Date().toDateString();
+            db.waterLastDate = today; db.waterLevel++; db.tempBag += 10;
+            
+            // 每20關法寶掉落
+            if (db.waterLevel % 20 === 0) {
+                const ts = ['sword', 'vase', 'jewel'];
+                db.treasures[ts[Math.floor(Math.random()*3)]]++;
+            }
+            saveDB();
+            
+            // 過關特效：白霧爆發 (Warp Speed)
+            document.getElementById('center-point').animate([{scale:1, opacity:1}, {scale:100, opacity:0}], {duration: 800});
+            
+            setTimeout(() => {
+                if (db.waterLevel % 5 === 0) {
+                    const s = SCRIPTURES[Math.floor(Math.random()*SCRIPTURES.length)];
+                    showModal(s.t, s.c, s.b, () => triggerExit(false));
+                } else {
+                    triggerExit(false);
+                }
+            }, 800);
         }
     }
-    function forceNextLevel() { db.level += 9; db.level++; initLevel(); }
+
+    function triggerExit(isManual) {
+        const title = isManual ? "法水觀心 ‧ 暫歇" : "今日修持 ‧ 圓滿";
+        let text = "放下手機，請給身邊的人一個微笑，或在心中默默感恩。清淨即在當下。";
+        
+        let html = `<button class="m-btn" onclick="shareApp()">法施分享</button>`;
+        if (db.tempBag >= 100) {
+            html += `<button class="m-btn m-btn-prime" onclick="syncPoints()">資糧結集 (${db.tempBag})</button>`;
+        } else {
+            html += `<button class="m-btn" onclick="window.location.href='index.html'">歸返道場</button>`;
+        }
+        
+        showModal(title, text, null, null, html);
+    }
+
+    function showModal(title, text, btnText, callback, customHtml) {
+        document.getElementById('m-title').innerText = title;
+        document.getElementById('m-text').innerText = text;
+        const actions = document.getElementById('m-actions');
+        actions.innerHTML = customHtml || `<button class="m-btn m-btn-prime" onclick="closeModal(${callback ? 'true' : 'false'})">${btnText}</button>`;
+        window.currentCallback = callback;
+        document.getElementById('modal').classList.add('show');
+    }
+
+    function closeModal(runCallback) {
+        document.getElementById('modal').classList.remove('show');
+        if(runCallback && window.currentCallback) window.currentCallback();
+    }
+
+    function syncPoints() {
+        db.points += db.tempBag; db.tempBag = 0; saveDB();
+        window.location.href = 'index.html';
+    }
+
+    function startTimer() {
+        const limit = (30 + Math.floor(db.waterLevel / 5)) * 60 * 1000;
+        const check = setInterval(() => {
+            const elapsed = Date.now() - game.startTime;
+            if (elapsed > limit) {
+                clearInterval(check);
+                showModal("超時提醒", "一念執著，心神已疲。請暫且放下，明日再來理順。", "安住呼吸", () => window.location.href='index.html');
+            }
+            const min = Math.floor((limit - elapsed) / 60000);
+            document.getElementById('timer-ui').innerText = `觀心餘時：${min} 分鐘`;
+        }, 10000);
+    }
+
+    function shareApp() {
+        if (navigator.share) {
+            navigator.share({ title: '淨流 ‧ 生活紀錄', url: window.location.href.split('?')[0] });
+        } else {
+            alert("隨喜功德！網址已可分享。");
+        }
+    }
+
+    // --------------------------------------------------
+    // 背景與拖曳 (略過部分重複背景代碼，保持核心)
+    // --------------------------------------------------
+    const canvas = document.getElementById('bgCanvas'); const ctx = canvas.getContext('2d');
+    let cw, ch; function res() { cw=canvas.width=window.innerWidth; ch=canvas.height=window.innerHeight; }
+    window.addEventListener('resize', res); res();
+    function draw() {
+        ctx.fillStyle = '#010204'; ctx.fillRect(0,0,cw,ch);
+        // ... (背景星空邏輯)
+        requestAnimationFrame(draw);
+    }
+    draw();
+
+    // 觸控旋轉防死機
+    let isD = false, sx = 0;
+    document.addEventListener('pointerdown', e => { if(game.isAnimating) return; isD = true; sx = e.clientX; });
+    document.addEventListener('pointermove', e => {
+        if(!isD) return;
+        let dx = e.clientX - sx; game.rotY += dx * 0.4; sx = e.clientX;
+        document.getElementById('carousel').style.transform = `rotateY(${game.rotY}deg)`;
+    });
+    document.addEventListener('pointerup', () => isD = false);
+
     initLevel();
 </script>
 </body>

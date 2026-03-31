@@ -19,10 +19,10 @@
             position: fixed; inset: 0; z-index: 0;
         }
 
-        /* ✨ 銳利高解析度漂浮蓮花 (無光暈、無限縮放、全場景遊走) */
+        /* ✨ 銳利高解析度漂浮蓮花 (金心實體、無光暈、無限縮放、全場景遊走) */
         #wandering-lotus {
-            position: fixed; top: 50%; left: 50%; width: 200px; height: 200px;
-            margin-top: -100px; margin-left: -100px; 
+            position: fixed; top: 50%; left: 50%; width: 220px; height: 220px;
+            margin-top: -110px; margin-left: -110px; 
             display: flex; justify-content: center; align-items: center; 
             pointer-events: none; z-index: 5;
             animation: lotusWander 35s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
@@ -30,15 +30,14 @@
         
         #wandering-lotus svg {
             width: 100%; height: 100%; 
-            /* 嚴格遵照指示：不加任何 drop-shadow，保持向量絕對銳利 */
-            filter: none;
+            /* 嚴格遵照指示：不加任何 filter，保持向量絕對銳利 */
         }
 
         /* 蓮花極致漂浮與縮放軌跡 */
         @keyframes lotusWander {
             0% { transform: translate(0, 0) scale(0.8) rotate(0deg); opacity: 0.8; }
             25% { transform: translate(-25vw, -20vh) scale(2.0) rotate(90deg); opacity: 0.9; }
-            50% { transform: translate(15vw, 15vh) scale(3.8) rotate(180deg); opacity: 1; } /* 極限放大 */
+            50% { transform: translate(15vw, 15vh) scale(3.5) rotate(180deg); opacity: 1; } /* 極限放大 */
             75% { transform: translate(-10vw, 25vh) scale(1.2) rotate(270deg); opacity: 0.85; }
             100% { transform: translate(25vw, -15vh) scale(0.5) rotate(360deg); opacity: 0.6; }
         }
@@ -79,12 +78,12 @@
         /* 寶珠的光源折射面 (無模糊，純幾何漸層) */
         .orb::after {
             content: ''; position: absolute; inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 45%, rgba(0,0,0,0.4) 100%);
+            background: linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 45%, rgba(0,0,0,0.4) 100%);
             pointer-events: none;
         }
         
         /* 提舉時最上方的寶珠發光 */
-        .vessel.selected .orb:last-child { transform: translateY(-8px); filter: brightness(1.3); }
+        .vessel.selected .orb:last-child { transform: translateY(-8px); filter: brightness(1.4); }
         
         /* 躍遷寶珠 */
         .orb-jump { 
@@ -108,7 +107,16 @@
     <svg viewBox="0 0 200 200">
         <defs>
             <radialGradient id="lotusGrad" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#fff" /><stop offset="60%" stop-color="#f3e5ab" /><stop offset="100%" stop-color="#d4af37" stop-opacity="0" />
+                <stop offset="0%" stop-color="#ffd700" />    /* 中心實體常寂金光 */
+                <stop offset="30%" stop-color="#fff" />      /* 過渡白光 */
+                <stop offset="70%" stop-color="#f3e5ab" />   /* 花瓣主色 */
+                <stop offset="100%" stop-color="#d4af37" stop-opacity="0" /> /* 邊緣透明 */
+            </radialGradient>
+            
+            <radialGradient id="lotusGradDark" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#d4af37" />
+                <stop offset="50%" stop-color="#c9a0dc" />
+                <stop offset="100%" stop-color="#9b5de5" stop-opacity="0" />
             </radialGradient>
         </defs>
         <g transform="translate(100, 100)" id="lotus-group"></g>
@@ -162,10 +170,10 @@
     let stars = [];
     let colorOrbs = [];
     const orbColors = [
-        'rgba(230, 57, 70, 0.6)',  
-        'rgba(0, 180, 216, 0.6)',  
-        'rgba(212, 175, 55, 0.6)', 
-        'rgba(155, 93, 229, 0.6)'  
+        'rgba(230, 57, 70, 0.6)',  // 紅
+        'rgba(0, 180, 216, 0.6)',  // 藍
+        'rgba(212, 175, 55, 0.6)', // 金
+        'rgba(155, 93, 229, 0.6)'  // 紫
     ];
 
     function resizeCanvas() { cw = canvas.width = window.innerWidth; ch = canvas.height = window.innerHeight; }
@@ -180,7 +188,7 @@
     for(let i=0; i<6; i++) {
         colorOrbs.push({
             x: Math.random() * cw, y: Math.random() * ch,
-            radius: Math.random() * 100 + 60,
+            radius: Math.random() * 120 + 60,
             color: orbColors[i % orbColors.length],
             vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5
         });
@@ -228,15 +236,32 @@
     function drawLotus() {
         const group = document.getElementById('lotus-group');
         group.innerHTML = '';
+        
+        // ✨ 多層次實體花瓣堆疊
         for(let i=0; i<12; i++) {
+            // 底層大花瓣 (暗色墊底)
+            let p0 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            p0.setAttribute("d", "M0,0 C20,-40 45,-80 0,-110 C-45,-80 -20,-40 0,0");
+            p0.setAttribute("fill", "url(#lotusGradDark)"); p0.setAttribute("transform", `rotate(${i*30 + 15}) scale(0.9)`); p0.setAttribute("opacity", "0.7");
+            
+            // 中層主花瓣
             let p1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
             p1.setAttribute("d", "M0,0 C15,-30 35,-60 0,-90 C-35,-60 -15,-30 0,0");
-            p1.setAttribute("fill", "url(#lotusGrad)"); p1.setAttribute("transform", `rotate(${i*30})`); p1.setAttribute("opacity", "0.9");
+            p1.setAttribute("fill", "url(#lotusGrad)"); p1.setAttribute("transform", `rotate(${i*30})`); p1.setAttribute("opacity", "0.95");
+            
+            // 內層小花瓣
             let p2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
             p2.setAttribute("d", "M0,0 C10,-20 20,-40 0,-60 C-20,-40 -10,-20 0,0");
-            p2.setAttribute("fill", "url(#lotusGrad)"); p2.setAttribute("transform", `rotate(${i*30 + 15}) scale(0.8)`); p2.setAttribute("opacity", "0.95");
-            group.appendChild(p1); group.appendChild(p2);
+            p2.setAttribute("fill", "url(#lotusGrad)"); p2.setAttribute("transform", `rotate(${i*30 + 15}) scale(0.8)`); p2.setAttribute("opacity", "1");
+            
+            group.appendChild(p0); group.appendChild(p1); group.appendChild(p2);
         }
+        
+        // ✨ 補上正中央的實體金心，確保絕對不露黑底
+        let centerCore = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        centerCore.setAttribute("cx", "0"); centerCore.setAttribute("cy", "0"); centerCore.setAttribute("r", "15");
+        centerCore.setAttribute("fill", "#ffd700");
+        group.appendChild(centerCore);
     }
 
     // ✨ 純色資料庫 (化繁為簡)
@@ -325,7 +350,7 @@
             let currentAngle = (parseFloat(c.dataset.theta) + db.carouselRotY) % 360;
             if(currentAngle < 0) currentAngle += 360;
             let dist = Math.min(currentAngle, 360 - currentAngle);
-            if(dist > 85) { c.style.filter = 'brightness(0.2) opacity(0.5)'; c.style.pointerEvents = 'none'; } 
+            if(dist > 85) { c.style.filter = 'brightness(0.3) opacity(0.6)'; c.style.pointerEvents = 'none'; } 
             else { c.style.filter = 'brightness(1) opacity(1)'; c.style.pointerEvents = 'auto'; }
         });
     }

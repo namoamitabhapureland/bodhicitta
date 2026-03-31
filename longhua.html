@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>淨流 ‧ 琉璃萬德 - 360度法輪壇城</title>
+    <title>淨流 ‧ 琉璃萬德 - 六角壇城與尊聖法光</title>
     <style>
         :root {
-            --bg-deep: #010204;
+            --bg-deep: #020306;
             --gold: #f3e5ab; 
             --solid-gold: #d4af37; 
             --cyan: #8ba89c; 
@@ -17,12 +17,11 @@
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
             overflow: hidden; height: 100dvh; display: flex; flex-direction: column;
             -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
-            /* 阻止原生的水平滑動，保留我們自己的 3D 拖曳 */
             touch-action: pan-y; 
         }
 
-        /* 虛空底座 */
-        #realmCanvas { position: fixed; inset: 0; z-index: -1; }
+        /* 菩提心三千世界底座 */
+        #realmCanvas { position: fixed; inset: 0; z-index: -1; transition: filter 1s; }
 
         #header {
             padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-end;
@@ -31,69 +30,91 @@
         .lv-tag { letter-spacing: 3px; color: var(--gold); font-size: 1rem; font-weight: bold; }
         .info-tag { font-size: 0.75rem; color: var(--cyan); letter-spacing: 1px; margin-top: 5px; }
 
-        /* ✨ 3D 場景容器 */
+        /* 3D 場景與法輪 */
         #scene {
             flex: 1; display: flex; justify-content: center; align-items: center;
-            perspective: 1200px; /* 創造 3D 透視深度 */
-            overflow: hidden; position: relative; z-index: 10;
+            perspective: 1200px; overflow: hidden; position: relative; z-index: 10;
         }
-
-        /* ✨ 旋轉法輪 (Carousel) */
         #carousel {
-            width: 50px; height: 140px; position: relative;
-            transform-style: preserve-3d; /* 保留子元素的 3D 空間 */
-            transition: transform 0.1s ease-out; /* 滑順的拖曳跟隨 */
+            width: 50px; height: 160px; position: relative;
+            transform-style: preserve-3d; transition: transform 0.1s ease-out;
         }
 
-        /* 琉璃法器 */
-        .vessel {
-            position: absolute; top: 0; left: 0; width: 50px; height: 140px;
+        /* 六角水晶柱 (Hexagonal Crystal Prism) */
+        .crystal {
+            position: absolute; top: 0; left: 0; width: 50px; height: 160px;
             cursor: pointer;
-            border: 1.5px solid rgba(243, 229, 171, 0.3);
-            border-top: none; border-radius: 0 0 18px 18px;
-            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px);
-            box-shadow: inset 4px 0 10px rgba(255,255,255,0.1), inset -4px 0 10px rgba(0,0,0,0.6);
-            display: flex; flex-direction: column-reverse; align-items: center; padding-bottom: 5px; gap: 3px;
-            /* 讓背面的瓶子變暗，增加立體感 */
+            /* 利用 clip-path 削出六角立體輪廓 */
+            clip-path: polygon(15% 0, 85% 0, 100% 10%, 100% 90%, 85% 100%, 15% 100%, 0 90%, 0 10%);
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.15) 20%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 80%, rgba(0,0,0,0.5) 100%);
+            backdrop-filter: blur(4px);
+            display: flex; flex-direction: column-reverse; 
+            box-shadow: inset 0 0 10px rgba(243, 229, 171, 0.2);
             transition: filter 0.3s, transform 0.3s;
         }
 
-        /* 瓶口立體環 */
-        .vessel::before {
-            content: ''; position: absolute; top: -3px; left: -3px; right: -3px; height: 8px;
-            border: 1.5px solid rgba(243, 229, 171, 0.6); border-radius: 50%;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 5;
+        .crystal.selected {
+            filter: brightness(1.5) drop-shadow(0 0 15px rgba(243, 229, 171, 0.5));
+            transform: translateY(-10px);
         }
 
-        /* 發光選取狀態 */
-        .vessel.selected {
-            border-color: rgba(243, 229, 171, 0.9);
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.6), inset 0 0 15px rgba(255,255,255,0.2);
+        /* 幾何晶塊資糧 (靜態) */
+        .gem-block {
+            width: 100%; height: 25%; 
+            position: relative; transition: all 0.3s ease;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.3);
+            border-top: 1px solid rgba(255,255,255,0.2);
         }
 
-        /* 資糧寶珠 */
-        .orb {
-            width: 22px; height: 22px; border-radius: 50%; position: relative;
-            box-shadow: inset -3px -3px 8px rgba(0,0,0,0.6), inset 3px 3px 8px rgba(255,255,255,0.7);
-            z-index: 2; flex-shrink: 0; transition: all 0.3s;
-        }
-
-        .vessel.selected .orb:last-child {
+        /* 點擊選中時，最上層晶塊開始微縮準備躍遷 */
+        .crystal.selected .gem-block:last-child {
+            border-radius: 50%; width: 34px; height: 34px; margin: 0 auto;
             transform: translateY(-10px); filter: brightness(1.3);
-            box-shadow: 0 0 15px currentColor, inset -3px -3px 8px rgba(0,0,0,0.5), inset 3px 3px 8px rgba(255,255,255,0.8);
+            box-shadow: 0 0 20px currentColor, inset -5px -5px 15px rgba(0,0,0,0.5);
         }
 
-        /* 光影躍遷 */
+        /* 躍遷中的琉璃光球 (動態) */
         .orb-jump {
-            position: fixed; width: 22px; height: 22px; border-radius: 50%;
-            box-shadow: 0 0 25px currentColor, inset -3px -3px 8px rgba(0,0,0,0.5), inset 3px 3px 8px rgba(255,255,255,0.8);
+            position: fixed; width: 34px; height: 34px; border-radius: 50%;
+            box-shadow: 0 0 30px currentColor, inset -5px -5px 15px rgba(0,0,0,0.5), inset 5px 5px 15px rgba(255,255,255,0.8);
             z-index: 1000; pointer-events: none;
         }
 
-        #footer { padding: 15px; display: flex; justify-content: center; z-index: 10; }
-        .reset-btn {
-            background: rgba(255,255,255,0.03); border: 1px solid var(--cyan); color: var(--cyan);
-            padding: 8px 25px; border-radius: 20px; font-size: 0.85rem; letter-spacing: 2px; cursor: pointer;
+        /* RPG 琉璃玉簡對話框 */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.5s;
+        }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-box {
+            width: 85%; max-width: 360px; background: rgba(5,10,15,0.85); 
+            border: 1px solid var(--solid-gold); border-radius: 10px; padding: 30px 25px; 
+            text-align: center; box-shadow: 0 0 40px rgba(0,0,0,0.8);
+            transform: translateY(20px); transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            position: relative; overflow: hidden;
+        }
+        .modal-overlay.show .modal-box { transform: translateY(0); }
+        
+        .modal-title { color: var(--gold); font-size: 1.15rem; letter-spacing: 4px; margin-bottom: 15px; }
+        .modal-text { color: var(--text-main); font-size: 0.95rem; letter-spacing: 2px; line-height: 1.8; margin-bottom: 35px; text-align: justify; text-align-last: center;}
+        
+        /* 尊聖法光聚光按鈕 */
+        .rpg-btn-wrap {
+            position: relative; width: 100%; height: 50px; display: flex; justify-content: center; align-items: center;
+            border-radius: 25px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+            cursor: pointer; overflow: hidden;
+        }
+        .rpg-btn-fill {
+            position: absolute; left: 0; top: 0; height: 100%; width: 0%; 
+            transition: width 0.1s linear; opacity: 0.8;
+            /* 發光顏色由 JS 動態注入 */
+        }
+        .rpg-btn-text { position: absolute; color: #fff; font-size: 0.95rem; letter-spacing: 5px; z-index: 5; text-shadow: 0 0 5px rgba(0,0,0,0.8); }
+
+        #footer { padding: 15px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .tool-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--cyan); color: var(--cyan);
+            padding: 8px 20px; border-radius: 20px; font-size: 0.8rem; letter-spacing: 2px; cursor: pointer;
         }
     </style>
 </head>
@@ -103,8 +124,8 @@
 
 <div id="header">
     <div>
-        <div class="lv-tag" id="lv-display">立體壇城 ‧ 轉動法輪</div>
-        <div class="info-tag">左右滑動螢幕，調動虛空法器</div>
+        <div class="lv-tag" id="lv-display">法界漫遊 ‧ 晶塊躍遷</div>
+        <div class="info-tag">轉動法輪，理順幾何資糧</div>
     </div>
 </div>
 
@@ -113,34 +134,50 @@
 </div>
 
 <div id="footer">
-    <div class="reset-btn" onclick="initLevel()">重整陣列</div>
+    <div class="tool-btn" onclick="initLevel()">重整陣列</div>
+    <div class="tool-btn" style="border-color: var(--solid-gold); color: var(--gold);" onclick="triggerRandomEncounter()">觸發無常遭遇</div>
+</div>
+
+<div class="modal-overlay" id="rpg-modal">
+    <div class="modal-box">
+        <div class="modal-title" id="rpg-title"></div>
+        <div class="modal-text" id="rpg-text"></div>
+        <div class="rpg-btn-wrap" onmousedown="startFill()" onmouseup="stopFill()" ontouchstart="startFill()" ontouchend="stopFill()">
+            <div class="rpg-btn-fill" id="rpg-btn-fill"></div>
+            <div class="rpg-btn-text" id="rpg-btn-text"></div>
+        </div>
+    </div>
 </div>
 
 <script>
-    const ORB_COLORS = ['#e63946', '#2a9d8f', '#00b4d8', '#d4af37', '#9b5de5', '#fb8500', '#f4a261', '#8338ec', '#ffb7c5', '#06d6a0'];
-    const MAX_ORBS = 4;
-    const TOTAL_VESSELS = 24; // 24 個瓶子完美支援
-    const COLORS_IN_PLAY = 18; 
-
+    const COLORS = ['#e63946', '#2a9d8f', '#00b4d8', '#d4af37', '#9b5de5', '#fb8500', '#f4a261', '#8338ec'];
+    const MAX_GEMS = 4;
+    const TOTAL_CRYSTALS = 12; // 測試版 12 根水晶柱
+    
     let db = {
-        level: 24, vessels: [], selectedIdx: null, isAnimating: false,
-        carouselRotY: 0, radius: 0
+        crystals: [], selectedIdx: null, isAnimating: false,
+        carouselRotY: 0, radius: 0,
+        currentEncounter: null
     };
 
-    // 極簡星空底座
+    // 菩提心三千世界背景
     function initBackground() {
         const cvs = document.getElementById('realmCanvas');
         const ctx = cvs.getContext('2d');
         let w, h; let stars = [];
         const resize = () => { w = cvs.width = window.innerWidth; h = cvs.height = window.innerHeight; };
         window.addEventListener('resize', resize); resize();
-        for(let i=0; i<80; i++) stars.push({ x: Math.random()*w, y: Math.random()*h, s: Math.random()*1.5, a: Math.random()*Math.PI*2 });
+        
+        for(let i=0; i<100; i++) stars.push({ x: Math.random()*w, y: Math.random()*h, s: Math.random()*2, a: Math.random()*Math.PI*2, speed: Math.random()*0.5+0.1 });
+        
         function draw() {
-            ctx.fillStyle = 'rgba(1, 2, 4, 0.4)'; ctx.fillRect(0, 0, w, h);
+            ctx.fillStyle = db.currentEncounter ? 'rgba(10, 5, 20, 0.4)' : 'rgba(2, 3, 6, 0.4)';
+            ctx.fillRect(0, 0, w, h);
             stars.forEach(p => {
-                p.y -= 0.3; p.x += Math.sin(p.a)*0.3; p.a += 0.02;
+                p.y -= p.speed; p.x += Math.sin(p.a)*0.4; p.a += 0.02;
                 if(p.y < 0) p.y = h;
-                ctx.fillStyle = `rgba(212, 175, 55, ${0.2 + Math.random()*0.3})`;
+                let opacity = db.currentEncounter ? 0.8 : 0.3 + Math.random()*0.3;
+                ctx.fillStyle = `rgba(243, 229, 171, ${opacity})`;
                 ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill();
             });
             requestAnimationFrame(draw);
@@ -148,182 +185,219 @@
         draw();
     }
 
+    // 初始化六角壇城
     function initLevel() {
         const carousel = document.getElementById('carousel');
         carousel.innerHTML = '';
-        db.vessels = []; db.selectedIdx = null; db.isAnimating = false;
+        db.crystals = []; db.selectedIdx = null; db.isAnimating = false;
         db.carouselRotY = 0; carousel.style.transform = `rotateY(0deg)`;
-
-        // 計算 3D 圓柱半徑 (Radius = (itemWidth / 2) / Math.tan(PI / totalItems))
-        // 稍微加大間距讓視覺更開闊
-        db.radius = Math.round((60 / 2) / Math.tan(Math.PI / TOTAL_VESSELS)) + 20;
+        db.radius = Math.round((60 / 2) / Math.tan(Math.PI / TOTAL_CRYSTALS)) + 30;
 
         let pool = [];
-        for(let i=0; i<COLORS_IN_PLAY; i++) {
-            for(let j=0; j<MAX_ORBS; j++) pool.push(ORB_COLORS[i]);
+        for(let i=0; i<TOTAL_CRYSTALS - 2; i++) {
+            for(let j=0; j<MAX_GEMS; j++) pool.push(COLORS[i % COLORS.length]);
         }
         pool.sort(() => Math.random() - 0.5);
 
-        for (let i = 0; i < TOTAL_VESSELS; i++) {
-            let content = (i < COLORS_IN_PLAY) ? pool.splice(0, MAX_ORBS) : [];
-            db.vessels.push(content);
+        for (let i = 0; i < TOTAL_CRYSTALS; i++) {
+            let content = (i < TOTAL_CRYSTALS - 2) ? pool.splice(0, MAX_GEMS) : [];
+            db.crystals.push(content);
             
-            const v = document.createElement('div');
-            v.className = 'vessel'; v.id = `vsl-${i}`;
+            const crystal = document.createElement('div');
+            crystal.className = 'crystal'; crystal.id = `cry-${i}`;
             
-            // ✨ 核心：將法器沿著 Y 軸旋轉，並向外推至半徑邊緣，形成立體圓柱
-            let theta = (360 / TOTAL_VESSELS) * i;
-            v.style.transform = `rotateY(${theta}deg) translateZ(${db.radius}px)`;
+            let theta = (360 / TOTAL_CRYSTALS) * i;
+            crystal.style.transform = `rotateY(${theta}deg) translateZ(${db.radius}px)`;
             
-            v.onclick = () => handleTap(i, theta);
-            carousel.appendChild(v);
-            renderOrbs(i);
+            crystal.onclick = () => handleTap(i, theta);
+            carousel.appendChild(crystal);
+            renderGems(i);
         }
-        updateVesselShading();
+        updateShading();
     }
 
-    function renderOrbs(idx) {
-        const v = document.getElementById(`vsl-${idx}`);
-        v.innerHTML = '';
-        db.vessels[idx].forEach(color => {
-            const orb = document.createElement('div');
-            orb.className = 'orb'; orb.style.backgroundColor = color; orb.style.color = color;
-            v.appendChild(orb);
+    function renderGems(idx) {
+        const c = document.getElementById(`cry-${idx}`);
+        c.innerHTML = '';
+        db.crystals[idx].forEach(color => {
+            const gem = document.createElement('div');
+            gem.className = 'gem-block'; 
+            gem.style.backgroundColor = color; gem.style.color = color;
+            c.appendChild(gem);
         });
     }
 
-    // ✨ 3D 場景拖曳控制引擎
-    let isDragging = false, startX = 0, currentX = 0;
+    // 3D 旋轉控制
+    let isDragging = false, startX = 0;
     const scene = document.getElementById('scene');
     const carousel = document.getElementById('carousel');
 
-    function onPointerDown(e) {
-        isDragging = true;
-        startX = e.clientX || e.touches[0].clientX;
-        carousel.style.transition = 'none'; // 拖曳時取消動畫，緊跟手指
-    }
-
+    function onPointerDown(e) { if(db.currentEncounter) return; isDragging = true; startX = e.clientX || e.touches[0].clientX; carousel.style.transition = 'none'; }
     function onPointerMove(e) {
         if (!isDragging) return;
         let x = e.clientX || e.touches[0].clientX;
-        let deltaX = x - startX;
-        startX = x;
-        // 將水平滑動距離轉換為旋轉角度 (除以一個靈敏度系數)
-        db.carouselRotY += deltaX * 0.4;
+        db.carouselRotY += (x - startX) * 0.4; startX = x;
         carousel.style.transform = `rotateY(${db.carouselRotY}deg)`;
-        updateVesselShading();
+        updateShading();
     }
+    function onPointerUp() { if(!isDragging) return; isDragging = false; carousel.style.transition = 'transform 0.5s ease-out'; }
+    
+    scene.addEventListener('mousedown', onPointerDown); window.addEventListener('mousemove', onPointerMove); window.addEventListener('mouseup', onPointerUp);
+    scene.addEventListener('touchstart', onPointerDown, {passive: true}); window.addEventListener('touchmove', onPointerMove, {passive: true}); window.addEventListener('touchend', onPointerUp);
 
-    function onPointerUp() {
-        if(!isDragging) return;
-        isDragging = false;
-        carousel.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)'; // 釋放時加上慣性滑動感
-        // 自動吸附到最近的法器角度 (可選，這裡為了滑順度先只加過渡)
-    }
-
-    scene.addEventListener('mousedown', onPointerDown);
-    window.addEventListener('mousemove', onPointerMove);
-    window.addEventListener('mouseup', onPointerUp);
-    scene.addEventListener('touchstart', onPointerDown, {passive: true});
-    window.addEventListener('touchmove', onPointerMove, {passive: true});
-    window.addEventListener('touchend', onPointerUp);
-
-    // 根據 3D 角度，讓轉到背面的瓶子變暗，前方的瓶子變亮，強化立體感
-    function updateVesselShading() {
-        const vessels = document.querySelectorAll('.vessel');
-        vessels.forEach((v, i) => {
-            let theta = (360 / TOTAL_VESSELS) * i;
-            // 計算目前瓶子與正前方視角的絕對角度差
+    function updateShading() {
+        document.querySelectorAll('.crystal').forEach((c, i) => {
+            let theta = (360 / TOTAL_CRYSTALS) * i;
             let currentAngle = (theta + db.carouselRotY) % 360;
             if(currentAngle < 0) currentAngle += 360;
-            // 距離前方 (0度或360度) 越遠越暗
-            let distToFront = Math.min(currentAngle, 360 - currentAngle);
-            if(distToFront > 90) {
-                v.style.filter = 'brightness(0.3) blur(2px)'; // 背面模糊且黯淡
-                v.style.pointerEvents = 'none'; // 背面的不可點擊
-            } else {
-                v.style.filter = 'brightness(1) blur(0px)';
-                v.style.pointerEvents = 'auto';
-            }
+            let dist = Math.min(currentAngle, 360 - currentAngle);
+            if(dist > 90) { c.style.filter = 'brightness(0.2) blur(3px)'; c.style.pointerEvents = 'none'; } 
+            else { c.style.filter = 'brightness(1) blur(0px)'; c.style.pointerEvents = 'auto'; }
         });
     }
 
+    // 晶塊躍遷邏輯
     async function handleTap(idx, theta) {
-        if (db.isAnimating || isDragging) return;
-        const targetEl = document.getElementById(`vsl-${idx}`);
+        if (db.isAnimating || isDragging || db.currentEncounter) return;
+        const targetEl = document.getElementById(`cry-${idx}`);
         
         if (db.selectedIdx === null) {
-            if (db.vessels[idx].length === 0) return;
+            if (db.crystals[idx].length === 0) return;
             db.selectedIdx = idx; targetEl.classList.add('selected');
         } else {
-            const fromIdx = db.selectedIdx;
-            const toIdx = idx;
-            const fromEl = document.getElementById(`vsl-${fromIdx}`);
-            
-            if (fromIdx === toIdx) {
-                fromEl.classList.remove('selected'); db.selectedIdx = null; return;
-            }
+            const fromIdx = db.selectedIdx; const toIdx = idx;
+            const fromEl = document.getElementById(`cry-${fromIdx}`);
+            if (fromIdx === toIdx) { fromEl.classList.remove('selected'); db.selectedIdx = null; return; }
 
-            const fromArr = db.vessels[fromIdx];
-            const toArr = db.vessels[toIdx];
+            const fromArr = db.crystals[fromIdx]; const toArr = db.crystals[toIdx];
             const moveColor = fromArr[fromArr.length - 1];
 
-            if (toArr.length < MAX_ORBS && (toArr.length === 0 || toArr[toArr.length-1] === moveColor)) {
-                db.isAnimating = true;
-                fromEl.classList.remove('selected');
+            if (toArr.length < MAX_GEMS && (toArr.length === 0 || toArr[toArr.length-1] === moveColor)) {
+                db.isAnimating = true; fromEl.classList.remove('selected');
                 
-                // 自動將目標瓶轉到正前方 (強化互動感)
                 db.carouselRotY = -theta;
                 carousel.style.transition = 'transform 0.4s ease-in-out';
                 carousel.style.transform = `rotateY(${db.carouselRotY}deg)`;
-                updateVesselShading();
+                updateShading();
 
-                // 等待旋轉到位後再進行光影躍遷
                 await new Promise(r => setTimeout(r, 450));
 
                 const poppedColor = fromArr.pop();
-                const fromOrbs = fromEl.querySelectorAll('.orb');
-                const topOrbEl = fromOrbs[fromOrbs.length - 1];
+                const fromGems = fromEl.querySelectorAll('.gem-block');
+                const topGemEl = fromGems[fromGems.length - 1];
                 
-                // 取得旋轉後的最新 2D 螢幕座標
-                const fromRect = topOrbEl.getBoundingClientRect();
-                topOrbEl.style.opacity = '0';
+                const fromRect = topGemEl.getBoundingClientRect();
+                topGemEl.style.opacity = '0';
 
                 const toRect = targetEl.getBoundingClientRect();
-                const destX = toRect.left + (toRect.width - 22) / 2;
-                const destY = toRect.bottom - 5 - 25 * (toArr.length + 1);
+                const destX = toRect.left + (toRect.width - 34) / 2;
+                const destY = toRect.bottom - 5 - 40 * (toArr.length + 1);
 
-                await animateOrbJump(fromRect.left, fromRect.top, destX, destY, poppedColor);
+                await animateMorphJump(fromRect.left, fromRect.top, destX, destY, poppedColor);
                 
                 toArr.push(poppedColor);
-                renderOrbs(fromIdx); renderOrbs(toIdx);
-            } else {
-                fromEl.classList.remove('selected');
-            }
+                renderGems(fromIdx); renderGems(toIdx);
+            } else { fromEl.classList.remove('selected'); }
             db.selectedIdx = null; db.isAnimating = false;
         }
     }
 
-    function animateOrbJump(startX, startY, endX, endY, color) {
+    function animateMorphJump(startX, startY, endX, endY, color) {
         return new Promise(resolve => {
             const jumper = document.createElement('div');
             jumper.className = 'orb-jump';
             jumper.style.backgroundColor = color; jumper.style.color = color;
             document.body.appendChild(jumper);
 
-            const controlY = Math.min(startY, endY) - 150; 
+            const controlY = Math.min(startY, endY) - 120; 
             const deltaX = endX - startX;
 
             const animation = jumper.animate([
                 { transform: `translate(${startX}px, ${startY}px) scale(1)` },
-                { transform: `translate(${startX + deltaX*0.5}px, ${controlY}px) scale(1.3)` },
-                { transform: `translate(${endX}px, ${endY}px) scale(1)` }
-            ], {
-                duration: 400, easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)', fill: 'forwards'
-            });
+                { transform: `translate(${startX + deltaX*0.5}px, ${controlY}px) scale(1.1)` },
+                { transform: `translate(${endX}px, ${endY}px) scale(0.8)` }
+            ], { duration: 400, easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)', fill: 'forwards' });
 
             animation.onfinish = () => { jumper.remove(); resolve(); };
         });
+    }
+
+    // ==========================================
+    // ✨ RPG 尊聖法光系統
+    // ==========================================
+    const encounters = [
+        { 
+            buddha: '釋迦牟尼佛', 
+            title: '無明網現', 
+            text: '娑婆業力翻湧，迷失本心。請至誠稱唸本師名號，祈求常寂金光護念，破除無明。',
+            btnText: '南無本師釋迦牟尼佛',
+            lightColor: '#d4af37', // 常寂金光
+            boxShadow: '0 0 30px rgba(212, 175, 55, 0.8)'
+        },
+        { 
+            buddha: '地藏王菩薩', 
+            title: '深淵震盪', 
+            text: '宿世業障現前，心識動盪。請稱唸大願地藏王菩薩名號，以安忍如地之墨綠法光，鎮伏業海。',
+            btnText: '南無地藏王菩薩',
+            lightColor: '#1e5631', // 安忍墨綠
+            boxShadow: '0 0 30px rgba(30, 86, 49, 0.8)'
+        },
+        { 
+            buddha: '大勢至菩薩', 
+            title: '念頭散亂', 
+            text: '六根攀緣，無法攝心。請稱唸大勢至菩薩名號，以無邊智慧白光，都攝六根，淨念相繼。',
+            btnText: '南無大勢至菩薩',
+            lightColor: '#ffffff', // 智慧白光
+            boxShadow: '0 0 30px rgba(255, 255, 255, 0.8)'
+        }
+    ];
+
+    let fillTimer = null; let fillProgress = 0;
+
+    function triggerRandomEncounter() {
+        if(db.isAnimating || db.currentEncounter) return;
+        
+        const enc = encounters[Math.floor(Math.random() * encounters.length)];
+        db.currentEncounter = enc;
+
+        document.getElementById('realmCanvas').style.filter = 'blur(3px) contrast(1.2)';
+        document.getElementById('rpg-title').innerText = enc.title;
+        document.getElementById('rpg-text').innerText = enc.text;
+        document.getElementById('rpg-btn-text').innerText = enc.btnText;
+        
+        const fillEl = document.getElementById('rpg-btn-fill');
+        fillEl.style.backgroundColor = enc.lightColor;
+        fillEl.style.boxShadow = enc.boxShadow;
+        fillEl.style.width = '0%';
+
+        document.getElementById('rpg-modal').classList.add('show');
+    }
+
+    function startFill() {
+        if(!db.currentEncounter) return;
+        clearInterval(fillTimer);
+        fillProgress = 0;
+        document.getElementById('rpg-btn-fill').style.width = '0%';
+        fillTimer = setInterval(() => {
+            fillProgress += 2.5; // 長按約 4 秒
+            document.getElementById('rpg-btn-fill').style.width = fillProgress + '%';
+            if(fillProgress >= 100) {
+                clearInterval(fillTimer);
+                closeEncounter();
+            }
+        }, 100);
+    }
+
+    function stopFill() {
+        clearInterval(fillTimer);
+        fillProgress = 0;
+        document.getElementById('rpg-btn-fill').style.width = '0%';
+    }
+
+    function closeEncounter() {
+        document.getElementById('rpg-modal').classList.remove('show');
+        document.getElementById('realmCanvas').style.filter = 'none';
+        setTimeout(() => db.currentEncounter = null, 500);
     }
 
     initBackground(); initLevel();

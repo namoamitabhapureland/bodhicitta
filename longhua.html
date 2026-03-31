@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>淨流 ‧ 琉璃萬德 - 無相星海與尊聖法光</title>
+    <title>淨流 ‧ 琉璃萬德 - 星海法輪強固版</title>
     <style>
         :root {
-            --bg-deep: #020306;
+            --bg-deep: #010204;
             --gold: #f3e5ab; 
             --solid-gold: #d4af37; 
             --cyan: #8ba89c; 
@@ -17,7 +17,8 @@
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
             overflow: hidden; height: 100dvh; display: flex; flex-direction: column;
             -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
-            touch-action: pan-y; 
+            /* ✨ 防死機關鍵：徹底禁止所有瀏覽器預設滑動手勢 */
+            touch-action: none; 
         }
 
         /* 背景：星雲穿梭與清晰彩色光球 */
@@ -43,7 +44,7 @@
             transform-style: preserve-3d; transition: transform 0.1s ease-out;
         }
 
-        /* 採用您的代碼：六角水晶柱 (徹底去除試管感) */
+        /* 六角水晶柱 (您指定的完美容器比例) */
         .crystal {
             position: absolute; top: 0; left: 0; width: 50px; height: 180px;
             cursor: pointer;
@@ -61,7 +62,7 @@
             transform: translateY(-10px);
         }
 
-        /* 琉璃圓球 (放置於水晶柱內) */
+        /* 琉璃圓球 */
         .orb {
             width: 38px; height: 38px; border-radius: 50%; position: relative;
             box-shadow: inset -5px -5px 12px rgba(0,0,0,0.6), inset 5px 5px 12px rgba(255,255,255,0.8), 0 2px 5px rgba(0,0,0,0.5);
@@ -80,7 +81,7 @@
             z-index: 1000; pointer-events: none;
         }
 
-        /* 您設計的 RPG 琉璃玉簡與長按法光系統 */
+        /* 尊聖法光系統 */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
             z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.5s;
@@ -141,7 +142,7 @@
     <div class="modal-box">
         <div class="modal-title" id="rpg-title"></div>
         <div class="modal-text" id="rpg-text"></div>
-        <div class="rpg-btn-wrap" onmousedown="startFill()" onmouseup="stopFill()" onmouseleave="stopFill()" ontouchstart="startFill()" ontouchend="stopFill()">
+        <div class="rpg-btn-wrap" onmousedown="startFill()" onmouseup="stopFill()" onmouseleave="stopFill()" ontouchstart="startFill()" ontouchend="stopFill()" ontouchcancel="stopFill()">
             <div class="rpg-btn-fill" id="rpg-btn-fill"></div>
             <div class="rpg-btn-text" id="rpg-btn-text"></div>
         </div>
@@ -149,52 +150,45 @@
 </div>
 
 <script>
-    // 原生音效
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    // ✨ 防死機金剛鎖 1：確保音效引擎絕對不報錯
     let audioCtx = null;
-    function initAudio() { if (!audioCtx) { audioCtx = new AudioContext(); if (audioCtx.state === 'suspended') audioCtx.resume(); } }
-    function playTone(freq, type, duration, vol) {
-        if (!audioCtx) return;
-        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-        osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    function initAudio() { 
+        try {
+            if (!audioCtx) { 
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if(AC) audioCtx = new AC(); 
+            }
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); 
+        } catch(e) { console.warn("音效系統未授權"); }
     }
+    
+    function playTone(freq, type, duration, vol) {
+        try {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
+        } catch(e) {}
+    }
+    
     function playSelectSound() { playTone(1200, 'sine', 0.1, 0.3); } 
     function playJumpSound() { playTone(800, 'triangle', 0.25, 0.2); } 
     function playErrorSound() { playTone(200, 'sawtooth', 0.2, 0.2); } 
     function playWinSound() { playTone(432, 'sine', 2.0, 0.5); } 
 
-    // 背景引擎：星雲穿梭 + 清晰彩色光球
+    // ✨ 背景引擎：星雲前進穿梭 + 清晰能量球
     const canvas = document.getElementById('bgCanvas');
     const ctx = canvas.getContext('2d');
-    let cw, ch;
-    
-    let stars = [];
-    let colorOrbs = [];
-    const orbColors = [
-        'rgba(230, 57, 70, 0.4)',  
-        'rgba(0, 180, 216, 0.4)',  
-        'rgba(212, 175, 55, 0.4)', 
-        'rgba(155, 93, 229, 0.4)'  
-    ];
+    let cw, ch, stars = [], colorOrbs = [];
+    const orbColors = ['rgba(230, 57, 70, 0.4)', 'rgba(0, 180, 216, 0.4)', 'rgba(212, 175, 55, 0.4)', 'rgba(155, 93, 229, 0.4)'];
 
     function resizeCanvas() { cw = canvas.width = window.innerWidth; ch = canvas.height = window.innerHeight; }
     window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
-    for(let i=0; i<200; i++) {
-        stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, size: Math.random() * 2 + 0.5 });
-    }
-
-    for(let i=0; i<6; i++) {
-        colorOrbs.push({
-            x: Math.random() * cw, y: Math.random() * ch,
-            radius: Math.random() * 100 + 60,
-            color: orbColors[i % orbColors.length],
-            vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5
-        });
-    }
+    for(let i=0; i<150; i++) stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, size: Math.random() * 2 + 0.5 });
+    for(let i=0; i<6; i++) colorOrbs.push({ x: Math.random() * cw, y: Math.random() * ch, radius: Math.random() * 100 + 60, color: orbColors[i % 4], vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5 });
 
     function drawBg() {
         ctx.fillStyle = db.currentEncounter ? 'rgba(10, 5, 20, 0.9)' : '#010204'; 
@@ -206,11 +200,8 @@
                 orb.x += orb.vx; orb.y += orb.vy;
                 if(orb.x < -orb.radius || orb.x > cw + orb.radius) orb.vx *= -1;
                 if(orb.y < -orb.radius || orb.y > ch + orb.radius) orb.vy *= -1;
-
                 let grad = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orb.radius);
-                grad.addColorStop(0, orb.color);
-                grad.addColorStop(1, 'rgba(0,0,0,0)');
-
+                grad.addColorStop(0, orb.color); grad.addColorStop(1, 'rgba(0,0,0,0)');
                 ctx.beginPath(); ctx.arc(orb.x, orb.y, orb.radius, 0, Math.PI*2);
                 ctx.fillStyle = grad; ctx.fill();
             });
@@ -221,7 +212,6 @@
             if (s.z <= 0) { s.z = 2000; s.x = (Math.random() - 0.5) * 2000; s.y = (Math.random() - 0.5) * 2000; }
             let scale = 800 / (800 + s.z);
             let px = cw / 2 + s.x * scale; let py = ch / 2 + s.y * scale;
-
             if (px > 0 && px < cw && py > 0 && py < ch) {
                 ctx.beginPath(); ctx.arc(px, py, s.size * scale, 0, Math.PI*2);
                 ctx.fillStyle = `rgba(255, 255, 255, ${scale})`; ctx.fill();
@@ -233,29 +223,26 @@
     }
     drawBg();
 
-    // 遊戲邏輯
-    const PALETTE = ['#e63946', '#2a9d8f', '#00b4d8', '#d4af37', '#9b5de5', '#fb8500', '#f4a261', '#ffb7c5'];
-    const MAX_ORBS = 4;
+    // 遊戲邏輯與動態生成
+    const COLORS = ['#e63946', '#2a9d8f', '#00b4d8', '#d4af37', '#9b5de5', '#fb8500', '#f4a261', '#8338ec', '#ff006e', '#3a0ca3'];
+    const MAX_GEMS = 4;
     let db = { level: 1, crystals: [], selectedIdx: null, isAnimating: false, carouselRotY: 0, radius: 0, currentEncounter: null };
 
+    // 自動依難度擴充顏色種類 (單層極限)
     function generateLevelData(lv) {
-        let totalCrystals = Math.min(24, 4 + Math.floor(lv / 5)); 
-        let colorTypes = Math.min(8, totalCrystals - 2);   
+        let colorTypes = Math.min(10, 3 + Math.floor(lv / 4)); 
+        let totalCrystals = colorTypes + 2; // 永遠保持2個空容器
         
         let pool = [];
-        let emptyCrystals = totalCrystals > 10 ? 3 : 2; 
-        let itemsNeeded = (totalCrystals - emptyCrystals) * MAX_ORBS; 
-        
-        let colorIdx = 0;
-        for(let i=0; i < itemsNeeded / MAX_ORBS; i++) {
-            let targetColor = PALETTE[colorIdx % colorTypes];
-            for(let j=0; j<MAX_ORBS; j++) pool.push(targetColor);
-            colorIdx++;
+        for(let i=0; i < colorTypes; i++) {
+            for(let j=0; j<MAX_GEMS; j++) pool.push(COLORS[i]);
         }
         pool.sort(() => Math.random() - 0.5); 
         
         let crystals = [];
-        for(let i=0; i<totalCrystals; i++) crystals.push(i < totalCrystals - emptyCrystals ? pool.splice(0, MAX_ORBS) : []);
+        for(let i=0; i<totalCrystals; i++) {
+            crystals.push(i < colorTypes ? pool.splice(0, MAX_GEMS) : []);
+        }
         return crystals;
     }
 
@@ -268,22 +255,15 @@
         db.carouselRotY = 0; carousel.style.transform = `rotateY(0deg)`;
         
         const total = db.crystals.length;
-        const rows = total > 12 ? 2 : 1;
-        const perRow = Math.ceil(total / rows); 
-        db.radius = Math.round((50 / 2) / Math.tan(Math.PI / perRow)) + 60; 
+        db.radius = Math.round((50 / 2) / Math.tan(Math.PI / total)) + 40; 
 
         for (let i = 0; i < total; i++) {
             const c = document.createElement('div');
             c.className = 'crystal'; c.id = `cry-${i}`;
+            let theta = (360 / total) * i;
             
-            let rowIdx = Math.floor(i / perRow);
-            let colIdx = i % perRow;
-            let theta = (360 / perRow) * colIdx;
-            
-            let yOffset = rows === 2 ? (rowIdx === 0 ? -95 : 95) : 0; 
-            
-            c.style.transform = `rotateY(${theta}deg) translateY(${yOffset}px) translateZ(${db.radius}px)`;
-            c.dataset.theta = theta; 
+            c.style.transform = `rotateY(${theta}deg) translateZ(${db.radius}px)`;
+            c.dataset.theta = theta; // 綁定角度供後續精準計算
             c.onclick = () => handleTap(i, theta);
             carousel.appendChild(c);
             renderOrbs(i);
@@ -297,40 +277,56 @@
         c.innerHTML = '';
         db.crystals[idx].forEach(color => {
             const orb = document.createElement('div');
-            orb.className = 'orb'; 
-            orb.style.backgroundColor = color; 
-            orb.style.color = color;
+            orb.className = 'orb'; orb.style.backgroundColor = color; orb.style.color = color;
             c.appendChild(orb);
         });
     }
 
-    let isDragging = false, startX = 0;
+    // ✨ 防死機金剛鎖 2：強制解除所有干擾點擊的拖曳手勢
+    let isDragging = false, startX = 0, dragDelta = 0;
     const carousel = document.getElementById('carousel');
+    
     document.addEventListener('pointerdown', e => { 
         if(db.currentEncounter) return; 
-        initAudio(); isDragging = true; startX = e.clientX; carousel.style.transition = 'none'; 
+        if(e.target.closest('.tool-btn') || e.target.closest('.modal-box')) return;
+        initAudio(); 
+        isDragging = true; 
+        startX = e.clientX; 
+        dragDelta = 0; // 重置拖曳距離
+        carousel.style.transition = 'none'; 
     });
+    
     document.addEventListener('pointermove', e => {
         if (!isDragging) return;
-        db.carouselRotY += (e.clientX - startX) * 0.4; startX = e.clientX;
+        let delta = e.clientX - startX;
+        dragDelta += Math.abs(delta); // 累加判斷是否真的有滑動
+        db.carouselRotY += delta * 0.4; 
+        startX = e.clientX;
         carousel.style.transform = `rotateY(${db.carouselRotY}deg)`;
         updateShading();
     });
-    document.addEventListener('pointerup', () => { isDragging = false; carousel.style.transition = 'transform 0.5s ease-out'; });
+
+    const endDrag = () => { if(isDragging) { isDragging = false; carousel.style.transition = 'transform 0.5s ease-out'; } };
+    
+    document.addEventListener('pointerup', endDrag);
+    document.addEventListener('pointercancel', endDrag); // 手機防卡死最重要的一行
+    document.addEventListener('pointerleave', endDrag);
 
     function updateShading() {
         document.querySelectorAll('.crystal').forEach(c => {
             let currentAngle = (parseFloat(c.dataset.theta) + db.carouselRotY) % 360;
             if(currentAngle < 0) currentAngle += 360;
             let dist = Math.min(currentAngle, 360 - currentAngle);
-            if(dist > 85) { c.style.filter = 'brightness(0.2) blur(2px)'; c.style.pointerEvents = 'none'; } 
+            if(dist > 90) { c.style.filter = 'brightness(0.2) blur(3px)'; c.style.pointerEvents = 'none'; } 
             else { c.style.filter = 'brightness(1) blur(0px)'; c.style.pointerEvents = 'auto'; }
         });
     }
 
     async function handleTap(idx, theta) {
         initAudio();
-        if (db.isAnimating || isDragging || db.currentEncounter) return;
+        if (db.isAnimating || db.currentEncounter) return;
+        if (dragDelta > 5) return; // ✨ 區分點擊與滑動：如果手指有滑動，就不觸發水晶點擊
+
         const targetEl = document.getElementById(`cry-${idx}`);
         
         if (db.selectedIdx === null) {
@@ -345,58 +341,74 @@
             const fromArr = db.crystals[fromIdx]; const toArr = db.crystals[toIdx];
             const moveColor = fromArr[fromArr.length - 1];
 
-            if (toArr.length < MAX_ORBS && (toArr.length === 0 || toArr[toArr.length-1] === moveColor)) {
-                db.isAnimating = true; fromEl.classList.remove('selected');
-                playJumpSound();
-                
-                db.carouselRotY = -theta;
-                carousel.style.transform = `rotateY(${db.carouselRotY}deg)`;
-                updateShading();
+            if (toArr.length < MAX_GEMS && (toArr.length === 0 || toArr[toArr.length-1] === moveColor)) {
+                try {
+                    db.isAnimating = true; 
+                    fromEl.classList.remove('selected');
+                    playJumpSound();
+                    
+                    db.carouselRotY = -theta;
+                    carousel.style.transform = `rotateY(${db.carouselRotY}deg)`;
+                    updateShading();
 
-                await new Promise(r => setTimeout(r, 450));
+                    await new Promise(r => setTimeout(r, 450));
 
-                const poppedColor = fromArr.pop();
-                const topOrbEl = fromEl.querySelectorAll('.orb')[fromEl.querySelectorAll('.orb').length - 1];
-                const fromRect = topOrbEl.getBoundingClientRect();
-                topOrbEl.style.opacity = '0';
+                    const poppedColor = fromArr.pop();
+                    const topOrbEl = fromEl.querySelectorAll('.orb')[fromEl.querySelectorAll('.orb').length - 1];
+                    const fromRect = topOrbEl.getBoundingClientRect();
+                    topOrbEl.style.opacity = '0';
 
-                const destX = targetEl.getBoundingClientRect().left + (targetEl.getBoundingClientRect().width - 38) / 2;
-                const destY = targetEl.getBoundingClientRect().bottom - 8 - 42 * (toArr.length + 1);
+                    const destX = targetEl.getBoundingClientRect().left + (targetEl.getBoundingClientRect().width - 38) / 2;
+                    const destY = targetEl.getBoundingClientRect().bottom - 8 - 42 * (toArr.length + 1);
 
-                await animateOrbJump(fromRect.left, fromRect.top, destX, destY, poppedColor);
-                
-                toArr.push(poppedColor); renderOrbs(fromIdx); renderOrbs(toIdx);
-                checkWin();
-            } else { fromEl.classList.remove('selected'); playErrorSound(); }
-            db.selectedIdx = null; db.isAnimating = false;
+                    await animateOrbJump(fromRect.left, fromRect.top, destX, destY, poppedColor);
+                    
+                    toArr.push(poppedColor); renderOrbs(fromIdx); renderOrbs(toIdx);
+                    checkWin();
+                } catch(e) {
+                    console.warn(e);
+                } finally {
+                    db.selectedIdx = null; db.isAnimating = false; // 絕對解除鎖定
+                }
+            } else { 
+                fromEl.classList.remove('selected'); db.selectedIdx = null; playErrorSound(); 
+            }
         }
     }
 
+    // ✨ 防死機金剛鎖 3：動畫超時強制解鎖
     function animateOrbJump(startX, startY, endX, endY, color) {
         return new Promise(resolve => {
             const jumper = document.createElement('div');
             jumper.className = 'orb-jump'; jumper.style.backgroundColor = color; jumper.style.color = color;
             document.body.appendChild(jumper);
 
-            const animation = jumper.animate([
-                { transform: `translate(${startX}px, ${startY}px) scale(1)` },
-                { transform: `translate(${startX + (endX - startX)*0.5}px, ${Math.min(startY, endY) - 150}px) scale(1.2)` },
-                { transform: `translate(${endX}px, ${endY}px) scale(1)` }
-            ], { duration: 400, easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)', fill: 'forwards' });
+            const controlY = Math.min(startY, endY) - 150; 
+            const deltaX = endX - startX;
 
-            animation.onfinish = () => { jumper.remove(); resolve(); };
+            try {
+                const animation = jumper.animate([
+                    { transform: `translate(${startX}px, ${startY}px) scale(1)` },
+                    { transform: `translate(${startX + deltaX*0.5}px, ${controlY}px) scale(1.2)` },
+                    { transform: `translate(${endX}px, ${endY}px) scale(1)` }
+                ], { duration: 400, easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)', fill: 'forwards' });
+
+                animation.onfinish = () => { jumper.remove(); resolve(); };
+            } catch(e) { jumper.remove(); resolve(); } // 防止低階手機不支援 API
+
+            setTimeout(() => { if(jumper.parentNode) { jumper.remove(); resolve(); } }, 450); // 絕對防卡死
         });
     }
 
     function checkWin() {
-        if (db.crystals.every(v => v.length === 0 || (v.length === MAX_ORBS && v.every(item => item === v[0])))) {
+        if (db.crystals.every(v => v.length === 0 || (v.length === MAX_GEMS && v.every(item => item === v[0])))) {
             playWinSound(); setTimeout(() => { db.level++; initLevel(); }, 1200);
         }
     }
     
     function forceNextLevel() { db.level += 9; db.level++; initLevel(); }
 
-    // 您的 RPG 長按互動系統
+    // 尊聖法光系統
     const encounters = [
         { buddha: '釋迦牟尼佛', title: '無明網現', text: '娑婆業力翻湧，迷失本心。請至誠稱唸本師名號，祈求常寂金光護念，破除無明。', btnText: '南無本師釋迦牟尼佛', lightColor: '#d4af37', boxShadow: '0 0 30px rgba(212, 175, 55, 0.8)' },
         { buddha: '地藏王菩薩', title: '深淵震盪', text: '宿世業障現前，心識動盪。請稱唸大願地藏王菩薩名號，以安忍如地之墨綠法光，鎮伏業海。', btnText: '南無地藏王菩薩', lightColor: '#1e5631', boxShadow: '0 0 30px rgba(30, 86, 49, 0.8)' },
@@ -424,9 +436,7 @@
 
     function startFill() {
         if(!db.currentEncounter) return;
-        initAudio();
-        clearInterval(fillTimer);
-        fillProgress = 0;
+        initAudio(); clearInterval(fillTimer); fillProgress = 0;
         document.getElementById('rpg-btn-fill').style.width = '0%';
         fillTimer = setInterval(() => {
             fillProgress += 2.5; 
@@ -435,9 +445,7 @@
         }, 100);
     }
 
-    function stopFill() {
-        clearInterval(fillTimer); fillProgress = 0; document.getElementById('rpg-btn-fill').style.width = '0%';
-    }
+    function stopFill() { clearInterval(fillTimer); fillProgress = 0; document.getElementById('rpg-btn-fill').style.width = '0%'; }
 
     function closeEncounter() {
         document.getElementById('rpg-modal').classList.remove('show');

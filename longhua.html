@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>淨流 ‧ 琉璃萬德 - 核心實裝版</title>
+    <title>淨流 ‧ 琉璃萬德 - 第一章：禪圓見性</title>
     <style>
         :root {
-            --bg: #010103;
+            --bg: #000000;
             --gold: #f3e5ab;
             --solid-gold: #d4af37;
             --cyan: #8ba89c;
-            --lotus-glow: rgba(212, 175, 55, 0.4);
+            --glass: rgba(255, 255, 255, 0.05);
         }
 
         body {
@@ -18,288 +18,317 @@
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
             overflow: hidden; height: 100dvh; display: flex; flex-direction: column;
             -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
+            touch-action: none;
         }
 
-        #star-canvas { position: fixed; inset: 0; z-index: -1; }
+        /* ✨ 自主律動禪圓背景 */
+        #bg-canvas {
+            position: fixed; inset: 0; z-index: -1;
+            background: radial-gradient(circle at center, #050508 0%, #000 100%);
+        }
 
         #header {
-            padding: 20px 25px; display: flex; justify-content: space-between; align-items: flex-end;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.15); backdrop-filter: blur(10px);
+            padding: 20px 25px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1); backdrop-filter: blur(10px);
+            z-index: 10;
         }
-        .lv-info { letter-spacing: 3px; color: var(--gold); font-size: 0.95rem; font-weight: bold; }
-        .score-info { font-size: 0.75rem; color: var(--cyan); letter-spacing: 1px; }
+        .lv-tag { letter-spacing: 3px; color: var(--gold); font-size: 0.9rem; font-weight: bold; }
+        .merit-tag { font-size: 0.75rem; color: var(--cyan); letter-spacing: 1px; }
 
-        /* ✨ 般若時限光弦 */
-        #timer-wrap { width: 100%; height: 3px; background: rgba(255,255,255,0.05); display: none; }
-        #timer-bar { height: 100%; background: var(--solid-gold); width: 100%; box-shadow: 0 0 15px var(--gold); }
-
-        /* ✨ 中央萬德蓮華 */
-        #lotus-container {
-            height: 28vh; display: flex; justify-content: center; align-items: center; position: relative;
+        /* ✨ 萬德蓮華區 */
+        #lotus-stage {
+            height: 25vh; display: flex; justify-content: center; align-items: center;
+            position: relative; z-index: 5;
         }
-        #lotus-svg {
-            width: 180px; height: 180px; filter: drop-shadow(0 0 25px var(--lotus-glow));
-            transition: transform 1s ease-out;
+        #main-lotus {
+            width: 160px; height: 160px; filter: drop-shadow(0 0 20px rgba(212,175,55,0.3));
+            transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* ✨ 琉璃瓶區域 */
-        #game-area {
+        #game-grid {
             flex: 1; display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 20px; padding: 20px 40px; justify-items: center; align-content: center;
+            gap: 15px; padding: 10px 40px; justify-items: center; align-content: center;
+            z-index: 10;
         }
 
-        .bottle-wrap { position: relative; width: 56px; height: 155px; cursor: pointer; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.2); }
-        .bottle-wrap.selected { transform: translateY(-25px); filter: brightness(1.2); }
-        
-        .bottle-glass {
-            width: 100%; height: 100%; border: 1.8px solid rgba(243, 229, 171, 0.25);
-            border-radius: 8px 8px 22px 22px; position: relative; overflow: hidden;
-            background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(8px);
+        .bottle {
+            width: 52px; height: 145px; position: relative; cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.2);
         }
-        .bottle-glass::before {
-            content: ''; position: absolute; left: 15%; top: 0; width: 20%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+        .bottle.selected { transform: translateY(-20px); filter: brightness(1.2); }
+        
+        .bottle-body {
+            width: 100%; height: 100%; border: 1.5px solid rgba(243, 229, 171, 0.2);
+            border-radius: 6px 6px 20px 20px; overflow: hidden;
+            background: var(--glass); backdrop-filter: blur(5px);
         }
 
         .liquid {
-            position: absolute; left: 0; width: 100%; transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            position: absolute; left: 0; width: 100%; transition: all 0.5s ease;
+            border-top: 1px solid rgba(255,255,255,0.15);
         }
-        /* 無明蔽心：隱藏層視覺 */
-        .liquid.hidden-layer { background: #333 !important; filter: grayscale(1) !important; opacity: 0.8; }
-        .liquid.hidden-layer::after { content: '?'; position: absolute; width: 100%; text-align: center; top: 20%; color: #666; font-size: 10px; }
+        /* 無明蔽心：11關後啟動 */
+        .liquid.hidden-layer { 
+            background: #222 !important; filter: contrast(0.5) !important; 
+        }
+        .liquid.hidden-layer::after {
+            content: '?'; position: absolute; width: 100%; text-align: center;
+            top: 20%; color: #444; font-size: 10px; font-weight: bold;
+        }
 
-        #footer { padding: 25px; display: flex; gap: 15px; justify-content: center; }
-        .btn {
-            background: rgba(255, 255, 255, 0.03); border: 1px solid var(--cyan);
-            color: var(--cyan); padding: 10px 22px; border-radius: 20px;
-            font-size: 0.8rem; letter-spacing: 2px; cursor: pointer; transition: 0.3s;
+        #footer { padding: 20px; display: flex; justify-content: center; z-index: 10; }
+        .reset-btn {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--cyan);
+            color: var(--cyan); padding: 8px 20px; border-radius: 20px;
+            font-size: 0.8rem; letter-spacing: 2px; cursor: pointer;
         }
-        .btn:active { transform: scale(0.9); }
 
         #toast {
-            position: fixed; top: 18%; left: 50%; transform: translateX(-50%);
-            color: var(--gold); letter-spacing: 4px; font-size: 1rem; opacity: 0; transition: 1s; pointer-events: none; text-shadow: 0 0 10px #000;
-        }
-
-        /* 粒子動畫 */
-        .merit-star {
-            position: absolute; width: 4px; height: 4px; background: #fff; border-radius: 50%;
-            box-shadow: 0 0 8px var(--gold); pointer-events: none; z-index: 100;
+            position: fixed; top: 15%; left: 50%; transform: translateX(-50%);
+            color: var(--gold); letter-spacing: 4px; font-size: 0.95rem;
+            opacity: 0; transition: 0.8s; pointer-events: none; z-index: 100;
         }
     </style>
 </head>
 <body>
 
-<canvas id="star-canvas"></canvas>
+<canvas id="bg-canvas"></canvas>
 
 <div id="header">
-    <div class="lv-info" id="lv-text">第一關 ‧ 解行初入</div>
-    <div class="score-info">資糧位：<span id="merit-val">0</span></div>
+    <div class="lv-tag" id="lv-display">第一重 ‧ 禪圓見性</div>
+    <div class="merit-tag">資糧：<span id="merit-count">0</span></div>
 </div>
 
-<div id="timer-wrap"><div id="timer-bar"></div></div>
-
-<div id="lotus-container">
-    <svg id="lotus-svg" viewBox="0 0 200 200">
+<div id="lotus-stage">
+    <svg id="main-lotus" viewBox="0 0 200 200">
         <defs>
-            <radialGradient id="lotusGold" cx="50%" cy="50%" r="50%">
+            <radialGradient id="lotusGrad" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stop-color="#fff" />
                 <stop offset="70%" stop-color="#f3e5ab" />
                 <stop offset="100%" stop-color="#d4af37" stop-opacity="0" />
             </radialGradient>
         </defs>
-        <g id="lotus-g" transform="translate(100, 100)"></g>
+        <g id="lotus-group" transform="translate(100, 100)"></g>
     </svg>
 </div>
 
-<div id="game-area"></div>
+<div id="game-grid"></div>
 
 <div id="footer">
-    <div class="btn" onclick="resetHeart()">重整心識</div>
+    <div class="reset-btn" onclick="resetGame()">重整心識</div>
 </div>
 
 <div id="toast"></div>
 
 <script>
-    const ATTRS = {
+    const COLORS = {
         'r': '#e63946', 'g': '#2a9d8f', 'b': '#00b4d8', 
-        'y': '#d4af37', 'p': '#9b5de5', 'o': '#fb8500'
+        'y': '#d4af37', 'p': '#9b5de5', 'o': '#ff9f1c'
     };
 
-    let state = {
-        level: 1, merit: 0, bottles: [], selected: null,
-        isAnimating: false, timer: null, timeLeft: 100,
-        lotusRot: 0, lotusTargetScale: 1
+    let db = {
+        level: 1, merit: 0,
+        bottles: [], selected: null, isAnimating: false,
+        time: 0, angleX: 0.3, angleY: 0
     };
 
-    // ✨ 背景流動星空
-    function initStars() {
-        const cvs = document.getElementById('star-canvas');
+    // ✨ 禪圓自主背景引擎
+    function initBackground() {
+        const cvs = document.getElementById('bg-canvas');
         const ctx = cvs.getContext('2d');
-        let stars = [];
-        const resize = () => { cvs.width = window.innerWidth; cvs.height = window.innerHeight; };
+        let width, height;
+        let ensoParticles = [];
+
+        const resize = () => {
+            width = cvs.width = window.innerWidth;
+            height = cvs.height = window.innerHeight;
+        };
         window.addEventListener('resize', resize); resize();
 
-        for(let i=0; i<100; i++) stars.push({ x: Math.random()*cvs.width, y: Math.random()*cvs.height, s: Math.random()*2, v: Math.random()*0.5+0.1 });
-        
-        function animate() {
-            ctx.fillStyle = '#000'; ctx.fillRect(0,0,cvs.width, cvs.height);
-            stars.forEach(s => {
-                s.y += s.v; if(s.y > cvs.height) s.y = 0;
-                ctx.fillStyle = `rgba(243, 229, 171, ${Math.random()*0.5+0.5})`;
-                ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, Math.PI*2); ctx.fill();
+        // 構建無相禪圓粒子
+        for(let i=0; i<1200; i++) {
+            let theta = Math.random() * Math.PI * 2;
+            if(theta > 0 && theta < 0.5 && Math.random() > 0.1) continue; // 刻意留下一點缺口
+            ensoParticles.push({
+                r: 180 + (Math.random()-0.5)*30,
+                theta: theta,
+                z: (Math.random()-0.5)*60,
+                s: Math.random()*1.5 + 0.5,
+                c: Math.random() > 0.8 ? '#ffffff' : '#d4af37'
             });
-            requestAnimationFrame(animate);
         }
-        animate();
+
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, width, height);
+            
+            db.time += 0.01;
+            db.angleY += 0.003; // 自主慢速旋轉
+            let breath = 1 + Math.sin(db.time * 0.5) * 0.1; // 空間呼吸感
+
+            const cosX = Math.cos(db.angleX), sinX = Math.sin(db.angleX);
+            const cosY = Math.cos(db.angleY), sinY = Math.sin(db.angleY);
+
+            ctx.globalCompositeOperation = 'screen';
+            ensoParticles.forEach(p => {
+                let currR = p.r * breath;
+                let x = Math.cos(p.theta) * currR;
+                let y = Math.sin(p.theta) * currR;
+                let z = p.z;
+
+                // 3D 投影
+                let x1 = x * cosY - z * sinY;
+                let z1 = x * sinY + z * cosY;
+                let y2 = y * cosX - z1 * sinX;
+                let z2 = y * sinX + z1 * cosX;
+
+                let scale = 400 / (400 + z2);
+                let px = width/2 + x1 * scale;
+                let py = height/2 - y2 * scale;
+
+                if(scale > 0) {
+                    ctx.fillStyle = p.c;
+                    ctx.globalAlpha = scale * 0.6;
+                    ctx.beginPath();
+                    ctx.arc(px, py, p.s * scale, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            });
+            ctx.globalCompositeOperation = 'source-over';
+            requestAnimationFrame(draw);
+        }
+        draw();
     }
 
-    // ✨ 萬德蓮華繪製與成長
+    // ✨ 萬德蓮華生長引擎
     function updateLotus() {
-        const g = document.getElementById('lotus-g');
-        g.innerHTML = '';
-        const layers = 2 + Math.floor(state.level / 10);
-        state.lotusRot += (0.2 + (state.level * 0.05));
-        
-        document.getElementById('lotus-svg').style.transform = `rotate(${state.lotusRot}deg) scale(${state.lotusTargetScale})`;
-        
+        const group = document.getElementById('lotus-group');
+        group.innerHTML = '';
+        const layers = 2 + Math.floor(db.level / 8);
+        const rot = (db.time * 20) % 360;
+        const scale = 0.8 + (db.merit % 500) / 2000;
+
+        document.getElementById('main-lotus').style.transform = `rotate(${rot}deg) scale(${scale})`;
+
         for (let l = 0; l < layers; l++) {
             const count = 8 + l * 4;
             for (let i = 0; i < count; i++) {
-                const angle = (i / count) * 360 + (l * 20);
-                const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                p.setAttribute("d", "M0,0 C10,-15 20,-30 0,-60 C-20,-30 -10,-15 0,0");
-                p.setAttribute("fill", "url(#lotusGold)");
-                p.setAttribute("opacity", 0.8 - l*0.2);
-                p.setAttribute("transform", `rotate(${angle}) scale(${1 - l*0.25})`);
-                g.appendChild(p);
+                const angle = (i / count) * 360 + (l * 25);
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", "M0,0 C10,-15 20,-30 0,-55 C-20,-30 -10,-15 0,0");
+                path.setAttribute("fill", "url(#lotusGrad)");
+                path.setAttribute("opacity", 0.7 - l * 0.15);
+                path.setAttribute("transform", `rotate(${angle}) scale(${1 - l * 0.2})`);
+                group.appendChild(path);
             }
         }
     }
 
-    // ✨ 核心關卡生成算法
+    // ✨ 核心遊戲邏輯
     function initLevel() {
-        const area = document.getElementById('game-area');
-        area.innerHTML = ''; state.bottles = []; state.selected = null;
-        
-        // 難度配置邏輯
-        let colorCount, bottleCount, hiddenCount = 0;
-        if(state.level <= 5) {
-            colorCount = 2 + Math.floor(state.level/3); bottleCount = colorCount + 1;
-        } else if(state.level <= 10) {
-            colorCount = 4; bottleCount = 6;
-        } else {
-            colorCount = Math.min(6, 4 + Math.floor((state.level-10)/5));
-            bottleCount = colorCount + 3;
-            hiddenCount = Math.min(2, Math.floor((state.level-10)/4)); // 啟動無明蔽心
-        }
+        const grid = document.getElementById('game-grid');
+        grid.innerHTML = '';
+        db.bottles = []; db.selected = null;
 
+        // 難度演算法：1-5關極簡，6-10關中等，11關後啟動魔障
+        let colorNum = db.level <= 5 ? 2 : (db.level <= 10 ? 3 : Math.min(6, 4 + Math.floor((db.level-10)/3)));
+        let bottleNum = colorNum + (db.level <= 5 ? 1 : 2);
+        
         let pool = [];
-        const keys = Object.keys(ATTRS).slice(0, colorCount);
+        const keys = Object.keys(COLORS).slice(0, colorNum);
         keys.forEach(k => { for(let i=0; i<4; i++) pool.push(k); });
         pool.sort(() => Math.random() - 0.5);
 
-        for (let i = 0; i < bottleCount; i++) {
-            let content = (i < bottleCount - 2) ? pool.splice(0, 4) : [];
-            state.bottles.push(content);
-            const w = document.createElement('div');
-            w.className = 'bottle-wrap'; w.id = `btl-${i}`;
-            w.onclick = () => handleTap(i);
-            const g = document.createElement('div'); g.className = 'bottle-glass';
-            w.appendChild(g); area.appendChild(w);
-            renderLiquids(i, hiddenCount);
+        for (let i = 0; i < bottleNum; i++) {
+            let content = (i < colorNum) ? pool.splice(0, 4) : [];
+            db.bottles.push(content);
+            
+            const b = document.createElement('div');
+            b.className = 'bottle'; b.id = `btl-${i}`;
+            b.onclick = () => handleTap(i);
+            const body = document.createElement('div'); body.className = 'bottle-body';
+            b.appendChild(body); grid.appendChild(b);
+            renderLiquids(i);
         }
-
-        // 大魔王關計時器 (逢10)
-        if(state.level % 10 === 0) startTimer(); else stopTimer();
-
-        document.getElementById('lv-text').innerText = `第 ${state.level} 關 ‧ ${state.level > 10 ? '真修實煉' : '攝心初階'}`;
-        updateLotus();
+        
+        document.getElementById('lv-display').innerText = `第 ${db.level} 重 ‧ ${db.level >= 11 ? '無明考驗' : '禪圓見性'}`;
     }
 
-    function renderLiquids(idx, hiddenMax) {
-        const glass = document.getElementById(`btl-${idx}`).querySelector('.bottle-glass');
-        glass.querySelectorAll('.liquid').forEach(l => l.remove());
-        state.bottles[idx].forEach((c, i) => {
+    function renderLiquids(idx) {
+        const body = document.getElementById(`btl-${idx}`).querySelector('.bottle-body');
+        body.querySelectorAll('.liquid').forEach(l => l.remove());
+        
+        db.bottles[idx].forEach((c, i) => {
             const l = document.createElement('div');
             l.className = 'liquid';
             l.style.height = '25%'; l.style.bottom = (i * 25) + '%';
-            l.style.background = `linear-gradient(to right, ${ATTRS[c]}, #fff, ${ATTRS[c]})`;
-            // 若為高階關卡，下層顯示為無明
-            if(i < hiddenMax && state.bottles[idx].length > i + 1) l.classList.add('hidden-layer');
-            glass.appendChild(l);
+            l.style.backgroundColor = COLORS[c];
+            l.style.boxShadow = `inset 0 0 10px rgba(255,255,255,0.2), 0 0 10px ${COLORS[c]}`;
+            
+            // 11關後的無明魔障：隱藏最底下的顏色
+            if(db.level >= 11 && i === 0 && db.bottles[idx].length > 1) {
+                l.classList.add('hidden-layer');
+            }
+            body.appendChild(l);
         });
     }
 
     async function handleTap(idx) {
-        if (state.isAnimating) return;
-        if (state.selected === null) {
-            if (state.bottles[idx].length === 0) return;
-            state.selected = idx; document.getElementById(`btl-${idx}`).classList.add('selected');
+        if (db.isAnimating) return;
+        
+        if (db.selected === null) {
+            if (db.bottles[idx].length === 0) return;
+            db.selected = idx;
+            document.getElementById(`btl-${idx}`).classList.add('selected');
         } else {
-            const from = state.bottles[state.selected], to = state.bottles[idx];
-            if (state.selected !== idx && to.length < 4 && (to.length === 0 || to[to.length-1] === from[from.length-1])) {
-                state.isAnimating = true;
-                const color = from[from.length-1];
-                while(from.length > 0 && from[from.length-1] === color && to.length < 4) {
+            const from = db.bottles[db.selected];
+            const to = db.bottles[idx];
+            
+            if (db.selected !== idx && to.length < 4 && (to.length === 0 || to[to.length-1] === from[from.length-1])) {
+                db.isAnimating = true;
+                const moveColor = from[from.length-1];
+                while(from.length > 0 && from[from.length-1] === moveColor && to.length < 4) {
                     to.push(from.pop());
-                    renderLiquids(state.selected, (state.level>10?1:0)); 
-                    renderLiquids(idx, (state.level>10?1:0));
+                    renderLiquids(db.selected); renderLiquids(idx);
                     await new Promise(r => setTimeout(r, 200));
                 }
-                checkBottle(idx); checkWin();
+                checkWin();
             }
-            document.getElementById(`btl-${state.selected}`).classList.remove('selected');
-            state.selected = null; state.isAnimating = false;
+            document.getElementById(`btl-${db.selected}`).classList.remove('selected');
+            db.selected = null; db.isAnimating = false;
         }
-    }
-
-    function checkBottle(idx) {
-        const b = state.bottles[idx];
-        if(b.length === 4 && b.every(v => v === b[0])) {
-            triggerMerit(idx);
-            state.merit += 50; document.getElementById('merit-val').innerText = state.merit;
-        }
-    }
-
-    function triggerMerit(idx) {
-        const rect = document.getElementById(`btl-${idx}`).getBoundingClientRect();
-        const lotusRect = document.getElementById('lotus-svg').getBoundingClientRect();
-        for(let i=0; i<8; i++) {
-            const p = document.createElement('div'); p.className = 'merit-star';
-            p.style.left = (rect.left + rect.width/2) + 'px'; p.style.top = rect.top + 'px';
-            document.body.appendChild(p);
-            p.animate([
-                { transform: 'translate(0,0) scale(1)', opacity: 1 },
-                { transform: `translate(${lotusRect.left - rect.left + 80}px, ${lotusRect.top - rect.top + 80}px) scale(0)`, opacity: 0 }
-            ], { duration: 1200 + Math.random()*800, easing: 'ease-in' }).onfinish = () => p.remove();
-        }
-        state.lotusTargetScale = 1.2; setTimeout(() => state.lotusTargetScale = 1, 500);
     }
 
     function checkWin() {
-        if(state.bottles.every(b => b.length === 0 || (b.length === 4 && b.every(v => v === b[0])))) {
-            stopTimer(); showToast("願力歸位 ‧ 晉升重天");
-            setTimeout(() => { state.level++; initLevel(); }, 1500);
+        const win = db.bottles.every(b => b.length === 0 || (b.length === 4 && b.every(v => v === b[0])));
+        if (win) {
+            db.merit += 100;
+            document.getElementById('merit-count').innerText = db.merit;
+            showToast("清淨資糧 ‧ 圓滿歸位");
+            setTimeout(() => {
+                db.level++;
+                if (db.level >= 20) {
+                    showToast("第一章圓滿，即將轉入下一分頁");
+                    // 這裡未來可以跳轉至 game2.html
+                } else {
+                    initLevel();
+                }
+            }, 1500);
         }
     }
 
-    function startTimer() {
-        const wrap = document.getElementById('timer-wrap'); const bar = document.getElementById('timer-bar');
-        wrap.style.display = 'block'; state.timeLeft = 100;
-        clearInterval(state.timer);
-        state.timer = setInterval(() => {
-            state.timeLeft -= 0.4; bar.style.width = state.timeLeft + '%';
-            if(state.timeLeft <= 0) { clearInterval(state.timer); showToast("無常逼迫 ‧ 攝心重來"); setTimeout(initLevel, 1500); }
-        }, 200);
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg; t.style.opacity = 1;
+        setTimeout(() => t.style.opacity = 0, 2000);
     }
-    function stopTimer() { document.getElementById('timer-wrap').style.display = 'none'; clearInterval(state.timer); }
-    function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.opacity = 1; setTimeout(() => t.style.opacity=0, 2000); }
-    function resetHeart() { initLevel(); }
 
-    initStars(); initLevel();
-    setInterval(updateLotus, 50);
+    function resetGame() { initLevel(); }
+
+    initBackground();
+    initLevel();
+    setInterval(updateLotus, 100);
 </script>
 </body>
 </html>

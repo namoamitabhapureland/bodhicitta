@@ -7,8 +7,7 @@
     <style>
         :root {
             --bg-deep: #010204; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
-            
-            /* 14 種高辨識度躍遷水滴主題色 */
+            /* 14 種高辨識度琉璃漸層色 */
             --color-red: #ff4d4d; --color-cyan: #00e5ff; --color-gold: #ffe066; --color-purple: #d8b4fe; 
             --color-green: #80ed99; --color-orange: #ffb703; --color-pink: #ffb7c5; --color-white: #ffffff; 
             --color-black: #555555; --color-gray: #a0a0a0; --color-blue: #4da6ff; --color-yellow: #ffff66; 
@@ -24,7 +23,6 @@
 
         #bgCanvas { position: fixed; inset: 0; z-index: 0; }
         
-        /* 異象覆蓋層：地藏業海、過關白霧、佛光 */
         #vision-overlay {
             position: fixed; inset: 0; z-index: 100; pointer-events: none; opacity: 0;
             transition: opacity 0.8s, background 1s;
@@ -32,7 +30,14 @@
         .vibrate { animation: shake 0.2s infinite; }
         @keyframes shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -2px); } 100% { transform: translate(1px, -1px); } }
 
-        /* 中心菩提心呼吸光點 (純淨無雜質) */
+        /* 華藏世界星球特效 */
+        .huayan-planet {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.1);
+            width: 50vh; height: 50vh; border-radius: 50%; filter: blur(20px); opacity: 0; z-index: 50; pointer-events: none; 
+            transition: transform 2.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 2.5s ease, filter 2.5s ease;
+        }
+        .huayan-planet.active { transform: translate(-50%, -50%) scale(1.5); opacity: 0.85; filter: blur(4px); }
+
         #center-point {
             position: absolute; top: 50%; left: 50%; width: 12px; height: 12px; background: #fff; border-radius: 50%;
             transform: translate(-50%, -50%); z-index: 5; pointer-events: none;
@@ -44,12 +49,13 @@
             100% { transform: translate(-50%, -50%) scale(1.4); opacity: 1; filter: drop-shadow(0 0 25px #fff) drop-shadow(0 0 50px var(--solid-gold)); } 
         }
 
-        /* 頂部導航列 */
         #header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid rgba(212,175,55,0.15); z-index: 10; position: relative; background: rgba(1,2,4,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
         .lv-tag { letter-spacing: 4px; color: var(--gold); font-size: 1.05rem; font-weight: bold; }
         .info-tag { font-size: 0.72rem; color: var(--cyan); letter-spacing: 2px; margin-top: 6px; }
 
-        /* 3D 場景與法輪 */
+        /* 第 1 關引導文案 */
+        #tutorial-ui { position: absolute; top: 18%; left: 0; width: 100%; text-align: center; color: var(--gold); font-size: 0.85rem; letter-spacing: 3px; opacity: 0; transition: opacity 0.8s; z-index: 20; pointer-events: none; text-shadow: 0 0 10px rgba(212,175,55,0.5); }
+
         #scene { flex: 1; display: flex; justify-content: center; align-items: center; perspective: 1200px; overflow: hidden; position: relative; z-index: 10; }
         #carousel { width: 80px; height: 180px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); }
 
@@ -58,25 +64,22 @@
         .bottle-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; transition: filter 0.3s; }
         .vessel.selected .bottle-svg { filter: drop-shadow(0 0 20px rgba(243, 229, 171, 0.6)); }
 
-        /* 躍遷水滴 */
         .drop-jump { position: fixed; width: 22px; height: 22px; border-radius: 50%; box-shadow: inset -3px -3px 8px rgba(0,0,0,0.5), inset 3px 3px 8px rgba(255,255,255,0.9); z-index: 1000; pointer-events: none; }
 
-        /* 底部導航 */
-        #footer { padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; z-index: 10; position: relative; background: rgba(1,2,4,0.3); border-top: 1px solid rgba(139,168,156,0.1); }
-        .tool-btn { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(139,168,156,0.4); color: var(--cyan); padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; letter-spacing: 2px; cursor: pointer; backdrop-filter: blur(5px); transition: all 0.3s; }
+        #footer { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10; position: relative; background: rgba(1,2,4,0.3); border-top: 1px solid rgba(139,168,156,0.1); }
+        .tool-btn { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(139,168,156,0.4); color: var(--cyan); padding: 8px 14px; border-radius: 20px; font-size: 0.8rem; letter-spacing: 2px; cursor: pointer; backdrop-filter: blur(5px); transition: all 0.3s; }
         .tool-btn:active { transform: scale(0.95); background: rgba(139, 168, 156, 0.15); }
 
-        /* 頂級琉璃玻璃對話框 (Glassmorphism) */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.5s; }
+        /* 頂級琉璃對話框 */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.5s; }
         .modal-overlay.show { display: flex; opacity: 1; }
-        .modal-box { width: 88%; max-width: 340px; background: linear-gradient(135deg, rgba(20,25,35,0.85), rgba(5,10,15,0.95)); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 24px; padding: 35px 25px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(212,175,55,0.05); position: relative; transform: translateY(20px); transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .modal-box { width: 88%; max-width: 340px; background: linear-gradient(135deg, rgba(20,25,35,0.85), rgba(5,10,15,0.95)); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 24px; padding: 35px 25px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(212,175,55,0.05); position: relative; transform: translateY(20px); transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); max-height: 85vh; overflow-y: auto; }
         .modal-overlay.show .modal-box { transform: translateY(0); }
         
-        .m-title { color: var(--gold); font-size: 1.15rem; letter-spacing: 5px; margin-bottom: 15px; text-shadow: 0 0 15px rgba(212,175,55,0.5); }
+        .m-title { color: var(--gold); font-size: 1.1rem; letter-spacing: 5px; margin-bottom: 15px; text-shadow: 0 0 15px rgba(212,175,55,0.5); }
         .m-divider { width: 40px; height: 1px; background: var(--solid-gold); margin: 0 auto 20px; opacity: 0.5; }
-        .m-text { font-size: 0.95rem; line-height: 1.8; margin-bottom: 35px; letter-spacing: 2px; color: #e0e0e0; text-align: justify; text-align-last: center; }
+        .m-text { font-size: 0.95rem; line-height: 1.8; margin-bottom: 30px; letter-spacing: 2px; color: #e0e0e0; text-align: justify; text-align-last: center; }
         
-        /* 長按聚光解厄按鈕 */
         .rpg-btn-wrap { position: relative; width: 100%; height: 52px; border-radius: 26px; border: 1px solid rgba(212,175,55,0.6); background: rgba(0,0,0,0.3); cursor: pointer; overflow: hidden; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); }
         .rpg-btn-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0%; transition: width 0.05s linear; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.5)); }
         .rpg-btn-text { position: relative; z-index: 5; color: #fff; font-size: 0.9rem; letter-spacing: 4px; text-shadow: 0 0 10px rgba(0,0,0,0.8); pointer-events: none; }
@@ -86,6 +89,10 @@
         .m-btn:active { transform: scale(0.96); background: rgba(139,168,156,0.1); }
         .m-btn-prime { background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); border-color: var(--solid-gold); color: var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.1); }
         .m-btn-prime:active { background: rgba(212,175,55,0.3); }
+
+        /* 自定義捲軸 */
+        .modal-box::-webkit-scrollbar { width: 4px; }
+        .modal-box::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.3); border-radius: 2px; }
     </style>
 </head>
 <body id="main-body">
@@ -109,9 +116,7 @@
         <linearGradient id="grad-magenta" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ff80df"/><stop offset="100%" stop-color="#800060"/></linearGradient>
         
         <linearGradient id="glass-glare" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="rgba(255,255,255,0.3)"/>
-            <stop offset="40%" stop-color="transparent"/>
-            <stop offset="100%" stop-color="rgba(0,0,0,0.4)"/>
+            <stop offset="0%" stop-color="rgba(255,255,255,0.3)"/><stop offset="40%" stop-color="transparent"/><stop offset="100%" stop-color="rgba(0,0,0,0.4)"/>
         </linearGradient>
     </defs>
 </svg>
@@ -129,19 +134,15 @@
         <div class="info-tag" id="bag-ui">資糧：0/100</div>
     </div>
 </div>
+<div id="tutorial-ui">輕觸提舉淨瓶，滑動轉動法輪<br>將同色法水歸一</div>
 
 <div id="scene"><div id="carousel"></div></div>
 
 <div id="footer">
-    <div class="tool-btn" onclick="initLevel()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 1 0 2.13-5.87L21 8"></path></svg> 重整
-    </div>
-    <div class="tool-btn" onclick="shareApp()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg> 法施
-    </div>
-    <div class="tool-btn" style="border-color:var(--solid-gold); color:var(--gold);" onclick="triggerExit()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> 退場
-    </div>
+    <div class="tool-btn" onclick="showInfo()">指南</div>
+    <div class="tool-btn" onclick="initLevel()">重整</div>
+    <div class="tool-btn" onclick="shareApp()">法施</div>
+    <div class="tool-btn" style="border-color:var(--solid-gold); color:var(--gold);" onclick="triggerExit()">退場</div>
 </div>
 
 <div class="modal-overlay" id="modal">
@@ -170,10 +171,10 @@
 
     function saveDB() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
 
-    // 14 色法水庫
     const COLORS = ['red', 'cyan', 'gold', 'purple', 'green', 'orange', 'pink', 'white', 'black', 'gray', 'blue', 'yellow', 'brown', 'magenta'];
-    let game = { vessels: [], selectedIdx: null, isAnimating: false, rotY: 0, startTime: Date.now(), starSpeed: 1, currentEncounter: null };
+    let game = { vessels: [], selectedIdx: null, isAnimating: false, rotY: 0, startTime: Date.now(), starSpeed: 1, currentEncounter: null, isHuayan: false };
     let timerInterval = null;
+    let synth = window.speechSynthesis; // 語音引擎
 
     // 音效引擎
     let audioCtx = null;
@@ -190,11 +191,7 @@
     function getBottleSVG(idx) {
         return `
         <svg viewBox="0 0 100 150" class="bottle-svg">
-            <defs>
-                <clipPath id="m-${idx}">
-                    <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" />
-                </clipPath>
-            </defs>
+            <defs><clipPath id="m-${idx}"><path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" /></clipPath></defs>
             <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="rgba(255,255,255,0.03)" />
             <g id="w-${idx}" clip-path="url(#m-${idx})"></g>
             <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="url(#glass-glare)" pointer-events="none"/>
@@ -205,27 +202,50 @@
         </svg>`;
     }
 
+    // 開局防呆機制：確保不會有完成的瓶子
+    function generateVessels(total, colorCount) {
+        let isValid = false;
+        let v = [];
+        while(!isValid) {
+            let pool = [];
+            for(let i=0; i<colorCount; i++) { for(let j=0; j<3; j++) pool.push(COLORS[i]); } 
+            pool.sort(() => Math.random() - 0.5);
+            v = [];
+            for(let i=0; i<total; i++) v.push(i < colorCount ? pool.splice(0, 3) : []);
+            
+            // 驗證是否有初始即同色的狀況
+            isValid = true;
+            for(let i=0; i<colorCount; i++) {
+                if (v[i].length === 3 && v[i][0] === v[i][1] && v[i][1] === v[i][2]) {
+                    isValid = false; break;
+                }
+            }
+        }
+        return v;
+    }
+
     function initLevel() {
         const carousel = document.getElementById('carousel'); carousel.innerHTML = '';
         game.selectedIdx = null; game.isAnimating = false; game.startTime = Date.now(); game.starSpeed = 1;
         game.rotY = 0; carousel.style.transform = `rotateY(0deg)`;
         
         const lv = db.waterLevel;
-        
-        // ✨ 動態難度演算法：慢慢推進到 16 個瓶子與 14 種顏色
-        let totalVessels = Math.min(16, 4 + Math.floor((lv - 1) / 12)); 
-        let colorCount = totalVessels - 2; // 永遠只有 2 個空瓶
-        let pool = [];
-        // 取出對應數量的顏色種類 (最多 14 種)
-        for(let i=0; i<colorCount; i++) { 
-            for(let j=0; j<3; j++) pool.push(COLORS[i]); 
-        } 
-        pool.sort(() => Math.random() - 0.5);
-        
-        game.vessels = [];
-        for(let i=0; i<totalVessels; i++) game.vessels.push(i < colorCount ? pool.splice(0, 3) : []);
+        let totalVessels, colorCount;
 
-        const rows = totalVessels > 8 ? 2 : 1; // 超過8個就變兩層
+        // 第一關：絕對簡單引導模式 (3瓶，2色，1空)
+        if (lv === 1) {
+            totalVessels = 3; colorCount = 2;
+            document.getElementById('tutorial-ui').style.opacity = '1';
+        } else {
+            // 動態難度：緩步升至 16 瓶、14 色
+            totalVessels = Math.min(16, 4 + Math.floor((lv - 1) / 10)); 
+            colorCount = totalVessels - 2; 
+            document.getElementById('tutorial-ui').style.opacity = '0';
+        }
+        
+        game.vessels = generateVessels(totalVessels, colorCount);
+
+        const rows = totalVessels > 8 ? 2 : 1; 
         const perRow = Math.ceil(totalVessels / rows);
         const radius = Math.round((100 / 2) / Math.tan(Math.PI / perRow)) + 65;
 
@@ -249,9 +269,10 @@
         startTimer();
     }
 
-    // 三分漸層法水渲染
     function renderWater(idx) {
-        const g = document.getElementById(`w-${idx}`); g.innerHTML = '';
+        const g = document.getElementById(`w-${idx}`);
+        if (!g) return;
+        g.innerHTML = '';
         const slots = [{y:103.75, h:27}, {y:77.5, h:26.5}, {y:51.25, h:26.5}];
         game.vessels[idx].forEach((c, i) => {
             const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -266,11 +287,9 @@
         });
     }
 
-    // --------------------------------------------------
-    // ✨ 最短路徑旋轉邏輯 
-    // --------------------------------------------------
+    // 最短路徑旋轉邏輯
     async function handleTap(idx, theta) {
-        if (game.isAnimating || game.currentEncounter) return;
+        if (game.isAnimating || game.currentEncounter || game.isHuayan) return;
         const targetEl = document.getElementById(`v-${idx}`);
         
         if (game.selectedIdx === null) {
@@ -328,7 +347,7 @@
     }
 
     // --------------------------------------------------
-    // ✨ 結算 (保底 10 點機制)、無常異象庫與法寶庫掉落
+    // 結算與法界異象庫
     // --------------------------------------------------
     const SCRIPTURES = [
         { t: "釋迦如來 ‧ 演說大經", c: "【發菩提心，一向專念】。<br>此三輩往生之根本，行者當攝心入定。", b: "南無本師釋迦牟尼佛", color: "rgba(243,229,171,0.25)" },
@@ -344,7 +363,6 @@
     async function checkWin() {
         if (game.vessels.every(v => v.length === 0 || (v.length === 3 && v.every(c => c === v[0])))) {
             
-            // ✨ 防通膨與每日保底機制
             const today = new Date().toDateString();
             let isFirstWinToday = (db.waterLastDate !== today);
             db.waterLastDate = today; 
@@ -354,21 +372,29 @@
             let clearMsg = "一念清淨，資糧 +1。";
             if (isFirstWinToday) {
                 earnedPoints += 10;
-                clearMsg = "今日首度理順，獲【每日精進】保底 +10，過關 +1，共得 +11 點。";
+                clearMsg = "今日首度理順，獲【每日定課】保底 +10，過關 +1，共得 +11 點。";
             }
             db.tempBag += earnedPoints;
             
-            // ✨ 每 20 關掉落法寶
+            // 每 20 關固定化現淨瓶 (使用真實 SVG 圖示)
             let dropMsg = "";
-            if ((db.waterLevel - 1) % 20 === 0 && (db.waterLevel - 1) > 0) { 
-                const ts = ['sword', 'vase', 'jewel']; const names = ['幾何慧劍', '琉璃淨瓶', '多面寶珠'];
-                const rIdx = Math.floor(Math.random()*3);
-                db.treasures[ts[rIdx]]++; 
-                dropMsg = `<br><br><span style="color:var(--solid-gold); font-size:0.85rem; font-weight:bold;">✨ 法界感應，化現【${names[rIdx]}】<br>已收入多寶閣。</span>`;
+            let levelPassed = db.waterLevel - 1;
+            if (levelPassed % 20 === 0 && levelPassed > 0) { 
+                db.treasures.vase++; 
+                dropMsg = `
+                <div style="display:flex; justify-content:center; align-items:center; gap:15px; margin: 20px 0; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 16px; border: 1px solid rgba(212,175,55,0.3);">
+                    <div style="width: 30px; height: 45px; position:relative;">
+                        ${getBottleSVG('drop-icon')}
+                    </div>
+                    <div style="text-align:left;">
+                        <div style="color:var(--solid-gold); font-size:0.9rem; letter-spacing:2px; font-weight:bold;">化現【琉璃淨瓶】</div>
+                        <div style="color:#aaa; font-size:0.75rem; letter-spacing:1px; margin-top:3px;">已收入多寶閣</div>
+                    </div>
+                </div>`;
             }
             saveDB();
             
-            // ✨ 過關特效：菩提白霧爆發 + Warp Speed
+            // 過關白霧特效
             game.starSpeed = 25; playWin();
             const overlay = document.getElementById('vision-overlay');
             overlay.style.background = 'radial-gradient(circle, #fff 0%, transparent 80%)';
@@ -379,10 +405,12 @@
                 game.starSpeed = 1; overlay.style.opacity = '0';
                 document.getElementById('center-point').style.transform = 'translate(-50%, -50%) scale(1)';
                 
-                // 每 5 關觸發經典開示
-                if ((db.waterLevel - 1) % 5 === 0 && (db.waterLevel - 1) > 0) {
+                // 判斷異象順序：華藏 (3倍數) 與 佛菩薩 (5倍數)
+                if (levelPassed % 5 === 0 && levelPassed > 0) {
                     const s = SCRIPTURES[Math.floor(Math.random()*SCRIPTURES.length)];
                     triggerRPG(s, clearMsg + dropMsg);
+                } else if (levelPassed % 3 === 0 && levelPassed > 0) {
+                    triggerHuayanWorld(levelPassed, clearMsg + dropMsg);
                 } else {
                     showLevelClear(clearMsg + dropMsg);
                 }
@@ -390,18 +418,38 @@
         }
     }
 
-    // 允許連續破關
+    // ✨ 華藏二十重世界 (每 3 關觸發)
+    function triggerHuayanWorld(lvl, extraMsg) {
+        game.isHuayan = true;
+        game.starSpeed = 60; // 極速金色星河
+        let layer = Math.floor(lvl / 3) % 20 + 1;
+        
+        const planet = document.createElement('div');
+        planet.className = 'huayan-planet';
+        const cols = ['var(--color-cyan)', 'var(--color-purple)', 'var(--color-gold)', 'var(--color-magenta)'];
+        planet.style.background = `radial-gradient(circle, ${cols[layer % 4]} 0%, transparent 70%)`;
+        document.body.appendChild(planet);
+        
+        setTimeout(() => planet.classList.add('active'), 100);
+        
+        setTimeout(() => {
+            planet.classList.remove('active'); planet.style.opacity = '0';
+            setTimeout(() => planet.remove(), 1500);
+            game.starSpeed = 1; game.isHuayan = false;
+            
+            showLevelClear(`<span style="color:var(--solid-gold); font-size:1.05rem; font-weight:bold;">神遊華藏大千 ‧ 第 ${layer} 重天</span><br><br>` + extraMsg);
+        }, 3000);
+    }
+
     function showLevelClear(msg) {
         showModal("理順色相 ‧ 境界提昇", msg, null, null, `
             <button class="m-btn m-btn-prime" onclick="closeModalAndNext()">繼續精進</button>
             <button class="m-btn" onclick="triggerExit()">圓滿退場</button>
         `);
+        document.getElementById('m-text').style.display = 'block';
     }
 
-    function closeModalAndNext() {
-        closeModal();
-        initLevel(); 
-    }
+    function closeModalAndNext() { closeModal(); initLevel(); }
 
     function triggerRPG(s, extraMsg) {
         game.currentEncounter = s;
@@ -416,6 +464,7 @@
             </div>
             <div style="font-size:0.7rem; color:#888; letter-spacing:2px; margin-top:5px;">(長按聚光解厄)</div>
         `);
+        document.getElementById('m-text').style.display = 'block';
     }
 
     let rpgTimer = null, rpgProg = 0;
@@ -431,20 +480,43 @@
         const overlay = document.getElementById('vision-overlay');
         overlay.style.background = '#fff'; setTimeout(() => { overlay.style.opacity = '0'; }, 300);
         document.getElementById('main-body').classList.remove('vibrate');
-        closeModal(); 
-        showLevelClear(""); 
+        closeModal(); showLevelClear(""); 
     }
 
-    // ✨ 退場與資糧結集 (滿 100 分出現按鈕)
+    // ✨ 說明與語音導讀
+    function showInfo() {
+        let infoHtml = `
+            <div style="font-size: 0.85rem; line-height: 1.8; text-align: left; color: #d0d0d0; letter-spacing: 1px; margin-bottom: 20px;">
+                「心如工畫師，能畫諸世間。」<br><br>
+                此琉璃法水，非為世俗之遊戲，實乃供行者「調伏其心」之微觀道場。瓶中色相紛雜，喻娑婆之八萬四千煩惱；理順歸一，乃轉識成智、萬法歸宗之菩提道。<br><br>
+                <span style="color:var(--solid-gold); font-weight:bold;">【 觀心與定力法則 】</span><br>
+                1. 每日定課：娑婆一日，陣法一開。今日色相理順後，法水即止，唯餘靜觀。<br>
+                2. 時劫考驗：每重結界皆有時劫。若心生焦躁、六根攀緣而超時，結界自閉，請安住呼吸，明日再來。<br>
+                3. 資糧匯聚：理順一重結界，聚一分資糧，滿百則可匯入主系統。<br>
+                4. 華藏遊歷：每突破三重結界，神遊華藏大千世界一重天；每二十重，化現【琉璃淨瓶】，以助行者於多寶閣中交織萬德。
+            </div>
+            <button class="m-btn m-btn-prime" onclick="readInfo()" style="margin-bottom:10px;">語音導讀</button>
+            <button class="m-btn" onclick="closeModal()">知悉</button>
+        `;
+        showModal("琉璃法水 ． 轉識成智", "", null, null, infoHtml);
+        document.getElementById('m-text').style.display = 'none';
+    }
+
+    function readInfo() {
+        if(synth.speaking) { synth.cancel(); return; }
+        const text = "琉璃法水，轉識成智。心如工畫師，能畫諸世間。此琉璃法水，非為世俗之遊戲，實乃供行者調伏其心之微觀道場。瓶中色相紛雜，喻娑婆之八萬四千煩惱；理順歸一，乃轉識成智、萬法歸宗之菩提道。觀心與定力法則：第一，每日定課：娑婆一日，陣法一開。今日色相理順後，法水即止，唯餘靜觀。第二，時劫考驗：每重結界皆有時劫。若心生焦躁、六根攀緣而超時，結界自閉，請安住呼吸，明日再來。第三，資糧匯聚：理順一重結界，聚一分資糧，滿百則可匯入主系統。第四，華藏遊歷：每突破三重結界，神遊華藏大千世界一重天；每二十重，化現琉璃淨瓶，以助行者於多寶閣中交織萬德。";
+        const utterThis = new SpeechSynthesisUtterance(text);
+        utterThis.lang = 'zh-TW'; utterThis.rate = 0.85; 
+        synth.speak(utterThis);
+    }
+
     function triggerExit() {
         let html = `<button class="m-btn" onclick="shareApp()">法施分享</button>`;
-        if (db.tempBag >= 100) {
-            html += `<button class="m-btn m-btn-prime" onclick="syncPoints()">資糧結集 (${db.tempBag} 點入庫)</button>`;
-        } else {
-            html += `<button class="m-btn" onclick="window.location.href='index.html'">歸返道場</button>`;
-        }
+        if (db.tempBag >= 100) { html += `<button class="m-btn m-btn-prime" onclick="syncPoints()">資糧結集 (${db.tempBag} 點入庫)</button>`; } 
+        else { html += `<button class="m-btn" onclick="window.location.href='index.html'">歸返道場</button>`; }
         html += `<button class="m-btn" onclick="closeModal()">繼續觀心</button>`;
         showModal("法水觀心 ‧ 暫歇", "放下手機，請給身邊的人一個微笑，或在心中默默感恩。<br><br>清淨，即在當下。", null, null, html);
+        document.getElementById('m-text').style.display = 'block';
     }
 
     function showModal(title, text, btnText, callback, customHtml) {
@@ -455,11 +527,16 @@
         document.getElementById('modal').classList.add('show');
     }
 
-    function closeModal() { document.getElementById('modal').classList.remove('show'); game.currentEncounter = null; if(window.currentCallback) { window.currentCallback(); window.currentCallback = null; } }
+    function closeModal() { 
+        document.getElementById('modal').classList.remove('show'); 
+        game.currentEncounter = null; 
+        if(synth.speaking) synth.cancel(); // 關閉時停止語音
+        if(window.currentCallback) { window.currentCallback(); window.currentCallback = null; } 
+    }
 
     function syncPoints() { db.points += db.tempBag; db.tempBag = 0; saveDB(); window.location.href = 'index.html'; }
 
-    // ✨ 動態時劫：隨關卡增加時間 (30分 + 關卡數)
+    // 動態時劫
     function startTimer() {
         clearInterval(timerInterval);
         const limit = (30 + db.waterLevel) * 60 * 1000;
@@ -468,6 +545,7 @@
             if (elapsed > limit) { 
                 clearInterval(timerInterval); 
                 showModal("時劫已滿", "一念執著，心神已疲。<br>請暫且放下，明日再來理順。", null, null, `<button class="m-btn m-btn-prime" onclick="window.location.href='index.html'">安住呼吸</button>`); 
+                document.getElementById('m-text').style.display = 'block';
             }
             const min = Math.floor((limit - elapsed) / 60000);
             document.getElementById('timer-ui').innerText = `觀心餘時：${min} 分鐘`;
@@ -492,20 +570,30 @@
 
     function draw() {
         ctx.fillStyle = '#010204'; ctx.fillRect(0,0,cw,ch); ctx.globalCompositeOperation = 'screen';
-        if(!game.currentEncounter) {
+        
+        // 華藏世界金色星軌特效
+        if(game.isHuayan) {
+            ctx.fillStyle = 'rgba(212,175,55,0.05)';
+            ctx.fillRect(0,0,cw,ch);
+        }
+
+        if(!game.currentEncounter && !game.isHuayan) {
             orbs.forEach(o => { o.x+=o.vx; o.y+=o.vy; if(o.x<0||o.x>cw)o.vx*=-1; if(o.y<0||o.y>ch)o.vy*=-1; let g=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r); g.addColorStop(0,o.c); g.addColorStop(1,'transparent'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2); ctx.fill(); });
         }
         stars.forEach(s => {
             s.z -= (6 * game.starSpeed); if(s.z<=0){s.z=2000; s.x=(Math.random()-0.5)*2000; s.y=(Math.random()-0.5)*2000;}
             let sc=800/(800+s.z), px=cw/2+s.x*sc, py=ch/2+s.y*sc;
-            if(px>0&&px<cw&&py>0&&py<ch){ ctx.fillStyle=`rgba(255,255,255,${sc})`; ctx.beginPath(); ctx.arc(px,py,s.s*sc*(game.starSpeed>1?8:1),0,Math.PI*2); ctx.fill(); }
+            if(px>0&&px<cw&&py>0&&py<ch){ 
+                ctx.fillStyle = game.isHuayan ? `rgba(212,175,55,${sc})` : `rgba(255,255,255,${sc})`; 
+                ctx.beginPath(); ctx.arc(px,py,s.s*sc*(game.starSpeed>1?8:1),0,Math.PI*2); ctx.fill(); 
+            }
         });
         ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(draw);
     }
     draw();
 
     let isD = false, sx = 0, dragDelta = 0;
-    document.addEventListener('pointerdown', e => { if(game.isAnimating||game.currentEncounter||e.target.closest('.tool-btn')||e.target.closest('.modal-box')) return; isD=true; sx=e.clientX; dragDelta=0; document.getElementById('carousel').style.transition='none'; });
+    document.addEventListener('pointerdown', e => { if(game.isAnimating||game.currentEncounter||game.isHuayan||e.target.closest('.tool-btn')||e.target.closest('.modal-box')) return; isD=true; sx=e.clientX; dragDelta=0; document.getElementById('carousel').style.transition='none'; initAudio(); });
     document.addEventListener('pointermove', e => { if(!isD) return; let dx=e.clientX-sx; dragDelta+=Math.abs(dx); game.rotY+=dx*0.4; sx=e.clientX; document.getElementById('carousel').style.transform=`rotateY(${game.rotY}deg)`; updateShading(); });
     const endDrag = () => { if(isD) { isD=false; document.getElementById('carousel').style.transition='transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)'; } };
     document.addEventListener('pointerup', endDrag); document.addEventListener('pointercancel', endDrag); document.addEventListener('pointerleave', endDrag);

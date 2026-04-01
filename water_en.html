@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Amitabha Pure Land System ‧ Dharma Water</title>
+    <style>
+        :root {
+            --bg-deep: #010204; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
+            --color-red: #ff4d4d; --color-cyan: #00e5ff; --color-gold: #ffe066; --color-purple: #d8b4fe; 
+            --color-green: #80ed99; --color-orange: #ffb703; --color-pink: #ffb7c5; --color-white: #ffffff; 
+            --color-black: #555555; --color-gray: #a0a0a0; --color-blue: #4da6ff; --color-yellow: #ffff66; 
+            --color-brown: #cfa076; --color-magenta: #ff66cc;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            margin: 0; background: var(--bg-deep); color: #d0d0d0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden; height: 100dvh; display: flex; flex-direction: column;
+            -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: none; 
+        }
+
+        #bgCanvas { position: fixed; inset: 0; z-index: 0; }
+        
+        #vision-overlay {
+            position: fixed; inset: 0; z-index: 100; pointer-events: none; opacity: 0;
+            transition: opacity 0.8s, background 1s;
+        }
+        .vibrate { animation: shake 0.2s infinite; }
+        @keyframes shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -2px); } 100% { transform: translate(1px, -1px); } }
+
+        .huayan-planet {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.1);
+            width: 50vh; height: 50vh; border-radius: 50%; filter: blur(20px); opacity: 0; z-index: 50; pointer-events: none; 
+            transition: transform 2.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 2.5s ease, filter 2.5s ease;
+        }
+        .huayan-planet.active { transform: translate(-50%, -50%) scale(1.5); opacity: 0.85; filter: blur(4px); }
+
+        #center-point {
+            position: absolute; top: 50%; left: 50%; width: 12px; height: 12px; background: #fff; border-radius: 50%;
+            transform: translate(-50%, -50%); z-index: 5; pointer-events: none;
+            filter: drop-shadow(0 0 15px #fff) drop-shadow(0 0 35px var(--solid-gold));
+            animation: breathe 3s infinite alternate ease-in-out; transition: all 0.8s;
+        }
+        @keyframes breathe { 
+            0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.5; filter: drop-shadow(0 0 10px #fff); } 
+            100% { transform: translate(-50%, -50%) scale(1.4); opacity: 1; filter: drop-shadow(0 0 25px #fff) drop-shadow(0 0 50px var(--solid-gold)); } 
+        }
+
+        #header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid rgba(212,175,55,0.15); z-index: 10; position: relative; background: rgba(1,2,4,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        .lv-tag { letter-spacing: 2px; color: var(--gold); font-size: 1.05rem; font-weight: bold; }
+        .info-tag { font-size: 0.72rem; color: var(--cyan); letter-spacing: 1px; margin-top: 6px; }
+
+        #tutorial-ui { position: absolute; top: 18%; left: 0; width: 100%; text-align: center; color: var(--gold); font-size: 0.85rem; letter-spacing: 2px; opacity: 0; transition: opacity 0.8s; z-index: 20; pointer-events: none; text-shadow: 0 0 10px rgba(212,175,55,0.5); line-height: 1.6; }
+
+        #scene { flex: 1; display: flex; justify-content: center; align-items: center; perspective: 1200px; overflow: hidden; position: relative; z-index: 10; }
+        #carousel { width: 80px; height: 180px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); }
+
+        .vessel { position: absolute; top: 0; left: -10px; width: 100px; height: 150px; cursor: pointer; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .vessel.selected { transform: translateY(-18px); }
+        .bottle-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; transition: filter 0.3s; }
+        .vessel.selected .bottle-svg { filter: drop-shadow(0 0 20px rgba(243, 229, 171, 0.6)); }
+
+        .drop-jump { position: fixed; width: 22px; height: 22px; border-radius: 50%; box-shadow: inset -3px -3px 8px rgba(0,0,0,0.5), inset 3px 3px 8px rgba(255,255,255,0.9); z-index: 1000; pointer-events: none; }
+
+        #footer { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10; position: relative; background: rgba(1,2,4,0.3); border-top: 1px solid rgba(139,168,156,0.1); }
+        .tool-btn { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(139,168,156,0.4); color: var(--cyan); padding: 8px 14px; border-radius: 20px; font-size: 0.8rem; letter-spacing: 1px; cursor: pointer; backdrop-filter: blur(5px); transition: all 0.3s; text-transform: uppercase; }
+        .tool-btn:active { transform: scale(0.95); background: rgba(139, 168, 156, 0.15); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.5s; }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-box { width: 88%; max-width: 340px; background: linear-gradient(135deg, rgba(20,25,35,0.85), rgba(5,10,15,0.95)); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 24px; padding: 35px 25px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(212,175,55,0.05); position: relative; transform: translateY(20px); transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); max-height: 85vh; overflow-y: auto; }
+        .modal-overlay.show .modal-box { transform: translateY(0); }
+        
+        .m-title { color: var(--gold); font-size: 1.1rem; letter-spacing: 2px; margin-bottom: 15px; text-shadow: 0 0 15px rgba(212,175,55,0.5); font-weight: bold; }
+        .m-divider { width: 40px; height: 1px; background: var(--solid-gold); margin: 0 auto 20px; opacity: 0.5; }
+        .m-text { font-size: 0.95rem; line-height: 1.6; margin-bottom: 30px; letter-spacing: 1px; color: #e0e0e0; text-align: center; }
+        
+        .rpg-btn-wrap { position: relative; width: 100%; height: 52px; border-radius: 26px; border: 1px solid rgba(212,175,55,0.6); background: rgba(0,0,0,0.3); cursor: pointer; overflow: hidden; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); }
+        .rpg-btn-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0%; transition: width 0.05s linear; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.5)); }
+        .rpg-btn-text { position: relative; z-index: 5; color: #fff; font-size: 0.85rem; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,0,0,0.8); pointer-events: none; font-weight: bold; }
+        
+        .m-action-group { display: flex; flex-direction: column; gap: 12px; }
+        .m-btn { background: transparent; border: 1px solid rgba(139,168,156,0.4); color: var(--cyan); padding: 12px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; letter-spacing: 1px; width: 100%; text-transform: uppercase; font-weight: bold; }
+        .m-btn:active { transform: scale(0.96); background: rgba(139,168,156,0.1); }
+        .m-btn-prime { background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); border-color: var(--solid-gold); color: var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.1); }
+        .m-btn-prime:active { background: rgba(212,175,55,0.3); }
+
+        .modal-box::-webkit-scrollbar { width: 4px; }
+        .modal-box::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.3); border-radius: 2px; }
+    </style>
+</head>
+<body id="main-body">
+
+<svg style="width:0; height:0; position:absolute;">
+    <defs>
+        <linearGradient id="grad-red" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ff4d4d"/><stop offset="100%" stop-color="#800000"/></linearGradient>
+        <linearGradient id="grad-cyan" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#00e5ff"/><stop offset="100%" stop-color="#004d40"/></linearGradient>
+        <linearGradient id="grad-gold" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffe066"/><stop offset="100%" stop-color="#8b6508"/></linearGradient>
+        <linearGradient id="grad-purple" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#d8b4fe"/><stop offset="100%" stop-color="#4a148c"/></linearGradient>
+        <linearGradient id="grad-green" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#80ed99"/><stop offset="100%" stop-color="#1b5e20"/></linearGradient>
+        <linearGradient id="grad-orange" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffb703"/><stop offset="100%" stop-color="#e65100"/></linearGradient>
+        <linearGradient id="grad-pink" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffb7c5"/><stop offset="100%" stop-color="#880e4f"/></linearGradient>
+        
+        <linearGradient id="grad-white" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#b0b0b0"/></linearGradient>
+        <linearGradient id="grad-black" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#606060"/><stop offset="100%" stop-color="#050505"/></linearGradient>
+        <linearGradient id="grad-gray" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#b0b0b0"/><stop offset="100%" stop-color="#404040"/></linearGradient>
+        <linearGradient id="grad-blue" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#4da6ff"/><stop offset="100%" stop-color="#000080"/></linearGradient>
+        <linearGradient id="grad-yellow" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffff80"/><stop offset="100%" stop-color="#b3b300"/></linearGradient>
+        <linearGradient id="grad-brown" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e6b89c"/><stop offset="100%" stop-color="#5c3a21"/></linearGradient>
+        <linearGradient id="grad-magenta" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ff80df"/><stop offset="100%" stop-color="#800060"/></linearGradient>
+        
+        <linearGradient id="glass-glare" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.3)"/><stop offset="40%" stop-color="transparent"/><stop offset="100%" stop-color="rgba(0,0,0,0.4)"/>
+        </linearGradient>
+    </defs>
+</svg>
+
+<canvas id="bgCanvas"></canvas>
+<div id="vision-overlay"></div>
+<div id="center-point"></div>
+
+<div id="header">
+    <div>
+        <div class="lv-tag" id="lv-display">Initializing...</div>
+        <div id="timer-ui" style="font-size:0.7rem; color:var(--gold); margin-top:4px; opacity:0.8; letter-spacing:1px;">...</div>
+    </div>
+    <div style="text-align:right;">
+        <div class="info-tag" id="bag-ui">Provisions: 0/100</div>
+    </div>
+</div>
+<div id="tutorial-ui">Tap to lift the vase.<br>Swipe to rotate the wheel.<br>Merge identical Dharma water.</div>
+
+<div id="scene"><div id="carousel"></div></div>
+
+<div id="footer">
+    <div class="tool-btn" onclick="showInfo()">Guide</div>
+    <div class="tool-btn" onclick="initLevel()">Reset</div>
+    <div class="tool-btn" onclick="shareApp()">Share</div>
+    <div class="tool-btn" style="border-color:var(--solid-gold); color:var(--gold);" onclick="triggerExit()">Exit</div>
+</div>
+
+<div class="modal-overlay" id="modal">
+    <div class="modal-box" id="modal-box">
+        <div class="m-title" id="m-title"></div>
+        <div class="m-divider"></div>
+        <div class="m-text" id="m-text"></div>
+        <div class="m-action-group" id="m-actions"></div>
+    </div>
+</div>
+
+<script>
+    // --------------------------------------------------
+    // Database Initialization (PX_EN_V15.0)
+    // --------------------------------------------------
+    let db = {};
+    try { db = JSON.parse(localStorage.getItem('PX_EN_V15.0')) || {}; } catch(e) { db = {}; }
+    
+    db.waterLevel = db.waterLevel || 1;
+    db.tempBag = db.tempBag || 0;
+    db.points = db.points || 0;
+    if (!db.treasures) db.treasures = { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 };
+    if (typeof db.treasures.sword === 'undefined') db.treasures.sword = 0;
+    if (typeof db.treasures.vase === 'undefined') db.treasures.vase = 0;
+    if (typeof db.treasures.jewel === 'undefined') db.treasures.jewel = 0;
+
+    function saveDB() { localStorage.setItem('PX_EN_V15.0', JSON.stringify(db)); }
+
+    const COLORS = ['red', 'cyan', 'gold', 'purple', 'green', 'orange', 'pink', 'white', 'black', 'gray', 'blue', 'yellow', 'brown', 'magenta'];
+    let game = { vessels: [], selectedIdx: null, isAnimating: false, rotY: 0, startTime: Date.now(), starSpeed: 1, currentEncounter: null, isHuayan: false };
+    let timerInterval = null;
+    let synth = window.speechSynthesis; 
+
+    // Audio Engine
+    let audioCtx = null;
+    function initAudio() { try { if (!audioCtx) { const AC = window.AudioContext || window.webkitAudioContext; if(AC) audioCtx = new AC(); } if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); } catch(e) {} }
+    function playTone(freq, type, dur, vol) { try { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + dur); } catch(e) {} }
+    function playSelect() { playTone(1200, 'sine', 0.1, 0.2); } 
+    function playJump() { playTone(800, 'triangle', 0.25, 0.15); } 
+    function playErr() { playTone(200, 'sawtooth', 0.2, 0.2); } 
+    function playWin() { playTone(432, 'sine', 2.0, 0.5); } 
+
+    function getBottleSVG(idx) {
+        return `
+        <svg viewBox="0 0 100 150" class="bottle-svg">
+            <defs><clipPath id="m-${idx}"><path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" /></clipPath></defs>
+            <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="rgba(255,255,255,0.03)" />
+            <g id="w-${idx}" clip-path="url(#m-${idx})"></g>
+            <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="url(#glass-glare)" pointer-events="none"/>
+            <ellipse cx="50" cy="95" rx="22" ry="6" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" pointer-events="none"/>
+            <ellipse cx="50" cy="95" rx="22" ry="6" fill="rgba(255,255,255,0.1)" pointer-events="none"/>
+            <path d="M45,25 L55,25 L58,50 L72,95 L60,125 L40,125 L28,95 L42,50 Z" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round" pointer-events="none"/>
+            <path d="M40,125 Q50,135 60,125" fill="none" stroke="#d4af37" stroke-width="3" stroke-linecap="round" pointer-events="none"/>
+        </svg>`;
+    }
+
+    function generateVessels(total, colorCount) {
+        let isValid = false;
+        let v = [];
+        while(!isValid) {
+            let pool = [];
+            for(let i=0; i<colorCount; i++) { for(let j=0; j<3; j++) pool.push(COLORS[i]); } 
+            pool.sort(() => Math.random() - 0.5);
+            v = [];
+            for(let i=0; i<total; i++) v.push(i < colorCount ? pool.splice(0, 3) : []);
+            
+            isValid = true;
+            for(let i=0; i<colorCount; i++) {
+                if (v[i].length === 3 && v[i][0] === v[i][1] && v[i][1] === v[i][2]) {
+                    isValid = false; break;
+                }
+            }
+        }
+        return v;
+    }
+
+    function initLevel() {
+        const carousel = document.getElementById('carousel'); carousel.innerHTML = '';
+        game.selectedIdx = null; game.isAnimating = false; game.startTime = Date.now(); game.starSpeed = 1;
+        game.rotY = 0; carousel.style.transform = `rotateY(0deg)`;
+        
+        const lv = db.waterLevel;
+        let totalVessels, colorCount;
+
+        if (lv === 1) {
+            totalVessels = 3; colorCount = 2;
+            document.getElementById('tutorial-ui').style.opacity = '1';
+        } else {
+            totalVessels = Math.min(16, 4 + Math.floor((lv - 1) / 10)); 
+            colorCount = totalVessels - 2; 
+            document.getElementById('tutorial-ui').style.opacity = '0';
+        }
+        
+        game.vessels = generateVessels(totalVessels, colorCount);
+
+        const rows = totalVessels > 8 ? 2 : 1; 
+        const perRow = Math.ceil(totalVessels / rows);
+        const radius = Math.round((100 / 2) / Math.tan(Math.PI / perRow)) + 65;
+
+        for (let i = 0; i < totalVessels; i++) {
+            const v = document.createElement('div'); v.className = 'vessel'; v.id = `v-${i}`;
+            let rowIdx = Math.floor(i / perRow); let colIdx = i % perRow;
+            let theta = (360 / perRow) * colIdx;
+            let yOffset = rows === 2 ? (rowIdx === 0 ? -100 : 100) : 0;
+            v.style.transform = `rotateY(${theta}deg) translateY(${yOffset}px) translateZ(${radius}px)`;
+            v.dataset.theta = theta;
+            v.innerHTML = getBottleSVG(i);
+            
+            v.onclick = () => handleTap(i, theta);
+            carousel.appendChild(v);
+            renderWater(i);
+        }
+
+        updateShading();
+        document.getElementById('lv-display').innerText = `Tier ${lv}`;
+        document.getElementById('bag-ui').innerText = `Provisions: ${db.tempBag}/100`;
+        startTimer();
+    }
+
+    function renderWater(idx) {
+        const g = document.getElementById(`w-${idx}`);
+        if (!g) return;
+        g.innerHTML = '';
+        const slots = [{y:103.75, h:27}, {y:77.5, h:26.5}, {y:51.25, h:26.5}];
+        game.vessels[idx].forEach((c, i) => {
+            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute("x", "0"); rect.setAttribute("y", slots[i].y); rect.setAttribute("width", "100"); rect.setAttribute("height", slots[i].h);
+            rect.setAttribute("fill", `url(#grad-${c})`); g.appendChild(rect);
+            
+            if(i === game.vessels[idx].length - 1) {
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", "10"); line.setAttribute("y1", slots[i].y); line.setAttribute("x2", "90"); line.setAttribute("y2", slots[i].y);
+                line.setAttribute("stroke", "rgba(255,255,255,0.85)"); line.setAttribute("stroke-width", "1.5"); g.appendChild(line);
+            }
+        });
+    }
+
+    async function handleTap(idx, theta) {
+        if (game.isAnimating || game.currentEncounter || game.isHuayan) return;
+        const targetEl = document.getElementById(`v-${idx}`);
+        
+        if (game.selectedIdx === null) {
+            if (game.vessels[idx].length === 0) return;
+            game.selectedIdx = idx; targetEl.classList.add('selected');
+            updateShading(); playSelect();
+        } else {
+            const fromIdx = game.selectedIdx; const toIdx = idx;
+            const fromEl = document.getElementById(`v-${fromIdx}`);
+            if (fromIdx === toIdx) { fromEl.classList.remove('selected'); game.selectedIdx = null; updateShading(); return; }
+
+            const fromArr = game.vessels[fromIdx]; const toArr = game.vessels[toIdx];
+            const moveColor = fromArr[fromArr.length - 1];
+
+            if (toArr.length < 3 && (toArr.length === 0 || toArr[toArr.length-1] === moveColor)) {
+                try {
+                    game.isAnimating = true; fromEl.classList.remove('selected'); playJump();
+                    
+                    let diff = ((-theta) - game.rotY + 540) % 360 - 180;
+                    game.rotY += diff;
+                    document.getElementById('carousel').style.transform = `rotateY(${game.rotY}deg)`;
+                    updateShading();
+                    
+                    await new Promise(r => setTimeout(r, 450));
+                    
+                    const poppedColor = fromArr.pop(); renderWater(fromIdx);
+                    
+                    const fromRect = fromEl.getBoundingClientRect();
+                    const targetRect = targetEl.getBoundingClientRect();
+                    const destX = targetRect.left + (targetRect.width - 22) / 2;
+                    const slots = [103.75, 77.5, 51.25, 25];
+                    const destY = targetRect.top + (slots[toArr.length] / 150) * targetRect.height;
+                    
+                    await animateJump(fromRect.left + 40, fromRect.top + 40, destX, destY, poppedColor);
+                    
+                    toArr.push(poppedColor); renderWater(toIdx);
+                    checkWin();
+                } catch(e) { console.warn(e); } 
+                finally { game.selectedIdx = null; game.isAnimating = false; }
+            } else { fromEl.classList.remove('selected'); game.selectedIdx = null; updateShading(); playErr(); }
+        }
+    }
+
+    function animateJump(sx, sy, ex, ey, cid) {
+        return new Promise(resolve => {
+            const j = document.createElement('div'); j.className = 'drop-jump'; j.style.background = `var(--color-${cid})`;
+            document.body.appendChild(j);
+            const anim = j.animate([
+                { transform: `translate(${sx}px, ${sy}px) scale(1)`, opacity: 1 },
+                { transform: `translate(${(sx+ex)/2}px, ${Math.min(sy,ey)-150}px) scale(1.3)`, opacity: 1 },
+                { transform: `translate(${ex}px, ${ey}px) scale(0.6)`, opacity: 0 }
+            ], { duration: 380, easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)', fill: 'forwards' });
+            anim.onfinish = () => { j.remove(); resolve(); };
+        });
+    }
+
+    // --------------------------------------------------
+    // English Dharma Encounters
+    // --------------------------------------------------
+    const SCRIPTURES = [
+        { t: "Shakyamuni Buddha", c: "[Arouse the Bodhi Mind, mindful of One Direction.]<br>This is the root of rebirth in the Pure Land. Settle your mind in stillness.", b: "Namo Shakyamuni Buddha", color: "rgba(243,229,171,0.25)" },
+        { t: "Bhikshu Dharmakara", c: "[If I attain Buddhahood, beings in ten directions shall rejoice.]<br>The 48 Vows guide all to Ultimate Bliss.", b: "Namo Amitabha Buddha", color: "rgba(255,255,255,0.3)" },
+        { t: "Ksitigarbha Bodhisattva", c: "[Until the hells are empty, I vow not to become a Buddha.]<br>The sea of karma surges. Long-press to recite the vow and calm the waves.", b: "Namo Ksitigarbha Bodhisattva", color: "rgba(180,30,30,0.5)", type: "earth" },
+        { t: "Mahasthamaprapta", c: "[Gather the six senses, continuous pure mindfulness.]<br>Like a child remembering their mother, the pure light constantly protects you.", b: "Namo Mahasthamaprapta", color: "rgba(255,255,255,0.4)" },
+        { t: "Avalokitesvara", c: "[Illuminating the five aggregates are empty, freeing from all suffering.]<br>Form is emptiness, emptiness is form.", b: "Namo Avalokitesvara", color: "rgba(0,200,255,0.2)" },
+        { t: "Maitreya Bodhisattva", c: "[Viewing beings with compassionate eyes, the ocean of merit is boundless.]<br>Realize all is manifested by the mind to transform consciousness.", b: "Namo Maitreya Buddha", color: "rgba(255,183,3,0.25)" },
+        { t: "Samantabhadra", c: "[Even if the void ends, my vows are endless.]<br>In one mote of dust are worlds numerous as dust motes.", b: "Namo Samantabhadra", color: "rgba(216,180,254,0.25)" },
+        { t: "Manifestation of Impermanence", c: "[The world is impermanent, the lands are fragile.]<br>The senses grasp, the mind scatters. Please settle your mind and recite the Buddha's name.", b: "Namo Amitabha Buddha", color: "rgba(50,55,60,0.6)" }
+    ];
+
+    async function checkWin() {
+        if (game.vessels.every(v => v.length === 0 || (v.length === 3 && v.every(c => c === v[0])))) {
+            
+            const today = new Date().toDateString();
+            let isFirstWinToday = (db.waterLastDate !== today);
+            db.waterLastDate = today; 
+            db.waterLevel++; 
+            
+            let earnedPoints = 1;
+            let clearMsg = "Mind purified, Provisions +1.";
+            if (isFirstWinToday) {
+                earnedPoints += 10;
+                clearMsg = "First clearance today. [Daily Diligence] +10, Clear +1. Total +11 Provisions.";
+            }
+            db.tempBag += earnedPoints;
+            
+            let dropMsg = "";
+            let levelPassed = db.waterLevel - 1;
+            if (levelPassed % 20 === 0 && levelPassed > 0) { 
+                db.treasures.vase++; 
+                dropMsg = `
+                <div style="display:flex; justify-content:center; align-items:center; gap:15px; margin: 20px 0; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 16px; border: 1px solid rgba(212,175,55,0.3);">
+                    <div style="width: 30px; height: 45px; position:relative;">
+                        ${getBottleSVG('drop-icon')}
+                    </div>
+                    <div style="text-align:left;">
+                        <div style="color:var(--solid-gold); font-size:0.9rem; letter-spacing:1px; font-weight:bold;">Manifested [Lapis Vase]</div>
+                        <div style="color:#aaa; font-size:0.75rem; letter-spacing:1px; margin-top:3px;">Added to Treasure Pavilion</div>
+                    </div>
+                </div>`;
+            }
+            saveDB();
+            
+            game.starSpeed = 25; playWin();
+            const overlay = document.getElementById('vision-overlay');
+            overlay.style.background = 'radial-gradient(circle, #fff 0%, transparent 80%)';
+            overlay.style.opacity = '1';
+            document.getElementById('center-point').style.transform = 'translate(-50%, -50%) scale(50)';
+            
+            setTimeout(() => {
+                game.starSpeed = 1; overlay.style.opacity = '0';
+                document.getElementById('center-point').style.transform = 'translate(-50%, -50%) scale(1)';
+                
+                if (levelPassed % 5 === 0 && levelPassed > 0) {
+                    const s = SCRIPTURES[Math.floor(Math.random()*SCRIPTURES.length)];
+                    triggerRPG(s, clearMsg + dropMsg);
+                } else if (levelPassed % 3 === 0 && levelPassed > 0) {
+                    triggerHuayanWorld(levelPassed, clearMsg + dropMsg);
+                } else {
+                    showLevelClear(clearMsg + dropMsg);
+                }
+            }, 1800);
+        }
+    }
+
+    function triggerHuayanWorld(lvl, extraMsg) {
+        game.isHuayan = true;
+        game.starSpeed = 60; 
+        let layer = Math.floor(lvl / 3) % 20 + 1;
+        
+        const planet = document.createElement('div');
+        planet.className = 'huayan-planet';
+        const cols = ['var(--color-cyan)', 'var(--color-purple)', 'var(--color-gold)', 'var(--color-magenta)'];
+        planet.style.background = `radial-gradient(circle, ${cols[layer % 4]} 0%, transparent 70%)`;
+        document.body.appendChild(planet);
+        
+        setTimeout(() => planet.classList.add('active'), 100);
+        
+        setTimeout(() => {
+            planet.classList.remove('active'); planet.style.opacity = '0';
+            setTimeout(() => planet.remove(), 1500);
+            game.starSpeed = 1; game.isHuayan = false;
+            
+            showLevelClear(`<span style="color:var(--solid-gold); font-size:1.05rem; font-weight:bold;">Lotus Treasury World ‧ Tier ${layer}</span><br><br>` + extraMsg);
+        }, 3000);
+    }
+
+    function showLevelClear(msg) {
+        showModal("State Elevated", msg, null, null, `
+            <button class="m-btn m-btn-prime" onclick="closeModalAndNext()">Continue</button>
+            <button class="m-btn" onclick="triggerExit()">Exit</button>
+        `);
+        document.getElementById('m-text').style.display = 'block';
+    }
+
+    function closeModalAndNext() { closeModal(); initLevel(); }
+
+    function triggerRPG(s, extraMsg) {
+        game.currentEncounter = s;
+        const overlay = document.getElementById('vision-overlay');
+        overlay.style.opacity = '1'; overlay.style.background = s.color;
+        if(s.type === 'earth') document.getElementById('main-body').classList.add('vibrate');
+
+        showModal(s.t, s.c + "<br><br><span style='font-size:0.8rem; color:var(--gold);'>" + extraMsg + "</span>", null, null, `
+            <div class="rpg-btn-wrap" onmousedown="startRPG()" onmouseup="stopRPG()" ontouchstart="startRPG()" ontouchend="stopRPG()">
+                <div class="rpg-btn-fill" id="fill" style="background:linear-gradient(90deg, transparent, ${s.color.replace(/[\d\.]+\)$/g, '0.8)')})"></div>
+                <div class="rpg-btn-text">${s.b}</div>
+            </div>
+            <div style="font-size:0.7rem; color:#888; letter-spacing:1px; margin-top:5px;">(Long Press to Dissolve)</div>
+        `);
+        document.getElementById('m-text').style.display = 'block';
+    }
+
+    let rpgTimer = null, rpgProg = 0;
+    function startRPG() {
+        clearInterval(rpgTimer); rpgProg = 0;
+        rpgTimer = setInterval(() => {
+            rpgProg += 2; document.getElementById('fill').style.width = rpgProg + '%';
+            if(rpgProg >= 100) { clearInterval(rpgTimer); finishRPG(); }
+        }, 30);
+    }
+    function stopRPG() { clearInterval(rpgTimer); rpgProg = 0; document.getElementById('fill').style.width = '0%'; }
+    function finishRPG() {
+        const overlay = document.getElementById('vision-overlay');
+        overlay.style.background = '#fff'; setTimeout(() => { overlay.style.opacity = '0'; }, 300);
+        document.getElementById('main-body').classList.remove('vibrate');
+        closeModal(); showLevelClear(""); 
+    }
+
+    function showInfo() {
+        let infoHtml = `
+            <div style="font-size: 0.85rem; line-height: 1.8; text-align: left; color: #d0d0d0; letter-spacing: 1px; margin-bottom: 20px;">
+                "The mind is like a master painter, creating all worlds."<br><br>
+                This Dharma Water is not a worldly game, but a microscopic dojo for "taming the mind." The mixed colors symbolize the daily afflictions of the Saha world; by mindfully observing and merging them, we hope to find a moment of peace amidst the noise. In this brief focus, may you slightly taste "Precepts, Concentration, and Wisdom."<br><br>
+                <span style="color:var(--solid-gold); font-weight:bold;">[ Laws of Concentration ]</span><br>
+                1. Daily Practice: Once the forms are sorted today, the water rests. Only observation remains.<br>
+                2. Kalpa Trial: Each tier has a time limit. If anxiety arises and time expires, the barrier closes. Please breathe mindfully and return tomorrow.<br>
+                3. Provisions: Clear one tier, gain 1 point. Daily first clear grants 10. Reach 100 to accumulate into the main system.<br>
+                4. Lotus Treasury: Every 3 tiers, roam the Lotus Treasury World. Every 20 tiers, a Lapis Vase will manifest for the Treasure Pavilion.
+            </div>
+            <button class="m-btn m-btn-prime" onclick="readInfo()" style="margin-bottom:10px;">Audio Guide</button>
+            <button class="m-btn" onclick="closeModal()">Acknowledge</button>
+        `;
+        showModal("Dharma Water ‧ Precepts & Wisdom", "", null, null, infoHtml);
+        document.getElementById('m-text').style.display = 'none';
+    }
+
+    function readInfo() {
+        if(synth.speaking) { synth.cancel(); return; }
+        const text = "Dharma Water, Precepts and Wisdom. The mind is like a master painter, creating all worlds. This Dharma Water is not a worldly game, but a microscopic dojo for taming the mind. The mixed colors symbolize the daily afflictions of the Saha world; by mindfully observing and merging them, we hope to find a moment of peace amidst the noise. In this brief focus, may you slightly taste Precepts, Concentration, and Wisdom. Laws of Concentration: First, Daily Practice: Once the forms are sorted today, the water rests. Second, Kalpa Trial: Each tier has a time limit. If anxiety arises and time expires, the barrier closes. Please breathe mindfully and return tomorrow. Third, Provisions: Clear one tier, gain 1 point. Reach 100 to accumulate into the main system. Fourth, Lotus Treasury: Every three tiers, roam the Lotus Treasury World. Every twenty tiers, a Lapis Vase will manifest for the Treasure Pavilion.";
+        const utterThis = new SpeechSynthesisUtterance(text);
+        utterThis.lang = 'en-US'; utterThis.rate = 0.9; 
+        synth.speak(utterThis);
+    }
+
+    function triggerExit() {
+        let html = `<button class="m-btn" onclick="shareApp()">Share</button>`;
+        if (db.tempBag >= 100) { html += `<button class="m-btn m-btn-prime" onclick="syncPoints()">Accumulate (${db.tempBag} Points)</button>`; } 
+        else { html += `<button class="m-btn" onclick="window.location.href='index_en.html'">Return to Home</button>`; }
+        html += `<button class="m-btn" onclick="closeModal()">Continue</button>`;
+        showModal("Dharma Water ‧ Rest", "Put down your phone, give a smile to those around you, or silently express gratitude.<br><br>Purity is in the present moment.", null, null, html);
+        document.getElementById('m-text').style.display = 'block';
+    }
+
+    function showModal(title, text, btnText, callback, customHtml) {
+        document.getElementById('m-title').innerHTML = title;
+        document.getElementById('m-text').innerHTML = text;
+        document.getElementById('m-actions').innerHTML = customHtml || `<button class="m-btn m-btn-prime" onclick="closeModal()">${btnText}</button>`;
+        if(callback) window.currentCallback = callback;
+        document.getElementById('modal').classList.add('show');
+    }
+
+    function closeModal() { 
+        document.getElementById('modal').classList.remove('show'); 
+        game.currentEncounter = null; 
+        if(synth.speaking) synth.cancel(); 
+        if(window.currentCallback) { window.currentCallback(); window.currentCallback = null; } 
+    }
+
+    function syncPoints() { db.points += db.tempBag; db.tempBag = 0; saveDB(); window.location.href = 'index_en.html'; }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        const limit = (30 + db.waterLevel) * 60 * 1000;
+        timerInterval = setInterval(() => {
+            const elapsed = Date.now() - game.startTime;
+            if (elapsed > limit) { 
+                clearInterval(timerInterval); 
+                showModal("Kalpa Expired", "Attachment arises, the mind is weary.<br>Please let go for now and return tomorrow.", null, null, `<button class="m-btn m-btn-prime" onclick="window.location.href='index_en.html'">Mindful Breathing</button>`); 
+                document.getElementById('m-text').style.display = 'block';
+            }
+            const min = Math.floor((limit - elapsed) / 60000);
+            document.getElementById('timer-ui').innerText = `Time left: ${min} min`;
+        }, 10000); 
+    }
+
+    function shareApp() {
+        if (navigator.share) { navigator.share({ title: 'Amitabha System ‧ Dharma Water', text: 'Merge the forms, transform consciousness into wisdom.', url: window.location.href.split('?')[0] }); }
+        else { alert("Link copied. Rejoice in your sharing!"); }
+    }
+
+    // --------------------------------------------------
+    // Background Engine: Starry Sky & Warp Speed
+    // --------------------------------------------------
+    const canvas = document.getElementById('bgCanvas'); const ctx = canvas.getContext('2d');
+    let cw, ch, stars = [], orbs = [];
+    function res() { cw=canvas.width=window.innerWidth; ch=canvas.height=window.innerHeight; }
+    window.addEventListener('resize', res); res();
+    for(let i=0; i<150; i++) stars.push({x:(Math.random()-0.5)*2000, y:(Math.random()-0.5)*2000, z:Math.random()*2000, s:Math.random()*2+1});
+    const oCols = ['rgba(230,57,70,0.3)', 'rgba(0,180,216,0.3)', 'rgba(212,175,55,0.3)', 'rgba(155,93,229,0.3)'];
+    for(let i=0; i<5; i++) orbs.push({x:Math.random()*cw, y:Math.random()*ch, r:Math.random()*120+60, c:oCols[i%4], vx:(Math.random()-0.5)*1.5, vy:(Math.random()-0.5)*1.5});
+
+    function draw() {
+        ctx.fillStyle = '#010204'; ctx.fillRect(0,0,cw,ch); ctx.globalCompositeOperation = 'screen';
+        
+        if(game.isHuayan) {
+            ctx.fillStyle = 'rgba(212,175,55,0.05)';
+            ctx.fillRect(0,0,cw,ch);
+        }
+
+        if(!game.currentEncounter && !game.isHuayan) {
+            orbs.forEach(o => { o.x+=o.vx; o.y+=o.vy; if(o.x<0||o.x>cw)o.vx*=-1; if(o.y<0||o.y>ch)o.vy*=-1; let g=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r); g.addColorStop(0,o.c); g.addColorStop(1,'transparent'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2); ctx.fill(); });
+        }
+        stars.forEach(s => {
+            s.z -= (6 * game.starSpeed); if(s.z<=0){s.z=2000; s.x=(Math.random()-0.5)*2000; s.y=(Math.random()-0.5)*2000;}
+            let sc=800/(800+s.z), px=cw/2+s.x*sc, py=ch/2+s.y*sc;
+            if(px>0&&px<cw&&py>0&&py<ch){ 
+                ctx.fillStyle = game.isHuayan ? `rgba(212,175,55,${sc})` : `rgba(255,255,255,${sc})`; 
+                ctx.beginPath(); ctx.arc(px,py,s.s*sc*(game.starSpeed>1?8:1),0,Math.PI*2); ctx.fill(); 
+            }
+        });
+        ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(draw);
+    }
+    draw();
+
+    let isD = false, sx = 0, dragDelta = 0;
+    document.addEventListener('pointerdown', e => { if(game.isAnimating||game.currentEncounter||game.isHuayan||e.target.closest('.tool-btn')||e.target.closest('.modal-box')) return; isD=true; sx=e.clientX; dragDelta=0; document.getElementById('carousel').style.transition='none'; initAudio(); });
+    document.addEventListener('pointermove', e => { if(!isD) return; let dx=e.clientX-sx; dragDelta+=Math.abs(dx); game.rotY+=dx*0.4; sx=e.clientX; document.getElementById('carousel').style.transform=`rotateY(${game.rotY}deg)`; updateShading(); });
+    const endDrag = () => { if(isD) { isD=false; document.getElementById('carousel').style.transition='transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)'; } };
+    document.addEventListener('pointerup', endDrag); document.addEventListener('pointercancel', endDrag); document.addEventListener('pointerleave', endDrag);
+
+    function updateShading() {
+        document.querySelectorAll('.vessel').forEach(c => {
+            let currentAngle = (parseFloat(c.dataset.theta) + game.rotY) % 360; if(currentAngle < 0) currentAngle += 360;
+            let dist = Math.min(currentAngle, 360 - currentAngle);
+            if(dist > 85) { c.style.filter = 'brightness(0.3) opacity(0.6)'; } 
+            else { c.style.filter = c.classList.contains('selected') ? 'brightness(1.4)' : 'brightness(1) opacity(1)'; }
+        });
+    }
+
+    initLevel();
+</script>
+</body>
+</html>

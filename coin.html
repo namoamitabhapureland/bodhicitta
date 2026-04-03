@@ -12,6 +12,7 @@
             --bg-deep: #020205; 
             --gold-bright: #f3e5ab; 
             --gold-solid: #d4af37; 
+            --gold-bronze: #b8860b; 
             --cyan: #8ba89c; 
             --text-main: #d0d0d0;
         }
@@ -62,6 +63,7 @@
             font-size: 1.1rem; letter-spacing: 3px; transition: 0.5s; font-family: serif; border-radius: 8px 8px 0 0;
         }
         #user-name:focus { border-bottom-color: var(--gold-solid); background: rgba(212,175,55,0.05); }
+        #user-name:disabled { opacity: 0.9; border-bottom: 1px solid transparent; background: transparent; color: var(--gold-solid); }
 
         .matrix-stream { 
             font-family: monospace; font-size: 0.75rem; color: var(--cyan); 
@@ -82,17 +84,22 @@
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 🌟 核心防呆：touch-action: none 阻絕手機滑動干擾 */
         .vajra-btn {
             width: 100%; padding: 20px; border-radius: 40px; border: 1.5px solid var(--gold-solid); 
             background: linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,1)); 
             color: var(--gold-bright); font-weight: bold; letter-spacing: 6px; cursor: pointer;
-            transition: 0.3s; user-select: none; -webkit-user-select: none; touch-action: none;
+            transition: 0.3s; user-select: none; -webkit-user-select: none; touch-action: none; -webkit-touch-callout: none;
             box-shadow: 0 8px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1);
             font-size: 1.05rem; display: flex; justify-content: center; align-items: center; gap: 10px;
             outline: none; margin-top: 10px;
         }
         .vajra-btn:active { background: rgba(212,175,55,0.15); transform: scale(0.96); box-shadow: 0 0 30px rgba(212,175,55,0.4); }
+
+        .seal-link { 
+            display: inline-block; margin-top: 25px; color: var(--cyan); text-decoration: none; 
+            border-bottom: 1px dashed var(--cyan); font-size: 0.8rem; padding-bottom: 3px; 
+            opacity: 0; transition: 1s; letter-spacing: 2px; pointer-events: none;
+        }
 
         #infinite-light {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -155,7 +162,7 @@
             此系統將您的念佛能量視為不可磨滅的「種子」。<span class="highlight">阿賴耶識</span>如同原始資料庫，透過這 100 秒的「工作量證明（PoW）」鍛造，將定力轉化為唯一的數位權證，代表真實不虛的資糧累積。
         </div>
         
-        <input type="text" id="user-name" placeholder="請填寫行者名號">
+        <input type="text" id="user-name" placeholder="請填寫行者名號 (可安座真名)">
         <div class="matrix-stream" id="matrix-box">0x00000000000000000000000000000000</div>
 
         <div class="svg-container" id="svg-shaker">
@@ -204,6 +211,7 @@
             <span id="btn-text">長按 ． 默念彌陀</span>
         </button>
 
+        <a href="https://easyaccounting.github.io/app/security.html" target="_blank" class="seal-link" id="seal-link">前往 ． 金剛印驗證系統</a>
     </section>
 
     <div id="theory-drawer">
@@ -260,13 +268,71 @@
     <script>
         let fTimer, mTimer;
         let progress = 0;
-        const total = 1000; // 100秒
+        const total = 1000; 
         let isDone = false; 
         let currentHash = "";
 
-        let db = null;
-        try { db = JSON.parse(localStorage.getItem('PX_V15.0')); } catch(e) {}
-        if(db && db.name) document.getElementById('user-name').value = db.name;
+        // ================= ✨ 核心：收藏閣狀態判定 ✨ =================
+        window.onload = () => {
+            let db = null;
+            try { db = JSON.parse(localStorage.getItem('PX_V15.0')); } catch(e) {}
+            
+            if (db && db.coinHash) {
+                // 已有鍛造紀錄，啟動收藏閣模式
+                const savedName = db.coinName || db.name || "行者";
+                document.getElementById('user-name').value = savedName;
+                document.getElementById('user-name').disabled = true; // 鎖定真名
+                showCollectionMode(savedName, db.coinHash);
+            } else {
+                // 尚未鍛造，載入預設名號供修改
+                if(db && db.name) document.getElementById('user-name').value = db.name;
+            }
+        };
+
+        // 轉換為收藏閣介面的專屬函數
+        function showCollectionMode(name, hash) {
+            isDone = true;
+            currentHash = hash;
+
+            // 隱藏鍛造過程 UI
+            document.getElementById('panel-desc').style.display = 'none';
+            document.getElementById('matrix-box').style.display = 'none';
+            document.getElementById('instruction-text').style.display = 'none';
+            document.getElementById('svg-shaker').style.marginBottom = '15px';
+
+            // 顯示 Hash 與改變蓮花狀態
+            document.getElementById('hash-result-box').style.display = 'block';
+            document.getElementById('hash-display').innerText = hash;
+            document.getElementById('p-ring').style.strokeDashoffset = 0; // 蓮花光環全滿
+            document.querySelectorAll('#lotus-core path').forEach(p => { 
+                p.style.opacity = 0.9; 
+                p.style.filter = "drop-shadow(0 0 5px var(--gold-solid))"; 
+            });
+
+            // 轉化按鈕為下載
+            const btn = document.getElementById('forge-btn');
+            btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>下載法幣金剛印</span>';
+            btn.style.background = "var(--gold-solid)";
+            btn.style.color = "#000";
+            btn.style.boxShadow = "0 0 30px rgba(212,175,55,0.6)";
+            btn.style.border = "none";
+            
+            btn.onpointerdown = null; btn.onpointerup = null; btn.onpointerleave = null; btn.onpointercancel = null; btn.onpointerout = null;
+            btn.onclick = () => generateAndDownloadCert(name, hash);
+
+            // 顯示前往驗證系統的超連結
+            const sealLink = document.getElementById('seal-link');
+            if(sealLink) { sealLink.style.opacity = 1; sealLink.style.pointerEvents = 'auto'; }
+        }
+
+        // ================= 存入資料庫函數 =================
+        function saveForgeToDB(name, hash) {
+            let currentDB = {};
+            try { currentDB = JSON.parse(localStorage.getItem('PX_V15.0')) || {}; } catch(e) {}
+            currentDB.coinHash = hash;
+            currentDB.coinName = name; // 同時鎖死鍛造時輸入的名字
+            localStorage.setItem('PX_V15.0', JSON.stringify(currentDB));
+        }
 
         function shuffle() {
             const hex = "0123456789ABCDEF"; let s = "0x";
@@ -274,53 +340,22 @@
             document.getElementById('matrix-box').innerText = s;
         }
 
-        // ================= 🔊 Web Audio API: 絕對防 Bug 重構版 =================
-        let audioCtx = null;
-        let pulseInterval = null;
-
+        // 🔊 音效引擎 (保持不變)
+        let audioCtx = null; let pulseInterval = null;
         function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            // 🌟 核心防呆：強制喚醒 iOS 休眠的音頻引擎
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
         }
-
         function playPulseSound() {
             if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-
-            osc.type = 'sine'; 
-            osc.frequency.setValueAtTime(80, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.1);
-
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.01);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.3);
+            const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(80, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.01); gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
         }
-
-        function startVajraPulse() {
-            initAudio();
-            playPulseSound(); 
-            pulseInterval = setInterval(playPulseSound, 1000);
-        }
-
-        function stopVajraPulse() {
-            if (pulseInterval) {
-                clearInterval(pulseInterval);
-                pulseInterval = null;
-            }
-        }
-        // ========================================================================
+        function startVajraPulse() { initAudio(); playPulseSound(); pulseInterval = setInterval(playPulseSound, 1000); }
+        function stopVajraPulse() { if (pulseInterval) { clearInterval(pulseInterval); pulseInterval = null; } }
 
         function startForge() {
             if(isDone) return; 
@@ -331,7 +366,6 @@
 
             document.getElementById('svg-shaker').classList.add('shaking');
             const btn = document.getElementById('forge-btn');
-            const btnText = document.getElementById('btn-text');
             btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
                              <span>鍛造 ． 注入能量中</span>`; 
             btn.style.borderColor = "var(--cyan)";
@@ -356,7 +390,7 @@
                 
                 if (progress >= total) {
                     clearInterval(fTimer); 
-                    done(name); // 不再因為錯誤崩潰
+                    done(name); 
                 }
             }, 100); 
         }
@@ -364,9 +398,7 @@
         function stopForge() {
             if(isDone) return;
             clearInterval(fTimer); clearInterval(mTimer);
-            
-            stopVajraPulse(); // 安全停止音效
-
+            stopVajraPulse(); 
             document.getElementById('svg-shaker').classList.remove('shaking');
             if(progress < total) {
                 progress = 0;
@@ -388,13 +420,12 @@
             });
         }
 
-        function done(name) { // 移除了容易報錯的 async
+        function done(name) { 
             if(isDone) return;
             isDone = true; 
             
             clearInterval(fTimer); clearInterval(mTimer);
             stopVajraPulse(); 
-            document.getElementById('svg-shaker').classList.remove('shaking');
             
             const light = document.getElementById('infinite-light');
             light.style.display = 'block';
@@ -402,59 +433,39 @@
                 light.style.opacity = '1';
                 if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
             });
-            setTimeout(() => {
-                light.style.opacity = '0';
-                setTimeout(() => light.style.display = 'none', 3000);
-            }, 500);
+            setTimeout(() => { light.style.opacity = '0'; setTimeout(() => light.style.display = 'none', 3000); }, 500);
 
+            // 產生唯一 Hash 並永恆寫入資料庫！
             currentHash = "A48D" + Math.random().toString(16).slice(2,10).toUpperCase() + "EF92" + name.length + "B7C0" + Date.now().toString(16).toUpperCase();
+            saveForgeToDB(name, currentHash);
 
-            document.getElementById('panel-desc').style.display = 'none';
-            document.getElementById('matrix-box').style.display = 'none';
-            document.getElementById('instruction-text').style.display = 'none';
+            // 鎖死名字框
+            document.getElementById('user-name').disabled = true;
 
-            document.getElementById('hash-result-box').style.display = 'block';
-            document.getElementById('hash-display').innerText = currentHash;
-
-            const btn = document.getElementById('forge-btn');
-            btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>下載法幣金剛印</span>';
-            btn.style.background = "var(--gold-solid)";
-            btn.style.color = "#000";
-            btn.style.boxShadow = "0 0 30px rgba(212,175,55,0.6)";
-            btn.style.border = "none";
-            
-            btn.onpointerdown = null; btn.onpointerup = null; btn.onpointerleave = null; btn.onpointercancel = null; btn.onpointerout = null;
-            btn.onclick = () => generateAndDownloadCert(name, currentHash);
+            // 呼叫收藏閣顯示函數
+            showCollectionMode(name, currentHash);
         }
 
         // ================= 🎨 Canvas 繪圖引擎 =================
         function generateAndDownloadCert(name, hash) {
             const canvas = document.getElementById('cert-canvas');
             const ctx = canvas.getContext('2d');
-            const w = canvas.width;  
-            const h = canvas.height; 
+            const w = canvas.width; const h = canvas.height; 
 
-            ctx.fillStyle = "#fdfbf5";
-            ctx.fillRect(0, 0, w, h);
+            ctx.fillStyle = "#fdfbf5"; ctx.fillRect(0, 0, w, h);
 
-            const padding = 100;
-            const x = padding, y = padding, cw = w - padding * 2, ch = h - padding * 2;
-            
-            ctx.save();
-            ctx.strokeStyle = "#b8860b"; ctx.lineWidth = 25; ctx.strokeRect(x, y, cw, ch);
+            const padding = 100; const x = padding, y = padding, cw = w - padding * 2, ch = h - padding * 2;
+            ctx.save(); ctx.strokeStyle = "#b8860b"; ctx.lineWidth = 25; ctx.strokeRect(x, y, cw, ch);
             ctx.strokeStyle = "#d4af37"; ctx.lineWidth = 8; ctx.shadowColor = "rgba(212, 175, 55, 0.5)"; ctx.shadowBlur = 20;
-            ctx.strokeRect(x + 40, y + 40, cw - 80, ch - 80);
-            ctx.restore();
+            ctx.strokeRect(x + 40, y + 40, cw - 80, ch - 80); ctx.restore();
 
             const drawCornerLotus = (cx, cy) => {
                 ctx.save(); ctx.translate(cx, cy); ctx.strokeStyle = "#d4af37"; ctx.lineWidth = 6; ctx.beginPath();
-                for(let i=0; i<4; i++) {
-                    ctx.rotate(Math.PI / 2); ctx.moveTo(0, 0); ctx.quadraticCurveTo(15, -30, 0, -50); ctx.quadraticCurveTo(-15, -30, 0, 0);
-                }
+                for(let i=0; i<4; i++) { ctx.rotate(Math.PI / 2); ctx.moveTo(0, 0); ctx.quadraticCurveTo(15, -30, 0, -50); ctx.quadraticCurveTo(-15, -30, 0, 0); }
                 ctx.stroke(); ctx.restore();
             };
-            drawCornerLotus(x + 40, y + 40);         drawCornerLotus(x + cw - 40, y + 40);    
-            drawCornerLotus(x + 40, y + ch - 40);    drawCornerLotus(x + cw - 40, y + ch - 40); 
+            drawCornerLotus(x + 40, y + 40); drawCornerLotus(x + cw - 40, y + 40);    
+            drawCornerLotus(x + 40, y + ch - 40); drawCornerLotus(x + cw - 40, y + ch - 40); 
 
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = "#aaa"; 
             ctx.font = "30px sans-serif"; ctx.letterSpacing = "15px";
@@ -474,18 +485,14 @@
             };
             drawLotusOnCanvas(w/2, y + 360, 180);
 
-            ctx.fillStyle = "#b8860b"; ctx.font = "bold 100px serif"; ctx.letterSpacing = "30px";
-            ctx.fillText("信根法幣", w/2, y + 680);
-
+            ctx.fillStyle = "#b8860b"; ctx.font = "bold 100px serif"; ctx.letterSpacing = "30px"; ctx.fillText("信根法幣", w/2, y + 680);
             ctx.fillStyle = "#1a1c1e"; ctx.font = "bold 55px serif"; ctx.letterSpacing = "10px";
             const nameText = `行者 ${name}`; ctx.fillText(nameText, w/2, y + 820);
-            
             const nameWidth = ctx.measureText(nameText).width;
             ctx.strokeStyle = "#d4af37"; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.moveTo(w/2 - nameWidth/2 - 20, y + 860); ctx.lineTo(w/2 + nameWidth/2 + 20, y + 860); ctx.stroke();
 
             ctx.fillStyle = "#333"; ctx.font = "46px serif"; ctx.letterSpacing = "4px";
-            
             const content = [
                 "此自性法幣，非世間有為之財。其鍛造整合密碼學之不可篡改性，凝結",
                 "行者一萬聲『南無阿彌陀佛』之清淨資糧。以百秒不散之定力為印，虛",
@@ -493,29 +500,19 @@
                 "紀錄，遂如實納入阿賴耶識數位矩陣。不假方便，自得心開；以此無漏",
                 "功德，莊嚴極樂佛國。"
             ];
-            
-            let startY = y + 980;
-            for(let i=0; i<content.length; i++) {
-                ctx.fillText(content[i], w/2, startY + (i * 90));
-            }
-
-            ctx.fillStyle = "#b8860b"; ctx.font = "bold 50px serif";
-            ctx.fillText("自性莊嚴，金剛不壞。", w/2, startY + (content.length * 90) + 70);
+            let startY = y + 980; for(let i=0; i<content.length; i++) { ctx.fillText(content[i], w/2, startY + (i * 90)); }
+            ctx.fillStyle = "#b8860b"; ctx.font = "bold 50px serif"; ctx.fillText("自性莊嚴，金剛不壞。", w/2, startY + (content.length * 90) + 70);
 
             const hx = w/2 - 700, hy = h - 380, hw = 1400, hh = 220;
             ctx.save(); ctx.strokeStyle = "rgba(212, 175, 55, 0.6)"; ctx.lineWidth = 3; ctx.setLineDash([15, 10]);
             ctx.strokeRect(hx, hy, hw, hh); ctx.restore();
 
-            ctx.fillStyle = "#888"; ctx.font = "bold 32px sans-serif"; ctx.letterSpacing = "8px";
-            ctx.fillText("阿賴耶識 ‧ 定力驗證雜湊 (SAMADHI HASH)", w/2, hy + 60);
-
+            ctx.fillStyle = "#888"; ctx.font = "bold 32px sans-serif"; ctx.letterSpacing = "8px"; ctx.fillText("阿賴耶識 ‧ 定力驗證雜湊 (SAMADHI HASH)", w/2, hy + 60);
             ctx.fillStyle = "#555"; ctx.font = "38px monospace"; ctx.letterSpacing = "3px";
-            ctx.fillText(hash.substring(0, 16), w/2, hy + 130);
-            ctx.fillText(hash.substring(16), w/2, hy + 185);
+            ctx.fillText(hash.substring(0, 16), w/2, hy + 130); ctx.fillText(hash.substring(16), w/2, hy + 185);
 
             setTimeout(() => {
-                const dataUrl = canvas.toDataURL("image/png");
-                const link = document.createElement('a');
+                const dataUrl = canvas.toDataURL("image/png"); const link = document.createElement('a');
                 link.download = `信根法幣-${name}-金剛印.png`; link.href = dataUrl; link.click();
                 alert("法幣金剛印證書已生成並開始下載。請妥善保存這份資糧。");
             }, 100);
@@ -524,12 +521,8 @@
         // ================= ✨ 探究法理抽屜與 TTS =================
         function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
         function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
-
         let isPlayingTheory = false; let theoryUtterance = null; window.sysUtterances = []; 
-        if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = function() { speechSynthesis.getVoices(); };
-        }
-
+        if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) { speechSynthesis.onvoiceschanged = function() { speechSynthesis.getVoices(); }; }
         function toggleTheoryAudio() {
             if (!window.speechSynthesis) return alert("您的設備不支援語音功能");
             const btnText = document.getElementById('tts-text'); const btnIcon = document.getElementById('tts-icon');
@@ -539,21 +532,14 @@
             } else {
                 let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text');
                 let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('。');
-                let isAndroid = /Android/i.test(navigator.userAgent);
-                textToRead = isAndroid ? textToRead : textToRead.replace(/阿/g, 'ㄚ');
-                
+                let isAndroid = /Android/i.test(navigator.userAgent); textToRead = isAndroid ? textToRead : textToRead.replace(/阿/g, 'ㄚ');
                 theoryUtterance = new SpeechSynthesisUtterance(textToRead); theoryUtterance.lang = 'zh-TW'; theoryUtterance.rate = 0.85; 
                 if (isAndroid) {
-                    window.sysUtterances.push(theoryUtterance);
-                    let voices = window.speechSynthesis.getVoices();
-                    if (voices.length > 0) {
-                        let zhVoice = voices.find(v => v.lang === 'zh-TW' && v.name.includes('Google')) || voices.find(v => v.lang.includes('zh'));
-                        if (zhVoice) theoryUtterance.voice = zhVoice;
-                    }
+                    window.sysUtterances.push(theoryUtterance); let voices = window.speechSynthesis.getVoices();
+                    if (voices.length > 0) { let zhVoice = voices.find(v => v.lang === 'zh-TW' && v.name.includes('Google')) || voices.find(v => v.lang.includes('zh')); if (zhVoice) theoryUtterance.voice = zhVoice; }
                 }
                 theoryUtterance.onend = () => {
-                    isPlayingTheory = false; btnText.innerText = "聆聽法音";
-                    btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                    isPlayingTheory = false; btnText.innerText = "聆聽法音"; btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
                     if(isAndroid) window.sysUtterances = window.sysUtterances.filter(u => u !== theoryUtterance);
                 };
                 setTimeout(() => { window.speechSynthesis.speak(theoryUtterance); }, isAndroid ? 150 : 50);

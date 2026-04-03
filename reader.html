@@ -131,62 +131,56 @@ function initArticle() {
         const params = new URLSearchParams(window.location.search);
         const articleId = params.get('id') || "2026-001"; 
 
-        // 檢查數據是否存在
+        // 1. 確保數據存在
         if (typeof articleLibrary === 'undefined') {
-            document.getElementById('s-title').innerText = "數據連線失敗";
-            document.getElementById('s-desc').innerText = "請檢查 articles.js 是否已正確上傳至同目錄。";
+            console.error("找不到 articleLibrary，請檢查 articles.js 路徑。");
             return;
         }
 
-        // 自動適配：不管是 Array 還是 Object 都能讀取
-        let article;
-        if (Array.isArray(articleLibrary)) {
-            article = articleLibrary.find(a => a.id === articleId);
-        } else if (articleLibrary.data) {
-            article = articleLibrary.data[articleId];
-        }
+        // 2. 尋找文章 (對應您的 Array 結構)
+        const article = articleLibrary.find(a => a.id === articleId);
 
         if (!article) {
             document.getElementById('s-title').innerText = "查無此篇";
-            document.getElementById('s-desc').innerText = `ID: ${articleId} 尚未寫入資料庫。`;
+            document.getElementById('s-desc').innerText = `ID: ${articleId} 尚未寫入庫。`;
             return;
         }
 
-        // 成功讀取後填充內容
-        document.getElementById('s-title').innerText = article.statusTitle || article.title;
-        document.getElementById('s-desc').innerHTML = article.statusDesc || "已成功對齊法界數據";
+        // 3. 填充頂部狀態 (對應您的鍵值：statusTitle, statusDesc)
+        document.getElementById('s-title').innerText = article.statusTitle;
+        document.getElementById('s-desc').innerHTML = article.statusDesc;
         document.title = article.title;
 
+        // 4. 填充內容 (對應您的鍵值：humble, sections)
         let html = `
-            <div class="humble-statement">${article.humble || article.humbleStatement}</div>
+            <div class="humble-statement">${article.humble}</div>
             <h1 class="main-title">${article.title}</h1>
         `;
 
-        // 適配章節內容
-        const sections = article.sections || article.chapters;
-        sections.forEach(sec => {
+        // 遍歷您的 sections 陣列
+        article.sections.forEach(sec => {
             html += `
                 <div class="chapter-box">
                     <div class="c-header">
                         <svg class="c-icon" viewBox="0 0 24 24"><path d="${sec.icon}"/></svg>
-                        <div class="c-title">${sec.title || sec.subtitle}</div>
+                        <div class="c-title">${sec.title}</div>
                     </div>
-                    <div class="c-text">${sec.content || sec.text}</div>
+                    <div class="c-text">${sec.content}</div>
                 </div>
                 <div class="chapter-divider"></div>
             `;
         });
 
         document.getElementById('article-inject-point').innerHTML = html;
-        console.log("導讀數據加載成功！");
+        console.log("✅ 正法數據對齊成功！");
 
     } catch (err) {
-        document.getElementById('s-title').innerText = "邏輯出錯";
+        console.error("讀取錯誤:", err);
+        document.getElementById('s-title').innerText = "系統擾動";
         document.getElementById('s-desc').innerText = err.message;
     }
 }
 
-window.onload = initArticle;
 
 
         // --- 2. 抽屜控制 ---

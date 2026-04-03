@@ -1244,7 +1244,7 @@
     </div>
 
     <script>
-        // 每秒檢查一次功德箱，動態改變法幣按鈕的外觀 (不干擾效能)
+        // 每秒檢查一次功德箱，動態改變法幣按鈕的外觀 (注入 48 願漸變色邏輯)
         setInterval(() => {
             let nian = (typeof db !== 'undefined' && db) ? (db.totalNian || 0) : 0;
             let forgeBtn = document.getElementById('modal-forge-btn');
@@ -1253,7 +1253,6 @@
 
             if (!forgeBtn || !forgeText || !forgeIcon) return; // 避免報錯
 
-            // 設定標準高度，確保解鎖前後按鈕大小一致
             const stdHeight = "50px"; 
 
             if(nian >= 10000) {
@@ -1261,8 +1260,8 @@
                 forgeBtn.style.border = "1px solid rgba(212,175,55,0.8)";
                 forgeBtn.style.color = "var(--gold)";
                 forgeBtn.style.boxShadow = "0 0 15px rgba(212,175,55,0.15)";
+                forgeBtn.style.background = "linear-gradient(135deg, rgba(40, 30, 10, 0.9) 0%, rgba(20, 20, 20, 1) 100%)";
                 
-                // 確保解鎖後按鈕內部的內容恢復為標準橫向排列 (Row)
                 forgeBtn.style.display = "flex";
                 forgeBtn.style.flexDirection = "row"; 
                 forgeBtn.style.justifyContent = "center"; 
@@ -1270,53 +1269,61 @@
                 forgeBtn.style.height = stdHeight;
                 forgeBtn.style.padding = "0 20px";
                 
-                // 重置文字元件的雙行樣式
-                forgeText.innerHTML = ""; // 清空內部結構
-                forgeText.innerText = "契入 ‧ 信根法幣鍛造"; // 單行文字
-                forgeText.style.display = "inline"; // 恢復單行顯示
-                forgeText.style.fontSize = "0.95rem"; // 原始字體大小
-                forgeText.style.lineHeight = "normal"; // 恢復行高
+                forgeText.innerHTML = ""; 
+                forgeText.innerText = "契入 ‧ 信根法幣鍛造"; 
+                forgeText.style.display = "inline"; 
+                forgeText.style.fontSize = "0.95rem"; 
+                forgeText.style.lineHeight = "normal"; 
 
-                // 重置圖示元件的樣式
-                forgeIcon.style.marginRight = "10px"; // 恢復右間距
+                forgeIcon.style.marginRight = "10px"; 
 
                 // 解鎖圖示：發光寶珠
                 forgeIcon.innerHTML = `<path d="M12 22C16.4183 22 20 18.4183 20 14C20 9.58172 12 2 12 2C12 2 4 9.58172 4 14C4 18.4183 7.58172 22 12 22Z" fill="rgba(212,175,55,0.15)" stroke="var(--gold)" stroke-width="1.5"/><circle cx="12" cy="14" r="2.5" fill="var(--gold)" filter="drop-shadow(0 0 3px #fff)"/>`;
             } else {
-                // --- 🔒 封印狀態：深邃暗灰 (🌟 核心修正：完美雙行與金鎖保留) ---
-                forgeBtn.style.border = "1px solid #444";
-                forgeBtn.style.color = "#777"; // 恢復莊嚴的黯淡色，不使用白色
+                // --- 🔒 封印狀態：移植 48 願漸變色演算法 ---
+                
+                // 計算進度比例 (0.0 到 1.0)
+                let ratio = Math.min(nian / 10000, 1);
+                
+                // 顏色從鐵灰 (119, 119, 119) 漸變到真金 (212, 175, 55)
+                let r = Math.floor(119 + (212 - 119) * ratio);
+                let g = Math.floor(119 + (175 - 119) * ratio);
+                let b = Math.floor(119 + (55 - 119) * ratio);
+                let dynamicColor = `rgb(${r}, ${g}, ${b})`;
+                
+                // 邊框亮度也隨著進度慢慢提升
+                let borderAlpha = 0.2 + (0.4 * ratio);
+                let borderColor = `rgba(${r}, ${g}, ${b}, ${borderAlpha})`;
+
+                forgeBtn.style.border = `1px solid ${borderColor}`;
+                forgeBtn.style.color = dynamicColor; 
                 forgeBtn.style.boxShadow = "none";
+                forgeBtn.style.background = "linear-gradient(135deg, rgba(20, 20, 20, 0.95) 0%, rgba(30, 25, 10, 0.8) 100%)";
 
-                // 🌟 核心美化修復：保持橫向排列，但文字元件改為縱向堆疊
                 forgeBtn.style.display = "flex";
-                forgeBtn.style.flexDirection = "row"; // 保持橫向：金鎖 | 兩行文字
-                forgeBtn.style.justifyContent = "center"; // 置中
-                forgeBtn.style.alignItems = "center"; // 置中
-                forgeBtn.style.height = stdHeight; // 保持按鈕高度一致
-                forgeBtn.style.padding = "0 15px"; // 縮減左右填充以增加空間
+                forgeBtn.style.flexDirection = "row"; 
+                forgeBtn.style.justifyContent = "center"; 
+                forgeBtn.style.alignItems = "center";
+                forgeBtn.style.height = stdHeight;
+                forgeBtn.style.padding = "0 15px";
 
-                // 金鎖樣式調整
-                forgeIcon.style.marginRight = "8px"; // 與文字縮小間距，增加工整感
+                forgeIcon.style.marginRight = "8px"; 
 
-                // 🌟 文字元件樣式調整：開啟縱向排版 (Column)，並縮小行距與大小以完美嵌入 🌟
                 forgeText.style.display = "flex";
-                forgeText.style.flexDirection = "column"; // 開啟雙行堆疊
-                forgeText.style.alignItems = "center"; // 文字左右置中
-                forgeText.style.justifyContent = "center"; // 文字垂直置中
-                forgeText.style.fontSize = "0.9rem"; // 整體字體微縮
-                forgeText.style.lineHeight = "1.3"; // 縮小行距，讓兩行文字更緊湊
+                forgeText.style.flexDirection = "column"; 
+                forgeText.style.alignItems = "center"; 
+                forgeText.style.justifyContent = "center"; 
+                forgeText.style.fontSize = "0.9rem"; 
+                forgeText.style.lineHeight = "1.3"; 
 
-                // 使用內建 HTML 設定精緻的雙行文案 (依照居士指示)
-                // 第一行：說明標籤 (法幣鍛造結界)
-                // 第二行：累積進度 (累積念佛數：${nian}/10000) - 字體微縮，讓焦點集中在標題
+                // 文字直接套用動態漸變色 (dynamicColor)
                 forgeText.innerHTML = `
-                    <span style="font-weight:bold;">法幣鍛造結界</span>
-                    <span style="font-size:0.85em; opacity:0.7;">累積念佛數：${nian}/10000</span>
+                    <span style="font-weight:bold; color:${dynamicColor}; transition:color 1s;">法幣鍛造結界</span>
+                    <span style="font-size:0.85em; color:${dynamicColor}; opacity:0.7; transition:color 1s;">累積念佛數：${nian}/10000</span>
                 `;
 
-                // 封印圖示：純向量鎖頭 (🌟 絕對不會再不見)
-                forgeIcon.innerHTML = `<rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="#777" stroke-width="1.5" fill="none"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#777" stroke-width="1.5" fill="none"/>`;
+                // 金鎖也套用動態漸變色 (dynamicColor)
+                forgeIcon.innerHTML = `<rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="${dynamicColor}" stroke-width="1.5" fill="none" style="transition:stroke 1s;"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="${dynamicColor}" stroke-width="1.5" fill="none" style="transition:stroke 1s;"/>`;
             }
         }, 1000);
 
@@ -1324,11 +1331,9 @@
         function checkModalForge() {
             let nian = (typeof db !== 'undefined' && db) ? (db.totalNian || 0) : 0;
             if(nian >= 10000) {
-                // 優雅轉場到法幣網頁
                 document.getElementById('page-transition-curtain').style.opacity = '1';
                 setTimeout(() => { window.location.href = 'coin.html'; }, 800); 
             } else {
-                // 結界震動回饋 (拒絕進入)
                 let btn = document.getElementById('modal-forge-btn');
                 btn.style.transition = 'transform 0.1s';
                 btn.style.transform = 'translateX(6px)';
@@ -1340,6 +1345,7 @@
             }
         }
     </script>
+
 
 </div>
 

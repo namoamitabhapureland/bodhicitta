@@ -3,133 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>正法專欄 ． 加載中</title>
+    <title>正法專欄 ． 導讀系統</title>
     <style>
-        /* 引用阿氏原本的 CSS 樣式 (省略重複部分，保持一致) */
         :root {
-            --bg-deep: #000000; --gold: #f3e5ab; --solid-gold: #d4af37; 
-            --cyan: #8ba89c; --silver: #e0e0e0; --text-main: #d0d0d0;
+            --bg-deep: #000000; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --text-main: #d0d0d0;
         }
+        
         body { 
             margin: 0; background: var(--bg-deep); color: var(--text-main); 
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
             overflow: hidden; touch-action: none; user-select: none; overscroll-behavior: none;
         }
-        /* ... 您的 back-btn, status-panel, theory-drawer 等樣式直接放入 ... */
-        .back-btn { position: absolute; top: 20px; left: 20px; z-index: 1000; color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer; background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3); backdrop-filter: blur(5px); }
-        #status-panel { position: absolute; top: 70px; left: 5%; width: 90%; border-left: 2px solid var(--cyan); padding: 10px 20px; z-index: 100; }
-        .status-title { font-size: 1.15rem; color: var(--cyan); font-weight: bold; letter-spacing: 2px; }
-        .status-desc { font-size: 0.85rem; color: #bbb; line-height: 1.8; margin-top: 5px; }
-        #theory-drawer { position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px); border-top: 1.5px solid rgba(139,168,156,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding-bottom: 80px; }
+
+        /* ✨ UI 基礎層 ✨ */
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.9rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; 
+            border: 1px solid rgba(212,175,55,0.3); backdrop-filter: blur(5px);
+        }
+
+        #status-panel {
+            position: absolute; top: 75px; left: 5%; width: 90%; max-width: 350px;
+            border-left: 2px solid var(--cyan); padding: 10px 20px; z-index: 100;
+        }
+        .status-title { font-size: 1.1rem; font-weight: bold; color: var(--cyan); letter-spacing: 2px; }
+        .status-desc { font-size: 0.8rem; color: #999; line-height: 1.6; margin-top: 5px; }
+
+        canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+
+        /* ✨ 導讀喚起按鈕 ✨ */
+        .ui-layer { 
+            position: absolute; bottom: 8%; width: 100%; 
+            display: flex; justify-content: center; z-index: 10; 
+        }
+        .open-drawer-btn {
+            background: linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid var(--cyan); color: var(--cyan);
+            padding: 15px 35px; border-radius: 30px; font-size: 1rem; font-weight: bold;
+            letter-spacing: 3px; cursor: pointer; backdrop-filter: blur(10px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8); transition: 0.3s;
+        }
+        .open-drawer-btn:active { transform: scale(0.95); border-color: var(--gold); color: var(--gold); }
+
+        /* ✨ 導讀長卷 (Drawer) ✨ */
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; 
+            background: rgba(5, 5, 8, 0.98); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(139,168,156,0.4); border-radius: 25px 25px 0 0; 
+            transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); 
+            z-index: 2000; overflow-y: auto; padding-bottom: 80px;
+        }
         #theory-drawer.open { transform: translateY(0); }
-        .theory-container { padding: 30px 7%; max-width: 720px; margin: 0 auto; }
-        .main-title { color: var(--cyan); font-size: 1.5rem; text-align: center; margin-bottom: 30px; letter-spacing: 3px; }
-        .chapter-box { margin-bottom: 40px; }
-        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; color: var(--cyan); font-weight: bold; }
+
+        .drawer-header {
+            position: sticky; top: 0; background: #050508; padding: 15px 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; border-bottom: 1px solid rgba(139,168,156,0.1);
+        }
+        
+        .theory-container { padding: 40px 8%; max-width: 700px; margin: 0 auto; }
+        
+        .humble-statement { 
+            font-size: 0.8rem; color: #888; line-height: 1.8; text-align: justify; 
+            padding: 20px; border: 1px solid rgba(139,168,156,0.15); 
+            border-radius: 12px; background: rgba(10,15,20,0.3); margin-bottom: 40px; 
+        }
+        
+        .main-title { color: var(--cyan); font-size: 1.4rem; letter-spacing: 3px; text-align: center; margin-bottom: 40px; }
+        .chapter-box { margin-bottom: 45px; }
+        .c-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; color: var(--cyan); }
         .c-icon { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; }
-        .c-text { padding-left: 37px; line-height: 1.9; text-align: justify; }
-        /* TTS 按鈕樣式 */
-        #tts-btn { color: var(--gold); border: 1px solid var(--gold); padding: 6px 12px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; }
+        .c-title { font-size: 1.1rem; font-weight: bold; letter-spacing: 1.5px; }
+        .c-text { color: var(--text-main); font-size: 0.95rem; line-height: 1.9; text-align: justify; padding-left: 34px; }
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 30px 0; }
+
+        /* TTS 按鈕 */
+        #tts-btn {
+            color: var(--gold); font-size: 0.85rem; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; background: rgba(212,175,55,0.1);
+            padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+        }
     </style>
 </head>
 <body>
 
-    <div class="back-btn" onclick="window.location.href='treasure.html'">
+    <div class="back-btn" onclick="window.location.href='treasure_list.html'">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-        返回法寶閣
+        返回清單
     </div>
 
     <div id="status-panel">
-        <div class="status-title" id="s-title">加載中...</div>
-        <div class="status-desc" id="s-desc">正從雲端記憶矩陣調取數據。</div>
+        <div class="status-title" id="s-title">數據讀取中</div>
+        <div class="status-desc" id="s-desc">正在從法界雲端調取專欄內容...</div>
     </div>
 
-    <canvas id="realmCanvas" style="position:fixed; inset:0; z-index:1;"></canvas>
+    <canvas id="realmCanvas"></canvas>
 
-    <div style="position:absolute; bottom:10%; width:100%; display:flex; justify-content:center; z-index:10;">
-        <button onclick="openTheoryDrawer()" style="background:rgba(0,0,0,0.8); color:var(--cyan); border:1px solid var(--cyan); padding:15px 30px; border-radius:30px; letter-spacing:2px; cursor:pointer;">
-            展開禪卷 ． 探究實相
-        </button>
+    <div class="ui-layer">
+        <button class="open-drawer-btn" onclick="openDrawer()">展開專欄 ． 進入導讀</button>
     </div>
 
     <div id="theory-drawer">
-        <div style="position:sticky; top:0; background:#050508; padding:20px; display:flex; justify-content:space-between; align-items:center; z-index:100; border-bottom:1px solid rgba(139,168,156,0.2);">
-            <div onclick="closeTheoryDrawer()" style="color:var(--cyan); cursor:pointer;">收起</div>
-            <div id="tts-btn" onclick="toggleTheoryAudio()">
-                <span id="tts-text">聆聽法音</span>
+        <div class="drawer-header">
+            <div onclick="closeDrawer()" style="color:var(--cyan); cursor:pointer; font-size:0.9rem;">收起</div>
+            <div id="tts-btn" onclick="toggleAudio()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                <span id="tts-text">聆聽導讀</span>
             </div>
         </div>
         
-        <div class="theory-container" id="article-content">
+        <div class="theory-container" id="article-inject-point">
             </div>
     </div>
 
     <script src="articles.js"></script>
+
     <script>
-        // --- 核心加載邏輯 ---
-        function loadArticleContent() {
+        // --- 1. 內容加載邏輯 ---
+        function initArticle() {
             const params = new URLSearchParams(window.location.search);
-            const id = params.get('id') || "2026-001";
-            const article = articleLibrary.data[id];
+            const articleId = params.get('id') || "2026-001"; // 預設第一篇
+            const article = articleLibrary.find(a => a.id === articleId);
 
-            if (!article) {
-                document.getElementById('s-title').innerText = "數據遺失";
-                return;
-            }
+            if (!article) return alert("文章數據不存在");
 
-            // 更新頁面標題與狀態
-            document.title = article.title;
+            // 更新狀態面板
             document.getElementById('s-title').innerText = article.statusTitle;
             document.getElementById('s-desc').innerHTML = article.statusDesc;
+            document.title = article.title;
 
-            // 構建文章 HTML
-            let contentHtml = `
-                <div style="font-size:0.85rem; color:#888; border:1px solid #333; padding:15px; border-radius:10px; margin-bottom:30px;">${article.humbleStatement}</div>
+            // 構建 HTML
+            let html = `
+                <div class="humble-statement">${article.humble}</div>
                 <h1 class="main-title">${article.title}</h1>
             `;
 
-            article.chapters.forEach(ch => {
-                contentHtml += `
+            article.sections.forEach(sec => {
+                html += `
                     <div class="chapter-box">
                         <div class="c-header">
-                            <svg class="c-icon" viewBox="0 0 24 24"><path d="${ch.icon}"/></svg>
-                            <div class="c-title">${ch.title}</div>
+                            <svg class="c-icon" viewBox="0 0 24 24"><path d="${sec.icon}"/></svg>
+                            <div class="c-title">${sec.title}</div>
                         </div>
-                        <div class="c-text">${ch.text}</div>
+                        <div class="c-text">${sec.content}</div>
                     </div>
+                    <div class="chapter-divider"></div>
                 `;
             });
 
-            document.getElementById('article-content').innerHTML = contentHtml;
+            document.getElementById('article-inject-point').innerHTML = html;
         }
 
-        // --- 抽屜控制 ---
-        function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
-        function closeTheoryDrawer() { 
+        // --- 2. 抽屜控制 ---
+        function openDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+        function closeDrawer() { 
             document.getElementById('theory-drawer').classList.remove('open'); 
-            if (isPlayingTheory) toggleTheoryAudio(); // 關閉時停止播放
+            if(isPlaying) toggleAudio(); // 關閉時停止播放
         }
 
-        // --- TTS 邏輯 (延用您的跨平台兼容代碼) ---
-        let isPlayingTheory = false;
-        function toggleTheoryAudio() {
-            const text = document.getElementById('article-content').innerText;
-            if (!isPlayingTheory) {
+        // --- 3. TTS 語音邏輯 ---
+        let isPlaying = false;
+        function toggleAudio() {
+            const btnText = document.getElementById('tts-text');
+            if (!isPlaying) {
+                const text = document.getElementById('article-inject-point').innerText;
                 const utter = new SpeechSynthesisUtterance(text);
                 utter.lang = 'zh-TW';
                 utter.rate = 0.9;
-                utter.onend = () => { isPlayingTheory = false; document.getElementById('tts-text').innerText = "聆聽法音"; };
+                utter.onend = () => { isPlaying = false; btnText.innerText = "聆聽導讀"; };
                 window.speechSynthesis.speak(utter);
-                isPlayingTheory = true;
-                document.getElementById('tts-text').innerText = "停止播放";
+                isPlaying = true;
+                btnText.innerText = "停止播放";
             } else {
                 window.speechSynthesis.cancel();
-                isPlayingTheory = false;
-                document.getElementById('tts-text').innerText = "聆聽法音";
+                isPlaying = false;
+                btnText.innerText = "聆聽導讀";
             }
         }
 
-        window.onload = loadArticleContent;
+        // 啟動
+        window.onload = initArticle;
     </script>
 </body>
 </html>

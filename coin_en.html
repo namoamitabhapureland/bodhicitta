@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Amitabha Pure Land System ． Dharma Coin Forge</title>
+    <style>
+        /* ==========================================
+           ✨ Void Realm Aesthetics ✨
+           ========================================== */
+        :root {
+            --bg-deep: #020205; 
+            --gold-bright: #f3e5ab; 
+            --gold-solid: #d4af37; 
+            --gold-bronze: #b8860b; 
+            --cyan: #8ba89c; 
+            --text-main: #d0d0d0;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh; overflow-x: hidden;
+        }
+
+        body::before {
+            content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle at center, rgba(212,175,55,0.03) 0%, transparent 60%);
+            z-index: -1; pointer-events: none;
+        }
+
+        .nav-header { width: 100%; padding: 20px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 100; }
+        
+        .btn-glass { 
+            color: var(--gold-bright); text-decoration: none; font-size: 0.9rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s; letter-spacing: 1px; outline: none;
+        }
+        .btn-glass:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        .forge-panel {
+            width: 90%; max-width: 500px; margin-top: 10px; margin-bottom: 40px;
+            background: linear-gradient(135deg, rgba(20, 20, 22, 0.8) 0%, rgba(5, 5, 8, 0.9) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 24px;
+            padding: 35px 25px; position: relative;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.9), inset 0 1px 10px rgba(255,255,255,0.02);
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .panel-text { 
+            font-size: 0.95rem; line-height: 1.8; color: #aaa; text-align: center; 
+            letter-spacing: 0.5px; margin-bottom: 25px;
+        }
+        .highlight { color: var(--gold-solid); font-weight: bold; text-shadow: 0 0 5px rgba(212,175,55,0.4); }
+
+        #user-name {
+            width: 100%; background: rgba(0,0,0,0.4); border: none; border-bottom: 1px solid rgba(212,175,55,0.4); 
+            color: var(--gold-bright); text-align: center; padding: 15px; margin-bottom: 15px; outline: none; 
+            font-size: 1.1rem; letter-spacing: 2px; transition: 0.5s; font-family: inherit; border-radius: 8px 8px 0 0;
+        }
+        #user-name:focus { border-bottom-color: var(--gold-solid); background: rgba(212,175,55,0.05); }
+        #user-name:disabled { opacity: 0.9; border-bottom: 1px solid transparent; background: transparent; color: var(--gold-solid); }
+
+        .matrix-stream { 
+            font-family: monospace; font-size: 0.75rem; color: var(--cyan); 
+            width: 100%; text-align: center; word-break: break-all; opacity: 0.6; 
+            letter-spacing: 2px; margin-bottom: 30px; height: 30px;
+        }
+
+        .svg-container { position: relative; width: 220px; height: 220px; margin: 0 auto 30px; transition: 0.5s; }
+        #coin-svg { width: 100%; height: 100%; filter: drop-shadow(0 0 25px rgba(212,175,55,0.2)); }
+        
+        .shaking { animation: v-shake 0.1s infinite; }
+        @keyframes v-shake { 0% { transform: translate(1px, 1px); } 100% { transform: translate(-1px, -1px); } }
+
+        #hash-result-box {
+            display: none; width: 100%; background: rgba(0,0,0,0.6); border: 1px solid var(--gold-solid); 
+            border-radius: 15px; padding: 25px 20px; margin-bottom: 25px; text-align: center; 
+            box-shadow: 0 0 20px rgba(212,175,55,0.2); animation: fadeIn 1s ease-in-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .vajra-btn {
+            width: 100%; padding: 20px; border-radius: 40px; border: 1.5px solid var(--gold-solid); 
+            background: linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,1)); 
+            color: var(--gold-bright); font-weight: bold; letter-spacing: 3px; cursor: pointer;
+            transition: 0.3s; user-select: none; -webkit-user-select: none; touch-action: none; -webkit-touch-callout: none;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1);
+            font-size: 1.05rem; display: flex; justify-content: center; align-items: center; gap: 10px;
+            outline: none; margin-top: 10px; font-family: inherit;
+        }
+        .vajra-btn:active { background: rgba(212,175,55,0.15); transform: scale(0.96); box-shadow: 0 0 30px rgba(212,175,55,0.4); }
+
+        #infinite-light {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(243,229,171,0.95) 40%, rgba(212,175,55,0.85) 100%);
+            z-index: 99999; pointer-events: none; opacity: 0; display: none;
+            transition: opacity 3s cubic-bezier(0.25, 0.1, 0.25, 1); mix-blend-mode: screen;
+        }
+
+        /* 📜 Theory Drawer */
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.98); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0; 
+            transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); 
+            z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        #theory-drawer::-webkit-scrollbar { display: none; }
+        #theory-drawer { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(212,175,55,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(212,175,55,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        .main-title { color: var(--gold-bright); font-size: 1.3rem; letter-spacing: 2px; text-align: center; margin-bottom: 50px; text-shadow: 0 0 15px rgba(212,175,55,0.3); font-weight: bold;}
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--gold-solid), transparent); margin: 15px auto 0; }
+        
+        .chapter-box { margin-bottom: 45px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 22px; height: 22px; stroke: var(--gold-solid); fill: none; stroke-width: 1.5; filter: drop-shadow(0 0 5px rgba(212,175,55,0.4)); flex-shrink: 0;}
+        .c-title { color: var(--gold-bright); font-size: 1.1rem; letter-spacing: 1px; font-weight: bold; }
+        .c-text { color: #ccc; font-size: 0.95rem; line-height: 1.8; text-align: justify; padding-left: 37px; }
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.2), transparent); margin: 35px 0; }
+
+        /* Hidden Canvas for Certificate */
+        #cert-canvas { display: none; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div id="infinite-light"></div>
+
+    <div class="nav-header">
+        <a href="index_en.html" class="btn-glass">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Return to Dojo
+        </a>
+        <div class="btn-glass" onclick="openTheoryDrawer()" style="border-color: rgba(139,168,156,0.6); color: var(--cyan);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            Explore Theory
+        </div>
+    </div>
+
+    <div style="text-align:center; margin-bottom: 15px; padding: 0 20px;">
+        <h1 style="color:var(--gold-bright); font-size:1.35rem; letter-spacing: 5px; margin-bottom: 10px; text-shadow: 0 0 15px rgba(212,175,55,0.4); text-transform: uppercase;">Dharma Coin Forge</h1>
+        <div style="color:var(--cyan); font-size:0.85rem; letter-spacing: 2px;">Proof of Samadhi ． Void Matrix</div>
+    </div>
+
+    <section class="forge-panel">
+        <div id="panel-desc" class="panel-text">
+            This system treats your chanting energy as an indestructible "seed". The <span class="highlight">Alaya-vijnana</span> acts as the primordial database. Through this 100-second "Proof of Work (PoW)", your Samadhi is transformed into a unique digital voucher, representing the authentic accumulation of your spiritual merits.
+        </div>
+        
+        <input type="text" id="user-name" placeholder="Enter Name (True Name Optional)">
+        <div class="matrix-stream" id="matrix-box">0x00000000000000000000000000000000</div>
+
+        <div class="svg-container" id="svg-shaker">
+            <svg id="coin-svg" viewBox="0 0 100 100">
+                <defs>
+                    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="var(--gold-bright)" />
+                        <stop offset="100%" stop-color="var(--gold-solid)" />
+                    </linearGradient>
+                </defs>
+                <circle cx="50" cy="50" r="48" fill="none" stroke="url(#goldGrad)" stroke-width="0.5" opacity="0.2"/>
+                <circle id="p-ring" cx="50" cy="50" r="48" fill="none" stroke="url(#goldGrad)" stroke-width="1.5" stroke-dasharray="301.6" stroke-dashoffset="301.6" transform="rotate(-90 50 50)"/>
+                <g id="lotus-core" stroke="url(#goldGrad)" stroke-width="1" fill="none">
+                    <path id="lp-0" d="M50 50 C50 35 42 20 50 5 C58 20 50 35 50 50" transform="rotate(0 50 50)" opacity="0.1"/>
+                    <path id="sp-1" d="M50 50 C50 42 45 38 50 30 C55 38 50 42 50 50" transform="rotate(36 50 50)" opacity="0.1"/>
+                    <path id="lp-2" d="M50 50 C50 35 42 20 50 5 C58 20 50 35 50 50" transform="rotate(72 50 50)" opacity="0.1"/>
+                    <path id="sp-3" d="M50 50 C50 42 45 38 50 30 C55 38 50 42 50 50" transform="rotate(108 50 50)" opacity="0.1"/>
+                    <path id="lp-4" d="M50 50 C50 35 42 20 50 5 C58 20 50 35 50 50" transform="rotate(144 50 50)" opacity="0.1"/>
+                    <path id="sp-5" d="M50 50 C50 42 45 38 50 30 C55 38 50 42 50 50" transform="rotate(180 50 50)" opacity="0.1"/>
+                    <path id="lp-6" d="M50 50 C50 35 42 20 50 5 C58 20 50 35 50 50" transform="rotate(216 50 50)" opacity="0.1"/>
+                    <path id="sp-7" d="M50 50 C50 42 45 38 50 30 C55 38 50 42 50 50" transform="rotate(252 50 50)" opacity="0.1"/>
+                    <path id="lp-8" d="M50 50 C50 35 42 20 50 5 C58 20 50 35 50 50" transform="rotate(288 50 50)" opacity="0.1"/>
+                    <path id="sp-9" d="M50 50 C50 42 45 38 50 30 C55 38 50 42 50 50" transform="rotate(324 50 50)" opacity="0.1"/>
+                    <circle cx="50" cy="50" r="4" fill="url(#goldGrad)" filter="drop-shadow(0 0 5px #fff)"/>
+                </g>
+            </svg>
+        </div>
+
+        <div id="instruction-text" class="panel-text" style="font-size: 0.85rem;">
+            Please keep your fingertip on the seal. <span class="highlight">Chant silently and do not release for exactly 100 seconds.</span> This physical time and unwavering focus is the truest Proof of Work (PoW).
+        </div>
+
+        <div id="hash-result-box">
+            <div style="color:var(--cyan); font-size:0.85rem; letter-spacing:2px; margin-bottom:15px; font-weight:bold; text-transform: uppercase;">Alaya-vijnana ‧ Fingerprint</div>
+            <div id="hash-display" style="font-family:monospace; color:var(--gold-bright); font-size:1rem; word-break:break-all; letter-spacing:2px; line-height:1.6; background: rgba(212,175,55,0.05); padding: 10px; border-radius: 8px;"></div>
+            <button onclick="copyHash()" style="margin-top:20px; background:transparent; border:1px solid var(--cyan); color:var(--cyan); padding:10px 25px; border-radius:25px; font-size:0.85rem; letter-spacing: 1px; cursor:pointer; transition: 0.3s;" onmousedown="this.style.background='rgba(139,168,156,0.2)'" onmouseup="this.style.background='transparent'">Copy Dharma Coin Code</button>
+        </div>
+
+        <button class="vajra-btn" id="forge-btn" 
+            onpointerdown="startForge()" 
+            onpointerup="stopForge()" 
+            onpointerleave="stopForge()"
+            onpointercancel="stopForge()"
+            onpointerout="stopForge()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span id="btn-text">Hold ． Chant Silently</span>
+        </button>
+
+    </section>
+
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()">
+            <div class="close-bar"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+                <div style="color:var(--cyan); font-size:0.85rem; letter-spacing:1px; font-weight:bold; cursor:pointer;">Close Scroll</div>
+                <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold-solid); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                    <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                    <span id="tts-text">Listen</span>
+                </div>
+            </div>
+        </div>
+        <div class="theory-container" id="theory-content-box">
+            <h1 class="main-title">Wisdom & Logic ． Digital Vajra Reality</h1>
+            
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <div class="c-title">Chapter 1: Alaya-vijnana ． The Void Network</div>
+                </div>
+                <div class="c-text">
+                    In the secular digital world, assets rely on central servers for accounting and trust. However, in the void realm of the Amitabha Pure Land, all actions are engraved in the "Alaya-vijnana (Eighth Consciousness)." This is a decentralized, absolute trust matrix that requires no central authority. Every chant of the Buddha's name is faithfully synchronized across the Dharma network—true, real, and indestructible.
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+            
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                    <div class="c-title">Chapter 2: Infallible Karma ． The Vajra Seal</div>
+                </div>
+                <div class="c-text">
+                    The Buddha said, "Even after hundreds of thousands of eons, the karma created does not perish." The "Hash function" in cryptography is the digital manifestation of this cosmic law. It is the unique ID in the digital world and the proof of your 10,000 chants. Even changing a single space alters the fingerprint (Hash value) completely, ensuring the record cannot be tampered with. The system converts your name and timestamp into a "Samadhi Hash," ensuring this merit is unique and indestructible as a Vajra.
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <div class="c-title">Chapter 3: Proof of Samadhi ． 100 Seconds</div>
+                </div>
+                <div class="c-text">
+                    In blockchain, "forging coins" is not creating something from nothing; it consumes real physical energy to discover an extremely rare solution. Users must apply powerful computing power (energy) to find a unique random number (Nonce). There are no shortcuts; it requires continuous attempts. Why does the coin have value? Because it is not easily generated. Behind every coin lies millions of "arduous but honest" energy expenditures.<br><br>
+                    This Dharma Coin is the same. It requires the real computing power of your mobile chip and asks you to keep your fingertip on the screen, chanting with utmost concentration for exactly 100 seconds without releasing. This 100 seconds of physical time and focus is the truest "Proof of Work (PoW)". The appearance of this coin is determined by the practitioner's "Name" and the "Forged Nonce" (every result has a cause). It resides permanently in your device's local memory (Vajra Treasury). Only with sufficient Samadhi can the coin be forged.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="cert-canvas" width="3508" height="2480"></canvas>
+
+    <script>
+        let fTimer, mTimer;
+        let progress = 0;
+        const total = 1000; 
+        let isDone = false; 
+        let currentHash = "";
+
+        // ================= ✨ Collection Mode (English DB) ✨ =================
+        window.onload = () => {
+            let db = null;
+            try { db = JSON.parse(localStorage.getItem('PX_EN_V15.0')); } catch(e) {}
+            
+            if (db && db.coinHash) {
+                const savedName = db.coinName || db.name || "Practitioner";
+                document.getElementById('user-name').value = savedName;
+                document.getElementById('user-name').disabled = true; 
+                showCollectionMode(savedName, db.coinHash);
+            } else {
+                if(db && db.name) document.getElementById('user-name').value = db.name;
+            }
+        };
+
+        function showCollectionMode(name, hash) {
+            isDone = true;
+            currentHash = hash;
+
+            document.getElementById('panel-desc').style.display = 'none';
+            document.getElementById('matrix-box').style.display = 'none';
+            document.getElementById('instruction-text').style.display = 'none';
+            document.getElementById('svg-shaker').style.marginBottom = '15px';
+
+            document.getElementById('hash-result-box').style.display = 'block';
+            document.getElementById('hash-display').innerText = hash;
+            document.getElementById('p-ring').style.strokeDashoffset = 0; 
+            document.querySelectorAll('#lotus-core path').forEach(p => { 
+                p.style.opacity = 0.9; 
+                p.style.filter = "drop-shadow(0 0 5px var(--gold-solid))"; 
+            });
+
+            const btn = document.getElementById('forge-btn');
+            btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Download Vajra Seal</span>';
+            btn.style.background = "var(--gold-solid)";
+            btn.style.color = "#000";
+            btn.style.boxShadow = "0 0 30px rgba(212,175,55,0.6)";
+            btn.style.border = "none";
+            
+            btn.onpointerdown = null; btn.onpointerup = null; btn.onpointerleave = null; btn.onpointercancel = null; btn.onpointerout = null;
+            btn.onclick = () => generateAndDownloadCert(name, hash);
+        }
+
+        function saveForgeToDB(name, hash) {
+            let currentDB = {};
+            try { currentDB = JSON.parse(localStorage.getItem('PX_EN_V15.0')) || {}; } catch(e) {}
+            currentDB.coinHash = hash;
+            currentDB.coinName = name; 
+            localStorage.setItem('PX_EN_V15.0', JSON.stringify(currentDB));
+        }
+
+        function shuffle() {
+            const hex = "0123456789ABCDEF"; let s = "0x";
+            for(let i=0; i<32; i++) s += hex.charAt(Math.floor(Math.random()*16));
+            document.getElementById('matrix-box').innerText = s;
+        }
+
+        // 🔊 Audio Engine
+        let audioCtx = null; let pulseInterval = null;
+        function initAudio() {
+            if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+        }
+        function playPulseSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(80, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.01); gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        }
+        function startVajraPulse() { initAudio(); playPulseSound(); pulseInterval = setInterval(playPulseSound, 1000); }
+        function stopVajraPulse() { if (pulseInterval) { clearInterval(pulseInterval); pulseInterval = null; } }
+
+        function startForge() {
+            if(isDone) return; 
+            const name = document.getElementById('user-name').value.trim();
+            if(!name) return alert("Please enter your Practitioner Name first.");
+
+            try { startVajraPulse(); } catch(e) { console.log(e); }
+
+            document.getElementById('svg-shaker').classList.add('shaking');
+            const btn = document.getElementById('forge-btn');
+            btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                             <span>Forging ． Infusing Energy</span>`; 
+            btn.style.borderColor = "var(--cyan)";
+            btn.style.color = "var(--cyan)";
+            mTimer = setInterval(shuffle, 50);
+
+            fTimer = setInterval(() => {
+                progress++;
+                document.getElementById('p-ring').style.strokeDashoffset = 301.6 - (301.6 * (progress / total));
+                
+                const step = Math.floor(progress / (total / 5));
+                if(document.getElementById(`lp-${step*2}`)) {
+                    document.getElementById(`lp-${step*2}`).style.opacity = 0.9;
+                    document.getElementById(`lp-${step*2}`).style.filter = "drop-shadow(0 0 5px var(--gold-solid))";
+                }
+                if(document.getElementById(`sp-${step*2+1}`)) {
+                    document.getElementById(`sp-${step*2+1}`).style.opacity = 0.9;
+                    document.getElementById(`sp-${step*2+1}`).style.filter = "drop-shadow(0 0 5px var(--gold-solid))";
+                }
+
+                if (navigator.vibrate && progress % 10 === 0) navigator.vibrate(10); 
+                
+                if (progress >= total) {
+                    clearInterval(fTimer); 
+                    done(name); 
+                }
+            }, 100); 
+        }
+
+        function stopForge() {
+            if(isDone) return;
+            clearInterval(fTimer); clearInterval(mTimer);
+            stopVajraPulse(); 
+            document.getElementById('svg-shaker').classList.remove('shaking');
+            if(progress < total) {
+                progress = 0;
+                document.getElementById('p-ring').style.strokeDashoffset = 301.6;
+                const btn = document.getElementById('forge-btn');
+                btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span id="btn-text">Hold ． Chant Silently</span>';
+                btn.style.borderColor = "var(--gold-solid)";
+                btn.style.color = "var(--gold-bright)";
+                document.querySelectorAll('#lotus-core path').forEach(p => { p.style.opacity = 0.1; p.style.filter = "none"; });
+            }
+        }
+
+        function copyHash() {
+            const text = document.getElementById('hash-display').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Dharma Coin code copied! Please keep it safe.");
+            }).catch(err => {
+                alert("Copy failed, please copy manually.");
+            });
+        }
+
+        function done(name) { 
+            if(isDone) return;
+            isDone = true; 
+            
+            clearInterval(fTimer); clearInterval(mTimer);
+            stopVajraPulse(); 
+            
+            const light = document.getElementById('infinite-light');
+            light.style.display = 'block';
+            requestAnimationFrame(() => {
+                light.style.opacity = '1';
+                if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
+            });
+            setTimeout(() => { light.style.opacity = '0'; setTimeout(() => light.style.display = 'none', 3000); }, 500);
+
+            currentHash = "A48D" + Math.random().toString(16).slice(2,10).toUpperCase() + "EF92" + name.length + "B7C0" + Date.now().toString(16).toUpperCase();
+            saveForgeToDB(name, currentHash);
+
+            document.getElementById('user-name').disabled = true;
+            showCollectionMode(name, currentHash);
+        }
+
+        // ================= 🎨 Canvas Generator (English Adapted) =================
+        function generateAndDownloadCert(name, hash) {
+            const canvas = document.getElementById('cert-canvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width; const h = canvas.height; 
+
+            ctx.fillStyle = "#fdfbf5"; ctx.fillRect(0, 0, w, h);
+
+            const padding = 100; const x = padding, y = padding, cw = w - padding * 2, ch = h - padding * 2;
+            ctx.save(); ctx.strokeStyle = "#b8860b"; ctx.lineWidth = 25; ctx.strokeRect(x, y, cw, ch);
+            ctx.strokeStyle = "#d4af37"; ctx.lineWidth = 8; ctx.shadowColor = "rgba(212, 175, 55, 0.5)"; ctx.shadowBlur = 20;
+            ctx.strokeRect(x + 40, y + 40, cw - 80, ch - 80); ctx.restore();
+
+            const drawCornerLotus = (cx, cy) => {
+                ctx.save(); ctx.translate(cx, cy); ctx.strokeStyle = "#d4af37"; ctx.lineWidth = 6; ctx.beginPath();
+                for(let i=0; i<4; i++) { ctx.rotate(Math.PI / 2); ctx.moveTo(0, 0); ctx.quadraticCurveTo(15, -30, 0, -50); ctx.quadraticCurveTo(-15, -30, 0, 0); }
+                ctx.stroke(); ctx.restore();
+            };
+            drawCornerLotus(x + 40, y + 40); drawCornerLotus(x + cw - 40, y + 40);    
+            drawCornerLotus(x + 40, y + ch - 40); drawCornerLotus(x + cw - 40, y + ch - 40); 
+
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = "#aaa"; 
+            ctx.font = "30px sans-serif"; ctx.letterSpacing = "15px";
+            ctx.fillText("AMITABHA PURE LAND SYSTEM", w/2, y + 120);
+
+            const drawLotusOnCanvas = (cx, cy, r) => {
+                ctx.save(); ctx.translate(cx, cy);
+                ctx.strokeStyle = "#d4af37"; ctx.lineWidth = 10; ctx.shadowColor = "rgba(212, 175, 55, 0.4)"; ctx.shadowBlur = 30;
+                ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
+                ctx.shadowBlur = 10; ctx.lineWidth = 5;
+                for(let i=0; i<10; i++) {
+                    ctx.save(); ctx.rotate((i * 36) * Math.PI / 180); ctx.beginPath();
+                    ctx.moveTo(0, 0); ctx.bezierCurveTo(0, -r*0.3, -r*0.16, -r*0.6, 0, -r*0.9);
+                    ctx.bezierCurveTo(r*0.16, -r*0.6, 0, -r*0.3, 0, 0); ctx.stroke(); ctx.restore();
+                }
+                ctx.fillStyle = "#d4af37"; ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI*2); ctx.fill(); ctx.restore();
+            };
+            drawLotusOnCanvas(w/2, y + 360, 180);
+
+            ctx.fillStyle = "#b8860b"; ctx.font = "bold 90px serif"; ctx.letterSpacing = "20px"; ctx.fillText("DHARMA COIN", w/2, y + 680);
+            
+            ctx.fillStyle = "#1a1c1e"; ctx.font = "bold 50px serif"; ctx.letterSpacing = "5px";
+            const nameText = `Practitioner: ${name}`; ctx.fillText(nameText, w/2, y + 820);
+            const nameWidth = ctx.measureText(nameText).width;
+            ctx.strokeStyle = "#d4af37"; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(w/2 - nameWidth/2 - 20, y + 870); ctx.lineTo(w/2 + nameWidth/2 + 20, y + 870); ctx.stroke();
+
+            ctx.fillStyle = "#333"; ctx.font = "46px serif"; ctx.letterSpacing = "2px";
+            const content = [
+                "This Dharma Coin of intrinsic nature is no worldly wealth. Its forging integrates the immutability of cryptography,",
+                "condensing the pure merits of your 10,000 chants. It uses 100 seconds of unwavering Samadhi as its seal,",
+                "and the Alaya-vijnana of the void realm as its treasury. The fusion of physical computing power and spiritual",
+                "Samadhi forges the true record of ten thousand chants, faithfully entering the digital matrix of the Alaya-vijnana.",
+                "Without relying on expedients, the mind opens naturally; with this flawless merit, we adorn the Pure Land."
+            ];
+            let startY = y + 1000; for(let i=0; i<content.length; i++) { ctx.fillText(content[i], w/2, startY + (i * 90)); }
+            
+            ctx.fillStyle = "#b8860b"; ctx.font = "bold 48px serif"; 
+            ctx.fillText("Intrinsically adorned, indestructible as a Vajra.", w/2, startY + (content.length * 90) + 70);
+
+            const hx = w/2 - 700, hy = h - 380, hw = 1400, hh = 220;
+            ctx.save(); ctx.strokeStyle = "rgba(212, 175, 55, 0.6)"; ctx.lineWidth = 3; ctx.setLineDash([15, 10]);
+            ctx.strokeRect(hx, hy, hw, hh); ctx.restore();
+
+            ctx.fillStyle = "#888"; ctx.font = "bold 28px sans-serif"; ctx.letterSpacing = "6px"; ctx.fillText("ALAYA-VIJNANA ‧ SAMADHI HASH", w/2, hy + 60);
+            ctx.fillStyle = "#555"; ctx.font = "38px monospace"; ctx.letterSpacing = "3px";
+            ctx.fillText(hash.substring(0, 16), w/2, hy + 130); ctx.fillText(hash.substring(16), w/2, hy + 185);
+
+            setTimeout(() => {
+                const dataUrl = canvas.toDataURL("image/png"); const link = document.createElement('a');
+                link.download = `DharmaCoin-${name}-VajraSeal.png`; link.href = dataUrl; link.click();
+                alert("Dharma Coin Vajra Seal certificate generated and downloading. Please preserve this merit.");
+            }, 100);
+        }
+
+        // ================= ✨ TTS for English ✨ =================
+        function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+        function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+        let isPlayingTheory = false; let theoryUtterance = null; 
+        
+        function toggleTheoryAudio() {
+            if (!window.speechSynthesis) return alert("Your device does not support TTS audio.");
+            const btnText = document.getElementById('tts-text'); const btnIcon = document.getElementById('tts-icon');
+            if (isPlayingTheory) {
+                window.speechSynthesis.cancel(); isPlayingTheory = false; btnText.innerText = "Listen";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+            } else {
+                let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text');
+                let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('. ');
+                
+                theoryUtterance = new SpeechSynthesisUtterance(textToRead); 
+                theoryUtterance.lang = 'en-US'; 
+                theoryUtterance.rate = 0.9; 
+                
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) { 
+                    let enVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) || voices.find(v => v.lang.startsWith('en')); 
+                    if (enVoice) theoryUtterance.voice = enVoice; 
+                }
+                
+                theoryUtterance.onend = () => {
+                    isPlayingTheory = false; btnText.innerText = "Listen"; btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                };
+                
+                setTimeout(() => { window.speechSynthesis.speak(theoryUtterance); }, 50);
+                isPlayingTheory = true; btnText.innerText = "Stop"; btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+            }
+        }
+        const originalCloseTheoryDrawer = closeTheoryDrawer;
+        closeTheoryDrawer = function() { if (isPlayingTheory) toggleTheoryAudio(); originalCloseTheoryDrawer(); }
+    </script>
+</body>
+</html>

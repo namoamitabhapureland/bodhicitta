@@ -12,11 +12,8 @@
             --bg-deep: #020205; 
             --gold-bright: #f3e5ab; 
             --gold-solid: #d4af37; 
-            --gold-bronze: #b8860b; /* 證書專用古銅金 */
             --cyan: #8ba89c; 
             --text-main: #d0d0d0;
-            --paper-bg: #fdfbf5;    /* 證書古樸法紙色 */
-            --ink-black: #1a1c1e;   /* 證書玄青墨色 */
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -28,7 +25,6 @@
             min-height: 100vh; overflow-x: hidden;
         }
 
-        /* 背景：深淵微光 */
         body::before {
             content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
             background: radial-gradient(circle at center, rgba(212,175,55,0.03) 0%, transparent 60%);
@@ -54,12 +50,6 @@
             display: flex; flex-direction: column; align-items: center;
         }
 
-        .panel-title { 
-            color: var(--gold-bright); font-size: 1.2rem; letter-spacing: 6px; 
-            font-weight: bold; margin-bottom: 15px; text-shadow: 0 0 10px rgba(212,175,55,0.3);
-            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
-        }
-        
         .panel-text { 
             font-size: 0.9rem; line-height: 1.9; color: #aaa; text-align: justify; 
             letter-spacing: 1px; margin-bottom: 25px;
@@ -92,20 +82,26 @@
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* 🌟 核心防呆：touch-action: none 阻絕手機滑動干擾 */
         .vajra-btn {
             width: 100%; padding: 20px; border-radius: 40px; border: 1.5px solid var(--gold-solid); 
             background: linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,1)); 
             color: var(--gold-bright); font-weight: bold; letter-spacing: 6px; cursor: pointer;
-            transition: 0.3s; user-select: none; -webkit-user-select: none;
+            transition: 0.3s; user-select: none; -webkit-user-select: none; touch-action: none;
             box-shadow: 0 8px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1);
             font-size: 1.05rem; display: flex; justify-content: center; align-items: center; gap: 10px;
             outline: none; margin-top: 10px;
         }
         .vajra-btn:active { background: rgba(212,175,55,0.15); transform: scale(0.96); box-shadow: 0 0 30px rgba(212,175,55,0.4); }
 
-        /* ==========================================
-           📜 法理抽屜 (Theory Drawer) ＆ TTS 樣式
-           ========================================== */
+        #infinite-light {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(243,229,171,0.95) 40%, rgba(212,175,55,0.85) 100%);
+            z-index: 99999; pointer-events: none; opacity: 0; display: none;
+            transition: opacity 3s cubic-bezier(0.25, 0.1, 0.25, 1); mix-blend-mode: screen;
+        }
+
+        /* 📜 法理抽屜 */
         #theory-drawer {
             position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.98); backdrop-filter: blur(20px);
             border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0; 
@@ -130,14 +126,7 @@
         .c-text { color: #ccc; font-size: 0.95rem; line-height: 1.9; text-align: justify; text-justify: inter-ideograph; padding-left: 37px; letter-spacing: 0.8px;}
         .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.2), transparent); margin: 35px 0; }
 
-        #infinite-light {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(243,229,171,0.95) 40%, rgba(212,175,55,0.85) 100%);
-            z-index: 99999; pointer-events: none; opacity: 0; display: none;
-            transition: opacity 3s cubic-bezier(0.25, 0.1, 0.25, 1); mix-blend-mode: screen;
-        }
-
-        /* 隱藏用於繪圖的 Canvas */
+        /* 隱藏 Canvas */
         #cert-canvas { display: none; }
     </style>
 </head>
@@ -205,7 +194,12 @@
             <button onclick="copyHash()" style="margin-top:20px; background:transparent; border:1px solid var(--cyan); color:var(--cyan); padding:10px 25px; border-radius:25px; font-size:0.85rem; letter-spacing: 2px; cursor:pointer; transition: 0.3s;" onmousedown="this.style.background='rgba(139,168,156,0.2)'" onmouseup="this.style.background='transparent'">複製法幣代碼</button>
         </div>
 
-        <button class="vajra-btn" id="forge-btn" onpointerdown="startForge()" onpointerup="stopForge()" onpointerleave="stopForge()">
+        <button class="vajra-btn" id="forge-btn" 
+            onpointerdown="startForge()" 
+            onpointerup="stopForge()" 
+            onpointerleave="stopForge()"
+            onpointercancel="stopForge()"
+            onpointerout="stopForge()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
             <span id="btn-text">長按 ． 默念彌陀</span>
         </button>
@@ -254,7 +248,7 @@
                     <div class="c-title">第三章：定力自證 ． 百秒一念間</div>
                 </div>
                 <div class="c-text">
-                    區塊鏈中的「鍛造幣」並非無中生有，而是透過消耗真實的物理能量去碰撞出極其稀有的解答。使用者必須運用強大的算力（能量），去尋找一個唯一的隨機數（Nonce）。這個 Nonce 沒有捷徑，只能不斷去嘗試。為什麼幣有價值？因為不容易生成。每一個幣的背後都凝聚了幾百萬次「辛苦但誠實」的能量支出。<br><br>
+                    區塊鏈的「挖礦」並非無中生有，而是透過消耗真實的物理能量去碰撞出極其稀有的解答。使用者必須運用強大的算力（能量），去尋找一個唯一的隨機數（Nonce）。這個 Nonce 沒有捷徑，只能不斷去嘗試。為什麼幣有價值？因為不容易生成。每一個幣的背後都凝聚了幾百萬次「辛苦但誠實」的能量支出。<br><br>
                     此法幣亦同，真實投入手機晶片的算力，要求您將指尖貼合於屏幕，整整 100 秒內心無旁騖，指不離印。這 100 秒的物理時間與專注力，便是最真實的「工作量證明（PoW）」，那是能量轉化為真實性的證明。這枚幣的樣貌由行者的「名號」與「鍛造所出的 Nonce」共同決定（果必有因）。它存在於您的手機本地內存（金剛藏）中。唯有定力具足，方能凝聚成幣。
                 </div>
             </div>
@@ -268,7 +262,7 @@
         let progress = 0;
         const total = 1000; // 100秒
         let isDone = false; 
-        let currentHash = ""; // 儲存生成的 Hash
+        let currentHash = "";
 
         let db = null;
         try { db = JSON.parse(localStorage.getItem('PX_V15.0')); } catch(e) {}
@@ -280,7 +274,7 @@
             document.getElementById('matrix-box').innerText = s;
         }
 
-        // ================= 🔊 Web Audio API: 金剛脈搏 (純數學音效) =================
+        // ================= 🔊 Web Audio API: 絕對防 Bug 重構版 =================
         let audioCtx = null;
         let pulseInterval = null;
 
@@ -288,37 +282,35 @@
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
+            // 🌟 核心防呆：強制喚醒 iOS 休眠的音頻引擎
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
         }
 
-        // 憑空合成一個低沉的「咚」聲
         function playPulseSound() {
             if (!audioCtx) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-
             const osc = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
 
-            osc.type = 'sine'; // 正弦波，最純淨的低音
-            // 模擬心跳/打鐵的頻率變化：從 80Hz 快速降到 30Hz
+            osc.type = 'sine'; 
             osc.frequency.setValueAtTime(80, audioCtx.currentTime);
-            osc.frequency.rampToValueAtTime(30, audioCtx.currentTime + 0.1);
+            osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.1);
 
-            // 音量包絡：瞬間亮起，快速淡出
             gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.002); // 攻擊相
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3); // 釋放相
+            gainNode.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
 
             osc.connect(gainNode);
             gainNode.connect(audioCtx.destination);
 
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.3); // 聲音總長 0.3 秒
+            osc.stop(audioCtx.currentTime + 0.3);
         }
 
         function startVajraPulse() {
             initAudio();
-            playPulseSound(); // 按下瞬間先響一聲
-            // 之後每 1000ms (1秒) 響一聲，形成脈搏
+            playPulseSound(); 
             pulseInterval = setInterval(playPulseSound, 1000);
         }
 
@@ -326,11 +318,6 @@
             if (pulseInterval) {
                 clearInterval(pulseInterval);
                 pulseInterval = null;
-            }
-            // 瞬間停止所有還在排隊的聲音 (防 Bug)
-            if (audioCtx) {
-                const oscillator = audioCtx.createOscillator();
-                oscillator.stop(); 
             }
         }
         // ========================================================================
@@ -340,14 +327,13 @@
             const name = document.getElementById('user-name').value.trim();
             if(!name) return alert("請先填寫行者名號。");
 
-            // 啟動金剛脈搏音效
-            try { startVajraPulse(); } catch(e) { console.log("Audio not supported"); }
+            try { startVajraPulse(); } catch(e) { console.log(e); }
 
             document.getElementById('svg-shaker').classList.add('shaking');
             const btn = document.getElementById('forge-btn');
             const btnText = document.getElementById('btn-text');
             btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                             <span>鍛造 ． 注入能量中</span>`; // 依照指示修改
+                             <span>鍛造 ． 注入能量中</span>`; 
             btn.style.borderColor = "var(--cyan)";
             btn.style.color = "var(--cyan)";
             mTimer = setInterval(shuffle, 50);
@@ -370,7 +356,7 @@
                 
                 if (progress >= total) {
                     clearInterval(fTimer); 
-                    done(name);
+                    done(name); // 不再因為錯誤崩潰
                 }
             }, 100); 
         }
@@ -379,8 +365,7 @@
             if(isDone) return;
             clearInterval(fTimer); clearInterval(mTimer);
             
-            // 停止音效
-            stopVajraPulse();
+            stopVajraPulse(); // 安全停止音效
 
             document.getElementById('svg-shaker').classList.remove('shaking');
             if(progress < total) {
@@ -403,15 +388,14 @@
             });
         }
 
-        async function done(name) {
+        function done(name) { // 移除了容易報錯的 async
             if(isDone) return;
             isDone = true; 
             
             clearInterval(fTimer); clearInterval(mTimer);
-            stopVajraPulse(); // 確保音效停止
+            stopVajraPulse(); 
             document.getElementById('svg-shaker').classList.remove('shaking');
             
-            // 觸發無量光
             const light = document.getElementById('infinite-light');
             light.style.display = 'block';
             requestAnimationFrame(() => {
@@ -423,19 +407,15 @@
                 setTimeout(() => light.style.display = 'none', 3000);
             }, 500);
 
-            // 產生唯一 Hash
             currentHash = "A48D" + Math.random().toString(16).slice(2,10).toUpperCase() + "EF92" + name.length + "B7C0" + Date.now().toString(16).toUpperCase();
 
-            // 隱藏介面
             document.getElementById('panel-desc').style.display = 'none';
             document.getElementById('matrix-box').style.display = 'none';
             document.getElementById('instruction-text').style.display = 'none';
 
-            // 顯示 Hash
             document.getElementById('hash-result-box').style.display = 'block';
             document.getElementById('hash-display').innerText = currentHash;
 
-            // 按鈕變更為「下載圖檔」
             const btn = document.getElementById('forge-btn');
             btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>下載法幣金剛印</span>';
             btn.style.background = "var(--gold-solid)";
@@ -443,123 +423,68 @@
             btn.style.boxShadow = "0 0 30px rgba(212,175,55,0.6)";
             btn.style.border = "none";
             
-            btn.onpointerdown = null; btn.onpointerup = null; btn.onpointerleave = null;
-            // 綁定生成與下載圖檔函數
+            btn.onpointerdown = null; btn.onpointerup = null; btn.onpointerleave = null; btn.onpointercancel = null; btn.onpointerout = null;
             btn.onclick = () => generateAndDownloadCert(name, currentHash);
         }
 
-        // ================= 🎨 Canvas 繪圖引擎: 生成莊嚴質感證書圖檔 =================
+        // ================= 🎨 Canvas 繪圖引擎 =================
         function generateAndDownloadCert(name, hash) {
             const canvas = document.getElementById('cert-canvas');
             const ctx = canvas.getContext('2d');
-            const w = canvas.width;  // 3508 (A4 橫式)
-            const h = canvas.height; // 2480
+            const w = canvas.width;  
+            const h = canvas.height; 
 
-            // 1. 繪製背景：古樸法紙色
             ctx.fillStyle = "#fdfbf5";
             ctx.fillRect(0, 0, w, h);
 
-            // 2. 繪製「金剛琉璃框」(復古雙層金框 + 幾何蓮花角)
             const padding = 100;
             const x = padding, y = padding, cw = w - padding * 2, ch = h - padding * 2;
             
             ctx.save();
-            // 外層粗框 (古銅金)
-            ctx.strokeStyle = "#b8860b"; 
-            ctx.lineWidth = 25;
-            ctx.strokeRect(x, y, cw, ch);
-            
-            // 內層細框 (亮金 + 琉璃光效)
-            ctx.strokeStyle = "#d4af37";
-            ctx.lineWidth = 8;
-            ctx.shadowColor = "rgba(212, 175, 55, 0.5)";
-            ctx.shadowBlur = 20;
+            ctx.strokeStyle = "#b8860b"; ctx.lineWidth = 25; ctx.strokeRect(x, y, cw, ch);
+            ctx.strokeStyle = "#d4af37"; ctx.lineWidth = 8; ctx.shadowColor = "rgba(212, 175, 55, 0.5)"; ctx.shadowBlur = 20;
             ctx.strokeRect(x + 40, y + 40, cw - 80, ch - 80);
             ctx.restore();
 
-            // 繪製四角幾何蓮花印 (亮金)
             const drawCornerLotus = (cx, cy) => {
-                ctx.save();
-                ctx.translate(cx, cy);
-                ctx.strokeStyle = "#d4af37";
-                ctx.lineWidth = 6;
-                ctx.beginPath();
-                // 簡約幾何蓮花瓣
+                ctx.save(); ctx.translate(cx, cy); ctx.strokeStyle = "#d4af37"; ctx.lineWidth = 6; ctx.beginPath();
                 for(let i=0; i<4; i++) {
-                    ctx.rotate(Math.PI / 2);
-                    ctx.moveTo(0, 0);
-                    ctx.quadraticCurveTo(15, -30, 0, -50);
-                    ctx.quadraticCurveTo(-15, -30, 0, 0);
+                    ctx.rotate(Math.PI / 2); ctx.moveTo(0, 0); ctx.quadraticCurveTo(15, -30, 0, -50); ctx.quadraticCurveTo(-15, -30, 0, 0);
                 }
-                ctx.stroke();
-                ctx.restore();
+                ctx.stroke(); ctx.restore();
             };
-            drawCornerLotus(x + 40, y + 40);         // 左上
-            drawCornerLotus(x + cw - 40, y + 40);    // 右上
-            drawCornerLotus(x + 40, y + ch - 40);    // 左下
-            drawCornerLotus(x + cw - 40, y + ch - 40); // 右下
+            drawCornerLotus(x + 40, y + 40);         drawCornerLotus(x + cw - 40, y + 40);    
+            drawCornerLotus(x + 40, y + ch - 40);    drawCornerLotus(x + cw - 40, y + ch - 40); 
 
-            // 3. 繪製頁眉：英文系統名 (玄青墨色)
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = "#aaa"; // 黯淡灰色
-            ctx.font = "30px sans-serif";
-            ctx.letterSpacing = "15px";
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = "#aaa"; 
+            ctx.font = "30px sans-serif"; ctx.letterSpacing = "15px";
             ctx.fillText("AMITABHA PURE LAND SYSTEM", w/2, y + 120);
 
-            // 4. 繪製 SVG 蓮花幣 (將當前 SVG 狀態畫入 Canvas)
-            // 這裡為了原生乾淨，阿智採用代碼重繪蓮花，質感更好
             const drawLotusOnCanvas = (cx, cy, r) => {
-                ctx.save();
-                ctx.translate(cx, cy);
-                
-                // 外圈琉璃金環
-                ctx.strokeStyle = "#d4af37";
-                ctx.lineWidth = 10;
-                ctx.shadowColor = "rgba(212, 175, 55, 0.4)"; ctx.shadowBlur = 30;
+                ctx.save(); ctx.translate(cx, cy);
+                ctx.strokeStyle = "#d4af37"; ctx.lineWidth = 10; ctx.shadowColor = "rgba(212, 175, 55, 0.4)"; ctx.shadowBlur = 30;
                 ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
-                
-                // 繪製10片金蓮花瓣 (莊嚴全亮狀態)
                 ctx.shadowBlur = 10; ctx.lineWidth = 5;
                 for(let i=0; i<10; i++) {
-                    ctx.save();
-                    ctx.rotate((i * 36) * Math.PI / 180);
-                    // 根據 SVG路徑重繪大花瓣
-                    ctx.beginPath();
+                    ctx.save(); ctx.rotate((i * 36) * Math.PI / 180); ctx.beginPath();
                     ctx.moveTo(0, 0); ctx.bezierCurveTo(0, -r*0.3, -r*0.16, -r*0.6, 0, -r*0.9);
-                    ctx.bezierCurveTo(r*0.16, -r*0.6, 0, -r*0.3, 0, 0);
-                    ctx.stroke();
-                    ctx.restore();
+                    ctx.bezierCurveTo(r*0.16, -r*0.6, 0, -r*0.3, 0, 0); ctx.stroke(); ctx.restore();
                 }
-                // 中心明點
-                ctx.fillStyle = "#d4af37"; ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI*2); ctx.fill();
-                ctx.restore();
+                ctx.fillStyle = "#d4af37"; ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI*2); ctx.fill(); ctx.restore();
             };
             drawLotusOnCanvas(w/2, y + 360, 180);
 
-            // 5. 繪製標題：信根法幣 (古銅金，大氣 Serif 體)
-            ctx.fillStyle = "#b8860b";
-            ctx.font = "bold 100px serif";
-            ctx.letterSpacing = "30px";
+            ctx.fillStyle = "#b8860b"; ctx.font = "bold 100px serif"; ctx.letterSpacing = "30px";
             ctx.fillText("信根法幣", w/2, y + 680);
 
-            // 6. 繪製行者名號 (玄青墨色 + 金色裝飾底線)
-            ctx.fillStyle = "#1a1c1e";
-            ctx.font = "bold 55px serif";
-            ctx.letterSpacing = "10px";
-            const nameText = `行者 ${name}`;
-            ctx.fillText(nameText, w/2, y + 820);
+            ctx.fillStyle = "#1a1c1e"; ctx.font = "bold 55px serif"; ctx.letterSpacing = "10px";
+            const nameText = `行者 ${name}`; ctx.fillText(nameText, w/2, y + 820);
             
-            // 名號裝飾底線
             const nameWidth = ctx.measureText(nameText).width;
             ctx.strokeStyle = "#d4af37"; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.moveTo(w/2 - nameWidth/2 - 20, y + 860); ctx.lineTo(w/2 + nameWidth/2 + 20, y + 860); ctx.stroke();
 
-            // 7. 繪製正文內容 (玄青墨色，工整 Serif 體，居士潤飾最終版)
-            ctx.fillStyle = "#333";
-            ctx.font = "46px serif";
-            ctx.letterSpacing = "4px";
-            ctx.lineHeight = 90; // 自定義行高
+            ctx.fillStyle = "#333"; ctx.font = "46px serif"; ctx.letterSpacing = "4px";
             
             const content = [
                 "此自性法幣，非世間有為之財。其鍛造整合密碼學之不可篡改性，凝結",
@@ -574,49 +499,33 @@
                 ctx.fillText(content[i], w/2, startY + (i * 90));
             }
 
-            // 8. 繪製結語：自性莊嚴 (古銅金，加粗)
-            ctx.fillStyle = "#b8860b";
-            ctx.font = "bold 50px serif";
+            ctx.fillStyle = "#b8860b"; ctx.font = "bold 50px serif";
             ctx.fillText("自性莊嚴，金剛不壞。", w/2, startY + (content.length * 90) + 70);
 
-            // 9. 繪製底部驗證區雜湊 ( dashed 金框 + monospace )
             const hx = w/2 - 700, hy = h - 380, hw = 1400, hh = 220;
-            
-            // dashed 框
-            ctx.save();
-            ctx.strokeStyle = "rgba(212, 175, 55, 0.6)"; ctx.lineWidth = 3; ctx.setLineDash([15, 10]);
-            ctx.strokeRect(hx, hy, hw, hh);
-            ctx.restore();
+            ctx.save(); ctx.strokeStyle = "rgba(212, 175, 55, 0.6)"; ctx.lineWidth = 3; ctx.setLineDash([15, 10]);
+            ctx.strokeRect(hx, hy, hw, hh); ctx.restore();
 
-            // 雜湊標題
             ctx.fillStyle = "#888"; ctx.font = "bold 32px sans-serif"; ctx.letterSpacing = "8px";
             ctx.fillText("阿賴耶識 ‧ 定力驗證雜湊 (SAMADHI HASH)", w/2, hy + 60);
 
-            // 雜湊值 (分兩行，monospace)
             ctx.fillStyle = "#555"; ctx.font = "38px monospace"; ctx.letterSpacing = "3px";
             ctx.fillText(hash.substring(0, 16), w/2, hy + 130);
             ctx.fillText(hash.substring(16), w/2, hy + 185);
 
-            // 10. 觸發下載圖檔
             setTimeout(() => {
                 const dataUrl = canvas.toDataURL("image/png");
                 const link = document.createElement('a');
-                link.download = `信根法幣-${name}-金剛印.png`;
-                link.href = dataUrl;
-                link.click();
-                alert("法幣金剛印證書已生成並開始下載。請檢查您的相簿或下載資料夾，妥善保存這份資糧。");
+                link.download = `信根法幣-${name}-金剛印.png`; link.href = dataUrl; link.click();
+                alert("法幣金剛印證書已生成並開始下載。請妥善保存這份資糧。");
             }, 100);
         }
-        // ========================================================================
 
-        // ================= ✨ 探究法理抽屜與 TTS 語音系統 (移植 48願) ✨ =================
+        // ================= ✨ 探究法理抽屜與 TTS =================
         function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
         function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
 
-        let isPlayingTheory = false;
-        let theoryUtterance = null;
-        window.sysUtterances = []; 
-
+        let isPlayingTheory = false; let theoryUtterance = null; window.sysUtterances = []; 
         if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = function() { speechSynthesis.getVoices(); };
         }
@@ -630,7 +539,6 @@
             } else {
                 let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text');
                 let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('。');
-                
                 let isAndroid = /Android/i.test(navigator.userAgent);
                 textToRead = isAndroid ? textToRead : textToRead.replace(/阿/g, 'ㄚ');
                 
@@ -649,14 +557,11 @@
                     if(isAndroid) window.sysUtterances = window.sysUtterances.filter(u => u !== theoryUtterance);
                 };
                 setTimeout(() => { window.speechSynthesis.speak(theoryUtterance); }, isAndroid ? 150 : 50);
-                isPlayingTheory = true; btnText.innerText = "停止聆聽";
-                btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+                isPlayingTheory = true; btnText.innerText = "停止聆聽"; btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
             }
         }
-
         const originalCloseTheoryDrawer = closeTheoryDrawer;
         closeTheoryDrawer = function() { if (isPlayingTheory) toggleTheoryAudio(); originalCloseTheoryDrawer(); }
-
     </script>
 </body>
 </html>

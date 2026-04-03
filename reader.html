@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>正法專欄 ． 導讀系統</title>
+    <link rel="manifest" href="manifest.json">
+    <title>正法專欄 ． 悟後起修</title>
     <style>
         :root {
             --bg-deep: #000000; 
@@ -16,10 +17,13 @@
         body { 
             margin: 0; background: var(--bg-deep); color: var(--text-main); 
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            /* ✨ 防止 iOS 滑動穿透 ✨ */
             overflow: hidden; touch-action: none; user-select: none; overscroll-behavior: none;
         }
 
-        /* ✨ UI 基礎層 ✨ */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* ✨ UI 導航層 ✨ */
         .back-btn {
             position: absolute; top: 20px; left: 20px; z-index: 1000;
             color: var(--gold); text-decoration: none; font-size: 0.9rem; font-weight: bold;
@@ -29,92 +33,93 @@
         }
 
         #status-panel {
-            position: absolute; top: 75px; left: 5%; width: 90%; max-width: 350px;
+            position: absolute; top: 80px; left: 5%; width: 90%; max-width: 350px;
             border-left: 2px solid var(--cyan); padding: 10px 20px; z-index: 100;
         }
         .status-title { font-size: 1.1rem; font-weight: bold; color: var(--cyan); letter-spacing: 2px; }
         .status-desc { font-size: 0.8rem; color: #999; line-height: 1.6; margin-top: 5px; }
 
-        canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+        /* ✨ 背景引擎掛載點 ✨ */
+        #realmCanvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 
-        /* ✨ 導讀喚起按鈕 ✨ */
+        /* ✨ 主喚起按鈕 ✨ */
         .ui-layer { 
-            position: absolute; bottom: 8%; width: 100%; 
+            position: absolute; bottom: 10%; width: 100%; 
             display: flex; justify-content: center; z-index: 10; 
         }
-        .open-drawer-btn {
+        .open-btn {
             background: linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95)); 
             border: 1px solid var(--cyan); color: var(--cyan);
-            padding: 15px 35px; border-radius: 30px; font-size: 1rem; font-weight: bold;
+            padding: 16px 40px; border-radius: 30px; font-size: 1rem; font-weight: bold;
             letter-spacing: 3px; cursor: pointer; backdrop-filter: blur(10px);
             box-shadow: 0 5px 20px rgba(0,0,0,0.8); transition: 0.3s;
         }
-        .open-drawer-btn:active { transform: scale(0.95); border-color: var(--gold); color: var(--gold); }
+        .open-btn:active { transform: scale(0.95); color: var(--gold); border-color: var(--gold); }
 
-        /* ✨ 導讀長卷 (Drawer) ✨ */
+        /* ✨ 導讀長卷抽屜 ✨ */
         #theory-drawer {
             position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; 
-            background: rgba(5, 5, 8, 0.98); backdrop-filter: blur(20px);
+            background: rgba(5, 5, 8, 0.98); backdrop-filter: blur(25px);
             border-top: 1.5px solid rgba(139,168,156,0.4); border-radius: 25px 25px 0 0; 
             transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); 
-            z-index: 2000; overflow-y: auto; padding-bottom: 80px;
+            z-index: 2000; overflow-y: auto; padding-bottom: 100px;
         }
         #theory-drawer.open { transform: translateY(0); }
 
         .drawer-header {
-            position: sticky; top: 0; background: #050508; padding: 15px 25px;
+            position: sticky; top: 0; background: #050508; padding: 18px 25px;
             display: flex; justify-content: space-between; align-items: center;
             z-index: 100; border-bottom: 1px solid rgba(139,168,156,0.1);
         }
         
-        .theory-container { padding: 40px 8%; max-width: 700px; margin: 0 auto; }
+        .theory-container { padding: 40px 8%; max-width: 720px; margin: 0 auto; }
         
         .humble-statement { 
-            font-size: 0.8rem; color: #888; line-height: 1.8; text-align: justify; 
-            padding: 20px; border: 1px solid rgba(139,168,156,0.15); 
-            border-radius: 12px; background: rgba(10,15,20,0.3); margin-bottom: 40px; 
+            font-size: 0.82rem; color: #888; line-height: 1.8; text-align: justify; 
+            padding: 22px; border: 1px solid rgba(139,168,156,0.15); 
+            border-radius: 12px; background: rgba(10,15,20,0.3); margin-bottom: 45px; 
         }
         
-        .main-title { color: var(--cyan); font-size: 1.4rem; letter-spacing: 3px; text-align: center; margin-bottom: 40px; }
-        .chapter-box { margin-bottom: 45px; }
-        .c-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; color: var(--cyan); }
-        .c-icon { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; }
-        .c-title { font-size: 1.1rem; font-weight: bold; letter-spacing: 1.5px; }
-        .c-text { color: var(--text-main); font-size: 0.95rem; line-height: 1.9; text-align: justify; padding-left: 34px; }
-        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 30px 0; }
+        .main-title { color: var(--cyan); font-size: 1.5rem; letter-spacing: 4px; text-align: center; margin-bottom: 50px; }
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; color: var(--cyan); }
+        .c-icon { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+        .c-title { font-size: 1.15rem; font-weight: bold; letter-spacing: 1.5px; }
+        .c-text { color: var(--text-main); font-size: 1rem; line-height: 2; text-align: justify; padding-left: 36px; letter-spacing: 0.5px; }
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
 
-        /* TTS 按鈕 */
+        /* TTS 控制項 */
         #tts-btn {
             color: var(--gold); font-size: 0.85rem; font-weight: bold; cursor: pointer;
-            display: flex; align-items: center; gap: 8px; background: rgba(212,175,55,0.1);
-            padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            display: flex; align-items: center; gap: 8px; background: rgba(212,175,55,0.12);
+            padding: 8px 18px; border-radius: 25px; border: 1px solid rgba(212,175,55,0.3);
         }
     </style>
 </head>
 <body>
 
-    <div class="back-btn" onclick="window.location.href='treasure_list.html'">
+    <div class="back-btn" onclick="window.location.href='treasure.html'">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-        返回清單
+        返回法寶閣
     </div>
 
     <div id="status-panel">
-        <div class="status-title" id="s-title">數據讀取中</div>
-        <div class="status-desc" id="s-desc">正在從法界雲端調取專欄內容...</div>
+        <div class="status-title" id="s-title">法界數據加載中</div>
+        <div class="status-desc" id="s-desc">正從阿賴耶識矩陣調取專欄內容...</div>
     </div>
 
     <canvas id="realmCanvas"></canvas>
 
     <div class="ui-layer">
-        <button class="open-drawer-btn" onclick="openDrawer()">展開專欄 ． 進入導讀</button>
+        <button class="open-btn" onclick="openDrawer()">展開專欄 ． 進入導讀</button>
     </div>
 
     <div id="theory-drawer">
         <div class="drawer-header">
-            <div onclick="closeDrawer()" style="color:var(--cyan); cursor:pointer; font-size:0.9rem;">收起</div>
+            <div onclick="closeDrawer()" style="color:var(--cyan); cursor:pointer; font-size:0.9rem; letter-spacing:1px;">收起禪卷</div>
             <div id="tts-btn" onclick="toggleAudio()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
-                <span id="tts-text">聆聽導讀</span>
+                <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                <span id="tts-text">聆聽法音</span>
             </div>
         </div>
         
@@ -125,92 +130,101 @@
     <script src="articles.js"></script>
 
     <script>
-        // --- 核心加載邏輯（強化修復版） ---
-function initArticle() {
-    try {
-        const params = new URLSearchParams(window.location.search);
-        const articleId = params.get('id') || "2026-001"; 
+        // --- ✨ 智慧解析引擎 ✨ ---
+        function initArticle() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const articleId = params.get('id') || "2026-04-03"; 
+                
+                if (typeof rawArticles === 'undefined') throw new Error("找不到 articles.js 資料");
+                const data = rawArticles.find(a => a.id === articleId);
+                if (!data) throw new Error("查無此篇內容");
 
-        // 1. 確保數據存在
-        if (typeof articleLibrary === 'undefined') {
-            console.error("找不到 articleLibrary，請檢查 articles.js 路徑。");
-            return;
-        }
+                // 1. 解析狀態欄 (由 | 分隔)
+                const statusParts = data.status.split('|');
+                document.getElementById('s-title').innerText = statusParts[0].trim();
+                document.getElementById('s-desc').innerText = statusParts[1]?.trim() || "";
 
-        // 2. 尋找文章 (對應您的 Array 結構)
-        const article = articleLibrary.find(a => a.id === articleId);
+                // 2. 向量圖標庫 (自動循環分配)
+                const icons = [
+                    "M2 12 Q 12 20 22 12 M4 10 C 12 18, 16 10, 20 6", // 小舟
+                    "M12 3 A 9 9 0 1 1 3 12", // 圓相
+                    "M21 16V8a2 2 0 0 0-1-1.73l-7-4", // 幾何
+                    "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z", // 盾牌
+                    "M13 2L3 14h9l-1 8 10-12h-9l1-8z" // 閃電
+                ];
 
-        if (!article) {
-            document.getElementById('s-title').innerText = "查無此篇";
-            document.getElementById('s-desc').innerText = `ID: ${articleId} 尚未寫入庫。`;
-            return;
-        }
+                // 3. 正則解析 [標題] 內容
+                const sectionRegex = /\[(.*?)\](.*?)(?=\[|$)/gs;
+                let sectionsHtml = "";
+                let match;
+                let i = 0;
 
-        // 3. 填充頂部狀態 (對應您的鍵值：statusTitle, statusDesc)
-        document.getElementById('s-title').innerText = article.statusTitle;
-        document.getElementById('s-desc').innerHTML = article.statusDesc;
-        document.title = article.title;
+                while ((match = sectionRegex.exec(data.content.trim())) !== null) {
+                    sectionsHtml += `
+                        <div class="chapter-box">
+                            <div class="c-header">
+                                <svg class="c-icon" viewBox="0 0 24 24"><path d="${icons[i % icons.length]}"/></svg>
+                                <div class="c-title">${match[1].trim()}</div>
+                            </div>
+                            <div class="c-text">${match[2].trim()}</div>
+                        </div>
+                        <div class="chapter-divider"></div>
+                    `;
+                    i++;
+                }
 
-        // 4. 填充內容 (對應您的鍵值：humble, sections)
-        let html = `
-            <div class="humble-statement">${article.humble}</div>
-            <h1 class="main-title">${article.title}</h1>
-        `;
+                // 4. 填充至容器
+                document.getElementById('article-inject-point').innerHTML = `
+                    <div class="humble-statement">${data.humble}</div>
+                    <h1 class="main-title">${data.title}</h1>
+                    ${sectionsHtml}
+                `;
+                document.title = data.title;
 
-        // 遍歷您的 sections 陣列
-        article.sections.forEach(sec => {
-            html += `
-                <div class="chapter-box">
-                    <div class="c-header">
-                        <svg class="c-icon" viewBox="0 0 24 24"><path d="${sec.icon}"/></svg>
-                        <div class="c-title">${sec.title}</div>
-                    </div>
-                    <div class="c-text">${sec.content}</div>
-                </div>
-                <div class="chapter-divider"></div>
-            `;
-        });
+                // 5. 啟動背景引擎 (如果有的話)
+                if (typeof initEngines === 'function') initEngines();
 
-        document.getElementById('article-inject-point').innerHTML = html;
-        console.log("✅ 正法數據對齊成功！");
-
-    } catch (err) {
-        console.error("讀取錯誤:", err);
-        document.getElementById('s-title').innerText = "系統擾動";
-        document.getElementById('s-desc').innerText = err.message;
-    }
-}
-
-
-
-        // --- 2. 抽屜控制 ---
-        function openDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
-        function closeDrawer() { 
-            document.getElementById('theory-drawer').classList.remove('open'); 
-            if(isPlaying) toggleAudio(); // 關閉時停止播放
-        }
-
-        // --- 3. TTS 語音邏輯 ---
-        let isPlaying = false;
-        function toggleAudio() {
-            const btnText = document.getElementById('tts-text');
-            if (!isPlaying) {
-                const text = document.getElementById('article-inject-point').innerText;
-                const utter = new SpeechSynthesisUtterance(text);
-                utter.lang = 'zh-TW';
-                utter.rate = 0.9;
-                utter.onend = () => { isPlaying = false; btnText.innerText = "聆聽導讀"; };
-                window.speechSynthesis.speak(utter);
-                isPlaying = true;
-                btnText.innerText = "停止播放";
-            } else {
-                window.speechSynthesis.cancel();
-                isPlaying = false;
-                btnText.innerText = "聆聽導讀";
+            } catch (err) {
+                document.getElementById('s-title').innerText = "系統擾動";
+                document.getElementById('s-desc').innerText = err.message;
             }
         }
 
-        // 啟動
+        // --- ✨ 抽屜與語音控制 ✨ ---
+        function openDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+        function closeDrawer() { 
+            document.getElementById('theory-drawer').classList.remove('open'); 
+            if(isPlaying) toggleAudio();
+        }
+
+        let isPlaying = false;
+        function toggleAudio() {
+            const btnText = document.getElementById('tts-text');
+            const btnIcon = document.getElementById('tts-icon');
+            if (!isPlaying) {
+                const text = document.getElementById('article-inject-point').innerText;
+                const utter = new SpeechSynthesisUtterance(text);
+                utter.lang = 'zh-TW'; utter.rate = 0.9;
+                utter.onend = () => { 
+                    isPlaying = false; btnText.innerText = "聆聽法音"; 
+                    btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                };
+                window.speechSynthesis.speak(utter);
+                isPlaying = true;
+                btnText.innerText = "停止播放";
+                btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+            } else {
+                window.speechSynthesis.cancel();
+                isPlaying = false;
+                btnText.innerText = "聆聽法音";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+            }
+        }
+
+        // 鎖定背景滾動
+        document.getElementById('theory-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
+
         window.onload = initArticle;
     </script>
 </body>

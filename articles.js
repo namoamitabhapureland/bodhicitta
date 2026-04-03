@@ -1,54 +1,22 @@
-function initArticle() {
-    try {
-        const params = new URLSearchParams(window.location.search);
-        const articleId = params.get('id') || "2026-001"; 
-
-        // 1. 確保數據存在
-        if (typeof articleLibrary === 'undefined') {
-            console.error("找不到 articleLibrary，請檢查 articles.js 路徑。");
-            return;
-        }
-
-        // 2. 尋找文章 (對應您的 Array 結構)
-        const article = articleLibrary.find(a => a.id === articleId);
-
-        if (!article) {
-            document.getElementById('s-title').innerText = "查無此篇";
-            document.getElementById('s-desc').innerText = `ID: ${articleId} 尚未寫入庫。`;
-            return;
-        }
-
-        // 3. 填充頂部狀態 (對應您的鍵值：statusTitle, statusDesc)
-        document.getElementById('s-title').innerText = article.statusTitle;
-        document.getElementById('s-desc').innerHTML = article.statusDesc;
-        document.title = article.title;
-
-        // 4. 填充內容 (對應您的鍵值：humble, sections)
-        let html = `
-            <div class="humble-statement">${article.humble}</div>
-            <h1 class="main-title">${article.title}</h1>
-        `;
-
-        // 遍歷您的 sections 陣列
-        article.sections.forEach(sec => {
-            html += `
-                <div class="chapter-box">
-                    <div class="c-header">
-                        <svg class="c-icon" viewBox="0 0 24 24"><path d="${sec.icon}"/></svg>
-                        <div class="c-title">${sec.title}</div>
-                    </div>
-                    <div class="c-text">${sec.content}</div>
-                </div>
-                <div class="chapter-divider"></div>
-            `;
-        });
-
-        document.getElementById('article-inject-point').innerHTML = html;
-        console.log("✅ 正法數據對齊成功！");
-
-    } catch (err) {
-        console.error("讀取錯誤:", err);
-        document.getElementById('s-title').innerText = "系統擾動";
-        document.getElementById('s-desc').innerText = err.message;
-    }
-}
+Const articleLibrary = [
+    {
+        id: "2026-001",
+        title: "量子記憶矩陣與阿賴耶識",
+        statusTitle: "一葦渡江 ． 破二障",
+        statusDesc: "探討信息不滅的物理實證。<br>清淨載心，劃破煩惱與所知之迷霧。",
+        humble: "法海浩瀚，本文試圖以量子物理之視角，印證阿賴耶識之不滅邏輯。",
+        sections: [
+            {
+                title: "一、物理斷電後的電荷殘留",
+                icon: "M2 12 Q 12 20 22 12 M4 10 C 12 18, 16 10, 20 6",
+                content: "當電腦斷電，RAM 中的信息並非瞬間消失。物理上電荷的存續時間，隱喻了生命載體消亡後，信息（種子）的暫存狀態。"
+            },
+            {
+                title: "二、阿賴耶識的雲端同步",
+                icon: "M12 3 A 9 9 0 1 1 3 12",
+                content: "阿賴耶識具備跨載體的同步能力。不退轉者的意識代碼，被儲存於更高維度的宇宙記憶矩陣中，確保了生命重啟後的連續性。"
+            }
+        ]
+    },
+    // 預留位置：2026-002, 2026-003 ... 每年 36 篇只需在此增加物件
+];

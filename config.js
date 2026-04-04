@@ -1,0 +1,66 @@
+// config.js - 彌陀淨土系統 (中文版) 節日公告與每日法露設定檔
+
+const festivalMap = {
+    "01-05": "阿彌陀佛聖誕 (農曆 11/17)", "12-25": "阿彌陀佛聖誕 (農曆 11/17)",
+    "04-06": "觀世音菩薩聖誕 (農曆 2/19)", "08-01": "觀世音菩薩成道 (農曆 6/19)", "10-29": "觀世音菩薩出家 (農曆 9/19)",
+    "09-10": "地藏王菩薩聖誕 (農曆 7/30)", "05-24": "釋迦牟尼佛浴佛節 (農曆 4/8)",
+    "03-26": "釋迦牟尼佛出家 (農曆 2/8)", "04-02": "釋迦牟尼佛涅槃 / 農曆十五",
+    "01-19": "農曆初一", "02-02": "農曆十五", "02-17": "農曆初一", "03-03": "農曆十五", "03-19": "農曆初一",
+    "04-17": "農曆初一", "05-01": "農曆十五", "05-16": "農曆初一", "05-31": "農曆十五", "06-15": "農曆初一",
+    "06-29": "農曆十五", "07-14": "農曆初一", "07-29": "農曆十五", "08-13": "農曆初一", "08-27": "農曆十五",
+    "09-11": "農曆初一", "09-26": "農曆十五", "10-10": "農曆初一", "10-25": "農曆十五", "11-09": "農曆初一",
+    "11-24": "農曆十五", "12-08": "農曆初一", "12-23": "農曆十五"
+};
+
+const dewQuotes = [
+    "一稱南無佛，皆已成佛道。", "心如工畫師，能畫諸世間。", "應無所住，而生其心。",
+    "凡所有相，皆是虛妄。", "一切有為法，如夢幻泡影。", "念佛方能消宿業，竭誠自可轉凡心。",
+    "信為道源功德母，長養一切諸善法。", "不假方便，自得心開。", "都攝六根，淨念相繼。",
+    "一念相應一念佛，念念相應念念佛。",
+    "光明遍照十方世界，念佛眾生攝取不捨。", "若眾生心，憶佛念佛，現前當來，必定見佛。",
+    "得生與否，全由信願之有無；品位高下，全由持名之深淺。", "輪迴路險，無常迅速，老實念佛，莫換題目。",
+    "極樂無為涅槃界，隨緣雜善恐難生。", "一句彌陀作大舟，生死海中任遨遊。",
+    "愛不重不生娑婆，念不一不生極樂。", "真為生死，發菩提心，以深信願，持佛名號。",
+    "莫訝一稱超十地，須知六字括三乘。", "不懷疑、不夾雜、不間斷。",
+    "過去心不可得，現在心不可得，未來心不可得。", "無所從來，亦無所去，故名如來。",
+    "色不異空，空不異色；色即是空，空即是色。", "狂心頓歇，歇即菩提。",
+    "知幻即離，不作方便；離幻即覺，亦無漸次。", "菩提本無樹，明鏡亦非臺；本來無一物，何處惹塵埃。",
+    "百千法門，同歸方寸；河沙妙德，總在心源。", "隨緣消舊業，更莫造新殃。",
+    "不見一法即如來，方得名為觀自在。", "若見諸相非相，即見如來。",
+    "心佛及眾生，是三無差別。", "若人欲了知，三世一切佛，應觀法界性，一切唯心造。",
+    "忘失菩提心，修諸善法，是名魔業。", "虛空有盡，我願無窮。",
+    "不為自己求安樂，但願眾生得離苦。", "佛法在世間，不離世間覺。",
+    "一切眾生，皆具如來智慧德相，但因妄想執著，不能證得。", "十方三世佛，共同一法身。",
+    "一塵中有塵數剎，一一剎有難思佛。", "不退菩薩為伴侶，華開見佛悟無生。",
+    "菩薩畏因，眾生畏果。", "假使百千劫，所作業不亡，因緣會遇時，果報還自受。",
+    "萬般帶不去，唯有業隨身。", "人身難得今已得，佛法難聞今已聞。",
+    "靜坐常思己過，閒談莫論人非。", "欲知前世因，今生受者是；欲知來世果，今生作者是。",
+    "不怕念起，只怕覺遲。", "境緣無好醜，好醜起於心。",
+    "欲平大地，先平心地；心地理平，大地皆平。", "修行無他，唯在看破與放下。"
+];
+
+// config_en.js - Amitabha Pure Land System (English) Festival & Dew Quotes
+
+const festivalMap = {
+    "01-05": "Amitabha Buddha's Birthday", "12-25": "Amitabha Buddha's Birthday",
+    "04-06": "Avalokitesvara's Birthday", "08-01": "Avalokitesvara's Enlightenment", "10-29": "Avalokitesvara's Renunciation",
+    "09-10": "Ksitigarbha Bodhisattva's Birthday", "05-24": "Shakyamuni Buddha's Birthday",
+    "03-26": "Shakyamuni Buddha's Renunciation", "04-02": "Shakyamuni Buddha's Nirvana",
+    "01-19": "Lunar 1st", "02-02": "Lunar 15th", "02-17": "Lunar 1st", "03-03": "Lunar 15th", "03-19": "Lunar 1st",
+    "04-17": "Lunar 1st", "05-01": "Lunar 15th", "05-16": "Lunar 1st", "05-31": "Lunar 15th", "06-15": "Lunar 1st",
+    "06-29": "Lunar 15th", "07-14": "Lunar 1st", "07-29": "Lunar 15th", "08-13": "Lunar 1st", "08-27": "Lunar 15th",
+    "09-11": "Lunar 1st", "09-26": "Lunar 15th", "10-10": "Lunar 1st", "10-25": "Lunar 15th", "11-09": "Lunar 1st",
+    "11-24": "Lunar 15th", "12-08": "Lunar 1st", "12-23": "Lunar 15th"
+};
+
+const dewQuotes = [
+    "One recitation of 'Namo Buddha', and the path to Buddhahood is sealed.", 
+    "The mind is like a master painter, able to paint all worlds.", 
+    "Arouse the mind without resting it upon anything.",
+    "All appearances are illusory.", 
+    "All conditioned phenomena are like dreams, illusions, bubbles, and shadows.", 
+    "Mindfulness of the Buddha extinguishes past karma.",
+    "Faith is the source of the path and the mother of merit.", 
+    "Gather the six senses, maintain continuous pure mindfulness.",
+    "One thought corresponds, one thought is Buddha."
+];

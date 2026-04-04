@@ -2,59 +2,116 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>妙依園地 ． 行者論壇</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>妙依園地 ． 數位道場</title>
     <style>
         :root {
             --bg-deep: #020205; --gold: #f3e5ab; --solid-gold: #d4af37;
-            --cyan: #8ba89c; --text-main: #e0e0e0; --glass-border: rgba(212, 175, 55, 0.25);
+            --cyan: #8ba89c; --text-main: #e0e0e0; --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(212, 175, 55, 0.25); --glow-gold: rgba(212, 175, 55, 0.4);
+            --ptt-push: #ff4444; --ptt-boo: #5555ff; --ptt-arrow: #ffff55;
         }
-        body { margin: 0; background: var(--bg-deep); color: var(--text-main); font-family: sans-serif; padding: 20px; }
-        .main-container { max-width: 600px; margin: 0 auto; }
-        
-        /* 留言主卡片 */
-        .post-card {
-            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
-            border-radius: 12px; padding: 20px; margin-bottom: 30px;
+        body {
+            margin: 0; background: var(--bg-deep); color: var(--text-main);
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow-x: hidden; padding-bottom: 60px;
         }
-        .post-author { color: var(--solid-gold); font-weight: bold; }
-        .post-content { margin: 10px 0; line-height: 1.6; }
 
-        /* 推文區塊 (PTT 樣式) */
-        .reply-list { border-top: 1px solid rgba(139, 168, 156, 0.2); margin-top: 15px; padding-top: 10px; font-size: 0.9rem; }
-        .reply-item { margin-bottom: 5px; }
-        .reply-tag { color: var(--solid-gold); margin-right: 5px; }
-        .reply-user { color: var(--cyan); font-weight: bold; margin-right: 8px; }
-        
-        /* 推文輸入框 */
-        .reply-input-group { display: flex; gap: 5px; margin-top: 10px; }
-        .mini-input { 
-            background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); 
-            color: white; padding: 5px 10px; border-radius: 4px; flex-grow: 1; outline: none;
+        /* 🌟 背景彩色曼陀羅 (純向量，不佔流量) */
+        #mandala-bg {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 800px; height: 800px; z-index: -1; opacity: 0.1;
+            transition: transform 0.1s linear;
         }
-        .mini-btn { background: var(--solid-gold); border: none; color: black; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+
+        .header-section {
+            padding: 80px 6% 40px; text-align: center; border-bottom: 1px solid var(--glass-border);
+            background: radial-gradient(circle at center, rgba(20,25,30,0.8) 0%, var(--bg-deep) 100%);
+        }
+        .live-counter {
+            display: inline-block; padding: 4px 12px; background: rgba(139,168,156,0.1);
+            border: 1px solid var(--cyan); border-radius: 20px; color: var(--cyan);
+            font-size: 0.75rem; letter-spacing: 2px; margin-top: 15px;
+        }
+
+        .main-container { max-width: 850px; margin: 0 auto; padding: 0 6%; }
+
+        /* 主題卡片優化 */
+        .thread-card {
+            background: rgba(10, 15, 20, 0.8); border: 1px solid var(--glass-border);
+            margin: 40px 0; border-radius: 4px; position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); transition: 0.3s;
+        }
+        .thread-card:hover { border-color: var(--solid-gold); box-shadow: 0 0 30px var(--glow-gold); }
+
+        .thread-header { padding: 20px; border-bottom: 1px solid rgba(212,175,55,0.1); display: flex; justify-content: space-between; align-items: center;}
+        .thread-body { padding: 30px; line-height: 2; font-size: 1.1rem; text-align: justify; }
+        
+        /* 🌟 自動圖像顯示樣式 */
+        .embedded-img {
+            max-width: 100%; border-radius: 8px; margin: 15px 0;
+            border: 1px solid var(--glass-border); display: block;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        /* 互動漣漪效果 */
+        .ripple-btn {
+            position: relative; overflow: hidden;
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            color: var(--cyan); padding: 12px 25px; cursor: pointer;
+            transition: 0.4s;
+        }
+        .ripple-btn:active { background: var(--solid-gold); color: black; }
+
+        /* PTT 模式推文清單 */
+        .reply-section { background: rgba(0,0,0,0.4); padding: 10px 20px; border-top: 1px solid rgba(212,175,55,0.1); }
+        .reply-item { display: flex; gap: 12px; padding: 8px 0; font-family: monospace; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .tag-push { color: var(--ptt-push); font-weight: bold; }
+        .tag-boo { color: var(--ptt-boo); font-weight: bold; }
+        .tag-arrow { color: var(--ptt-arrow); font-weight: bold; }
     </style>
 </head>
 <body>
 
+    <svg id="mandala-bg" viewBox="0 0 100 100">
+        <defs>
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:var(--solid-gold);stop-opacity:1" />
+                <stop offset="100%" style="stop-color:var(--cyan);stop-opacity:1" />
+            </linearGradient>
+        </defs>
+        <g stroke="url(#grad1)" fill="none" stroke-width="0.2">
+            <script>
+                const g = document.currentScript.parentElement;
+                for(let i=0; i<36; i++) {
+                    g.innerHTML += `<ellipse cx="50" cy="50" rx="45" ry="10" transform="rotate(${i*10} 50 50)" />`;
+                }
+            </script>
+        </g>
+    </svg>
+
+    <div class="header-section">
+        <h1 style="color:var(--solid-gold); letter-spacing:10px; font-weight:normal;">妙依論壇</h1>
+        <div class="live-counter">同行行者：<span id="live-users">1</span> 人</div>
+    </div>
+
     <div class="main-container">
-        <h2 style="color:var(--solid-gold); text-align:center;">🙏 行者法義分享</h2>
-        
-        <div style="margin-bottom:40px;">
-            <input type="text" id="main-name" class="mini-input" style="width:100%; margin-bottom:10px;" placeholder="您的法號">
-            <textarea id="main-content" class="mini-input" style="width:100%; height:80px;" placeholder="分享法喜..."></textarea>
-            <button onclick="sendPost()" class="mini-btn" style="width:100%; margin-top:10px; height:40px;">發表文章</button>
+        <div style="margin: 40px 0; background:rgba(255,255,255,0.02); padding:30px; border:1px solid var(--glass-border);">
+            <input type="text" id="db-username" class="thread-body" style="width:100%; background:none; border:none; border-bottom:1px solid var(--glass-border); color:var(--gold); padding:10px 0; margin-bottom:20px;" placeholder="法號 ID">
+            <textarea id="db-message" style="width:100%; height:120px; background:none; border:none; color:var(--text-main); font-size:1.1rem; outline:none;" placeholder="分享法喜... (可直接貼上圖片網址)"></textarea>
+            <div style="text-align:right;">
+                <button class="ripple-btn" id="db-submit-btn" style="border-radius:30px;">發布主題</button>
+            </div>
         </div>
 
-        <div id="post-list">
-            </div>
+        <div id="db-thread-list"></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // 1. 初始化 Firebase (請確保填入你的 Config)
+        // === 1. 初始化 Firebase ===
         const firebaseConfig = {
             apiKey: "AIzaSyCtttGd8yvbcEq17P75cnh52Pxgcc5ak_4",
             authDomain: "pureland-system.firebaseapp.com",
@@ -63,73 +120,91 @@
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        const pttRef = database.ref('mini_ptt');
+        const postsRef = database.ref('ptt_v3');
 
-        // 2. 發表新文章
-        function sendPost() {
-            const name = document.getElementById('main-name').value || "十方善信";
-            const text = document.getElementById('main-content').value;
-            if(!text) return alert("內容不能為空");
-            
-            pttRef.push({
-                author: name,
-                content: text,
-                timestamp: Date.now()
+        // === 2. 完美功能：在線人數監測 ===
+        const presenceRef = database.ref('presence');
+        const userRef = presenceRef.push();
+        // 當使用者斷線時，自動移除該筆資料
+        userRef.onDisconnect().remove();
+        userRef.set(true);
+        // 監聽總人數
+        presenceRef.on('value', snap => {
+            document.getElementById('live-users').innerText = snap.numChildren();
+        });
+
+        // === 3. 完美功能：智慧解析網址與圖片 ===
+        function parseContent(text) {
+            // 防止 XSS
+            let html = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            // 匹配圖片網址 (jpg, png, gif, webp)
+            const imgRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/gi;
+            html = html.replace(imgRegex, (url) => {
+                return `<img src="${url}" class="embedded-img" loading="lazy">`;
             });
-            document.getElementById('main-content').value = "";
+            // 換行處理
+            return html.replace(/\n/g, "<br>");
         }
 
-        // 3. 監聽文章與推文
-        pttRef.on('value', (snapshot) => {
-            const list = document.getElementById('post-list');
-            list.innerHTML = "";
-            const data = snapshot.val();
-            
-            for(let id in data) {
+        // === 4. 背景旋轉互動 ===
+        window.onscroll = () => {
+            const rotation = window.pageYOffset / 10;
+            document.getElementById('mandala-bg').style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
+        };
+
+        // --- 核心邏輯 (與先前 PTT 版類似但更優化) ---
+        document.getElementById('db-submit-btn').addEventListener('click', () => {
+            const name = document.getElementById('db-username').value.trim() || '匿名行者';
+            const msg = document.getElementById('db-message').value.trim();
+            if(!msg) return;
+            postsRef.push({ author: name, text: msg, timestamp: Date.now() });
+            document.getElementById('db-message').value = '';
+        });
+
+        postsRef.on('value', snap => {
+            const container = document.getElementById('db-thread-list');
+            container.innerHTML = '';
+            const data = snap.val();
+            if(!data) return;
+
+            Object.keys(data).reverse().forEach(id => {
                 const post = data[id];
                 const card = document.createElement('div');
-                card.className = 'post-card';
+                card.className = 'thread-card';
                 
-                // 組合推文 HTML
-                let repliesHtml = "";
+                let replies = '';
                 if(post.replies) {
-                    for(let rId in post.replies) {
-                        const r = post.replies[rId];
-                        repliesHtml += `
-                            <div class="reply-item">
-                                <span class="reply-tag">推</span>
-                                <span class="reply-user">${r.user}:</span>
-                                <span>${r.msg}</span>
-                            </div>
-                        `;
-                    }
+                    Object.values(post.replies).forEach(r => {
+                        const tag = r.type === 'push' ? '推' : (r.type === 'boo' ? '噓' : '→');
+                        const tagClass = `tag-${r.type}`;
+                        replies += `<div class="reply-item"><span class="${tagClass}">${tag}</span><span style="color:var(--cyan)">${r.user}</span><span>: ${r.msg}</span></div>`;
+                    });
                 }
 
                 card.innerHTML = `
-                    <div class="post-author">${post.author}</div>
-                    <div class="post-content">${post.content}</div>
-                    <div class="reply-list" id="replies-${id}">${repliesHtml}</div>
-                    <div class="reply-input-group">
-                        <input type="text" class="mini-input" id="input-name-${id}" placeholder="暱稱" style="width:60px;">
-                        <input type="text" class="mini-input" id="input-msg-${id}" placeholder="推文...">
-                        <button class="mini-btn" onclick="sendReply('${id}')">推</button>
+                    <div class="thread-header">
+                        <span style="color:var(--solid-gold); font-weight:bold;">${post.author}</span>
+                        <span style="color:var(--cyan); font-size:0.8rem;">${new Date(post.timestamp).toLocaleString()}</span>
+                    </div>
+                    <div class="thread-body">${parseContent(post.text)}</div>
+                    <div class="reply-section">
+                        ${replies}
+                        <div style="display:flex; gap:10px; margin-top:15px;">
+                            <input type="text" id="r-msg-${id}" class="mini-input" style="flex:1; background:rgba(0,0,0,0.5); border:1px solid var(--glass-border); color:white; padding:8px;" placeholder="回應...">
+                            <button class="ripple-btn" style="padding:5px 15px;" onclick="addReply('${id}', 'push')">推</button>
+                            <button class="ripple-btn" style="padding:5px 15px;" onclick="addReply('${id}', 'arrow')">→次</button>
+                        </div>
                     </div>
                 `;
-                list.prepend(card);
-            }
+                container.appendChild(card);
+            });
         });
 
-        // 4. 送出推文 (PTT 互動的核心)
-        function sendReply(postId) {
-            const userName = document.getElementById(`input-name-${postId}`).value || "匿名者";
-            const userMsg = document.getElementById(`input-msg-${postId}`).value;
-            if(!userMsg) return;
-
-            // 🌟 關鍵：將推文 push 到該文章 ID 的 replies 子路徑下
-            pttRef.child(postId).child('replies').push({
-                user: userName,
-                msg: userMsg,
-                timestamp: Date.now()
+        function addReply(id, type) {
+            const msg = document.getElementById(`r-msg-${id}`).value.trim();
+            if(!msg) return;
+            postsRef.child(id).child('replies').push({
+                user: '行者', msg: msg, type: type, timestamp: Date.now()
             });
         }
     </script>

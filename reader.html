@@ -2,290 +2,222 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>正法專欄 ． 金剛藏</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>妙依園地 ． 數位法寶</title>
     <style>
         :root {
-            --bg-deep: #000000;
-            --gold: #f3e5ab;
+            --bg-deep: #020205;
+            --gold-glow: rgba(212, 175, 55, 0.4);
             --solid-gold: #d4af37;
-            --cyan: #8ba89c;
-            --silver: #e0e0e0;
-            --text-main: #d0d0d0;
-            --glass: rgba(10, 10, 10, 0.9);
+            --text-white: #ffffff;
+            --text-dim: #a0a0a0;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(212, 175, 55, 0.2);
+            --cyan-accent: #8ba89c;
         }
 
         body {
-            margin: 0; background: var(--bg-deep); color: var(--text-main);
+            margin: 0; background: var(--bg-deep); color: var(--text-white);
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
-            overflow: hidden; touch-action: none; user-select: none; overscroll-behavior: none;
+            line-height: 1.6; overflow-x: hidden;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        /* ✨ 背景引擎 (Canvas) ✨ */
-        #realmCanvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
-
-        /* ✨ 畫面一：清單模式 (Vajra List) ✨ */
-        #list-layer {
-            position: relative; z-index: 10; height: 100vh; overflow-y: auto;
-            padding: 100px 8% 60px; display: block; -webkit-overflow-scrolling: touch;
+        /* 玻璃發光按鈕樣式 */
+        .glass-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            color: var(--solid-gold);
+            padding: 10px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
-        .list-header { text-align: center; margin-bottom: 60px; }
-        .list-title { 
-            color: var(--cyan); font-size: 1.6rem; letter-spacing: 8px; font-weight: bold;
-            text-shadow: 0 0 20px rgba(139,168,156,0.3);
+        .glass-btn:hover {
+            background: rgba(212, 175, 55, 0.1);
+            border-color: var(--solid-gold);
+            box-shadow: 0 0 20px var(--gold-glow);
+            transform: translateY(-2px);
         }
 
-        /* 分類導航：極簡膠囊按鈕 */
-        .cat-nav { 
-            display: flex; justify-content: center; gap: 10px; margin: 30px 0 50px; flex-wrap: wrap; 
-        }
-        .cat-btn {
-            background: rgba(255,255,255,0.02); border: 1px solid rgba(139,168,156,0.25);
-            color: var(--cyan); padding: 8px 20px; border-radius: 25px; 
-            font-size: 0.82rem; cursor: pointer; transition: 0.3s; letter-spacing: 1.5px;
-        }
-        .cat-btn.active { 
-            border-color: var(--solid-gold); color: var(--gold); 
-            background: rgba(212,175,55,0.1);
+        .glass-btn.active {
+            background: var(--solid-gold);
+            color: var(--bg-deep);
+            box-shadow: 0 0 25px var(--solid-gold);
         }
 
-        /* 文章卡片美學 */
-        .article-card { max-width: 720px; margin: 0 auto 50px; cursor: pointer; }
-        .card-meta { 
-            display: flex; align-items: center; gap: 12px; margin-bottom: 15px;
-            color: var(--solid-gold); font-family: monospace; font-size: 0.75rem; letter-spacing: 1px;
-        }
-        .card-title { 
-            color: var(--cyan); font-size: 1.4rem; margin-bottom: 15px; font-weight: bold; 
-            letter-spacing: 1px; line-height: 1.4;
-        }
-        .card-preview { 
-            font-size: 0.95rem; color: #888; line-height: 1.9; text-align: justify;
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-        }
-        .card-divider { 
-            width: 100%; height: 1px; margin-top: 35px;
-            background: linear-gradient(90deg, rgba(212,175,55,0.35), transparent); 
+        /* 分類導航欄 */
+        .nav-container {
+            position: sticky; top: 0; z-index: 100;
+            padding: 20px; background: rgba(2,2,5,0.8);
+            backdrop-filter: blur(15px);
+            display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;
+            border-bottom: 1px solid var(--glass-border);
         }
 
-        /* ✨ 畫面二：閱讀模式 (Dharma Reader) ✨ */
-        #reader-layer { display: none; position: relative; z-index: 20; height: 100vh; }
+        /* 文章清單卡片 */
+        #article-list { padding: 40px 10%; max-width: 900px; margin: 0 auto; }
         
-        .back-btn {
-            position: absolute; top: 25px; left: 20px; z-index: 1000;
-            color: var(--gold); font-size: 0.85rem; font-weight: bold; cursor: pointer;
-            background: var(--glass); padding: 10px 18px; border-radius: 30px; 
-            border: 1px solid rgba(212,175,55,0.25); backdrop-filter: blur(10px);
-            display: flex; align-items: center; gap: 8px;
+        .article-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            cursor: pointer;
+            transition: 0.4s;
         }
 
-        #status-panel { 
-            position: absolute; top: 95px; left: 6%; width: 88%; 
-            border-left: 2px solid var(--cyan); padding: 5px 22px; z-index: 100; 
-        }
-        .status-title { font-size: 1.2rem; font-weight: bold; color: var(--cyan); letter-spacing: 2px; }
-        .status-desc { font-size: 0.85rem; color: #999; margin-top: 10px; line-height: 1.6; }
-
-        .open-drawer-btn {
-            position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%);
-            background: var(--glass); border: 1px solid var(--cyan); color: var(--cyan);
-            padding: 18px 45px; border-radius: 40px; font-size: 1rem; font-weight: bold;
-            letter-spacing: 4px; cursor: pointer; backdrop-filter: blur(15px);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6); transition: 0.3s;
-        }
-        .open-drawer-btn:active { transform: translate(-50%, 2px); background: rgba(139,168,156,0.1); }
-
-        /* ✨ 抽屜長卷 (The Scroll) ✨ */
-        #theory-drawer {
-            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; 
-            background: rgba(5, 5, 8, 0.99); backdrop-filter: blur(30px);
-            border-top: 1px solid rgba(139,168,156,0.4); border-radius: 30px 30px 0 0; 
-            transform: translateY(100%); transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); 
-            z-index: 3000; overflow-y: auto; padding-bottom: 120px;
-        }
-        #theory-drawer.open { transform: translateY(0); }
-
-        .drawer-header {
-            position: sticky; top: 0; background: #050508; padding: 22px 30px;
-            display: flex; justify-content: space-between; align-items: center;
-            z-index: 100; border-bottom: 1px solid rgba(139,168,156,0.15);
+        .article-card:hover {
+            border-color: var(--cyan-accent);
+            background: rgba(139, 168, 156, 0.05);
         }
 
-        .theory-container { padding: 50px 9%; max-width: 780px; margin: 0 auto; }
-        .humble-statement { 
-            font-size: 0.85rem; color: #888; line-height: 1.9; text-align: justify; 
-            padding: 28px; border: 1px solid rgba(139,168,156,0.2); border-radius: 12px; 
-            background: rgba(15,20,25,0.4); margin-bottom: 60px; 
+        .card-category {
+            color: var(--cyan-accent);
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
         }
-        .main-title { color: var(--cyan); font-size: 1.7rem; text-align: center; margin-bottom: 70px; letter-spacing: 5px; line-height: 1.5; }
-        .chapter-box { margin-bottom: 70px; }
-        .c-header { display: flex; align-items: center; gap: 18px; margin-bottom: 25px; color: var(--cyan); }
-        .c-icon { width: 26px; height: 26px; stroke: currentColor; fill: none; stroke-width: 1.2; }
-        .c-title { font-size: 1.25rem; font-weight: bold; letter-spacing: 2px; }
-        .c-text { color: var(--text-main); font-size: 1.05rem; line-height: 2.2; text-align: justify; padding-left: 44px; letter-spacing: 0.8px; }
-        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 45px 0; }
 
-        #tts-btn {
-            color: var(--gold); font-size: 0.85rem; font-weight: bold; cursor: pointer;
-            display: flex; align-items: center; gap: 10px; background: rgba(212,175,55,0.1);
-            padding: 10px 22px; border-radius: 30px; border: 1px solid rgba(212,175,55,0.35);
+        .card-title {
+            color: var(--solid-gold);
+            font-size: 1.5rem;
+            margin: 0 0 15px 0;
+            font-weight: bold;
         }
+
+        /* 閱讀器抽屜層 */
+        #reader-overlay {
+            position: fixed; inset: 0; background: var(--bg-deep);
+            z-index: 2000; display: none; overflow-y: auto;
+            padding: 60px 10%;
+        }
+
+        .reader-content { max-width: 750px; margin: 0 auto; }
+        
+        .chapter-title {
+            color: var(--solid-gold);
+            border-left: 3px solid var(--solid-gold);
+            padding-left: 15px;
+            margin: 40px 0 20px;
+            font-size: 1.3rem;
+        }
+
+        /* 關閉與語音控制 */
+        .controls {
+            position: fixed; top: 20px; right: 20px;
+            display: flex; gap: 10px; z-index: 2100;
+        }
+
+        /* 向量 SVG 圖示 */
+        .icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
     </style>
 </head>
 <body>
 
-    <canvas id="realmCanvas"></canvas>
-
-    <div id="list-layer">
-        <div class="list-header">
-            <div class="list-title">正法專欄 ． 金剛藏</div>
-            <div class="cat-nav" id="cat-nav"></div>
-        </div>
-        <div id="article-list"></div>
-    </div>
-
-    <div id="reader-layer">
-        <div class="back-btn" onclick="exitReader()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            返回列表
-        </div>
-        
-        <div id="status-panel">
-            <div class="status-title" id="s-title"></div>
-            <div class="status-desc" id="s-desc"></div>
+    <div class="nav-container" id="cat-nav">
         </div>
 
-        <button class="open-drawer-btn" onclick="openDrawer()">展開專欄 ． 進入導讀</button>
-    </div>
+    <div id="article-list"></div>
 
-    <div id="theory-drawer">
-        <div class="drawer-header">
-            <div onclick="closeDrawer()" style="color:var(--cyan); cursor:pointer; font-size:0.95rem; font-weight:bold;">收起禪卷</div>
-            <div id="tts-btn" onclick="toggleAudio()">
-                <svg id="tts-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
-                <span id="tts-text">聆聽法音</span>
-            </div>
+    <div id="reader-overlay">
+        <div class="controls">
+            <button class="glass-btn" onclick="toggleSpeech()" id="speech-btn">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M11 5 6 9 2 9v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                聆聽
+            </button>
+            <button class="glass-btn" onclick="closeReader()">返回</button>
         </div>
-        <div class="theory-container" id="article-content"></div>
+        <div class="reader-content" id="article-body"></div>
     </div>
 
     <script src="articles.js"></script>
-
     <script>
-        const icons = [
-            "M2 12 Q 12 20 22 12 M4 10 C 12 18, 16 10, 20 6", // 扁舟
-            "M12 3 A 9 9 0 1 1 3 12", // 圓相
-            "M21 16V8a2 2 0 0 0-1-1.73l-7-4", // 幾何
-            "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" // 盾牌
-        ];
+        let currentSpeech = null;
 
-        function initApp() {
-            const params = new URLSearchParams(window.location.search);
-            const id = params.get('id');
-            if (id) enterReader(id); else renderList();
-            if (typeof initEngines === 'function') initEngines();
+        function init() {
+            // 根據當前頁面語系篩選資料 (範例默認 zh)
+            const lang = document.documentElement.lang.startsWith('en') ? 'en' : 'zh';
+            const articles = rawArticles.filter(a => a.lang === lang);
+            
+            renderCategories(articles);
+            renderList(articles, '全部');
         }
 
-        function renderList(targetCat = '全部') {
-            document.getElementById('list-layer').style.display = 'block';
-            document.getElementById('reader-layer').style.display = 'none';
+        function renderCategories(data) {
+            const cats = ['全部', ...new Set(data.map(a => a.category || "未分類"))];
+            const nav = document.getElementById('cat-nav');
+            nav.innerHTML = cats.map(c => `
+                <button class="glass-btn" onclick="filterCat('${c}')" id="btn-${c}">${c}</button>
+            `).join('');
+            document.getElementById('btn-全部').classList.add('active');
+        }
 
-            // 生成分類按鈕 (根據 articles.js 自動生成)
-            const cats = ['全部', ...new Set(rawArticles.map(a => a.category || "未分類"))];
-            document.getElementById('cat-nav').innerHTML = cats.map(c => 
-                `<div class="cat-btn ${c===targetCat?'active':''}" onclick="renderList('${c}')">${c}</div>`
-            ).join('');
-
-            // 生成文章卡片
-            const filtered = targetCat === '全部' ? rawArticles : rawArticles.filter(a => a.category === targetCat);
-            document.getElementById('article-list').innerHTML = filtered.map(a => `
-                <div class="article-card" onclick="enterReader('${a.id}')">
-                    <div class="card-meta"><span>${a.id}</span> <span>✦</span> <span>${a.category || '正法'}</span></div>
+        function renderList(data, filter) {
+            const container = document.getElementById('article-list');
+            const filtered = filter === '全部' ? data : data.filter(a => a.category === filter);
+            
+            container.innerHTML = filtered.map(a => `
+                <div class="article-card" onclick="openReader('${a.id}')">
+                    <div class="card-category">${a.category || '未分類'}</div>
                     <div class="card-title">${a.title}</div>
-                    <div class="card-preview">${a.content.replace(/\[.*?\]/g, '').substring(0, 85)}...</div>
-                    <div class="card-divider"></div>
+                    <div style="color: var(--text-dim); font-size: 0.9rem;">${a.id} ． ${a.status.split('|')[0]}</div>
                 </div>
             `).join('');
         }
 
-        function enterReader(id) {
+        function filterCat(cat) {
+            document.querySelectorAll('.glass-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-${cat}`).classList.add('active');
+            const lang = document.documentElement.lang.startsWith('en') ? 'en' : 'zh';
+            renderList(rawArticles.filter(a => a.lang === lang), cat);
+        }
+
+        function openReader(id) {
             const article = rawArticles.find(a => a.id === id);
-            if (!article) return renderList();
+            const overlay = document.getElementById('reader-overlay');
+            const body = document.getElementById('article-body');
 
-            document.getElementById('list-layer').style.display = 'none';
-            document.getElementById('reader-layer').style.display = 'block';
+            // 內容解析：將 [章節] 轉為美化標題
+            const formattedContent = article.content.replace(/\[(.*?)\]/g, '<div class="chapter-title">$1</div>');
 
-            // 分解狀態標題
-            const statusParts = article.status.split('|');
-            document.getElementById('s-title').innerText = statusParts[0].trim();
-            document.getElementById('s-desc').innerHTML = statusParts[1]?.trim() || "";
-
-            // 智慧解析 [章節]
-            const sectionRegex = /\[(.*?)\](.*?)(?=\[|$)/gs;
-            let sectionsHtml = ""; let match; let i = 0;
-            while ((match = sectionRegex.exec(article.content.trim())) !== null) {
-                sectionsHtml += `
-                    <div class="chapter-box">
-                        <div class="c-header">
-                            <svg class="c-icon" viewBox="0 0 24 24"><path d="${icons[i % icons.length]}"/></svg>
-                            <div class="c-title">${match[1].trim()}</div>
-                        </div>
-                        <div class="c-text">${match[2].trim()}</div>
-                    </div>
-                    <div class="chapter-divider"></div>
-                `;
-                i++;
-            }
-
-            document.getElementById('article-content').innerHTML = `
-                <div class="humble-statement">${article.humble}</div>
-                <h1 class="main-title">${article.title}</h1>
-                ${sectionsHtml}
+            body.innerHTML = `
+                <h1 style="color: var(--solid-gold); font-size: 2rem; text-align: center;">${article.title}</h1>
+                <p style="color: var(--cyan-accent); font-style: italic; border-bottom: 1px solid var(--glass-border); padding-bottom: 20px;">${article.humble}</p>
+                <div style="font-size: 1.1rem; color: #eee; text-align: justify;">${formattedContent}</div>
             `;
 
-            window.history.pushState({}, '', `?id=${id}`);
-            document.title = article.title;
+            overlay.style.display = 'block';
+            document.body.style.overflow = 'hidden';
         }
 
-        function exitReader() {
-            window.history.pushState({}, '', window.location.pathname);
-            renderList();
+        function closeReader() {
+            if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
+            document.getElementById('reader-overlay').style.display = 'none';
+            document.body.style.overflow = 'auto';
         }
 
-        function openDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
-        function closeDrawer() { 
-            document.getElementById('theory-drawer').classList.remove('open'); 
-            if(isPlaying) toggleAudio(); 
-        }
-
-        let isPlaying = false;
-        function toggleAudio() {
-            const btnText = document.getElementById('tts-text');
-            const btnIcon = document.getElementById('tts-icon');
-            if (!isPlaying) {
-                const text = document.getElementById('article-content').innerText;
-                const utter = new SpeechSynthesisUtterance(text);
-                utter.lang = 'zh-TW'; utter.rate = 0.92;
-                utter.onend = () => { 
-                    isPlaying = false; btnText.innerText = "聆聽法音"; 
-                    btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
-                };
-                window.speechSynthesis.speak(utter);
-                isPlaying = true; btnText.innerText = "停止播放";
-                btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        function toggleSpeech() {
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                document.getElementById('speech-btn').innerHTML = '聆聽';
             } else {
-                window.speechSynthesis.cancel(); isPlaying = false;
-                btnText.innerText = "聆聽法音";
-                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                const text = document.getElementById('article-body').innerText;
+                const utter = new SpeechSynthesisUtterance(text);
+                utter.lang = document.documentElement.lang === 'en' ? 'en-US' : 'zh-TW';
+                window.speechSynthesis.speak(utter);
+                document.getElementById('speech-btn').innerHTML = '停止';
+                utter.onend = () => document.getElementById('speech-btn').innerHTML = '聆聽';
             }
         }
 
-        document.getElementById('theory-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
-
-        window.onload = initApp;
+        window.onload = init;
     </script>
 </body>
 </html>

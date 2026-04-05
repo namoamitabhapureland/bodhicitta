@@ -226,7 +226,10 @@
         
         const dbRef = firebase.database();
         const ref = dbRef.ref('posts_clean_v9');
-        let currentUserUid = null;
+        
+        // ✨ 強韌化：配發預設的臨時 ID，防止載入或存檔失敗
+        let currentUserUid = "guest_" + Math.random().toString(36).substr(2, 9);
+        let isBoardLoaded = false;
 
         // ✨ 2. 讀取本機資料 (LocalStorage)
         let localDB = null;
@@ -243,16 +246,29 @@
         const userNian = (localDB && localDB.totalNian) ? localDB.totalNian : 0;
         const defaultName = (lang === 'en') ? 'Practitioner' : '十方善信';
 
-        // 啟動 Firebase 匿名驗證 (獲取無記名訪客證)
+        // ✨ 4. 啟動 Firebase 匿名驗證 (獲取無記名訪客證)
         firebase.auth().signInAnonymously().catch((error) => {
-            console.error("匿名登入失敗:", error);
+            console.warn("匿名登入失敗 (可能後台尚未啟用)，將以一般模式載入客棧:", error);
+            // 就算失敗，也強制載入留言板！
+            if (!isBoardLoaded) {
+                loadBoard();
+                isBoardLoaded = true;
+            }
         });
 
-        // 監聽登入狀態，確認拿到身分證後，再開始讀取留言板
+        // 監聽登入狀態，拿到正式身分證後更新畫面
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
-                currentUserUid = user.uid;
-                loadBoard(); // 確保拿到身分後才去抓資料，這樣才能正確比對作者
+                currentUserUid = user.uid; // 拿到真正的 uid 了
+            }
+            
+            // 確保無論如何都會執行載入
+            if (!isBoardLoaded) {
+                loadBoard();
+                isBoardLoaded = true;
+            } else {
+                // 如果一開始沒拿到 uid 先載入了，後來才拿到 uid，就重新渲染一次以顯示刪除按鈕
+                loadBoard();
             }
         });
 
@@ -273,7 +289,7 @@
             const n = document.getElementById('nn').value.trim() || defaultName;
             if(!m) return;
             
-            // ✨ 4. 將使用者的 uid、位階 (rank) 與念佛數 (nian) 一起存入資料庫
+            // ✨ 5. 將使用者的 uid、位階 (rank) 與念佛數 (nian) 一起存入資料庫
             ref.push({ 
                 n: n, 
                 m: m, 
@@ -316,7 +332,7 @@
                         deleteBtnHTML = `<button class="btn-delete" onclick="delPost('${id}')">刪除 / Del</button>`;
                     }
 
-                    // ✨ 5. 在介面上顯示出位階與資糧數
+                    // ✨ 6. 在介面上顯示出位階與資糧數
                     const rankDisplay = item.rank ? `<span style="color:var(--cyan); font-size:0.75rem; margin-left:8px; opacity:0.8;">[ ${item.rank} · ${item.nian || 0} ]</span>` : '';
 
                     const card = document.createElement('div');

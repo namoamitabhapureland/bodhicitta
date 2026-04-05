@@ -45,15 +45,16 @@
         .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; }
         canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
 
-        /* Buddha Name Display */
+        /* ✨ Buddha Name Display (Pyramid Layout) ✨ */
         #buddha-name-display {
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-            color: var(--gold); font-size: 1.8rem; font-weight: bold; letter-spacing: 2px;
-            text-shadow: 0 0 20px var(--solid-gold); z-index: 50;
-            opacity: 0; transition: opacity 1s ease-in-out;
-            white-space: nowrap; text-align: center; pointer-events: none;
+            display: flex; flex-direction: column; align-items: center;
+            z-index: 50; opacity: 0; transition: opacity 0.8s ease-in-out;
+            pointer-events: none; width: 95vw;
         }
-        .buddha-rank { font-size: 0.9rem; color: var(--cyan); letter-spacing: 2px; margin-bottom: 12px; display: block; text-shadow: 0 0 10px var(--cyan);}
+        .buddha-rank { font-size: 0.9rem; color: var(--cyan); letter-spacing: 2px; margin-bottom: 12px; text-shadow: 0 0 10px var(--cyan); }
+        .buddha-namo { color: var(--gold); font-size: 1.2rem; letter-spacing: 6px; margin-bottom: 10px; text-shadow: 0 0 15px var(--solid-gold); font-weight: bold; margin-right: -6px; }
+        .buddha-name { color: var(--gold); font-weight: bold; text-shadow: 0 0 20px var(--solid-gold); transition: all 0.3s; text-align: center; line-height: 1.4; }
         
         /* Universe Flash */
         #universe-flash {
@@ -125,7 +126,7 @@
         </defs>
     </svg>
 
-    <div class="back-btn" onclick="window.location.href='index_en.html'">
+    <div class="back-btn" onclick="window.location.href='index_en.html?screen=3'">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         Return
     </div>
@@ -141,7 +142,8 @@
         
         <div id="buddha-name-display">
             <span class="buddha-rank" id="buddha-rank"></span>
-            <span id="buddha-name"></span>
+            <span class="buddha-namo" id="buddha-namo">Namo</span>
+            <span class="buddha-name" id="buddha-name"></span>
         </div>
 
         <div class="ui-layer" id="ui-layer">
@@ -220,6 +222,31 @@
     </div>
 
 <script>
+    // ================= ✨ Cross-platform TTS System ✨ =================
+    window.sysUtterances = []; 
+    function speak(textToSpeak, rate = 0.85) {
+        if (!window.speechSynthesis) return; 
+        window.speechSynthesis.cancel(); 
+        
+        const m = new SpeechSynthesisUtterance(textToSpeak);
+        m.lang = 'en-US'; 
+        m.rate = rate; 
+        
+        let isAndroid = /Android/i.test(navigator.userAgent);
+        if (isAndroid) {
+            window.sysUtterances.push(m);
+            let voices = window.speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                let enVoice = voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) || voices.find(v => v.lang.includes('en'));
+                if (enVoice) m.voice = enVoice;
+            }
+            m.onend = function() { window.sysUtterances = window.sysUtterances.filter(u => u !== m); };
+            setTimeout(() => { window.speechSynthesis.speak(m); }, 150);
+        } else {
+            window.speechSynthesis.speak(m);
+        }
+    }
+
     // ================= Data: 88 Buddhas Names (English) =================
     const buddhas88 = [
         "Universal Light Buddha", "Universal Brightness Buddha", "Universal Purity Buddha", "Tamalapatra Sandalwood Fragrance Buddha", "Sandalwood Light Buddha", "Mani Banner Buddha", "Treasury of Joy Mani Jewel Accumulation Buddha", "Supreme Great Vigor Joyfully Seen by All Worlds Buddha", "Mani Banner Lamp Light Buddha", "Wisdom Torch Illumination Buddha", 
@@ -291,14 +318,7 @@
             db.points = (db.points || 0) + 10;
             db.buddha88LastDate = today;
             shouldSave = true;
-            
-            setTimeout(() => { 
-                if (window.speechSynthesis) {
-                    let m = new SpeechSynthesisUtterance("Filled with Dharma joy, merit increased.");
-                    m.lang = 'en-US'; m.rate = 0.85;
-                    window.speechSynthesis.speak(m);
-                }
-            }, 1000);
+            setTimeout(() => { speak("Filled with Dharma joy, merit increased.", 0.85); }, 1000);
         }
 
         // 2. Treasure Drop (Every 8 Days)
@@ -319,11 +339,7 @@
             
             setTimeout(() => {
                 document.getElementById('treasure-overlay').classList.add('show');
-                if (window.speechSynthesis) {
-                    let m = new SpeechSynthesisUtterance("Constant homage brings Dharma response. Jewel manifested.");
-                    m.lang = 'en-US'; m.rate = 0.85;
-                    window.speechSynthesis.speak(m);
-                }
+                speak("Constant homage brings Dharma response. Jewel manifested.", 0.85);
             }, 1500);
         }
 
@@ -477,6 +493,7 @@
 
     // ================= Interactive Control =================
     const nameDisplay = document.getElementById('buddha-name-display');
+    const namoText = document.getElementById('buddha-namo');
     const rankText = document.getElementById('buddha-rank');
     const nameText = document.getElementById('buddha-name');
 
@@ -484,17 +501,36 @@
         nameDisplay.style.opacity = 0; 
         
         setTimeout(() => {
+            // Restore "Namo" visibility
+            namoText.style.display = 'block';
+
             if (index < 53) rankText.innerText = `The 53 Buddhas ． No. ${index + 1}`;
             else rankText.innerText = `The 35 Buddhas ． No. ${index - 53 + 1}`;
             
-            nameText.innerText = "Namo " + buddhas88[index];
+            const bName = buddhas88[index];
+            nameText.innerText = bName;
+            
+            // ✨ Pyramid layout dynamic scaling for English ✨
+            if (bName.length <= 20) {
+                nameText.style.fontSize = "1.8rem";
+                nameText.style.letterSpacing = "2px";
+                nameDisplay.style.whiteSpace = "nowrap";
+            } else if (bName.length <= 40) {
+                nameText.style.fontSize = "1.3rem";
+                nameText.style.letterSpacing = "1px";
+                nameDisplay.style.whiteSpace = "nowrap";
+            } else {
+                // Super long names auto-wrap and shrink
+                nameText.style.fontSize = "1.05rem";
+                nameText.style.letterSpacing = "0px";
+                nameDisplay.style.whiteSpace = "normal"; 
+                nameText.style.padding = "0 10px";
+            }
+
             nameDisplay.style.opacity = 1; 
             
             if(isAutoPlaying && !isPlayingTheory) {
-                let speech = new SpeechSynthesisUtterance("Namo " + buddhas88[index]);
-                speech.lang = 'en-US';
-                speech.rate = 0.9;
-                window.speechSynthesis.speak(speech);
+                speak("Namo " + bName, 0.85);
             }
         }, 500);
     }
@@ -502,7 +538,12 @@
     function nextBuddha() {
         if (currentBuddhaIndex >= 87) {
             rankText.innerText = "Merit Perfected";
+            namoText.style.display = 'none'; // Hide Namo
             nameText.innerText = "Dharmadhatu Body Amitabha Buddha";
+            nameText.style.fontSize = "1.5rem";
+            nameText.style.letterSpacing = "2px";
+            nameDisplay.style.whiteSpace = "nowrap";
+            
             document.getElementById('universe-flash').classList.add('flash-active');
             setTimeout(() => document.getElementById('universe-flash').classList.remove('flash-active'), 150);
             return;
@@ -526,12 +567,11 @@
             
             if(currentBuddhaIndex === -1) nextBuddha(); 
             
+            // ✨ Prostrations Timer: 4.5 seconds ✨
             autoPlayTimer = setInterval(() => {
-                if (currentBuddhaIndex >= 87) {
-                    toggleAutoPlay(); 
-                }
+                if (currentBuddhaIndex >= 87) toggleAutoPlay(); 
                 nextBuddha();
-            }, 3500); 
+            }, 4500); 
         }
     }
 
@@ -545,10 +585,8 @@
     canvas.addEventListener('mousedown', onDown); window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
     canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
 
-    // ================= ✨ TTS System (English) ✨ =================
+    // ================= ✨ TTS Audio Player ✨ =================
     let isPlayingTheory = false;
-    let theoryUtterance = null;
-    window.sysUtterances = []; 
 
     if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
         speechSynthesis.onvoiceschanged = function() { speechSynthesis.getVoices(); };
@@ -568,31 +606,20 @@
             let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .buddha-text-block');
             let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('. ');
             
-            theoryUtterance = new SpeechSynthesisUtterance(textToRead); 
-            theoryUtterance.lang = 'en-US'; 
-            theoryUtterance.rate = 0.85; 
+            speak(textToRead, 0.85);
             
-            let isAndroid = /Android/i.test(navigator.userAgent);
-            
-            if (isAndroid) {
-                window.sysUtterances.push(theoryUtterance);
-                let voices = window.speechSynthesis.getVoices();
-                if (voices.length > 0) {
-                    let enVoice = voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) || voices.find(v => v.lang.includes('en'));
-                    if (enVoice) theoryUtterance.voice = enVoice;
-                }
-            }
-            theoryUtterance.onend = () => {
-                isPlayingTheory = false; 
-                btnText.innerText = "Listen";
-                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
-                if(isAndroid) window.sysUtterances = window.sysUtterances.filter(u => u !== theoryUtterance);
-            };
-            
-            setTimeout(() => { window.speechSynthesis.speak(theoryUtterance); }, isAndroid ? 150 : 50);
             isPlayingTheory = true; 
             btnText.innerText = "Stop";
             btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+            
+            let checkEnd = setInterval(() => {
+                if(!window.speechSynthesis.speaking) {
+                    clearInterval(checkEnd);
+                    isPlayingTheory = false;
+                    btnText.innerText = "Listen";
+                    btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                }
+            }, 1000);
         }
     }
 

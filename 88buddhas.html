@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <title>八十八佛大懺悔文 ． 蓮邦星海</title>
+    <style>
+        :root {
+            --bg-deep: #010103; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; user-select: none;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* 返回按鈕 */
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        /* 左上角狀態列 */
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px;
+            background: transparent; border-left: 2px solid rgba(212,175,55,0.8); 
+            padding: 10px 20px; z-index: 100; pointer-events: none;
+        }
+        .status-title { font-size: 1.15rem; font-weight: bold; color: var(--gold); letter-spacing: 2px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); }
+        .status-desc { font-size: 0.85rem; color: #ddd; line-height: 1.8; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
+
+        /* 3D 畫布 */
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+        /* 佛號動態顯示器 */
+        #buddha-name-display {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            color: var(--gold); font-size: 2.2rem; font-weight: bold; letter-spacing: 6px;
+            text-shadow: 0 0 20px var(--solid-gold); z-index: 50;
+            opacity: 0; transition: opacity 1s ease-in-out;
+            white-space: nowrap; text-align: center; pointer-events: none;
+        }
+        .buddha-rank { font-size: 1rem; color: var(--cyan); letter-spacing: 4px; margin-bottom: 12px; display: block; text-shadow: 0 0 10px var(--cyan);}
+        
+        /* 宇宙大閃光 */
+        #universe-flash {
+            position: absolute; inset: 0; background: #fff; z-index: 99999; pointer-events: none;
+            opacity: 0; transition: opacity 1.5s ease-out;
+        }
+        .flash-active { opacity: 1 !important; transition: opacity 0.1s ease-in !important; }
+
+        /* 底部 UI 控制區 */
+        .ui-layer { position: absolute; bottom: 5%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 12px; }
+        
+        .control-group { display: flex; gap: 10px; width: 85%; max-width: 380px; justify-content: center; margin-bottom: 10px;}
+        
+        .action-btn {
+            flex: 1; justify-content: center;
+            background: linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(212,175,55,0.5); color: var(--gold);
+            padding: 14px 10px; border-radius: 20px; font-size: 0.95rem; font-weight: bold; letter-spacing: 1px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; gap: 6px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1);
+        }
+        .action-btn:active { transform: scale(0.96); box-shadow: 0 0 20px rgba(212,175,55,0.6); }
+        .action-btn.active-auto { background: rgba(212,175,55,0.2); border-color: var(--solid-gold); text-shadow: 0 0 8px var(--solid-gold);}
+        
+        #theory-btn { width: 85%; max-width: 380px; border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,15,10,0.8); justify-content: center;}
+
+        /* 古卷抽屜 */
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(212,175,55,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        .close-btn { color: var(--cyan); font-size: 0.85rem; letter-spacing: 2px; font-weight: bold; cursor: pointer; }
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; color: var(--text-main); font-size: 0.95rem; line-height: 2; text-align: justify; letter-spacing: 1px; }
+        
+        .main-title { color: var(--gold); font-size: 1.3rem; letter-spacing: 3px; text-align: center; margin-bottom: 30px; text-shadow: 0 0 15px rgba(212,175,55,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--solid-gold), transparent); margin: 15px auto 0; }
+        
+        .buddha-text-block { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.15); margin-bottom: 20px; }
+        .highlight-buddha { color: var(--gold); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="back-btn" onclick="history.back()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        回道場
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title">八十八佛大懺悔文</div>
+        <div class="status-desc">「一稱佛名，滅無量罪。」<br>虔誠禮敬，蓮花化生。</div>
+    </div>
+
+    <section class="matrix-section">
+        <div id="universe-flash"></div> 
+        <canvas id="realmCanvas"></canvas>
+        
+        <div id="buddha-name-display">
+            <span class="buddha-rank" id="buddha-rank"></span>
+            <span id="buddha-name"></span>
+        </div>
+
+        <div class="ui-layer" id="ui-layer">
+            <div class="control-group">
+                <button class="action-btn" id="btn-next" onclick="nextBuddha()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    禮敬下一尊
+                </button>
+                <button class="action-btn" id="btn-auto" onclick="toggleAutoPlay()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                    自動禮佛
+                </button>
+            </div>
+            
+            <button class="action-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                閱讀大懺悔文全文
+            </button>
+            
+            <div style="color:rgba(212,175,55,0.6); font-size:0.75rem; letter-spacing:2px; margin-top:5px;">360° 滑動觀想 ． 星空蓮海</div>
+        </div>
+    </section>
+
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()">
+            <div class="close-bar"></div>
+            <div style="display:flex; justify-content:center; align-items:center; padding: 0 5px;">
+                <div class="close-btn">收起經文</div>
+            </div>
+        </div>
+        <div class="theory-container">
+            <h1 class="main-title">八十八佛大懺悔文</h1>
+            <div class="buddha-text-block">
+                大慈大悲愍眾生，大喜大捨濟含識，相好光明以自嚴，眾等至心歸命禮。<br><br>
+                南無 皈依十方 盡虛空界 一切諸佛<br>
+                南無 皈依十方 盡虛空界 一切尊法<br>
+                南無 皈依十方 盡虛空界 一切賢聖僧<br><br>
+                南無如來、應供、正遍知、明行足、善逝、世間解、無上士、調御丈夫、天人師、佛、世尊。<br>
+            </div>
+            <div class="buddha-text-block" id="full-text-buddhas" style="line-height: 2.2;">
+                </div>
+            <div class="buddha-text-block">
+                南無 法界藏身 阿彌陀佛<br><br>
+                如是等一切世界，諸佛世尊，常住在世。是諸世尊，當慈念我。若我此生，若我前生，從無始生死以來，所作眾罪。若自作，若教他作，見作隨喜。若塔若僧，若四方僧物。若自取，若教他取，見取隨喜。五無間罪，若自作，若教他作，見作隨喜。十不善道，若自作，若教他作，見作隨喜。所作罪障，或有覆藏，或不覆藏。應墮地獄，餓鬼畜生，諸餘惡趣，邊地下賤，及蔑戾車，如是等處。所作罪障，今皆懺悔。<br><br>
+                今諸佛世尊，當證知我，當憶念我。我復於諸佛世尊前，作如是言。若我此生，若我餘生。曾行布施或守淨戒，乃至施與畜生一摶之食。或修淨行所有善根。成就眾生所有善根。修行菩提所有善根。及無上智所有善根。一切合集，校計籌量，皆悉迴向，阿耨多羅三藐三菩提。如過去未來，現在諸佛，所作迴向，我亦如是迴向。<br><br>
+                眾罪皆懺悔，諸福盡隨喜，及請佛功德，願成無上智。去來現在佛，於眾生最勝，無量功德海，我今歸命禮。
+            </div>
+        </div>
+    </div>
+
+<script>
+    // ================= 資料：八十八佛名號 =================
+    const buddhas88 = [
+        "普光佛", "普明佛", "普淨佛", "多摩羅跋栴檀香佛", "栴檀光佛", "摩尼幢佛", "歡喜藏摩尼寶積佛", "一切世間樂見上大精進佛", "摩尼幢燈光佛", "慧炬照佛", 
+        "海德光明佛", "金剛牢強普散金光佛", "大強精進勇猛佛", "大悲光佛", "慈力王佛", "慈藏佛", "栴檀窟莊嚴勝佛", "賢善首佛", "善意佛", "廣莊嚴王佛", 
+        "金華光佛", "寶蓋照空自在力王佛", "虛空寶華光佛", "琉璃莊嚴王佛", "普現色身光佛", "不動智光佛", "降伏眾魔王佛", "才光明佛", "智慧勝佛", "彌勒仙光佛", 
+        "善寂月音妙尊智王佛", "世淨光佛", "龍種上尊王佛", "日月光佛", "日月珠光佛", "慧幡勝王佛", "獅子吼自在力王佛", "妙音勝佛", "常光幢佛", "觀世燈佛", 
+        "慧威燈王佛", "法勝王佛", "須彌光佛", "須曼那華光佛", "優曇缽羅華殊勝王佛", "大慧力王佛", "阿閦毘歡喜光佛", "無量音聲王佛", "才光佛", "金海光佛", 
+        "山海慧自在通王佛", "大通光佛", "一切法常滿王佛", // 以上五十三佛
+        "釋迦牟尼佛", "金剛不壞佛", "寶光佛", "龍尊王佛", "精進軍佛", "精進喜佛", "寶火佛", "寶月光佛", "現無愚佛", "寶月佛", 
+        "無垢佛", "離垢佛", "勇施佛", "清淨佛", "清淨施佛", "娑留那佛", "水天佛", "堅德佛", "栴檀功德佛", "無量掬光佛", 
+        "光德佛", "無憂德佛", "那羅延佛", "功德華佛", "蓮華光遊戲神通佛", "財功德佛", "德念佛", "善名稱功德佛", "紅燄帝幢王佛", "善遊步功德佛", 
+        "鬥戰勝佛", "善遊步佛", "周匝莊嚴功德佛", "寶華遊步佛", "寶蓮華善住娑羅樹王佛" // 以上三十五佛
+    ];
+
+    // 將佛號填入抽屜
+    const fullTextDiv = document.getElementById('full-text-buddhas');
+    buddhas88.forEach(name => {
+        fullTextDiv.innerHTML += `<span class="highlight-buddha">南無 ${name}</span><br>`;
+    });
+
+    // ================= 3D 畫布與蓮花引擎 =================
+    const canvas = document.getElementById('realmCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    let time = 0;
+    let angleX = 0.2, angleY = 0;
+    let isDragging = false;
+    let lastMouseX = 0, lastMouseY = 0;
+    const FOV = 400; 
+
+    // 系統狀態
+    let currentBuddhaIndex = -1; // 目前禮敬到的佛號 (-1 代表還沒開始)
+    let isAutoPlaying = false;
+    let autoPlayTimer = null;
+
+    let stars = [];
+    let lotusMatrix = []; 
+    
+    // 蓮花無版權專屬色系 (純金, 琉璃青, 粉櫻, 月白, 紫光)
+    const lotusColors = [
+        { r: 212, g: 175, b: 55 },   // 金
+        { r: 139, g: 168, b: 156 },  // 青
+        { r: 255, g: 182, b: 193 },  // 粉
+        { r: 224, g: 224, b: 224 },  // 白
+        { r: 177, g: 156, b: 217 }   // 紫
+    ];
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+    }
+    window.addEventListener('resize', resize); resize();
+
+    function initMatrix() {
+        // 星空
+        stars = [];
+        for (let i = 0; i < 600; i++) {
+            stars.push({
+                x: (Math.random()-0.5)*2000, y: (Math.random()-0.5)*2000, z: (Math.random()-0.5)*2000, 
+                size: Math.random()*1.5 + 0.5, speed: Math.random()*0.5
+            });
+        }
+
+        // 88朵蓮花分佈在 3D 球面上
+        lotusMatrix = [];
+        for(let i=0; i<88; i++) {
+            // 球面座標隨機分佈
+            let radius = 250 + Math.random() * 400; // 半徑
+            let theta = Math.random() * Math.PI * 2;
+            let phi = Math.acos(Math.random() * 2 - 1); 
+            // 避免全部擠在正上或正下方
+            if (phi < 0.5) phi += 0.5;
+            if (phi > Math.PI - 0.5) phi -= 0.5;
+
+            let x = radius * Math.sin(phi) * Math.cos(theta);
+            let y = radius * Math.cos(phi);
+            let z = radius * Math.sin(phi) * Math.sin(theta);
+
+            let c = lotusColors[Math.floor(Math.random() * lotusColors.length)];
+
+            lotusMatrix.push({
+                index: i, x: x, y: y, z: z, baseRadius: radius, theta: theta, phi: phi,
+                color: c, bloom: 0, rotateSpeed: (Math.random() - 0.5) * 0.5, phase: Math.random() * Math.PI * 2
+            });
+        }
+    }
+
+    function project3D(x, y, z) {
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+        let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
+        if(z2 < -FOV+10) return null; // 在相機後方
+        let scale = FOV / (FOV + z2); 
+        return { x: (width/2) + x2*scale, y: (height/2) - y1*scale, scale: scale, z: z2 };
+    }
+
+    // 繪製動態蓮花
+    function drawVectorLotus(proj, bloom, color, rotation, beat) {
+        if(!proj) return;
+        ctx.save();
+        ctx.translate(proj.x, proj.y);
+        
+        // bloom 為 0 時，是一顆小光點；bloom 為 1 時，是一朵蓮花
+        if (bloom < 0.1) {
+            let s = proj.scale * 2;
+            ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI*2);
+            ctx.fillStyle = `rgba(${color.r},${color.g},${color.b}, 0.5)`;
+            ctx.fill();
+            ctx.restore();
+            return;
+        }
+
+        let s = proj.scale * (0.5 + bloom * 1.5 + beat * 0.1); 
+        ctx.scale(s, s);
+        ctx.rotate(rotation); 
+        
+        ctx.shadowBlur = 15 * bloom; 
+        ctx.shadowColor = `rgba(${color.r},${color.g},${color.b}, 0.8)`;
+        
+        let petalCount = 8; 
+        for(let i=0; i<petalCount; i++) {
+            ctx.rotate((Math.PI * 2) / petalCount);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            // 隨 bloom 參數展開花瓣
+            ctx.quadraticCurveTo(10 * bloom, -20 * bloom, 0, -40 * bloom);
+            ctx.quadraticCurveTo(-10 * bloom, -20 * bloom, 0, 0);
+            
+            let grad = ctx.createLinearGradient(0, 0, 0, -40);
+            grad.addColorStop(0, `rgba(${color.r},${color.g},${color.b}, 0.9)`);
+            grad.addColorStop(1, `rgba(255, 255, 255, 0.4)`); 
+            
+            ctx.fillStyle = grad; ctx.fill();
+            ctx.lineWidth = 0.5; ctx.strokeStyle = `rgba(255,255,255,${0.3 * bloom})`; ctx.stroke();
+        }
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, 4 * bloom, 0, Math.PI*2);
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        
+        ctx.restore();
+    }
+
+    function animate() {
+        ctx.fillStyle = 'rgba(1, 1, 3, 0.4)';
+        ctx.fillRect(0, 0, width, height);
+        time += 0.02;
+
+        if(!isDragging) {
+            angleY += 0.001; 
+        }
+
+        // 1. 繪製星空
+        let projectedStars = [];
+        stars.forEach(s => {
+            s.y -= s.speed;
+            if(s.y < -1000) s.y = 1000;
+            let proj = project3D(s.x, s.y, s.z);
+            if(proj) projectedStars.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, size: s.size });
+        });
+        projectedStars.sort((a,b) => b.z - a.z);
+        ctx.globalCompositeOperation = 'screen';
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        projectedStars.forEach(p => {
+            let s = p.size * p.sc; if(s < 0.1) return;
+            ctx.beginPath(); ctx.arc(p.x, p.y, s, 0, Math.PI*2); ctx.fill();
+        });
+
+        // 2. 繪製 88 朵蓮花
+        let projectedLotuses = [];
+        lotusMatrix.forEach(lotus => {
+            // 平滑過渡綻放狀態
+            let targetBloom = (lotus.index <= currentBuddhaIndex) ? 1 : 0;
+            lotus.bloom += (targetBloom - lotus.bloom) * 0.05;
+
+            // 緩慢漂浮
+            let waveY = Math.sin(time + lotus.phase) * 10;
+            let proj = project3D(lotus.x, lotus.y + waveY, lotus.z);
+            if(proj) projectedLotuses.push({ proj: proj, lotus: lotus });
+        });
+
+        projectedLotuses.sort((a,b) => b.proj.z - a.proj.z);
+
+        projectedLotuses.forEach(item => {
+            let beat = (item.lotus.index === currentBuddhaIndex) ? Math.sin(time * 5) : Math.sin(time * 2 + item.lotus.phase); 
+            let rotation = time * item.lotus.rotateSpeed;
+            drawVectorLotus(item.proj, item.lotus.bloom, item.lotus.color, rotation, beat);
+        });
+
+        ctx.globalCompositeOperation = 'source-over';
+        requestAnimationFrame(animate);
+    }
+
+    // ================= 互動控制 =================
+    const nameDisplay = document.getElementById('buddha-name-display');
+    const rankText = document.getElementById('buddha-rank');
+    const nameText = document.getElementById('buddha-name');
+
+    function showBuddhaName(index) {
+        nameDisplay.style.opacity = 0; // 先暗下
+        
+        setTimeout(() => {
+            if (index < 53) rankText.innerText = `五十三佛 ． 第 ${index + 1} 尊`;
+            else rankText.innerText = `三十五佛 ． 第 ${index - 53 + 1} 尊`;
+            
+            nameText.innerText = "南無 " + buddhas88[index];
+            nameDisplay.style.opacity = 1; // 亮起
+            
+            // 將視角稍微轉向該蓮花 (製造空間感)
+            let targetLotus = lotusMatrix[index];
+            if(targetLotus) {
+                // 利用簡單的平滑過渡改變 angleY
+                let targetAngleY = -Math.atan2(targetLotus.x, targetLotus.z);
+                // 為了避免旋轉過大，這裡只做輕微提示，或者讓使用者自己轉
+                // 這裡保留手動權限，不強制干擾視角，保持平靜
+            }
+        }, 500);
+    }
+
+    function nextBuddha() {
+        if (currentBuddhaIndex >= 87) {
+            // 圓滿
+            rankText.innerText = "功德圓滿";
+            nameText.innerText = "法界藏身阿彌陀佛";
+            document.getElementById('universe-flash').classList.add('flash-active');
+            setTimeout(() => document.getElementById('universe-flash').classList.remove('flash-active'), 150);
+            return;
+        }
+        currentBuddhaIndex++;
+        showBuddhaName(currentBuddhaIndex);
+        if (navigator.vibrate) navigator.vibrate(15);
+    }
+
+    function toggleAutoPlay() {
+        const btn = document.getElementById('btn-auto');
+        if (isAutoPlaying) {
+            isAutoPlaying = false;
+            clearInterval(autoPlayTimer);
+            btn.classList.remove('active-auto');
+            btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg> 自動禮佛`;
+        } else {
+            isAutoPlaying = true;
+            btn.classList.add('active-auto');
+            btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12"></rect></svg> 停止自動`;
+            
+            if(currentBuddhaIndex === -1) nextBuddha(); // 若還沒開始，先走第一尊
+            
+            autoPlayTimer = setInterval(() => {
+                if (currentBuddhaIndex >= 87) {
+                    toggleAutoPlay(); // 到達最後一尊自動停止
+                }
+                nextBuddha();
+            }, 3500); // 每 3.5 秒一尊
+        }
+    }
+
+    // 抽屜控制
+    function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+    function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+
+    // 滑動控制
+    function onDown(e) { if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; isDragging = true; lastMouseX = e.touches?e.touches[0].clientX:e.clientX; lastMouseY = e.touches?e.touches[0].clientY:e.clientY; }
+    function onMove(e) { if (!isDragging) return; let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; angleY += (curX-lastMouseX)*0.01; angleX += (curY-lastMouseY)*0.01; angleX = Math.max(-Math.PI/2, Math.min(Math.PI/2, angleX)); lastMouseX=curX; lastMouseY=curY; }
+    function onUp() { isDragging = false; }
+
+    canvas.addEventListener('mousedown', onDown); window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
+
+    // 啟動
+    initMatrix(); animate();
+</script>
+</body>
+</html>

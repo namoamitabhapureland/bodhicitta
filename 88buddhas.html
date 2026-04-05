@@ -45,15 +45,16 @@
         .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; }
         canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
 
-        /* 佛號動態顯示器 */
+        /* ✨ 佛號動態顯示器 (金字塔智慧排版) ✨ */
         #buddha-name-display {
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-            color: var(--gold); font-size: 2.2rem; font-weight: bold; letter-spacing: 6px;
-            text-shadow: 0 0 20px var(--solid-gold); z-index: 50;
-            opacity: 0; transition: opacity 1s ease-in-out;
-            white-space: nowrap; text-align: center; pointer-events: none;
+            display: flex; flex-direction: column; align-items: center;
+            z-index: 50; opacity: 0; transition: opacity 0.8s ease-in-out;
+            white-space: nowrap; pointer-events: none; width: 95vw;
         }
-        .buddha-rank { font-size: 1rem; color: var(--cyan); letter-spacing: 4px; margin-bottom: 12px; display: block; text-shadow: 0 0 10px var(--cyan);}
+        .buddha-rank { font-size: 1rem; color: var(--cyan); letter-spacing: 4px; margin-bottom: 12px; text-shadow: 0 0 10px var(--cyan); }
+        .buddha-namo { color: var(--gold); font-size: 1.5rem; letter-spacing: 15px; margin-bottom: 10px; text-shadow: 0 0 15px var(--solid-gold); font-weight: bold; margin-right: -15px; }
+        .buddha-name { color: var(--gold); font-weight: bold; text-shadow: 0 0 20px var(--solid-gold); transition: all 0.3s; }
         
         /* 宇宙大閃光 */
         #universe-flash {
@@ -141,7 +142,8 @@
         
         <div id="buddha-name-display">
             <span class="buddha-rank" id="buddha-rank"></span>
-            <span id="buddha-name"></span>
+            <span class="buddha-namo" id="buddha-namo">南 無</span>
+            <span class="buddha-name" id="buddha-name"></span>
         </div>
 
         <div class="ui-layer" id="ui-layer">
@@ -307,7 +309,7 @@
         const today = new Date().toDateString();
         let shouldSave = false;
 
-        // 1. 每日禮佛資糧 (10點) - 嚴格限制一天只送一次
+        // 1. 每日禮佛資糧 (10點)
         if (db.buddha88LastDate !== today) {
             db.points = (db.points || 0) + 10;
             db.buddha88LastDate = today;
@@ -488,6 +490,7 @@
 
     // ================= 互動控制 =================
     const nameDisplay = document.getElementById('buddha-name-display');
+    const namoText = document.getElementById('buddha-namo');
     const rankText = document.getElementById('buddha-rank');
     const nameText = document.getElementById('buddha-name');
 
@@ -495,14 +498,32 @@
         nameDisplay.style.opacity = 0; 
         
         setTimeout(() => {
+            // 恢復顯示「南無」
+            namoText.style.display = 'block';
+
             if (index < 53) rankText.innerText = `五十三佛 ． 第 ${index + 1} 尊`;
             else rankText.innerText = `三十五佛 ． 第 ${index - 53 + 1} 尊`;
             
-            nameText.innerText = "南無 " + buddhas88[index];
+            const bName = buddhas88[index];
+            nameText.innerText = bName;
+            
+            // ✨ 金字塔智慧縮放邏輯 ✨
+            if (bName.length <= 4) {
+                nameText.style.fontSize = "2.2rem";
+                nameText.style.letterSpacing = "6px";
+            } else if (bName.length <= 7) {
+                nameText.style.fontSize = "1.8rem";
+                nameText.style.letterSpacing = "4px";
+            } else {
+                // 超長佛號，縮小字型以防破版
+                nameText.style.fontSize = "1.3rem";
+                nameText.style.letterSpacing = "1px";
+            }
+
             nameDisplay.style.opacity = 1; 
             
             if(isAutoPlaying && !isPlayingTheory) {
-                speak("南無 " + buddhas88[index], 0.85);
+                speak("南無 " + bName, 0.85);
             }
         }, 500);
     }
@@ -510,7 +531,11 @@
     function nextBuddha() {
         if (currentBuddhaIndex >= 87) {
             rankText.innerText = "功德圓滿";
+            namoText.style.display = 'none'; // 隱藏南無
             nameText.innerText = "法界藏身阿彌陀佛";
+            nameText.style.fontSize = "1.8rem";
+            nameText.style.letterSpacing = "4px";
+
             document.getElementById('universe-flash').classList.add('flash-active');
             setTimeout(() => document.getElementById('universe-flash').classList.remove('flash-active'), 150);
             return;
@@ -534,10 +559,11 @@
             
             if(currentBuddhaIndex === -1) nextBuddha(); 
             
+            // ✨ 跪拜專用計時器：調整為 4.5 秒一尊，讓老菩薩有充足時間起身跪拜 ✨
             autoPlayTimer = setInterval(() => {
                 if (currentBuddhaIndex >= 87) toggleAutoPlay(); 
                 nextBuddha();
-            }, 3500); 
+            }, 4500); 
         }
     }
 
@@ -575,7 +601,6 @@
             btnText.innerText = "停止聆聽";
             btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
             
-            // 監聽結束事件來恢復按鈕狀態
             let checkEnd = setInterval(() => {
                 if(!window.speechSynthesis.speaking) {
                     clearInterval(checkEnd);

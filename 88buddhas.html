@@ -18,6 +18,7 @@
             margin: 0; background: var(--bg-deep); color: var(--text-main); 
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
             overflow: hidden; touch-action: none; user-select: none;
+            -webkit-touch-callout: none; -webkit-user-select: none;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -95,11 +96,36 @@
         
         .buddha-text-block { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.15); margin-bottom: 20px; }
         .highlight-buddha { color: var(--gold); font-weight: bold; }
+
+        /* ✨ 法寶顯化專屬 UI ✨ */
+        #treasure-overlay { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90vw; max-width: 400px; padding: 40px 20px; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1); background: rgba(5, 5, 8, 0.95); backdrop-filter: blur(15px); border: 1px solid rgba(212,175,55,0.4); border-radius: 20px; box-shadow: 0 0 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(212,175,55,0.1); }
+        #treasure-overlay.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+        #treasure-overlay.collecting { transform: translate(calc(50vw - 80px), calc(50vh - 80px)) scale(0.1); opacity: 0; pointer-events: none; }
+
+        #svg-container { width: 100%; height: 150px; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 0 20px rgba(243, 229, 171, 0.4)); animation: float-pulse 4s infinite ease-in-out; margin-bottom: 20px;}
+        @keyframes float-pulse { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); filter: drop-shadow(0 0 30px rgba(243, 229, 171, 0.8)); } }
+        #svg-container svg { width: auto; height: 100%; overflow: visible; }
+
+        .t-text-group { text-align: center; opacity: 0; transition: opacity 1s 0.5s; flex-shrink: 0; }
+        #treasure-overlay.show .t-text-group { opacity: 1; }
+        
+        .t-name { color: #fff; font-size: 1.15rem; letter-spacing: 4px; text-shadow: 0 0 15px #fff, 0 0 30px #d4af37; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; line-height: 1.5; }
+        .t-desc { color: #f3e5ab; font-size: 0.9rem; letter-spacing: 2px; line-height: 1.8; text-align: center; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
+        .t-action-hint { margin-top: 30px; font-size: 0.8rem; color: rgba(255,255,255,0.6); letter-spacing: 4px; animation: blink 2s infinite; cursor: pointer; border: 1px solid rgba(212,175,55,0.4); padding: 8px 20px; border-radius: 20px; background: rgba(212,175,55,0.1); display: inline-block;}
+        @keyframes blink { 0%, 100% { opacity: 0.6; box-shadow: none;} 50% { opacity: 1; box-shadow: 0 0 15px rgba(212,175,55,0.4);} }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-    <div class="back-btn" onclick="history.back()">
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none; left: -9999px;">
+        <defs>
+            <linearGradient id="facet-light" x1="0%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.95"/><stop offset="100%" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
+            <linearGradient id="facet-dark" x1="50%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d4af37" stop-opacity="0.1"/><stop offset="100%" stop-color="#b8860b" stop-opacity="0.7"/></linearGradient>
+            <linearGradient id="facet-rose" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#c2185b" stop-opacity="0.5"/></linearGradient>
+        </defs>
+    </svg>
+
+    <div class="back-btn" onclick="window.location.href='index.html?screen=3'">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         回道場
     </div>
@@ -139,14 +165,38 @@
         </div>
     </section>
 
+    <div id="treasure-overlay">
+        <div id="svg-container">
+            <svg viewBox="0 0 100 150">
+                <g transform="translate(0, 20)">
+                    <polygon points="50,15 85,45 50,65 15,45" fill="url(#facet-light)" stroke="#fff" stroke-width="0.8"/>
+                    <polygon points="15,45 50,65 50,115 25,85" fill="url(#facet-rose)" opacity="0.9" stroke="#fff" stroke-width="0.5"/>
+                    <polygon points="85,45 50,65 50,115 75,85" fill="url(#facet-dark)" opacity="0.8" stroke="#fff" stroke-width="0.5"/>
+                    <polygon points="50,115 25,85 50,65" fill="rgba(255,255,255,0.3)"/>
+                    <polygon points="50,15 50,65 85,45" fill="rgba(255,255,255,0.4)"/>
+                    <circle cx="50" cy="65" r="5" fill="#fff" filter="drop-shadow(0 0 12px #fff)"/>
+                </g>
+            </svg>
+        </div> 
+        <div class="t-text-group">
+            <div class="t-name" id="t-name-ui">多面寶珠 顯現</div>
+            <div class="t-desc" id="t-desc-ui">行者恆心禮佛，法界感應迴饋。<br>願此寶珠，堅固道心。</div>
+            <div class="t-action-hint" onclick="collectTreasure()">收入多寶閣</div>
+        </div>
+    </div>
+
     <div id="theory-drawer">
         <div class="drawer-header" onclick="closeTheoryDrawer()">
             <div class="close-bar"></div>
-            <div style="display:flex; justify-content:center; align-items:center; padding: 0 5px;">
-                <div class="close-btn">收起經文</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+                <div class="close-btn" onclick="closeTheoryDrawer()">收起經文</div>
+                <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                    <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                    <span id="tts-text">聆聽法音</span>
+                </div>
             </div>
         </div>
-        <div class="theory-container">
+        <div class="theory-container" id="theory-content-box">
             <h1 class="main-title">八十八佛大懺悔文</h1>
             <div class="buddha-text-block">
                 大慈大悲愍眾生，大喜大捨濟含識，相好光明以自嚴，眾等至心歸命禮。<br><br>
@@ -167,6 +217,30 @@
     </div>
 
 <script>
+    // ================= 跨平台語音引擎 =================
+    window.sysUtterances = [];
+    function speak(t, r = 0.85) {
+        if (!window.speechSynthesis) return; 
+        window.speechSynthesis.cancel(); 
+        let isAndroid = /Android/i.test(navigator.userAgent);
+        let textToSpeak = isAndroid ? t : t.replace(/阿/g, 'ㄚ');
+        const m = new SpeechSynthesisUtterance(textToSpeak);
+        m.lang = 'zh-TW'; m.rate = r; 
+        
+        if (isAndroid) {
+            window.sysUtterances.push(m);
+            let voices = window.speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                let zhVoice = voices.find(v => v.lang === 'zh-TW' && v.name.includes('Google')) || voices.find(v => v.lang.includes('zh'));
+                if (zhVoice) m.voice = zhVoice;
+            }
+            m.onend = function() { window.sysUtterances = window.sysUtterances.filter(u => u !== m); };
+            setTimeout(() => { window.speechSynthesis.speak(m); }, 150);
+        } else {
+            window.speechSynthesis.speak(m);
+        }
+    }
+
     // ================= 資料：八十八佛名號 =================
     const buddhas88 = [
         "普光佛", "普明佛", "普淨佛", "多摩羅跋栴檀香佛", "栴檀光佛", "摩尼幢佛", "歡喜藏摩尼寶積佛", "一切世間樂見上大精進佛", "摩尼幢燈光佛", "慧炬照佛", 
@@ -181,7 +255,6 @@
         "鬥戰勝佛", "善遊步佛", "周匝莊嚴功德佛", "寶華遊步佛", "寶蓮華善住娑羅樹王佛" // 以上三十五佛
     ];
 
-    // 將佛號填入抽屜
     const fullTextDiv = document.getElementById('full-text-buddhas');
     buddhas88.forEach(name => {
         fullTextDiv.innerHTML += `<span class="highlight-buddha">南無 ${name}</span><br>`;
@@ -198,15 +271,76 @@
     let lastMouseX = 0, lastMouseY = 0;
     const FOV = 400; 
 
-    // 系統狀態
-    let currentBuddhaIndex = -1; // 目前禮敬到的佛號 (-1 代表還沒開始)
+    let currentBuddhaIndex = -1; 
     let isAutoPlaying = false;
     let autoPlayTimer = null;
 
     let stars = [];
     let lotusMatrix = []; 
     
-    // 蓮花無版權專屬色系 (純金, 琉璃青, 粉櫻, 月白, 紫光)
+    // ✨ 讀取主系統資料庫 ✨
+    let db;
+    try {
+        db = JSON.parse(localStorage.getItem('PX_V15.0'));
+        if (!db || typeof db !== 'object') db = null;
+    } catch(e) {}
+    
+    if (!db) {
+        db = { points: 0, treasures: { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 } };
+    }
+    if (!db.treasures) db.treasures = { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 };
+    if (db.buddha88LastDate === undefined) db.buddha88LastDate = "";
+    if (db.buddha88TreasureDate === undefined) db.buddha88TreasureDate = "";
+
+    function saveDB() {
+        localStorage.setItem('PX_V15.0', JSON.stringify(db));
+    }
+
+    function collectTreasure() {
+        const overlay = document.getElementById('treasure-overlay');
+        overlay.classList.remove('show'); 
+        overlay.classList.add('collecting');
+    }
+
+    // ✨ 每日資糧與法寶獎勵 ✨
+    function checkDailyRewards() {
+        const today = new Date().toDateString();
+        let shouldSave = false;
+
+        // 1. 每日禮佛資糧 (10點) - 嚴格限制一天只送一次
+        if (db.buddha88LastDate !== today) {
+            db.points = (db.points || 0) + 10;
+            db.buddha88LastDate = today;
+            shouldSave = true;
+            
+            setTimeout(() => { speak("法喜充滿，資糧增長", 0.85); }, 1000);
+        }
+
+        // 2. 每 8 天贈送如意寶珠
+        let isTreasureDay = false;
+        if (!db.buddha88TreasureDate) {
+            isTreasureDay = true;
+        } else {
+            const lastDrop = new Date(db.buddha88TreasureDate).setHours(0,0,0,0);
+            const now = new Date().setHours(0,0,0,0);
+            const diffDays = Math.round((now - lastDrop) / 86400000);
+            if (diffDays >= 8) isTreasureDay = true;
+        }
+
+        if (isTreasureDay) {
+            db.treasures.jewel = (db.treasures.jewel || 0) + 1;
+            db.buddha88TreasureDate = today;
+            shouldSave = true;
+            
+            setTimeout(() => {
+                document.getElementById('treasure-overlay').classList.add('show');
+                speak("恆心禮佛，法界感應。獲贈多面寶珠", 0.85);
+            }, 1500);
+        }
+
+        if (shouldSave) saveDB();
+    }
+
     const lotusColors = [
         { r: 212, g: 175, b: 55 },   // 金
         { r: 139, g: 168, b: 156 },  // 青
@@ -222,7 +356,6 @@
     window.addEventListener('resize', resize); resize();
 
     function initMatrix() {
-        // 星空
         stars = [];
         for (let i = 0; i < 600; i++) {
             stars.push({
@@ -231,14 +364,11 @@
             });
         }
 
-        // 88朵蓮花分佈在 3D 球面上
         lotusMatrix = [];
         for(let i=0; i<88; i++) {
-            // 球面座標隨機分佈
-            let radius = 250 + Math.random() * 400; // 半徑
+            let radius = 250 + Math.random() * 400; 
             let theta = Math.random() * Math.PI * 2;
             let phi = Math.acos(Math.random() * 2 - 1); 
-            // 避免全部擠在正上或正下方
             if (phi < 0.5) phi += 0.5;
             if (phi > Math.PI - 0.5) phi -= 0.5;
 
@@ -259,18 +389,16 @@
         let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
         let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
         let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
-        if(z2 < -FOV+10) return null; // 在相機後方
+        if(z2 < -FOV+10) return null; 
         let scale = FOV / (FOV + z2); 
         return { x: (width/2) + x2*scale, y: (height/2) - y1*scale, scale: scale, z: z2 };
     }
 
-    // 繪製動態蓮花
     function drawVectorLotus(proj, bloom, color, rotation, beat) {
         if(!proj) return;
         ctx.save();
         ctx.translate(proj.x, proj.y);
         
-        // bloom 為 0 時，是一顆小光點；bloom 為 1 時，是一朵蓮花
         if (bloom < 0.1) {
             let s = proj.scale * 2;
             ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI*2);
@@ -292,7 +420,6 @@
             ctx.rotate((Math.PI * 2) / petalCount);
             ctx.beginPath();
             ctx.moveTo(0, 0);
-            // 隨 bloom 參數展開花瓣
             ctx.quadraticCurveTo(10 * bloom, -20 * bloom, 0, -40 * bloom);
             ctx.quadraticCurveTo(-10 * bloom, -20 * bloom, 0, 0);
             
@@ -322,7 +449,6 @@
             angleY += 0.001; 
         }
 
-        // 1. 繪製星空
         let projectedStars = [];
         stars.forEach(s => {
             s.y -= s.speed;
@@ -338,14 +464,11 @@
             ctx.beginPath(); ctx.arc(p.x, p.y, s, 0, Math.PI*2); ctx.fill();
         });
 
-        // 2. 繪製 88 朵蓮花
         let projectedLotuses = [];
         lotusMatrix.forEach(lotus => {
-            // 平滑過渡綻放狀態
             let targetBloom = (lotus.index <= currentBuddhaIndex) ? 1 : 0;
             lotus.bloom += (targetBloom - lotus.bloom) * 0.05;
 
-            // 緩慢漂浮
             let waveY = Math.sin(time + lotus.phase) * 10;
             let proj = project3D(lotus.x, lotus.y + waveY, lotus.z);
             if(proj) projectedLotuses.push({ proj: proj, lotus: lotus });
@@ -369,29 +492,23 @@
     const nameText = document.getElementById('buddha-name');
 
     function showBuddhaName(index) {
-        nameDisplay.style.opacity = 0; // 先暗下
+        nameDisplay.style.opacity = 0; 
         
         setTimeout(() => {
             if (index < 53) rankText.innerText = `五十三佛 ． 第 ${index + 1} 尊`;
             else rankText.innerText = `三十五佛 ． 第 ${index - 53 + 1} 尊`;
             
             nameText.innerText = "南無 " + buddhas88[index];
-            nameDisplay.style.opacity = 1; // 亮起
+            nameDisplay.style.opacity = 1; 
             
-            // 將視角稍微轉向該蓮花 (製造空間感)
-            let targetLotus = lotusMatrix[index];
-            if(targetLotus) {
-                // 利用簡單的平滑過渡改變 angleY
-                let targetAngleY = -Math.atan2(targetLotus.x, targetLotus.z);
-                // 為了避免旋轉過大，這裡只做輕微提示，或者讓使用者自己轉
-                // 這裡保留手動權限，不強制干擾視角，保持平靜
+            if(isAutoPlaying && !isPlayingTheory) {
+                speak("南無 " + buddhas88[index], 0.85);
             }
         }, 500);
     }
 
     function nextBuddha() {
         if (currentBuddhaIndex >= 87) {
-            // 圓滿
             rankText.innerText = "功德圓滿";
             nameText.innerText = "法界藏身阿彌陀佛";
             document.getElementById('universe-flash').classList.add('flash-active');
@@ -415,31 +532,71 @@
             btn.classList.add('active-auto');
             btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12"></rect></svg> 停止自動`;
             
-            if(currentBuddhaIndex === -1) nextBuddha(); // 若還沒開始，先走第一尊
+            if(currentBuddhaIndex === -1) nextBuddha(); 
             
             autoPlayTimer = setInterval(() => {
-                if (currentBuddhaIndex >= 87) {
-                    toggleAutoPlay(); // 到達最後一尊自動停止
-                }
+                if (currentBuddhaIndex >= 87) toggleAutoPlay(); 
                 nextBuddha();
-            }, 3500); // 每 3.5 秒一尊
+            }, 3500); 
         }
     }
 
-    // 抽屜控制
     function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
     function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
 
-    // 滑動控制
-    function onDown(e) { if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; isDragging = true; lastMouseX = e.touches?e.touches[0].clientX:e.clientX; lastMouseY = e.touches?e.touches[0].clientY:e.clientY; }
+    function onDown(e) { if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer') || e.target.closest('#treasure-overlay')) return; isDragging = true; lastMouseX = e.touches?e.touches[0].clientX:e.clientX; lastMouseY = e.touches?e.touches[0].clientY:e.clientY; }
     function onMove(e) { if (!isDragging) return; let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; angleY += (curX-lastMouseX)*0.01; angleX += (curY-lastMouseY)*0.01; angleX = Math.max(-Math.PI/2, Math.min(Math.PI/2, angleX)); lastMouseX=curX; lastMouseY=curY; }
     function onUp() { isDragging = false; }
 
     canvas.addEventListener('mousedown', onDown); window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
     canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
 
+    // ================= ✨ TTS 語音導航系統 ✨ =================
+    let isPlayingTheory = false;
+
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("您的設備不支援語音功能");
+        const btnText = document.getElementById('tts-text'); 
+        const btnIcon = document.getElementById('tts-icon');
+        
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel(); 
+            isPlayingTheory = false; 
+            btnText.innerText = "聆聽法音";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .buddha-text-block');
+            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('。');
+            
+            // 使用共用的跨平台發聲系統
+            speak(textToRead, 0.85);
+            
+            isPlayingTheory = true; 
+            btnText.innerText = "停止聆聽";
+            btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+            
+            // 監聽結束事件來恢復按鈕狀態
+            let checkEnd = setInterval(() => {
+                if(!window.speechSynthesis.speaking) {
+                    clearInterval(checkEnd);
+                    isPlayingTheory = false;
+                    btnText.innerText = "聆聽法音";
+                    btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                }
+            }, 1000);
+        }
+    }
+
+    const originalCloseTheoryDrawer = closeTheoryDrawer;
+    closeTheoryDrawer = function() { 
+        if (isPlayingTheory) toggleTheoryAudio(); 
+        originalCloseTheoryDrawer(); 
+    }
+
     // 啟動
-    initMatrix(); animate();
+    checkDailyRewards();
+    initMatrix(); 
+    animate();
 </script>
 </body>
 </html>

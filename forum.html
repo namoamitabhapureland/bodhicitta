@@ -59,9 +59,21 @@
 
         .container { max-width: 800px; margin: 0 auto; padding: 80px 20px 60px 20px; position: relative; }
 
-        .header { text-align: center; margin-bottom: 40px; }
+        .header { text-align: center; margin-bottom: 25px; }
         .lotus-wrapper { display: inline-block; animation: breathe 5s ease-in-out infinite; }
         @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+
+        /* ✨ 新增：優雅的客棧規約說明欄 ✨ */
+        .guide-box {
+            background: linear-gradient(145deg, rgba(20,25,22,0.8), rgba(5,8,5,0.9));
+            border: 1px solid rgba(212,175,55,0.3); border-radius: 15px; 
+            padding: 18px 20px; margin-bottom: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 0 15px rgba(139,168,156,0.05);
+            display: flex; align-items: flex-start; gap: 15px; backdrop-filter: blur(5px);
+        }
+        .guide-icon { width: 24px; height: 24px; flex-shrink: 0; filter: drop-shadow(0 0 5px rgba(212,175,55,0.4)); stroke: var(--gold); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; margin-top: 2px; }
+        .guide-text { color: #ccc; font-size: 0.85rem; line-height: 1.6; letter-spacing: 1px; text-align: justify; margin: 0; }
+        .guide-highlight { color: var(--gold); font-weight: bold; }
 
         .interaction-panel {
             background: var(--card); border: 1px solid var(--border);
@@ -121,9 +133,8 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.3s;
         }
         .btn-act:active { transform: scale(0.95); border-color: var(--gold); color: var(--gold); background: rgba(212,175,55,0.1); }
-        .btn-act svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+        .btn-act svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
         .act-zh { font-size: 0.75rem; letter-spacing: 1px; font-weight: bold; }
-        .act-en { font-size: 0.55rem; opacity: 0.6; letter-spacing: 0.5px; }
 
         .reply-item { padding: 10px 20px; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; align-items: flex-start; gap: 8px; }
 
@@ -218,6 +229,17 @@
             <div id="site-desc" style="color:var(--cyan); letter-spacing:2px; font-size:0.85rem; margin-top:10px;">蓮友清淨交流 · Global Community</div>
         </header>
 
+        <div class="guide-box">
+            <svg class="guide-icon" viewBox="0 0 24 24">
+                <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
+                <circle cx="12" cy="10" r="3" fill="rgba(212,175,55,0.2)"/>
+            </svg>
+            <p class="guide-text" id="forum-guide-text">
+                歡迎來到菩提客棧。此處完全自由，願行者皆以清淨正念結緣。為護持道場流暢，系統將自動流轉，僅保留<span class="guide-highlight">最新五十篇</span>法喜心得。<br><br>
+                <span style="color:var(--cyan);">若欲回覆或互動，請先於下方填妥法號。</span>
+            </p>
+        </div>
+
         <div class="interaction-panel">
             <input type="text" id="nn" class="custom-field" placeholder="法號 / Name (Optional)">
             <textarea id="mm" class="custom-field" rows="4" placeholder="在此分享法喜心得... / Share your thoughts here..."></textarea>
@@ -247,6 +269,9 @@
             document.getElementById('mm').placeholder = "Share your thoughts here... / 在此分享法喜心得...";
             document.getElementById('btn-post-main').innerText = "Post Message";
             document.getElementById('btn-post-sub').innerText = "結緣發布";
+            
+            // ✨ 英文版的客棧規約 ✨
+            document.getElementById('forum-guide-text').innerHTML = "Welcome to the Lotus Forum. Feel free to share, keeping your thoughts pure and positive. To maintain harmony and speed, the system gracefully cycles and retains only the <span class='guide-highlight'>latest 50 posts</span>.<br><br><span style='color:var(--cyan);'>To reply or interact, please enter your name below first.</span>";
         }
 
         function showAlert(msg) {
@@ -280,7 +305,6 @@
 
         let localDB = null;
         try {
-            // 自動依照網址參數決定讀取中文版還是英文版的資料庫
             const dbKey = (lang === 'en') ? 'PX_EN_V15.0' : 'PX_V15.0';
             localDB = JSON.parse(localStorage.getItem(dbKey));
         } catch(e) {
@@ -315,18 +339,12 @@
             return s.replace(/\n/g, "<br>");
         }
 
-        // ✨ 重大修復：同時看得懂中英文位階的辨識系統 ✨
         function getRankType(rankName) {
             if (!rankName) return '信';
-            // 如果字串包含「地」或「Bhumi」，就歸類為地（最高階蓮花）
             if (rankName.includes('地') || rankName.includes('Bhumi')) return '地';
-            // 如果包含「迴」或「Dedication」，歸類為迴向位
             if (rankName.includes('迴') || rankName.includes('Dedication')) return '迴';
-            // 如果包含「行」或「Practice」，歸類為行位
             if (rankName.includes('行') || rankName.includes('Practice')) return '行';
-            // 如果包含「住」或「Abiding」，歸類為住位
             if (rankName.includes('住') || rankName.includes('Abiding')) return '住';
-            // 預設為信位（Faith）
             return '信';
         }
 
@@ -391,10 +409,8 @@
             return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">${defs}${bgContent}${lotusContent}</svg>`;
         }
 
-        // 把原始 SVG 加上討論區專屬的排版樣式
         function getFormattedIcon(rankName, nianCount) {
             if (!rankName) return '';
-            // ✨ 在這裡呼叫升級版的中英雙語辨識系統
             let rawSvg = getLotusSVG(getRankType(rankName), nianCount);
             return rawSvg.replace('<svg ', '<svg width="20" height="20" style="margin-right:6px; filter: drop-shadow(0 0 3px rgba(212,175,55,0.4));" ');
         }
@@ -444,10 +460,19 @@
                     if(item.rs) {
                         Object.values(item.rs).forEach(r => {
                             let sym = "";
-                            if(r.ty === 'gassho') { sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#F3E5AB" stroke="#D4AF37" stroke-width="1.5"><path d="M12 22s-5-4.5-5-11.5S12 2 12 2s5 3.5 5 10.5S12 22 12 22z"/><path d="M12 2v20" stroke="#D4AF37" stroke-opacity="0.5"/></svg>`; }
-                            if(r.ty === 'praise') { sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#FFD700" stroke="#FFA500" stroke-width="1.5"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5Z"/></svg>`; }
-                            if(r.ty === 'flower') { sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#FFB6C1" stroke="#FF69B4" stroke-width="1.5"><path d="M12 22c0 0 5-6 5-10s-5-8-5-8-5 6-5 8 5 10 5 10z"/><path d="M12 22c0 0 10-4 10-10s-5-4-10 0"/><path d="M12 22c0 0-10-4-10-10s5-4 10 0"/></svg>`; }
-                            if(r.ty === 'chant')  { sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8BA89C" stroke-width="2.5"><circle cx="12" cy="12" r="8" stroke-dasharray="4 4"/><circle cx="12" cy="22" r="3" fill="#D4AF37" stroke="none"/></svg>`; }
+                            // ✨ 新增：零版權純代碼的禪意互動圖騰 ✨
+                            if(r.ty === 'gassho') { 
+                                sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M12 3 C12 3, 7 9, 7 15 C7 18, 9 21, 12 21 C15 21, 17 18, 17 15 C17 9, 12 3, 12 3 Z" fill="rgba(212,175,55,0.1)"/><path d="M12 21 L12 10" stroke-opacity="0.4"/></svg>`; 
+                            }
+                            if(r.ty === 'praise') { 
+                                sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M12 2 L14.5 9.5 L22 12 L14.5 14.5 L12 22 L9.5 14.5 L2 12 L9.5 9.5 Z" fill="rgba(212,175,55,0.15)"/><circle cx="12" cy="12" r="2.5" fill="var(--gold)"/></svg>`; 
+                            }
+                            if(r.ty === 'flower') { 
+                                sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="1.5"><path d="M12 22 C12 22, 5 15, 5 10 C5 6, 12 2, 12 2 C12 2, 19 6, 19 10 C19 15, 12 22, 12 22 Z" fill="rgba(139,168,156,0.1)"/><path d="M12 22 C12 22, 9 16, 9 11 C9 8, 12 4, 12 4 C12 4, 15 8, 15 11 C15 16, 12 22, 12 22 Z" fill="rgba(139,168,156,0.2)"/></svg>`; 
+                            }
+                            if(r.ty === 'chant')  { 
+                                sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><circle cx="12" cy="10" r="7.5" stroke-dasharray="3 3" opacity="0.7"/><circle cx="12" cy="20" r="2.5" fill="var(--gold)"/><path d="M12 17.5 L12 18.5" opacity="0.5"/></svg>`; 
+                            }
                             
                             const replyIcon = getFormattedIcon(r.rank, r.nian || 0);
                             const replyRankDisplay = r.rank ? `<span style="display:flex; align-items:center; color:var(--cyan); font-size:0.75rem; margin-left:8px; opacity:0.9;">${replyIcon}[ ${r.rank} · ${r.nian || 0} ]</span>` : '';
@@ -483,6 +508,7 @@
                     const flowerText = (lang === 'en') ? "Offer" : "供花";
                     const chantText = (lang === 'en') ? "Chant" : "念佛";
 
+                    // ✨ 新增：按鈕區也換上禪意法器 SVG ✨
                     card.innerHTML = `
                         <div class="post-header">
                             <div style="display:flex; align-items:center; flex-wrap:wrap;">
@@ -499,10 +525,22 @@
                             <input type="text" id="i-${id}" class="reply-input" placeholder="${replyPlaceholder}">
                             
                             <div class="reaction-grid">
-                                <button class="btn-act" onclick="re('${id}','gassho')"><svg viewBox="0 0 24 24"><path d="M12 22s-5-4.5-5-11.5S12 2 12 2s5 3.5 5 10.5S12 22 12 22z"/><path d="M12 2v20" stroke-opacity="0.3"/></svg><span class="act-zh">${gasshoText}</span></button>
-                                <button class="btn-act" onclick="re('${id}','praise')"><svg viewBox="0 0 24 24"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5Z"/></svg><span class="act-zh">${praiseText}</span></button>
-                                <button class="btn-act" onclick="re('${id}','flower')"><svg viewBox="0 0 24 24"><path d="M12 22c0 0 5-6 5-10s-5-8-5-8-5 6-5 8 5 10 5 10z"/><path d="M12 22c0 0 10-4 10-10s-5-4-10 0"/><path d="M12 22c0 0-10-4-10-10s5-4 10 0"/></svg><span class="act-zh">${flowerText}</span></button>
-                                <button class="btn-act" onclick="re('${id}','chant')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-dasharray="4 4"/><circle cx="12" cy="22" r="2" fill="currentColor" stroke="none"/></svg><span class="act-zh">${chantText}</span></button>
+                                <button class="btn-act" onclick="re('${id}','gassho')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M12 3 C12 3, 7 9, 7 15 C7 18, 9 21, 12 21 C15 21, 17 18, 17 15 C17 9, 12 3, 12 3 Z" fill="rgba(212,175,55,0.05)"/><path d="M12 21 L12 10" stroke-opacity="0.4"/></svg>
+                                    <span class="act-zh">${gasshoText}</span>
+                                </button>
+                                <button class="btn-act" onclick="re('${id}','praise')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M12 2 L14.5 9.5 L22 12 L14.5 14.5 L12 22 L9.5 14.5 L2 12 L9.5 9.5 Z" fill="rgba(212,175,55,0.05)"/><circle cx="12" cy="12" r="2.5" fill="var(--gold)"/></svg>
+                                    <span class="act-zh">${praiseText}</span>
+                                </button>
+                                <button class="btn-act" onclick="re('${id}','flower')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="1.5"><path d="M12 22 C12 22, 5 15, 5 10 C5 6, 12 2, 12 2 C12 2, 19 6, 19 10 C19 15, 12 22, 12 22 Z" fill="rgba(139,168,156,0.05)"/><path d="M12 22 C12 22, 9 16, 9 11 C9 8, 12 4, 12 4 C12 4, 15 8, 15 11 C15 16, 12 22, 12 22 Z" fill="rgba(139,168,156,0.15)"/></svg>
+                                    <span class="act-zh">${flowerText}</span>
+                                </button>
+                                <button class="btn-act" onclick="re('${id}','chant')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><circle cx="12" cy="10" r="7.5" stroke-dasharray="3 3" opacity="0.7"/><circle cx="12" cy="20" r="2.5" fill="var(--gold)"/><path d="M12 17.5 L12 18.5" opacity="0.5"/></svg>
+                                    <span class="act-zh">${chantText}</span>
+                                </button>
                             </div>
                         </div>
                     `;

@@ -134,7 +134,6 @@
         }
         .btn-delete:hover { background: rgba(255, 50, 50, 0.2); border-color: #ff6b6b; }
 
-        /* ✨ 新增：琉璃金屬質感自訂提示框 (Glassmorphism Alert) */
         .glass-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px);
@@ -172,8 +171,8 @@
         <button class="btn-back" onclick="history.back()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
             <div style="display:flex; flex-direction:column; align-items:flex-start;">
-                <span style="line-height:1.2; font-weight:bold;">返回</span>
-                <span style="font-size:0.6rem; line-height:1; opacity:0.7;">Return</span>
+                <span id="nav-back-text" style="line-height:1.2; font-weight:bold;">返回</span>
+                <span id="nav-back-sub" style="font-size:0.6rem; line-height:1; opacity:0.7;">Return</span>
             </div>
         </button>
     </div>
@@ -213,10 +212,10 @@
             </div>
             
             <h1 style="color:var(--gold-br); margin-top:5px; margin-bottom:5px; display:flex; flex-direction:column; align-items:center;">
-                <span style="letter-spacing:6px; font-weight:300; font-size:1.8rem;">菩提客棧</span>
-                <span style="font-size:0.8rem; letter-spacing:3px; opacity:0.8; font-weight:normal; margin-top:5px;">Lotus Forum</span>
+                <span id="site-title-main" style="letter-spacing:6px; font-weight:300; font-size:1.8rem;">菩提客棧</span>
+                <span id="site-title-sub" style="font-size:0.8rem; letter-spacing:3px; opacity:0.8; font-weight:normal; margin-top:5px;">Lotus Forum</span>
             </h1>
-            <div style="color:var(--cyan); letter-spacing:2px; font-size:0.85rem; margin-top:10px;">蓮友清淨交流 · Global Community</div>
+            <div id="site-desc" style="color:var(--cyan); letter-spacing:2px; font-size:0.85rem; margin-top:10px;">蓮友清淨交流 · Global Community</div>
         </header>
 
         <div class="interaction-panel">
@@ -224,8 +223,8 @@
             <textarea id="mm" class="custom-field" rows="4" placeholder="在此分享法喜心得... / Share your thoughts here..."></textarea>
             
             <button class="btn-post" id="post-btn">
-                <span style="font-size: 1.05rem; letter-spacing: 4px; font-weight: bold;">結緣發布</span>
-                <span style="font-size: 0.7rem; letter-spacing: 1px; font-weight: normal; opacity: 0.8;">Post Message</span>
+                <span id="btn-post-main" style="font-size: 1.05rem; letter-spacing: 4px; font-weight: bold;">結緣發布</span>
+                <span id="btn-post-sub" style="font-size: 0.7rem; letter-spacing: 1px; font-weight: normal; opacity: 0.8;">Post Message</span>
             </button>
         </div>
 
@@ -237,7 +236,19 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // ✨ 新增：琉璃提示框的控制函數
+        // --- 介面語系切換 ---
+        if (lang === 'en') {
+            document.getElementById('nav-back-text').innerText = "Back";
+            document.getElementById('nav-back-sub').innerText = "返回";
+            document.getElementById('site-title-main').innerText = "Lotus Forum";
+            document.getElementById('site-title-sub').innerText = "菩提客棧";
+            document.getElementById('site-desc').innerText = "Global Community · 蓮友清淨交流";
+            document.getElementById('nn').placeholder = "Name / 法號 (Optional)";
+            document.getElementById('mm').placeholder = "Share your thoughts here... / 在此分享法喜心得...";
+            document.getElementById('btn-post-main').innerText = "Post Message";
+            document.getElementById('btn-post-sub').innerText = "結緣發布";
+        }
+
         function showAlert(msg) {
             document.getElementById('pure-alert-msg').innerHTML = msg.replace(/\n/g, '<br>');
             const overlay = document.getElementById('pure-alert');
@@ -264,12 +275,12 @@
         const dbRef = firebase.database();
         const ref = dbRef.ref('posts_clean_v9');
         
-        // ✨ 重大修復：恢復給予臨時憑證，絕不讓行者卡在連線中！
         let currentUserUid = "guest_" + Math.random().toString(36).substr(2, 9);
         let isBoardLoaded = false;
 
         let localDB = null;
         try {
+            // 自動依照網址參數決定讀取中文版還是英文版的資料庫
             const dbKey = (lang === 'en') ? 'PX_EN_V15.0' : 'PX_V15.0';
             localDB = JSON.parse(localStorage.getItem(dbKey));
         } catch(e) {
@@ -278,29 +289,19 @@
 
         const userRank = (localDB && localDB.currentRank) ? localDB.currentRank : (lang === 'en' ? 'Wanderer' : '雲遊行者');
         const userNian = (localDB && localDB.totalNian) ? localDB.totalNian : 0;
-        const defaultName = (lang === 'en') ? 'Practitioner' : '十方善信';
+        const defaultPostName = (lang === 'en') ? 'Practitioner' : '十方善信';
+        const defaultReplyName = (lang === 'en') ? 'User' : '行者 / User';
 
         const savedName = localStorage.getItem('lotus_forum_name');
         if (savedName) {
             document.getElementById('nn').value = savedName;
         }
 
-        firebase.auth().signInAnonymously().catch((error) => {
-            console.warn("匿名登入異常:", error);
-        });
+        firebase.auth().signInAnonymously().catch((error) => console.warn("匿名登入異常:", error));
 
         firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                // 如果成功拿到正式憑證，就替換掉臨時憑證
-                currentUserUid = user.uid; 
-            }
-            
-            if (!isBoardLoaded) {
-                loadBoard();
-                isBoardLoaded = true;
-            } else {
-                loadBoard(); 
-            }
+            if (user) currentUserUid = user.uid; 
+            if (!isBoardLoaded) { loadBoard(); isBoardLoaded = true; } else { loadBoard(); }
         });
 
         function parse(str) {
@@ -314,19 +315,104 @@
             return s.replace(/\n/g, "<br>");
         }
 
+        // ✨ 重大修復：同時看得懂中英文位階的辨識系統 ✨
+        function getRankType(rankName) {
+            if (!rankName) return '信';
+            // 如果字串包含「地」或「Bhumi」，就歸類為地（最高階蓮花）
+            if (rankName.includes('地') || rankName.includes('Bhumi')) return '地';
+            // 如果包含「迴」或「Dedication」，歸類為迴向位
+            if (rankName.includes('迴') || rankName.includes('Dedication')) return '迴';
+            // 如果包含「行」或「Practice」，歸類為行位
+            if (rankName.includes('行') || rankName.includes('Practice')) return '行';
+            // 如果包含「住」或「Abiding」，歸類為住位
+            if (rankName.includes('住') || rankName.includes('Abiding')) return '住';
+            // 預設為信位（Faith）
+            return '信';
+        }
+
+        function getLotusSVG(rankType, nianCount = 0) {
+            const gold = "#f3e5ab"; const darkGold = "#d4af37";
+            
+            let defs = `<defs>
+                <radialGradient id="pureGold" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
+                    <stop offset="30%" stop-color="${gold}" stop-opacity="1"/>
+                    <stop offset="100%" stop-color="${darkGold}" stop-opacity="1"/>
+                </radialGradient>
+                <linearGradient id="metalGold" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#ffeba8"/>
+                    <stop offset="50%" stop-color="#d4af37"/>
+                    <stop offset="100%" stop-color="#8a6d1c"/>
+                </linearGradient>
+                <radialGradient id="darkHole" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#000" stop-opacity="0.9"/>
+                    <stop offset="65%" stop-color="#0a0a0a" stop-opacity="0.7"/>
+                    <stop offset="100%" stop-color="transparent" stop-opacity="0"/>
+                </radialGradient>
+                <filter id="holyGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="2.5" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+            </defs>`;
+
+            let bgContent = `<circle cx="50" cy="50" r="38" fill="url(#darkHole)"/>`;
+
+            switch(rankType) {
+                case '信': 
+                    bgContent += `<g opacity="0.85"><ellipse cx="50" cy="72" rx="28" ry="8" fill="none" stroke="#8ba89c" stroke-width="1" opacity="0.4"><animate attributeName="rx" values="15;32;15" dur="4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0;0.6" dur="4s" repeatCount="indefinite"/></ellipse><ellipse cx="50" cy="72" rx="16" ry="4" fill="none" stroke="url(#pureGold)" stroke-width="1.5" filter="url(#holyGlow)"/><path d="M 32 68 Q 50 85 68 68" fill="none" stroke="url(#metalGold)" stroke-width="2" opacity="0.8" filter="url(#holyGlow)"/><circle cx="50" cy="72" r="1.5" fill="#fff"/></g>`; 
+                    break;
+                case '住': 
+                    bgContent += `<g fill="url(#metalGold)" opacity="0.85"><polygon points="32,72 68,72 73,78 27,78" /><polygon points="36,68 64,68 68,72 32,72" opacity="0.7"/><rect x="27" y="78" width="46" height="2" fill="#fff" opacity="0.5"/></g>`; 
+                    break;
+                case '行': 
+                    bgContent += `<g stroke="#e0e0e0" opacity="0.7"><circle cx="50" cy="50" r="30" fill="none" stroke-width="1" stroke-dasharray="2 4"/><circle cx="50" cy="50" r="26" fill="none" stroke-width="0.5"/><g stroke-width="1.2">${[...Array(12)].map((_,i) => `<line x1="50" y1="50" x2="50" y2="20" transform="rotate(${i*30} 50 50)"/>`).join('')}</g><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="30s" repeatCount="indefinite"/></g>`; 
+                    break;
+                case '迴': 
+                    bgContent += `<g stroke="#e6a8d7" fill="none" opacity="0.7"><g stroke-width="1"><rect x="26" y="26" width="48" height="48" transform="rotate(0 50 50)"/><rect x="26" y="26" width="48" height="48" transform="rotate(45 50 50)"/></g><circle cx="50" cy="50" r="34" stroke-width="0.5" stroke-dasharray="3 3"/><animateTransform attributeName="transform" type="rotate" from="360 50 50" to="0 50 50" dur="40s" repeatCount="indefinite"/></g>`; 
+                    break;
+                case '地': 
+                    bgContent += `<g opacity="0.8"><circle cx="50" cy="50" r="38" fill="none" stroke="url(#pureGold)" stroke-width="0.5" stroke-dasharray="1 5"/>${[...Array(16)].map((_,i) => `<path d="M50 50 Q 68 22 50 12 Q 32 22 50 50" fill="none" stroke="#a8e6cf" stroke-width="0.5" opacity="0.6" transform="rotate(${i*22.5} 50 50)"/>`).join('')}<circle cx="50" cy="50" r="42" fill="none" stroke="#ff8b94" stroke-width="0.3"/><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="60s" repeatCount="indefinite"/></g><circle cx="50" cy="50" r="1.5" fill="#fff" filter="url(#holyGlow)"><animate attributeName="r" values="1.5;3;1.5" dur="3s" repeatCount="indefinite"/></circle>`; 
+                    break;
+            }
+
+            let lotusContent = "";
+            if (nianCount < 1000) { 
+                lotusContent = `<g><circle cx="50" cy="55" r="15" fill="url(#pureGold)" opacity="0.15" filter="url(#holyGlow)"><animate attributeName="r" values="12;18;12" dur="3s" repeatCount="indefinite"/></circle><g filter="url(#holyGlow)"><path d="M50 25 C 65 50, 58 70, 50 72 C 42 70, 35 50, 50 25" fill="url(#metalGold)"/><path d="M50 25 C 55 50, 53 70, 50 72 C 47 70, 45 50, 50 25" fill="url(#pureGold)"/><animateTransform attributeName="transform" type="scale" values="1;1.02;1" dur="3s" repeatCount="indefinite" transform-origin="50 55"/></g></g>`; 
+            } 
+            else if (nianCount < 10000) { 
+                lotusContent = `<g filter="url(#holyGlow)"><path d="M50 68 C 75 50, 75 35, 70 30 C 60 45, 55 60, 50 68" fill="url(#metalGold)"/><path d="M50 68 C 25 50, 25 35, 30 30 C 40 45, 45 60, 50 68" fill="url(#metalGold)"/><path d="M50 28 C 65 48, 58 68, 50 72 C 42 68, 35 48, 50 28" fill="url(#pureGold)"/></g>`; 
+            } 
+            else if (nianCount < 100000) { 
+                lotusContent = `<g filter="url(#holyGlow)" transform="translate(0, -2)"><path d="M50 70 C 80 55, 85 40, 75 35 C 65 50, 55 60, 50 70" fill="url(#metalGold)"/><path d="M50 70 C 20 55, 15 40, 25 35 C 35 50, 45 60, 50 70" fill="url(#metalGold)"/><path d="M50 70 C 65 45, 65 30, 60 25 C 55 45, 52 60, 50 70" fill="url(#pureGold)"/><path d="M50 70 C 35 45, 35 30, 40 25 C 45 45, 48 60, 50 70" fill="url(#pureGold)"/><path d="M50 20 C 62 40, 56 65, 50 72 C 44 65, 38 40, 50 20" fill="#fff"/></g>`; 
+            } 
+            else { 
+                lotusContent = `<g filter="url(#holyGlow)" transform="translate(0, -4)"><path d="M50 75 C 90 65, 95 45, 85 40 C 75 55, 60 65, 50 75" fill="url(#metalGold)"/><path d="M50 75 C 10 65, 5 45, 15 40 C 25 55, 40 65, 50 75" fill="url(#metalGold)"/><path d="M50 73 C 80 50, 80 30, 70 25 C 60 45, 55 60, 50 73" fill="url(#pureGold)"/><path d="M50 73 C 20 50, 20 30, 30 25 C 40 45, 45 60, 50 73" fill="url(#pureGold)"/><path d="M50 72 C 65 40, 65 20, 58 15 C 54 35, 52 55, 50 72" fill="#fff"/><path d="M50 72 C 35 40, 35 20, 42 15 C 46 35, 48 55, 50 72" fill="#fff"/><path d="M50 12 C 60 35, 55 60, 50 70 C 45 60, 40 35, 50 12" fill="url(#pureGold)"/><circle cx="50" cy="55" r="4" fill="#fff" filter="drop-shadow(0 0 5px #fff)"><animate attributeName="r" values="3.5;4.5;3.5" dur="2s" repeatCount="indefinite"/></circle></g>`; 
+            }
+            return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">${defs}${bgContent}${lotusContent}</svg>`;
+        }
+
+        // 把原始 SVG 加上討論區專屬的排版樣式
+        function getFormattedIcon(rankName, nianCount) {
+            if (!rankName) return '';
+            // ✨ 在這裡呼叫升級版的中英雙語辨識系統
+            let rawSvg = getLotusSVG(getRankType(rankName), nianCount);
+            return rawSvg.replace('<svg ', '<svg width="20" height="20" style="margin-right:6px; filter: drop-shadow(0 0 3px rgba(212,175,55,0.4));" ');
+        }
+
         document.getElementById('post-btn').onclick = () => {
-            // ✨ 修復：移除了阻擋發文的限制，不再卡死！
-            
             const m = document.getElementById('mm').value.trim();
-            const n = document.getElementById('nn').value.trim() || defaultName;
+            const rawName = document.getElementById('nn').value.trim();
+            const n = rawName || defaultPostName;
             
-            // ✨ 替換為琉璃提示框
-            if(!m) return showAlert("請先填寫心得內容喔！\nPlease enter text!");
+            const alertMsg = (lang === 'en') ? "Please enter text!" : "請先填寫心得內容喔！\nPlease enter text!";
+            if(!m) return showAlert(alertMsg);
             
             const btn = document.getElementById('post-btn');
             const originalBtnHTML = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = `<span style="font-size: 1.05rem; letter-spacing: 4px; font-weight: bold;">傳送中...</span>`;
+            
+            const loadingText = (lang === 'en') ? "Sending..." : "傳送中...";
+            btn.innerHTML = `<span style="font-size: 1.05rem; letter-spacing: 4px; font-weight: bold;">${loadingText}</span>`;
             
             ref.push({ 
                 n: n, 
@@ -337,9 +423,10 @@
                 nian: userNian
             }).then(() => {
                 document.getElementById('mm').value = "";
-                localStorage.setItem('lotus_forum_name', n);
+                if (rawName) localStorage.setItem('lotus_forum_name', rawName);
             }).catch(err => {
-                showAlert("發佈失敗！可能是網路不穩\n(錯誤碼: " + err.message + ")");
+                const failMsg = (lang === 'en') ? "Failed! Check your network." : "發佈失敗！可能是網路不穩";
+                showAlert(failMsg + "\n(Error: " + err.message + ")");
             }).finally(() => {
                 btn.disabled = false;
                 btn.innerHTML = originalBtnHTML;
@@ -362,14 +449,16 @@
                             if(r.ty === 'flower') { sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#FFB6C1" stroke="#FF69B4" stroke-width="1.5"><path d="M12 22c0 0 5-6 5-10s-5-8-5-8-5 6-5 8 5 10 5 10z"/><path d="M12 22c0 0 10-4 10-10s-5-4-10 0"/><path d="M12 22c0 0-10-4-10-10s5-4 10 0"/></svg>`; }
                             if(r.ty === 'chant')  { sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8BA89C" stroke-width="2.5"><circle cx="12" cy="12" r="8" stroke-dasharray="4 4"/><circle cx="12" cy="22" r="3" fill="#D4AF37" stroke="none"/></svg>`; }
                             
-                            const replyRankDisplay = r.rank ? `<span style="color:var(--cyan); font-size:0.75rem; margin-left:8px; opacity:0.8;">[ ${r.rank} · ${r.nian || 0} ]</span>` : '';
+                            const replyIcon = getFormattedIcon(r.rank, r.nian || 0);
+                            const replyRankDisplay = r.rank ? `<span style="display:flex; align-items:center; color:var(--cyan); font-size:0.75rem; margin-left:8px; opacity:0.9;">${replyIcon}[ ${r.rank} · ${r.nian || 0} ]</span>` : '';
                             
                             rs += `<div class="reply-item">
                                     <span style="display:flex; align-items:center; justify-content:center; margin-top:2px;">${sym}</span>
                                     <div>
-                                        <span style="color:var(--gold); font-size:0.85rem; font-weight:bold;">${r.u}</span>
-                                        ${replyRankDisplay}
-                                        <br>
+                                        <div style="display:flex; align-items:center; flex-wrap:wrap;">
+                                            <span style="color:var(--gold); font-size:0.85rem; font-weight:bold;">${r.u}</span>
+                                            ${replyRankDisplay}
+                                        </div>
                                         <span style="color:#ddd;">${r.m}</span>
                                     </div>
                                    </div>`;
@@ -378,13 +467,22 @@
 
                     let deleteBtnHTML = "";
                     if (currentUserUid && item.uid === currentUserUid && !currentUserUid.startsWith('guest_')) {
-                        deleteBtnHTML = `<button class="btn-delete" onclick="delPost('${id}')">刪除 / Del</button>`;
+                        const delText = (lang === 'en') ? "Del" : "刪除 / Del";
+                        deleteBtnHTML = `<button class="btn-delete" onclick="delPost('${id}')">${delText}</button>`;
                     }
 
-                    const rankDisplay = item.rank ? `<span style="color:var(--cyan); font-size:0.75rem; margin-left:8px; opacity:0.8;">[ ${item.rank} · ${item.nian || 0} ]</span>` : '';
+                    const mainIcon = getFormattedIcon(item.rank, item.nian || 0);
+                    const rankDisplay = item.rank ? `<span style="display:flex; align-items:center; color:var(--cyan); font-size:0.75rem; margin-left:8px; opacity:0.9;">${mainIcon}[ ${item.rank} · ${item.nian || 0} ]</span>` : '';
 
                     const card = document.createElement('div');
                     card.className = 'post-card';
+                    
+                    const replyPlaceholder = (lang === 'en') ? "Write a reply..." : "寫下您的共鳴或祝福... / Reply...";
+                    const gasshoText = (lang === 'en') ? "Gassho" : "合十";
+                    const praiseText = (lang === 'en') ? "Praise" : "讚歎";
+                    const flowerText = (lang === 'en') ? "Offer" : "供花";
+                    const chantText = (lang === 'en') ? "Chant" : "念佛";
+
                     card.innerHTML = `
                         <div class="post-header">
                             <div style="display:flex; align-items:center; flex-wrap:wrap;">
@@ -398,13 +496,13 @@
                         <div class="re-list">${rs}</div>
                         
                         <div class="action-wrap">
-                            <input type="text" id="i-${id}" class="reply-input" placeholder="寫下您的共鳴或祝福... / Reply...">
+                            <input type="text" id="i-${id}" class="reply-input" placeholder="${replyPlaceholder}">
                             
                             <div class="reaction-grid">
-                                <button class="btn-act" onclick="re('${id}','gassho')"><svg viewBox="0 0 24 24"><path d="M12 22s-5-4.5-5-11.5S12 2 12 2s5 3.5 5 10.5S12 22 12 22z"/><path d="M12 2v20" stroke-opacity="0.3"/></svg><span class="act-zh">合十</span><span class="act-en">Gassho</span></button>
-                                <button class="btn-act" onclick="re('${id}','praise')"><svg viewBox="0 0 24 24"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5Z"/></svg><span class="act-zh">讚歎</span><span class="act-en">Praise</span></button>
-                                <button class="btn-act" onclick="re('${id}','flower')"><svg viewBox="0 0 24 24"><path d="M12 22c0 0 5-6 5-10s-5-8-5-8-5 6-5 8 5 10 5 10z"/><path d="M12 22c0 0 10-4 10-10s-5-4-10 0"/><path d="M12 22c0 0-10-4-10-10s5-4 10 0"/></svg><span class="act-zh">供花</span><span class="act-en">Offer</span></button>
-                                <button class="btn-act" onclick="re('${id}','chant')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-dasharray="4 4"/><circle cx="12" cy="22" r="2" fill="currentColor" stroke="none"/></svg><span class="act-zh">念佛</span><span class="act-en">Chant</span></button>
+                                <button class="btn-act" onclick="re('${id}','gassho')"><svg viewBox="0 0 24 24"><path d="M12 22s-5-4.5-5-11.5S12 2 12 2s5 3.5 5 10.5S12 22 12 22z"/><path d="M12 2v20" stroke-opacity="0.3"/></svg><span class="act-zh">${gasshoText}</span></button>
+                                <button class="btn-act" onclick="re('${id}','praise')"><svg viewBox="0 0 24 24"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5Z"/></svg><span class="act-zh">${praiseText}</span></button>
+                                <button class="btn-act" onclick="re('${id}','flower')"><svg viewBox="0 0 24 24"><path d="M12 22c0 0 5-6 5-10s-5-8-5-8-5 6-5 8 5 10 5 10z"/><path d="M12 22c0 0 10-4 10-10s-5-4-10 0"/><path d="M12 22c0 0-10-4-10-10s5-4 10 0"/></svg><span class="act-zh">${flowerText}</span></button>
+                                <button class="btn-act" onclick="re('${id}','chant')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-dasharray="4 4"/><circle cx="12" cy="22" r="2" fill="currentColor" stroke="none"/></svg><span class="act-zh">${chantText}</span></button>
                             </div>
                         </div>
                     `;
@@ -414,15 +512,14 @@
         }
 
         window.re = (id, ty) => {
-            // ✨ 修復：移除了互動阻擋限制
-            
             const inputField = document.getElementById(`i-${id}`);
             const m = inputField.value.trim();
+            const alertMsg = (lang === 'en') ? "Please enter text!" : "請先寫下您的共鳴喔！\nPlease enter text!";
+            if(!m) return showAlert(alertMsg);
             
-            // ✨ 替換為琉璃提示框
-            if(!m) return showAlert("請先寫下您的共鳴喔！\nPlease enter text!");
+            const rawName = document.getElementById('nn').value.trim();
+            const n = rawName || defaultReplyName; 
             
-            const n = document.getElementById('nn').value.trim() || defaultName;
             inputField.disabled = true;
 
             ref.child(id).child('rs').push({ 
@@ -433,19 +530,21 @@
                 nian: userNian
             }).then(() => {
                 inputField.value = ""; 
-                localStorage.setItem('lotus_forum_name', n); 
+                if (rawName) localStorage.setItem('lotus_forum_name', rawName); 
             }).catch(err => {
-                showAlert("互動失敗！可能是網路不穩\n(錯誤碼: " + err.message + ")");
+                const failMsg = (lang === 'en') ? "Failed! Check your network." : "互動失敗！可能是網路不穩";
+                showAlert(failMsg + "\n(Error: " + err.message + ")");
             }).finally(() => {
                 inputField.disabled = false;
             });
         };
 
         window.delPost = (id) => {
-            // 這裡保留原生 confirm，因為這通常是系統層級的重要確認
-            if(confirm("確定要刪除這篇結緣留言嗎？ / Are you sure you want to delete this post?")) {
+            const confirmMsg = (lang === 'en') ? "Are you sure you want to delete this post?" : "確定要刪除這篇結緣留言嗎？ / Are you sure you want to delete this post?";
+            if(confirm(confirmMsg)) {
                 ref.child(id).remove().catch(err => {
-                    showAlert("刪除失敗！權限不足或連線異常。\n(錯誤碼: " + err.message + ")");
+                    const failMsg = (lang === 'en') ? "Failed to delete!" : "刪除失敗！權限不足或連線異常。";
+                    showAlert(failMsg + "\n(Error: " + err.message + ")");
                 });
             }
         };

@@ -6,20 +6,15 @@
     <title>菩提客棧 ． Lotus Forum</title>
     
     <script>
-        // 讀取網址列的參數
         const urlParams = new URLSearchParams(window.location.search);
         const lang = urlParams.get('lang');
-        
-        // 建立 link 標籤
         const manifestLink = document.createElement('link');
         manifestLink.rel = 'manifest';
-        
         if (lang === 'en') {
             manifestLink.href = 'manifest_en.json';
         } else {
             manifestLink.href = 'manifest.json';
         }
-        
         document.head.appendChild(manifestLink);
     </script>
 
@@ -138,9 +133,40 @@
             cursor: pointer; transition: 0.3s; margin-left: 10px;
         }
         .btn-delete:hover { background: rgba(255, 50, 50, 0.2); border-color: #ff6b6b; }
+
+        /* ✨ 新增：琉璃金屬質感自訂提示框 (Glassmorphism Alert) */
+        .glass-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px);
+            z-index: 1000; display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .glass-overlay.show { opacity: 1; }
+        .glass-box {
+            background: rgba(18, 22, 28, 0.85); border: 1px solid var(--border);
+            padding: 30px 25px; border-radius: 20px; text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8); max-width: 80%; width: 320px;
+            transform: translateY(20px); transition: transform 0.3s ease;
+        }
+        .glass-overlay.show .glass-box { transform: translateY(0); }
+        .glass-text { color: var(--gold-br); font-size: 1.05rem; margin-bottom: 25px; line-height: 1.6; font-weight: 300; letter-spacing: 1px; }
+        .glass-btn {
+            background: linear-gradient(135deg, #D4AF37 0%, #8A6D3B 100%);
+            color: #000; border: none; padding: 10px 30px; border-radius: 12px;
+            font-size: 0.9rem; font-weight: bold; cursor: pointer; letter-spacing: 2px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.2s;
+        }
+        .glass-btn:active { transform: translateY(2px); }
     </style>
 </head>
 <body>
+
+    <div class="glass-overlay" id="pure-alert">
+        <div class="glass-box">
+            <div class="glass-text" id="pure-alert-msg"></div>
+            <button class="glass-btn" onclick="closeAlert()">確 定</button>
+        </div>
+    </div>
 
     <div class="top-nav">
         <button class="btn-back" onclick="history.back()">
@@ -211,6 +237,19 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
+        // ✨ 新增：琉璃提示框的控制函數
+        function showAlert(msg) {
+            document.getElementById('pure-alert-msg').innerHTML = msg.replace(/\n/g, '<br>');
+            const overlay = document.getElementById('pure-alert');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('show'), 10);
+        }
+        function closeAlert() {
+            const overlay = document.getElementById('pure-alert');
+            overlay.classList.remove('show');
+            setTimeout(() => overlay.style.display = 'none', 300);
+        }
+
         const cfg = {
             apiKey: "AIzaSyCtttGd8yvbcEq17P75cnh52Pxgcc5ak_4",
             authDomain: "pureland-system.firebaseapp.com",
@@ -225,11 +264,10 @@
         const dbRef = firebase.database();
         const ref = dbRef.ref('posts_clean_v9');
         
-        // 預設未取得正式身分證
-        let currentUserUid = null;
+        // ✨ 重大修復：恢復給予臨時憑證，絕不讓行者卡在連線中！
+        let currentUserUid = "guest_" + Math.random().toString(36).substr(2, 9);
         let isBoardLoaded = false;
 
-        // 讀取本機資料 (LocalStorage)
         let localDB = null;
         try {
             const dbKey = (lang === 'en') ? 'PX_EN_V15.0' : 'PX_V15.0';
@@ -242,23 +280,19 @@
         const userNian = (localDB && localDB.totalNian) ? localDB.totalNian : 0;
         const defaultName = (lang === 'en') ? 'Practitioner' : '十方善信';
 
-        // ✨ 優化：載入上次使用的名字
         const savedName = localStorage.getItem('lotus_forum_name');
         if (savedName) {
             document.getElementById('nn').value = savedName;
         }
 
-        // 啟動 Firebase 匿名驗證
         firebase.auth().signInAnonymously().catch((error) => {
             console.warn("匿名登入異常:", error);
         });
 
-        // 監聽登入狀態
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
+                // 如果成功拿到正式憑證，就替換掉臨時憑證
                 currentUserUid = user.uid; 
-            } else {
-                currentUserUid = null;
             }
             
             if (!isBoardLoaded) {
@@ -280,18 +314,15 @@
             return s.replace(/\n/g, "<br>");
         }
 
-        // 發文邏輯
         document.getElementById('post-btn').onclick = () => {
-            if (!currentUserUid) {
-                alert("菩提客棧連線中，請稍候片刻再發布！ / Connecting, please wait...");
-                return;
-            }
-
+            // ✨ 修復：移除了阻擋發文的限制，不再卡死！
+            
             const m = document.getElementById('mm').value.trim();
             const n = document.getElementById('nn').value.trim() || defaultName;
-            if(!m) return;
             
-            // ✨ 優化：防止重複點擊
+            // ✨ 替換為琉璃提示框
+            if(!m) return showAlert("請先填寫心得內容喔！\nPlease enter text!");
+            
             const btn = document.getElementById('post-btn');
             const originalBtnHTML = btn.innerHTML;
             btn.disabled = true;
@@ -306,19 +337,16 @@
                 nian: userNian
             }).then(() => {
                 document.getElementById('mm').value = "";
-                // ✨ 優化：記住法號
                 localStorage.setItem('lotus_forum_name', n);
             }).catch(err => {
-                alert("發佈失敗！(錯誤碼: " + err.message + ")");
+                showAlert("發佈失敗！可能是網路不穩\n(錯誤碼: " + err.message + ")");
             }).finally(() => {
-                // 恢復按鈕狀態
                 btn.disabled = false;
                 btn.innerHTML = originalBtnHTML;
             });
         };
 
         function loadBoard() {
-            // ✨ 優化：限制只載入最新的 50 篇，節省流量與提升效能
             ref.limitToLast(50).on('value', snap => {
                 const b = document.getElementById('board'); b.innerHTML = "";
                 const data = snap.val(); if(!data) return;
@@ -334,7 +362,6 @@
                             if(r.ty === 'flower') { sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#FFB6C1" stroke="#FF69B4" stroke-width="1.5"><path d="M12 22c0 0 5-6 5-10s-5-8-5-8-5 6-5 8 5 10 5 10z"/><path d="M12 22c0 0 10-4 10-10s-5-4-10 0"/><path d="M12 22c0 0-10-4-10-10s5-4 10 0"/></svg>`; }
                             if(r.ty === 'chant')  { sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8BA89C" stroke-width="2.5"><circle cx="12" cy="12" r="8" stroke-dasharray="4 4"/><circle cx="12" cy="22" r="3" fill="#D4AF37" stroke="none"/></svg>`; }
                             
-                            // ✨ 修復：正確顯示回覆者的名字、位階與念佛數
                             const replyRankDisplay = r.rank ? `<span style="color:var(--cyan); font-size:0.75rem; margin-left:8px; opacity:0.8;">[ ${r.rank} · ${r.nian || 0} ]</span>` : '';
                             
                             rs += `<div class="reply-item">
@@ -350,7 +377,7 @@
                     }
 
                     let deleteBtnHTML = "";
-                    if (currentUserUid && item.uid === currentUserUid) {
+                    if (currentUserUid && item.uid === currentUserUid && !currentUserUid.startsWith('guest_')) {
                         deleteBtnHTML = `<button class="btn-delete" onclick="delPost('${id}')">刪除 / Del</button>`;
                     }
 
@@ -387,19 +414,15 @@
         }
 
         window.re = (id, ty) => {
-            if (!currentUserUid) {
-                alert("連線中，請稍候再互動！ / Connecting, please wait...");
-                return;
-            }
-
+            // ✨ 修復：移除了互動阻擋限制
+            
             const inputField = document.getElementById(`i-${id}`);
             const m = inputField.value.trim();
-            if(!m) return alert("請先輸入內容喔！ / Please enter text!");
             
-            // ✨ 修復：抓取目前輸入的名字與位階
+            // ✨ 替換為琉璃提示框
+            if(!m) return showAlert("請先寫下您的共鳴喔！\nPlease enter text!");
+            
             const n = document.getElementById('nn').value.trim() || defaultName;
-
-            // 暫停輸入框避免連點
             inputField.disabled = true;
 
             ref.child(id).child('rs').push({ 
@@ -410,19 +433,19 @@
                 nian: userNian
             }).then(() => {
                 inputField.value = ""; 
-                localStorage.setItem('lotus_forum_name', n); // 回覆也順便記憶法號
+                localStorage.setItem('lotus_forum_name', n); 
             }).catch(err => {
-                alert("互動失敗！(錯誤碼: " + err.message + ")");
+                showAlert("互動失敗！可能是網路不穩\n(錯誤碼: " + err.message + ")");
             }).finally(() => {
-                // 恢復輸入框
                 inputField.disabled = false;
             });
         };
 
         window.delPost = (id) => {
+            // 這裡保留原生 confirm，因為這通常是系統層級的重要確認
             if(confirm("確定要刪除這篇結緣留言嗎？ / Are you sure you want to delete this post?")) {
                 ref.child(id).remove().catch(err => {
-                    alert("刪除失敗！(錯誤碼: " + err.message + ")");
+                    showAlert("刪除失敗！權限不足或連線異常。\n(錯誤碼: " + err.message + ")");
                 });
             }
         };

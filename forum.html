@@ -14,14 +14,12 @@
         const manifestLink = document.createElement('link');
         manifestLink.rel = 'manifest';
         
-        // 如果網址有帶 ?lang=en，就載入英文版 manifest，否則預設載入中文版
         if (lang === 'en') {
             manifestLink.href = 'manifest_en.json';
         } else {
             manifestLink.href = 'manifest.json';
         }
         
-        // 將標籤塞入 head 中
         document.head.appendChild(manifestLink);
     </script>
 
@@ -51,7 +49,6 @@
         .realm-inner { transform-origin: center; animation: rotateRealm 100s linear infinite; }
         @keyframes rotateRealm { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* ✨ 智慧返回按鈕 */
         .top-nav {
             position: fixed; top: 0; left: 0; width: 100%; padding: 15px 20px;
             background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
@@ -91,6 +88,7 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
         }
         .btn-post:active { transform: translateY(2px); box-shadow: 0 0 15px var(--gold); }
+        .btn-post:disabled { opacity: 0.7; cursor: not-allowed; }
 
         .post-card {
             background: var(--card); border: 1px solid var(--border);
@@ -119,6 +117,7 @@
             box-sizing: border-box; transition: 0.3s;
         }
         .reply-input:focus { border-color: var(--gold); }
+        .reply-input:disabled { opacity: 0.5; }
         
         .reaction-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
         .btn-act {
@@ -133,7 +132,6 @@
 
         .reply-item { padding: 10px 20px; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; align-items: flex-start; gap: 8px; }
 
-        /* ✨ 專屬刪除按鈕 */
         .btn-delete {
             background: rgba(255, 50, 50, 0.1); border: 1px solid rgba(255, 50, 50, 0.3);
             color: #ff6b6b; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem;
@@ -219,7 +217,7 @@
             databaseURL: "https://pureland-system-default-rtdb.firebaseio.com",
             projectId: "pureland-system"
         };
-        // 確保 Firebase 只初始化一次
+        
         if (!firebase.apps.length) {
             firebase.initializeApp(cfg);
         }
@@ -227,48 +225,47 @@
         const dbRef = firebase.database();
         const ref = dbRef.ref('posts_clean_v9');
         
-        // ✨ 強韌化：配發預設的臨時 ID，防止載入或存檔失敗
-        let currentUserUid = "guest_" + Math.random().toString(36).substr(2, 9);
+        // 預設未取得正式身分證
+        let currentUserUid = null;
         let isBoardLoaded = false;
 
-        // ✨ 2. 讀取本機資料 (LocalStorage)
+        // 讀取本機資料 (LocalStorage)
         let localDB = null;
         try {
-            // 依照網址的 ?lang=en 決定去抓哪一把鑰匙
             const dbKey = (lang === 'en') ? 'PX_EN_V15.0' : 'PX_V15.0';
             localDB = JSON.parse(localStorage.getItem(dbKey));
         } catch(e) {
             console.log("未找到本機修行紀錄");
         }
 
-        // ✨ 3. 設定位階、念佛數與預設名稱。若無資料 (外人)，給予「雲遊行者」預設值
         const userRank = (localDB && localDB.currentRank) ? localDB.currentRank : (lang === 'en' ? 'Wanderer' : '雲遊行者');
         const userNian = (localDB && localDB.totalNian) ? localDB.totalNian : 0;
         const defaultName = (lang === 'en') ? 'Practitioner' : '十方善信';
 
-        // ✨ 4. 啟動 Firebase 匿名驗證 (獲取無記名訪客證)
+        // ✨ 優化：載入上次使用的名字
+        const savedName = localStorage.getItem('lotus_forum_name');
+        if (savedName) {
+            document.getElementById('nn').value = savedName;
+        }
+
+        // 啟動 Firebase 匿名驗證
         firebase.auth().signInAnonymously().catch((error) => {
-            console.warn("匿名登入失敗 (可能後台尚未啟用)，將以一般模式載入客棧:", error);
-            // 就算失敗，也強制載入留言板！
-            if (!isBoardLoaded) {
-                loadBoard();
-                isBoardLoaded = true;
-            }
+            console.warn("匿名登入異常:", error);
         });
 
-        // 監聽登入狀態，拿到正式身分證後更新畫面
+        // 監聽登入狀態
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
-                currentUserUid = user.uid; // 拿到真正的 uid 了
+                currentUserUid = user.uid; 
+            } else {
+                currentUserUid = null;
             }
             
-            // 確保無論如何都會執行載入
             if (!isBoardLoaded) {
                 loadBoard();
                 isBoardLoaded = true;
             } else {
-                // 如果一開始沒拿到 uid 先載入了，後來才拿到 uid，就重新渲染一次以顯示刪除按鈕
-                loadBoard();
+                loadBoard(); 
             }
         });
 
@@ -285,11 +282,21 @@
 
         // 發文邏輯
         document.getElementById('post-btn').onclick = () => {
+            if (!currentUserUid) {
+                alert("菩提客棧連線中，請稍候片刻再發布！ / Connecting, please wait...");
+                return;
+            }
+
             const m = document.getElementById('mm').value.trim();
             const n = document.getElementById('nn').value.trim() || defaultName;
             if(!m) return;
             
-            // ✨ 5. 將使用者的 uid、位階 (rank) 與念佛數 (nian) 一起存入資料庫
+            // ✨ 優化：防止重複點擊
+            const btn = document.getElementById('post-btn');
+            const originalBtnHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span style="font-size: 1.05rem; letter-spacing: 4px; font-weight: bold;">傳送中...</span>`;
+            
             ref.push({ 
                 n: n, 
                 m: m, 
@@ -297,14 +304,22 @@
                 uid: currentUserUid,
                 rank: userRank,
                 nian: userNian
+            }).then(() => {
+                document.getElementById('mm').value = "";
+                // ✨ 優化：記住法號
+                localStorage.setItem('lotus_forum_name', n);
+            }).catch(err => {
+                alert("發佈失敗！(錯誤碼: " + err.message + ")");
+            }).finally(() => {
+                // 恢復按鈕狀態
+                btn.disabled = false;
+                btn.innerHTML = originalBtnHTML;
             });
-            document.getElementById('mm').value = "";
-           
         };
 
-              // 將讀取資料庫的邏輯包裝成函式
         function loadBoard() {
-            ref.on('value', snap => {
+            // ✨ 優化：限制只載入最新的 50 篇，節省流量與提升效能
+            ref.limitToLast(50).on('value', snap => {
                 const b = document.getElementById('board'); b.innerHTML = "";
                 const data = snap.val(); if(!data) return;
                 
@@ -314,36 +329,31 @@
                     if(item.rs) {
                         Object.values(item.rs).forEach(r => {
                             let sym = "";
+                            if(r.ty === 'gassho') { sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#F3E5AB" stroke="#D4AF37" stroke-width="1.5"><path d="M12 22s-5-4.5-5-11.5S12 2 12 2s5 3.5 5 10.5S12 22 12 22z"/><path d="M12 2v20" stroke="#D4AF37" stroke-opacity="0.5"/></svg>`; }
+                            if(r.ty === 'praise') { sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#FFD700" stroke="#FFA500" stroke-width="1.5"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5Z"/></svg>`; }
+                            if(r.ty === 'flower') { sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#FFB6C1" stroke="#FF69B4" stroke-width="1.5"><path d="M12 22c0 0 5-6 5-10s-5-8-5-8-5 6-5 8 5 10 5 10z"/><path d="M12 22c0 0 10-4 10-10s-5-4-10 0"/><path d="M12 22c0 0-10-4-10-10s5-4 10 0"/></svg>`; }
+                            if(r.ty === 'chant')  { sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8BA89C" stroke-width="2.5"><circle cx="12" cy="12" r="8" stroke-dasharray="4 4"/><circle cx="12" cy="22" r="3" fill="#D4AF37" stroke="none"/></svg>`; }
                             
-                            // ✨ 替換為彩色 SVG 向量圖示
-                            if(r.ty === 'gassho') { 
-                                sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#F3E5AB" stroke="#D4AF37" stroke-width="1.5"><path d="M12 22s-5-4.5-5-11.5S12 2 12 2s5 3.5 5 10.5S12 22 12 22z"/><path d="M12 2v20" stroke="#D4AF37" stroke-opacity="0.5"/></svg>`; 
-                            }
-                            if(r.ty === 'praise') { 
-                                sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#FFD700" stroke="#FFA500" stroke-width="1.5"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5Z"/></svg>`; 
-                            }
-                            if(r.ty === 'flower') { 
-                                sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#FFB6C1" stroke="#FF69B4" stroke-width="1.5"><path d="M12 22c0 0 5-6 5-10s-5-8-5-8-5 6-5 8 5 10 5 10z"/><path d="M12 22c0 0 10-4 10-10s-5-4-10 0"/><path d="M12 22c0 0-10-4-10-10s5-4 10 0"/></svg>`; 
-                            }
-                            if(r.ty === 'chant')  { 
-                                sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8BA89C" stroke-width="2.5"><circle cx="12" cy="12" r="8" stroke-dasharray="4 4"/><circle cx="12" cy="22" r="3" fill="#D4AF37" stroke="none"/></svg>`; 
-                            }
+                            // ✨ 修復：正確顯示回覆者的名字、位階與念佛數
+                            const replyRankDisplay = r.rank ? `<span style="color:var(--cyan); font-size:0.75rem; margin-left:8px; opacity:0.8;">[ ${r.rank} · ${r.nian || 0} ]</span>` : '';
                             
-                            // 調整了圖示外框的對齊方式，讓它跟文字更貼齊
                             rs += `<div class="reply-item">
                                     <span style="display:flex; align-items:center; justify-content:center; margin-top:2px;">${sym}</span>
-                                    <div><span style="color:var(--cyan); font-size:0.8rem;">${r.u}</span><br><span style="color:#ddd;">${r.m}</span></div>
+                                    <div>
+                                        <span style="color:var(--gold); font-size:0.85rem; font-weight:bold;">${r.u}</span>
+                                        ${replyRankDisplay}
+                                        <br>
+                                        <span style="color:#ddd;">${r.m}</span>
+                                    </div>
                                    </div>`;
                         });
                     }
 
-                    // 判斷這篇留言是否為當前使用者發的，若是，則產生「刪除」按鈕
                     let deleteBtnHTML = "";
-                    if (item.uid === currentUserUid) {
+                    if (currentUserUid && item.uid === currentUserUid) {
                         deleteBtnHTML = `<button class="btn-delete" onclick="delPost('${id}')">刪除 / Del</button>`;
                     }
 
-                    // ✨ 6. 在介面上顯示出位階與資糧數
                     const rankDisplay = item.rank ? `<span style="color:var(--cyan); font-size:0.75rem; margin-left:8px; opacity:0.8;">[ ${item.rank} · ${item.nian || 0} ]</span>` : '';
 
                     const card = document.createElement('div');
@@ -377,18 +387,45 @@
         }
 
         window.re = (id, ty) => {
-            const m = document.getElementById(`i-${id}`).value.trim();
+            if (!currentUserUid) {
+                alert("連線中，請稍候再互動！ / Connecting, please wait...");
+                return;
+            }
+
+            const inputField = document.getElementById(`i-${id}`);
+            const m = inputField.value.trim();
             if(!m) return alert("請先輸入內容喔！ / Please enter text!");
-            ref.child(id).child('rs').push({ u: '行者 / User', m, ty });
-            document.getElementById(`i-${id}`).value = ""; // 送出後清空輸入框
+            
+            // ✨ 修復：抓取目前輸入的名字與位階
+            const n = document.getElementById('nn').value.trim() || defaultName;
+
+            // 暫停輸入框避免連點
+            inputField.disabled = true;
+
+            ref.child(id).child('rs').push({ 
+                u: n, 
+                m: m, 
+                ty: ty,
+                rank: userRank,
+                nian: userNian
+            }).then(() => {
+                inputField.value = ""; 
+                localStorage.setItem('lotus_forum_name', n); // 回覆也順便記憶法號
+            }).catch(err => {
+                alert("互動失敗！(錯誤碼: " + err.message + ")");
+            }).finally(() => {
+                // 恢復輸入框
+                inputField.disabled = false;
+            });
         };
 
-        // 刪除留言功能
         window.delPost = (id) => {
             if(confirm("確定要刪除這篇結緣留言嗎？ / Are you sure you want to delete this post?")) {
-                ref.child(id).remove();
+                ref.child(id).remove().catch(err => {
+                    alert("刪除失敗！(錯誤碼: " + err.message + ")");
+                });
             }
         };
     </script>
 </body>
-</html> 
+</html>

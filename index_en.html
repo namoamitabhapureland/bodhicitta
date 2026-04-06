@@ -1815,41 +1815,193 @@ function speak(t, r) {
     setTimeout(() => { window.speechSynthesis.speak(m); }, 50);
 }
 
-function getLotusSVG(rankType, nianCount = 0) {
-    const gold = "#f3e5ab"; const darkGold = "#d4af37";
-    let defs = `<defs><radialGradient id="pureGold" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="1"/><stop offset="30%" stop-color="${gold}" stop-opacity="1"/><stop offset="100%" stop-color="${darkGold}" stop-opacity="1"/></radialGradient><linearGradient id="metalGold" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffeba8"/><stop offset="50%" stop-color="#d4af37"/><stop offset="100%" stop-color="#8a6d1c"/></linearGradient><radialGradient id="darkHole" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#000" stop-opacity="0.9"/><stop offset="65%" stop-color="#0a0a0a" stop-opacity="0.7"/><stop offset="100%" stop-color="transparent" stop-opacity="0"/></radialGradient><filter id="holyGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.5" result="blur" /><feComposite in="SourceGraphic" in2="blur" operator="over" /></filter></defs>`;
-    let bgContent = `<circle cx="50" cy="50" r="38" fill="url(#darkHole)"/>`;
+function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
+  // ── 共用漸層與濾鏡定義 ──
+  const sharedDefs = `
+    <defs>
+      <radialGradient id="rg-pure" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="30%" stop-color="#fff8dc"/>
+        <stop offset="100%" stop-color="#d4af37"/>
+      </radialGradient>
+      <linearGradient id="lg-metal" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ffeba8"/>
+        <stop offset="50%" stop-color="#d4af37"/>
+        <stop offset="100%" stop-color="#8a6d1c"/>
+      </linearGradient>
+      <linearGradient id="lg-petal-cyan" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#eafff8"/>
+        <stop offset="60%" stop-color="#8ce6c8"/>
+        <stop offset="100%" stop-color="#349b7d"/>
+      </linearGradient>
+      <linearGradient id="lg-petal-silver" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="50%" stop-color="#e0e0e0"/>
+        <stop offset="100%" stop-color="#8a8a8a"/>
+      </linearGradient>
+      <linearGradient id="lg-petal-gold" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#fffeea"/>
+        <stop offset="50%" stop-color="#f3d052"/>
+        <stop offset="100%" stop-color="#b8860b"/>
+      </linearGradient>
+      <linearGradient id="lg-ruby" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ffe6eb"/>
+        <stop offset="50%" stop-color="#ff4d79"/>
+        <stop offset="100%" stop-color="#8b0000"/>
+      </linearGradient>
+      <radialGradient id="rg-void" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#111111" stop-opacity="0.95"/>
+        <stop offset="60%" stop-color="#0a0500" stop-opacity="0.8"/>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="glow-gold" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="glow-soft" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="1.5" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="glow-strong" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="4.5" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+  `;
 
-    switch(rankType) {
-        case 'Faith': 
-            bgContent += `<g opacity="0.85"><ellipse cx="50" cy="72" rx="28" ry="8" fill="none" stroke="#8ba89c" stroke-width="1" opacity="0.4"><animate attributeName="rx" values="15;32;15" dur="4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0;0.6" dur="4s" repeatCount="indefinite"/></ellipse><ellipse cx="50" cy="72" rx="16" ry="4" fill="none" stroke="url(#pureGold)" stroke-width="1.5" filter="url(#holyGlow)"/><path d="M 32 68 Q 50 85 68 68" fill="none" stroke="url(#metalGold)" stroke-width="2" opacity="0.8" filter="url(#holyGlow)"/><circle cx="50" cy="72" r="1.5" fill="#fff"/></g>`; 
-            break;
-        case 'Abiding': 
-            bgContent += `<g fill="url(#metalGold)" opacity="0.85"><polygon points="32,72 68,72 73,78 27,78" /><polygon points="36,68 64,68 68,72 32,72" opacity="0.7"/><rect x="27" y="78" width="46" height="2" fill="#fff" opacity="0.5"/></g>`; 
-            break;
-        case 'Practice': 
-            bgContent += `<g stroke="#e0e0e0" opacity="0.7"><circle cx="50" cy="50" r="30" fill="none" stroke-width="1" stroke-dasharray="2 4"/><circle cx="50" cy="50" r="26" fill="none" stroke-width="0.5"/><g stroke-width="1.2">${[...Array(12)].map((_,i) => `<line x1="50" y1="50" x2="50" y2="20" transform="rotate(${i*30} 50 50)"/>`).join('')}</g><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="30s" repeatCount="indefinite"/></g>`; 
-            break;
-        case 'Dedication': 
-            bgContent += `<g stroke="#e6a8d7" fill="none" opacity="0.7"><g stroke-width="1"><rect x="26" y="26" width="48" height="48" transform="rotate(0 50 50)"/><rect x="26" y="26" width="48" height="48" transform="rotate(45 50 50)"/></g><circle cx="50" cy="50" r="34" stroke-width="0.5" stroke-dasharray="3 3"/><animateTransform attributeName="transform" type="rotate" from="360 50 50" to="0 50 50" dur="40s" repeatCount="indefinite"/></g>`; 
-            break;
-        case 'Bhumi': 
-            bgContent += `<g opacity="0.8"><circle cx="50" cy="50" r="38" fill="none" stroke="url(#pureGold)" stroke-width="0.5" stroke-dasharray="1 5"/>${[...Array(16)].map((_,i) => `<path d="M50 50 Q 68 22 50 12 Q 32 22 50 50" fill="none" stroke="#a8e6cf" stroke-width="0.5" opacity="0.6" transform="rotate(${i*22.5} 50 50)"/>`).join('')}<circle cx="50" cy="50" r="42" fill="none" stroke="#ff8b94" stroke-width="0.3"/><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="60s" repeatCount="indefinite"/></g><circle cx="50" cy="50" r="1.5" fill="#fff" filter="url(#holyGlow)"><animate attributeName="r" values="1.5;3;1.5" dur="3s" repeatCount="indefinite"/></circle>`; 
-            break;
-    }
+  // ── 背景虛空黑洞 ──
+  const voidBg = `
+    <circle cx="50" cy="50" r="45" fill="url(#rg-void)">
+      <animate attributeName="r" values="44;46;44" dur="6s" repeatCount="indefinite"/>
+    </circle>
+  `;
 
-    let lotusContent = "";
-    if (nianCount < 1000) { 
-        lotusContent = `<g><circle cx="50" cy="55" r="15" fill="url(#pureGold)" opacity="0.15" filter="url(#holyGlow)"><animate attributeName="r" values="12;18;12" dur="3s" repeatCount="indefinite"/></circle><g filter="url(#holyGlow)"><path d="M50 25 C 65 50, 58 70, 50 72 C 42 70, 35 50, 50 25" fill="url(#metalGold)"/><path d="M50 25 C 55 50, 53 70, 50 72 C 47 70, 45 50, 50 25" fill="url(#pureGold)"/><animateTransform attributeName="transform" type="scale" values="1;1.02;1" dur="3s" repeatCount="indefinite" transform-origin="50 55"/></g></g>`; 
-    } else if (nianCount < 10000) { 
-        lotusContent = `<g filter="url(#holyGlow)"><path d="M50 68 C 75 50, 75 35, 70 30 C 60 45, 55 60, 50 68" fill="url(#metalGold)"/><path d="M50 68 C 25 50, 25 35, 30 30 C 40 45, 45 60, 50 68" fill="url(#metalGold)"/><path d="M50 28 C 65 48, 58 68, 50 72 C 42 68, 35 48, 50 28" fill="url(#pureGold)"/></g>`; 
-    } else if (nianCount < 100000) { 
-        lotusContent = `<g filter="url(#holyGlow)" transform="translate(0, -2)"><path d="M50 70 C 80 55, 85 40, 75 35 C 65 50, 55 60, 50 70" fill="url(#metalGold)"/><path d="M50 70 C 20 55, 15 40, 25 35 C 35 50, 45 60, 50 70" fill="url(#metalGold)"/><path d="M50 70 C 65 45, 65 30, 60 25 C 55 45, 52 60, 50 70" fill="url(#pureGold)"/><path d="M50 70 C 35 45, 35 30, 40 25 C 45 45, 48 60, 50 70" fill="url(#pureGold)"/><path d="M50 20 C 62 40, 56 65, 50 72 C 44 65, 38 40, 50 20" fill="#fff"/></g>`; 
-    } else { 
-        lotusContent = `<g filter="url(#holyGlow)" transform="translate(0, -4)"><path d="M50 75 C 90 65, 95 45, 85 40 C 75 55, 60 65, 50 75" fill="url(#metalGold)"/><path d="M50 75 C 10 65, 5 45, 15 40 C 25 55, 40 65, 50 75" fill="url(#metalGold)"/><path d="M50 73 C 80 50, 80 30, 70 25 C 60 45, 55 60, 50 73" fill="url(#pureGold)"/><path d="M50 73 C 20 50, 20 30, 30 25 C 40 45, 45 60, 50 73" fill="url(#pureGold)"/><path d="M50 72 C 65 40, 65 20, 58 15 C 54 35, 52 55, 50 72" fill="#fff"/><path d="M50 72 C 35 40, 35 20, 42 15 C 46 35, 48 55, 50 72" fill="#fff"/><path d="M50 12 C 60 35, 55 60, 50 70 C 45 60, 40 35, 50 12" fill="url(#pureGold)"/><circle cx="50" cy="55" r="4" fill="#fff" filter="drop-shadow(0 0 5px #fff)"><animate attributeName="r" values="3.5;4.5;3.5" dur="2s" repeatCount="indefinite"/></circle></g>`; 
+  // ══════════════════════════════════════════════
+  //  底層：資糧位階背景 (Rank Background)
+  // ══════════════════════════════════════════════
+  let bgContent = '';
+  if (rankType === '信' || rankType === 'Faith') {
+    bgContent = `
+      <g opacity="0.8">
+        <ellipse cx="50" cy="72" rx="30" ry="8" fill="none" stroke="url(#lg-petal-cyan)" stroke-width="1.5">
+          <animate attributeName="rx" values="15;35;15" dur="4s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.8;0;0.8" dur="4s" repeatCount="indefinite"/>
+        </ellipse>
+        <ellipse cx="50" cy="72" rx="18" ry="4" fill="none" stroke="url(#rg-pure)" stroke-width="1.5" filter="url(#glow-soft)"/>
+      </g>`;
+  } else if (rankType === '住' || rankType === 'Abiding') {
+    bgContent = `
+      <g opacity="0.85">
+        <path d="M 50 15 L 68 72 L 32 72 Z" fill="url(#rg-pure)" opacity="0.15" filter="url(#glow-soft)"/>
+        <polygon points="25,78 75,78 70,72 30,72" fill="url(#lg-metal)"/>
+        <rect x="22" y="78" width="56" height="3" fill="#ffffff" opacity="0.6"/>
+      </g>`;
+  } else if (rankType === '行' || rankType === 'Practice') {
+    let spokes = '';
+    for(let i=0; i<12; i++) {
+      spokes += `<line x1="50" y1="45" x2="50" y2="15" transform="rotate(${i*30} 50 45)" stroke="url(#lg-metal)" stroke-width="1.5"/>`;
     }
-    return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">${defs}${bgContent}${lotusContent}</svg>`;
+    bgContent = `
+      <g opacity="0.5" filter="url(#glow-soft)">
+        <animateTransform attributeName="transform" type="rotate" from="0 50 45" to="360 50 45" dur="20s" repeatCount="indefinite"/>
+        <circle cx="50" cy="45" r="30" fill="none" stroke="url(#lg-metal)" stroke-width="2"/>
+        <circle cx="50" cy="45" r="26" fill="none" stroke="url(#lg-metal)" stroke-width="0.5" stroke-dasharray="2 4"/>
+        ${spokes}
+      </g>`;
+  } else if (rankType === '迴' || rankType === 'Dedication') {
+    bgContent = `
+      <g opacity="0.6" stroke="#f472b6" fill="none" stroke-width="1.2" filter="url(#glow-soft)">
+        <animateTransform attributeName="transform" type="rotate" from="360 50 45" to="0 50 45" dur="30s" repeatCount="indefinite"/>
+        <rect x="20" y="15" width="60" height="60" transform="rotate(0 50 45)"/>
+        <rect x="20" y="15" width="60" height="60" transform="rotate(30 50 45)"/>
+        <rect x="20" y="15" width="60" height="60" transform="rotate(60 50 45)"/>
+        <circle cx="50" cy="45" r="35" stroke-dasharray="4 4" stroke-width="0.8"/>
+      </g>`;
+  } else if (rankType === '地' || rankType === 'Bhumi') {
+    let rays = '';
+    for(let i=0; i<16; i++) {
+      rays += `<path d="M50 45 Q 70 20 50 5 Q 30 20 50 45" fill="none" stroke="#a8e6cf" stroke-width="0.8" opacity="0.6" transform="rotate(${i*22.5} 50 45)"/>`;
+    }
+    bgContent = `
+      <g opacity="0.8">
+        <circle cx="50" cy="45" r="40" fill="none" stroke="url(#rg-pure)" stroke-width="1" stroke-dasharray="2 6"/>
+        <g filter="url(#glow-soft)">
+          <animateTransform attributeName="transform" type="rotate" from="0 50 45" to="360 50 45" dur="45s" repeatCount="indefinite"/>
+          ${rays}
+        </g>
+      </g>`;
+  }
+
+  // ══════════════════════════════════════════════
+  //  前景：累積念佛主蓮花 (Foreground Nian Lotus)
+  //  完全保留你原版的階層精神：<1000, <10000, <100000...
+  // ══════════════════════════════════════════════
+  let nLevel = 1;
+  if (overrideLevel !== null) {
+    nLevel = overrideLevel;
+  } else {
+    if (nianCount >= 1000000) nLevel = 5;
+    else if (nianCount >= 100000) nLevel = 4;
+    else if (nianCount >= 10000) nLevel = 3;
+    else if (nianCount >= 1000) nLevel = 2;
+  }
+
+  // 隨著階級變大，蓮花會逐漸等比放大
+  let lotusScale = 0.85 + (nLevel * 0.1); 
+  let petals = '';
+  
+  // 決定主色系：青玉 -> 白銀 -> 燦金 -> 紫金琉璃 -> 大明純白
+  let mColor = nLevel === 1 ? 'url(#lg-petal-cyan)' :
+               nLevel === 2 ? 'url(#lg-petal-silver)' :
+               nLevel === 3 ? 'url(#lg-petal-gold)' : 
+               nLevel === 4 ? 'url(#lg-ruby)' : 'url(#rg-pure)';
+  let cColor = nLevel >= 3 ? 'url(#lg-petal-gold)' : 'url(#lg-petal-silver)';
+
+  // 繪製【背後層】花瓣 (較暗、半透明，營造立體感)
+  let backPairCount = nLevel;
+  for (let i = backPairCount; i >= 1; i--) {
+    let spread = i * 14; 
+    let drop = i * 6;
+    petals += `<path d="M50 72 C ${50 - spread*0.8} 65, ${50 - spread*1.1} 45, ${50 - spread} ${30 + drop} C ${50 - spread*0.4} 45, 46 60, 50 72" fill="${cColor}" opacity="0.6"/>`;
+    petals += `<path d="M50 72 C ${50 + spread*0.8} 65, ${50 + spread*1.1} 45, ${50 + spread} ${30 + drop} C ${50 + spread*0.4} 45, 54 60, 50 72" fill="${cColor}" opacity="0.6"/>`;
+  }
+
+  // 繪製【前景層】主花瓣群
+  let frontPairCount = nLevel + 1;
+  for (let i = frontPairCount; i >= 1; i--) {
+    let spread = i * 11; 
+    let drop = i * 5;
+    petals += `<path d="M50 72 C ${50 - spread*0.8} 65, ${50 - spread*1.2} 45, ${50 - spread} ${25 + drop} C ${50 - spread*0.5} 40, 45 60, 50 72" fill="${mColor}" opacity="0.95" filter="url(#glow-soft)"/>`;
+    petals += `<path d="M50 72 C ${50 + spread*0.8} 65, ${50 + spread*1.2} 45, ${50 + spread} ${25 + drop} C ${50 + spread*0.5} 40, 55 60, 50 72" fill="${mColor}" opacity="0.95" filter="url(#glow-soft)"/>`;
+  }
+
+  // 中心正面的水滴形主花瓣
+  petals += `<path d="M50 72 C 43 55, 45 35, 50 22 C 55 35, 57 55, 50 72" fill="${cColor}" filter="url(#glow-gold)"/>`;
+  
+  // 底部花心發光核心 (強烈心跳光芒)
+  const core = `
+    <circle cx="50" cy="68" r="${2 + nLevel*1.5}" fill="#ffffff" filter="url(#glow-strong)">
+      <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite"/>
+    </circle>`;
+
+  // 組合蓮花，使用雙層 <g> 來確保 iOS Safari 縮放與呼吸動畫不衝突
+  const lotusContent = `
+    <g transform="translate(${50 * (1-lotusScale)}, ${72 * (1-lotusScale)}) scale(${lotusScale})">
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="0,1.5; 0,-1.5; 0,1.5" dur="4s" repeatCount="indefinite"/>
+        ${petals}
+        ${core}
+      </g>
+    </g>`;
+
+  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+    ${sharedDefs}
+    ${voidBg}
+    ${bgContent}
+    ${lotusContent}
+  </svg>`;
 }
+
 
 function updateUI() {
     const total = db.totalNian || 0; const points = db.points || 0;

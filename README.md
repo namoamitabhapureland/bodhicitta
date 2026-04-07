@@ -38,16 +38,6 @@ A high-security, offline-first vault for your digital credentials. Named after t
 
 ---
 
-## 3. Easy Accounting & Health Memory / 淨息流：簡易記帳與健康記憶
-A "clean" utility for tracking physical life metrics, integrating financial tracking with health data (Glucose/Blood Pressure).
-「絕對乾淨」的單機版工具，整合財務追蹤與生理健康指標（血糖/血壓）。
-
-**Core Modules / 核心模組:**
-* **Financials:** Lightweight bookkeeping and statistics. / 輕量化記帳與數據統計。
-* **Health Memory:** Tracking blood pressure, glucose, and medication. / 血壓、血糖追蹤與用藥紀錄。
-
----
-
 ## ⚙️ Technical Philosophy / 技術哲學
 To ensure maximum accessibility and speed for search engines, while maintaining absolute purity:
 為確保最高的可及性與搜尋引擎友善度，同時維持系統的絕對清淨：
@@ -57,7 +47,7 @@ To ensure maximum accessibility and speed for search engines, while maintaining 
 
 **SEO Keywords / 搜尋關鍵字:**
 * **EN:** Namo Amitabha, Pure Land Buddhism, Vajra security, offline password manager, private accounting app, ad-free health tracker, minimalist web tools, serverless finance.
-* **中文:** 阿彌陀佛、彌陀淨土、金剛藏、佛教、離線密碼管理、隱私記帳軟體、無廣告健康管理、血糖血壓紀錄、極簡設計網頁應用。
+* **中文:** 阿彌陀佛、彌陀淨土、金剛藏、佛教、離線密碼管理、極簡設計網頁應用。
 
 ---
 

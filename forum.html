@@ -270,7 +270,6 @@
             document.getElementById('btn-post-main').innerText = "Post Message";
             document.getElementById('btn-post-sub').innerText = "結緣發布";
             
-            // ✨ 更新英文版的客棧規約文案 ✨
             document.getElementById('forum-guide-text').innerHTML = "Welcome to the Lotus Forum. Please observe the dharma of the Saha world. Here, you experience absolute freedom, mirroring the cosmic cycle of Formation, Existence, Destruction, and Emptiness. To reduce worldly entropy and embrace Samsara, our realm operates on a '7-Day Cycle.' All messages naturally return to the void after seven days, retaining only the <span class='guide-highlight'>latest 50 echoes</span> of joy to maintain harmony.<br><br><span style='color:var(--cyan);'>To reply or interact, please enter your name below first.</span>";
         }
 
@@ -323,31 +322,25 @@
 
         firebase.auth().signInAnonymously().catch((error) => console.warn("匿名登入異常:", error));
 
-        // ✨ 新增：七日輪迴（自動刪除舊留言）的函數 ✨
+        // ✨ 這是唯一新增的 7 天刪除機制 ✨
         function cleanOldPosts() {
-            // 計算出 7 天前的時間戳記 (毫秒)
             const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-            
-            // 讓 Firebase 尋找時間戳記 (t) 小於 sevenDaysAgo 的留言
             ref.orderByChild('t').endAt(sevenDaysAgo).once('value', snap => {
                 if (snap.exists()) {
                     snap.forEach(childSnap => {
-                        // 執行真正的資料庫刪除動作 (化為虛無)
-                        childSnap.ref.remove()
-                            .then(() => console.log("順應無常，已將七日前之留言化為虛無"))
-                            .catch(err => console.error("輪迴清理異常:", err));
+                        childSnap.ref.remove().catch(err => console.error("清理異常:", err));
                     });
                 }
             });
         }
 
-        // ✨ 更新：每次進入系統時自動清理舊資料 ✨
+        // ✨ 完美恢復原本不卡頓的載入邏輯，順便呼叫清理功能 ✨
         firebase.auth().onAuthStateChanged((user) => {
-            if (user) currentUserUid = user.uid; 
-            
-            // 執行清理動作
-            cleanOldPosts();
-            
+            if (user) {
+                currentUserUid = user.uid;
+                cleanOldPosts(); // 只有拿到憑證的人，才順手幫忙掃地
+            }
+            // 留言板載入邏輯：不管有沒有憑證，都直接載入畫面，絕對不再空白！
             if (!isBoardLoaded) { 
                 loadBoard(); 
                 isBoardLoaded = true; 

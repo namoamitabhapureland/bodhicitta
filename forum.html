@@ -63,7 +63,7 @@
         .lotus-wrapper { display: inline-block; animation: breathe 5s ease-in-out infinite; }
         @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
 
-        /* ✨ 新增：優雅的客棧規約說明欄 ✨ */
+        /* ✨ 優雅的客棧規約說明欄 ✨ */
         .guide-box {
             background: linear-gradient(145deg, rgba(20,25,22,0.8), rgba(5,8,5,0.9));
             border: 1px solid rgba(212,175,55,0.3); border-radius: 15px; 
@@ -235,7 +235,7 @@
                 <circle cx="12" cy="10" r="3" fill="rgba(212,175,55,0.2)"/>
             </svg>
             <p class="guide-text" id="forum-guide-text">
-                歡迎來到菩提客棧。此處完全自由言論，願行者皆以清淨正念結緣。為保持道場的清淨，僅顯示<span class="guide-highlight">最新五十篇</span>法喜心得。<br><br>
+                歡迎來到菩提客棧。於此方寸之間，發言請務必隨順娑婆世間法。本客棧法度高度自由，然萬法皆不出「成、住、壞、空」之流轉。為減法界之熵，順應因緣輪迴之理，本道場特設「七日一循環」之制。凡結緣法語，七日後皆自動化為虛無，與天地同歸寂靜；且為保清淨，至多僅留存<span class="guide-highlight">最新五十篇</span>法喜心得。<br><br>
                 <span style="color:var(--cyan);">若欲回覆或互動，請先於下方填妥法號。</span>
             </p>
         </div>
@@ -270,8 +270,8 @@
             document.getElementById('btn-post-main').innerText = "Post Message";
             document.getElementById('btn-post-sub').innerText = "結緣發布";
             
-            // ✨ 英文版的客棧規約 ✨
-            document.getElementById('forum-guide-text').innerHTML = "Welcome to the Lotus Forum. Feel free to share, keeping your thoughts pure and positive. To maintain harmony and speed, the system gracefully cycles and retains only the <span class='guide-highlight'>latest 50 posts</span>.<br><br><span style='color:var(--cyan);'>To reply or interact, please enter your name below first.</span>";
+            // ✨ 更新英文版的客棧規約文案 ✨
+            document.getElementById('forum-guide-text').innerHTML = "Welcome to the Lotus Forum. Please observe the dharma of the Saha world. Here, you experience absolute freedom, mirroring the cosmic cycle of Formation, Existence, Destruction, and Emptiness. To reduce worldly entropy and embrace Samsara, our realm operates on a '7-Day Cycle.' All messages naturally return to the void after seven days, retaining only the <span class='guide-highlight'>latest 50 echoes</span> of joy to maintain harmony.<br><br><span style='color:var(--cyan);'>To reply or interact, please enter your name below first.</span>";
         }
 
         function showAlert(msg) {
@@ -323,9 +323,37 @@
 
         firebase.auth().signInAnonymously().catch((error) => console.warn("匿名登入異常:", error));
 
+        // ✨ 新增：七日輪迴（自動刪除舊留言）的函數 ✨
+        function cleanOldPosts() {
+            // 計算出 7 天前的時間戳記 (毫秒)
+            const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+            
+            // 讓 Firebase 尋找時間戳記 (t) 小於 sevenDaysAgo 的留言
+            ref.orderByChild('t').endAt(sevenDaysAgo).once('value', snap => {
+                if (snap.exists()) {
+                    snap.forEach(childSnap => {
+                        // 執行真正的資料庫刪除動作 (化為虛無)
+                        childSnap.ref.remove()
+                            .then(() => console.log("順應無常，已將七日前之留言化為虛無"))
+                            .catch(err => console.error("輪迴清理異常:", err));
+                    });
+                }
+            });
+        }
+
+        // ✨ 更新：每次進入系統時自動清理舊資料 ✨
         firebase.auth().onAuthStateChanged((user) => {
             if (user) currentUserUid = user.uid; 
-            if (!isBoardLoaded) { loadBoard(); isBoardLoaded = true; } else { loadBoard(); }
+            
+            // 執行清理動作
+            cleanOldPosts();
+            
+            if (!isBoardLoaded) { 
+                loadBoard(); 
+                isBoardLoaded = true; 
+            } else { 
+                loadBoard(); 
+            }
         });
 
         function parse(str) {
@@ -348,9 +376,7 @@
             return '信';
         }
 
-                // ── 替換開始：新版主系統位階與圖騰代碼 ──
         function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
-            // ── 專屬五大境界漸層與發光濾鏡 ──
             const sharedDefs = `
                 <defs>
                 <linearGradient id="grad-lv1" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -407,16 +433,12 @@
                 </defs>
             `;
 
-            // ── 背景虛空黑洞 ──
             const voidBg = `
                 <circle cx="50" cy="50" r="42" fill="url(#rg-void)">
                 <animate attributeName="r" values="41;43;41" dur="6s" repeatCount="indefinite"/>
                 </circle>
             `;
 
-            // ══════════════════════════════════════════════
-            //  底層：資糧位階背景 (Rank Background) - 安全內縮防破格
-            // ══════════════════════════════════════════════
             let bgContent = '';
             if (rankType === '信' || rankType === 'Faith') {
                 bgContent = `
@@ -470,30 +492,23 @@
                 </g>`;
             }
 
-            // ══════════════════════════════════════════════
-            //  前景：累積念佛主蓮花 (Foreground Nian Lotus)
-            // ══════════════════════════════════════════════
-            
-            // 判斷五大境界
             let nLevel = 1;
             if (overrideLevel !== null) {
                 nLevel = Math.min(overrideLevel, 5); 
             } else {
-                if (nianCount >= 10000000) nLevel = 5;       // 破千萬：大日紫金光
-                else if (nianCount >= 1000000) nLevel = 4;   // 破百萬：紅蓮紫金
-                else if (nianCount >= 100000) nLevel = 3;    // 破十萬：純粹真金
-                else if (nianCount >= 10000) nLevel = 2;     // 破一萬：真珠粉銀
-                else nLevel = 1;                             // 初始值：青玉琉璃
+                if (nianCount >= 10000000) nLevel = 5;       
+                else if (nianCount >= 1000000) nLevel = 4;   
+                else if (nianCount >= 100000) nLevel = 3;    
+                else if (nianCount >= 10000) nLevel = 2;     
+                else nLevel = 1;                             
             }
 
-            // 主色與陪襯核心色
             let mColor = `url(#grad-lv${nLevel})`;
             let cColor = `url(#grad-lv${Math.min(nLevel + 1, 5)})`; 
 
             let petals = '';
-            let pairs = nLevel + 1; // 依境界增加花瓣層數
+            let pairs = nLevel + 1; 
 
-            // 1. 繪製【背後層】花瓣 (鎖定最大寬度 36，絕對不破格)
             let backSpreadMax = 36; 
             for (let i = pairs; i >= 1; i--) {
                 let r = i / pairs;
@@ -504,7 +519,6 @@
                 petals += `<path d="M50 74 C ${50 + spread*0.6} 65, ${50 + spread} 50, ${50 + spread} ${tipY} C ${50 + spread*0.4} ${tipY+15}, 55 68, 50 74" fill="${cColor}" opacity="0.6" filter="url(#glow-soft)"/>`;
             }
 
-            // 2. 繪製【前景層】主花瓣 (鎖定最大寬度 28)
             let frontSpreadMax = 28; 
             for (let i = pairs - 1; i >= 1; i--) {
                 let r = i / (pairs - 1);
@@ -515,16 +529,13 @@
                 petals += `<path d="M50 76 C ${50 + spread*0.5} 68, ${50 + spread} 55, ${50 + spread} ${tipY} C ${50 + spread*0.4} ${tipY+12}, 53 70, 50 76" fill="${mColor}" opacity="0.95" filter="url(#glow-soft)"/>`;
             }
 
-            // 3. 中心正面主瓣
             petals += `<path d="M50 77 C 43 60, 44 42, 50 28 C 56 42, 57 60, 50 77" fill="${cColor}" filter="url(#glow-gold)"/>`;
             
-            // 4. 底部大明點 (強烈心跳光芒)
             const core = `
                 <circle cx="50" cy="70" r="${3 + nLevel}" fill="#ffffff" filter="url(#glow-strong)">
                 <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
                 </circle>`;
 
-            // 組合蓮花本體
             const lotusContent = `
                 <g>
                 <animateTransform attributeName="transform" type="translate" values="0,2; 0,-1.5; 0,2" dur="4s" repeatCount="indefinite"/>
@@ -532,7 +543,6 @@
                 ${core}
                 </g>`;
 
-            // 注意：這裡將原本的 style="width:100%; height:100%;" 移除了，交由 getFormattedIcon 統一管理尺寸
             return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                 ${sharedDefs}
                 ${voidBg}
@@ -544,11 +554,8 @@
         function getFormattedIcon(rankName, nianCount) {
             if (!rankName) return '';
             let rawSvg = getLotusSVG(getRankType(rankName), nianCount);
-            // 改良此處：使用正則表達式，安全且精準地替換外層 SVG 標籤，確保論壇內大小一致且無重複樣式衝突
             return rawSvg.replace(/<svg[^>]*>/, '<svg viewBox="0 0 100 100" width="20" height="20" style="margin-right:6px; filter: drop-shadow(0 0 3px rgba(212,175,55,0.4));">');
         }
-        // ── 替換結束 ──
-
 
         document.getElementById('post-btn').onclick = () => {
             const m = document.getElementById('mm').value.trim();
@@ -595,7 +602,6 @@
                     if(item.rs) {
                         Object.values(item.rs).forEach(r => {
                             let sym = "";
-                            // ✨ 新增：零版權純代碼的禪意互動圖騰 ✨
                             if(r.ty === 'gassho') { 
                                 sym = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M12 3 C12 3, 7 9, 7 15 C7 18, 9 21, 12 21 C15 21, 17 18, 17 15 C17 9, 12 3, 12 3 Z" fill="rgba(212,175,55,0.1)"/><path d="M12 21 L12 10" stroke-opacity="0.4"/></svg>`; 
                             }
@@ -643,7 +649,6 @@
                     const flowerText = (lang === 'en') ? "Offer" : "供花";
                     const chantText = (lang === 'en') ? "Chant" : "念佛";
 
-                    // ✨ 新增：按鈕區也換上禪意法器 SVG ✨
                     card.innerHTML = `
                         <div class="post-header">
                             <div style="display:flex; align-items:center; flex-wrap:wrap;">

@@ -1,4 +1,4 @@
-🌐 Overview / 總覽
+🌐 總覽
 # 彌陀淨土系統 | Amitabha Pure Land System
 
 **本師釋迦牟尼佛 | 行普賢菩薩願．歸彌陀極樂國**
@@ -80,48 +80,83 @@
 `Namo Amitabha` `Pure Land Buddhism` `彌陀淨土` `阿彌陀佛` `普賢行願` `數位道場` `佛學 PWA` `極簡修行` `Buddhist Web App` `Offline Practice Tool`
 
 ---
-🌐 Overview / 總覽
-Amitabha Pure Land System | 彌陀淨土系統
-Original Teacher Shakyamuni Buddha | Practicing Samantabhadra's Virtues, Returning to Amitabha's Pure Land
-This is a minimalist digital Dharma tool developed based on the teachings of the Infinite Life Sutra, the Avatamsaka Sutra, and the Lotus Sutra.
-It aims to help modern practitioners in the Saha World pre-experience the pure nature of the Pure Land through clear digital rituals, fulfilling the fundamental vow of "all shall practice the virtues of Samantabhadra."
-Enter the System → https://namoamitabhapureland.github.io/bodhicitta/index_en.html
-Vision and Purpose | 計畫宗旨
-This system is not merely a Buddha-recitation counting tool, but a practical platform for "transforming the environment through the mind."
-• Doctrinal Foundation: Based on the 22nd Vow of the Infinite Life Sutra, emphasizing the faith and vow of "rebirth through ten recitations" and the universal virtues of Samantabhadra.
-• Core Spirit: Relying 100% on Amitabha's vow power. By accumulating daily merit, a lotus flower is manifested in the mind's seven-jeweled pond.
-• Aesthetic Philosophy: Adopting minimalist vector graphics to eliminate all unnecessary visual interference, presenting the solemnity of the Dharma realm's "true emptiness and wondrous existence."
-System Modules | 修持模組
-1. Daily Practices (一、每日定課．動態行持)
-• Three Turnings of the Dharma Wheel: Guiding the practitioner from the Agamas, through Prajna, to Yogacara, shifting the mindset and aligning with the Dharma realm.
-• Arousing Bodhicitta: The core ten-recitation module. Anchoring mindfulness amidst worldly noise through the visual contemplation of lighting a golden lotus.
-• Prajna Wisdom: A systematic Dharma Q&A matrix, breaking through ignorance by establishing right views.
-• Lapis Lazuli Pure Water: Concentration training symbolizing the cleansing of the six sense faculties.
-• 88 Buddhas Repentance: Providing audio guidance and rituals to help with daily sincere repentance, clearing karmic obstacles, and increasing blessings.
-2. Deep Studies (二、深入經藏．心觀無相)
-• The Nine Columns: Includes "Overlooking Hua-yan," "Journey of Yogacara," and "Lotus Sutra Cipher," providing deep analyses of Mahayana texts.
-• Amitabha's 48 Vows Ocean: The ultimate system module. Unlocked only after accumulating 10,000 pure Buddha recitations, striking directly at the core of Amitabha's fundamental vows.
-3. Dharma Supports (三、助道法寶．菩提靜室)
-• Lotus Forum (Practitioners' Community): Operating on a 7-day cycle. Dharma words automatically return to silence after seven days, keeping only the latest 50 posts to maintain the Dojo's purity.
-• Lapis Treasure Pavilion: An exclusive sanctuary for protecting and blessing family and friends. Practitioners manifest vector-based jewels through practice, then dissolve them into the void during dedication, achieving formless giving.
-• Golden Lotus Q&A: Providing Dharma-aligned guidance for anxieties and confusions in daily life.
-Technical and Privacy Philosophy | 技術與安全哲學
-This system is developed with "absolute purity" as its original intention:
-• Serverless Architecture: Pure front-end, hosted on GitHub Pages, with no backend and no database.
-• Zero-Knowledge Privacy: Does not read or transmit any user data. All progress is stored securely on local devices.
-• Zero Tracking: No ads, no cookies, and no tracking scripts of any kind.
-• Vector Aesthetics: Strictly uses pure SVG mathematical vector graphics throughout. No bitmaps and no emojis.
-• PWA Support: Can be added to the mobile home screen with one click and used as an offline App.
-Progression and Ranking | 修證階位
-The system ranking reflects the practitioner's transformational journey from the "Initial Aspiration" to the "Tenth Bhumi":
-• Accelerated merit reflects the Infinite Life Sutra's teaching that "practicing goodness here for one day surpasses a hundred years in the Pure Land."
-• Visual icons evolve naturally as merit advances, symbolizing the shift from "the mind moving with the environment" to "the environment transforming according to the mind."
-• The rapid progression symbolizes receiving Amitabha's vow power, directly reaching the stage of non-retrogression.
-License and Credits | 授權與流傳
-License: Creative Commons Attribution-NonCommercial-ShareAlike (CC BY-NC-SA 4.0)
-• Perpetually free. Inserting advertisements or any commercial monetization is strictly prohibited.
-• This Dojo was developed by a lay practitioner. Any errors or omissions are solely due to limited personal intellect. May the Three Jewels bestow their blessings, and may fellow practitioners offer corrections.
-Developer: Developed with reverence by Miaoyi (Sherman Huang)
-SEO Keywords
-Namo Amitabha Pure Land Buddhism 彌陀淨土 阿彌陀佛 普賢行願 數位道場 佛學 PWA 極簡修行 Buddhist Web App Offline Practice Tool
+🌐 Overview 
+# Amitabha Pure Land System
 
+**Original Teacher: Shakyamuni Buddha**  
+**Practicing Samantabhadra’s Vows • Returning to Amitabha’s Pure Land**
+
+A minimalist digital cultivation tool developed based on the teachings of the *Infinite Life Sutra*, *Avatamsaka Sutra*, and *Lotus Sutra*.  
+
+This system assists modern practitioners to prepare for the pure Dharma realm of Amitabha’s Pure Land while living in the Saha World, fulfilling the vow that “all shall practice the virtues of Samantabhadra.”
+
+**[Enter the Dojo →]https://namoamitabhapureland.github.io/bodhicitta/index_en.html**
+
+---
+
+## Vision & Purpose
+
+This system is more than a recitation counter — it is a practical platform for “transforming the environment through the mind.”
+
+- **Doctrinal Foundation**: Based on the 22nd Vow of the *Infinite Life Sutra*, emphasizing faith in “rebirth through ten recitations” and the vast practice of Samantabhadra’s virtues.
+- **Core Spirit**: Complete reliance on Amitabha Buddha’s vow power. Through daily accumulation of merit, a lotus flower is gradually manifested in the mind’s Seven Jewelled Pond.
+- **Aesthetic Philosophy**: Pure minimalist vector graphics that eliminate all unnecessary visual elements, presenting the solemnity of “true emptiness and wondrous existence.”
+
+---
+
+## System Modules
+
+### 1. Daily Practices
+
+- **Three Turnings of the Dharma Wheel** — From Agama, Prajna, to Yogacara teachings, guiding the transformation of mind and perception.
+- **Arousing Bodhicitta** — Core ten-recitation module with visual golden lotus contemplation to establish mindfulness.
+- **Prajna Wisdom** — Systematic Dharma Q&A to establish right view and dispel ignorance.
+- **Lapis Lazuli Pure Water** — Concentration training that symbolizes cleansing the six sense faculties.
+- **Repentance of the Eighty-Eight Buddhas** — Audio-guided ritual for daily sincere repentance.
+
+### 2. Deep Sutra Study & Formless Contemplation
+
+- **Nine Major Columns** — In-depth explorations including “Overview of the Avatamsaka Realm,” “Journey of Yogacara,” and “Lotus Sutra Cipher.”
+- **Amitabha’s Forty-Eight Vows Ocean** — The ultimate module, unlocked only after accumulating 10,000 sincere Buddha recitations.
+
+### 3. Dharma Supports
+
+- **Lotus Forum** — Pure community space with a seven-day auto-expiry cycle, retaining only the latest 50 posts.
+- **Lapis Lazuli Treasure Pavilion** — Dedicated space for dedicating merit to family and friends through formless giving.
+- **Golden Lotus Q&A** — Dharma guidance for daily life challenges and questions.
+
+---
+
+## Technical & Privacy Philosophy
+
+Developed with the principle of “absolute purity”:
+
+- **Serverless Architecture** — Pure front-end, hosted on GitHub Pages.
+- **Zero-Knowledge Privacy** — No user data is read or transmitted. All progress is stored locally on the user’s device.
+- **Zero Tracking** — No advertisements, no cookies, no analytics scripts.
+- **Pure Vector Design** — 100% mathematical SVG graphics, no bitmaps, no emojis.
+- **PWA Support** — Fully installable as an offline application on mobile devices.
+
+---
+
+## Progression & Ranking
+
+System levels reflect the practitioner’s journey from initial aspiration toward the Ten Bhumis.  
+Visual elements evolve gracefully with accumulated merit, symbolizing the transition from “mind following environment” to “environment following mind.”
+
+---
+
+## License & Credits
+
+**License**: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)
+
+- This Dharma tool is permanently free.  
+- Commercial use, advertising, or any form of monetization is strictly prohibited.
+
+**Developed with reverence by**  
+**Chief Engineer: Sherman Huang (妙依)**
+
+---
+
+## SEO Keywords
+`Namo Amitabha` `Pure Land Buddhism` `Amitabha Pure Land` `Samantabhadra Vows` `Buddhist Web App` `Offline Practice Tool` `Minimalist Dharma` `Digital Dojo` `Pure Land Practice`

@@ -1,5 +1,4 @@
-🌐 總覽
-# 彌陀淨土系統 | Amitabha Pure Land System
+# 🌐 彌陀淨土系統 | Amitabha Pure Land System
 
 **本師釋迦牟尼佛 | 行普賢菩薩願．歸彌陀極樂國**
 
@@ -80,8 +79,7 @@
 `Namo Amitabha` `Pure Land Buddhism` `彌陀淨土` `阿彌陀佛` `普賢行願` `數位道場` `佛學 PWA` `極簡修行` `Buddhist Web App` `Offline Practice Tool`
 
 ---
-🌐 Overview 
-# Amitabha Pure Land System
+# 🌐 Amitabha Pure Land System
 
 **Original Teacher: Shakyamuni Buddha**  
 **Practicing Samantabhadra’s Vows • Returning to Amitabha’s Pure Land**

@@ -159,11 +159,11 @@ Visual elements evolve gracefully with accumulated merit, symbolizing the transi
 
 **妙依居士 (Sherman Huang)**
 
-畢業於美國華盛頓大學法學院，擁有數十年的法律、金融、科技實務與教學經驗。中年後深刻體悟世間無常，轉而深入經藏，潛心修學佛法。
+畢業於美國華盛頓大學法學院，中年後深刻體悟世間無常，轉而深入經藏，潛心修學佛法。
 
 期盼結合法律的嚴謹思維與極簡的美學設計，以數位工程的技術，打造純淨、無爭議的數位法具。願以此微薄之力，與十方有緣人共結菩提善緣。
 
-Graduated from the University of Washington School of Law, with decades of practical and teaching experience in IP law and fintech. In middle age, having deeply realized the impermanence of the world, he turned to the profound study of the Buddhist Dharma. 
+Graduated from the University of Washington School of Law. In middle age, having deeply realized the impermanence of the world, he turned to the profound study of the Buddhist Dharma. 
 
 By combining rigorous legal thinking with a pure, minimalist aesthetic, he dedicates himself to developing ad-free, copyright-free digital Dharma tools. He hopes these modest efforts will help preserve the authentic teachings and connect with those on the path to Bodhi.
 

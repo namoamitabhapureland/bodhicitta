@@ -344,7 +344,13 @@
         const dbRef = firebase.database();
         const ref = dbRef.ref('posts_clean_v9');
         
-        let currentUserUid = "guest_" + Math.random().toString(36).substr(2, 9);
+        // 【新增防洗機制】將假身分存入 localStorage，避免重整狂洗檢舉
+        let currentUserUid = localStorage.getItem('lotus_guest_uid');
+        if (!currentUserUid) {
+            currentUserUid = "guest_" + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('lotus_guest_uid', currentUserUid);
+        }
+
         let isBoardLoaded = false;
 
         let localDB = null;
@@ -380,7 +386,7 @@
 
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
-                currentUserUid = user.uid;
+                currentUserUid = user.uid; // 如果有成功連上，就覆蓋掉 localStorage 的假身分
                 cleanOldPosts(); 
             }
             if (!isBoardLoaded) { 
@@ -510,7 +516,7 @@
         }
 
         document.getElementById('post-btn').onclick = () => {
-            // 【新增邏輯】發文前檢查念佛數是否達標
+            // 發文前檢查念佛數是否達標
             if (userNian < 100) {
                 const nianAlertMsg = (lang === 'en') ? "Requires 100 chants to post!" : "需累積滿 100 聲佛號方可發文結緣喔！\nRequires 100 chants to post!";
                 return showAlert(nianAlertMsg);
@@ -545,7 +551,6 @@
         };
 
         function loadBoard() {
-            // 【關鍵效能修復】先卸載舊的監聽器，避免累積過多連線導致速度變慢與卡頓
             ref.limitToLast(50).off('value'); 
             
             ref.limitToLast(50).on('value', snap => {
@@ -555,7 +560,7 @@
                 Object.keys(data).reverse().forEach(id => {
                     const item = data[id];
                     
-                    // 【新增邏輯】計算檢舉數，超過3人檢舉自動隱藏
+                    // 計算檢舉數，超過3人檢舉自動隱藏
                     const reportCount = item.reports ? Object.keys(item.reports).length : 0;
                     if (reportCount >= 3) return; 
 
@@ -581,7 +586,7 @@
                         userActionHTML += `<button class="btn-delete" onclick="delPost('${id}')">${delText}</button>`;
                     }
 
-                    // 【新增邏輯】美麗無版權 SVG 檢舉按鈕
+                    // 檢舉按鈕
                     const reportText = (lang === 'en') ? "Report" : "檢舉";
                     userActionHTML += `
                         <button class="btn-report" onclick="reportPost('${id}')">
@@ -649,7 +654,6 @@
             const alertMsg = (lang === 'en') ? "Please enter text!" : "請先寫下您的共鳴喔！\nPlease enter text!";
             if(!m) return showAlert(alertMsg);
             
-            // 【新增邏輯】前端再次阻擋字數超過 20 的留言
             if(m.length > 20) {
                 const lenAlertMsg = (lang === 'en') ? "Max 20 characters allowed." : "留言請保持簡潔，字數限制為 20 字以內喔！";
                 return showAlert(lenAlertMsg);
@@ -684,12 +688,8 @@
             });
         };
 
-        // 【新增邏輯】檢舉功能實作，呼叫優雅的 confirm 介面
+        // 【修改邏輯】貫徹秒發免等待，允許直接呼叫檢舉
         window.reportPost = (id) => {
-            if (!currentUserUid || currentUserUid.startsWith('guest_')) {
-                return showAlert((lang === 'en') ? "Please wait for authentication." : "請稍候，系統正在為您安排連線憑證...");
-            }
-            
             const confirmMsg = (lang === 'en') ? "Report this post as inappropriate?\nIt will be hidden if multiple users report it." : "確認檢舉此篇內容為不當言論？\n若達一定人數將自動隱藏。";
             
             showConfirm(confirmMsg, (result) => {

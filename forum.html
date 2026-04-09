@@ -344,7 +344,7 @@
         const dbRef = firebase.database();
         const ref = dbRef.ref('posts_clean_v9');
         
-        // 【新增防洗機制】將假身分存入 localStorage，避免重整狂洗檢舉
+        // 【防洗機制】假身分存入 localStorage
         let currentUserUid = localStorage.getItem('lotus_guest_uid');
         if (!currentUserUid) {
             currentUserUid = "guest_" + Math.random().toString(36).substr(2, 9);
@@ -386,7 +386,7 @@
 
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
-                currentUserUid = user.uid; // 如果有成功連上，就覆蓋掉 localStorage 的假身分
+                currentUserUid = user.uid;
                 cleanOldPosts(); 
             }
             if (!isBoardLoaded) { 
@@ -516,7 +516,6 @@
         }
 
         document.getElementById('post-btn').onclick = () => {
-            // 發文前檢查念佛數是否達標
             if (userNian < 100) {
                 const nianAlertMsg = (lang === 'en') ? "Requires 100 chants to post!" : "需累積滿 100 聲佛號方可發文結緣喔！\nRequires 100 chants to post!";
                 return showAlert(nianAlertMsg);
@@ -560,7 +559,6 @@
                 Object.keys(data).reverse().forEach(id => {
                     const item = data[id];
                     
-                    // 計算檢舉數，超過3人檢舉自動隱藏
                     const reportCount = item.reports ? Object.keys(item.reports).length : 0;
                     if (reportCount >= 3) return; 
 
@@ -586,13 +584,26 @@
                         userActionHTML += `<button class="btn-delete" onclick="delPost('${id}')">${delText}</button>`;
                     }
 
-                    // 檢舉按鈕
-                    const reportText = (lang === 'en') ? "Report" : "檢舉";
-                    userActionHTML += `
-                        <button class="btn-report" onclick="reportPost('${id}')">
-                            <svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
-                            ${reportText}
-                        </button>`;
+                    // 【更新邏輯】判斷當前使用者是否已經檢舉過這篇文章
+                    const hasReported = item.reports && item.reports[currentUserUid];
+
+                    if (hasReported) {
+                        // 如果已經檢舉過，顯示灰色的「已檢舉」，且無法點擊
+                        const reportedText = (lang === 'en') ? "Reported" : "已檢舉";
+                        userActionHTML += `
+                            <span style="color:#555; font-size:0.75rem; margin-left:10px; display:flex; align-items:center; gap:4px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                ${reportedText}
+                            </span>`;
+                    } else {
+                        // 如果還沒檢舉過，顯示正常的檢舉按鈕
+                        const reportText = (lang === 'en') ? "Report" : "檢舉";
+                        userActionHTML += `
+                            <button class="btn-report" onclick="reportPost('${id}')">
+                                <svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+                                ${reportText}
+                            </button>`;
+                    }
 
                     const mainIcon = getFormattedIcon(item.rank, item.nian || 0);
                     const rankDisplay = item.rank ? `<span style="display:flex; align-items:center; color:var(--cyan); font-size:0.75rem; margin-left:8px; opacity:0.9;">${mainIcon}[ ${item.rank} · ${item.nian || 0} ]</span>` : '';
@@ -633,7 +644,7 @@
                                     <span class="act-zh">${praiseText}</span>
                                 </button>
                                 <button class="btn-act" onclick="re('${id}','flower')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="1.5"><path d="M12 22 C12 22, 5 15, 5 10 C5 6, 12 2, 12 2 C12 2, 19 6, 19 10 C19 15, 12 22, 12 22 Z" fill="rgba(139,168,156,0.05)"/><path d="M12 22 C12 22, 9 16, 9 11 C9 8, 12 4, 12 4 C12 4, 15 8, 15 11 C15 16, 12 22, 12 22 Z" fill="rgba(139,168,156,0.15)"/></svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="1.5"><path d="M12 22 C12 22, 5 15, 5 10 C5 6, 12 2, 12 2 C12 2, 19 6, 19 10 C19 15, 12 22, 12 22 Z" fill="rgba(139,168,156,0.1)"/><path d="M12 22 C12 22, 9 16, 9 11 C9 8, 12 4, 12 4 C12 4, 15 8, 15 11 C15 16, 12 22, 12 22 Z" fill="rgba(139,168,156,0.2)"/></svg>
                                     <span class="act-zh">${flowerText}</span>
                                 </button>
                                 <button class="btn-act" onclick="re('${id}','chant')">
@@ -688,7 +699,6 @@
             });
         };
 
-        // 【修改邏輯】貫徹秒發免等待，允許直接呼叫檢舉
         window.reportPost = (id) => {
             const confirmMsg = (lang === 'en') ? "Report this post as inappropriate?\nIt will be hidden if multiple users report it." : "確認檢舉此篇內容為不當言論？\n若達一定人數將自動隱藏。";
             
@@ -699,6 +709,7 @@
                         showAlert((lang === 'en') ? "Reported successfully." : "檢舉成功！感謝您協助維護客棧清淨。");
                     })
                     .catch(err => {
+                        // 如果仍然失敗，提供詳細錯誤以便追蹤
                         showAlert("檢舉失敗 / Report failed:\n" + err.message);
                     });
                 }

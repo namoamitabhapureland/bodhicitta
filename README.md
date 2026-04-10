@@ -85,7 +85,7 @@
 `Namo Amitabha` `Pure Land Buddhism` `彌陀淨土` `阿彌陀佛` `普賢行願` `數位道場` `佛學 PWA` `極簡修行` `Buddhist Web App` `Offline Practice Tool`
 
 ---
-# 🌐 Amitabha Pure Land System
+# Amitabha Pure Land System
 
 **Original Teacher: Shakyamuni Buddha**  
 **Practicing Samantabhadra’s Vows • Returning to Amitabha’s Pure Land**

@@ -108,14 +108,6 @@
         }
         .post-body { padding: 25px 20px; font-size: 1.05rem; line-height: 1.8; word-break: break-word; }
 
-        .pure-link { color: var(--gold-br); text-decoration: underline; font-size: 0.9rem; cursor: pointer; }
-        .yt-btn {
-            display: inline-block; padding: 6px 18px; border: 1px solid var(--cyan); color: var(--cyan);
-            border-radius: 20px; font-size: 0.8rem; cursor: pointer; margin: 10px 0; transition: 0.3s;
-        }
-        .yt-btn:hover { border-color: var(--gold); color: var(--gold); }
-        .yt-player { display: none; margin-top: 15px; width: 320px; max-width: 100%; height: 180px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
-
         .action-wrap { padding: 15px 20px; background: rgba(0,0,0,0.3); border-top: 1px solid #222; }
         .reply-input {
             width: 100%; background: rgba(255,255,255,0.03); border: 1px solid #444; color: #eee;
@@ -179,9 +171,21 @@
         .glass-btn-cancel {
             background: transparent; color: #aaa; border: 1px solid #555; box-shadow: none;
         }
+
+        /* 自動消失的 Toast 提示框 (黑金客棧風格) */
+        .toast {
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-18px);
+            background: rgba(18, 22, 28, 0.95); border: 1px solid var(--border); color: var(--gold-br);
+            padding: 12px 24px; border-radius: 24px; font-size: 0.9rem; letter-spacing: 2px;
+            opacity: 0; transition: all 0.3s; z-index: 9999; white-space: nowrap;
+            pointer-events: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     </style>
 </head>
 <body>
+
+    <div id="toast" class="toast"></div>
 
     <div class="glass-overlay" id="pure-alert">
         <div class="glass-box">
@@ -263,8 +267,8 @@
         </div>
 
         <div class="interaction-panel">
-            <input type="text" id="nn" class="custom-field" placeholder="法號 / Name (Optional)">
-            <textarea id="mm" class="custom-field" rows="4" placeholder="在此分享法喜心得... / Share your thoughts here..."></textarea>
+            <input type="text" id="nn" class="custom-field" placeholder="法號 / Name (Optional)" oninput="filterEmoji(this)">
+            <textarea id="mm" class="custom-field" rows="4" placeholder="在此分享法喜心得... / Share your thoughts here..." oninput="filterEmoji(this)"></textarea>
             
             <button class="btn-post" id="post-btn">
                 <span id="btn-post-main" style="font-size: 1.05rem; letter-spacing: 4px; font-weight: bold;">結緣發布</span>
@@ -395,14 +399,9 @@
             }
         });
 
+        // ✨ 移除了影音與圖片解析，回歸純淨的文字過濾
         function parse(str) {
             let s = str.replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
-            const yt = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})(?:[^\s]*)/gi;
-            s = s.replace(yt, (m, id) => {
-                return `<br><div class="yt-btn" onclick="this.nextSibling.style.display='block';this.style.display='none'">[ 啟動影音結界 / Play Video ]</div><div class="yt-player"><iframe width="320" height="180" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen></iframe></div>`;
-            });
-            const img = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/gi;
-            s = s.replace(img, u => `<br><a href="${u}" target="_blank" class="pure-link">[ 點擊觀看圖寶 / View Image ]</a><br>`);
             return s.replace(/\n/g, "<br>");
         }
 
@@ -584,11 +583,9 @@
                         userActionHTML += `<button class="btn-delete" onclick="delPost('${id}')">${delText}</button>`;
                     }
 
-                    // 【更新邏輯】判斷當前使用者是否已經檢舉過這篇文章
                     const hasReported = item.reports && item.reports[currentUserUid];
 
                     if (hasReported) {
-                        // 如果已經檢舉過，顯示灰色的「已檢舉」，且無法點擊
                         const reportedText = (lang === 'en') ? "Reported" : "已檢舉";
                         userActionHTML += `
                             <span style="color:#555; font-size:0.75rem; margin-left:10px; display:flex; align-items:center; gap:4px;">
@@ -596,7 +593,6 @@
                                 ${reportedText}
                             </span>`;
                     } else {
-                        // 如果還沒檢舉過，顯示正常的檢舉按鈕
                         const reportText = (lang === 'en') ? "Report" : "檢舉";
                         userActionHTML += `
                             <button class="btn-report" onclick="reportPost('${id}')">
@@ -617,6 +613,7 @@
                     const flowerText = (lang === 'en') ? "Offer" : "供花";
                     const chantText = (lang === 'en') ? "Chant" : "念佛";
 
+                    // ✨ 留言區綁定終極防護 oninput="filterEmoji(this)"
                     card.innerHTML = `
                         <div class="post-header">
                             <div style="display:flex; align-items:center; flex-wrap:wrap;">
@@ -632,7 +629,7 @@
                         <div class="re-list">${rs}</div>
                         
                         <div class="action-wrap">
-                            <input type="text" id="i-${id}" class="reply-input" placeholder="${replyPlaceholder}" maxlength="20">
+                            <input type="text" id="i-${id}" class="reply-input" placeholder="${replyPlaceholder}" maxlength="20" oninput="filterEmoji(this)">
                             
                             <div class="reaction-grid">
                                 <button class="btn-act" onclick="re('${id}','gassho')">
@@ -709,12 +706,57 @@
                         showAlert((lang === 'en') ? "Reported successfully." : "檢舉成功！感謝您協助維護客棧清淨。");
                     })
                     .catch(err => {
-                        // 如果仍然失敗，提供詳細錯誤以便追蹤
                         showAlert("檢舉失敗 / Report failed:\n" + err.message);
                     });
                 }
             });
         };
+
+        // ✨ 自動消失的 Toast 提示
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+             // ✨ 終極防護：過濾符號、網址與聯絡方式 (升級版：防空白鍵鑽漏洞)
+        function filterEmoji(el) {
+            const emojiRegex = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+            
+            // 升級：無視空白鍵的網址阻擋 (例如 W w w . c o m)
+            const urlRegex = /(https?:\/\/[^\s]+)|(w\s*w\s*w\s*\.\s*[a-zA-Z0-9-]+\s*\.\s*[a-zA-Z]{2,})|([a-zA-Z0-9-]+\s*\.\s*(com|tw|net|org|io|info|me|cc|xyz)\b)|(\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b)/gi;
+            
+            // 升級：無視空白鍵的聯絡方式阻擋 (例如 加  l i n e)
+            const contactRegex = /(加\s*line|加\s*賴|加\s*ig|加\s*微\s*信|加\s*好\s*友|加\s*我|私\s*訊|私\s*我|私\s*聊|交\s*友|約\s*嗎|群\s*組|社\s*群|站\s*內\s*信|賴\s*id|ig\s*帳\s*號|wechat|telegram|tg\s*群|line\s*id)/gi;
+            
+            const mentionRegex = /@[a-zA-Z0-9_.-]+/g;
+            const phoneIdRegex = /\d{7,}/g;
+
+            let original = el.value;
+            let modified = original;
+            let triggeredType = null;
+
+            if (emojiRegex.test(modified)) {
+                modified = modified.replace(emojiRegex, '');
+                triggeredType = 'emoji';
+            }
+            
+            if (urlRegex.test(modified) || contactRegex.test(modified) || mentionRegex.test(modified) || phoneIdRegex.test(modified)) {
+                modified = modified.replace(urlRegex, '').replace(contactRegex, '').replace(mentionRegex, '').replace(phoneIdRegex, '');
+                triggeredType = 'violation';
+            }
+
+            if (original !== modified) {
+                el.value = modified;
+                if (triggeredType === 'violation') {
+                    showToast((lang === 'en') ? 'Links and contact info are not allowed.' : '為保護彼此，請勿留下連結或聯絡方式喔');
+                } else {
+                    showToast((lang === 'en') ? 'Emojis are converted to light.' : '為保持空間清淨，符號已化為光');
+                }
+            }
+        }
+
     </script>
 </body>
 </html>

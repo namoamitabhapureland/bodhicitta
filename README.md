@@ -1,4 +1,9 @@
-# 🌐 彌陀淨土系統 | Amitabha Pure Land System
+#  彌陀淨土系統 | Amitabha Pure Land System
+[![GitHub Pages](https://img.shields.io/badge/網站-彌陀淨土系統-4A7043?style=for-the-badge&logo=githubpages&logoColor=white)](https://namoamitabhapureland.github.io/bodhicitta/)
+[![PWA](https://img.shields.io/badge/PWA-Ready-4285F4?style=for-the-badge&logo=pwa&logoColor=white)](https://namoamitabhapureland.github.io/bodhicitta/)
+[![Free](https://img.shields.io/badge/完全免費-100%25-00C853?style=for-the-badge)](https://namoamitabhapureland.github.io/bodhicitta/)
+[![No Ads](https://img.shields.io/badge/無廣告-純淨-FF9800?style=for-the-badge)](https://namoamitabhapureland.github.io/bodhicitta/)
+[![Static](https://img.shields.io/badge/純靜態-無後端-9C27B0?style=for-the-badge)](https://namoamitabhapureland.github.io/bodhicitta/)
 
 **本師釋迦牟尼佛 | 行普賢菩薩願．歸彌陀極樂國**
 

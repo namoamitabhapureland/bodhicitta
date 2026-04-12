@@ -3,21 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>菩提心室 ‧ 個人觀照</title>
+    <title>菩提心室 ‧ 蓮花觀照測試</title>
     <style>
-        /* 抄襲主系統的絕美色票 */
+        /* 絕對的低熵色票與防護 */
         :root {
             --bg-deep: #010103; 
-            --nebula: #150d1f;
             --gold: #f3e5ab; 
             --solid-gold: #d4af37; 
             --cyan: #8ba89c; 
             --text-main: #d0d0d0;
-            --glass-border: rgba(243, 229, 171, 0.4);
-            --btn-bg: rgba(212, 175, 55, 0.1);
+            --text-dim: #555555;
         }
 
-        /* 絕對防禦：禁止選單、禁止選取、防破格 */
         * { 
             -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; 
             outline: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; 
@@ -29,322 +26,252 @@
             height: 100dvh; overflow: hidden; display: flex; justify-content: center; 
         }
         
-        /* 移植星空背景 */
-        #nebula { position: absolute; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 50%, var(--nebula) 0%, var(--bg-deep) 100%); }
+        /* 移植的星空背景 */
         #starCanvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 
         .app-wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100dvh; }
 
-        /* 頂部導航 (鎖定高度) */
+        /* 頂部導航 (含隱形作弊開關) */
         .nav-top { flex-shrink: 0; padding: max(20px, env(safe-area-inset-top)) 25px 10px; display: flex; justify-content: space-between; align-items: center; }
-        .back-btn { color: var(--gold); text-decoration: none; font-size: 13px; letter-spacing: 2px; }
+        .back-btn { color: var(--text-dim); text-decoration: none; font-size: 13px; letter-spacing: 2px; }
+        .dev-trigger { font-size: 10px; color: var(--text-dim); letter-spacing: 3px; cursor: pointer; }
 
-        /* Profile 區塊 (鎖定高度) */
+        /* Profile 區塊 */
         .profile-section { flex-shrink: 0; padding: 10px 25px; display: flex; align-items: center; gap: 20px; }
         .avatar-box {
             width: 72px; height: 72px; border-radius: 50%; border: 1px solid var(--solid-gold);
-            padding: 3px; position: relative; flex-shrink: 0; cursor: pointer;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+            padding: 3px; position: relative; flex-shrink: 0;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
         }
         .avatar-img { width: 100%; height: 100%; border-radius: 50%; background: #111; background-size: cover; background-position: center; }
-        .avatar-plus { position: absolute; bottom: -2px; right: -2px; background: var(--bg-deep); color: var(--solid-gold); width: 22px; height: 22px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 14px; border: 1px solid var(--solid-gold); }
 
         .stats-row { flex: 1; display: flex; justify-content: space-around; text-align: center; }
+        .stat-item { cursor: pointer; } /* 點擊數字歸零的暗示 */
         .stat-num { font-size: 16px; font-weight: 300; color: #fff; }
         .stat-lbl { font-size: 9px; color: var(--cyan); letter-spacing: 1px; margin-top: 4px; }
 
         /* 備忘錄區 */
         .bio-section { flex-shrink: 0; padding: 0 25px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .bio-name { font-size: 14px; color: var(--gold); letter-spacing: 3px; }
-        .memo-input { width: 100%; background: transparent; border: none; font-size: 11px; color: var(--text-dim); padding: 8px 0; outline: none; border-bottom: 1px solid transparent; letter-spacing: 1px; }
-        .memo-input:focus { border-bottom-color: var(--glass-border); color: #fff; }
+        .memo-input { width: 100%; background: transparent; border: none; font-size: 11px; color: var(--text-dim); padding: 8px 0; letter-spacing: 1px; }
+        .memo-input:focus { border-bottom: 1px solid rgba(243, 229, 171, 0.3); color: #fff; }
 
-        /* 中央舞台 (彈性吸震區，防鍵盤擠壓) */
+        /* 中央舞台 (防鍵盤擠壓的彈性區) */
         .bodhi-stage { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; min-height: 0; }
         
-        /* 時間法義對照 */
         .time-diff { position: absolute; top: 10px; right: 25px; text-align: right; font-size: 9px; color: var(--text-dim); line-height: 1.8; letter-spacing: 1px; }
         
-        .lotus-container { width: 65vw; height: 65vw; max-width: 260px; max-height: 260px; display: flex; justify-content: center; align-items: center; transition: transform 1s ease; position: relative; }
+        /* 鎖死最大比例的蓮花容器 */
+        .lotus-container { width: 65vw; height: 65vw; max-width: 260px; max-height: 260px; display: flex; justify-content: center; align-items: center; transition: transform 1.5s ease-in-out; position: relative; }
         
-        /* 一真法界光點 */
-        .seed-core { position: absolute; width: 4px; height: 4px; background: #FFF; border-radius: 50%; box-shadow: 0 0 20px 5px rgba(255,255,255,0.8); animation: breathe 3s infinite; z-index: 10; }
+        .seed-core { position: absolute; width: 4px; height: 4px; background: #FFF; border-radius: 50%; box-shadow: 0 0 15px 3px rgba(255,255,255,0.6); animation: breathe 3s infinite; z-index: 10; }
 
-        /* 懸浮寶物軌道 */
-        .treasure-orbit { position: absolute; width: 100%; height: 100%; animation: spin 40s linear infinite; pointer-events: none; }
-        .treasure-item { position: absolute; width: 20px; height: 20px; filter: drop-shadow(0 0 5px var(--gold)); }
-
-        /* 底部操作 (抄襲主系統按鈕樣式) */
-        .action-row { flex-shrink: 0; padding: 10px 25px max(35px, env(safe-area-inset-bottom)); display: flex; justify-content: space-around; align-items: center; }
-        .btn-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+        /* 底部單一按鈕設計 */
+        .action-row { flex-shrink: 0; padding: 10px 25px max(35px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        .buddha-selector { font-size: 11px; color: var(--cyan); letter-spacing: 3px; cursor: pointer; border-bottom: 1px dashed rgba(139,168,156,0.3); padding-bottom: 3px; }
         
-        .action-btn { 
-            width: 48px; height: 48px; border-radius: 50%; display: flex; justify-content: center; align-items: center; position: relative;
-            background: var(--btn-bg); border: 1px solid var(--glass-border); color: var(--gold); 
-            backdrop-filter: blur(5px); transition: 0.3s;
+        .main-btn { 
+            width: 64px; height: 64px; border-radius: 50%; display: flex; justify-content: center; align-items: center; position: relative;
+            background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(243, 229, 171, 0.3); color: var(--gold); 
+            cursor: pointer; transition: 0.2s;
         }
-        .action-btn:active { transform: scale(0.9); background: rgba(243, 229, 171, 0.2); }
-        .btn-lbl { font-size: 9px; color: var(--cyan); letter-spacing: 2px; text-align: center; }
-
-        /* 進度環 (長按) */
-        .ring-svg { position: absolute; inset: -1px; transform: rotate(-90deg); pointer-events: none; }
-        .ring-svg circle { fill: none; stroke: var(--solid-gold); stroke-width: 1.5; stroke-dasharray: 150; stroke-dashoffset: 150; transition: stroke-dashoffset 1.5s linear; }
-        .pressing .ring-svg circle { stroke-dashoffset: 0; }
-
-        /* 大數據按鈕 */
-        .chart-btn { padding: 8px 15px; border-radius: 20px; border: 1px solid var(--glass-border); color: var(--gold); font-size: 9px; letter-spacing: 2px; background: var(--btn-bg); cursor: pointer; }
-
-        /* Modal (黑金質感) */
-        .modal-bg { position: absolute; inset: 0; background: rgba(1, 1, 3, 0.9); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 100; }
-        .modal-card { width: 85%; max-width: 340px; background: #0A0A0C; border: 1px solid var(--glass-border); border-radius: 15px; padding: 25px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.1); text-align: center;}
-        .custom-input { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--solid-gold); color: var(--gold); font-size: 15px; text-align: center; padding: 10px 0; margin: 20px 0; }
-        .modal-btn { background: transparent; border: 1px solid var(--glass-border); color: var(--gold); padding: 10px 30px; border-radius: 25px; font-size: 0.9rem; letter-spacing: 4px; cursor: pointer; width: 100%; margin-top: 10px;}
+        .main-btn:active { transform: scale(0.92); background: rgba(212, 175, 55, 0.15); border-color: var(--solid-gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
 
         .particle { position: absolute; width: 3px; height: 3px; background: var(--gold); border-radius: 50%; pointer-events: none; box-shadow: 0 0 8px var(--gold); z-index: 50;}
 
-        @keyframes breathe { 0%, 100% { transform: scale(0.8); opacity: 0.6; } 50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 30px 10px rgba(243, 229, 171, 0.5); } }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes breathe { 0%, 100% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 25px 8px rgba(243, 229, 171, 0.4); } }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-<div id="nebula"></div>
 <canvas id="starCanvas"></canvas>
 
 <div class="app-wrapper">
     <div class="nav-top">
-        <a href="index.html" class="back-btn">← 菩提客棧</a>
-        <div style="font-size:10px; color:var(--text-dim); letter-spacing:3px;">行者觀照</div>
+        <a href="index.html" class="back-btn">← 回道場</a>
+        <div class="dev-trigger" onclick="applyCheat()">行者觀照</div>
+        <div class="dev-trigger" onclick="resetAll()" style="color: rgba(244, 67, 54, 0.6);">重置</div>
     </div>
 
     <div class="profile-section">
-        <div class="avatar-box" onclick="document.getElementById('avatarInput').click()">
+        <div class="avatar-box">
             <div class="avatar-img" id="ui-avatar"></div>
-            <div class="avatar-plus" id="avatarPlus">+</div>
-            <input type="file" id="avatarInput" hidden accept="image/*" onchange="handleAvatar(event)">
         </div>
         <div class="stats-row">
-            <div class="stat-item"><div class="stat-num" id="ui-ami">0</div><div class="stat-lbl">專念彌陀</div></div>
-            <div class="stat-item"><div class="stat-num" id="ui-oth">0</div><div class="stat-lbl" id="lbl-oth">普念諸佛</div></div>
-            <div class="stat-item"><div class="stat-num" id="ui-warmth" style="color:var(--solid-gold);">0</div><div class="stat-lbl">菩提資糧</div></div>
+            <div class="stat-item" onclick="resetCurrent()">
+                <div class="stat-num" id="ui-ami">0</div>
+                <div class="stat-lbl" id="ui-current-lbl">阿彌陀佛</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num" id="ui-warmth" style="color:var(--solid-gold);">0</div>
+                <div class="stat-lbl">總菩提分</div>
+            </div>
         </div>
     </div>
 
     <div class="bio-section">
-        <div class="bio-name">妙依 ‧ <span id="ui-rank" style="font-size:10px; color:var(--cyan);">初發心</span></div>
-        <input type="text" class="memo-input" id="ui-memo" placeholder="寫下今日發心，儲存於本地守護...">
+        <div class="bio-name">妙依 ‧ <span id="ui-rank" style="font-size:10px; color:var(--cyan); letter-spacing: 1px;">一真法界</span></div>
+        <input type="text" class="memo-input" id="ui-memo" placeholder="寫下今日發心，此處絕對隱私...">
     </div>
 
     <div class="bodhi-stage">
         <div class="time-diff">
             娑婆當下 <span id="time-earth">--:--:--</span><br>
-            <span style="color:var(--gold); margin-top:4px; display:block;">極樂已過 <span id="time-suk">--:--:--</span></span>
+            <span style="color:var(--gold); margin-top:4px; display:block;">極樂時間 <span id="time-suk">--:--:--</span></span>
         </div>
-        <div class="lotus-container">
-            <div id="lotus-svg" style="width:100%; height:100%;"></div>
-            <div class="treasure-orbit" id="treasure-orbit"></div>
-        </div>
+        <div class="lotus-container" id="lotus-svg"></div>
         <div class="seed-core" id="seed-core"></div>
     </div>
 
     <div class="action-row">
-        <button class="chart-btn" onclick="toggleModal('chartModal')">大數據</button>
-
-        <div class="btn-item" onclick="addAmi(event)">
-            <div class="action-btn">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor"/>
-                </svg>
-            </div>
-            <div class="btn-lbl">專念彌陀</div>
+        <div class="buddha-selector" id="buddha-selector" onclick="changeBuddha()">當前定課：阿彌陀佛</div>
+        <div class="main-btn" onclick="addCount(event)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor"/>
+            </svg>
         </div>
-
-        <div class="btn-item" id="btn-oth" onmousedown="startPress()" onmouseup="endPress(event)" ontouchstart="startPress()" ontouchend="endPress(event)">
-            <div class="action-btn">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5Z"/>
-                </svg>
-                <svg class="ring-svg"><circle cx="24" cy="24" r="23"></circle></svg>
-            </div>
-            <div id="ui-oth-text" class="btn-lbl">普念諸佛</div>
-        </div>
-    </div>
-</div>
-
-<div id="inputModal" class="modal-bg">
-    <div class="modal-card">
-        <div style="color:var(--gold); font-size:14px; letter-spacing:4px;">請輸入欲觀照之聖號</div>
-        <input type="text" id="customBuddha" class="custom-input" placeholder="如：觀世音菩薩">
-        <button class="modal-btn" onclick="saveCustom()">開始灌溉</button>
-    </div>
-</div>
-
-<div id="chartModal" class="modal-bg" onclick="toggleModal('chartModal')">
-    <div class="modal-card" onclick="event.stopPropagation()">
-        <div style="color:var(--gold); font-size:14px; margin-bottom:15px; letter-spacing:3px;">修持大數據觀照</div>
-        <div style="font-size:10px; color:var(--text-dim); margin-bottom:10px;">近七日彌陀趨勢</div>
-        <div id="chart-svg" style="width:100%; height:120px; border-bottom:1px solid var(--glass-border);"></div>
-        <div id="oth-list" style="margin-top:20px; font-size:11px; color:var(--cyan); max-height:100px; overflow-y:auto; text-align:left; padding: 0 10px;"></div>
-        <button class="modal-btn" onclick="toggleModal('chartModal')">收起玉簡</button>
     </div>
 </div>
 
 <script>
-    // --- 1. 星空引擎 (無相背景) ---
+    // --- 1. 星空背景 (純粹移植) ---
     const canvas = document.getElementById('starCanvas');
     const ctx = canvas.getContext('2d');
-    let stars = [];
-    function initStars() {
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        stars = Array.from({length: 120}, () => ({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*1.5, speed: Math.random()*0.02 }));
-    }
+    let stars = Array.from({length: 100}, () => ({ x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight, size: Math.random()*1.5, speed: Math.random()*0.02 }));
     function drawStars() {
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "white";
         stars.forEach(s => { ctx.globalAlpha = Math.abs(Math.sin(Date.now()*s.speed*0.01)); ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill(); });
         requestAnimationFrame(drawStars);
     }
+    drawStars();
 
-    // --- 2. 聲音引擎 (原生無版權) ---
+    // --- 2. 聲音引擎 (原生，防 Bug 處理) ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playSnd(f, d, type='sine') {
+    document.body.addEventListener('touchstart', () => { if(audioCtx.state==='suspended') audioCtx.resume(); }, {once:true});
+    function playSnd(f, d) {
         if(audioCtx.state==='suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-        osc.type = type; osc.frequency.setValueAtTime(f, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + d);
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + d);
     }
 
-    // --- 3. 數據與寶物邏輯 ---
-    let ami = parseInt(localStorage.getItem('personal_ami') || '0');
-    let warmth = parseInt(localStorage.getItem('pure_land_warmth') || '0');
-    let pendingW = parseInt(localStorage.getItem('pending_w') || '0');
-    let othList = JSON.parse(localStorage.getItem('personal_oth_list') || '{}');
-    let curBuddha = localStorage.getItem('current_buddha') || '';
-    let myTreasures = JSON.parse(localStorage.getItem('my_treasures') || '[]');
-    let historyData = JSON.parse(localStorage.getItem('ami_7days') || '[0,0,0,0,0,0,0]');
+    // --- 3. 核心數據與作弊機關 ---
+    let mainDb = JSON.parse(localStorage.getItem('PX_V15.0')) || { totalAmi: 0 };
+    let currentMode = "阿彌陀佛"; // 預設彌陀
+    let customCounts = JSON.parse(localStorage.getItem('personal_oth_list') || '{}');
+    let personalAmi = parseInt(localStorage.getItem('personal_ami') || '0');
+    
+    // ⚠️ 開發者測試變數
+    let cheatClicks = 0;
+    let cheatScore = 0; 
+    let cheatTimer;
 
-    // 寶物 SVG 庫 (取自你給的多寶格)
-    const tAssets = [
-        `<svg viewBox="0 0 100 150"><polygon points="50,10 56,40 50,105 44,40" fill="#fff" opacity="0.8"/><polygon points="35,100 65,100 55,110 45,110" fill="#d4af37"/></svg>`, // 劍
-        `<svg viewBox="0 0 100 150"><polygon points="42,50 58,50 72,95 28,95" fill="#8ba89c" opacity="0.8"/><polygon points="28,95 72,95 60,125 40,125" fill="#d4af37"/></svg>`, // 瓶
-        `<svg viewBox="0 0 100 150"><polygon points="50,15 85,45 50,65 15,45" fill="#f3e5ab"/><polygon points="15,45 50,65 50,115 25,85" fill="#d4af37"/></svg>` // 珠
-    ];
-
-    window.onload = () => {
-        initStars(); drawStars();
-        
-        // 每日登入邏輯
-        const lastDate = localStorage.getItem('last_entry');
-        const today = new Date().toDateString();
-        if(lastDate !== today) {
-            let streak = parseInt(localStorage.getItem('entry_streak') || '0');
-            streak = (lastDate === new Date(Date.now()-86400000).toDateString()) ? streak + 1 : 1;
-            
-            // 3日送寶
-            if(streak % 3 === 0) {
-                myTreasures.push(Math.floor(Math.random() * 3));
-                localStorage.setItem('my_treasures', JSON.stringify(myTreasures));
-                alert("精進三日，法界贈予琉璃寶物，環繞菩提。");
-            }
-            // 10日送資糧
-            pendingW += 10;
-            if(streak % 10 === 0 || pendingW >= 100) { 
-                warmth += 100; pendingW = 0; 
-                localStorage.setItem('pure_land_warmth', warmth);
-                alert("十日圓滿，百點資糧已歸入主系統。"); 
-            }
-            
-            localStorage.setItem('pending_w', pendingW);
-            localStorage.setItem('entry_streak', streak);
-            localStorage.setItem('last_entry', today);
-
-            // 更新 7 日圖表
-            historyData.shift(); historyData.push(ami);
-            localStorage.setItem('ami_7days', JSON.stringify(historyData));
+    function applyCheat() {
+        clearTimeout(cheatTimer);
+        cheatClicks++;
+        if(cheatClicks >= 5) {
+            cheatScore += 10000;
+            cheatClicks = 0;
+            alert("【開發者權限】已灌入一萬點菩提分！請觀賞蓮花變化。目前測試總分：" + cheatScore);
+            updateUI();
         }
-
-        // 恢復 UI
-        const av = localStorage.getItem('traveler_avatar');
-        if(av) { document.getElementById('ui-avatar').style.backgroundImage=`url(${av})`; document.getElementById('avatarPlus').style.display='none'; }
-        document.getElementById('ui-memo').value = localStorage.getItem('traveler_memo') || '';
-        document.getElementById('ui-memo').oninput = e => localStorage.setItem('traveler_memo', e.target.value);
-        if(curBuddha) document.getElementById('ui-oth-text').innerText = `念${curBuddha}`;
-        
-        updateUI(); renderTreasures();
-        setInterval(updateTime, 1000);
-    };
-
-    // --- 4. 法義時間：娑婆 1秒 = 極樂 10小時 (36500倍) ---
-    function updateTime() {
-        const now = new Date();
-        document.getElementById('time-earth').innerText = now.toLocaleTimeString();
-        const sukOffset = (now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds()) * 36500;
-        const sD = new Date(sukOffset * 1000);
-        document.getElementById('time-suk').innerText = sD.getUTCHours().toString().padStart(2,'0') + ":" + sD.getUTCMinutes().toString().padStart(2,'0') + ":" + sD.getUTCSeconds().toString().padStart(2,'0');
+        cheatTimer = setTimeout(() => { cheatClicks = 0; }, 1000);
     }
 
-    // --- 5. 交互 ---
-    function addAmi(e) { 
-        ami++; localStorage.setItem('personal_ami', ami); 
-        playSnd(880, 0.5); fly(e, '#f3e5ab'); updateUI(); 
-    }
-
-    let pressTimer; let isLong = false;
-    function startPress() {
-        isLong = false; document.getElementById('btn-oth').classList.add('pressing');
-        pressTimer = setTimeout(() => {
-            isLong = true; 
-            playSnd(220, 0.8, 'square'); 
-            document.getElementById('seed-core').style.transform = 'scale(0.1)';
-            setTimeout(() => document.getElementById('seed-core').style.transform = '', 300);
-            toggleModal('inputModal'); 
-        }, 1500);
-    }
-    function endPress(e) {
-        clearTimeout(pressTimer); document.getElementById('btn-oth').classList.remove('pressing');
-        if(!isLong) {
-            if(!curBuddha) { toggleModal('inputModal'); return; }
-            othList[curBuddha] = (othList[curBuddha] || 0) + 1;
-            localStorage.setItem('personal_oth_list', JSON.stringify(othList));
-            playSnd(440, 0.3, 'triangle'); fly(e, '#8ba89c'); updateUI();
+    function resetAll() {
+        if(confirm("確定要將測試數據全數歸零？")) {
+            cheatScore = 0; personalAmi = 0; customCounts = {};
+            localStorage.setItem('personal_ami', 0);
+            localStorage.setItem('personal_oth_list', JSON.stringify({}));
+            updateUI();
         }
     }
 
-    function saveCustom() {
-        const name = document.getElementById('customBuddha').value.trim();
-        if(!name) return;
-        curBuddha = name; localStorage.setItem('current_buddha', curBuddha);
-        document.getElementById('ui-oth-text').innerText = `念${curBuddha}`;
-        toggleModal('inputModal');
+    // 點擊數字歸零當前聖號
+    function resetCurrent() {
+        if(confirm(`是否將【${currentMode}】的當次計數歸零？`)) {
+            if(currentMode === "阿彌陀佛") {
+                personalAmi = 0; localStorage.setItem('personal_ami', 0);
+            } else {
+                customCounts[currentMode] = 0; localStorage.setItem('personal_oth_list', JSON.stringify(customCounts));
+            }
+            updateUI();
+        }
     }
 
-    // --- 6. 原版絕美琉璃蓮花演算法 ---
+    // 切換佛號
+    function changeBuddha() {
+        let input = prompt("請輸入欲觀照之聖號 (留空則預設為阿彌陀佛)：", currentMode === "阿彌陀佛" ? "" : currentMode);
+        if (input !== null) {
+            currentMode = input.trim() === "" ? "阿彌陀佛" : input.trim();
+            document.getElementById('buddha-selector').innerText = `當前定課：${currentMode}`;
+            document.getElementById('ui-current-lbl').innerText = currentMode;
+            updateUI();
+        }
+    }
+
+    // 單一按鈕計數 (完美連動主系統)
+    function addCount(e) {
+        if(currentMode === "阿彌陀佛") {
+            personalAmi++; localStorage.setItem('personal_ami', personalAmi);
+            // ✨ 真實寫入主系統 PX_V15.0
+            mainDb.totalAmi = (mainDb.totalAmi || 0) + 1;
+            localStorage.setItem('PX_V15.0', JSON.stringify(mainDb));
+            playSnd(880, 0.5); // 彌陀罄聲
+        } else {
+            customCounts[currentMode] = (customCounts[currentMode] || 0) + 1;
+            localStorage.setItem('personal_oth_list', JSON.stringify(customCounts));
+            playSnd(440, 0.3); // 諸佛木魚聲
+        }
+        fly(e); updateUI();
+    }
+
+    // --- 4. 絕美蓮花演算法 (純淨琉璃版) ---
     function updateUI() {
-        document.getElementById('ui-ami').innerText = ami;
-        document.getElementById('ui-warmth').innerText = warmth;
-        let totalOth = Object.values(othList).reduce((a,b)=>a+b, 0);
-        document.getElementById('ui-oth').innerText = totalOth;
+        // 顯示當前選擇的數字
+        document.getElementById('ui-ami').innerText = currentMode === "阿彌陀佛" ? personalAmi : (customCounts[currentMode] || 0);
         
-        const score = ami + totalOth + (warmth * 5);
-        renderLotus(score);
+        // 總分計算 = 彌陀 + 諸佛總和 + 作弊分數
+        let totalOth = Object.values(customCounts).reduce((a,b)=>a+b, 0);
+        let totalScore = personalAmi + totalOth + cheatScore;
+        document.getElementById('ui-warmth').innerText = totalScore;
+        
+        renderLotus(totalScore);
     }
 
     function renderLotus(score) {
         const box = document.getElementById('lotus-svg');
         const rank = document.getElementById('ui-rank');
-        // 前10天 (5000分以下) 只有種子
+        
+        // 【第 1 階段】一真法界：分數不足 5000，只有種子
         if(score < 5000) { box.innerHTML = ''; rank.innerText = "一真法界"; return; }
         
-        let layers = score < 50000 ? 1 : 2;
-        let colorGrad = score < 100000 ? ["#8ba89c", "rgba(255,255,255,0.1)"] : ["#d4af37", "rgba(212,175,55,0.2)"];
-        rank.innerText = score < 100000 ? "清淨琉璃" : "圓滿金蓮";
+        // 【第 2 階段】清淨琉璃 (單層)
+        let layers = 1;
+        let colorGrad = ["#8ba89c", "rgba(255,255,255,0.1)"]; // 白藍漸層
+        let rankName = "清淨琉璃";
+
+        // 【第 3 階段】慈悲長養 (單層變色)
+        if (score >= 15000) { colorGrad = ["#e1bee7", "rgba(255,255,255,0.1)"]; rankName = "慈悲長養"; } // 粉紫
+        
+        // 【第 4 階段】行願幻彩 (雙層展開)
+        if (score >= 30000) { layers = 2; colorGrad = ["#b2dfdb", "rgba(224,247,250,0.15)"]; rankName = "行願幻彩"; } // 青綠
+
+        // 【第 5 階段】圓滿金蓮 (雙層純金)
+        if (score >= 50000) { layers = 2; colorGrad = ["#d4af37", "rgba(212,175,55,0.2)"]; rankName = "圓滿金蓮"; }
+
+        rank.innerText = rankName;
 
         let svgHtml = `<svg viewBox="-150 -150 300 300" style="width:100%; height:100%; overflow:visible;">
             <defs>
                 <linearGradient id="petalGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-                    <stop offset="0%" stop-color="rgba(1,1,3,0.9)"/><stop offset="50%" stop-color="${colorGrad[1]}"/><stop offset="100%" stop-color="${colorGrad[0]}"/>
+                    <stop offset="0%" stop-color="rgba(1,1,3,0.9)"/>
+                    <stop offset="50%" stop-color="${colorGrad[1]}"/>
+                    <stop offset="100%" stop-color="${colorGrad[0]}"/>
                 </linearGradient>
             </defs>`;
 
@@ -353,74 +280,42 @@
             const offset = (l % 2 === 0) ? 22.5 : 0; 
             for (let i = 0; i < 8; i++) {
                 const ang = i * 45 + offset;
-                // 原版極美花瓣路徑
+                // 原版極簡絕美花瓣路徑
                 svgHtml += `<g transform="rotate(${ang}) scale(${sc})">
-                    <path d="M0 0 C25 -50 40 -100 0 -150 C-40 -100 -25 -50 0 0" fill="url(#petalGrad)" stroke="${colorGrad[0]}" stroke-width="0.5" opacity="0.85"/>
+                    <path d="M0 0 C25 -50 40 -100 0 -150 C-40 -100 -25 -50 0 0" fill="url(#petalGrad)" stroke="${colorGrad[0]}" stroke-width="0.6" opacity="0.85"/>
                 </g>`;
             }
         }
         svgHtml += `</svg>`;
         box.innerHTML = svgHtml;
-        box.style.transform = `rotate(${score * 0.1}deg)`;
+        // 隨分數極度緩慢旋轉，帶來生命感
+        box.style.transform = `rotate(${score * 0.05}deg)`;
     }
 
-    // 渲染寶物星環
-    function renderTreasures() {
-        const orbit = document.getElementById('treasure-orbit');
-        orbit.innerHTML = '';
-        const total = myTreasures.length;
-        myTreasures.forEach((tIdx, i) => {
-            const angle = (i / total) * 360;
-            const el = document.createElement('div');
-            el.className = 'treasure-item';
-            el.style.transform = `rotate(${angle}deg) translateY(-110px) rotate(-${angle}deg)`;
-            el.innerHTML = tAssets[tIdx];
-            orbit.appendChild(el);
-        });
+    // --- 5. 娑婆極樂時間 (公式：娑婆1秒 = 極樂36500秒) ---
+    function updateTime() {
+        const now = new Date();
+        document.getElementById('time-earth').innerText = now.toLocaleTimeString();
+        const sukOffset = (now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds()) * 36500;
+        const sD = new Date(sukOffset * 1000);
+        document.getElementById('time-suk').innerText = sD.getUTCHours().toString().padStart(2,'0') + ":" + sD.getUTCMinutes().toString().padStart(2,'0') + ":" + sD.getUTCSeconds().toString().padStart(2,'0');
     }
 
-    // 大數據貝茲曲線
-    function drawChart() {
-        historyData[historyData.length - 1] = Math.max(historyData[historyData.length - 1], ami);
-        const box = document.getElementById('chart-svg');
-        const maxVal = Math.max(...historyData, 10);
-        const w = box.clientWidth; const h = 100; const step = w / 6;
-        let pathD = `M0,${h - (historyData[0]/maxVal)*h}`;
-        let pts = '';
-        for(let i = 0; i < 7; i++) {
-            const x = i * step; const y = h - (historyData[i] / maxVal) * h;
-            if(i > 0) pathD += ` C${(i-1)*step + step/2},${h - (historyData[i-1]/maxVal)*h} ${x - step/2},${y} ${x},${y}`;
-            pts += `<circle cx="${x}" cy="${y}" r="2" fill="#d4af37"/>`;
-        }
-        box.innerHTML = `<svg width="100%" height="100%" style="overflow:visible;"><path d="${pathD}" fill="none" stroke="rgba(212,175,55,0.6)" stroke-width="1.5"/>${pts}</svg>`;
-        
-        // 列出諸佛
-        document.getElementById('oth-list').innerHTML = Object.entries(othList).map(([k,v])=>`<div style="margin-bottom:6px; border-bottom:1px dashed rgba(139,168,156,0.3); padding-bottom:4px;">✨ 結緣 ${k} ── ${v} 次</div>`).join('');
-    }
-
-    function toggleModal(id) {
-        const m = document.getElementById(id);
-        m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
-        if(id === 'chartModal' && m.style.display === 'flex') drawChart();
-    }
-
-    function fly(e, color) {
-        const d = document.createElement('div'); d.className='particle'; d.style.background=color; d.style.boxShadow=`0 0 8px ${color}`;
+    // --- 輔助動畫 ---
+    function fly(e) {
+        const d = document.createElement('div'); d.className='particle'; 
         const x = e.clientX || e.touches[0].clientX; const y = e.clientY || e.touches[0].clientY;
         d.style.left = x+'px'; d.style.top = y+'px'; document.body.appendChild(d);
         const t = document.getElementById('seed-core').getBoundingClientRect();
         d.animate([{left:x+'px', top:y+'px'}, {left:t.left+'px', top:t.top+'px', opacity:0}], 800).onfinish = ()=>d.remove();
     }
 
-    function handleAvatar(e) {
-        const r = new FileReader();
-        r.onload = ev => {
-            document.getElementById('ui-avatar').style.backgroundImage=`url(${ev.target.result})`;
-            localStorage.setItem('traveler_avatar', ev.target.result);
-            document.getElementById('avatarPlus').style.display='none';
-        };
-        r.readAsDataURL(e.target.files[0]);
-    }
+    // 初始化
+    window.onload = () => {
+        updateUI(); setInterval(updateTime, 1000);
+        document.getElementById('ui-memo').value = localStorage.getItem('traveler_memo') || '';
+        document.getElementById('ui-memo').oninput = e => localStorage.setItem('traveler_memo', e.target.value);
+    };
 </script>
 </body>
 </html>

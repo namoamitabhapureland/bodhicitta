@@ -13,7 +13,7 @@
         .app-wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; z-index: 10; }
 
         .nav-top { flex-shrink: 0; padding: max(20px, env(safe-area-inset-top)) 25px 5px; display: flex; justify-content: space-between; align-items: center; }
-        .dev-zone { font-size: 11px; color: #444; letter-spacing: 2px; cursor: pointer; }
+        .dev-zone { font-size: 11px; color: #555; letter-spacing: 2px; cursor: pointer; }
         .dev-zone:active { color: var(--gold); }
 
         .stats-row { flex-shrink: 0; padding: 15px 25px; display: flex; justify-content: space-around; text-align: center; }
@@ -21,15 +21,17 @@
         .stat-lbl { font-size: 10px; color: var(--cyan); letter-spacing: 1px; margin-top: 5px; }
 
         .stage { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; min-height: 0; }
+        
+        /* 蓮花容器與種子，雙重綁定呼吸動畫 */
         #lotus-container { width: 85vw; height: 85vw; max-width: 320px; max-height: 320px; animation: lotus-breathe 4s infinite ease-in-out; display: flex; justify-content: center; align-items: center; position: relative; }
-        .seed { position: absolute; width: 6px; height: 6px; background: #fff; border-radius: 50%; box-shadow: 0 0 20px #fff; z-index: 10; }
+        .seed { position: absolute; width: 6px; height: 6px; background: #fff; border-radius: 50%; box-shadow: 0 0 20px #fff; z-index: 10; animation: lotus-breathe 4s infinite ease-in-out; }
         @keyframes lotus-breathe { 0%, 100% { transform: scale(0.96); } 50% { transform: scale(1.04); } }
 
         .footer { flex-shrink: 0; padding: 10px 25px max(35px, env(safe-area-inset-bottom)); text-align: center; }
         .main-btn { width: 72px; height: 72px; border-radius: 50%; border: 1px solid var(--solid); background: rgba(212,175,55,0.05); margin: 15px auto 0; display: flex; justify-content: center; align-items: center; transition: 0.2s; cursor: pointer; }
         .main-btn:active { transform: scale(0.92); background: rgba(212,175,55,0.2); }
 
-        /* ✨ 修復一：絕對鎖定寶物容器尺寸，拒絕變形 ✨ */
+        /* 絕對鎖定寶物容器尺寸，拒絕變形 */
         #treasure-overlay {
             position: fixed; inset: 0; z-index: 3000; background: rgba(1, 1, 3, 0.95);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -37,18 +39,18 @@
         }
         #treasure-overlay.show { display: flex; opacity: 1; }
         .t-svg-wrap { 
-            width: 140px; height: 140px; /* 拔除百分比，鎖死絕對尺寸 */
+            width: 140px; height: 140px; 
             display: flex; align-items: center; justify-content: center; 
             animation: float-pulse 4s infinite ease-in-out; margin-bottom: 25px;
         }
-        .t-svg-wrap svg { width: 100%; height: 100%; object-fit: contain; } /* 確保SVG在容器內維持比例 */
+        .t-svg-wrap svg { width: 100%; height: 100%; object-fit: contain; }
         @keyframes float-pulse { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
         .t-name { color: #fff; font-size: 1.2rem; letter-spacing: 5px; text-shadow: 0 0 20px #fff, 0 0 40px var(--solid); margin-bottom: 10px; text-align: center; }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-<svg style="position: absolute; width:0; height:0;">
+<svg style="position: absolute; width:0; height:0;" xmlns="http://www.w3.org/2000/svg">
     <defs>
         <linearGradient id="facet-light" x1="0%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.95"/><stop offset="100%" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
         <linearGradient id="facet-dark" x1="50%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d4af37" stop-opacity="0.2"/><stop offset="100%" stop-color="#b8860b" stop-opacity="0.8"/></linearGradient>
@@ -107,16 +109,16 @@
 </div>
 
 <script>
-    // --- 1. 數據與公式 (零 Bug 計算) ---
+    // --- 1. 數據連動與公式 (0 Bug 核心) ---
     let db = JSON.parse(localStorage.getItem('PX_V15.0')) || { totalNian: 0, bodhiLitCount: 0 };
     let localOth = JSON.parse(localStorage.getItem('personal_oth_list') || '{}');
     let currentMode = "阿彌陀佛";
     let cheatPts = 0;
 
     const treasures = [
-        { name: "幾何慧劍", svg: `<svg viewBox="0 0 100 150" preserveAspectRatio="xMidYMid meet"><g transform="translate(0, 5)"><polygon points="50,10 56,40 50,105 44,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="35,100 65,100 55,110 45,110" fill="url(#pure-glass)" stroke="#d4af37" stroke-width="0.8"/><circle cx="50" cy="105" r="4" fill="#fff"/></g></svg>` },
-        { name: "琉璃淨瓶", svg: `<svg viewBox="0 0 100 150" preserveAspectRatio="xMidYMid meet"><g transform="translate(0, 10)"><polygon points="42,50 58,50 72,95 28,95" fill="url(#facet-cyan)" stroke="#fff" stroke-width="0.5"/><circle cx="50" cy="80" r="10" fill="rgba(255,255,255,0.6)"/></g></svg>` },
-        { name: "多面寶珠", svg: `<svg viewBox="0 0 100 150" preserveAspectRatio="xMidYMid meet"><g transform="translate(0, 20)"><polygon points="50,15 85,45 50,65 15,45" fill="url(#facet-light)" stroke="#fff" stroke-width="0.8"/><polygon points="15,45 50,65 50,115 25,85" fill="url(#facet-rose)" opacity="0.9" stroke="#fff" stroke-width="0.5"/></g></svg>` }
+        { name: "幾何慧劍", svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 150" preserveAspectRatio="xMidYMid meet"><g transform="translate(0, 5)"><polygon points="50,10 56,40 50,105 44,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="35,100 65,100 55,110 45,110" fill="url(#pure-glass)" stroke="#d4af37" stroke-width="0.8"/><circle cx="50" cy="105" r="4" fill="#fff"/></g></svg>` },
+        { name: "琉璃淨瓶", svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 150" preserveAspectRatio="xMidYMid meet"><g transform="translate(0, 10)"><polygon points="42,50 58,50 72,95 28,95" fill="url(#facet-cyan)" stroke="#fff" stroke-width="0.5"/><circle cx="50" cy="80" r="10" fill="rgba(255,255,255,0.6)"/></g></svg>` },
+        { name: "多面寶珠", svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 150" preserveAspectRatio="xMidYMid meet"><g transform="translate(0, 20)"><polygon points="50,15 85,45 50,65 15,45" fill="url(#facet-light)" stroke="#fff" stroke-width="0.8"/><polygon points="15,45 50,65 50,115 25,85" fill="url(#facet-rose)" opacity="0.9" stroke="#fff" stroke-width="0.5"/></g></svg>` }
     ];
 
     function calculateTotalPoints() {
@@ -146,7 +148,7 @@
         document.getElementById('treasure-overlay').classList.add('show');
     }
 
-    // --- 2. 蓮花渲染 ✨修復二：補回所有純淨色階段判定✨ ---
+    // --- 2. 蓮花渲染 (徹底修復 SVG 寬高塌陷 Bug) ---
     function renderLotus(p) {
         const box = document.getElementById('lotus-container');
         const rank = document.getElementById('ui-rank');
@@ -172,7 +174,8 @@
         rank.innerText = rankTxt;
         box.style.filter = glow;
 
-        let svg = `<svg viewBox="-150 -150 300 300">`;
+        // ✨ 補回 style="width:100%; height:100%;" 解決手機縮小變零的問題 ✨
+        let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-150 -150 300 300" style="width:100%; height:100%; overflow:visible;">`;
         for (let l = layers; l > 0; l--) {
             const sc = 0.4 + (l * 0.25);
             for (let i = 0; i < 8; i++) {
@@ -193,13 +196,12 @@
         renderLotus(pts);
     }
 
-    // --- 3. 工具與作弊 ---
     function addCheat() { cheatPts += 1000; updateUI(); }
     function resetAll() { if(confirm("重置測試？")) { cheatPts=0; localOth={}; localStorage.setItem('personal_oth_list','{}'); updateUI(); } }
     function resetCurrent() { if(confirm(`歸零 ${currentMode}？`)) { if(currentMode==="阿彌陀佛") db.totalNian=0; else localOth[currentMode]=0; updateUI(); } }
     function changeBuddha() { let n = prompt("輸入聖號：", currentMode); if(n) { currentMode = n; document.getElementById('buddha-sel').innerText = `當前定課：${n}`; document.getElementById('ui-lbl').innerText = n; updateUI(); } }
 
-    // --- 4. ✨修復三：還原88佛的極慢呼吸深邃星空✨ ---
+    // --- 3. 完美還原：88佛的極慢深邃星空 ---
     const canvas = document.getElementById('starCanvas'); 
     const ctx = canvas.getContext('2d');
     let stars = [];
@@ -209,9 +211,9 @@
         stars = Array.from({length: 120}, () => ({ 
             x: Math.random() * canvas.width, 
             y: Math.random() * canvas.height, 
-            size: Math.random() * 2 + 0.5,  // 隨機大小，產生遠近感
-            speed: Math.random() * 0.002,   // 極度慢速
-            offset: Math.random() * Math.PI * 2 // 獨立的閃爍時間差
+            size: Math.random() * 2 + 0.5, 
+            speed: Math.random() * 0.002, 
+            offset: Math.random() * Math.PI * 2
         }));
     }
     
@@ -219,7 +221,6 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         let time = Date.now();
         stars.forEach(s => {
-            // 利用正弦函數創造緩慢亮暗的呼吸感
             let alpha = 0.2 + Math.abs(Math.sin(time * s.speed + s.offset)) * 0.8;
             ctx.globalAlpha = alpha;
             ctx.fillStyle = "white";

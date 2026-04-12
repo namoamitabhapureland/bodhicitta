@@ -3,319 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>菩提心室 ‧ 蓮花觀照測試</title>
+    <title>菩提心室 ‧ 蓮花與寶物測試</title>
     <style>
-        /* 絕對的低熵色票與防護 */
         :root {
-            --bg-deep: #010103; 
-            --gold: #f3e5ab; 
-            --solid-gold: #d4af37; 
-            --cyan: #8ba89c; 
-            --text-main: #d0d0d0;
-            --text-dim: #555555;
+            --bg-deep: #010103; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
+            --glass: rgba(255, 255, 255, 0.03); --glass-border: rgba(255, 255, 255, 0.1);
         }
-
-        * { 
-            -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; 
-            outline: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; 
-        }
+        * { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; outline: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        body { margin: 0; background: var(--bg-deep); color: #d0d0d0; font-family: "PingFang TC", serif; height: 100dvh; overflow: hidden; display: flex; justify-content: center; }
         
-        body { 
-            margin: 0; background: var(--bg-deep); color: var(--text-main); 
-            font-family: "PingFang TC", "Microsoft JhengHei", serif; 
-            height: 100dvh; overflow: hidden; display: flex; justify-content: center; 
-        }
-        
-        /* 移植的星空背景 */
+        /* 星空背景 */
         #starCanvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-
         .app-wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100dvh; }
 
-        /* 頂部導航 (含隱形作弊開關) */
-        .nav-top { flex-shrink: 0; padding: max(20px, env(safe-area-inset-top)) 25px 10px; display: flex; justify-content: space-between; align-items: center; }
-        .back-btn { color: var(--text-dim); text-decoration: none; font-size: 13px; letter-spacing: 2px; }
-        .dev-trigger { font-size: 10px; color: var(--text-dim); letter-spacing: 3px; cursor: pointer; }
+        /* 頂部導航 */
+        .nav-top { padding: max(20px, env(safe-area-inset-top)) 25px 10px; display: flex; justify-content: space-between; align-items: center; }
+        .dev-trigger { font-size: 10px; color: #555; letter-spacing: 3px; cursor: pointer; transition: 0.3s; }
+        .dev-trigger:active { color: var(--gold); }
 
-        /* Profile 區塊 */
-        .profile-section { flex-shrink: 0; padding: 10px 25px; display: flex; align-items: center; gap: 20px; }
-        .avatar-box {
-            width: 72px; height: 72px; border-radius: 50%; border: 1px solid var(--solid-gold);
-            padding: 3px; position: relative; flex-shrink: 0;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
-        }
-        .avatar-img { width: 100%; height: 100%; border-radius: 50%; background: #111; background-size: cover; background-position: center; }
-
-        .stats-row { flex: 1; display: flex; justify-content: space-around; text-align: center; }
-        .stat-item { cursor: pointer; } /* 點擊數字歸零的暗示 */
-        .stat-num { font-size: 16px; font-weight: 300; color: #fff; }
+        /* 數據區 */
+        .stats-row { padding: 10px 25px; display: flex; justify-content: space-around; text-align: center; }
+        .stat-num { font-size: 18px; font-weight: 300; color: #fff; }
         .stat-lbl { font-size: 9px; color: var(--cyan); letter-spacing: 1px; margin-top: 4px; }
 
-        /* 備忘錄區 */
-        .bio-section { flex-shrink: 0; padding: 0 25px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .bio-name { font-size: 14px; color: var(--gold); letter-spacing: 3px; }
-        .memo-input { width: 100%; background: transparent; border: none; font-size: 11px; color: var(--text-dim); padding: 8px 0; letter-spacing: 1px; }
-        .memo-input:focus { border-bottom: 1px solid rgba(243, 229, 171, 0.3); color: #fff; }
+        /* 中央舞台與蓮花 */
+        .bodhi-stage { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; }
+        .lotus-container { 
+            width: 70vw; height: 70vw; max-width: 280px; max-height: 280px; 
+            display: flex; justify-content: center; align-items: center; 
+            transition: transform 0.5s ease-out; position: relative;
+            animation: lotus-breathe 4s infinite ease-in-out;
+        }
+        .seed-core { position: absolute; width: 6px; height: 6px; background: #FFF; border-radius: 50%; box-shadow: 0 0 20px 5px rgba(255,255,255,0.8); z-index: 10; }
 
-        /* 中央舞台 (防鍵盤擠壓的彈性區) */
-        .bodhi-stage { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; min-height: 0; }
-        
-        .time-diff { position: absolute; top: 10px; right: 25px; text-align: right; font-size: 9px; color: var(--text-dim); line-height: 1.8; letter-spacing: 1px; }
-        
-        /* 鎖死最大比例的蓮花容器 */
-        .lotus-container { width: 65vw; height: 65vw; max-width: 260px; max-height: 260px; display: flex; justify-content: center; align-items: center; transition: transform 1.5s ease-in-out; position: relative; }
-        
-        .seed-core { position: absolute; width: 4px; height: 4px; background: #FFF; border-radius: 50%; box-shadow: 0 0 15px 3px rgba(255,255,255,0.6); animation: breathe 3s infinite; z-index: 10; }
+        /* 蓮花動畫：旋轉 + 呼吸 */
+        @keyframes lotus-breathe {
+            0%, 100% { transform: scale(0.97) rotate(0deg); }
+            50% { transform: scale(1.03) rotate(5deg); }
+        }
 
-        /* 底部單一按鈕設計 */
-        .action-row { flex-shrink: 0; padding: 10px 25px max(35px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; gap: 15px; }
-        .buddha-selector { font-size: 11px; color: var(--cyan); letter-spacing: 3px; cursor: pointer; border-bottom: 1px dashed rgba(139,168,156,0.3); padding-bottom: 3px; }
-        
+        /* 底部按鈕 */
+        .action-row { padding: 10px 25px max(35px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; gap: 15px; }
         .main-btn { 
-            width: 64px; height: 64px; border-radius: 50%; display: flex; justify-content: center; align-items: center; position: relative;
-            background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(243, 229, 171, 0.3); color: var(--gold); 
+            width: 68px; height: 68px; border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(243, 229, 171, 0.2); color: var(--gold); 
             cursor: pointer; transition: 0.2s;
         }
-        .main-btn:active { transform: scale(0.92); background: rgba(212, 175, 55, 0.15); border-color: var(--solid-gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
+        .main-btn:active { transform: scale(0.9); background: rgba(212, 175, 55, 0.2); }
 
-        .particle { position: absolute; width: 3px; height: 3px; background: var(--gold); border-radius: 50%; pointer-events: none; box-shadow: 0 0 8px var(--gold); z-index: 50;}
+        /* ✨ 抄襲自妙依的原版毛玻璃送禮畫面 ✨ */
+        #treasure-overlay {
+            position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        #treasure-overlay.show { opacity: 1; pointer-events: auto; }
+        .treasure-svg { width: 120px; height: 120px; margin-bottom: 30px; filter: drop-shadow(0 0 20px var(--gold)); animation: float 4s infinite ease-in-out; }
+        .treasure-msg { color: var(--gold); letter-spacing: 5px; font-size: 16px; margin-bottom: 10px; }
+        .treasure-sub { color: var(--cyan); font-size: 11px; letter-spacing: 2px; text-align: center; line-height: 1.8; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
 
-        @keyframes breathe { 0%, 100% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 25px 8px rgba(243, 229, 171, 0.4); } }
+        .particle { position: absolute; width: 4px; height: 4px; background: var(--gold); border-radius: 50%; pointer-events: none; z-index: 50;}
     </style>
 </head>
 <body oncontextmenu="return false;">
 
 <canvas id="starCanvas"></canvas>
 
+<div id="treasure-overlay" onclick="closeTreasure()">
+    <div class="treasure-svg" id="treasure-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+    </div>
+    <div class="treasure-msg">【 諸佛結緣 】</div>
+    <div class="treasure-sub" id="treasure-name">獲得法寶：淨世琉璃瓶<br><span style="opacity:0.5; font-size:9px;">點擊畫面收攝願力</span></div>
+</div>
+
 <div class="app-wrapper">
     <div class="nav-top">
-        <a href="index.html" class="back-btn">← 回道場</a>
         <div class="dev-trigger" onclick="applyCheat()">行者觀照</div>
-        <div class="dev-trigger" onclick="resetAll()" style="color: rgba(244, 67, 54, 0.6);">重置</div>
+        <div id="ui-rank" style="font-size:11px; color:var(--cyan); letter-spacing:2px;">一真法界</div>
+        <div class="dev-trigger" onclick="resetAll()">歸零</div>
     </div>
 
-    <div class="profile-section">
-        <div class="avatar-box">
-            <div class="avatar-img" id="ui-avatar"></div>
-        </div>
-        <div class="stats-row">
-            <div class="stat-item" onclick="resetCurrent()">
-                <div class="stat-num" id="ui-ami">0</div>
-                <div class="stat-lbl" id="ui-current-lbl">阿彌陀佛</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-num" id="ui-warmth" style="color:var(--solid-gold);">0</div>
-                <div class="stat-lbl">總菩提分</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="bio-section">
-        <div class="bio-name">妙依 ‧ <span id="ui-rank" style="font-size:10px; color:var(--cyan); letter-spacing: 1px;">一真法界</span></div>
-        <input type="text" class="memo-input" id="ui-memo" placeholder="寫下今日發心，此處絕對隱私...">
+    <div class="stats-row">
+        <div><div class="stat-num" id="ui-click">0</div><div class="stat-lbl">今日念佛</div></div>
+        <div><div class="stat-num" id="ui-points" style="color:var(--solid-gold);">0</div><div class="stat-lbl">菩提資糧</div></div>
     </div>
 
     <div class="bodhi-stage">
-        <div class="time-diff">
-            娑婆當下 <span id="time-earth">--:--:--</span><br>
-            <span style="color:var(--gold); margin-top:4px; display:block;">極樂時間 <span id="time-suk">--:--:--</span></span>
-        </div>
-        <div class="lotus-container" id="lotus-svg"></div>
-        <div class="seed-core" id="seed-core"></div>
+        <div class="seed-core"></div>
+        <div class="lotus-container" id="lotus-box"></div>
     </div>
 
     <div class="action-row">
-        <div class="buddha-selector" id="buddha-selector" onclick="changeBuddha()">當前定課：阿彌陀佛</div>
+        <div style="font-size:10px; color:#444; letter-spacing:2px;">累積百聲 ‧ 增益資糧</div>
         <div class="main-btn" onclick="addCount(event)">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor"/>
-            </svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
         </div>
     </div>
 </div>
 
 <script>
-    // --- 1. 星空背景 (純粹移植) ---
-    const canvas = document.getElementById('starCanvas');
-    const ctx = canvas.getContext('2d');
-    let stars = Array.from({length: 100}, () => ({ x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight, size: Math.random()*1.5, speed: Math.random()*0.02 }));
-    function drawStars() {
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "white";
-        stars.forEach(s => { ctx.globalAlpha = Math.abs(Math.sin(Date.now()*s.speed*0.01)); ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill(); });
-        requestAnimationFrame(drawStars);
-    }
-    drawStars();
-
-    // --- 2. 聲音引擎 (原生，防 Bug 處理) ---
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    document.body.addEventListener('touchstart', () => { if(audioCtx.state==='suspended') audioCtx.resume(); }, {once:true});
-    function playSnd(f, d) {
-        if(audioCtx.state==='suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-        osc.frequency.setValueAtTime(f, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + d);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + d);
-    }
-
-    // --- 3. 核心數據與作弊機關 ---
-    let mainDb = JSON.parse(localStorage.getItem('PX_V15.0')) || { totalAmi: 0 };
-    let currentMode = "阿彌陀佛"; // 預設彌陀
-    let customCounts = JSON.parse(localStorage.getItem('personal_oth_list') || '{}');
-    let personalAmi = parseInt(localStorage.getItem('personal_ami') || '0');
-    
-    // ⚠️ 開發者測試變數
+    // 數據狀態
+    let clickCount = 0; // 今日念佛
+    let bodhiPoints = 0; // 菩提點數 (資糧)
     let cheatClicks = 0;
-    let cheatScore = 0; 
-    let cheatTimer;
 
+    // 1. 作弊權限：點 5 次標題加 100 點
     function applyCheat() {
-        clearTimeout(cheatTimer);
         cheatClicks++;
         if(cheatClicks >= 5) {
-            cheatScore += 10000;
+            bodhiPoints += 100;
             cheatClicks = 0;
-            alert("【開發者權限】已灌入一萬點菩提分！請觀賞蓮花變化。目前測試總分：" + cheatScore);
-            updateUI();
-        }
-        cheatTimer = setTimeout(() => { cheatClicks = 0; }, 1000);
-    }
-
-    function resetAll() {
-        if(confirm("確定要將測試數據全數歸零？")) {
-            cheatScore = 0; personalAmi = 0; customCounts = {};
-            localStorage.setItem('personal_ami', 0);
-            localStorage.setItem('personal_oth_list', JSON.stringify({}));
+            checkTreasure(); // 檢查是否送禮
             updateUI();
         }
     }
 
-    // 點擊數字歸零當前聖號
-    function resetCurrent() {
-        if(confirm(`是否將【${currentMode}】的當次計數歸零？`)) {
-            if(currentMode === "阿彌陀佛") {
-                personalAmi = 0; localStorage.setItem('personal_ami', 0);
-            } else {
-                customCounts[currentMode] = 0; localStorage.setItem('personal_oth_list', JSON.stringify(customCounts));
-            }
-            updateUI();
-        }
-    }
-
-    // 切換佛號
-    function changeBuddha() {
-        let input = prompt("請輸入欲觀照之聖號 (留空則預設為阿彌陀佛)：", currentMode === "阿彌陀佛" ? "" : currentMode);
-        if (input !== null) {
-            currentMode = input.trim() === "" ? "阿彌陀佛" : input.trim();
-            document.getElementById('buddha-selector').innerText = `當前定課：${currentMode}`;
-            document.getElementById('ui-current-lbl').innerText = currentMode;
-            updateUI();
-        }
-    }
-
-    // 單一按鈕計數 (完美連動主系統)
+    // 2. 念佛邏輯：滿 100 聲送 10 點
     function addCount(e) {
-        if(currentMode === "阿彌陀佛") {
-            personalAmi++; localStorage.setItem('personal_ami', personalAmi);
-            // ✨ 真實寫入主系統 PX_V15.0
-            mainDb.totalAmi = (mainDb.totalAmi || 0) + 1;
-            localStorage.setItem('PX_V15.0', JSON.stringify(mainDb));
-            playSnd(880, 0.5); // 彌陀罄聲
-        } else {
-            customCounts[currentMode] = (customCounts[currentMode] || 0) + 1;
-            localStorage.setItem('personal_oth_list', JSON.stringify(customCounts));
-            playSnd(440, 0.3); // 諸佛木魚聲
+        clickCount++;
+        if(clickCount % 100 === 0) {
+            bodhiPoints += 10;
+            checkTreasure();
         }
-        fly(e); updateUI();
+        fly(e);
+        updateUI();
     }
 
-    // --- 4. 絕美蓮花演算法 (純淨琉璃版) ---
-    function updateUI() {
-        // 顯示當前選擇的數字
-        document.getElementById('ui-ami').innerText = currentMode === "阿彌陀佛" ? personalAmi : (customCounts[currentMode] || 0);
-        
-        // 總分計算 = 彌陀 + 諸佛總和 + 作弊分數
-        let totalOth = Object.values(customCounts).reduce((a,b)=>a+b, 0);
-        let totalScore = personalAmi + totalOth + cheatScore;
-        document.getElementById('ui-warmth').innerText = totalScore;
-        
-        renderLotus(totalScore);
+    // 3. 送禮邏輯 (抄襲妙依原本的多寶格觸發)
+    function checkTreasure() {
+        // 測試用：每增加 30 點點數就送一次禮
+        if(bodhiPoints > 0 && bodhiPoints % 30 === 0) {
+            const items = [
+                { name: "智慧寶劍", svg: '<path d="M14.5 4l-10 10l2 2l10 -10zM17 7l3 -3M4 20l2 -2"/>' },
+                { name: "淨世琉璃瓶", svg: '<path d="M9 3h6v3a4 4 0 0 1 4 4v9a2 2 0 0 1 -2 2H7a2 2 0 0 1 -2 -2v-9a4 4 0 0 1 4 -4V3z"/>' },
+                { name: "如意摩尼珠", svg: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="currentColor"/>' }
+            ];
+            const item = items[Math.floor(Math.random()*items.length)];
+            document.getElementById('treasure-icon').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">${item.svg}</svg>`;
+            document.getElementById('treasure-name').innerHTML = `獲得法寶：${item.name}<br><span style="opacity:0.5; font-size:9px;">點擊畫面收攝願力</span>`;
+            document.getElementById('treasure-overlay').classList.add('show');
+        }
     }
 
-    function renderLotus(score) {
-        const box = document.getElementById('lotus-svg');
+    function closeTreasure() {
+        document.getElementById('treasure-overlay').classList.remove('show');
+    }
+
+    // 4. 蓮花進化邏輯 (點數唯一標準)
+    function renderLotus(points) {
+        const box = document.getElementById('lotus-box');
         const rank = document.getElementById('ui-rank');
-        
-        // 【第 1 階段】一真法界：分數不足 5000，只有種子
-        if(score < 5000) { box.innerHTML = ''; rank.innerText = "一真法界"; return; }
-        
-        // 【第 2 階段】清淨琉璃 (單層)
+        if(points < 10) { box.innerHTML = ''; rank.innerText = "一真法界"; return; }
+
         let layers = 1;
-        let colorGrad = ["#8ba89c", "rgba(255,255,255,0.1)"]; // 白藍漸層
-        let rankName = "清淨琉璃";
+        let color = "#8ba89c"; // 預設白綠
+        let rankText = "清淨萌芽";
 
-        // 【第 3 階段】慈悲長養 (單層變色)
-        if (score >= 15000) { colorGrad = ["#e1bee7", "rgba(255,255,255,0.1)"]; rankName = "慈悲長養"; } // 粉紫
+        if(points >= 20) { color = "#e1bee7"; rankText = "慈悲長養"; }
+        if(points >= 50) { color = "#b2dfdb"; rankText = "智慧生機"; }
+        if(points >= 100) { layers = 2; color = "#d4af37"; rankText = "聖潔金蓮"; }
         
-        // 【第 4 階段】行願幻彩 (雙層展開)
-        if (score >= 30000) { layers = 2; colorGrad = ["#b2dfdb", "rgba(224,247,250,0.15)"]; rankName = "行願幻彩"; } // 青綠
+        // 100點後，每100點變換顏色
+        if(points >= 200) {
+            const hues = ["#d4af37", "#444", "#a28b6a", "#c0c0c0"]; 
+            color = hues[Math.floor(points/100) % hues.length];
+            rankText = `黑金蛻變 (${Math.floor(points/100)}階)`;
+        }
+        
+        // 1000點彩色漸層
+        if(points >= 1000) {
+            color = "url(#rainbow)";
+            rankText = "幻彩琉璃";
+        }
 
-        // 【第 5 階段】圓滿金蓮 (雙層純金)
-        if (score >= 50000) { layers = 2; colorGrad = ["#d4af37", "rgba(212,175,55,0.2)"]; rankName = "圓滿金蓮"; }
+        rank.innerText = rankText;
 
-        rank.innerText = rankName;
-
-        let svgHtml = `<svg viewBox="-150 -150 300 300" style="width:100%; height:100%; overflow:visible;">
+        let svg = `<svg viewBox="-150 -150 300 300" style="width:100%; height:100%; overflow:visible;">
             <defs>
-                <linearGradient id="petalGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-                    <stop offset="0%" stop-color="rgba(1,1,3,0.9)"/>
-                    <stop offset="50%" stop-color="${colorGrad[1]}"/>
-                    <stop offset="100%" stop-color="${colorGrad[0]}"/>
+                <linearGradient id="rainbow" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ff9a9e"/><stop offset="50%" stop-color="#fad0c4"/><stop offset="100%" stop-color="#a1c4fd"/>
+                </linearGradient>
+                <linearGradient id="pGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" stop-color="transparent"/>
+                    <stop offset="100%" stop-color="${color}"/>
                 </linearGradient>
             </defs>`;
 
         for (let l = layers; l > 0; l--) {
-            const sc = 0.4 + (l * 0.2); 
-            const offset = (l % 2 === 0) ? 22.5 : 0; 
+            const sc = 0.4 + (l * 0.25);
             for (let i = 0; i < 8; i++) {
-                const ang = i * 45 + offset;
-                // 原版極簡絕美花瓣路徑
-                svgHtml += `<g transform="rotate(${ang}) scale(${sc})">
-                    <path d="M0 0 C25 -50 40 -100 0 -150 C-40 -100 -25 -50 0 0" fill="url(#petalGrad)" stroke="${colorGrad[0]}" stroke-width="0.6" opacity="0.85"/>
+                svg += `<g transform="rotate(${i*45 + (l*22)}) scale(${sc})">
+                    <path d="M0 0 C20 -40 35 -80 0 -120 C-35 -80 -20 -40 0 0" fill="url(#pGrad)" stroke="${color}" stroke-width="0.5" opacity="0.8"/>
                 </g>`;
             }
         }
-        svgHtml += `</svg>`;
-        box.innerHTML = svgHtml;
-        // 隨分數極度緩慢旋轉，帶來生命感
-        box.style.transform = `rotate(${score * 0.05}deg)`;
+        svg += `</svg>`;
+        box.innerHTML = svg;
     }
 
-    // --- 5. 娑婆極樂時間 (公式：娑婆1秒 = 極樂36500秒) ---
-    function updateTime() {
-        const now = new Date();
-        document.getElementById('time-earth').innerText = now.toLocaleTimeString();
-        const sukOffset = (now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds()) * 36500;
-        const sD = new Date(sukOffset * 1000);
-        document.getElementById('time-suk').innerText = sD.getUTCHours().toString().padStart(2,'0') + ":" + sD.getUTCMinutes().toString().padStart(2,'0') + ":" + sD.getUTCSeconds().toString().padStart(2,'0');
+    function updateUI() {
+        document.getElementById('ui-click').innerText = clickCount;
+        document.getElementById('ui-points').innerText = bodhiPoints;
+        renderLotus(bodhiPoints);
     }
 
-    // --- 輔助動畫 ---
+    function resetAll() { if(confirm("確定歸零測試點數？")) { clickCount=0; bodhiPoints=0; updateUI(); } }
+
     function fly(e) {
-        const d = document.createElement('div'); d.className='particle'; 
+        const d = document.createElement('div'); d.className='particle';
         const x = e.clientX || e.touches[0].clientX; const y = e.clientY || e.touches[0].clientY;
         d.style.left = x+'px'; d.style.top = y+'px'; document.body.appendChild(d);
-        const t = document.getElementById('seed-core').getBoundingClientRect();
-        d.animate([{left:x+'px', top:y+'px'}, {left:t.left+'px', top:t.top+'px', opacity:0}], 800).onfinish = ()=>d.remove();
+        d.animate([{transform:'scale(1)', opacity:1}, {left:'50%', top:'50%', transform:'scale(0)', opacity:0}], 600).onfinish = ()=>d.remove();
     }
 
-    // 初始化
-    window.onload = () => {
-        updateUI(); setInterval(updateTime, 1000);
-        document.getElementById('ui-memo').value = localStorage.getItem('traveler_memo') || '';
-        document.getElementById('ui-memo').oninput = e => localStorage.setItem('traveler_memo', e.target.value);
-    };
+    // 星空背景渲染略...
+    const canvas = document.getElementById('starCanvas'); const ctx = canvas.getContext('2d');
+    function draw() {
+        canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+        ctx.fillStyle="white"; for(let i=0;i<50;i++) ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 1, 1);
+        requestAnimationFrame(draw);
+    }
+    draw();
+    updateUI();
 </script>
 </body>
 </html>

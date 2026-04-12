@@ -2,118 +2,188 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>菩提心室 ‧ 100至1000精細過渡色票</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>菩提心室 ‧ 個人觀照</title>
     <style>
         :root { --bg: #010103; --gold: #f3e5ab; --solid: #d4af37; --cyan: #8ba89c; }
-        body { margin: 0; background: var(--bg); color: #eee; font-family: "PingFang TC", serif; padding: 20px; }
+        * { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; outline: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: #eee; font-family: "PingFang TC", serif; height: 100dvh; overflow: hidden; display: flex; justify-content: center; }
         
-        .header { text-align: center; padding: 20px 0 30px; border-bottom: 1px solid rgba(243, 229, 171, 0.2); margin-bottom: 30px; }
-        .header h1 { color: var(--gold); letter-spacing: 4px; font-weight: normal; margin: 0 0 10px 0; font-size: 20px; }
-        .header p { color: var(--cyan); font-size: 12px; letter-spacing: 2px; margin: 0; }
+        #starCanvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+        .app-wrapper { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; z-index: 10; }
 
-        .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 20px; max-width: 900px; margin: 0 auto; }
-        
-        .lotus-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 15px 5px; display: flex; flex-direction: column; align-items: center; }
-        
-        .svg-wrap { width: 120px; height: 120px; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; position: relative; }
-        .svg-wrap svg { width: 100%; height: 100%; animation: breathe 4s infinite ease-in-out; }
-        .seed { position: absolute; width: 4px; height: 4px; background: #fff; border-radius: 50%; box-shadow: 0 0 15px #fff; }
+        /* 頂部導航與作弊區 */
+        .nav-top { flex-shrink: 0; padding: max(20px, env(safe-area-inset-top)) 25px 5px; display: flex; justify-content: space-between; align-items: center; }
+        .dev-zone { font-size: 11px; color: #333; letter-spacing: 2px; cursor: pointer; }
+        .dev-zone:active { color: var(--gold); }
 
-        @keyframes breathe { 0%, 100% { transform: scale(0.96) rotate(0deg); } 50% { transform: scale(1.04) rotate(5deg); } }
+        /* 數據與狀態 */
+        .stats-row { flex-shrink: 0; padding: 15px 25px; display: flex; justify-content: space-around; text-align: center; }
+        .stat-num { font-size: 22px; font-weight: 300; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .stat-lbl { font-size: 10px; color: var(--cyan); letter-spacing: 1px; margin-top: 5px; }
 
-        .info { text-align: center; }
-        .pts { color: var(--solid); font-size: 14px; letter-spacing: 2px; margin-bottom: 4px; font-weight: bold; }
-        .name { color: #fff; font-size: 11px; letter-spacing: 2px; margin-bottom: 6px; }
+        /* 中央舞台 */
+        .stage { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; min-height: 0; }
+        #lotus-container { width: 85vw; height: 85vw; max-width: 320px; max-height: 320px; animation: lotus-breathe 4s infinite ease-in-out; display: flex; justify-content: center; align-items: center; position: relative; }
+        .seed { position: absolute; width: 6px; height: 6px; background: #fff; border-radius: 50%; box-shadow: 0 0 20px #fff; z-index: 10; }
+        @keyframes lotus-breathe { 0%, 100% { transform: scale(0.96); } 50% { transform: scale(1.04); } }
+
+        /* 底部操作 */
+        .footer { flex-shrink: 0; padding: 10px 25px max(35px, env(safe-area-inset-bottom)); text-align: center; }
+        .main-btn { width: 72px; height: 72px; border-radius: 50%; border: 1.2px solid var(--solid); background: rgba(212,175,55,0.05); margin: 15px auto 0; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
+        .main-btn:active { transform: scale(0.9); background: rgba(212,175,55,0.15); }
+
+        /* ✨ 100% 抄襲：原版毛玻璃送禮畫面 ✨ */
+        #treasure-overlay {
+            position: fixed; inset: 0; z-index: 3000; background: rgba(1, 1, 3, 0.95);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            display: none; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        #treasure-overlay.show { display: flex; opacity: 1; }
+        .t-svg-wrap { width: 100%; height: 35%; display: flex; align-items: center; justify-content: center; animation: float-pulse 4s infinite ease-in-out; }
+        @keyframes float-pulse { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
+        .t-name { color: #fff; font-size: 1.2rem; letter-spacing: 5px; text-shadow: 0 0 20px #fff, 0 0 40px var(--solid); margin-bottom: 10px; text-align: center; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-<svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
+<svg style="position: absolute; width:0; height:0;">
     <defs>
-        <linearGradient id="grad-10" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stop-color="rgba(255,255,255,0.9)"/><stop offset="100%" stop-color="rgba(255,255,255,0.1)"/>
-        </linearGradient>
-        
-        <linearGradient id="grad-50" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stop-color="#f8bbd0" stop-opacity="0.9"/><stop offset="100%" stop-color="#fce4ec" stop-opacity="0.4"/>
-        </linearGradient>
-
-        <linearGradient id="grad-100" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stop-color="rgba(212,175,55,0.9)"/><stop offset="100%" stop-color="rgba(255,255,255,0.2)"/>
-        </linearGradient>
-
-        <linearGradient id="grad-300" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stop-color="#80deea" stop-opacity="0.9"/><stop offset="100%" stop-color="#e0f7fa" stop-opacity="0.3"/>
-        </linearGradient>
-
-        <linearGradient id="grad-500" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stop-color="#a5d6a7" stop-opacity="0.9"/><stop offset="100%" stop-color="#e8f5e9" stop-opacity="0.3"/>
-        </linearGradient>
-
-        <linearGradient id="grad-700" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stop-color="#ce93d8" stop-opacity="0.9"/><stop offset="100%" stop-color="#f3e5f5" stop-opacity="0.3"/>
-        </linearGradient>
-
-        <linearGradient id="grad-900" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stop-color="#ffcc80" stop-opacity="0.9"/><stop offset="100%" stop-color="#fff3e0" stop-opacity="0.3"/>
-        </linearGradient>
-
-        <linearGradient id="grad-1000" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stop-color="#ff9a9e" stop-opacity="0.9"/>
-            <stop offset="50%" stop-color="#fad0c4" stop-opacity="0.8"/>
-            <stop offset="100%" stop-color="#a1c4fd" stop-opacity="0.7"/>
-        </linearGradient>
+        <linearGradient id="facet-light" x1="0%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.95"/><stop offset="100%" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
+        <linearGradient id="facet-dark" x1="50%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d4af37" stop-opacity="0.2"/><stop offset="100%" stop-color="#b8860b" stop-opacity="0.8"/></linearGradient>
+        <linearGradient id="facet-cyan" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e0f7fa" stop-opacity="0.9"/><stop offset="100%" stop-color="#00838f" stop-opacity="0.5"/></linearGradient>
+        <linearGradient id="facet-rose" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#c2185b" stop-opacity="0.5"/></linearGradient>
+        <linearGradient id="pure-glass" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="50%" stop-color="#f3e5ab" stop-opacity="0.6"/><stop offset="100%" stop-color="#d4af37" stop-opacity="0.2"/></linearGradient>
+        <linearGradient id="grad-1000" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#ff9a9e" stop-opacity="0.9"/><stop offset="50%" stop-color="#fad0c4" stop-opacity="0.8"/><stop offset="100%" stop-color="#a1c4fd" stop-opacity="0.7"/></linearGradient>
+        <linearGradient id="grad-30000" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#D4AF37" stop-opacity="1"/><stop offset="50%" stop-color="#FFD700" stop-opacity="0.9"/><stop offset="100%" stop-color="#ffffff" stop-opacity="1"/></linearGradient>
+        <linearGradient id="grad-300" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#80deea"/><stop offset="100%" stop-color="#e0f7fa" stop-opacity="0.3"/></linearGradient>
+        <linearGradient id="grad-500" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#a5d6a7"/><stop offset="100%" stop-color="#e8f5e9" stop-opacity="0.3"/></linearGradient>
+        <linearGradient id="grad-700" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#ce93d8"/><stop offset="100%" stop-color="#f3e5f5" stop-opacity="0.3"/></linearGradient>
     </defs>
 </svg>
 
-<div class="header">
-    <h1>10 點至 1000 點 ‧ 精細過渡色票</h1>
-    <p>解決單調感，每 200 點替換純淨琉璃色</p>
+<canvas id="starCanvas"></canvas>
+
+<div id="treasure-overlay" onclick="this.classList.remove('show')">
+    <div class="t-svg-wrap" id="t-svg-ui"></div>
+    <div class="t-name" id="t-name-ui"></div>
+    <div style="color:var(--cyan); font-size:0.9rem; letter-spacing:2px; text-align:center;">法界感應 ‧ 迴向願力<br><span style="opacity:0.5; font-size:10px; margin-top:10px; display:block;">點擊畫面收攝</span></div>
 </div>
 
-<div class="gallery" id="gallery"></div>
+<div class="app-wrapper">
+    <div class="nav-top">
+        <div class="dev-zone" onclick="addCheat()">行者觀照 (作弊+1000)</div>
+        <div style="font-size:11px; color:var(--cyan); letter-spacing:3px;" id="ui-rank">一真法界</div>
+        <div class="dev-zone" onclick="resetAll()" style="color:rgba(255,0,0,0.3)">重置</div>
+    </div>
+
+    <div class="stats-row">
+        <div onclick="resetCurrent()"><div class="stat-num" id="ui-click">0</div><div class="stat-lbl" id="ui-lbl">當次念佛</div></div>
+        <div><div class="stat-num" id="ui-pts" style="color:var(--solid);">0</div><div class="stat-lbl">菩提點數</div></div>
+    </div>
+
+    <div class="stage">
+        <div class="seed"></div>
+        <div id="lotus-container"></div>
+    </div>
+
+    <div class="footer">
+        <div id="buddha-sel" style="color:var(--cyan); font-size:12px; letter-spacing:4px; border-bottom:1px dashed rgba(255,255,255,0.1); display:inline-block; padding-bottom:3px; cursor:pointer;" onclick="changeBuddha()">當前定課：阿彌陀佛</div>
+        <div class="main-btn" onclick="addCount(event)">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+        </div>
+    </div>
+</div>
 
 <script>
-    const stages = [
-        { pts: 10, name: "清淨萌芽", grad: "url(#grad-10)", stroke: "rgba(255,255,255,0.6)", layers: 1 },
-        { pts: 50, name: "慈悲初現", grad: "url(#grad-50)", stroke: "rgba(255,255,255,0.6)", layers: 1 },
-        { pts: 100, name: "聖潔初金", grad: "url(#grad-100)", stroke: "rgba(212,175,55,0.6)", layers: 2 },
-        { pts: 300, name: "空靈水藍", grad: "url(#grad-300)", stroke: "rgba(255,255,255,0.4)", layers: 2 },
-        { pts: 500, name: "琉璃翠玉", grad: "url(#grad-500)", stroke: "rgba(255,255,255,0.4)", layers: 2 },
-        { pts: 700, name: "紫氣祥雲", grad: "url(#grad-700)", stroke: "rgba(255,255,255,0.4)", layers: 2 },
-        { pts: 900, name: "赤金朝霞", grad: "url(#grad-900)", stroke: "rgba(255,255,255,0.4)", layers: 2 },
-        { pts: 1000, name: "初心幻彩", grad: "url(#grad-1000)", stroke: "rgba(255,255,255,0.4)", layers: 2 }
+    // --- 1. 數據連動與公式 (0 Bug 核心) ---
+    let db = JSON.parse(localStorage.getItem('PX_V15.0')) || { totalNian: 0, bodhiLitCount: 0 };
+    let localOth = JSON.parse(localStorage.getItem('personal_oth_list') || '{}');
+    let currentMode = "阿彌陀佛";
+    let cheatPts = 0;
+
+    // 100% 抄襲自多寶格的寶物
+    const treasures = [
+        { name: "幾何慧劍", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 5)"><polygon points="50,10 56,40 50,105 44,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="35,100 65,100 55,110 45,110" fill="url(#pure-glass)" stroke="#d4af37" stroke-width="0.8"/><circle cx="50" cy="105" r="4" fill="#fff"/></g></svg>` },
+        { name: "琉璃淨瓶", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 10)"><polygon points="42,50 58,50 72,95 28,95" fill="url(#facet-cyan)" stroke="#fff" stroke-width="0.5"/><circle cx="50" cy="80" r="10" fill="rgba(255,255,255,0.6)"/></g></svg>` },
+        { name: "多面寶珠", svg: `<svg viewBox="0 0 100 150"><g transform="translate(0, 20)"><polygon points="50,15 85,45 50,65 15,45" fill="url(#facet-light)" stroke="#fff" stroke-width="0.8"/><polygon points="15,45 50,65 50,115 25,85" fill="url(#facet-rose)" opacity="0.9" stroke="#fff" stroke-width="0.5"/></g></svg>` }
     ];
 
-    const gallery = document.getElementById('gallery');
+    function calculateTotalPoints() {
+        let nianSum = (db.totalNian || 0) + Object.values(localOth).reduce((a,b)=>a+b, 0);
+        let nianPts = Math.floor(nianSum / 100) * 10;
+        let litCount = db.bodhiLitCount || 0;
+        let dailyPts = litCount * 1 + Math.floor(litCount / 10) * 10;
+        return nianPts + dailyPts + cheatPts;
+    }
 
-    stages.forEach(s => {
+    function addCount(e) {
+        if(currentMode === "阿彌陀佛") {
+            db.totalNian = (db.totalNian || 0) + 1;
+            localStorage.setItem('PX_V15.0', JSON.stringify(db));
+        } else {
+            localOth[currentMode] = (localOth[currentMode] || 0) + 1;
+            localStorage.setItem('personal_oth_list', JSON.stringify(localOth));
+        }
+        updateUI();
+        if(calculateTotalPoints() > 0 && calculateTotalPoints() % 30 === 0) showGift();
+    }
+
+    function showGift() {
+        const t = treasures[Math.floor(Math.random()*treasures.length)];
+        document.getElementById('t-svg-ui').innerHTML = t.svg;
+        document.getElementById('t-name-ui').innerText = `獲得法寶：${t.name}`;
+        document.getElementById('treasure-overlay').classList.add('show');
+    }
+
+    // --- 2. 蓮花渲染 (100% 抄襲 88 佛瓣片算法) ---
+    function renderLotus(p) {
+        const box = document.getElementById('lotus-container');
+        const rank = document.getElementById('ui-rank');
+        if(p < 10) { box.innerHTML = ''; rank.innerText = "一真法界"; return; }
+
+        let layers = 1, fill = "rgba(255,255,255,0.8)", rankTxt = "清淨萌芽", stroke = "rgba(255,255,255,0.6)";
+
+        if(p >= 50) fill = "url(#facet-rose)";
+        if(p >= 100) { layers = 2; fill = "url(#facet-dark)"; rankTxt = "聖潔金蓮"; }
+        if(p >= 300) fill = "url(#grad-300)";
+        if(p >= 500) fill = "url(#grad-500)";
+        if(p >= 700) fill = "url(#grad-700)";
+        if(p >= 1000) { fill = "url(#grad-1000)"; rankTxt = "初心幻彩"; stroke = "none"; }
+        if(p >= 30000) { fill = "url(#grad-30000)"; rankTxt = "圓滿耀金"; stroke = "#fff"; }
+
+        rank.innerText = rankTxt;
         let svg = `<svg viewBox="-150 -150 300 300">`;
-        for (let l = s.layers; l > 0; l--) {
+        for (let l = layers; l > 0; l--) {
             const sc = 0.4 + (l * 0.25);
             for (let i = 0; i < 8; i++) {
-                const ang = i * 45 + (l * 22.5);
+                const ang = i * 45 + (l * 22.5) + (p * 0.02);
                 svg += `<g transform="rotate(${ang}) scale(${sc})">
-                    <path d="M 0 0 Q 30 -60 0 -120 Q -30 -60 0 0" fill="${s.grad}" stroke="${s.stroke}" stroke-width="1.5" opacity="0.9"/>
+                    <path d="M 0 0 Q 30 -60 0 -120 Q -30 -60 0 0" fill="${fill}" stroke="${stroke}" stroke-width="1" opacity="0.9"/>
                 </g>`;
             }
         }
         svg += `</svg>`;
+        box.innerHTML = svg;
+    }
 
-        gallery.innerHTML += `
-            <div class="lotus-card">
-                <div class="svg-wrap">
-                    <div class="seed"></div>
-                    ${svg}
-                </div>
-                <div class="info">
-                    <div class="pts">${s.pts} 點</div>
-                    <div class="name">${s.name}</div>
-                </div>
-            </div>
-        `;
-    });
+    function updateUI() {
+        const pts = calculateTotalPoints();
+        document.getElementById('ui-pts').innerText = pts;
+        document.getElementById('ui-click').innerText = currentMode === "阿彌陀佛" ? db.totalNian : (localOth[currentMode] || 0);
+        renderLotus(pts);
+    }
+
+    // --- 3. 交互工具 ---
+    function addCheat() { cheatPts += 1000; updateUI(); }
+    function resetAll() { if(confirm("確定重置作弊與本地數據？")) { cheatPts=0; localOth={}; localStorage.setItem('personal_oth_list','{}'); updateUI(); } }
+    function resetCurrent() { if(confirm(`歸零 ${currentMode}？`)) { if(currentMode==="阿彌陀佛") db.totalNian=0; else localOth[currentMode]=0; updateUI(); } }
+    function changeBuddha() { let n = prompt("請輸入聖號：", currentMode); if(n) { currentMode = n; document.getElementById('buddha-sel').innerText = `當前定課：${n}`; document.getElementById('ui-lbl').innerText = n; updateUI(); } }
+
+    // 星空背景略... (由 Canvas 繪製)
+    const canvas = document.getElementById('starCanvas'); const ctx = canvas.getContext('2d');
+    function draw() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; ctx.fillStyle="white"; for(let i=0;i<60;i++) ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 1.2, 1.2); requestAnimationFrame(draw); }
+    draw(); updateUI();
 </script>
 </body>
 </html>

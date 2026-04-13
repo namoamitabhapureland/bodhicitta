@@ -1839,23 +1839,56 @@ function updateClock() {
 }
 setInterval(updateClock, 50);
 
+// ── 琉璃改名彈窗與安全啟動邏輯 ──
+let pendingNewName = "";
+
 function startApp() {
     const nameInput = document.getElementById('user-name').value.trim();
     if(!nameInput) return alert("請留名號");
+    
+    // 若名號有變動，攔截並呼叫琉璃彈窗
     if (db.name && db.name !== nameInput) {
-        if(!confirm(`⚠️ 注意：目前法寶的紀錄屬於「${db.name}」，確定要切換名號嗎？`)) return;
+        pendingNewName = nameInput;
+        document.getElementById('old-name-display').innerText = db.name;
+        document.getElementById('new-name-display').innerText = nameInput;
+        
+        const modal = document.getElementById('nameChangeModal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.style.opacity = '1', 10);
+        return; 
     }
+    
+    executeAppStart(nameInput);
+}
+
+function cancelNameChange() {
+    const modal = document.getElementById('nameChangeModal');
+    modal.style.opacity = '0';
+    setTimeout(() => modal.style.display = 'none', 350);
+    document.getElementById('user-name').value = db.name; // 恢復原名
+}
+
+function executeStartAppWithNewName() {
+    const modal = document.getElementById('nameChangeModal');
+    modal.style.opacity = '0';
+    setTimeout(() => modal.style.display = 'none', 350);
+    executeAppStart(pendingNewName); // 帶入新名號啟動
+}
+
+// 原本的核心啟動邏輯，一字不差完美保留
+function executeAppStart(finalName) {
     if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
         let silentWake = new SpeechSynthesisUtterance("");
         silentWake.volume = 0; window.speechSynthesis.speak(silentWake);
     }
-    db.name = nameInput; db.todayCount++; checkNewDay(); save();
+    db.name = finalName; db.todayCount++; checkNewDay(); save();
     playUniverseFrequency(); showScreen(2); updateUI();
     speak("都攝六根一心專念，發無上菩提心", 0.8);
     document.getElementById('guide-ripple').style.display = 'block';
     refreshDew(); 
 }
+
 
 function touchAvatar() {
     refreshDew(); 
@@ -2470,5 +2503,19 @@ if(db.name) document.getElementById('user-name').value = db.name;
 updateUI();
 
 </script>
+
+<div id="nameChangeModal" style="position:fixed; inset:0; z-index:999999; background:rgba(0,0,0,0.85); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); display:none; justify-content:center; align-items:center; opacity:0; transition:0.35s;">
+    <div style="background:rgba(3,3,6,0.95); border:1px solid rgba(212,175,55,0.4); border-radius:24px; padding:35px 25px; width:88%; max-width:340px; text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.8);">
+        <div style="color:#d4af37; font-size:17px; letter-spacing:2px; margin-bottom:15px; text-shadow:0 0 15px rgba(212,175,55,0.5); font-weight:bold;">確認更易名號</div>
+        <div style="color:#8ba89c; font-size:14px; margin-bottom:25px; letter-spacing:1px; line-height:1.8;">
+            目前法寶的功德紀錄屬於「<span id="old-name-display" style="color:#f3e5ab; font-weight:bold;"></span>」。<br><br>您確定要將名號切換為「<span id="new-name-display" style="color:#f3e5ab; font-weight:bold;"></span>」嗎？
+        </div>
+        <div style="display:flex; gap:12px; justify-content:center;">
+            <button onclick="cancelNameChange()" style="flex:1; padding:13px; border-radius:12px; font-size:13px; letter-spacing:2px; cursor:pointer; background:transparent; border:1px solid rgba(255,255,255,0.15); color:#aaa;">取消</button>
+            <button onclick="executeStartAppWithNewName()" style="flex:1; padding:13px; border-radius:12px; font-size:13px; letter-spacing:2px; cursor:pointer; background:linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); border:1px solid #d4af37; color:#f3e5ab; font-weight:bold; box-shadow:0 0 15px rgba(212,175,55,0.2);">確認切換</button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

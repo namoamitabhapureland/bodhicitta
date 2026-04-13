@@ -402,7 +402,7 @@
         <span>回道場</span>
     </a>
     <div style="display:flex;gap:6px;align-items:center;">
-        <div onclick="addCheat()" style="width:15px;height:15px;cursor:pointer;"></div>
+        
         <div class="nav-btn" onclick="openDataModal()">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 20V10M12 20V4M6 20V14"/></svg>
             <span>大數據</span>
@@ -582,14 +582,13 @@ if (!db.personalRoom) db.personalRoom = { sessionCounts:{}, othList:{}, avatar:"
 if (!db.personalRoom.sessionCounts) db.personalRoom.sessionCounts = {};
 
 let curBuddha = "南無阿彌陀佛";
-let cheatPts = 0;
 
 function saveDB() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
 
 function getPts() {
     let nianSum = (db.totalNian||0) + Object.values(db.personalRoom.othList).reduce((a,b)=>a+b, 0);
     let lit = db.bodhiLitCount||0;
-    return Math.floor(nianSum/100)*10 + lit*1 + Math.floor(lit/10)*10 + cheatPts;
+    return Math.floor(nianSum/100)*10 + lit*1 + Math.floor(lit/10)*10;
 }
 
 // ── 姓名輸入 ──
@@ -745,7 +744,7 @@ function triggerNian(clientX, clientY) {
     updateUI();
 }
 
-function addCheat() { cheatPts+=1000; updateUI(); }
+
 
 // ══════════════════════════════════════════
 //  法寶（保留原邏輯）
@@ -809,72 +808,51 @@ function renderLotus(p) {
     const rank = document.getElementById('ui-rank-text');
     if (p < 10) { box.innerHTML=''; rank.innerText="初發菩提"; box.style.filter="none"; return; }
 
-    // 等級對應（保留原邏輯）
-    let layers=1, fill="url(#grad-10)", rTxt="清淨萌芽",
-        stroke="rgba(255,255,255,0.45)", glow="none";
-    if(p>=50)    fill="url(#grad-50)";
-    if(p>=100)  { layers=2; fill="url(#grad-100)"; stroke="rgba(212,175,55,0.55)"; rTxt="聖潔初金"; }
-    if(p>=300)   fill="url(#grad-300)";
-    if(p>=500)   fill="url(#grad-500)";
-    if(p>=700)   fill="url(#grad-700)";
-    if(p>=900)   fill="url(#grad-900)";
-    if(p>=1000) { fill="url(#grad-1000)"; stroke="rgba(255,255,255,0.38)"; rTxt="初心幻彩"; }
-    if(p>=5000) { fill="url(#grad-5000)"; rTxt="青淨琉璃"; }
-    if(p>=10000){ fill="url(#grad-10000)"; rTxt="紫金霞光"; }
-    if(p>=15000){ fill="url(#grad-15000)"; rTxt="晨曦玉露"; }
-    if(p>=20000){ fill="url(#grad-20000)"; rTxt="月魄銀輝"; }
-    if(p>=25000){ fill="url(#grad-25000)"; rTxt="玄黃凝脂"; }
-    if(p>=30000){ fill="url(#grad-30000)"; stroke="#fff"; rTxt="大圓滿耀金"; glow="drop-shadow(0 0 18px rgba(212,175,55,0.7))"; }
+    // ── 史詩級三十年門檻 (對應主系統一億聲佛號) ──
+    let layers=1, fill="url(#grad-10)", rTxt="清淨萌芽", stroke="rgba(255,255,255,0.45)", glow="none";
+    
+    if(p>=50)     fill="url(#grad-50)";
+    if(p>=100)   { layers=2; fill="url(#grad-100)"; stroke="rgba(212,175,55,0.55)"; rTxt="聖潔初金"; }
+    if(p>=1000)   fill="url(#grad-1000)"; 
+    if(p>=10000)  fill="url(#grad-5000)"; 
+    if(p>=100000) { fill="url(#grad-10000)"; rTxt="紫金霞光"; }    
+    if(p>=500000) { fill="url(#grad-15000)"; rTxt="晨曦玉露"; }    
+    if(p>=1000000){ fill="url(#grad-20000)"; rTxt="月魄銀輝"; }    
+    if(p>=5000000){ fill="url(#grad-25000)"; rTxt="玄黃凝脂"; }    
+    if(p>=10000000){ fill="url(#grad-30000)"; stroke="#fff"; rTxt="大圓滿耀金"; glow="drop-shadow(0 0 18px rgba(212,175,55,0.7))"; }
 
     rank.innerText = rTxt;
     box.style.filter = glow;
 
-    // ── SVG 繪製 ──
+    // ── 您的核心 SVG 繪製邏輯 (完全保留) ──
     let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-150 -150 300 300" style="width:100%;height:100%;overflow:visible;">`;
 
-    // 外層花瓣（有機 C 曲線，更逼真）
     for (let l = layers; l > 0; l--) {
         const sc = 0.44 + l * 0.28;
         const n  = (l === layers) ? 8 : 6;
         const rotOffset = l * 22.5 + p * 0.012;
-
         for (let i = 0; i < n; i++) {
             const rot = i * (360/n) + rotOffset;
             const s   = 112 * sc;
-            // 橢圓花瓣：使用三次貝塞爾曲線
-            const pth = `M 0 0
-                C ${s*.44} ${-s*.07} ${s*.54} ${-s*.62} 0 ${-s}
-                C ${-s*.54} ${-s*.62} ${-s*.44} ${-s*.07} 0 0`;
-            // 花瓣葉脈
+            const pth = `M 0 0 C ${s*.44} ${-s*.07} ${s*.54} ${-s*.62} 0 ${-s} C ${-s*.54} ${-s*.62} ${-s*.44} ${-s*.07} 0 0`;
             const vein = `M 0 ${-s*.08} Q 0 ${-s*.55} 0 ${-s*.88}`;
-
             svg += `<g transform="rotate(${rot})">
                 <path d="${pth}" fill="${fill}" stroke="${stroke}" stroke-width="0.9" opacity="0.93"/>
                 <path d="${vein}" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="0.6"/>
             </g>`;
         }
     }
-
-    // 中層花瓣（較高等級才出現）
     if (p >= 300) {
         const innerSz = 112 * 0.38;
         for (let i = 0; i < 6; i++) {
             const rot = i * 60 + 18 + p * 0.018;
-            const pth = `M 0 0
-                C ${innerSz*.35} ${-innerSz*.08} ${innerSz*.3} ${-innerSz*.7} 0 ${-innerSz}
-                C ${-innerSz*.3} ${-innerSz*.7} ${-innerSz*.35} ${-innerSz*.08} 0 0`;
-            svg += `<g transform="rotate(${rot})">
-                <path d="${pth}" fill="${fill}" stroke="${stroke}" stroke-width="0.7" opacity="0.85"/>
-            </g>`;
+            const pth = `M 0 0 C ${innerSz*.35} ${-innerSz*.08} ${innerSz*.3} ${-innerSz*.7} 0 ${-innerSz} C ${-innerSz*.3} ${-innerSz*.7} ${-innerSz*.35} ${-innerSz*.08} 0 0`;
+            svg += `<g transform="rotate(${rot})"><path d="${pth}" fill="${fill}" stroke="${stroke}" stroke-width="0.7" opacity="0.85"/></g>`;
         }
     }
-
-    // 蓮台（花心）
     if (p >= 50) {
         const cr = p >= 1000 ? 20 : p >= 300 ? 16 : 12;
         svg += `<circle cx="0" cy="0" r="${cr}" fill="${fill}" stroke="${stroke}" stroke-width="1.2" opacity="0.96"/>`;
-
-        // 花蕊（小點環繞）
         if (p >= 100) {
             const stamens = p >= 5000 ? 12 : 8;
             for (let s = 0; s < stamens; s++) {
@@ -882,21 +860,16 @@ function renderLotus(p) {
                 const sr = cr + 9;
                 const ex = (sr * Math.cos(sa)).toFixed(1);
                 const ey = (sr * Math.sin(sa)).toFixed(1);
-                svg += `<circle cx="${ex}" cy="${ey}" r="2.8" fill="${fill}" opacity="0.82"/>`;
-                // 花蕊柱
-                svg += `<line x1="${(cr*.6*Math.cos(sa)).toFixed(1)}" y1="${(cr*.6*Math.sin(sa)).toFixed(1)}"
-                    x2="${ex}" y2="${ey}"
-                    stroke="rgba(255,255,255,0.25)" stroke-width="0.7"/>`;
+                svg += `<circle cx="${ex}" cy="${ey}" r="2.8" fill="${fill}" opacity="0.82"/>
+                <line x1="${(cr*.6*Math.cos(sa)).toFixed(1)}" y1="${(cr*.6*Math.sin(sa)).toFixed(1)}" x2="${ex}" y2="${ey}" stroke="rgba(255,255,255,0.25)" stroke-width="0.7"/>`;
             }
         }
-
-        // 花心亮點
         svg += `<circle cx="-${cr*.18}" cy="-${cr*.22}" r="${cr*.28}" fill="rgba(255,255,255,0.38)"/>`;
     }
-
     svg += `</svg>`;
     box.innerHTML = svg;
 }
+
 
 // ══════════════════════════════════════════
 //  更新 UI

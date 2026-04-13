@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -24,8 +23,14 @@
             width:100vw; /* 確保主體寬度固定為螢幕寬，不會被撐大 */
         }
 
-```
-    #starCanvas { position:absolute; inset:0; z-index:1; pointer-events:none; }
+       #starCanvas { 
+        position: fixed; 
+        top: 0; left: 0; 
+        width: 100vw; height: 100vh; 
+        z-index: 0; 
+        pointer-events: none; 
+    }
+
      .app-wrapper {
             width:100%; max-width:480px; 
             margin:0 auto; /* 改用 margin 置中，這是最安全的防錯位做法 */
@@ -69,8 +74,19 @@
     }
     .nav-icon { width:13px; height:13px; opacity:.82; }
 
-    /* ── IG 排版 ── */
-    .ig-profile { padding:13px 18px; display:flex; align-items:center; gap:18px; margin:0 12px; }
+        /* ── IG 排版 (多寶閣浮雕琉璃金風格) ── */
+    .ig-profile { 
+        background: linear-gradient(145deg, rgba(20,20,20,0.95) 0%, rgba(5,5,5,0.98) 100%);
+        border: 1px solid rgba(212,175,55,0.4);
+        border-radius: 24px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.9), inset 0 0 15px rgba(212,175,55,0.08);
+        padding: 18px 22px; 
+        display: flex; 
+        align-items: center; 
+        gap: 18px; 
+        margin: 12px 16px; 
+        position: relative;
+    }
 
     .avatar-wrap {
         width:76px; height:76px; border-radius:50%;
@@ -342,14 +358,18 @@
 <div id="infoModal" class="custom-modal" onclick="closeM('infoModal')">
     <div class="glass-panel" style="padding:30px;width:85%;max-width:320px;" onclick="event.stopPropagation()">
         <div style="color:var(--solid);text-align:center;font-size:16px;letter-spacing:4px;margin-bottom:20px;">觀照說明</div>
-        <div style="line-height:2;font-size:14px;color:var(--text-gold);letter-spacing:1px;">
-            一、每百聲佛號轉化為十點資糧。<br>
-            二、蓮花隨總數自一真法界層層蛻變。<br>
-            三、每日安住觀照，法界將隨緣賜予無相法寶。
+        
+        <div style="line-height:2.2;font-size:14px;color:var(--text-gold);letter-spacing:1px;text-align:justify;">
+            一、念念彌陀，皆化菩提資糧；日發勝心神遊華藏，亦增道業。若能淨念相繼、十日不輟，法界自當傾注殊勝資糧。<br><br>
+            二、自性金蓮，依資糧而生。自初發菩提心起，層層蛻變，直至大圓滿耀金。<br><br>
+            三、行者若能每日安住靜室，迴光返照，法界自當隨順因緣，賜予無相法寶。<br><br>
+            四、此淨室乃專屬之芥子道場，法相（頭像）可隨心更易。一切境相唯存於行者自身寶具（手機）之內，不染外網。然世法無常，還望時常移步主道場妥善「封存備份」，護持修行軌跡不失。
         </div>
-        <div style="text-align:center;margin-top:25px;font-size:12px;color:var(--gold);cursor:pointer;" onclick="closeM('infoModal')">收攝</div>
+        
+        <div style="text-align:center;margin-top:25px;font-size:13px;color:var(--gold);letter-spacing:2px;cursor:pointer;font-weight:bold;" onclick="closeM('infoModal')">合十收攝</div>
     </div>
 </div>
+
 
 <!-- ═══ 大數據 ═══ -->
 
@@ -424,9 +444,9 @@
 <div class="bio-wrap">
     <div class="bio-header">
         <input type="text" class="bio-name-input" id="ui-name" placeholder="行者">
-        <span style="font-size:14px;color:var(--text-gold);">‧ <span id="ui-rank-text">一真法界</span></span>
+        <span style="font-size:14px;color:var(--text-gold);">‧ <span id="ui-rank-text">初發菩提</span></span>
     </div>
-    <input type="text" class="memo-input" id="ui-memo" placeholder="本地備忘錄：記下今日法喜...">
+    <input type="text" class="memo-input" id="ui-memo" placeholder="本地備忘錄：可記下今日法喜...">
 </div>
 
 <!-- 蓮花舞台 -->
@@ -509,19 +529,38 @@
 
 <script>
 // ══════════════════════════════════════════
-//  音效
+//  音效 (修復手機封鎖與音色優化)
 // ══════════════════════════════════════════
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-document.body.addEventListener('touchstart', () => { if(audioCtx.state==='suspended') audioCtx.resume(); }, {once:true});
+let audioCtx = null;
 function playTap() {
-    if(audioCtx.state==='suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-    osc.type='sine'; osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.5);
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime+0.5);
+    // 確保在使用者首次互動時才建立 AudioContext，繞過瀏覽器限制
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+    
+    // 模擬清脆的木魚/念珠碰撞聲
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'sine';
+    // 頻率快速下降，製造敲擊的「叩」聲
+    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+    
+    // 音量快速衰減
+    gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.1);
 }
+
 
 // ══════════════════════════════════════════
 //  模態框
@@ -771,7 +810,7 @@ function buildEnergyBar(name, count) {
 function renderLotus(p) {
     const box  = document.getElementById('lotus-container');
     const rank = document.getElementById('ui-rank-text');
-    if (p < 10) { box.innerHTML=''; rank.innerText="一真法界"; box.style.filter="none"; return; }
+    if (p < 10) { box.innerHTML=''; rank.innerText="初發菩提"; box.style.filter="none"; return; }
 
     // 等級對應（保留原邏輯）
     let layers=1, fill="url(#grad-10)", rTxt="清淨萌芽",

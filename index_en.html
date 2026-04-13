@@ -1670,21 +1670,66 @@ function updateClock() {
 }
 setInterval(updateClock, 50);
 
+let pendingNewName = "";
+
+// 1. 點擊按鈕時的攔截與判斷
 function startApp() {
     const nameInput = document.getElementById('user-name').value.trim();
     if(!nameInput) return alert("Please enter your name.");
+    
+    // 如果發現名字有改動，攔截原本的執行，改為顯示琉璃彈窗
     if (db.name && db.name !== nameInput) {
-        if(!confirm(`⚠️ Note: Current merit belongs to "${db.name}". Are you sure you want to change names?`)) return;
+        pendingNewName = nameInput;
+        document.getElementById('old-name-display').innerText = db.name;
+        document.getElementById('new-name-display').innerText = nameInput;
+        
+        const modal = document.getElementById('nameChangeModal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.style.opacity = '1', 10);
+        return; // 暫停執行，等待行者點擊琉璃彈窗的確認
     }
+    
+    // 如果名字沒變（或是新行者第一次進來），直接進入系統
+    executeAppStart(nameInput);
+}
+
+// 2. 點擊琉璃彈窗的「Cancel」
+function cancelNameChange() {
+    const modal = document.getElementById('nameChangeModal');
+    modal.style.opacity = '0';
+    setTimeout(() => modal.style.display = 'none', 350);
+    // 取消改名，將畫面上的名字還原回資料庫原本的名字
+    document.getElementById('user-name').value = db.name;
+}
+
+// 3. 點擊琉璃彈窗的「Confirm」
+function executeStartAppWithNewName() {
+    const modal = document.getElementById('nameChangeModal');
+    modal.style.opacity = '0';
+    setTimeout(() => modal.style.display = 'none', 350);
+    // 帶入新名字，繼續進入系統
+    executeAppStart(pendingNewName);
+}
+
+// 4. 您原本 startApp() 內部的核心啟動邏輯 (一字未改，完美保留！)
+function executeAppStart(finalName) {
     if (window.speechSynthesis) {
         window.speechSynthesis.cancel(); let silentWake = new SpeechSynthesisUtterance("");
         silentWake.volume = 0; window.speechSynthesis.speak(silentWake);
     }
-    db.name = nameInput; db.todayCount++; checkNewDay(); save();
-    playUniverseFrequency(); showScreen(2); updateUI();
+    db.name = finalName; 
+    db.todayCount++; 
+    checkNewDay(); 
+    save(); // 呼叫您原本的存檔函數
+    
+    playUniverseFrequency(); 
+    showScreen(2); 
+    updateUI();
     speak("Gather the six senses, focus the mind, and generate Bodhicitta.", 0.9);
-    document.getElementById('guide-ripple').style.display = 'block'; refreshDew(); 
+    document.getElementById('guide-ripple').style.display = 'block'; 
+    refreshDew(); 
 }
+
 
 function touchAvatar() {
     refreshDew(); if (navigator.vibrate) navigator.vibrate(20);
@@ -2259,5 +2304,18 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 </script>
+<div id="nameChangeModal" style="position:fixed; inset:0; z-index:999999; background:rgba(0,0,0,0.85); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); display:none; justify-content:center; align-items:center; opacity:0; transition:0.35s;">
+    <div style="background:rgba(3,3,6,0.95); border:1px solid rgba(212,175,55,0.4); border-radius:24px; padding:35px 25px; width:88%; max-width:340px; text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.8);">
+        <div style="color:#d4af37; font-size:16px; letter-spacing:2px; margin-bottom:15px; text-shadow:0 0 15px rgba(212,175,55,0.5); font-weight:bold; text-transform:uppercase;">Confirm Name Change</div>
+        <div style="color:#8ba89c; font-size:13px; margin-bottom:25px; letter-spacing:0.5px; line-height:1.6;">
+            Current merit belongs to "<span id="old-name-display" style="color:#f3e5ab; font-weight:bold;"></span>".<br><br>Are you sure you want to change your name to "<span id="new-name-display" style="color:#f3e5ab; font-weight:bold;"></span>"?
+        </div>
+        <div style="display:flex; gap:12px; justify-content:center;">
+            <button onclick="cancelNameChange()" style="flex:1; padding:13px; border-radius:12px; font-size:12px; letter-spacing:2px; cursor:pointer; background:transparent; border:1px solid rgba(255,255,255,0.15); color:#aaa; text-transform:uppercase;">Cancel</button>
+            <button onclick="executeStartAppWithNewName()" style="flex:1; padding:13px; border-radius:12px; font-size:12px; letter-spacing:1px; cursor:pointer; background:linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); border:1px solid #d4af37; color:#f3e5ab; font-weight:bold; text-transform:uppercase; box-shadow:0 0 15px rgba(212,175,55,0.2);">Confirm</button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

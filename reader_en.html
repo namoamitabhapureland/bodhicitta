@@ -143,7 +143,7 @@
     </div>
 
     <script src="articles.js"></script>
-    <script>
+       <script>
         // 10 種無版權純向量幾何圖示
         const chapterIcons = [
             `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle></svg>`, 
@@ -163,6 +163,13 @@
         let filteredData = [];
         let isPlaying = false;
 
+        // 【新增防呆機制】自動將分類名稱統一為首字母大寫，小寫結尾
+        function formatCategory(cat) {
+            if (!cat) return "Uncategorized";
+            cat = cat.trim();
+            return cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
+        }
+
         function initApp() {
             // 過濾出英文文章 (或沒有設定 lang 的預設文章)
             filteredData = rawArticles.filter(a => a.lang === currentLang || !a.lang);
@@ -179,8 +186,8 @@
         }
 
         function renderCategories() {
-            // 英文版的預設分類名稱改為 All 和 Uncategorized
-            const cats = ['All', ...new Set(filteredData.map(a => a.category || "Uncategorized"))];
+            // 使用 formatCategory 統一大小寫，避免重複按鈕
+            const cats = ['All', ...new Set(filteredData.map(a => formatCategory(a.category)))];
             const nav = document.getElementById('cat-nav');
             
             nav.innerHTML = cats.map(c => 
@@ -194,12 +201,13 @@
             if(activeBtn) activeBtn.classList.add('active');
 
             const container = document.getElementById('article-list');
-            const dataToShow = targetCat === 'All' ? filteredData : filteredData.filter(a => (a.category || 'Uncategorized') === targetCat);
+            // 比對時，也透過 formatCategory 將資料庫的分類標準化
+            const dataToShow = targetCat === 'All' ? filteredData : filteredData.filter(a => formatCategory(a.category) === targetCat);
             
             container.innerHTML = dataToShow.map(a => `
                 <div class="article-card" onclick="openReader('${a.id}')">
                     <div class="card-meta">
-                        <span>${a.category || 'Uncategorized'}</span>
+                        <span>${formatCategory(a.category)}</span>
                         <span>${a.id}</span>
                     </div>
                     <h2 class="card-title">${a.title}</h2>
@@ -289,5 +297,6 @@
 
         window.onload = initApp;
     </script>
+
 </body>
 </html>

@@ -7,6 +7,43 @@ const rawArticles = [
     // 中文文章
     // ==========================================
     {
+        id: "2026-04-14-zh-news-memory",
+        lang: "zh",
+        category: "新聞", 
+        title: "抵抗百億年熵增的記憶水晶，與宇宙本身的「量子記憶矩陣」",
+        status: "5D 光學儲存 ． 量子意識",
+        humble: "這是一篇探討極致實體儲存與宇宙量子資訊理論的新聞報導，反思意識與記憶的最終歸宿。",
+        content: `[實體封裝的極致：保存 138 億年的 5D 記憶水晶] 在數位時代，人類的資料儲存極度脆弱，傳統硬碟與雲端伺服器在數十年內便會面臨材料老化與磁性消退的「熵增」危機。為了留下人類文明的終極備份，英國南安普敦大學（University of Southampton）光電研究中心團隊，成功開發出一種被稱為「超人記憶水晶」（Superman memory crystal）的 5D 光學資料儲存技術【註1】。
+
+科學家摒棄了傳統的電磁載體，選用極度純淨的「石英玻璃」。透過飛秒雷射（Femtosecond laser），他們在玻璃內部刻下奈米級的微結構。這些結構不僅記錄了空間的 3D 座標，還包含了光穿透時的偏振方向與強度，構成了 5 維的資訊編碼。目前，這塊小小的玻璃片中已經被刻入了人類基因組的完整圖譜、《世界人權宣言》以及牛頓的《自然哲學的數學原理》。
+
+然而，這項技術最令人震撼的宣稱在於其壽命——科學家表示，這塊水晶能在室溫下無損保存資料長達 138 億年，等同於目前宇宙的年齡。
+
+[科學反問：如何證明一塊玻璃能保存 138 億年？] 面對這個近乎永恆的數字，我們不禁要提出科學上的反問：人類文明不過數千年，科學家如何「測試」並證實一項物品能保存 138 億年？
+
+答案在於物理學上的「加速老化測試」（Accelerated Aging Test）與阿倫尼烏斯方程式（Arrhenius equation）。研究團隊將這些石英玻璃放置在 1000°C 的極端高溫環境中進行長時間烘烤。在高溫下，原子的熱運動會劇烈加速，導致結構崩壞的時間被大幅壓縮。科學家透過測量在 1000°C 下資料劣化的速率，再依據熱力學公式反向推算，若將其放置於常溫（190°C 以下的環境），其奈米結構的半衰期將超過 138 億年。這意味著，除非遭受針對性的物理粉碎，否則即使地球毀滅，這份實體記憶依然存在。
+
+[典範轉移：意識、資訊與量子糾纏] 當人類耗費極大心力試圖用實體水晶來抵抗時間的遺忘時，現代前沿物理學卻指出了另一條路徑：宇宙本身，或許就是一個巨大的記憶載體。
+
+科學界對世界的認知，正經歷從「物質」到「資訊」的典範轉移。從牛頓力學的絕對時空，到愛因斯坦相對論揭示時空的相對性；進入近代，2020 年諾貝爾物理學獎得主羅傑·潘洛斯（Roger Penrose）與麻醉學家史都華·哈默洛夫（Stuart Hameroff）共同提出了著名的「客觀還原」（Orch-OR）理論，主張意識並非大腦神經元的神奇產物，而是發生在微管（Microtubules）中的量子疊加與塌縮過程【註2】。
+
+這項理論在 2022 年獲得了重大突破。神經科學家克里斯蒂安·克斯肯斯（Christian Kerskens）運用特製的 MRI 磁振造影，在人腦中觀測到了與心跳同步的「量子糾纏」跡象，實證了大腦中存在量子運算的可能性【註3】。這引發了一個終極問題：如果意識與記憶的本質是量子資訊，那麼當碳基肉體死亡後，這些違反熱力學消散常規的「量子資訊」，究竟去了哪裡？
+
+[宇宙的終極隨身碟：量子記憶矩陣] 2025 年，量子計算研究科學家弗洛里安·諾伊卡特（Florian Neukart）提出了一項具有顛覆性的統一框架——「量子記憶矩陣」（Quantum Memory Matrix）【註4】。
+
+這項理論指出，宇宙中的時空不僅僅是幾何與能量的展現場域，它本質上就是一個巨大的量子記憶體。宇宙過去、現在與未來的每一個事件，都會透過量子印記被主動儲存與編碼。這項理論不僅優雅地解釋了困擾物理學界多年的「黑洞資訊悖論」（指出進入黑洞的訊息並未消失，而是被編碼在事件視界上），更對宇宙的演化提出了全新的觀點。
+
+Neukart 的理論認為，神祕的暗物質與暗能量與這些「資訊」息息相關。當宇宙這個巨大的矩陣不斷記錄資訊，時空細胞的訊息逐漸飽和，暗能量就會促使宇宙膨脹以獲取更多儲存空間。當膨脹達到極點，便會反彈收縮。根據統計估算，我們目前的宇宙已經經歷了三到四個膨脹與收縮的週期，剩下的週期不到十個。當剩餘的週期完成、時空的資訊容量完全飽和時，宇宙將不再發生彈跳，而是進入擴張極度緩慢的最後階段。
+
+這項巨觀理論，目前已從事件視界望遠鏡（EHT）對 M87 星系與銀河系中心人馬座 A* 超大質量黑洞的觀測中獲得了初步的推進；同時，超級量子電腦的模擬實驗也支持了「宇宙包含記憶」的假設。從 5D 石英水晶到無垠的時空矩陣，科學的兩端奇妙地交會了。我們在微觀的玻璃裡刻下人類的過去，而宇宙則在宏觀的量子網絡中，靜靜地記憶著萬物的一切。
+
+[引用與延伸閱讀註解] 【註1】 南安普敦大學光電研究中心（ORC）：關於 5D 光學資料儲存（5D optical data storage）與保存人類基因組的官方研究發布。
+【註2】 Hameroff, S., & Penrose, R. (2014). Consciousness in the universe: A review of the 'Orch OR' theory. Physics of Life Reviews.
+【註3】 Kerskens, C. M., & Pérez, D. L. (2022). Experimental indications of non-classical brain functions. Journal of Physics Communications.
+【註4】 Neukart, F. (2025). The Quantum Memory Matrix: A Unified Framework for the Black Hole Information Paradox. arXiv:2504.00039v1.`
+    },
+
+    {
         id: "2026-04-14-zh-entropy",
         lang: "zh",
         category: "知識", 
@@ -44,6 +81,43 @@ const rawArticles = [
     // ==========================================
     // 英文文章 (English Articles)
     // ==========================================
+    {
+        id: "2026-04-14-en-news-memory",
+        lang: "en",
+        category: "News", 
+        title: "The Memory Crystal Resisting Billions of Years of Entropy, and the Universe's Own 'Quantum Memory Matrix'",
+        status: "5D Optical Storage ． Quantum Consciousness",
+        humble: "This is a news report exploring extreme physical storage and the universe's quantum information theory, reflecting on the ultimate destination of consciousness and memory.",
+        content: `[The Ultimate Physical Encapsulation: A 5D Memory Crystal Lasting 13.8 Billion Years] In the digital age, human data storage is extremely fragile. Traditional hard drives and cloud servers face the "entropy increase" crisis of material aging and magnetic decay within a few decades. To leave an ultimate backup of human civilization, a team at the Optoelectronics Research Centre (ORC) at the University of Southampton in the UK successfully developed a 5D optical data storage technology known as the "Superman memory crystal"【Note 1】.
+
+Scientists abandoned traditional electromagnetic carriers and chose extremely pure "fused quartz." Using a femtosecond laser, they inscribed nanoscale microstructures inside the glass. These structures not only record 3D spatial coordinates but also contain the polarization direction and intensity of light passing through, forming a 5-dimensional information encoding. Currently, the complete human genome, the Universal Declaration of Human Rights, and Newton's Opticks have already been inscribed into these small glass discs.
+
+However, the most shocking claim of this technology lies in its lifespan—scientists state that this crystal can preserve data losslessly at room temperature for up to 13.8 billion years, equivalent to the current age of the universe.
+
+[A Scientific Inquiry: How to Prove a Glass Can Last 13.8 Billion Years?] Faced with this nearly eternal figure, we cannot help but raise a scientific inquiry: human civilization has only existed for a few thousand years, so how can scientists "test" and prove that an object can be preserved for 13.8 billion years?
+
+The answer lies in the "Accelerated Aging Test" in physics and the Arrhenius equation. The research team placed these quartz glasses in an extreme high-temperature environment of 1000°C for prolonged baking. At high temperatures, the thermal motion of atoms accelerates violently, greatly compressing the time it takes for the structure to collapse. By measuring the rate of data degradation at 1000°C, scientists then calculated backward based on thermodynamic formulas. If placed at room temperature (environments below 190°C), the half-life of its nanostructures will exceed 13.8 billion years. This means that unless it is targeted and physically shattered, this physical memory will continue to exist even if the Earth is destroyed.
+
+[Paradigm Shift: Consciousness, Information, and Quantum Entanglement] While humans expend immense effort trying to use physical crystals to resist the oblivion of time, modern frontier physics has pointed out another path: the universe itself might be a giant memory carrier.
+
+The scientific community's understanding of the world is undergoing a paradigm shift from "matter" to "information." From absolute space and time in Newtonian mechanics to Einstein's theory of relativity revealing the relativity of space and time; entering the modern era, 2020 Nobel Laureate in Physics Roger Penrose and anesthesiologist Stuart Hameroff jointly proposed the famous "Orchestrated Objective Reduction" (Orch-OR) theory. They argue that consciousness is not a magical product of brain neurons but a quantum superposition and collapse process occurring in microtubules【Note 2】.
+
+This theory achieved a major breakthrough in 2022. Neuroscientist Christian Kerskens used specialized MRI to observe signs of "quantum entanglement" synchronized with heartbeats in the human brain, empirically demonstrating the possibility of quantum computing in the brain【Note 3】. This raises an ultimate question: if the essence of consciousness and memory is quantum information, then after the carbon-based physical body dies, where exactly does this "quantum information" that violates standard thermodynamic dissipation go?
+
+[The Universe's Ultimate Flash Drive: The Quantum Memory Matrix] In 2025, quantum computing research scientist Florian Neukart proposed a subversive unified framework—the "Quantum Memory Matrix"【Note 4】.
+
+This theory points out that space-time in the universe is not just an arena for geometry and energy to manifest; it is essentially a massive quantum memory. Every event in the past, present, and future of the universe is actively stored and encoded through quantum imprints. This theory not only elegantly explains the "black hole information paradox" (which states that information entering a black hole is not lost but encoded on the event horizon) that has troubled the physics community for years, but it also offers an entirely new perspective on the evolution of the universe.
+
+Neukart's theory suggests that the mysterious dark matter and dark energy are closely related to this "information." As the massive matrix of the universe continuously records information, the data capacity of space-time cells gradually saturates, and dark energy prompts the universe to expand to acquire more storage space. When the expansion reaches its limit, it bounces back and contracts. According to statistical estimates, our current universe has already gone through three or four cycles of expansion and contraction, with fewer than ten cycles remaining. When the remaining cycles are completed and the information capacity of space-time is fully saturated, the universe will no longer bounce back but will enter a final stage of extremely slow expansion.
+
+This macroscopic theory has currently gained preliminary traction from observations of the M87 galaxy and the Sagittarius A* supermassive black hole at the center of the Milky Way by the Event Horizon Telescope (EHT). Meanwhile, simulation experiments by super quantum computers also support the hypothesis that "the universe contains memory." From 5D quartz crystals to the boundless space-time matrix, the two ends of science have miraculously intersected. We inscribe human history into microscopic glass, while the universe silently remembers everything about all creation within its macroscopic quantum network.
+
+[Citations and Extended Reading Notes] 【Note 1】 Optoelectronics Research Centre (ORC), University of Southampton: Official research release on 5D optical data storage and preserving the human genome.
+【Note 2】 Hameroff, S., & Penrose, R. (2014). Consciousness in the universe: A review of the 'Orch OR' theory. Physics of Life Reviews.
+【Note 3】 Kerskens, C. M., & Pérez, D. L. (2022). Experimental indications of non-classical brain functions. Journal of Physics Communications.
+【Note 4】 Neukart, F. (2025). The Quantum Memory Matrix: A Unified Framework for the Black Hole Information Paradox. arXiv:2504.00039v1.`
+    },
+
     {
         id: "2026-04-14-en-entropy",
         lang: "en",

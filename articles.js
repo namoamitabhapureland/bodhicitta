@@ -9,10 +9,10 @@ const rawArticles = [
     {
         id: "2026-04-14-zh-news-memory",
         lang: "zh",
-        category: "新聞", 
+        category: "知識", 
         title: "抵抗百億年熵增的記憶水晶，與宇宙本身的「量子記憶矩陣」",
         status: "5D 光學儲存 ． 量子意識",
-        humble: "這是一篇探討極致實體儲存與宇宙量子資訊理論的新聞報導，反思意識與記憶的最終歸宿。",
+        humble: "這是一篇探討極致實體儲存與宇宙量子資訊理論的文章探討，反思意識與記憶的最終歸宿。",
         content: `[實體封裝的極致：保存 138 億年的 5D 記憶水晶] 在數位時代，人類的資料儲存極度脆弱，傳統硬碟與雲端伺服器在數十年內便會面臨材料老化與磁性消退的「熵增」危機。為了留下人類文明的終極備份，英國南安普敦大學（University of Southampton）光電研究中心團隊，成功開發出一種被稱為「超人記憶水晶」（Superman memory crystal）的 5D 光學資料儲存技術【註1】。
 
 科學家摒棄了傳統的電磁載體，選用極度純淨的「石英玻璃」。透過飛秒雷射（Femtosecond laser），他們在玻璃內部刻下奈米級的微結構。這些結構不僅記錄了空間的 3D 座標，還包含了光穿透時的偏振方向與強度，構成了 5 維的資訊編碼。目前，這塊小小的玻璃片中已經被刻入了人類基因組的完整圖譜、《世界人權宣言》以及牛頓的《自然哲學的數學原理》。
@@ -84,10 +84,10 @@ Neukart 的理論認為，神祕的暗物質與暗能量與這些「資訊」息
     {
         id: "2026-04-14-en-news-memory",
         lang: "en",
-        category: "News", 
+        category: "Knowledge", 
         title: "The Memory Crystal Resisting Billions of Years of Entropy, and the Universe's Own 'Quantum Memory Matrix'",
         status: "5D Optical Storage ． Quantum Consciousness",
-        humble: "This is a news report exploring extreme physical storage and the universe's quantum information theory, reflecting on the ultimate destination of consciousness and memory.",
+        humble: "This is a article exploring extreme physical storage and the universe's quantum information theory, reflecting on the ultimate destination of consciousness and memory.",
         content: `[The Ultimate Physical Encapsulation: A 5D Memory Crystal Lasting 13.8 Billion Years] In the digital age, human data storage is extremely fragile. Traditional hard drives and cloud servers face the "entropy increase" crisis of material aging and magnetic decay within a few decades. To leave an ultimate backup of human civilization, a team at the Optoelectronics Research Centre (ORC) at the University of Southampton in the UK successfully developed a 5D optical data storage technology known as the "Superman memory crystal"【Note 1】.
 
 Scientists abandoned traditional electromagnetic carriers and chose extremely pure "fused quartz." Using a femtosecond laser, they inscribed nanoscale microstructures inside the glass. These structures not only record 3D spatial coordinates but also contain the polarization direction and intensity of light passing through, forming a 5-dimensional information encoding. Currently, the complete human genome, the Universal Declaration of Human Rights, and Newton's Opticks have already been inscribed into these small glass discs.

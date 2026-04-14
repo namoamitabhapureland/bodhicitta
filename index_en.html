@@ -610,9 +610,10 @@
 <div id="festival-banner"></div>
 
 <div class="time-monitor">
-    <div class="mon-left" onclick="touchAvatar()" style="cursor:pointer;">
-        <div id="mini-seed" style="display:flex; align-items:center; justify-content:center; width:42px; height:42px;"></div>
-        <div style="display:flex; flex-direction:column; overflow:hidden;">
+        <div class="mon-left">
+        <div id="mini-seed" onclick="touchAvatar()" style="display:flex; align-items:center; justify-content:center; width:42px; height:42px; cursor:pointer;"></div>
+        
+        <div onclick="openNameModal()" style="display:flex; flex-direction:column; overflow:hidden; cursor:pointer; padding-right:10px;">
             <div style="display:flex; align-items:center; gap:5px;">
                 <span id="rank-title" style="font-size: 0.65rem; color: var(--cyan);">1st Faith Level</span>
                 <span id="title-medal" style="color:var(--gold); font-size:0.6rem; font-weight:bold;"></span>
@@ -620,6 +621,7 @@
             <span id="display-name" style="font-weight: bold; font-size: 0.95rem;">Practitioner</span>
         </div>
     </div>
+
     <div class="mon-right">
         <div id="earth-time">Saha: --:--:--</div>
         <div id="pure-time-display">Pure Land: --</div>
@@ -627,21 +629,11 @@
 </div>
 
 <div id="screen-1" class="container active">
-    <div style="width:100%; border: 1.5px solid var(--gold); border-radius: 18px; margin: 20px 0; background: rgba(243,229,171,0.03);">
-        <input type="text" id="user-name" placeholder="Enter Your Name" style="width:100%; background:transparent; border:none; color:var(--gold); text-align:center; font-size:1.25rem; outline:none; padding:18px; font-weight: bold;">
-    </div>
+    
     <div style="color:var(--gold); font-size: 1.1rem; margin-bottom:8px;">Total Chants: <span id="total-count">0</span></div>
     <div id="today-info" style="color:var(--cyan); font-size:0.9rem; margin-bottom:5px;">Today's Connection: <span id="today-count">0</span> times</div>
     
-    <div class="vol-slider-wrap">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-        </svg>
-        <input type="range" id="vol-slider" min="0" max="100" value="5" oninput="changeVolume(this.value)">
-        <span id="vol-display" style="width: 35px; text-align: right;">5%</span>
-    </div>
+  
 
     <div style="width:100%; height:8px; background:#1a1a1a; border-radius:4px; overflow:hidden; border: 0.5px solid #333; margin-top: 15px;"><div id="streak-bar" style="height:100%; background: linear-gradient(90deg, var(--solid-gold), var(--gold)); width:0%; transition:1.2s;"></div></div>
     
@@ -1526,26 +1518,8 @@ function checkInAppBrowser() {
 }
 checkInAppBrowser();
 
-let audioCtx, oscillator, gainNode;
-let globalVolume = 0.05; 
+let audioCtx;
 
-function changeVolume(val) {
-    globalVolume = val / 100; document.getElementById('vol-display').innerText = val + "%";
-    if (gainNode) gainNode.gain.setValueAtTime(globalVolume, audioCtx.currentTime);
-}
-
-function playUniverseFrequency() {
-    try {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            oscillator = audioCtx.createOscillator(); gainNode = audioCtx.createGain();
-            oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(432, audioCtx.currentTime); 
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(globalVolume, audioCtx.currentTime + 2); 
-            oscillator.connect(gainNode); gainNode.connect(audioCtx.destination); oscillator.start();
-        } else if (audioCtx.state === 'suspended') { audioCtx.resume(); }
-    } catch (e) {}
-}
 
 function playBell() {
     try {
@@ -1670,28 +1644,63 @@ function updateClock() {
 }
 setInterval(updateClock, 50);
 
-let pendingNewName = "";
-
-// 1. 點擊按鈕時的攔截與判斷
-function startApp() {
-    const nameInput = document.getElementById('user-name').value.trim();
-    if(!nameInput) return alert("Please enter your name.");
+// --- ✨ 名字設定與彈窗邏輯 ✨ ---
+function openNameModal() {
+    const modal = document.getElementById('name-setup-modal');
+    const input = document.getElementById('modal-user-name');
+    const title = document.getElementById('name-modal-title');
     
-    // 如果發現名字有改動，攔截原本的執行，改為顯示琉璃彈窗
-    if (db.name && db.name !== nameInput) {
-        pendingNewName = nameInput;
-        document.getElementById('old-name-display').innerText = db.name;
-        document.getElementById('new-name-display').innerText = nameInput;
-        
-        const modal = document.getElementById('nameChangeModal');
-        modal.style.display = 'flex';
-        setTimeout(() => modal.style.opacity = '1', 10);
-        return; // 暫停執行，等待行者點擊琉璃彈窗的確認
+    if (db.name) {
+        input.value = db.name;
+        title.innerText = "Edit Name";
+    } else {
+        input.value = "";
+        title.innerText = "Enter Dharma Realm";
     }
     
-    // 如果名字沒變（或是新行者第一次進來），直接進入系統
-    executeAppStart(nameInput);
+    modal.style.display = 'flex';
+    setTimeout(() => modal.style.opacity = '1', 10);
 }
+
+function saveNameFromModal() {
+    const nameInput = document.getElementById('modal-user-name').value.trim();
+    if(!nameInput) return alert("Please enter your name.");
+    
+    db.name = nameInput;
+    save();
+    updateUI(); // 立即更新左上角的名字顯示
+    
+    const modal = document.getElementById('name-setup-modal');
+    modal.style.opacity = '0';
+    setTimeout(() => modal.style.display = 'none', 400);
+}
+
+function startApp() {
+    if (!db.name) {
+        openNameModal(); // 如果系統偵測到沒名字，強制彈出設定框
+        return;
+    }
+    executeAppStart(db.name);
+}
+
+function executeAppStart(finalName) {
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        let silentWake = new SpeechSynthesisUtterance("");
+        silentWake.volume = 0; window.speechSynthesis.speak(silentWake);
+    }
+    db.todayCount++; 
+    checkNewDay(); 
+    save();
+    
+    playUniverseFrequency(); 
+    showScreen(2); 
+    updateUI();
+    speak("Gather the six senses, focus the mind, and generate Bodhicitta.", 0.9);
+    document.getElementById('guide-ripple').style.display = 'block'; 
+    refreshDew();
+}
+
 
 // 2. 點擊琉璃彈窗的「Cancel」
 function cancelNameChange() {
@@ -1722,7 +1731,7 @@ function executeAppStart(finalName) {
     checkNewDay(); 
     save(); // 呼叫您原本的存檔函數
     
-    playUniverseFrequency(); 
+    
     showScreen(2); 
     updateUI();
     speak("Gather the six senses, focus the mind, and generate Bodhicitta.", 0.9);
@@ -2217,7 +2226,7 @@ function startDedicationEffect() {
 let breatheInterval;
 function startBreathing() {
     document.getElementById('med-menu').style.display = 'none'; document.getElementById('med-breathe').style.display = 'flex';
-    playUniverseFrequency();
+    
     let mandala = document.getElementById('breathe-mandala'); 
     function runCycle() {
         mandala.innerText = "Inhale"; mandala.className = "breathe-expand";
@@ -2228,7 +2237,10 @@ function startBreathing() {
 }
 
 function startSleep() {
-    document.getElementById('sleep-overlay').style.display = 'flex'; playUniverseFrequency();
+    function startSleep() {
+    document.getElementById('sleep-overlay').style.display = 'flex'; 
+}
+
     if (gainNode) { gainNode.gain.setValueAtTime(globalVolume, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 600); }
 }
 
@@ -2265,8 +2277,15 @@ function stopAllMeditation() {
 function exportProgress() { const blob = new Blob([JSON.stringify(db)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `PureLand_Backup_${db.name}.json`; a.click(); }
 function importProgress(i) { const reader = new FileReader(); reader.onload = (e) => { try { db = JSON.parse(e.target.result); save(); location.reload(); } catch(err){alert("Invalid format");} }; reader.readAsText(i.files[0]); }
 
-checkNewDay(); if(db.name) document.getElementById('user-name').value = db.name;
+checkNewDay(); 
 updateUI();
+
+// 如果是完全沒有註冊過的新行者，載入後自動浮現法名儀式彈窗
+if (!db.name) {
+    setTimeout(openNameModal, 600); // 延遲 0.6 秒彈出，增添儀式感與柔和度
+}
+
+
 
 window.addEventListener('DOMContentLoaded', () => {
     // 1. URL Routing System (✨ Enhanced: Auto-detect screen number)
@@ -2310,18 +2329,21 @@ window.addEventListener('DOMContentLoaded', () => {
 
 </script>
 
-<div id="nameChangeModal" style="position:fixed; inset:0; z-index:999999; background:rgba(0,0,0,0.85); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); display:none; justify-content:center; align-items:center; opacity:0; transition:0.35s;">
-    <div style="background:rgba(3,3,6,0.95); border:1px solid rgba(212,175,55,0.4); border-radius:24px; padding:35px 25px; width:88%; max-width:340px; text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.8);">
-        <div style="color:#d4af37; font-size:16px; letter-spacing:2px; margin-bottom:15px; text-shadow:0 0 15px rgba(212,175,55,0.5); font-weight:bold; text-transform:uppercase;">Confirm Name Change</div>
-        <div style="color:#8ba89c; font-size:13px; margin-bottom:25px; letter-spacing:0.5px; line-height:1.6;">
-            Current merit belongs to "<span id="old-name-display" style="color:#f3e5ab; font-weight:bold;"></span>".<br><br>Are you sure you want to change your name to "<span id="new-name-display" style="color:#f3e5ab; font-weight:bold;"></span>"?
+<div id="name-setup-modal" style="position:fixed; inset:0; z-index:999999; background:rgba(0,0,0,0.85); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); display:none; justify-content:center; align-items:center; opacity:0; transition:0.4s;">
+    <div style="background:linear-gradient(145deg, #0a0a0a 0%, #000000 100%); border:1px solid rgba(212,175,55,0.4); border-radius:24px; padding:40px 30px; width:88%; max-width:360px; text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.9), inset 0 0 20px rgba(212,175,55,0.05);">
+        
+        <svg style="width: 50px; height: 50px; margin-bottom: 20px; filter: drop-shadow(0 0 8px rgba(212,175,55,0.5));" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M12 22C12 22 17 16 17 12C17 8 12 4 12 4C12 4 7 8 7 12C7 16 12 22 12 22Z"/><circle cx="12" cy="12" r="2" fill="var(--gold)"/></svg>
+        
+        <div id="name-modal-title" style="color:#d4af37; font-size:1.2rem; letter-spacing:2px; margin-bottom:20px; text-shadow:0 0 10px rgba(212,175,55,0.3); font-weight:bold;">Enter Dharma Realm</div>
+        
+        <div style="width:100%; border: 1.5px solid var(--gold); border-radius: 16px; background: rgba(243,229,171,0.05); margin-bottom: 25px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
+            <input type="text" id="modal-user-name" placeholder="Your Name" style="width:100%; background:transparent; border:none; color:var(--gold); text-align:center; font-size:1.25rem; outline:none; padding:16px; font-weight: bold; letter-spacing: 1px;">
         </div>
-        <div style="display:flex; gap:12px; justify-content:center;">
-            <button onclick="cancelNameChange()" style="flex:1; padding:13px; border-radius:12px; font-size:12px; letter-spacing:2px; cursor:pointer; background:transparent; border:1px solid rgba(255,255,255,0.15); color:#aaa; text-transform:uppercase;">Cancel</button>
-            <button onclick="executeStartAppWithNewName()" style="flex:1; padding:13px; border-radius:12px; font-size:12px; letter-spacing:1px; cursor:pointer; background:linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); border:1px solid #d4af37; color:#f3e5ab; font-weight:bold; text-transform:uppercase; box-shadow:0 0 15px rgba(212,175,55,0.2);">Confirm</button>
-        </div>
+        
+        <button onclick="saveNameFromModal()" style="width:100%; padding:15px; border-radius:16px; font-size:1rem; letter-spacing:2px; cursor:pointer; background:linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); border:1px solid #d4af37; color:#f3e5ab; font-weight:bold; box-shadow:0 0 15px rgba(212,175,55,0.2); transition: 0.3s;">CONFIRM</button>
     </div>
 </div>
+
 
 </body>
 </html>

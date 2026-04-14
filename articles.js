@@ -10,6 +10,31 @@ const rawArticles = [
         id: "2026-04-14",
         lang: "zh",
         category: "知識", 
+        title: "無生命的奇蹟甦醒——科學家破解五十年的「生命起源」拼圖",
+        status: "RNA與胺基酸 ． 宇宙的低熵奇蹟",
+        humble: "這是一篇關於2025年生命起源重大突破的報導，探討死寂的化學分子如何跨越界線，並大膽提出分子生物學與「十二因緣」相應的哲學假說。",
+        content: `[沉睡四十億年的化學謎團] 地球上的生命是如何從一鍋冰冷死寂的化學濃湯中誕生的？這是科學界延宕了半個世紀的終極謎團。我們知道，所有已知的生命都依賴兩種基本積木：負責攜帶遺傳記憶的「RNA」，以及構成蛋白質、執行生命勞動的「胺基酸」。然而，在沒有現代細胞複雜酶的輔助下，這兩種物質在四十億年前的早期地球上，究竟是如何史無前例地「牽起手來」的？這個被稱為「RNA胺基酸醯化」（RNA aminoacylation）的關鍵步驟，自1970年代以來，科學家在實驗室中屢屢嘗試，卻從未在早期地球的模擬環境下成功過。
+
+[2025年的破局：硫酯與自發的秩序] 2025年8月，英國倫敦大學學院（UCL）的化學團隊在權威期刊《自然》（Nature）發表了一項震撼性的突破【註1】。他們發現了這兩大生命積木之間的「失落環節」。
+
+研究團隊證明，只要在微溫、酸鹼值中性的水中，加入一種名為「硫酯」（thioester）的高能化學物質（這種類似於輔酶A的物質存在於所有現代活細胞中），胺基酸與RNA就能夠「自發且具有選擇性」地結合在一起【註2】。這意味著，生命的起源或許並不需要極度嚴苛或不可思議的巧合，只要材料齊備，宇宙的化學法則本身似乎就蘊含著組裝生命的內在驅動力。這項發現巧妙地將科學界爭論不休的「RNA世界」與「硫酯世界」兩種起源假說，完美地縫合在一起。
+
+[量子唯識與化學投影：一個生命起源的假說] 如果我們將分子生物學的視角拉高，RNA 與硫酯的結合，或許正是東方古老智慧中「十二因緣」與「緣起性空」在物質界最底層的投影。
+
+在細胞系統裡，RNA 扮演著「信息」（識）的角色，而胺基酸則是構成實體機器的「色」（物質）。一條 RNA 序列本身是「空」的、沒有自性的，若沒有解碼的環境與硫酯這股瞬間的推動力（緣），它就只是一串死寂的聚合物。
+
+「硫酯」正如十二因緣中促發連結的「行」（造作與推力），它強迫原本互不理睬的資訊（RNA）與物質（胺基酸）牽起手來，完成了「名色（信息與物質）相依」。當硫酯完成了推動，其化學鍵便斷裂消散，功成身退。它生於條件、也滅於條件，完美詮釋了「無自性」的本質。
+
+這不禁讓我們提出一個大膽的假說：宇宙中最初的生命起源，是否根本不是隨機的化學碰撞，而是宇宙「量子記憶矩陣」在特定條件下，透過化學分子所進行的一場「緣起」演算？當死寂的分子因為「緣」而產生了最初的「識」（資訊傳遞與記憶），這具由碳基化學組成的生命硬體，究竟是宇宙開始覺察自身的開端，還是另一場漫長無明（高熵）流轉的起點？
+
+[引用與延伸閱讀註解] 【註1】 2025年8月發表於《自然》（Nature）期刊的突破性研究，由倫敦大學學院（UCL）化學系 Matthew Powner 教授團隊主導。
+【註2】 該研究證明了在早期地球條件下，活化的胺基酸（硫酯）能與 RNA 自發結合，為蛋白質的早期合成機制提供了實驗證據，被視為解決生命起源謎團的重要里程碑。`
+    },
+
+    {
+        id: "2026-04-14",
+        lang: "zh",
+        category: "知識", 
         title: "抵抗百億年熵增的記憶水晶，與宇宙本身的「量子記憶矩陣」",
         status: "5D 光學儲存 ． 量子意識",
         humble: "這是一篇探討極致實體儲存與宇宙量子資訊理論的文章探討，反思意識與記憶的最終歸宿。",
@@ -81,6 +106,31 @@ Neukart 的理論認為，神祕的暗物質與暗能量與這些「資訊」息
     // ==========================================
     // 英文文章 (English Articles)
     // ==========================================
+    {
+        id: "2026-04-14",
+        lang: "en",
+        category: "Knowledge", 
+        title: "The Miraculous Awakening of the Inanimate: Scientists Crack the 50-Year 'Origin of Life' Puzzle",
+        status: "RNA and Amino Acids ． The Universe's Low-Entropy Miracle",
+        humble: "This is a report on a major 2025 breakthrough regarding the origin of life, exploring how dead chemical molecules crossed the boundary, and boldly proposing a philosophical hypothesis linking molecular biology with the 'Twelve Nidanas'.",
+        content: `[A Chemical Mystery Dormant for Four Billion Years] How did life on Earth emerge from a cold, dead primordial chemical soup? This has been the ultimate mystery delayed in the scientific community for half a century. We know that all known life relies on two basic building blocks: "RNA," which carries genetic memory, and "amino acids," which form proteins and perform the labor of life. However, without the assistance of complex modern cellular enzymes, how did these two substances unprecedentedly "join hands" on the early Earth four billion years ago? This crucial step, known as "RNA aminoacylation," has been attempted repeatedly by scientists in laboratories since the 1970s, but it had never been successfully replicated under simulated early Earth conditions.
+
+[The 2025 Breakthrough: Thioesters and Spontaneous Order] In August 2025, a chemistry team from University College London (UCL) published a shocking breakthrough in the prestigious journal Nature【Note 1】. They discovered the "missing link" between these two major building blocks of life.
+
+The research team demonstrated that by simply adding a high-energy chemical compound called a "thioester" (a substance similar to Coenzyme A found in all modern living cells) into slightly warm, pH-neutral water, amino acids and RNA could bind together "spontaneously and selectively"【Note 2】. This implies that the origin of life might not require extremely harsh or unbelievably coincidental conditions. As long as the ingredients are present, the chemical laws of the universe themselves seem to contain an intrinsic drive to assemble life. This discovery elegantly stitched together the two long-debated origin hypotheses in the scientific community: the "RNA world" and the "thioester world."
+
+[Quantum Vijnanavada and Chemical Projection: A Hypothesis on the Origin of Life] If we elevate the perspective of molecular biology, the combination of RNA and thioesters might just be the most fundamental physical projection of the ancient Eastern wisdom of the "Twelve Nidanas" (Twelve Links of Dependent Origination) and "Emptiness of Inherent Nature."
+
+In the cellular system, RNA plays the role of "information" (Consciousness/Vijnana), while amino acids form the physical machine (Form/Rupa). An RNA sequence itself is "empty" and lacks inherent nature; without a decoding environment and the instantaneous driving force of the thioester (the Condition/Pratyaya), it is merely a dead polymer.
+
+The "thioester" acts much like "Volitional Formations" (Samskara) in the Twelve Nidanas, a driving force that compels previously unrelated information (RNA) and matter (amino acids) to join hands, achieving the interdependence of "Name and Form" (Nama-rupa). Once the thioester completes its push, its chemical bonds break and dissipate. It arises from conditions and ceases from conditions, perfectly illustrating its "lack of inherent nature."
+
+This leads us to propose a bold hypothesis: could the initial origin of life in the universe be something other than random chemical collisions? Could it be a "dependent origination" computation performed by the universe's "Quantum Memory Matrix" under specific conditions using chemical molecules? When inanimate molecules generated the very first "consciousness" (information transfer and memory) due to "conditions," is this carbon-based biological hardware the beginning of the universe perceiving itself, or the starting point of another long, ignorant (high-entropy) cycle?
+
+[Citations and Extended Reading Notes] 【Note 1】 A breakthrough study published in the journal Nature in August 2025, led by Professor Matthew Powner's team at the Department of Chemistry, University College London (UCL).
+【Note 2】 The study demonstrated that under early Earth conditions, activated amino acids (thioesters) can spontaneously bind with RNA, providing experimental evidence for the early synthesis mechanism of proteins and marking a major milestone in solving the origin of life mystery.`
+    },
+
     {
         id: "2026-04-14",
         lang: "en",

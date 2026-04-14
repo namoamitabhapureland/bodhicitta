@@ -7,7 +7,7 @@ const rawArticles = [
     // 中文文章
     // ==========================================
     {
-        id: "2026-04-14",
+        id: "2026-04-14-zh-origin",
         lang: "zh",
         category: "知識", 
         title: "無生命的奇蹟甦醒——科學家破解五十年的「生命起源」拼圖",
@@ -32,7 +32,7 @@ const rawArticles = [
     },
 
     {
-        id: "2026-04-14",
+        id: "2026-04-14-zh-memory",
         lang: "zh",
         category: "知識", 
         title: "抵抗百億年熵增的記憶水晶，與宇宙本身的「量子記憶矩陣」",
@@ -69,7 +69,7 @@ Neukart 的理論認為，神祕的暗物質與暗能量與這些「資訊」息
     },
 
     {
-        id: "2026-04-14",
+        id: "2026-04-14-zh-entropy",
         lang: "zh",
         category: "知識", 
         title: "刻在墓碑上的宇宙猜想——從「熵」看見時間的單行道與無常",
@@ -107,7 +107,7 @@ Neukart 的理論認為，神祕的暗物質與暗能量與這些「資訊」息
     // 英文文章 (English Articles)
     // ==========================================
     {
-        id: "2026-04-14",
+        id: "2026-04-14-en-origin",
         lang: "en",
         category: "Knowledge", 
         title: "The Miraculous Awakening of the Inanimate: Scientists Crack the 50-Year 'Origin of Life' Puzzle",
@@ -132,7 +132,7 @@ This leads us to propose a bold hypothesis: could the initial origin of life in 
     },
 
     {
-        id: "2026-04-14",
+        id: "2026-04-14-en-memory",
         lang: "en",
         category: "Knowledge", 
         title: "The Memory Crystal Resisting Billions of Years of Entropy, and the Universe's Own 'Quantum Memory Matrix'",
@@ -169,7 +169,7 @@ This macroscopic theory has currently gained preliminary traction from observati
     },
 
     {
-        id: "2026-04-14",
+        id: "2026-04-14-en-entropy",
         lang: "en",
         category: "knowledge", 
         title: "The Cosmic Conjecture Carved on a Tombstone: Seeing the One-Way Street of Time and Impermanence through 'Entropy'",

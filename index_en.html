@@ -2028,35 +2028,42 @@ function speak(t, r) {
     setTimeout(() => { window.speechSynthesis.speak(m); }, 50);
 }
 function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
+    // ════════ 1. 決定法界光色 (依資糧大境界) ════════
     let safeRank = rankType || 'Faith';
     const colorMap = {
-        'Faith': { t: '#ffffff', m: '#8ba89c', b: '#1e382d' },
-        'Abiding': { t: '#ffffff', m: '#f48fb1', b: '#880e4f' },
-        'Practice': { t: '#f3e5f5', m: '#ce93d8', b: '#4a148c' },
-        'Dedication': { t: '#fff8e1', m: '#ffb74d', b: '#e65100' },
-        'Bhumi': { t: '#fff8d6', m: '#d4af37', b: '#5c400a' },
+        'Faith': { t: '#ffffff', m: '#8ba89c', b: '#1e382d' },      // 信：青玉琉璃
+        'Abiding': { t: '#ffffff', m: '#f48fb1', b: '#880e4f' },    // 住：粉色琉璃
+        'Practice': { t: '#f3e5f5', m: '#ce93d8', b: '#4a148c' },   // 行：紫金霞光
+        'Dedication': { t: '#fff8e1', m: '#ffb74d', b: '#e65100' }, // 迴：玄黃幻彩
+        'Bhumi': { t: '#fff8d6', m: '#d4af37', b: '#5c400a' },      // 地：大日純金
         '信': { t: '#ffffff', m: '#8ba89c', b: '#1e382d' },
         '住': { t: '#ffffff', m: '#f48fb1', b: '#880e4f' },
         '行': { t: '#f3e5f5', m: '#ce93d8', b: '#4a148c' },
         '迴': { t: '#fff8e1', m: '#ffb74d', b: '#e65100' },
         '地': { t: '#fff8d6', m: '#d4af37', b: '#5c400a' }
     };
+    
     let c = colorMap['Faith']; 
     for (let key in colorMap) { if (safeRank.includes(key)) { c = colorMap[key]; break; } }
 
+    // ════════ 2. 決定花瓣層數與光芒 (依累積念佛，保持絕對清淨) ════════
+    // 放棄 11 層的擁擠，最多只到 5 層，後期純粹強化蓮心法光
     let layers = 2; 
     let coreGlow = 1;
+
     if (overrideLevel !== null) {
         layers = Math.min(overrideLevel + 1, 5); 
     } else {
-        if (nianCount >= 100000000) { layers = 5; coreGlow = 3.0; }
-        else if (nianCount >= 1000000) { layers = 5; coreGlow = 2.0; }
-        else if (nianCount >= 10000) { layers = 4; coreGlow = 1.5; }
-        else if (nianCount >= 500) { layers = 3; coreGlow = 1.2; }
-        else if (nianCount >= 10) { layers = 3; coreGlow = 1.0; }
-        else { layers = 2; coreGlow = 0.8; }
+        if (nianCount >= 100000000) { layers = 5; coreGlow = 3.0; }      // 1億：5層花瓣，極強光芒
+        else if (nianCount >= 1000000) { layers = 5; coreGlow = 2.0; }   // 100萬：5層花瓣，強光
+        else if (nianCount >= 10000) { layers = 4; coreGlow = 1.5; }     // 1萬：4層花瓣，中光
+        else if (nianCount >= 500) { layers = 3; coreGlow = 1.2; }       // 500聲：3層花瓣
+        else if (nianCount >= 10) { layers = 3; coreGlow = 1.0; }        // 10聲：3層花瓣
+        else { layers = 2; coreGlow = 0.8; }                             // 初始：2層含苞
     }
 
+    // ════════ 3. 繪製純淨蓮花 ════════
+    // 移除所有複雜的陣法，只保留一圈最純淨的法界星軌與核心蓮花
     let svgHtml = `
     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; overflow:visible;">
         <defs>
@@ -2072,13 +2079,17 @@ function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
             </radialGradient>
             <path id="enPetal" d="M 50 50 C 39 25, 41 9, 50 2 C 59 9, 61 25, 50 50 Z" fill="url(#enLotusGrad)" stroke="rgba(255,255,255,0.5)" stroke-width="0.5"/>
         </defs>
+
         <circle cx="50" cy="50" r="45" fill="rgba(5,5,5,0.6)"/>
+        
         <circle cx="50" cy="50" r="38" fill="none" stroke="${c.m}" stroke-width="0.5" stroke-dasharray="1 4" opacity="0.5">
             <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="40s" repeatCount="indefinite"/>
         </circle>
+
         <g filter="drop-shadow(0 0 4px rgba(0,0,0,0.5))">
             <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="120s" repeatCount="indefinite"/>`;
 
+    // 渲染花瓣 (固定在最優雅的比例)
     for (let l = layers; l > 0; l--) {
         const scale = 0.35 + (l * 0.12);
         const offset = (l % 2 === 0) ? 22.5 : 0;
@@ -2088,20 +2099,8 @@ function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
             svgHtml += `<use href="#enPetal" transform="rotate(${angle} 50 50) scale(${scale}) translate(${(1-scale)*50/scale} ${(1-scale)*50/scale})" opacity="${opacity}"/>`;
         }
     }
-    function getRankBadgeSVG(rankName) {
-    if (rankName.includes('Faith') || rankName.includes('信')) {
-        return `<svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="5" fill="#8ba89c" /><circle cx="12" cy="12" r="9" fill="none" stroke="#8ba89c" stroke-width="1.5" stroke-dasharray="2 3" /></svg>`;
-    } else if (rankName.includes('Abiding') || rankName.includes('住')) {
-        return `<svg viewBox="0 0 24 24" width="14" height="14"><rect x="7" y="7" width="10" height="10" rx="2" fill="#f48fb1" /><rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="#f48fb1" stroke-width="1.5" /></svg>`;
-    } else if (rankName.includes('Practice') || rankName.includes('行')) {
-        return `<svg viewBox="0 0 24 24" width="14" height="14"><polygon points="12,2 14.5,9.5 22,12 14.5,14.5 12,22 9.5,14.5 2,12 9.5,9.5" fill="#ce93d8"/></svg>`;
-    } else if (rankName.includes('Dedication') || rankName.includes('迴')) {
-        return `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 2 L22 12 L12 22 L2 12 Z" fill="none" stroke="#ffb74d" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="#ffb74d"/></svg>`;
-    } else {
-        return `<svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="9" fill="none" stroke="#d4af37" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="#d4af37"/><path d="M12 2v3 M12 19v3 M2 12h3 M19 12h3" stroke="#d4af37" stroke-width="2" stroke-linecap="round"/></svg>`;
-    }
-}
-
+    
+    // 蓮心呼吸光芒
     const coreRadius = 3 + (layers * 0.5) * coreGlow;
     svgHtml += `
         </g>
@@ -2111,6 +2110,27 @@ function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
     </svg>`;
 
     return svgHtml;
+}
+// 產生大境界專屬的微型法界印記 (14x14px 極簡向量)
+function getRankBadgeSVG(rankName) {
+    let svg = '';
+    if (rankName.includes('Faith') || rankName.includes('信')) {
+        // 信位：琉璃種子 (Cyan)
+        svg = `<svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="5" fill="#8ba89c" /><circle cx="12" cy="12" r="9" fill="none" stroke="#8ba89c" stroke-width="1.5" stroke-dasharray="2 3" /></svg>`;
+    } else if (rankName.includes('Abiding') || rankName.includes('住')) {
+        // 住位：方圓寶座 (Pink)
+        svg = `<svg viewBox="0 0 24 24" width="14" height="14"><rect x="7" y="7" width="10" height="10" rx="2" fill="#f48fb1" /><rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="#f48fb1" stroke-width="1.5" /></svg>`;
+    } else if (rankName.includes('Practice') || rankName.includes('行')) {
+        // 行位：紫金星輪 (Purple)
+        svg = `<svg viewBox="0 0 24 24" width="14" height="14"><polygon points="12,2 14.5,9.5 22,12 14.5,14.5 12,22 9.5,14.5 2,12 9.5,9.5" fill="#ce93d8"/></svg>`;
+    } else if (rankName.includes('Dedication') || rankName.includes('迴')) {
+        // 迴向位：玄黃金剛 (Orange)
+        svg = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 2 L22 12 L12 22 L2 12 Z" fill="none" stroke="#ffb74d" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="#ffb74d"/></svg>`;
+    } else {
+        // 地位：大日純金 (Gold)
+        svg = `<svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="9" fill="none" stroke="#d4af37" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="#d4af37"/><path d="M12 2v3 M12 19v3 M2 12h3 M19 12h3" stroke="#d4af37" stroke-width="2" stroke-linecap="round"/></svg>`;
+    }
+    return svg;
 }
 
 

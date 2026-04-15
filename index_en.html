@@ -558,11 +558,26 @@
             font-size: 1.15rem; font-weight: bold; letter-spacing: 3px;
             text-shadow: 0 0 8px rgba(212,175,55,0.4);
         }
+        /* ✨ Gassho (合十) & Starry Background ✨ */
+        #starBg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+        .scene { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; cursor: pointer; margin: 10px 0 40px 0; }
+        .hands-wrap { animation: float 4s ease-in-out infinite; position: relative; }
+        @keyframes float {
+          0% { transform: translateY(0px); filter: drop-shadow(0 5px 15px rgba(212,175,55,0.05)); }
+          50% { transform: translateY(-8px); filter: drop-shadow(0 15px 30px rgba(212,175,55,0.25)); }
+          100% { transform: translateY(0px); filter: drop-shadow(0 5px 15px rgba(212,175,55,0.05)); }
+        }
+        .scene:active .hands-wrap { transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .hands-svg { overflow: visible; display: block; transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .caption { margin-top: 25px; color: var(--gold); font-size: 1.15rem; font-weight: 500; letter-spacing: 10px; text-shadow: 0 0 15px rgba(212,175,55,0.6); pointer-events: none; margin-left: 10px; text-transform: uppercase; }
+        .particle { position: fixed; width: 3px; height: 3px; border-radius: 50%; background: #fff; pointer-events: none; z-index: 9999; box-shadow: 0 0 8px var(--gold), 0 0 12px var(--solid-gold); }
+        @keyframes cosmicFlow { 0%{background-position:200% 0;} 100%{background-position:0% 0;} }
 
     </style>
 </head>
 <body>
 <div id="page-transition-curtain"></div>
+<canvas id="starBg"></canvas>
 
 <div id="inapp-warning">
     <div class="guide-arrow arrow-tr"><svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="21" x2="12" y2="3"></line><polyline points="5 10 12 3 19 10"></polyline></svg></div>
@@ -626,66 +641,72 @@
     </div>
 </div>
 
-<div id="screen-1" class="container active">
-    <div style="width:100%; border: 1.5px solid var(--gold); border-radius: 18px; margin: 20px 0; background: rgba(243,229,171,0.03);">
-        <input type="text" id="user-name" placeholder="Enter Your Name" style="width:100%; background:transparent; border:none; color:var(--gold); text-align:center; font-size:1.25rem; outline:none; padding:18px; font-weight: bold;">
-    </div>
-    <div style="color:var(--gold); font-size: 1.1rem; margin-bottom:8px;">Total Chants: <span id="total-count">0</span></div>
-    <div id="today-info" style="color:var(--cyan); font-size:0.9rem; margin-bottom:5px;">Today's Connection: <span id="today-count">0</span> times</div>
+<div id="screen-1" class="container active" style="position: relative; z-index: 10;">
     
-    <div class="vol-slider-wrap">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-        </svg>
-        <input type="range" id="vol-slider" min="0" max="100" value="5" oninput="changeVolume(this.value)">
-        <span id="vol-display" style="width: 35px; text-align: right;">5%</span>
+    <div style="width: 90%; background: linear-gradient(145deg, rgba(20,25,22,0.3), rgba(5,8,5,0.6)); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(212,175,55,0.15); border-radius: 20px; padding: 20px 15px; margin: 15px auto 35px auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; position: relative; z-index: 10;">
+        <div style="color:var(--gold); font-size: 1.1rem; font-weight: bold; letter-spacing: 2px; margin-bottom:8px; text-shadow: 0 0 10px rgba(212,175,55,0.3);">Total Chants: <span id="total-count">0</span></div>
+        <div id="today-info" style="color:var(--cyan); font-size:0.85rem; margin-bottom:15px; letter-spacing: 1px;">Today's Connection: <span id="today-count">0</span> times</div>
+        
+        <div style="width:85%; height:4px; background:rgba(0,0,0,0.6); border-radius:10px; margin: 0 auto 12px auto; position:relative; box-shadow: inset 0 1px 3px rgba(0,0,0,1);">
+            <div id="streak-bar" style="height:100%; border-radius:10px; background: linear-gradient(90deg, #FDF5D3, #D4AF37, #E5989B, #89CFF0, #C9A0DC, #D4AF37); background-size: 200% 100%; animation: cosmicFlow 4s linear infinite; width:0%; box-shadow: 0 0 8px rgba(137, 207, 240, 0.4); transition: 1.2s;"></div>
+        </div>
+        
+        <div id="label-container" style="font-size:0.75rem; color:#777; letter-spacing: 1px;">Faith Progress: <span id="streak-val" style="color:var(--gold);">0.0</span> / 10</div>
     </div>
 
-    <div style="width:100%; height:8px; background:#1a1a1a; border-radius:4px; overflow:hidden; border: 0.5px solid #333; margin-top: 15px;"><div id="streak-bar" style="height:100%; background: linear-gradient(90deg, var(--solid-gold), var(--gold)); width:0%; transition:1.2s;"></div></div>
-    
-    <div id="label-container" style="font-size:0.8rem; margin:12px 0 35px; color:#888;">Faith Progress (10 Days/Lv): <span id="streak-val">0.0</span> / 100</div>
-
-          <button class="btn-main" style="display:flex; justify-content:center; align-items:center; gap:12px; letter-spacing: 1px;" onclick="startApp()">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px rgba(212,175,55,0.6)); color: var(--gold);">
-            <circle cx="12" cy="12" r="10" stroke-dasharray="1 3" opacity="0.5"/>
-            <circle cx="12" cy="12" r="6" opacity="0.7"/>
-            <path d="M12 2 L12 22" stroke-width="1" opacity="0.8"/>
-            <path d="M2 12 L22 12" stroke-width="1" opacity="0.4"/>
-            <path d="M12 7 L15 12 L12 17 L9 12 Z" fill="rgba(212,175,55,0.15)" stroke-width="1"/>
-            <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none" filter="drop-shadow(0 0 5px #fff)"/>
+    <div class="scene" id="handsBtn">
+      <div class="hands-wrap">
+        <svg class="hands-svg" viewBox="0 0 200 320" width="160" height="256" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="glass-base" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="rgba(243, 229, 171, 0.35)"/><stop offset="50%" stop-color="rgba(212, 175, 55, 0.20)"/><stop offset="100%" stop-color="rgba(212, 175, 55, 0.08)"/>
+            </linearGradient>
+            <radialGradient id="burst-glow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="rgba(255,255,255,0.9)"/><stop offset="30%" stop-color="rgba(212,175,55,0.6)"/><stop offset="100%" stop-color="rgba(212,175,55,0)"/>
+            </radialGradient>
+            <filter id="mist-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="12" /></filter>
+          </defs>
+          <ellipse id="burst-el" cx="100" cy="180" rx="0" ry="0" fill="url(#burst-glow)" opacity="0"/>
+          <path id="hand-silhouette" d="M 100 25 C 97 18, 93 20, 92 30 L 62 165 C 58 190, 55 230, 65 280 Q 100 290 135 280 C 145 230, 142 190, 138 165 L 108 30 C 107 20, 103 18, 100 25 Z" fill="url(#glass-base)" stroke="var(--solid-gold)" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M 96 23 C 98 25, 98 32, 94 34" stroke="var(--solid-gold)" stroke-width="1" fill="none" />
+          <path d="M 104 23 C 102 25, 102 32, 106 34" stroke="var(--solid-gold)" stroke-width="1" fill="none" />
+          <path d="M 100 25 L 100 160" stroke="var(--solid-gold)" stroke-width="1.5" stroke-linecap="round" fill="none" />
+          <path d="M 136 175 C 125 155, 110 152, 102 155" stroke="rgba(212,175,55,0.8)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M 63 170 C 80 155, 95 152, 112 158 C 118 160, 120 170, 115 175 C 95 188, 75 198, 63 215 Z" fill="#010103" />
+          <path d="M 63 170 C 80 155, 95 152, 112 158 C 118 160, 120 170, 115 175 C 95 188, 75 198, 63 215 Z" fill="url(#glass-base)" />
+          <path d="M 63 170 C 80 155, 95 152, 112 158 C 118 160, 120 170, 115 175 C 95 188, 75 198, 63 215" stroke="var(--solid-gold)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+          <path d="M 103 162 C 109 159, 113 161, 113 166 C 109 169, 103 167, 103 162 Z" stroke="var(--solid-gold)" stroke-width="1" fill="none" />
+          <path d="M 105 182 Q 125 218 138 210" stroke="var(--solid-gold)" stroke-width="1.5" stroke-linecap="round" fill="none" />
+          <path d="M 64 270 Q 100 282 136 270" stroke="rgba(212,175,55,0.7)" stroke-width="1.2" fill="none" />
+          <path d="M 68 260 Q 100 270 132 260" stroke="rgba(212,175,55,0.4)" stroke-width="1" fill="none" />
+          <g filter="url(#mist-blur)" style="pointer-events: none;">
+            <ellipse cx="60" cy="280" rx="60" ry="25" fill="rgba(243,229,171,0.25)"><animate attributeName="cx" values="50; 70; 50" dur="8s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4; 0.8; 0.4" dur="6s" repeatCount="indefinite" /></ellipse>
+            <ellipse cx="140" cy="275" rx="60" ry="25" fill="rgba(139,168,156,0.25)"><animate attributeName="cx" values="150; 130; 150" dur="10s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4; 0.8; 0.4" dur="7s" repeatCount="indefinite" /></ellipse>
+            <ellipse cx="100" cy="300" rx="80" ry="30" fill="rgba(212,175,55,0.2)"><animate attributeName="cy" values="305; 295; 305" dur="7s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4; 0.7; 0.4" dur="9s" repeatCount="indefinite" /></ellipse>
+            <ellipse cx="100" cy="245" rx="50" ry="20" fill="rgba(255,255,255,0.15)"><animate attributeName="cx" values="110; 90; 110" dur="9s" repeatCount="indefinite" /><animate attributeName="cy" values="248; 240; 248" dur="8s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.3; 0.6; 0.3" dur="5s" repeatCount="indefinite" /></ellipse>
+          </g>
         </svg>
-        Connect with Amitabha
-    </button>
+      </div>
+      <div class="caption">CONNECT</div>
+    </div>
 
-    
-    <div style="display:flex; gap:12px; width:100%;">
+    <div style="display:flex; gap:12px; width:100%; position: relative; z-index: 10;">
         <button class="btn-main" style="font-size:0.85rem; flex:1; display:flex; justify-content:center; align-items:center; gap:8px; letter-spacing: 1px;" onclick="exportProgress()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.9;">
-                <path d="M21 8v13H3V8"></path>
-                <polyline points="1 3 23 3 23 8 1 8 1 3"></polyline>
-                <line x1="10" y1="12" x2="14" y2="12"></line>
-            </svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.9;"><path d="M21 8v13H3V8"></path><polyline points="1 3 23 3 23 8 1 8 1 3"></polyline><line x1="10" y1="12" x2="14" y2="12"></line></svg>
             Backup Merit
         </button>
-        
         <button class="btn-main" style="font-size:0.85rem; flex:1; display:flex; justify-content:center; align-items:center; gap:8px; letter-spacing: 1px;" onclick="document.getElementById('import-file').click()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.9;">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.9;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             Import Merit
         </button>
         <input type="file" id="import-file" style="display:none" onchange="importProgress(this)">
     </div>
-
     
-    <div style="text-align:center; margin-top:20px;">
+    <div style="text-align:center; margin-top:20px; position: relative; z-index: 10;">
         <span class="gold-btn" style="font-size: 0.75rem;" onclick="document.getElementById('guide-modal').style.display='flex'">SYSTEM GUIDE</span>
     </div>
 </div>
+
 
 <div id="screen-2" class="container">
     <div class="circle-wrap">
@@ -1722,7 +1743,7 @@ function executeAppStart(finalName) {
     checkNewDay(); 
     save(); // 呼叫您原本的存檔函數
     
-    playUniverseFrequency(); 
+    
     showScreen(2); 
     updateUI();
     speak("Gather the six senses, focus the mind, and generate Bodhicitta.", 0.9);
@@ -2305,6 +2326,108 @@ window.addEventListener('DOMContentLoaded', () => {
             dots.forEach(d => d.classList.remove('active'));
             if (dots[index]) dots[index].classList.add('active');
         });
+    }
+});
+// ═══════════════════════════════════
+// 星空背景與合十爆發粒子特效 
+// ═══════════════════════════════════
+const cvsStar = document.getElementById('starBg');
+const ctxStar = cvsStar ? cvsStar.getContext('2d') : null;
+let bgStars = [];
+
+function initStarsBg() {
+  if(!cvsStar) return;
+  cvsStar.width  = window.innerWidth;
+  cvsStar.height = window.innerHeight;
+  bgStars = Array.from({ length: 100 }, () => ({
+    x:  Math.random() * cvsStar.width,
+    y:  Math.random() * cvsStar.height,
+    r:  Math.random() * 1.5 + 0.5,
+    sp: Math.random() * 0.002 + 0.0005,
+    ph: Math.random() * Math.PI * 2
+  }));
+}
+function drawStarsBg() {
+  if(!ctxStar) return;
+  ctxStar.clearRect(0, 0, cvsStar.width, cvsStar.height);
+  const t = Date.now();
+  bgStars.forEach(s => {
+    ctxStar.globalAlpha = 0.15 + Math.abs(Math.sin(t * s.sp + s.ph)) * 0.6;
+    ctxStar.fillStyle = '#f3e5ab'; 
+    ctxStar.beginPath();
+    ctxStar.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctxStar.fill();
+  });
+  requestAnimationFrame(drawStarsBg);
+}
+if(cvsStar) { window.addEventListener('resize', initStarsBg); initStarsBg(); drawStarsBg(); }
+
+const burstEl = document.getElementById('burst-el');
+let isBursting = false;
+
+function doBurst(cx, cy) {
+  if (isBursting) return;
+  isBursting = true;
+
+  // 1. 粒子噴射
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = cx + 'px';
+    p.style.top  = cy + 'px';
+    document.body.appendChild(p);
+
+    const ang  = Math.random() * Math.PI * 2;
+    const dist = 60 + Math.random() * 120;
+    const tx   = Math.cos(ang) * dist;
+    const ty   = Math.sin(ang) * dist;
+    const dur  = 800 + Math.random() * 400;
+
+    p.animate([
+      { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(0)`, opacity: 0 }
+    ], { duration: dur, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' }).onfinish = () => p.remove();
+  }
+
+  // 2. 掌心光芒擴散
+  let t0 = null;
+  const durGlow = 600;
+
+  function frame(ts) {
+    if (!t0) t0 = ts;
+    const progress = Math.min((ts - t0) / durGlow, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+
+    if(burstEl) {
+        burstEl.setAttribute('rx', eased * 140);
+        burstEl.setAttribute('ry', eased * 160);
+        const opacity = progress < 0.2 ? progress * 5 : Math.max(0, 1 - (progress - 0.2) * 1.25);
+        burstEl.setAttribute('opacity', opacity * 0.8);
+    }
+
+    if (progress < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      if(burstEl) burstEl.setAttribute('opacity', 0);
+      isBursting = false;
+      
+      // ✨ 動畫結束後，呼叫主系統的啟動邏輯 ✨
+      setTimeout(() => { startApp(); }, 150);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+// 綁定點擊事件
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('handsBtn');
+    if(btn) {
+        btn.addEventListener('click', e => doBurst(e.clientX, e.clientY));
+        btn.addEventListener('touchend', e => {
+            e.preventDefault();
+            const t = e.changedTouches[0];
+            doBurst(t.clientX, t.clientY);
+        }, { passive: false });
     }
 });
 

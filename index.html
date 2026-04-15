@@ -2174,196 +2174,123 @@ function speak(t, r) {
 if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
     speechSynthesis.onvoiceschanged = function() { speechSynthesis.getVoices(); };
 }
+
+  
 function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
-  // ── 專屬五大境界漸層與發光濾鏡 ──
-  const sharedDefs = `
+    let safeRank = rankType || 'Faith';
+    const colorMap = {
+        'Faith': { t: '#ffffff', m: '#8ba89c', b: '#1e382d' },
+        'Abiding': { t: '#ffffff', m: '#f48fb1', b: '#880e4f' },
+        'Practice': { t: '#f3e5f5', m: '#ce93d8', b: '#4a148c' },
+        'Dedication': { t: '#fff8e1', m: '#ffb74d', b: '#e65100' },
+        'Bhumi': { t: '#fff8d6', m: '#d4af37', b: '#5c400a' },
+        '信': { t: '#ffffff', m: '#8ba89c', b: '#1e382d' },
+        '住': { t: '#ffffff', m: '#f48fb1', b: '#880e4f' },
+        '行': { t: '#f3e5f5', m: '#ce93d8', b: '#4a148c' },
+        '迴': { t: '#fff8e1', m: '#ffb74d', b: '#e65100' },
+        '地': { t: '#fff8d6', m: '#d4af37', b: '#5c400a' }
+    };
+    let c = colorMap['Faith']; 
+    for (let key in colorMap) { if (safeRank.includes(key)) { c = colorMap[key]; break; } }
+
+    let isFaith = safeRank.includes('Faith') || safeRank.includes('信');
+    let isAbiding = safeRank.includes('Abiding') || safeRank.includes('住');
+    let isPractice = safeRank.includes('Practice') || safeRank.includes('行');
+    let isDedication = safeRank.includes('Dedication') || safeRank.includes('迴');
+    let isBhumi = safeRank.includes('Bhumi') || safeRank.includes('地');
+
+    // 層數演算法 (融合 1億聲 8層曼陀羅)
+    let layers = 3; 
+    let coreGlowIntensity = 1;
+    if (overrideLevel !== null) {
+        layers = Math.min(overrideLevel + 2, 8); 
+    } else {
+        if (nianCount >= 100000000) { layers = 8; coreGlowIntensity = 3.5; }      
+        else if (nianCount >= 10000000) { layers = 7; coreGlowIntensity = 2.5; } 
+        else if (nianCount >= 1000000) { layers = 6; coreGlowIntensity = 2.0; }  
+        else if (nianCount >= 100000) { layers = 5; coreGlowIntensity = 1.6; }   
+        else if (nianCount >= 10000) { layers = 4; coreGlowIntensity = 1.3; }    
+        else if (nianCount >= 10) { layers = 3; coreGlowIntensity = 1.1; }       
+        else { layers = 2; coreGlowIntensity = 0.9; }                             
+    }
+
+    const sharedDefs = `
     <defs>
-      <linearGradient id="grad-lv1" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stop-color="#eafff8"/>
-        <stop offset="100%" stop-color="#349b7d"/>
-      </linearGradient>
-      <linearGradient id="grad-lv2" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stop-color="#ffffff"/>
-        <stop offset="100%" stop-color="#ff9eb5"/>
-      </linearGradient>
-      <linearGradient id="grad-lv3" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stop-color="#fffeea"/>
-        <stop offset="100%" stop-color="#d4af37"/>
-      </linearGradient>
-      <linearGradient id="grad-lv4" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stop-color="#ffeaee"/>
-        <stop offset="100%" stop-color="#c1121f"/>
-      </linearGradient>
-      <linearGradient id="grad-lv5" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stop-color="#ffffff"/>
-        <stop offset="35%" stop-color="#ffdf00"/>
-        <stop offset="100%" stop-color="#d2691e"/>
-      </linearGradient>
+        <linearGradient id="bg-grad-lv1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#eafff8"/><stop offset="100%" stop-color="#349b7d"/></linearGradient>
+        <linearGradient id="bg-grad-lv5" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="35%" stop-color="#ffdf00"/><stop offset="100%" stop-color="#d2691e"/></linearGradient>
+        <radialGradient id="bg-rg-pure" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffffff"/><stop offset="30%" stop-color="#fff8dc"/><stop offset="100%" stop-color="#d4af37"/></radialGradient>
+        <linearGradient id="bg-lg-metal" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffeba8"/><stop offset="50%" stop-color="#d4af37"/><stop offset="100%" stop-color="#8a6d1c"/></linearGradient>
+        <filter id="bg-glow-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        
+        <linearGradient id="enLotusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${c.t}" stop-opacity="0.95"/>
+            <stop offset="50%" stop-color="${c.m}" stop-opacity="0.85"/>
+            <stop offset="100%" stop-color="${c.b}" stop-opacity="0.95"/>
+        </linearGradient>
+        <radialGradient id="enCoreGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#fff"/><stop offset="40%" stop-color="${c.m}"/><stop offset="100%" stop-color="transparent"/>
+        </radialGradient>
+        <path id="enPetal" d="M 50 50 C 35 20, 42 5, 50 2 C 58 5, 65 20, 50 50 Z" fill="url(#enLotusGrad)" stroke="rgba(255,255,255,0.4)" stroke-width="0.4"/>
+    </defs>`;
 
-      <radialGradient id="rg-pure" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#ffffff"/>
-        <stop offset="30%" stop-color="#fff8dc"/>
-        <stop offset="100%" stop-color="#d4af37"/>
-      </radialGradient>
-      <linearGradient id="lg-metal" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#ffeba8"/>
-        <stop offset="50%" stop-color="#d4af37"/>
-        <stop offset="100%" stop-color="#8a6d1c"/>
-      </linearGradient>
-      
-      <radialGradient id="rg-void" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#111111" stop-opacity="0.95"/>
-        <stop offset="70%" stop-color="#0a0500" stop-opacity="0.8"/>
-        <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
-      </radialGradient>
-      
-      <filter id="glow-gold" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="2.5" result="b"/>
-        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-      <filter id="glow-soft" x="-30%" y="-30%" width="160%" height="160%">
-        <feGaussianBlur stdDeviation="1.5" result="b"/>
-        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-      <filter id="glow-strong" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="4.5" result="b"/>
-        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-    </defs>
-  `;
-
-  // ── 背景虛空黑洞 ──
-  const voidBg = `
-    <circle cx="50" cy="50" r="42" fill="url(#rg-void)">
-      <animate attributeName="r" values="41;43;41" dur="6s" repeatCount="indefinite"/>
-    </circle>
-  `;
-
-  // ══════════════════════════════════════════════
-  //  底層：資糧位階背景 (Rank Background) - 安全內縮防破格
-  // ══════════════════════════════════════════════
-  let bgContent = '';
-  if (rankType === '信' || rankType === 'Faith') {
-    bgContent = `
-      <g opacity="0.8">
-        <ellipse cx="50" cy="72" rx="30" ry="8" fill="none" stroke="url(#grad-lv1)" stroke-width="1.5">
-          <animate attributeName="rx" values="15;35;15" dur="4s" repeatCount="indefinite"/>
-          <animate attributeName="opacity" values="0.8;0;0.8" dur="4s" repeatCount="indefinite"/>
-        </ellipse>
-        <ellipse cx="50" cy="72" rx="18" ry="4" fill="none" stroke="url(#rg-pure)" stroke-width="1.5" filter="url(#glow-soft)"/>
-      </g>`;
-  } else if (rankType === '住' || rankType === 'Abiding') {
-    bgContent = `
-      <g opacity="0.85">
-        <path d="M 50 15 L 68 72 L 32 72 Z" fill="url(#rg-pure)" opacity="0.15" filter="url(#glow-soft)"/>
-        <polygon points="25,78 75,78 70,72 30,72" fill="url(#lg-metal)"/>
-        <rect x="22" y="78" width="56" height="3" fill="#ffffff" opacity="0.6"/>
-      </g>`;
-  } else if (rankType === '行' || rankType === 'Practice') {
-    let spokes = '';
-    for(let i=0; i<12; i++) {
-      spokes += `<line x1="50" y1="45" x2="50" y2="18" transform="rotate(${i*30} 50 45)" stroke="url(#lg-metal)" stroke-width="1.5"/>`;
+    let bgContent = '';
+    // 原版背景陣法 (精準置中)
+    if (isFaith) {
+        bgContent = `<g opacity="0.8">
+            <ellipse cx="50" cy="50" rx="36" ry="12" fill="none" stroke="url(#bg-grad-lv1)" stroke-width="1.5"><animate attributeName="rx" values="20;40;20" dur="4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.8;0.2;0.8" dur="4s" repeatCount="indefinite"/></ellipse>
+            <ellipse cx="50" cy="50" rx="20" ry="6" fill="none" stroke="url(#bg-rg-pure)" stroke-width="1.5" filter="url(#bg-glow-soft)"/>
+        </g>`;
+    } else if (isAbiding) {
+        bgContent = `<g opacity="0.85">
+            <polygon points="50,15 80,32 80,68 50,85 20,68 20,32" fill="url(#bg-rg-pure)" opacity="0.15" filter="url(#bg-glow-soft)"/>
+            <polygon points="50,24 68,34 68,66 50,76 32,66 32,34" fill="none" stroke="url(#bg-lg-metal)" stroke-width="1.5"/>
+        </g>`;
+    } else if (isPractice) {
+        let spokes = '';
+        for(let i=0; i<12; i++) { spokes += `<line x1="50" y1="50" x2="50" y2="18" transform="rotate(${i*30} 50 50)" stroke="url(#bg-lg-metal)" stroke-width="1.5"/>`; }
+        bgContent = `<g opacity="0.5" filter="url(#bg-glow-soft)"><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="20s" repeatCount="indefinite"/><circle cx="50" cy="50" r="32" fill="none" stroke="url(#bg-lg-metal)" stroke-width="2"/><circle cx="50" cy="50" r="26" fill="none" stroke="url(#bg-lg-metal)" stroke-width="0.5" stroke-dasharray="2 4"/>${spokes}</g>`;
+    } else if (isDedication) {
+        bgContent = `<g opacity="0.6" stroke="#f472b6" fill="none" stroke-width="1.2" filter="url(#bg-glow-soft)"><animateTransform attributeName="transform" type="rotate" from="360 50 50" to="0 50 50" dur="30s" repeatCount="indefinite"/><rect x="20" y="20" width="60" height="60" transform="rotate(0 50 50)"/><rect x="20" y="20" width="60" height="60" transform="rotate(30 50 50)"/><rect x="20" y="20" width="60" height="60" transform="rotate(60 50 50)"/><circle cx="50" cy="50" r="38" stroke-dasharray="4 4" stroke-width="0.8"/></g>`;
+    } else if (isBhumi) {
+        let rays = '';
+        for(let i=0; i<16; i++) { rays += `<path d="M50 50 Q 65 30 50 10 Q 35 30 50 50" fill="none" stroke="url(#bg-grad-lv5)" stroke-width="1" opacity="0.7" transform="rotate(${i*22.5} 50 50)"/>`; }
+        bgContent = `<g opacity="0.8"><circle cx="50" cy="50" r="42" fill="none" stroke="url(#bg-rg-pure)" stroke-width="1.5" stroke-dasharray="2 6"/><g filter="url(#bg-glow-soft)"><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="45s" repeatCount="indefinite"/>${rays}</g></g>`;
     }
-    bgContent = `
-      <g opacity="0.5" filter="url(#glow-soft)">
-        <animateTransform attributeName="transform" type="rotate" from="0 50 45" to="360 50 45" dur="20s" repeatCount="indefinite"/>
-        <circle cx="50" cy="45" r="28" fill="none" stroke="url(#lg-metal)" stroke-width="2"/>
-        <circle cx="50" cy="45" r="24" fill="none" stroke="url(#lg-metal)" stroke-width="0.5" stroke-dasharray="2 4"/>
-        ${spokes}
-      </g>`;
-  } else if (rankType === '迴' || rankType === 'Dedication') {
-    bgContent = `
-      <g opacity="0.6" stroke="#f472b6" fill="none" stroke-width="1.2" filter="url(#glow-soft)">
-        <animateTransform attributeName="transform" type="rotate" from="360 50 45" to="0 50 45" dur="30s" repeatCount="indefinite"/>
-        <rect x="24" y="19" width="52" height="52" transform="rotate(0 50 45)"/>
-        <rect x="24" y="19" width="52" height="52" transform="rotate(30 50 45)"/>
-        <rect x="24" y="19" width="52" height="52" transform="rotate(60 50 45)"/>
-        <circle cx="50" cy="45" r="32" stroke-dasharray="4 4" stroke-width="0.8"/>
-      </g>`;
-  } else if (rankType === '地' || rankType === 'Bhumi') {
-    let rays = '';
-    for(let i=0; i<16; i++) {
-      rays += `<path d="M50 45 Q 65 25 50 15 Q 35 25 50 45" fill="none" stroke="url(#grad-lv1)" stroke-width="1" opacity="0.7" transform="rotate(${i*22.5} 50 45)"/>`;
-    }
-    bgContent = `
-      <g opacity="0.8">
-        <circle cx="50" cy="45" r="36" fill="none" stroke="url(#rg-pure)" stroke-width="1.5" stroke-dasharray="2 6"/>
-        <g filter="url(#glow-soft)">
-          <animateTransform attributeName="transform" type="rotate" from="0 50 45" to="360 50 45" dur="45s" repeatCount="indefinite"/>
-          ${rays}
-        </g>
-      </g>`;
-  }
 
-  // ══════════════════════════════════════════════
-  //  前景：累積念佛主蓮花 (Foreground Nian Lotus)
-  // ══════════════════════════════════════════════
-  
-  // 判斷五大境界
-  let nLevel = 1;
-  if (overrideLevel !== null) {
-    nLevel = Math.min(overrideLevel, 5); 
-  } else {
-    if (nianCount >= 10000000) nLevel = 5;       // 破千萬：大日紫金光
-    else if (nianCount >= 1000000) nLevel = 4;   // 破百萬：紅蓮紫金
-    else if (nianCount >= 100000) nLevel = 3;    // 破十萬：純粹真金
-    else if (nianCount >= 10000) nLevel = 2;     // 破一萬：真珠粉銀
-    else nLevel = 1;                             // 初始值：青玉琉璃
-  }
-
-  // 主色與陪襯核心色
-  let mColor = `url(#grad-lv${nLevel})`;
-  let cColor = `url(#grad-lv${Math.min(nLevel + 1, 5)})`; 
-
-  let petals = '';
-  let pairs = nLevel + 1; // 依境界增加花瓣層數
-
-  // 1. 繪製【背後層】花瓣 (鎖定最大寬度 36，絕對不破格)
-  let backSpreadMax = 36; 
-  for (let i = pairs; i >= 1; i--) {
-    let r = i / pairs;
-    let spread = r * backSpreadMax;
-    let drop = r * 15;
-    let tipY = 25 + drop; 
-    petals += `<path d="M50 74 C ${50 - spread*0.6} 65, ${50 - spread} 50, ${50 - spread} ${tipY} C ${50 - spread*0.4} ${tipY+15}, 45 68, 50 74" fill="${cColor}" opacity="0.6" filter="url(#glow-soft)"/>`;
-    petals += `<path d="M50 74 C ${50 + spread*0.6} 65, ${50 + spread} 50, ${50 + spread} ${tipY} C ${50 + spread*0.4} ${tipY+15}, 55 68, 50 74" fill="${cColor}" opacity="0.6" filter="url(#glow-soft)"/>`;
-  }
-
-  // 2. 繪製【前景層】主花瓣 (鎖定最大寬度 28)
-  let frontSpreadMax = 28; 
-  for (let i = pairs - 1; i >= 1; i--) {
-    let r = i / (pairs - 1);
-    let spread = r * frontSpreadMax;
-    let drop = r * 12;
-    let tipY = 32 + drop; 
-    petals += `<path d="M50 76 C ${50 - spread*0.5} 68, ${50 - spread} 55, ${50 - spread} ${tipY} C ${50 - spread*0.4} ${tipY+12}, 47 70, 50 76" fill="${mColor}" opacity="0.95" filter="url(#glow-soft)"/>`;
-    petals += `<path d="M50 76 C ${50 + spread*0.5} 68, ${50 + spread} 55, ${50 + spread} ${tipY} C ${50 + spread*0.4} ${tipY+12}, 53 70, 50 76" fill="${mColor}" opacity="0.95" filter="url(#glow-soft)"/>`;
-  }
-
-  // 3. 中心正面主瓣
-  petals += `<path d="M50 77 C 43 60, 44 42, 50 28 C 56 42, 57 60, 50 77" fill="${cColor}" filter="url(#glow-gold)"/>`;
-  
-  // 4. 底部大明點 (強烈心跳光芒)
-  const core = `
-    <circle cx="50" cy="70" r="${3 + nLevel}" fill="#ffffff" filter="url(#glow-strong)">
-      <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
-    </circle>`;
-
-  // 組合蓮花本體 (僅加入安全的上下浮動，移除會破格的 scale 放大)
-  const lotusContent = `
+    // 神聖蓮花生成 (帶入上下懸浮與自轉)
+    let lotusContent = `
     <g>
-      <animateTransform attributeName="transform" type="translate" values="0,2; 0,-1.5; 0,2" dur="4s" repeatCount="indefinite"/>
-      ${petals}
-      ${core}
+        <animateTransform attributeName="transform" type="translate" values="0,1.5; 0,-1.5; 0,1.5" dur="4s" repeatCount="indefinite"/>
+        <g>
+            <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="150s" repeatCount="indefinite"/>`;
+            
+    for (let l = layers; l > 0; l--) {
+        // ✨ 大小調校：0.4 的起步基底保證初信位夠大，加上 0.075 的增幅保證 8 層滿版！
+        const scale = 0.4 + (l * 0.075); 
+        const offset = (l % 2 === 0) ? 22.5 : 0;
+        for (let i = 0; i < 8; i++) {
+            const angle = i * 45 + offset;
+            const opacity = Math.min(1, 0.55 + (l * 0.05));
+            lotusContent += `<use href="#enPetal" transform="rotate(${angle} 50 50) scale(${scale}) translate(${(1-scale)*50/scale} ${(1-scale)*50/scale})" opacity="${opacity}"/>`;
+        }
+    }
+    
+    // 蓮心發光
+    const coreRadius = 2 + (layers * 0.6) * coreGlowIntensity;
+    lotusContent += `
+        </g>
+        <circle cx="50" cy="50" r="${coreRadius}" fill="url(#enCoreGlow)" filter="blur(1px)">
+            <animate attributeName="opacity" values="0.4;1;0.4" dur="4s" repeatCount="indefinite"/>
+        </circle>
     </g>`;
 
-  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
-    ${sharedDefs}
-    ${voidBg}
-    ${bgContent}
-    ${lotusContent}
-  </svg>`;
+    return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; overflow:visible;">
+        ${sharedDefs}
+        ${bgContent}
+        ${lotusContent}
+    </svg>`;
 }
+
 
     
 
@@ -2409,10 +2336,20 @@ function updateUI() {
         base = (lv - 1) * 10; threshold = lv * 10; label = "信位進度 (十日一階)"; 
     }
 
-    const titleEl = document.getElementById('rank-title'); if(titleEl) { titleEl.innerText = rank.l; titleEl.style.color = rank.c; }
-    document.getElementById('display-name').innerText = db.name || "行者";
-    document.getElementById('mini-seed').innerHTML = rank.i; document.getElementById('big-seed').innerHTML = rank.i;
+        const titleEl = document.getElementById('rank-title'); 
+    if(titleEl) { 
+        titleEl.innerText = rank.l; 
+        titleEl.style.color = rank.c; 
+        // 👇 防破格魔法
+        titleEl.style.display = "inline-block"; 
+        titleEl.style.whiteSpace = "nowrap"; 
+    }
     
+    // 👇 完全維持您的原版，絕對不報錯
+    document.getElementById('display-name').innerText = db.name || "行者";
+    document.getElementById('mini-seed').innerHTML = rank.i; 
+    document.getElementById('big-seed').innerHTML = rank.i;
+
     let progress = ((currentDays - base) / (threshold - base)) * 100;
     document.getElementById('streak-val').innerText = currentDays.toFixed(1);
     document.getElementById('streak-bar').style.width = Math.min(progress, 100) + '%';

@@ -2174,11 +2174,16 @@ function updateUI() {
     let medal = "";
     if (total >= 100000000) medal = "[Perfect Buddhahood]"; else if (total >= 10000000) medal = "[Buddha Samadhi]"; else if (total >= 1000000) medal = "[Formless Recitation]"; else if (total >= 500000) medal = "[Non-retrogressive]"; else if (total >= 100000) medal = "[Lotus Assembly]"; else if (total >= 10000) medal = "[Faith & Vows]"; else if (total >= 5000) medal = "[Continuous Mindfulness]"; else if (total >= 500) medal = "[Pure Thought]"; else if (total >= 10) medal = "[Ten Recitations]";
     const medalEl = document.getElementById('title-medal'); if(medalEl) medalEl.innerText = medal;
-    
-    if (db.currentMedal && db.currentMedal !== medal && total >= 5000) {
-        setTimeout(() => { navigateTo('realm_en.html'); }, 1500); 
+        if (db.currentMedal && db.currentMedal !== medal && total >= 5000) {
+        if (db.lastRealmRedirectMedal !== medal) {
+            db.lastRealmRedirectMedal = medal;
+            save(); // 立即存檔鎖定位階，防止重整後反覆觸發
+            setTimeout(() => { navigateTo('realm_en.html'); }, 1500);
+        }
     }
     db.currentMedal = medal;
+
+    
 
     let currentDays = points / 100; 
     let rank, threshold, base, label;
@@ -2232,8 +2237,12 @@ function initLotus() {
     }
 }
 
+// 修復：精準攔截真正的啟動核心，並確保網頁重整時花瓣常駐
 const originalGoHome = goHome; goHome = function() { originalGoHome(); initLotus(); };
-const originalStartApp = startApp; startApp = function() { originalStartApp(); initLotus(); };
+const originalExecuteAppStart = executeAppStart; 
+executeAppStart = function(name) { originalExecuteAppStart(name); initLotus(); };
+window.addEventListener('DOMContentLoaded', initLotus);
+
 
 // ✨ 儲存時使用英文版專屬鑰匙 ✨
 function save() { localStorage.setItem('PX_EN_V15.0', JSON.stringify(db)); }

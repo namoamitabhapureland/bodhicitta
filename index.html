@@ -2176,120 +2176,92 @@ if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !=
 }
 
   
-function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
+
+ function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
+    // ════════ 1. 決定法界光色 (依資糧大境界) ════════
     let safeRank = rankType || 'Faith';
     const colorMap = {
-        'Faith': { t: '#ffffff', m: '#8ba89c', b: '#1e382d' },
-        'Abiding': { t: '#ffffff', m: '#f48fb1', b: '#880e4f' },
-        'Practice': { t: '#f3e5f5', m: '#ce93d8', b: '#4a148c' },
-        'Dedication': { t: '#fff8e1', m: '#ffb74d', b: '#e65100' },
-        'Bhumi': { t: '#fff8d6', m: '#d4af37', b: '#5c400a' },
+        'Faith': { t: '#ffffff', m: '#8ba89c', b: '#1e382d' },      // 信：青玉琉璃
+        'Abiding': { t: '#ffffff', m: '#f48fb1', b: '#880e4f' },    // 住：粉色琉璃
+        'Practice': { t: '#f3e5f5', m: '#ce93d8', b: '#4a148c' },   // 行：紫金霞光
+        'Dedication': { t: '#fff8e1', m: '#ffb74d', b: '#e65100' }, // 迴：玄黃幻彩
+        'Bhumi': { t: '#fff8d6', m: '#d4af37', b: '#5c400a' },      // 地：大日純金
         '信': { t: '#ffffff', m: '#8ba89c', b: '#1e382d' },
         '住': { t: '#ffffff', m: '#f48fb1', b: '#880e4f' },
         '行': { t: '#f3e5f5', m: '#ce93d8', b: '#4a148c' },
         '迴': { t: '#fff8e1', m: '#ffb74d', b: '#e65100' },
         '地': { t: '#fff8d6', m: '#d4af37', b: '#5c400a' }
     };
+    
     let c = colorMap['Faith']; 
     for (let key in colorMap) { if (safeRank.includes(key)) { c = colorMap[key]; break; } }
 
-    let isFaith = safeRank.includes('Faith') || safeRank.includes('信');
-    let isAbiding = safeRank.includes('Abiding') || safeRank.includes('住');
-    let isPractice = safeRank.includes('Practice') || safeRank.includes('行');
-    let isDedication = safeRank.includes('Dedication') || safeRank.includes('迴');
-    let isBhumi = safeRank.includes('Bhumi') || safeRank.includes('地');
+    // ════════ 2. 決定花瓣層數與光芒 (依累積念佛，保持絕對清淨) ════════
+    // 放棄 11 層的擁擠，最多只到 5 層，後期純粹強化蓮心法光
+    let layers = 2; 
+    let coreGlow = 1;
 
-    // 層數演算法 (融合 1億聲 8層曼陀羅)
-    let layers = 3; 
-    let coreGlowIntensity = 1;
     if (overrideLevel !== null) {
-        layers = Math.min(overrideLevel + 2, 8); 
+        layers = Math.min(overrideLevel + 1, 5); 
     } else {
-        if (nianCount >= 100000000) { layers = 8; coreGlowIntensity = 3.5; }      
-        else if (nianCount >= 10000000) { layers = 7; coreGlowIntensity = 2.5; } 
-        else if (nianCount >= 1000000) { layers = 6; coreGlowIntensity = 2.0; }  
-        else if (nianCount >= 100000) { layers = 5; coreGlowIntensity = 1.6; }   
-        else if (nianCount >= 10000) { layers = 4; coreGlowIntensity = 1.3; }    
-        else if (nianCount >= 10) { layers = 3; coreGlowIntensity = 1.1; }       
-        else { layers = 2; coreGlowIntensity = 0.9; }                             
+        if (nianCount >= 100000000) { layers = 5; coreGlow = 3.0; }      // 1億：5層花瓣，極強光芒
+        else if (nianCount >= 1000000) { layers = 5; coreGlow = 2.0; }   // 100萬：5層花瓣，強光
+        else if (nianCount >= 10000) { layers = 4; coreGlow = 1.5; }     // 1萬：4層花瓣，中光
+        else if (nianCount >= 500) { layers = 3; coreGlow = 1.2; }       // 500聲：3層花瓣
+        else if (nianCount >= 10) { layers = 3; coreGlow = 1.0; }        // 10聲：3層花瓣
+        else { layers = 2; coreGlow = 0.8; }                             // 初始：2層含苞
     }
 
-    const sharedDefs = `
-    <defs>
-        <linearGradient id="bg-grad-lv1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#eafff8"/><stop offset="100%" stop-color="#349b7d"/></linearGradient>
-        <linearGradient id="bg-grad-lv5" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="35%" stop-color="#ffdf00"/><stop offset="100%" stop-color="#d2691e"/></linearGradient>
-        <radialGradient id="bg-rg-pure" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffffff"/><stop offset="30%" stop-color="#fff8dc"/><stop offset="100%" stop-color="#d4af37"/></radialGradient>
-        <linearGradient id="bg-lg-metal" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffeba8"/><stop offset="50%" stop-color="#d4af37"/><stop offset="100%" stop-color="#8a6d1c"/></linearGradient>
-        <filter id="bg-glow-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    // ════════ 3. 繪製純淨蓮花 ════════
+    // 移除所有複雜的陣法，只保留一圈最純淨的法界星軌與核心蓮花
+    let svgHtml = `
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; overflow:visible;">
+        <defs>
+            <linearGradient id="enLotusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="${c.t}" stop-opacity="0.95"/>
+                <stop offset="50%" stop-color="${c.m}" stop-opacity="0.85"/>
+                <stop offset="100%" stop-color="${c.b}" stop-opacity="0.95"/>
+            </linearGradient>
+            <radialGradient id="enCoreGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#fff"/>
+                <stop offset="40%" stop-color="${c.m}"/>
+                <stop offset="100%" stop-color="transparent"/>
+            </radialGradient>
+            <path id="enPetal" d="M 50 50 C 39 25, 41 9, 50 2 C 59 9, 61 25, 50 50 Z" fill="url(#enLotusGrad)" stroke="rgba(255,255,255,0.5)" stroke-width="0.5"/>
+        </defs>
+
+        <circle cx="50" cy="50" r="45" fill="rgba(5,5,5,0.6)"/>
         
-        <linearGradient id="enLotusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="${c.t}" stop-opacity="0.95"/>
-            <stop offset="50%" stop-color="${c.m}" stop-opacity="0.85"/>
-            <stop offset="100%" stop-color="${c.b}" stop-opacity="0.95"/>
-        </linearGradient>
-        <radialGradient id="enCoreGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#fff"/><stop offset="40%" stop-color="${c.m}"/><stop offset="100%" stop-color="transparent"/>
-        </radialGradient>
-        <path id="enPetal" d="M 50 50 C 35 20, 42 5, 50 2 C 58 5, 65 20, 50 50 Z" fill="url(#enLotusGrad)" stroke="rgba(255,255,255,0.4)" stroke-width="0.4"/>
-    </defs>`;
+        <circle cx="50" cy="50" r="38" fill="none" stroke="${c.m}" stroke-width="0.5" stroke-dasharray="1 4" opacity="0.5">
+            <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="40s" repeatCount="indefinite"/>
+        </circle>
 
-    let bgContent = '';
-    // 原版背景陣法 (精準置中)
-    if (isFaith) {
-        bgContent = `<g opacity="0.8">
-            <ellipse cx="50" cy="50" rx="36" ry="12" fill="none" stroke="url(#bg-grad-lv1)" stroke-width="1.5"><animate attributeName="rx" values="20;40;20" dur="4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.8;0.2;0.8" dur="4s" repeatCount="indefinite"/></ellipse>
-            <ellipse cx="50" cy="50" rx="20" ry="6" fill="none" stroke="url(#bg-rg-pure)" stroke-width="1.5" filter="url(#bg-glow-soft)"/>
-        </g>`;
-    } else if (isAbiding) {
-        bgContent = `<g opacity="0.85">
-            <polygon points="50,15 80,32 80,68 50,85 20,68 20,32" fill="url(#bg-rg-pure)" opacity="0.15" filter="url(#bg-glow-soft)"/>
-            <polygon points="50,24 68,34 68,66 50,76 32,66 32,34" fill="none" stroke="url(#bg-lg-metal)" stroke-width="1.5"/>
-        </g>`;
-    } else if (isPractice) {
-        let spokes = '';
-        for(let i=0; i<12; i++) { spokes += `<line x1="50" y1="50" x2="50" y2="18" transform="rotate(${i*30} 50 50)" stroke="url(#bg-lg-metal)" stroke-width="1.5"/>`; }
-        bgContent = `<g opacity="0.5" filter="url(#bg-glow-soft)"><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="20s" repeatCount="indefinite"/><circle cx="50" cy="50" r="32" fill="none" stroke="url(#bg-lg-metal)" stroke-width="2"/><circle cx="50" cy="50" r="26" fill="none" stroke="url(#bg-lg-metal)" stroke-width="0.5" stroke-dasharray="2 4"/>${spokes}</g>`;
-    } else if (isDedication) {
-        bgContent = `<g opacity="0.6" stroke="#f472b6" fill="none" stroke-width="1.2" filter="url(#bg-glow-soft)"><animateTransform attributeName="transform" type="rotate" from="360 50 50" to="0 50 50" dur="30s" repeatCount="indefinite"/><rect x="20" y="20" width="60" height="60" transform="rotate(0 50 50)"/><rect x="20" y="20" width="60" height="60" transform="rotate(30 50 50)"/><rect x="20" y="20" width="60" height="60" transform="rotate(60 50 50)"/><circle cx="50" cy="50" r="38" stroke-dasharray="4 4" stroke-width="0.8"/></g>`;
-    } else if (isBhumi) {
-        let rays = '';
-        for(let i=0; i<16; i++) { rays += `<path d="M50 50 Q 65 30 50 10 Q 35 30 50 50" fill="none" stroke="url(#bg-grad-lv5)" stroke-width="1" opacity="0.7" transform="rotate(${i*22.5} 50 50)"/>`; }
-        bgContent = `<g opacity="0.8"><circle cx="50" cy="50" r="42" fill="none" stroke="url(#bg-rg-pure)" stroke-width="1.5" stroke-dasharray="2 6"/><g filter="url(#bg-glow-soft)"><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="45s" repeatCount="indefinite"/>${rays}</g></g>`;
-    }
+        <g filter="drop-shadow(0 0 4px rgba(0,0,0,0.5))">
+            <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="120s" repeatCount="indefinite"/>`;
 
-    // 神聖蓮花生成 (帶入上下懸浮與自轉)
-    let lotusContent = `
-    <g>
-        <animateTransform attributeName="transform" type="translate" values="0,1.5; 0,-1.5; 0,1.5" dur="4s" repeatCount="indefinite"/>
-        <g>
-            <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="150s" repeatCount="indefinite"/>`;
-            
+    // 渲染花瓣 (固定在最優雅的比例)
     for (let l = layers; l > 0; l--) {
-        // ✨ 大小調校：0.4 的起步基底保證初信位夠大，加上 0.075 的增幅保證 8 層滿版！
-        const scale = 0.4 + (l * 0.075); 
+        const scale = 0.35 + (l * 0.12);
         const offset = (l % 2 === 0) ? 22.5 : 0;
         for (let i = 0; i < 8; i++) {
             const angle = i * 45 + offset;
-            const opacity = Math.min(1, 0.55 + (l * 0.05));
-            lotusContent += `<use href="#enPetal" transform="rotate(${angle} 50 50) scale(${scale}) translate(${(1-scale)*50/scale} ${(1-scale)*50/scale})" opacity="${opacity}"/>`;
+            const opacity = Math.min(1, 0.7 + (l * 0.05));
+            svgHtml += `<use href="#enPetal" transform="rotate(${angle} 50 50) scale(${scale}) translate(${(1-scale)*50/scale} ${(1-scale)*50/scale})" opacity="${opacity}"/>`;
         }
     }
     
-    // 蓮心發光
-    const coreRadius = 2 + (layers * 0.6) * coreGlowIntensity;
-    lotusContent += `
+    // 蓮心呼吸光芒
+    const coreRadius = 3 + (layers * 0.5) * coreGlow;
+    svgHtml += `
         </g>
-        <circle cx="50" cy="50" r="${coreRadius}" fill="url(#enCoreGlow)" filter="blur(1px)">
-            <animate attributeName="opacity" values="0.4;1;0.4" dur="4s" repeatCount="indefinite"/>
+        <circle cx="50" cy="50" r="${coreRadius}" fill="url(#enCoreGlow)">
+            <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite"/>
         </circle>
-    </g>`;
-
-    return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; overflow:visible;">
-        ${sharedDefs}
-        ${bgContent}
-        ${lotusContent}
     </svg>`;
+
+    return svgHtml;
 }
+
 
 
     

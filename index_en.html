@@ -157,6 +157,21 @@
     overflow: hidden;
         }
         .btn-main:active { transform: translateY(3px); box-shadow: 0 0 40px var(--solid-gold); background: var(--gold); color: #000; }
+/* 定義神聖呼吸：柔和地在 1.15 到 1.25 倍之間起伏 */
+@keyframes lotus-breath {
+    0% { transform: scale(1.15); filter: drop-shadow(0 0 15px var(--solid-gold)); }
+    50% { transform: scale(1.22); filter: drop-shadow(0 0 25px rgba(255,255,255,0.6)); }
+    100% { transform: scale(1.15); filter: drop-shadow(0 0 15px var(--solid-gold)); }
+}
+
+/* 應用到蓮花容器 */
+#big-seed {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: lotus-breath 5s infinite ease-in-out; /* 5秒一次深呼吸 */
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
 
 /* --- 彌陀淨土專屬：佛光掃過效果 (零耗能 GPU 加速版) --- */
 .btn-main::after {
@@ -788,25 +803,23 @@
 
 
 <div id="screen-2" class="container">
-    <div class="circle-wrap" id="circle-wrap">
-        <div id="big-seed" style="z-index: 10; width: 100%; height: 100%;"></div>
+    <div class="circle-wrap" id="circle-wrap" style="width: 320px; height: 320px;"> <div id="big-seed" style="z-index: 10; width: 100%; height: 100%; transform: scale(1.2);"></div>
         
-        <svg width="280" height="280" viewBox="0 0 300 300" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-90deg); pointer-events:none;">
-            <circle cx="150" cy="150" r="140" fill="none" stroke="rgba(212,175,55,0.08)" stroke-width="1.5"/>
-            <circle id="progress-ring" cx="150" cy="150" r="140" fill="none" stroke="var(--gold)" stroke-width="3" stroke-dasharray="880" stroke-dashoffset="880" stroke-linecap="round" style="transition:0.5s; opacity:0.6; filter: drop-shadow(0 0 6px var(--solid-gold));"></circle>
+        <svg width="320" height="320" viewBox="0 0 300 300" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-90deg); pointer-events:none;">
+            <circle cx="150" cy="150" r="142" fill="none" stroke="rgba(212,175,55,0.08)" stroke-width="1.5"/>
+            <circle id="progress-ring" cx="150" cy="150" r="142" fill="none" stroke="var(--gold)" stroke-width="3" stroke-dasharray="892" stroke-dashoffset="892" stroke-linecap="round" style="transition:0.5s; opacity:0.6; filter: drop-shadow(0 0 6px var(--solid-gold));"></circle>
         </svg>
         
-        <div id="orbit-wrap" class="orbit-container" style="width:280px; height:280px;">
-            <div id="orbit-dot"></div>
-        </div>
+        <div id="orbit-wrap" class="orbit-container" style="width:280px; height:280px;"><div id="orbit-dot"></div></div>
         <div id="guide-ripple"></div>
     </div>
 
-    <div id="nian-num-wrap">
-        <div id="nian-num" style="font-size:3.2rem; font-weight:bold; color:var(--gold); letter-spacing: 3px; text-shadow: 0 0 15px rgba(212,175,55,0.4); font-family: 'PingFang TC', sans-serif;">0 / 10</div>
+    <div id="nian-num-wrap" style="margin-top: 20px;">
+        <div id="nian-num" style="font-size:3.2rem; font-weight:bold; color:var(--gold); letter-spacing: 3px;">0 / 10</div>
     </div>
     <div id="nian-word" style="font-size:1.8rem; color:var(--gold); height:3.5rem; margin-top:15px; font-weight:bold; letter-spacing: 4px; opacity: 0; transition: opacity 0.5s;"></div>
 </div>
+
 
 
 <div id="screen-3" class="container" style="overflow-x: hidden; width: 100%; max-width: 100vw; padding: 20px 10px;">
@@ -1893,67 +1906,95 @@ function handleNian(event) {
     if (nianCount < 10) {
         if (navigator.vibrate) navigator.vibrate(15);
         document.getElementById('guide-ripple').style.display = 'none';
-        let isPerfect = false; let now = Date.now();
-        if (nianCount === 0) { isPerfect = true; } else {
+        
+        let now = Date.now();
+        // 1. 保留神祕彩蛋：節奏判定
+        if (nianCount === 0) { 
+            perfectHits = 1; 
+        } else {
             let elapsed = now - lastClickTime;
-            if (elapsed >= 1650 && elapsed <= 2300) { isPerfect = true; perfectHits++; }
+            if (elapsed >= 1650 && elapsed <= 2300) { perfectHits++; }
         }
         lastClickTime = now;
+
+        // 2. 視覺特效：蓮花脈衝與星軌
+        // 在 handleNian 裡面找到控制 big-seed 的地方改為：
+const bigSeed = document.getElementById('big-seed');
+bigSeed.style.animation = "none"; // 點擊瞬間暫停呼吸動畫
+bigSeed.style.transform = "scale(1.4)"; // 瞬間放大到 1.4 倍
+setTimeout(() => {
+    bigSeed.style.transform = "scale(1.2)";
+    bigSeed.style.animation = "lotus-breath 4s infinite ease-in-out"; // 恢復呼吸
+}, 150);
+
         const orbit = document.getElementById('orbit-wrap');
         orbit.classList.remove('orbit-anim'); void orbit.offsetWidth; orbit.classList.add('orbit-anim');
-        if (isPerfect && event && event.clientX) { createGoldDust(event.clientX, event.clientY); }
-        nianCount++; db.totalNian++;
-        const nianWord = document.getElementById('nian-word');
-        if (nianCount >= 2) { nianWord.style.opacity = "1"; nianWord.innerText = "Namo Amitabha Buddha"; }
-        document.getElementById('big-seed').style.filter = "drop-shadow(0 0 50px white)";
-        setTimeout(()=> {
-            if(nianCount >= 2) nianWord.style.opacity = "0.5"; 
-            document.getElementById('big-seed').style.filter = "drop-shadow(0 0 15px var(--solid-gold))";
-        }, 500);
-        speak("Namo Amitabha Buddha", 0.9);
-        document.getElementById('progress-ring').style.strokeDashoffset = 691 - (nianCount * 69.1);
-        document.getElementById('nian-num').innerText = nianCount + " / 10";
-        const p = document.getElementById('petal-' + (nianCount-1));
-        if(p) { p.setAttribute("fill", "var(--gold)"); p.style.filter = "drop-shadow(0 0 10px var(--solid-gold))"; }
         
+        // 產生金粉粒子
+        createGoldDust(event.clientX || window.innerWidth/2, event.clientY || window.innerHeight/2);
+        
+        nianCount++; db.totalNian++;
+        
+        // 3. 字幕顯示邏輯
+        const nianWord = document.getElementById('nian-word');
+        if (nianCount >= 1) { 
+            nianWord.style.opacity = "1"; 
+            nianWord.innerText = "Namo Amituofo"; // 顯示英文佛號
+        }
+        
+        // 4. 唸出聲音 (語音功能回歸)
+        speak("Namo Amituofo", 0.75); 
+        
+        // 5. 更新進度光環 (對應 892 像素周長)
+        const progressRing = document.getElementById('progress-ring');
+        if(progressRing) {
+            progressRing.style.strokeDashoffset = 892 - (nianCount * 89.2);
+        }
+        document.getElementById('nian-num').innerText = nianCount + " / 10";
+
+        // 6. 十念圓滿邏輯
         if(nianCount === 10) { 
             if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
             db.points += 2; 
+
+            // 連續天數獎勵 (英文版文字)
             const todayStr = new Date().toLocaleDateString();
-            let isStreakAwarded = false; let streakMsg = "";
+            let isStreakAwarded = false;
+            let streakMsg = "";
             if (db.lastNianDate !== todayStr) {
-                db.streakDays = (db.streakDays || 0) + 1; db.lastNianDate = todayStr; 
+                db.streakDays = (db.streakDays || 0) + 1;
+                db.lastNianDate = todayStr; 
                 if (db.streakDays > 0 && db.streakDays % 10 === 0) {
-                    db.points += 1000; isStreakAwarded = true;
-                    if (db.streakDays === 10) {
-                        streakMsg = "[Initial Completion・Buddha's Blessing]\n\nTen days of pure mindfulness! The Buddha grants 1000 Bodhi merit points to aid your path!";
-                    } else {
-                        streakMsg = `[Continuous Mindfulness・Merit Flow]\n\nYou have connected with the Buddha for ${db.streakDays} consecutive days. 1000 supreme merit points have been added!`;
-                    }
+                    db.points += 1000;
+                    isStreakAwarded = true;
+                    streakMsg = (db.streakDays === 10) ? 
+                        "[Initial Completion・Buddha's Blessing]\n\nTen days of pure mindfulness! The Buddha grants 1000 Bodhi merit points!" :
+                        `[Continuous Mindfulness・Merit Flow]\n\nYou have connected for ${db.streakDays} consecutive days. 1000 merit points added!`;
                 }
             }
             save(); 
+
+            // 神祕彩蛋：無量光佛護佑 (英文版)
             if (perfectHits >= 9 || Math.random() < 0.08) {
                 let infiniteLight = document.createElement('div');
                 infiniteLight.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(243,229,171,0.9) 40%, rgba(212,175,55,0.8) 100%); z-index:9999; pointer-events:none; opacity:1; transition: opacity 4s cubic-bezier(0.25, 0.1, 0.25, 1); mix-blend-mode: screen;";
                 document.body.appendChild(infiniteLight);
-                setTimeout(() => speak("Boundless Light Buddha, bless and protect you.", 0.9), 800); 
+                setTimeout(() => speak("Infinite Light Buddha blesses and protects you.", 0.8), 800); 
                 setTimeout(() => { infiniteLight.style.opacity = '0'; }, 100); 
                 setTimeout(() => infiniteLight.remove(), 4500);
             }
-            if (perfectHits >= 8) { flowerRain(3); } else if (perfectHits >= 4) { flowerRain(2); } else {
-                if (Math.random() > 0.5) flowerRain(1); 
-            }
-            const bigSeed = document.getElementById('big-seed');
-            bigSeed.classList.add('ripple-effect'); setTimeout(() => bigSeed.classList.remove('ripple-effect'), 1000);
+
+            // 圓滿花雨
+            flowerRain(perfectHits >= 8 ? 3 : (perfectHits >= 4 ? 2 : 1));
             
-            setTimeout(()=> { 
+            setTimeout(() => { 
                 if (isStreakAwarded) alert(streakMsg);
                 document.getElementById('dedi-modal').style.display='flex'; 
             }, 2500); 
         }
     }
 }
+
 
 function renderTasks() {
     const container = document.getElementById('task-list'); container.innerHTML = "";
@@ -2026,14 +2067,18 @@ function getLotusSVG(rankType, totalNian = 0) {
             <g><animateTransform attributeName="transform" type="rotate" from="0 200 200" to="360 200 200" dur="120s" repeatCount="indefinite"/>`;
 
     // 由外向內渲染層次，產生 99 分的立體感
+    // 層疊渲染：由外而內
     for (let l = layers; l > 0; l--) {
-        const scale = 0.35 + (l * 0.12);
+        // 修改後：初始比例從 0.35 加大到 0.52，讓蓮花整體更為飽滿
+        const scale = 0.52 + (l * 0.12); 
         const offset = (l % 2 === 0) ? 22.5 : 0;
         for (let i = 0; i < 8; i++) {
             const angle = i * 45 + offset;
-            svgHtml += `<use href="#enPetal" transform="rotate(${angle} 200 200) scale(${scale}) translate(${(1-scale)*200/scale} ${(1-scale)*200/scale})" opacity="${0.6 + (l*0.06)}"/>`;
+            // 修改後：透明度調高至 0.7 起跳，視覺質感更扎實，不再透薄
+            svgHtml += `<use href="#enPetal" transform="rotate(${angle} 200 200) scale(${scale}) translate(${(1-scale)*200/scale} ${(1-scale)*200/scale})" opacity="${0.7 + (l*0.05)}"/>`;
         }
     }
+
 
     // 蓮心明點：呼吸光芒
     svgHtml += `</g><circle cx="200" cy="200" r="${18 + layers}" fill="url(#enCoreGlow)"><animate attributeName="opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite"/></circle></svg>`;

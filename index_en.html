@@ -625,67 +625,107 @@
         <div id="pure-time-display">Pure Land: --</div>
     </div>
 </div>
+<style>
+#starBg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.scene { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; cursor: pointer; margin: 20px 0; }
+.hands-wrap { animation: float-hands 4s ease-in-out infinite; position: relative; }
+@keyframes float-hands { 0%, 100% { transform: translateY(0px); filter: drop-shadow(0 5px 15px rgba(212,175,55,0.05)); } 50% { transform: translateY(-8px); filter: drop-shadow(0 15px 30px rgba(212,175,55,0.25)); } }
+.scene:active .hands-wrap { transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.hands-svg { overflow: visible; display: block; transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+/* CONNECT 掃光文字特效 */
+.connect-text {
+    margin-top: 25px; color: var(--gold); font-size: 1.2rem; font-weight: bold; letter-spacing: 12px;
+    text-shadow: 0 0 15px rgba(212,175,55,0.6); margin-left: 12px; position: relative; overflow: hidden;
+    background: linear-gradient(90deg, #f3e5ab, #fff, #f3e5ab); background-size: 200% 100%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: textShine 3s linear infinite;
+}
+@keyframes textShine { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+.sub-caption { font-size: 0.75rem; color: #8ba89c; letter-spacing: 2px; text-transform: uppercase; margin-top: 8px; opacity: 0.9; }
+.today-sync { font-size: 0.8rem; color: var(--pink); letter-spacing: 1px; margin-top: 5px; margin-bottom: 25px; text-shadow: 0 0 8px rgba(244,114,182,0.5); }
+
+/* 玻璃數據面板與彩色能量棒 */
+.info-glass-box { width: 100%; padding: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(212,175,55,0.15); border-radius: 20px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.bar-track { width:100%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.09); border-radius:10px; overflow:hidden; box-shadow:inset 0 2px 5px rgba(0,0,0,0.55); }
+.colorful-fill { height:100%; background:linear-gradient(90deg,#FDF5D3,#D4AF37,#E5989B,#89CFF0,#C9A0DC,#D4AF37,#FDF5D3); background-size:200% 100%; opacity:.9; animation:energyFlow 4s linear infinite; transition:width 1.2s cubic-bezier(0.2,0.8,0.2,1); width:0%; }
+@keyframes energyFlow { 0%{background-position:200% 0;} 100%{background-position:0% 0;} }
+.bar-labels { position:absolute; width:100%; height:20px; top:12px; }
+.bar-labels span { position:absolute; font-size:9px; color:rgba(243,229,171,0.6); letter-spacing:1px; transform:translateX(-50%); white-space:nowrap; }
+.bar-labels span::before { content:''; position:absolute; top:-8px; left:50%; transform:translateX(-50%); width:3px; height:3px; background:rgba(255,255,255,0.5); border-radius:50%; }
+
+/* 透明底部按鈕 */
+.btn-transparent-small { background: rgba(255,255,255,0.02); border: 1px solid rgba(212,175,55,0.3); color: rgba(243,229,171,0.8); padding: 10px 15px; border-radius: 20px; font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+.btn-transparent-small:active { background: rgba(212,175,55,0.15); border-color: var(--solid-gold); }
+</style>
+
+<canvas id="starBg"></canvas>
+
+<div id="firstTimeNameModal" class="modal" style="display: none; z-index: 3000;">
+    <div class="modal-content" style="background: #05060A; border: 1.5px solid var(--solid-gold); text-align: center; padding: 35px 25px; box-shadow: 0 25px 60px rgba(0,0,0,0.9), inset 0 0 15px rgba(212,175,55,0.1);">
+        <div style="color: var(--solid-gold); font-size: 1.1rem; letter-spacing: 2px; margin-bottom: 12px; font-weight: bold; text-transform: uppercase;">Practitioner Name</div>
+        <div style="color: #888; font-size: 0.8rem; margin-bottom: 25px; letter-spacing: 0.5px;">Please enter your name to connect.</div>
+        <input type="text" id="first-time-name-input" placeholder="Enter Name" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid rgba(212,175,55,0.5); color: var(--gold); text-align: center; font-size: 1.2rem; padding: 10px; margin-bottom: 30px; outline: none; letter-spacing: 1px;">
+        <button class="gold-btn" style="width: 100%; padding: 14px; font-size: 0.9rem; letter-spacing: 2px; border-radius: 12px;" onclick="confirmFirstTimeName()">CONFIRM</button>
+    </div>
+</div>
 
 <div id="screen-1" class="container active">
-    <div style="width:100%; border: 1.5px solid var(--gold); border-radius: 18px; margin: 20px 0; background: rgba(243,229,171,0.03);">
-        <input type="text" id="user-name" placeholder="Enter Your Name" style="width:100%; background:transparent; border:none; color:var(--gold); text-align:center; font-size:1.25rem; outline:none; padding:18px; font-weight: bold;">
-    </div>
-    <div style="color:var(--gold); font-size: 1.1rem; margin-bottom:8px;">Total Chants: <span id="total-count">0</span></div>
-    <div id="today-info" style="color:var(--cyan); font-size:0.9rem; margin-bottom:5px;">Today's Connection: <span id="today-count">0</span> times</div>
-    
-    <div class="vol-slider-wrap">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-        </svg>
-        <input type="range" id="vol-slider" min="0" max="100" value="5" oninput="changeVolume(this.value)">
-        <span id="vol-display" style="width: 35px; text-align: right;">5%</span>
-    </div>
+    <input type="hidden" id="user-name" value="">
 
-    <div style="width:100%; height:8px; background:#1a1a1a; border-radius:4px; overflow:hidden; border: 0.5px solid #333; margin-top: 15px;"><div id="streak-bar" style="height:100%; background: linear-gradient(90deg, var(--solid-gold), var(--gold)); width:0%; transition:1.2s;"></div></div>
-    
-    <div id="label-container" style="font-size:0.8rem; margin:12px 0 35px; color:#888;">Faith Progress (10 Days/Lv): <span id="streak-val">0.0</span> / 100</div>
-
-          <button class="btn-main" style="display:flex; justify-content:center; align-items:center; gap:12px; letter-spacing: 1px;" onclick="startApp()">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px rgba(212,175,55,0.6)); color: var(--gold);">
-            <circle cx="12" cy="12" r="10" stroke-dasharray="1 3" opacity="0.5"/>
-            <circle cx="12" cy="12" r="6" opacity="0.7"/>
-            <path d="M12 2 L12 22" stroke-width="1" opacity="0.8"/>
-            <path d="M2 12 L22 12" stroke-width="1" opacity="0.4"/>
-            <path d="M12 7 L15 12 L12 17 L9 12 Z" fill="rgba(212,175,55,0.15)" stroke-width="1"/>
-            <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none" filter="drop-shadow(0 0 5px #fff)"/>
-        </svg>
-        Connect with Amitabha
-    </button>
-
-    
-    <div style="display:flex; gap:12px; width:100%;">
-        <button class="btn-main" style="font-size:0.85rem; flex:1; display:flex; justify-content:center; align-items:center; gap:8px; letter-spacing: 1px;" onclick="exportProgress()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.9;">
-                <path d="M21 8v13H3V8"></path>
-                <polyline points="1 3 23 3 23 8 1 8 1 3"></polyline>
-                <line x1="10" y1="12" x2="14" y2="12"></line>
+    <div class="scene" id="handsBtn" onclick="handleConnectClick(event)">
+        <div class="hands-wrap">
+            <svg class="hands-svg" viewBox="0 0 200 320" width="160" height="256" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="glass-base" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(243, 229, 171, 0.35)"/><stop offset="50%" stop-color="rgba(212, 175, 55, 0.20)"/><stop offset="100%" stop-color="rgba(212, 175, 55, 0.08)"/></linearGradient>
+                    <radialGradient id="burst-glow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(255,255,255,0.9)"/><stop offset="30%" stop-color="rgba(212,175,55,0.6)"/><stop offset="100%" stop-color="rgba(212,175,55,0)"/></radialGradient>
+                    <filter id="mist-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="12" /></filter>
+                </defs>
+                <ellipse id="burst-el" cx="100" cy="180" rx="0" ry="0" fill="url(#burst-glow)" opacity="0"/>
+                <path d="M 100 25 C 97 18, 93 20, 92 30 L 62 165 C 58 190, 55 230, 65 280 Q 100 290 135 280 C 145 230, 142 190, 138 165 L 108 30 C 107 20, 103 18, 100 25 Z" fill="url(#glass-base)" stroke="var(--solid-gold)" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M 96 23 C 98 25, 98 32, 94 34" stroke="var(--solid-gold)" stroke-width="1" fill="none" /><path d="M 104 23 C 102 25, 102 32, 106 34" stroke="var(--solid-gold)" stroke-width="1" fill="none" /><path d="M 100 25 L 100 160" stroke="var(--solid-gold)" stroke-width="1.5" stroke-linecap="round" fill="none" /><path d="M 136 175 C 125 155, 110 152, 102 155" stroke="rgba(212,175,55,0.8)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                <path d="M 63 170 C 80 155, 95 152, 112 158 C 118 160, 120 170, 115 175 C 95 188, 75 198, 63 215 Z" fill="#010204" /><path d="M 63 170 C 80 155, 95 152, 112 158 C 118 160, 120 170, 115 175 C 95 188, 75 198, 63 215 Z" fill="url(#glass-base)" /><path d="M 63 170 C 80 155, 95 152, 112 158 C 118 160, 120 170, 115 175 C 95 188, 75 198, 63 215" stroke="var(--solid-gold)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                <g filter="url(#mist-blur)" style="pointer-events: none;">
+                    <ellipse cx="60" cy="280" rx="60" ry="25" fill="rgba(243,229,171,0.2)"><animate attributeName="cx" values="50; 70; 50" dur="8s" repeatCount="indefinite" /></ellipse>
+                    <ellipse cx="140" cy="275" rx="60" ry="25" fill="rgba(139,168,156,0.2)"><animate attributeName="cx" values="150; 130; 150" dur="10s" repeatCount="indefinite" /></ellipse>
+                </g>
             </svg>
-            Backup Merit
+        </div>
+        <div class="connect-text">CONNECT</div>
+        <div class="sub-caption">Realm Synchronization</div>
+        <div class="today-sync">Today: <span id="today-count">0</span></div>
+    </div>
+
+    <div class="info-glass-box">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items: flex-end;">
+            <span id="label-container" style="font-size:0.75rem; color:#888; letter-spacing: 0.5px;">Faith Progress: <span id="streak-val" style="color:var(--gold);">0.0</span> / 100</span>
+            <span style="font-size:0.7rem; color: #666;">DAILY</span>
+        </div>
+        <div class="bar-track" style="height: 6px; margin-bottom: 22px;"><div id="streak-bar" class="colorful-fill" style="width:0%"></div></div>
+
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items: flex-end;">
+            <span style="font-size:0.75rem; color:#888; letter-spacing: 0.5px;">Total Chants</span>
+            <span id="total-count" style="color:var(--gold); font-size:1.05rem; font-weight:bold; letter-spacing: 1px; text-shadow: 0 0 10px rgba(212,175,55,0.3);">0</span>
+        </div>
+        <div style="position:relative; width:100%; height:8px; margin-bottom:0;">
+            <div class="bar-track" style="height: 100%;"><div id="amitabha-bar-fill" class="colorful-fill" style="width:0%"></div></div>
+            <div class="bar-labels"><span style="left:5%">100</span><span style="left:50%">1K</span><span style="left:60%">10K</span><span style="left:70%">100K</span><span style="left:80%">1M</span><span style="left:90%">10M</span><span style="left:100%">100M</span></div>
+        </div>
+    </div>
+
+    <div style="display:flex; gap:10px; width:100%; justify-content:center; margin-top: 25px;">
+        <button class="btn-transparent-small" onclick="exportProgress()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"></path><polyline points="1 3 23 3 23 8 1 8 1 3"></polyline></svg> Backup
         </button>
-        
-        <button class="btn-main" style="font-size:0.85rem; flex:1; display:flex; justify-content:center; align-items:center; gap:8px; letter-spacing: 1px;" onclick="document.getElementById('import-file').click()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.9;">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            Import Merit
+        <button class="btn-transparent-small" onclick="document.getElementById('import-file').click()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline></svg> Import
+        </button>
+        <button class="btn-transparent-small" onclick="document.getElementById('guide-modal').style.display='flex'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path></svg> Guide
         </button>
         <input type="file" id="import-file" style="display:none" onchange="importProgress(this)">
     </div>
-
-    
-    <div style="text-align:center; margin-top:20px;">
-        <span class="gold-btn" style="font-size: 0.75rem;" onclick="document.getElementById('guide-modal').style.display='flex'">SYSTEM GUIDE</span>
-    </div>
 </div>
+
 
 <div id="screen-2" class="container">
     <div class="circle-wrap">
@@ -2311,6 +2351,103 @@ window.addEventListener('DOMContentLoaded', () => {
         </div>
     </div>
 </div>
+<script>
+// ==========================================
+// 1. 星空背景動畫
+// ==========================================
+const cvsBg = document.getElementById('starBg'); const ctxBg = cvsBg.getContext('2d'); let starsBg = [];
+function initStarsBg() { cvsBg.width = window.innerWidth; cvsBg.height = window.innerHeight; starsBg = Array.from({ length: 100 }, () => ({ x: Math.random() * cvsBg.width, y: Math.random() * cvsBg.height, r: Math.random() * 1.5 + 0.5, sp: Math.random() * 0.002 + 0.0005, ph: Math.random() * Math.PI * 2 })); }
+function drawStarsBg() { ctxBg.clearRect(0, 0, cvsBg.width, cvsBg.height); const t = Date.now(); starsBg.forEach(s => { ctxBg.globalAlpha = 0.15 + Math.abs(Math.sin(t * s.sp + s.ph)) * 0.6; ctxBg.fillStyle = '#f3e5ab'; ctxBg.beginPath(); ctxBg.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctxBg.fill(); }); requestAnimationFrame(drawStarsBg); }
+window.addEventListener('resize', initStarsBg); initStarsBg(); drawStarsBg();
+
+// ==========================================
+// 2. 極簡音效喚醒器 (結合你保留的 audioCtx)
+// ==========================================
+function wakeUpAudio() {
+    if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if(AudioContext) audioCtx = new AudioContext();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}
+
+// ==========================================
+// 3. 無損擴充 updateUI (掛載大數據能量棒與今日對頻)
+// ==========================================
+if (typeof updateUI === 'function' && typeof _originalUpdateUI_V3 === 'undefined') {
+    const _originalUpdateUI_V3 = updateUI;
+    updateUI = function() {
+        _originalUpdateUI_V3(); // 絕對不破壞原本的蓮花邏輯，先照常執行！
+        
+        // 更新大數據能量棒寬度 (對數算法移植自念佛室)
+        const total = db.totalNian || 0;
+        let nianW = total <= 1000 ? (total / 1000) * 50 : Math.min(100, 50 + ((Math.log10(total) - 3) / 5) * 50);
+        let amiBar = document.getElementById('amitabha-bar-fill'); 
+        if(amiBar) amiBar.style.width = Math.max(1, nianW) + '%';
+        
+        // 更新今日對頻次數 (Today: X)
+        let todaySync = document.getElementById('today-count');
+        if(todaySync) todaySync.innerText = db.todayCount || 0;
+
+        // 同步隱藏的名字欄位，保護原系統
+        if(db.name && document.getElementById('user-name')) {
+            document.getElementById('user-name').value = db.name;
+        }
+    };
+}
+
+// ==========================================
+// 4. 合十點擊與極簡彈窗邏輯
+// ==========================================
+let burstBusy = false; const burstEl = document.getElementById('burst-el');
+window.addEventListener('DOMContentLoaded', () => { if (typeof db !== 'undefined' && db && db.name) document.getElementById('user-name').value = db.name; });
+
+function handleConnectClick(e) {
+    wakeUpAudio(); // 點擊當下立刻喚醒你的 audioCtx！
+    
+    if (!db || !db.name) {
+        document.getElementById('firstTimeNameModal').style.display = 'flex';
+        setTimeout(() => document.getElementById('firstTimeNameModal').style.opacity = '1', 10);
+    } else {
+        doBurstAnimation(e.clientX || window.innerWidth/2, e.clientY || window.innerHeight/2); 
+    }
+}
+
+function confirmFirstTimeName() {
+    let inputName = document.getElementById('first-time-name-input').value.trim();
+    if (!inputName) return alert("Please enter your name.");
+    if(typeof db !== 'undefined' && db) { db.name = inputName; document.getElementById('user-name').value = inputName; save(); }
+    document.getElementById('firstTimeNameModal').style.opacity = '0';
+    setTimeout(() => { 
+        document.getElementById('firstTimeNameModal').style.display = 'none'; 
+        wakeUpAudio(); // 彈窗確認當下確保喚醒
+        doBurstAnimation(window.innerWidth / 2, window.innerHeight / 2); 
+    }, 300);
+}
+
+function doBurstAnimation(cx, cy) {
+    if (burstBusy) return; burstBusy = true;
+    for (let i = 0; i < 20; i++) {
+        const p = document.createElement('div'); p.className = 'burst-particle'; p.style.left = cx + 'px'; p.style.top = cy + 'px'; document.body.appendChild(p);
+        const ang = Math.random() * Math.PI * 2, dist = 60 + Math.random() * 120;
+        p.animate([{ transform: 'translate(-50%, -50%) scale(1)', opacity: 1 }, { transform: `translate(calc(-50% + ${Math.cos(ang)*dist}px), calc(-50% + ${Math.sin(ang)*dist}px)) scale(0)`, opacity: 0 }], { duration: 800 + Math.random() * 400, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' }).onfinish = () => p.remove();
+    }
+    let t0 = null;
+    function frame(ts) {
+        if (!t0) t0 = ts; const progress = Math.min((ts - t0) / 600, 1), eased = 1 - Math.pow(1 - progress, 3);
+        burstEl.setAttribute('rx', eased * 140); burstEl.setAttribute('ry', eased * 160);
+        burstEl.setAttribute('opacity', progress < 0.2 ? progress * 5 : Math.max(0, 1 - (progress - 0.2) * 1.25) * 0.8);
+        if (progress < 1) requestAnimationFrame(frame);
+        else { 
+            burstEl.setAttribute('opacity', 0); burstBusy = false; 
+            if(typeof startApp === 'function') startApp(); 
+        }
+    }
+    requestAnimationFrame(frame);
+}
+</script>
 
 </body>
 </html>

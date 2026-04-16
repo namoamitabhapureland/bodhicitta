@@ -641,9 +641,31 @@
    ========================================== */
 #starBg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 .scene { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; cursor: pointer; margin: 20px 0; }
-.hands-wrap { animation: float-hands 4s ease-in-out infinite; position: relative; }
-@keyframes float-hands { 0%, 100% { transform: translateY(0px); filter: drop-shadow(0 5px 15px rgba(212,175,55,0.05)); } 50% { transform: translateY(-8px); filter: drop-shadow(0 15px 30px rgba(212,175,55,0.25)); } }
-.scene:active .hands-wrap { transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+.hands-wrap { 
+    animation: float-hands 4s ease-in-out infinite; 
+    position: relative; 
+    /* 👇 關鍵修復：啟動硬體高精度渲染，強制 iOS 不要在縮放時產生黑邊偽影 */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+}
+
+/* 👇 關鍵修復：將 SVG 推入獨立的 3D 渲染層，阻絕 2D 點陣化計算誤差 */
+.hands-svg {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
+@keyframes float-hands { 
+    0%, 100% { transform: translateY(0px); filter: drop-shadow(0 5px 15px rgba(212,175,55,0.05)); } 
+    50% { transform: translateY(-8px); filter: drop-shadow(0 15px 30px rgba(212,175,55,0.25)); } 
+}
+.scene:active .hands-wrap { 
+    transform: scale(0.95); 
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); 
+}
 
 /* 爆發粒子與合十下方文字 */
 .burst-particle { position: fixed; width: 3px; height: 3px; border-radius: 50%; background: #fff; pointer-events: none; z-index: 9999; box-shadow: 0 0 8px var(--gold), 0 0 12px var(--solid-gold); }

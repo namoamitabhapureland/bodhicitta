@@ -40,12 +40,13 @@
 - **九大專欄**：包含「俯瞰華藏」、「唯識之旅」、「法華密碼」等，深度解析大乘經典。
 - **彌陀四十八願海**：系統終極模組，需累積滿 **10,000** 聲念佛資糧後解鎖，直探彌陀本願核心。
 
-### 三、助道法寶．菩提靜室 (Dharma Supports)
+### 三、助道法寶．菩提淨室 (Dharma Supports)
 
 - **菩提客棧（蓮友論壇）**：七日一循環制，法語七日後自動歸寂，僅保留最新50篇，維持道場清淨。
 - **琉璃多寶閣**：為親友祈福的專屬化城，實修顯化向量寶珠，迴向時歸零歸空，成就無相佈施。
 - **金蓮解惑**：針對日常生活困惑，提供隨順法性的指引。
-
+- **菩提淨室**：專屬個人線上念佛區，提供行者一個念佛與完整統計數據。
+- **經典微探**：世間新知與法理探微，有感即錄，隨緣增補。
 ---
 
 ## 技術與安全哲學 | Technical and Privacy Philosophy
@@ -82,7 +83,7 @@
 ---
 
 ## SEO Keywords
-`Namo Amitabha` `Pure Land Buddhism` `彌陀淨土` `阿彌陀佛` `普賢行願` `數位道場` `佛學 PWA` `極簡修行` `Buddhist Web App` `Offline Practice Tool`
+`Namo Amitabha` `Pure Land Buddhism` `彌陀淨土` `阿彌陀佛` `普賢行願` `線上念佛` `數位道場` `佛學 PWA` `極簡修行` `Buddhist Web App` `Offline Practice Tool`
 
 ---
 # Amitabha Pure Land System

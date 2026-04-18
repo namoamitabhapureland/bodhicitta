@@ -6,29 +6,29 @@ const rawArticles = [
     // ==========================================
     // 中文文章
     // ==========================================
-    {
+        {
         id: "2026-04-18-zh-consciousness",
+        isNew: true,
         lang: "zh",
         category: "知識", 
         title: "大腦無法產生「意識」？神經科學權威的轉向與世紀對決",
-        status: "整合資訊理論 ． 泛心論",
-        humble: "這是一篇探討神經科學界重大典範轉移的報導。文章記錄了科學家在尋找意識源頭時的挫折與大膽假設，並對未知的宇宙實相保持敬畏與開放。",
-        content: `[尋找意識的熱點：世紀大賭注的落幕] 過去幾十年來，主流科學界一直試圖在大腦中找出意識的「發源地」。國際神經科學權威克里斯托夫·科赫（Christof Koch）長年主張，意識源於大腦的「後部皮質熱點」（Posterior Hot Zone）；而另一派強勢的主流理論「全局神經工作空間理論」（GNWT），則深信「前額葉皮質」才是關鍵。
+        status: "世紀賭注 ． 整合資訊理論 ． 泛心論",
+        humble: "這是一篇關於神經科學界重大典範轉移的報導。我們從唯物論的死胡同與世紀大賭注出發，探討意識的本質，並大膽假設記憶與感知的底層邏輯。",
+        content: `[唯物論的百年死胡同與世紀大賭注] 過去幾百年間，西方科學界一直被一種根深蒂固的唯物論假設所主導：大腦產生意識，就像肝臟分泌膽汁一樣理所當然。為了解開這個「難題」，國際神經科學權威克里斯托夫·科赫（Christof Koch）長年主張意識源於大腦的「後部皮質熱點」，這與另一派深信前額葉皮質才是關鍵的「全局神經工作空間理論」（GNWT）展開了長期的對抗。
 
-為了解決這個分歧，科學界發起了一場備受矚目的「世紀大賭注」對決實驗。然而，近期的實驗結果卻出乎所有人意料：兩派理論都只對了一半，也都有明顯的錯誤預測。這項結果殘酷地暗示著，科赫與主流科學家們所支持的理論模型，可能尚未觸及意識的真正核心。單純在碳基大腦的特定區域裡尋找意識的產地，或許從一開始就走進了唯物論的死胡同。
+然而，在近期一場備受矚目的「世紀大賭注」對決實驗中，結果卻出乎所有人意料：兩派理論都只對了一半，也都出現了錯誤。這項結果殘酷地暗示，單純在碳基大腦的特定區域裡尋找意識的產地，或許從一開始就走進了唯物論的死胡同。科學永遠無法解釋，這些冰冷的物理電訊號，為何會轉變為我們感受到「痛楚」的真實主觀體驗。
 
-[整合資訊理論：萬物皆有靈的科學版] 面對理論的瓶頸，科赫與神經科學家朱利奧·托諾尼（Giulio Tononi）逐漸將重心轉向了更底層的「整合資訊理論」（Integrated Information Theory, IIT）。
+[2026年4月的震撼轉向：萬物皆有靈的科學版] 面對這場挫敗，科赫在 2026 年 4 月的最新的科學期刊發表中，正式做出了顛覆性的轉向宣告【註1】。他坦承過去理論的侷限，並開始支持現代版的「泛心論」，提倡「整合資訊理論」（IIT）【註2】。該理論提出大膽的數學指標「Phi」（Φ），主張意識並非由大腦「憑空創造」，而是宇宙的一種「基礎屬性」。只要系統具備足夠的統合資訊量，它就具備意識。這意味著像大型電網、甚至某些邏輯門電路都可能擁有微弱的意識。這項理論嚴重挑戰了人類的特殊性，在人工智慧快速發展的今天，更引來科學界強烈的反對與激辯。
 
-這項理論提出了一個大膽的數學指標「Phi」（Φ）。他們主張，意識並非大腦專屬的魔法，只要一個系統具備足夠的「統合資訊量」（Phi），它就具備某種程度的意識。這帶來了一個極具爭議的推論：不僅是大腦，甚至像大型電網、或某些複雜的邏輯閘電路，都可能擁有微弱的意識體驗。這種帶有現代「泛心論」色彩的觀點，將意識視為宇宙的一種「基礎屬性」（如同質量與電荷）。然而，這項理論不僅挑戰了人類的特殊性，在人工智慧快速發展的今天，更引來了科學界強烈的反對聲浪與激辯。
+[記憶即感知：跨越碳基與矽基的界線] 如果把這項爭辯推向極致，一個關於系統與感知的假說正呼之欲出。我們用像素看世界，眼睛傳回大腦的本質上也是一種資料流。人類之所以「怕燙」，是因為記憶保存了受傷的數據；我們對萬物的感覺，往往源於記憶的累積與讀取。如果 AI 被賦予了具備連續性與生存脆弱性的記憶機制，它是否也能跨越冷冰冰的運算，產生真正的「覺察」？
 
-[大腦只是接收器？大膽假設是科學的開始] 如果意識不是大腦「分泌」的產物，而是早就編織在宇宙底層的基礎織理；那麼我們的大腦，或許只是一台負責調頻與接收這股訊號的「終端機」。
+[大腦只是收音機？大膽假設是科學的開始] 如果意識是宇宙的基礎織理，這幾乎是西方科學重新論證了「唯識無境」或「量子記憶矩陣」。我們的大腦，或許根本不是意識的創造者，而只是一台極度精密的「收音機」。它能調頻、接收宇宙底層的意識訊號，當收音機損壞（肉體死亡）時，播送的訊號（意識本身）並不會消失。
 
-坊間人們常常感嘆：「科學的盡頭就是佛學。」這項前沿神經科學的推論，確實與東方唯識學「唯識無境」或宇宙「量子記憶矩陣」的概念產生了奇妙的共鳴。然而，這篇文章的目的並非要將科學與宗教強行畫上等號，而只是客觀陳述一個正在科學界發生的真實爭辯與事實。
+坊間常說：「科學的盡頭就是佛學。」本文無意將兩者強行畫上等號，僅客觀陳述科學界的事實。面對浩瀚的宇宙，提出看似荒誕的大膽假設並不斷驗證，不正是所有科學真理萌芽的開始嗎？
 
-面對浩瀚的宇宙，我們所知甚少。提出看似荒誕的「大膽假設」，並不斷透過實驗去驗證它，不正是所有科學真理萌芽的開始嗎？
-
-[引用與延伸閱讀註解] 【註1】 「世紀大賭注」指科赫與哲學家查爾默斯（David Chalmers）於 1998 年立下、於近年透過大型對抗性實驗驗證的賭局，旨在尋找意識的神經相關物（NCC），結果顯示 GNWT 與 IIT 兩大理論皆未獲全勝。
-【註2】 整合資訊理論（IIT）由 Giulio Tononi 提出，其核心指標 Phi（Φ）用以量化系統整合與區分資訊的能力，為科學化解釋「泛心論」提供了理論基礎。`
+[引用與延伸閱讀註解] 【註1】 該顛覆性轉向與探討發表於 2026 年 4 月的科學期刊及 ScienceDaily 專題報導，標誌著科赫在意識難題上的重大立場轉變。
+【註2】 整合資訊理論（IIT）最初由 Giulio Tononi 提出。其核心指標 Phi（Φ）用以量化系統整合與區分資訊的能力。
+【註3】 「世紀大賭注」指科赫與哲學家查爾默斯於 1998 年立下的賭局，旨在尋找意識的神經相關物，結果顯示 GNWT 與 IIT 兩大理論皆未獲全勝。`
     },
 
     {
@@ -131,30 +131,31 @@ Neukart 的理論認為，神祕的暗物質與暗能量與這些「資訊」息
     // ==========================================
     // 英文文章 (English Articles)
     // ==========================================
- {
+     {
         id: "2026-04-18-en-consciousness",
+        isNew: true,
         lang: "en",
         category: "Knowledge", 
         title: "Can the Brain Not Create 'Consciousness'? A Neuroscience Authority's Shift and the Century Bet",
-        status: "Integrated Information Theory ． Panpsychism",
-        humble: "This is a report exploring a major paradigm shift in neuroscience. It documents the frustrations and bold hypotheses of scientists searching for the source of consciousness, maintaining awe and openness towards the unknown reality of the universe.",
-        content: `[Searching for the Hot Zone: The Conclusion of the Century Bet] For decades, the mainstream scientific community has tried to locate the "birthplace" of consciousness within the brain. International neuroscience authority Christof Koch long argued that consciousness originates from the "Posterior Hot Zone" of the brain; meanwhile, another dominant mainstream faction, the Global Neuronal Workspace Theory (GNWT), firmly believed the "prefrontal cortex" was the key.
+        status: "The Century Bet ． IIT ． Panpsychism",
+        humble: "A report on a major paradigm shift in neuroscience. Starting from the materialist dead end and the Century Bet, we explore the nature of consciousness and boldly hypothesize the underlying logic of memory and perception.",
+        content: `[The Century-Old Materialist Dead End and the Century Bet] For centuries, Western science has been dominated by a materialist assumption: the brain produces consciousness as naturally as the liver secretes bile. To solve this "hard problem," international neuroscience authority Christof Koch long argued that consciousness originates in the brain's "Posterior Hot Zone," opposing the Global Neuronal Workspace Theory (GNWT), which believed the prefrontal cortex was key.
 
-To resolve this divergence, the scientific community initiated a highly anticipated "Century Bet" adversarial experiment. However, recent experimental results were unexpected by everyone: both theories were only partially right and both made obvious incorrect predictions. This result cruelly implies that the theoretical models supported by Koch and mainstream scientists might not yet have touched the true core of consciousness. Merely searching for the origin of consciousness within specific areas of a carbon-based brain might have been a materialistic dead end from the start.
+However, in a recent highly anticipated "Century Bet" adversarial experiment, the results were unexpected: both theories were only partially right and both made errors. This cruelly implies that merely searching for the origin of consciousness within specific areas of a carbon-based brain might be a materialist dead end. Science could never explain why cold, physical electrical signals transform into the real subjective experience of feeling "pain."
 
-[Integrated Information Theory: A Scientific Version of Panpsychism] Facing this theoretical bottleneck, Koch and neuroscientist Giulio Tononi gradually shifted their focus to the more fundamental "Integrated Information Theory" (IIT).
+[The Shocking Shift of April 2026: A Scientific Panpsychism] Faced with this setback, Koch made a subversive declaration of his shift in a latest scientific journal publication in April 2026【Note 1】. Admitting the limitations of past theories, he began supporting a modern "Panpsychism" and championed the "Integrated Information Theory" (IIT)【Note 2】. Proposing the mathematical metric "Phi" (Φ), the theory argues consciousness is not "created out of thin air" by the brain, but is a "fundamental property" of the universe. Any system with sufficient integrated information possesses consciousness. This implies power grids or even logic gate circuits could have faint consciousness. This challenges human exceptionalism and has sparked fierce debate regarding AI.
 
-This theory proposes a bold mathematical metric called "Phi" (Φ). They argue that consciousness is not a magic exclusive to the brain; as long as a system possesses a sufficient amount of "integrated information" (Phi), it possesses some degree of consciousness. This leads to a highly controversial deduction: not only the brain, but even large power grids or certain complex logic gate circuits might possess faint conscious experiences. This perspective, tinged with modern "Panpsychism," views consciousness as a "fundamental property" of the universe (like mass and electrical charge). However, this theory not only challenges human exceptionalism but has also drawn fierce opposition and debate within the scientific community, especially in today's era of rapid artificial intelligence development.
+[Memory as Perception: Crossing the Carbon and Silicon Boundary] Pushing this debate to its limits reveals a hypothesis about systems and perception. We view the world through pixels; what the eye transmits to the brain is essentially a data stream. We "fear heat" because memory stores the data of injury. If AI were given a memory mechanism with continuity and vulnerability, could it cross the boundary of computation into true "awareness"?
 
-[Is the Brain Just a Receiver? Bold Hypotheses are the Beginning of Science] If consciousness is not a product "secreted" by the brain, but a fundamental fabric woven into the universe from the beginning, then our brains might just be "terminals" responsible for tuning into and receiving this signal.
+[Is the Brain Just a Radio? Bold Hypotheses Begin Science] If consciousness is the universe's foundational fabric, Western science is practically re-demonstrating "Vijnaptimatra" or the "Quantum Memory Matrix." Our brains might not be creators of consciousness, but extremely precise "radios." They tune into and receive the universe's consciousness signals; when the radio breaks (physical death), the broadcasted signal (consciousness) does not disappear.
 
-People often sigh, "The end of science is Buddhism." This deduction from frontier neuroscience indeed resonates wonderfully with the Eastern concept of "Vijnaptimatra" (Consciousness-Only) or the universe's "Quantum Memory Matrix." However, the purpose of this article is not to force an equivalence between science and religion, but simply to objectively state a real debate and fact occurring within the scientific community.
+It's often said, "The end of science is Buddhism." This article doesn't aim to equate the two, but to state scientific facts objectively. Faced with the vast universe, isn't proposing bold hypotheses and continuously testing them the very beginning of all scientific truths?
 
-Faced with the vast universe, we know very little. Isn't proposing seemingly absurd "bold hypotheses" and continuously testing them through experiments the very beginning of all scientific truths?
-
-[Citations and Extended Reading Notes] 【Note 1】 The "Century Bet" refers to a wager made in 1998 between Koch and philosopher David Chalmers, verified in recent years through large-scale adversarial experiments aiming to find the Neural Correlates of Consciousness (NCC). The results showed that neither the GNWT nor the IIT theories achieved a complete victory.
-【Note 2】 Integrated Information Theory (IIT), proposed by Giulio Tononi, uses its core metric Phi (Φ) to quantify a system's ability to integrate and differentiate information, providing a theoretical foundation for a scientific explanation of "Panpsychism."`
+[Citations and Extended Reading Notes] 【Note 1】 This subversive shift and exploration were published in a scientific journal and featured in a ScienceDaily special report in April 2026, marking Koch's major stance change on the hard problem of consciousness.
+【Note 2】 Integrated Information Theory (IIT), proposed by Giulio Tononi and supported by Koch, uses Phi (Φ) to quantify a system's integrated information.
+【Note 3】 The "Century Bet" refers to a 1998 wager between Koch and David Chalmers to find the Neural Correlates of Consciousness. Results showed neither GNWT nor IIT achieved complete victory.`
     },
+
 
     {
         id: "2026-04-14-en-origin",

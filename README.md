@@ -1,4 +1,4 @@
-#  彌陀淨土系統 | Amitabha Pure Land System
+#  阿彌陀佛 淨土系統 | Amitabha Pure Land System
 [![GitHub Pages](https://img.shields.io/badge/網站-彌陀淨土系統-4A7043?style=for-the-badge&logo=githubpages&logoColor=white)](https://namoamitabhapureland.github.io/bodhicitta/)
 [![PWA](https://img.shields.io/badge/PWA-Ready-4285F4?style=for-the-badge&logo=pwa&logoColor=white)](https://namoamitabhapureland.github.io/bodhicitta/)
 [![Free](https://img.shields.io/badge/完全免費-100%25-00C853?style=for-the-badge)](https://namoamitabhapureland.github.io/bodhicitta/)
@@ -17,7 +17,7 @@
 
 ## 計畫宗旨 | Vision and Purpose
 
-本系統**不僅是念佛計數工具**，更是一個「境隨心轉」的實修平台。
+本系統**不僅提供念佛計數**，更是一個「境隨心轉」的實修與菩薩道轉化的平台。
 
 - **教理基礎**：依《無量壽經》第二十二願，強調「十念必生」的信願與「廣修萬行」的普賢大德。
 - **核心精神**：百分之百仰賴彌陀願力，透過每日累積資糧，在心中化生七寶池蓮花。

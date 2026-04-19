@@ -226,9 +226,7 @@
         return { x: (width/2) + x2*scale, y: (height/2) - y1*scale - 50, scale: scale, z: z2 };
     }
 
-    // =========================================================================
-    // 🟢 模組化插入點：所有新開發的世界幾何生成代碼，請加在下方的 switch 判斷內
-    // =========================================================================
+        // ================= 3. 幾何演算法引擎 (Geometry Engine) =================
     function initParticleEngines() {
         if(stars.length === 0) {
             for (let i = 0; i < 500; i++) {
@@ -238,21 +236,70 @@
         realmParticles = [];
         let id = RealmMatrix[currentRealmIndex].id;
 
-        if (id === 3) {
-            let radius = 120;
-            for(let i=0; i<600; i++) {
-                let theta = Math.random() * Math.PI * 2; let phi = Math.acos((Math.random() * 2) - 1);
-                realmParticles.push({ x: radius * Math.sin(phi) * Math.cos(theta), y: radius * Math.sin(phi) * Math.sin(theta), z: radius * Math.cos(phi), type: 'sphere' });
+        if (id === 1) { // 🟢 1. 廣大寶網
+            let N = 800; let R = 180; let goldenAngle = Math.PI * (3 - Math.sqrt(5)); 
+            for(let i=0; i<N; i++) {
+                let y = 1 - (i / (N - 1)) * 2; let radius = Math.sqrt(1 - y*y); let theta = goldenAngle * i;
+                realmParticles.push({ baseX: Math.cos(theta)*radius*R, baseY: y*R, baseZ: Math.sin(theta)*radius*R, offsetSeed: Math.random()*Math.PI*2, type: 'mani' });
             }
-        } 
-        else if (id === 8) {
+        }
+        else if (id === 2) { // 🟢 2. 香蓮華
+            const petalLayers = 4; const petalsPerLayer = [6, 8, 10, 12];
+            for (let l = 0; l < petalLayers; l++) {
+                let pCount = petalsPerLayer[l]; let radiusOut = 40 + l * 25; let heightUp = 20 + l * 20;  
+                for (let p = 0; p < pCount; p++) {
+                    let angleCenter = (Math.PI * 2 / pCount) * p + (l * 0.3); 
+                    for (let t = 0; t <= 1; t += 0.1) { 
+                        for (let w = -1; w <= 1; w += 0.4) { 
+                            let petalWidth = Math.sin(t * Math.PI) * (15 + l * 5); 
+                            let currentR = t * radiusOut; let currentY = -t * heightUp + (w * w * 12); 
+                            let px = currentR * Math.cos(angleCenter) - (w * petalWidth) * Math.sin(angleCenter);
+                            let pz = currentR * Math.sin(angleCenter) + (w * petalWidth) * Math.cos(angleCenter);
+                            realmParticles.push({ baseX: px, baseY: currentY + 40, baseZ: pz, type: 'lotus', layer: l, t: t });
+                        }
+                    }
+                }
+            }
+            for(let i=0; i<300; i++) {
+                realmParticles.push({ baseX: (Math.random()-0.5)*300, baseY: Math.random()*200-50, baseZ: (Math.random()-0.5)*300, type: 'aroma', speedY: Math.random()*0.8+0.3, offsetSeed: Math.random()*Math.PI*2 });
+            }
+        }
+        else if (id === 3) { // 🟢 3. 寶月
+            let radius = 130; let bands = 16; let segments = 32;
+            for(let b = 1; b < bands; b++) {
+                let phi = (Math.PI / bands) * b;
+                for(let s = 0; s < segments; s++) {
+                    let theta = (Math.PI * 2 / segments) * s;
+                    let x = radius * Math.sin(phi) * Math.cos(theta); let y = radius * Math.cos(phi); let z = radius * Math.sin(phi) * Math.sin(theta);
+                    realmParticles.push({ baseX: x, baseY: y, baseZ: z, theta: theta, phi: phi, type: 'moon-grid' });
+                }
+            }
+            for(let i = 0; i < 150; i++) {
+                let theta = Math.random() * Math.PI * 2; let phi = Math.acos((Math.random() * 2) - 1); let r = Math.random() * 50; 
+                realmParticles.push({ baseX: r * Math.sin(phi) * Math.cos(theta), baseY: r * Math.cos(phi), baseZ: r * Math.sin(phi) * Math.sin(theta), speed: Math.random() * 0.05 + 0.02, type: 'projection-core' });
+            }
+        }
+        else if (id === 4) { // 🟢 4. 光明華網
+            let layers = 6; let petals = 12;
+            for(let l = 1; l <= layers; l++) {
+                let radius = l * 25; let yOffset = Math.sin(l * 0.5) * 20;
+                for(let p = 0; p < petals; p++) {
+                    let angle = (Math.PI * 2 / petals) * p + (l * 0.2); 
+                    for(let t = 0; t <= 1; t += 0.15) { 
+                        let r = radius * t; let x = r * Math.cos(angle); let z = r * Math.sin(angle); let y = yOffset * t - (t * t * 40); 
+                        realmParticles.push({ baseX: x, baseY: y, baseZ: z, layer: l, petal: p, t: t, type: 'light-net' });
+                    }
+                }
+            }
+        }
+        else if (id === 8) { // 🟢 8. 半月
             let radius = 140;
             for(let i=0; i<500; i++) {
                 let theta = Math.random() * Math.PI; let phi = Math.acos((Math.random() * 2) - 1);
                 realmParticles.push({ x: radius * Math.sin(phi) * Math.cos(theta), y: radius * Math.sin(phi) * Math.sin(theta), z: radius * Math.cos(phi), type: 'half-moon' });
             }
         }
-        else if (id === 9) {
+        else if (id === 9) { // 🟢 9. 梵篋
             let w = 120, h = 40, d = 160; 
             for(let x = -w; x <= w; x += 15) {
                 for(let y = -h; y <= h; y += 15) {
@@ -264,7 +311,7 @@
                 }
             }
         }
-        else if (id === 10) {
+        else if (id === 10) { // 🟢 10. 金剛幢
             let height = 300, radius = 60, sides = 6;
             for(let y = -height/2; y <= height/2; y += 10) {
                 for(let s = 0; s <= sides; s++) {
@@ -273,7 +320,7 @@
                 }
             }
         }
-        else if (id === 13) {
+        else if (id === 13) { // 🟢 13. 娑婆極樂雙星
             for(let i = 0; i < 300; i++) {
                 let theta = Math.random() * Math.PI * 2; let phi = Math.acos(Math.random()*2 - 1); let r = Math.random() * 60 + 20;
                 realmParticles.push({ x: r*Math.sin(phi)*Math.cos(theta), y: r*Math.cos(phi), z: r*Math.sin(phi)*Math.sin(theta), size: Math.random()*2+1, type: 'r13Saha' });
@@ -281,7 +328,7 @@
                 realmParticles.push({ x: r*Math.sin(phi)*Math.cos(theta), y: r*Math.cos(phi), z: r*Math.sin(phi)*Math.sin(theta), size: Math.random()*2+1, type: 'r13Pure' });
             }
         }
-        else if (id === 20) {
+        else if (id === 20) { // 🟢 20. 妙寶燄
             let coreR = 80;
             for(let i=0; i<1200; i++) {
                 let theta = Math.random() * Math.PI * 2; let phi = Math.acos((Math.random() * 2) - 1);
@@ -292,128 +339,7 @@
                 realmParticles.push({ baseR: r, theta: theta, phi: phi, type: 'flame', isCreature: isCreature, oSpeed: orbitSpeed, hue: 30 + Math.random() * 40, s: isCreature ? Math.random() * 3 + 2 : Math.random() * 1.5 + 0.5 });
             }
         }
-                // 🟢 【第 1 重：最勝光遍照 (黃金螺旋廣大寶網)】
-        else if (id === 1) {
-            let N = 800; // 象徵微塵數諸佛
-            let R = 180; // 廣大的法界半徑
-            let goldenAngle = Math.PI * (3 - Math.sqrt(5)); // 宇宙黃金角
-            
-            for(let i=0; i<N; i++) {
-                // 黃金螺旋立體分佈算法
-                let y = 1 - (i / (N - 1)) * 2; 
-                let radius = Math.sqrt(1 - y*y);
-                let theta = goldenAngle * i;
-                
-                let px = Math.cos(theta) * radius * R;
-                let py = y * R;
-                let pz = Math.sin(theta) * radius * R;
-                
-                realmParticles.push({
-                    baseX: px, baseY: py, baseZ: pz,
-                    offsetSeed: Math.random() * Math.PI * 2, // 獨立閃爍種子
-                    type: 'mani'
-                });
-            }
-        }
-        // 🟢 【第 2 重：種種香蓮華 (立體呼吸蓮花與螺旋香雲)】
-        else if (id === 2) {
-            // 1. 生成立體蓮花花瓣 (4層)
-            const petalLayers = 4;
-            const petalsPerLayer = [6, 8, 10, 12];
-            for (let l = 0; l < petalLayers; l++) {
-                let pCount = petalsPerLayer[l];
-                let radiusOut = 40 + l * 25; // 每一層向外擴張
-                let heightUp = 20 + l * 20;  // 花瓣高度
-                
-                for (let p = 0; p < pCount; p++) {
-                    let angleCenter = (Math.PI * 2 / pCount) * p + (l * 0.3); // 每層錯開角度
-                    // 繪製單片花瓣的網格點
-                    for (let t = 0; t <= 1; t += 0.1) { // 從根部(0)到尖端(1)
-                        for (let w = -1; w <= 1; w += 0.4) { // 花瓣橫向寬度
-                            let petalWidth = Math.sin(t * Math.PI) * (15 + l * 5); // 橢圓形：中間寬，兩頭尖
-                            let currentR = t * radiusOut;
-                            let currentY = -t * heightUp + (w * w * 12); // 向上生長並帶有立體內凹弧度
-
-                            // 繞 Y 軸旋轉到對應的花瓣位置
-                            let px = currentR * Math.cos(angleCenter) - (w * petalWidth) * Math.sin(angleCenter);
-                            let pz = currentR * Math.sin(angleCenter) + (w * petalWidth) * Math.cos(angleCenter);
-
-                            realmParticles.push({
-                                baseX: px, baseY: currentY + 40, baseZ: pz, // +40 讓整朵蓮花往下沉一點對齊視角
-                                type: 'lotus', layer: l, t: t 
-                            });
-                        }
-                    }
-                }
-            }
-
-            // 2. 生成香氣微塵 (摩尼香雲)
-            for(let i=0; i<300; i++) {
-                realmParticles.push({
-                    baseX: (Math.random() - 0.5) * 300,
-                    baseY: Math.random() * 200 - 50,
-                    baseZ: (Math.random() - 0.5) * 300,
-                    type: 'aroma',
-                    speedY: Math.random() * 0.8 + 0.3,
-                    offsetSeed: Math.random() * Math.PI * 2
-                });
-            }
-        }
-         // 🟢 【第 3 重：一切寶莊嚴 (全息寶月與光學投影核心)】
-        else if (id === 3) {
-            let radius = 130;
-            let bands = 16;
-            let segments = 32;
-
-            // 生成寶月全息網格
-            for(let b = 1; b < bands; b++) {
-                let phi = (Math.PI / bands) * b;
-                for(let s = 0; s < segments; s++) {
-                    let theta = (Math.PI * 2 / segments) * s;
-                    let x = radius * Math.sin(phi) * Math.cos(theta);
-                    let y = radius * Math.cos(phi);
-                    let z = radius * Math.sin(phi) * Math.sin(theta);
-                    
-                    realmParticles.push({ baseX: x, baseY: y, baseZ: z, theta: theta, phi: phi, type: 'moon-grid' });
-                }
-            }
-            // 生成內部光學投影核心
-            for(let i = 0; i < 150; i++) {
-                let theta = Math.random() * Math.PI * 2;
-                let phi = Math.acos((Math.random() * 2) - 1);
-                let r = Math.random() * 50; 
-                realmParticles.push({ baseX: r * Math.sin(phi) * Math.cos(theta), baseY: r * Math.cos(phi), baseZ: r * Math.sin(phi) * Math.sin(theta), speed: Math.random() * 0.05 + 0.02, type: 'projection-core' });
-            }
-        }
-        // 🟢 【第 4 重：種種光明華 (無量色彩光明網)】
-        else if (id === 4) {
-            let layers = 6;
-            let petals = 12;
-            for(let l = 1; l <= layers; l++) {
-                let radius = l * 25;
-                let yOffset = Math.sin(l * 0.5) * 20;
-                for(let p = 0; p < petals; p++) {
-                    let angle = (Math.PI * 2 / petals) * p + (l * 0.2); // 每層錯開角度
-                    for(let t = 0; t <= 1; t += 0.15) { // 花瓣的網點
-                        let r = radius * t;
-                        let x = r * Math.cos(angle);
-                        let z = r * Math.sin(angle);
-                        let y = yOffset * t - (t * t * 40); // 向上彎曲生長
-                        realmParticles.push({ baseX: x, baseY: y, baseZ: z, layer: l, petal: p, t: t, type: 'light-net' });
-                    }
-                }
-            }
-        }
-        
-
-        // 👇 未來世界的代碼插入點 👇
-        // else if (id === 2) { 
-        //    // 預留給【種種香蓮華】
-        // }
-        // 👆 未來世界的代碼插入點 👆
-        
-        // 🟢 通用動態佔位符 (若該層尚未實作專屬演算法，則顯示多邊旋轉曼陀羅)
-        else {
+        else { // 🟢 通用動態佔位符
             const sides = (id % 5) + 3; const rings = 6;
             for(let r=1; r<=rings; r++) {
                 let radius = r * 30; let pts = sides * r * 3;
@@ -425,153 +351,67 @@
         }
     }
 
-    // =========================================================================
-    // 🟢 模組化插入點：所有新開發的世界視覺渲染代碼，請加在下方的 if-else 內
-    // =========================================================================
     function renderWorld() {
         let projected = [];
         let data = RealmMatrix[currentRealmIndex];
-        let baseColor = data.theme === 'gold' ? '212,175,55' : (data.theme === 'cyan' ? '139,168,156' : (data.theme === 'silver' ? '224,224,224' : '168,50,50'));
+        let baseR = data.theme === 'gold' ? 243 : (data.theme === 'cyan' ? 139 : (data.theme === 'silver' ? 224 : 168));
+        let baseG = data.theme === 'gold' ? 229 : (data.theme === 'cyan' ? 168 : (data.theme === 'silver' ? 224 : 50));
+        let baseB = data.theme === 'gold' ? 171 : (data.theme === 'cyan' ? 156 : (data.theme === 'silver' ? 224 : 50));
+        let baseHex = data.theme === 'gold' ? '#d4af37' : (data.theme === 'cyan' ? '#8ba89c' : (data.theme === 'silver' ? '#e0e0e0' : '#a83232'));
+
         let id = data.id;
 
-        if(id === 9) {
-            if(!isDragging) { angleY += 0.005; angleX = Math.sin(time*0.5)*0.3; } 
-            realmParticles.forEach(p => {
-                let wave = Math.sin(p.bx * 0.05 + time*3) * Math.cos(p.bz * 0.05 + time*2) * 15;
-                let y = p.by + (Math.abs(p.by) < 40 ? wave : 0); 
-                let proj = project3D(p.bx, y, p.bz);
-                if(proj) projected.push({ ...proj, a: 0.6, c: `rgba(${baseColor},`, isGlow: true });
-            });
-        }
-        else if(id === 13) {
-            let orbitSpeed = time * 0.8;
-            let cx1 = 120 * Math.cos(orbitSpeed), cz1 = 120 * Math.sin(orbitSpeed);
-            let cx2 = 120 * Math.cos(orbitSpeed + Math.PI), cz2 = 120 * Math.sin(orbitSpeed + Math.PI);
-            let p1 = project3D(cx1, Math.sin(time*2)*20, cz1); let p2 = project3D(cx2, Math.sin(time*2 + Math.PI)*20, cz2);
-            if(p1 && p2) { ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.strokeStyle = `rgba(212,175,55,0.2)`; ctx.lineWidth = 2 * p1.scale; ctx.stroke(); }
-            realmParticles.forEach(p => {
-                let proj;
-                if(p.type === 'r13Saha') { proj = project3D(p.x + cx1, p.y + Math.sin(time*2)*20, p.z + cz1); if(proj) projected.push({ ...proj, c: 'rgba(139,168,156,', a:0.8, s: p.size, isSaha: true }); }
-                else { proj = project3D(p.x + cx2, p.y + Math.sin(time*2 + Math.PI)*20, p.z + cz2); if(proj) projected.push({ ...proj, c: 'rgba(243,229,171,', a:0.9, s: p.size, isSaha: false }); }
-            });
-        }
-        else if (id === 20) {
-            if(!isDragging) { angleY += 0.005; angleX = 0.2 + Math.sin(time*0.5)*0.1; }
-            realmParticles.forEach(p => {
-                if(p.isCreature) { p.theta += p.oSpeed; p.phi += p.oSpeed * 0.5; }
-                let breath = 1 + Math.sin(time * 3 + p.theta) * 0.1;
-                let r = p.baseR * breath;
-                let x = r * Math.sin(p.phi) * Math.cos(p.theta); let y = r * Math.cos(p.phi) - 20; let z = r * Math.sin(p.phi) * Math.sin(p.theta);
-                let proj = project3D(x, y, z);
-                if(proj) {
-                    let a = p.isCreature ? 0.95 : 0.4 + Math.sin(time * 5 + p.theta) * 0.3;
-                    let c = p.isCreature ? `hsla(60, 100%, 80%, ${a})` : `hsla(${p.hue}, 90%, 60%, ${a})`;
-                    projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, a: a, c: c, isGlow: true, s: p.s * (p.isCreature ? 1.8 : 1) });
-                }
-            });
-        }
-        else if (id === 3 || id === 8 || id === 10) {
-            if(!isDragging) angleY += 0.003;
-            realmParticles.forEach(p => {
-                let breath = 1 + Math.sin(time * 2) * 0.05; 
-                let proj = project3D(p.x * breath, p.y * breath, p.z * breath);
-                if(proj) projected.push({ ...proj, a: 0.7, c: `rgba(${baseColor},`, isGlow: true });
-            });
-        }
-                // 【1: 最勝光遍照】(微塵數摩尼寶光閃耀)
-        else if (id === 1) {
-            // 宏大且沉穩的自轉
+        if (id === 1) { // 1. 廣大寶網
             if(!isDragging) { angleY += 0.002; angleX = Math.sin(time*0.3)*0.1; } 
-            
             realmParticles.forEach(p => {
-                // 每一顆摩尼寶珠都有微小的呼吸擴張感
                 let breath = 1 + Math.sin(time * 1.5 + p.offsetSeed) * 0.03;
-                let x = p.baseX * breath;
-                let y = p.baseY * breath;
-                let z = p.baseZ * breath;
-
+                let x = p.baseX * breath; let y = p.baseY * breath; let z = p.baseZ * breath;
                 let proj = project3D(x, y, z);
                 if(proj) {
-                    // 閃爍邏輯：隨機爆發強光，模擬金剛與摩尼寶光
                     let sparkle = Math.sin(time * 4 + p.offsetSeed);
                     let isBright = sparkle > 0.85; 
-                    
-                    // 越近越亮，發光時透明度極高
                     let a = isBright ? 0.95 : 0.3 + (proj.scale * 0.4);
-                    
-                    // 寶光以純白與真金交織
                     let color = isBright ? 'rgba(255,255,255,' : `rgba(243,229,171,`;
-                    
-                    projected.push({ 
-                        x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, 
-                        a: a, c: color, 
-                        isGlow: isBright, // 只有閃耀時才開啟高強度光暈，節省效能
-                        s: isBright ? 2.5 : 1.2 
-                    });
+                    let glowColor = isBright ? '#ffffff' : '#d4af37';
+                    projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, a: a, c: color, isGlow: isBright, s: isBright ? 2.5 : 1.2, glowC: glowColor });
                 }
             });
         }
-        // 【2: 種種香蓮華】(琉璃蓮瓣開合，黃金香氣升騰)
-        else if (id === 2) {
-            // 視角緩慢盤旋俯瞰
+        else if (id === 2) { // 2. 香蓮華
             if(!isDragging) { angleY += 0.003; angleX = 0.3 + Math.sin(time*0.4)*0.1; } 
-            
             realmParticles.forEach(p => {
                 if (p.type === 'lotus') {
-                    // 花瓣輕微呼吸開合 (利用 layer 與 t 產生波浪感)
                     let breath = 1 + Math.sin(time * 2 + p.layer) * 0.06 * p.t;
-                    let x = p.baseX * breath;
-                    let y = p.baseY + Math.sin(time * 1.5) * 5; // 整朵蓮花輕微上下浮動
-                    let z = p.baseZ * breath;
-
+                    let x = p.baseX * breath; let y = p.baseY + Math.sin(time * 1.5) * 5; let z = p.baseZ * breath;
                     let proj = project3D(x, y, z);
                     if(proj) {
-                        // 越靠近花瓣尖端 (p.t 接近 1)，透明度越高且發光
                         let a = 0.15 + (p.t * 0.6); 
-                        projected.push({ 
-                            x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, 
-                            a: a, c: `rgba(139,168,156,`, // 琉璃青主題色
-                            isGlow: p.t > 0.8, // 尖端開啟光暈
-                            s: 1.2 
-                        });
+                        projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, a: a, c: `rgba(139,168,156,`, isGlow: p.t > 0.8, s: 1.2, glowC: '#8ba89c' });
                     }
                 } 
                 else if (p.type === 'aroma') {
-                    // 香氣裊裊上升
                     p.baseY -= p.speedY;
-                    if (p.baseY < -200) p.baseY = 150; // 飄到頂端後從底部重生
-                    
-                    // 螺旋上升方程式
+                    if (p.baseY < -200) p.baseY = 150; 
                     let spiralX = p.baseX + Math.sin(p.baseY * 0.02 + time + p.offsetSeed) * 20;
                     let spiralZ = p.baseZ + Math.cos(p.baseY * 0.02 + time + p.offsetSeed) * 20;
-
                     let proj = project3D(spiralX, p.baseY, spiralZ);
                     if(proj) {
-                        // 摩尼寶香氣忽明忽暗
                         let a = (Math.sin(time * 3 + p.offsetSeed) + 1) / 2 * 0.7;
-                        projected.push({ 
-                            x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, 
-                            a: a, c: `rgba(243,229,171,`, // 黃金摩尼色
-                            isGlow: true, 
-                            s: 2.0 
-                        });
+                        projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, a: a, c: `rgba(243,229,171,`, isGlow: true, s: 2.0, glowC: '#f3e5ab' });
                     }
                 }
             });
         }
-                // 【3: 一切寶莊嚴】(銀白全息寶月與內部光學躍動)
-        else if (id === 3) {
+        else if (id === 3) { // 3. 寶月
             if(!isDragging) { angleY += 0.004; angleX = Math.sin(time*0.5)*0.2; } 
-            
             realmParticles.forEach(p => {
                 if (p.type === 'moon-grid') {
                     let wave = 1 + Math.sin(time * 3 + p.theta * 4 + p.phi * 2) * 0.05;
                     let x = p.baseX * wave; let y = p.baseY * wave; let z = p.baseZ * wave;
-
                     let proj = project3D(x, y, z);
                     if(proj) {
                         let a = 0.2 + Math.sin(p.phi) * 0.7;
-                        projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, a: a, c: `rgba(224,224,224,`, isGlow: true, s: 1.5 });
+                        projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, a: a, c: `rgba(224,224,224,`, isGlow: true, s: 1.5, glowC: '#e0e0e0' });
                     }
                 }
                 else if (p.type === 'projection-core') {
@@ -579,41 +419,71 @@
                     let rotAngle = time * p.speed * 10;
                     let px = p.baseX * Math.cos(rotAngle) - p.baseZ * Math.sin(rotAngle);
                     let pz = p.baseX * Math.sin(rotAngle) + p.baseZ * Math.cos(rotAngle);
-
                     let proj = project3D(px * pulseR, p.baseY * pulseR, pz * pulseR);
                     if(proj) {
-                        projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, a: 0.9, c: `rgba(255,255,255,`, isGlow: true, s: 2.5 });
+                        projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, a: 0.9, c: `rgba(255,255,255,`, isGlow: true, s: 2.5, glowC: '#ffffff' });
                     }
                 }
             });
         }
-        // 【4: 種種光明華】(無量色彩光明網)
-        else if (id === 4) {
+        else if (id === 4) { // 4. 光明華網
             if(!isDragging) { angleY -= 0.003; angleX = 0.4 + Math.sin(time*0.5)*0.1; } 
-            
             realmParticles.forEach(p => {
                 let breath = 1 + Math.sin(time * 2 + p.layer) * 0.1;
                 let x = p.baseX * breath; let y = p.baseY * breath; let z = p.baseZ * breath;
-
                 let proj = project3D(x, y, z);
                 if(proj) {
-                    // 無量色彩：依據層次、花瓣角度與時間，用 hsl 算出循環的彩虹色相
                     let hue = (p.layer * 40 + p.petal * 20 + time * 30) % 360;
-                    let a = 0.3 + p.t * 0.6; // 越往外越亮
-                    projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, a: a, c: `hsla(${hue}, 80%, 60%, ${a})`, isGlow: true, s: 1.8 });
+                    let a = 0.3 + p.t * 0.6; 
+                    projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, a: a, c: `hsla(${hue}, 80%, 60%, ${a})`, isGlow: true, s: 1.8, glowC: `hsl(${hue}, 80%, 60%)` });
                 }
             });
         }
-        
-
-
-        // 👇 未來世界的渲染插入點 👇
-        // else if (id === 2) { 
-        //    // 預留給【種種香蓮華】
-        // }
-        // 👆 未來世界的渲染插入點 👆
-        
-        else {
+        else if(id === 9) { // 9. 梵篋
+            if(!isDragging) { angleY += 0.005; angleX = Math.sin(time*0.5)*0.3; } 
+            realmParticles.forEach(p => {
+                let wave = Math.sin(p.bx * 0.05 + time*3) * Math.cos(p.bz * 0.05 + time*2) * 15;
+                let y = p.by + (Math.abs(p.by) < 40 ? wave : 0); 
+                let proj = project3D(p.bx, y, p.bz);
+                if(proj) projected.push({ ...proj, a: 0.6, c: `rgba(${baseR},${baseG},${baseB},`, isGlow: true, glowC: baseHex });
+            });
+        }
+        else if(id === 13) { // 13. 娑婆極樂
+            let orbitSpeed = time * 0.8;
+            let cx1 = 120 * Math.cos(orbitSpeed), cz1 = 120 * Math.sin(orbitSpeed);
+            let cx2 = 120 * Math.cos(orbitSpeed + Math.PI), cz2 = 120 * Math.sin(orbitSpeed + Math.PI);
+            let p1 = project3D(cx1, Math.sin(time*2)*20, cz1); let p2 = project3D(cx2, Math.sin(time*2 + Math.PI)*20, cz2);
+            if(p1 && p2) { ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.strokeStyle = `rgba(212,175,55,0.2)`; ctx.lineWidth = 2 * p1.scale; ctx.stroke(); }
+            realmParticles.forEach(p => {
+                let proj;
+                if(p.type === 'r13Saha') { proj = project3D(p.x + cx1, p.y + Math.sin(time*2)*20, p.z + cz1); if(proj) projected.push({ ...proj, c: 'rgba(139,168,156,', a:0.8, s: p.size, isGlow: true, glowC: '#8ba89c' }); }
+                else { proj = project3D(p.x + cx2, p.y + Math.sin(time*2 + Math.PI)*20, p.z + cz2); if(proj) projected.push({ ...proj, c: 'rgba(243,229,171,', a:0.9, s: p.size, isGlow: true, glowC: '#d4af37' }); }
+            });
+        }
+        else if (id === 20) { // 20. 妙寶燄
+            if(!isDragging) { angleY += 0.005; angleX = 0.2 + Math.sin(time*0.5)*0.1; }
+            realmParticles.forEach(p => {
+                if(p.isCreature) { p.theta += p.oSpeed; p.phi += p.oSpeed * 0.5; }
+                let breath = 1 + Math.sin(time * 3 + p.theta) * 0.1; let r = p.baseR * breath;
+                let x = r * Math.sin(p.phi) * Math.cos(p.theta); let y = r * Math.cos(p.phi) - 20; let z = r * Math.sin(p.phi) * Math.sin(p.theta);
+                let proj = project3D(x, y, z);
+                if(proj) {
+                    let a = p.isCreature ? 0.95 : 0.4 + Math.sin(time * 5 + p.theta) * 0.3;
+                    let c = p.isCreature ? `hsla(60, 100%, 80%, ${a})` : `hsla(${p.hue}, 90%, 60%, ${a})`;
+                    let glowC = p.isCreature ? `hsl(60, 100%, 80%)` : `hsl(${p.hue}, 90%, 60%)`;
+                    projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, a: a, c: c, isGlow: true, s: p.s * (p.isCreature ? 1.8 : 1), glowC: glowC });
+                }
+            });
+        }
+        else if (id === 8 || id === 10) { // 8. 半月, 10. 金剛幢
+            if(!isDragging) angleY += 0.003;
+            realmParticles.forEach(p => {
+                let breath = 1 + Math.sin(time * 2) * 0.05; 
+                let proj = project3D(p.x * breath, p.y * breath, p.z * breath);
+                if(proj) projected.push({ ...proj, a: 0.7, c: `rgba(${baseR},${baseG},${baseB},`, isGlow: true, glowC: baseHex });
+            });
+        }
+        else { // 🟢 通用佔位符
             if(!isDragging) angleY -= 0.002;
             realmParticles.forEach(p => {
                 let modAngle = p.theta % (Math.PI * 2 / p.sides);
@@ -623,7 +493,7 @@
                 let z = (polygonR + breath) * Math.sin(p.theta + time * 0.2 * (p.layer%2===0?1:-1));
                 let y = Math.sin(time + p.theta*3) * 30;
                 let proj = project3D(x, y, z);
-                if(proj) projected.push({ ...proj, a: 0.4 + (p.layer/8)*0.6, c: `rgba(${baseColor},`, isGlow: true });
+                if(proj) projected.push({ ...proj, a: 0.4 + (p.layer/8)*0.6, c: `rgba(${baseR},${baseG},${baseB},`, isGlow: true, glowC: baseHex });
             });
         }
 
@@ -633,17 +503,18 @@
         projected.forEach(p => {
             let s = p.s ? p.s : 1.5;
             ctx.beginPath(); ctx.arc(p.x, p.y, s * p.sc, 0, Math.PI*2);
-            // 處理 HSLA 與 RGBA 的字串相容
             ctx.fillStyle = p.c.includes('hsla') ? p.c : `${p.c}${p.a})`;
-            if(p.isGlow || p.type === 'r13Pure') { 
+            if(p.isGlow) { 
                 ctx.shadowBlur = 8 * p.sc; 
-                ctx.shadowColor = p.c.includes('hsla') ? p.c : p.c.replace(',','').replace('rgba(','#'); 
+                ctx.shadowColor = p.glowC; 
             } else { ctx.shadowBlur = 0; }
             ctx.fill();
         });
         ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
     }
 
+      
+                    
     function animate() {
         ctx.fillStyle = 'rgba(1, 1, 3, 0.5)';
         ctx.fillRect(0, 0, width, height);

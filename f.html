@@ -278,6 +278,8 @@
                 }
             }
         }
+                
+
         // 🟢 【第 13 重：平正 (娑婆極樂雙星)】
         else if (id === 13) {
             for(let i = 0; i < 300; i++) {
@@ -298,6 +300,30 @@
                     let theta = (i / pts) * Math.PI * 2;
                     realmParticles.push({ theta: theta, radius: radius, layer: r, type: 'generic', sides: sides });
                 }
+            }
+        }
+        // 🟢 【第 20 重：妙寶燄 (極致光芒與純意志形態)】
+        else if (id === 20) {
+            let coreR = 80;
+            // 生成 1200 顆粒子，構築極度華麗的光世界
+            for(let i=0; i<1200; i++) {
+                let theta = Math.random() * Math.PI * 2;
+                let phi = Math.acos((Math.random() * 2) - 1);
+                
+                // ✨ 這裡就是妳說的「不規則形狀」：加入多重正弦波干擾
+                let flameNoise = Math.sin(theta * 6) * 20 + Math.cos(phi * 4) * 25;
+                let r = coreR + flameNoise + Math.random() * 15;
+                
+                // ✨ 內部象徵「最上菩薩 / 純意志」的動態生物光體
+                let isCreature = Math.random() > 0.85; 
+                let orbitSpeed = isCreature ? Math.random() * 0.08 + 0.03 : 0;
+
+                realmParticles.push({
+                    baseR: r, theta: theta, phi: phi, type: 'flame',
+                    isCreature: isCreature, oSpeed: orbitSpeed, 
+                    hue: 30 + Math.random() * 40, // 色相：從純金黃到火紅 (30~70)
+                    s: isCreature ? Math.random() * 3 + 2 : Math.random() * 1.5 + 0.5
+                });
             }
         }
     }
@@ -359,6 +385,41 @@
                 if(proj) projected.push({ ...proj, a: 0.4 + (p.layer/8)*0.6, c: `rgba(${baseColor},`, isGlow: true });
             });
         }
+                // 【20: 妙寶燄世界】(最華麗的光芒萬丈)
+        else if (id === 20) {
+            if(!isDragging) { angleY += 0.005; angleX = 0.2 + Math.sin(time*0.5)*0.1; } // 整個法界緩緩自轉呼吸
+            
+            realmParticles.forEach(p => {
+                // 1. 生物粒子(最上菩薩)在不規則的寶燄內部高速穿梭
+                if(p.isCreature) {
+                    p.theta += p.oSpeed;
+                    p.phi += p.oSpeed * 0.5; // 立體螺旋穿梭
+                }
+                
+                // 2. 呼吸光芒效應，讓外殼像有機體一樣律動
+                let breath = 1 + Math.sin(time * 3 + p.theta) * 0.1;
+                let r = p.baseR * breath;
+                
+                let x = r * Math.sin(p.phi) * Math.cos(p.theta);
+                let y = r * Math.cos(p.phi) - 20; // 稍微往上偏移，如火焰升騰
+                let z = r * Math.sin(p.phi) * Math.sin(p.theta);
+                
+                let proj = project3D(x, y, z);
+                if(proj) {
+                    // 生物體亮度極高(0.95)，外殼則閃爍變化
+                    let a = p.isCreature ? 0.95 : 0.4 + Math.sin(time * 5 + p.theta) * 0.3;
+                    // 使用 hsla 創造出千變萬化的火光與純金
+                    let c = p.isCreature ? `hsla(60, 100%, 80%, ${a})` : `hsla(${p.hue}, 90%, 60%, ${a})`;
+                    
+                    projected.push({ 
+                        x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, 
+                        a: a, c: c, isGlow: true, 
+                        s: p.s * (p.isCreature ? 1.8 : 1) // 生物光體特別大
+                    });
+                }
+            });
+        }
+
 
         // 統一渲染輸出
         projected.sort((a,b) => b.z - a.z);

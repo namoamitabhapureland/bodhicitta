@@ -292,6 +292,30 @@
                 realmParticles.push({ baseR: r, theta: theta, phi: phi, type: 'flame', isCreature: isCreature, oSpeed: orbitSpeed, hue: 30 + Math.random() * 40, s: isCreature ? Math.random() * 3 + 2 : Math.random() * 1.5 + 0.5 });
             }
         }
+                // 🟢 【第 1 重：最勝光遍照 (黃金螺旋廣大寶網)】
+        else if (id === 1) {
+            let N = 800; // 象徵微塵數諸佛
+            let R = 180; // 廣大的法界半徑
+            let goldenAngle = Math.PI * (3 - Math.sqrt(5)); // 宇宙黃金角
+            
+            for(let i=0; i<N; i++) {
+                // 黃金螺旋立體分佈算法
+                let y = 1 - (i / (N - 1)) * 2; 
+                let radius = Math.sqrt(1 - y*y);
+                let theta = goldenAngle * i;
+                
+                let px = Math.cos(theta) * radius * R;
+                let py = y * R;
+                let pz = Math.sin(theta) * radius * R;
+                
+                realmParticles.push({
+                    baseX: px, baseY: py, baseZ: pz,
+                    offsetSeed: Math.random() * Math.PI * 2, // 獨立閃爍種子
+                    type: 'mani'
+                });
+            }
+        }
+
         // 👇 未來世界的代碼插入點 👇
         // else if (id === 2) { 
         //    // 預留給【種種香蓮華】
@@ -364,6 +388,40 @@
                 if(proj) projected.push({ ...proj, a: 0.7, c: `rgba(${baseColor},`, isGlow: true });
             });
         }
+                // 【1: 最勝光遍照】(微塵數摩尼寶光閃耀)
+        else if (id === 1) {
+            // 宏大且沉穩的自轉
+            if(!isDragging) { angleY += 0.002; angleX = Math.sin(time*0.3)*0.1; } 
+            
+            realmParticles.forEach(p => {
+                // 每一顆摩尼寶珠都有微小的呼吸擴張感
+                let breath = 1 + Math.sin(time * 1.5 + p.offsetSeed) * 0.03;
+                let x = p.baseX * breath;
+                let y = p.baseY * breath;
+                let z = p.baseZ * breath;
+
+                let proj = project3D(x, y, z);
+                if(proj) {
+                    // 閃爍邏輯：隨機爆發強光，模擬金剛與摩尼寶光
+                    let sparkle = Math.sin(time * 4 + p.offsetSeed);
+                    let isBright = sparkle > 0.85; 
+                    
+                    // 越近越亮，發光時透明度極高
+                    let a = isBright ? 0.95 : 0.3 + (proj.scale * 0.4);
+                    
+                    // 寶光以純白與真金交織
+                    let color = isBright ? 'rgba(255,255,255,' : `rgba(243,229,171,`;
+                    
+                    projected.push({ 
+                        x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, 
+                        a: a, c: color, 
+                        isGlow: isBright, // 只有閃耀時才開啟高強度光暈，節省效能
+                        s: isBright ? 2.5 : 1.2 
+                    });
+                }
+            });
+        }
+
         // 👇 未來世界的渲染插入點 👇
         // else if (id === 2) { 
         //    // 預留給【種種香蓮華】

@@ -370,13 +370,27 @@
                 realmParticles.push({ x: r*Math.sin(p)*Math.cos(t), y: r*Math.cos(p), z: r*Math.sin(p)*Math.sin(t), s: Math.random()*2+1, type: 'pure', col:PastelColors[3] });
             }
         }
-        else if (id === 14) { // 寶帶 
-            for(let i=0; i<800; i++) {
-                let t = (i/800) * Math.PI * 2;
-                let x = (100 + 40 * Math.cos(t/2)) * Math.cos(t), y = (100 + 40 * Math.cos(t/2)) * Math.sin(t), z = 40 * Math.sin(t/2);
-                addColorfulParticle(x, y, z, { tOffset: t });
+                else if (id === 14) { // 14. 寂靜功德 (14條繽紛寶帶交融)
+            for(let band = 0; band < 14; band++) {
+                // 給每一條帶子分配一個固定的繽紛色彩
+                let col = PastelColors[band % PastelColors.length];
+                // 14條帶子在 360 度立體空間中均勻錯開的角度
+                let angleOffset = (band / 14) * Math.PI * 2; 
+                
+                for(let i = 0; i < 60; i++) { // 每條帶子 60 個粒子，保持效能流暢
+                    let t = (i / 60) * Math.PI * 2;
+                    realmParticles.push({
+                        x: 0, y: 0, z: 0, 
+                        tOffset: t,        // 粒子在帶子上的位置
+                        angOff: angleOffset, // 這條帶子的專屬旋轉角
+                        band: band,        // 帶子編號，用來做微小呼吸差
+                        col: col, 
+                        type: 'ribbon-14'
+                    });
+                }
             }
         }
+
                else if (id === 15) { // 15. 光明普照 (15圓複合曼陀羅網)
             for(let i = 0; i < 15; i++) {
                 // 15個圓的圓心，均勻分佈在一個大圓軌道上
@@ -514,9 +528,26 @@
                 wx = x1*Math.cos(rotY) - z1*Math.sin(rotY); wy = y1; wz = x1*Math.sin(rotY) + z1*Math.cos(rotY);
                 a = 0.5 + noise*0.4; s = 1.8;
             }
-            else if (id === 14) { // 寶帶
-                let flow = time*2 + p.tOffset; wx = (100 + 40*Math.cos(flow/2))*Math.cos(flow); wy = (100 + 40*Math.cos(flow/2))*Math.sin(flow); wz = 40*Math.sin(flow/2);
+                       else if (id === 14) { // 14. 14條繽紛寶帶交錯流動
+                let flow = p.tOffset + time * 1.5; // 粒子流動速度
+                
+                // 基礎莫比烏斯環形狀
+                let bx = (90 + 30 * Math.cos(flow / 2)) * Math.cos(flow);
+                let by = (90 + 30 * Math.cos(flow / 2)) * Math.sin(flow);
+                let bz = 40 * Math.sin(flow / 2);
+                
+                // 將 14 條帶子繞著 Y 軸錯開旋轉，形成交疊的立體花結
+                wx = bx * Math.cos(p.angOff) - bz * Math.sin(p.angOff);
+                wy = by;
+                wz = bx * Math.sin(p.angOff) + bz * Math.cos(p.angOff);
+                
+                // 讓整組結構有像呼吸一樣的微小脈動交融感
+                let breath = 1 + Math.sin(time * 2 + p.band) * 0.05;
+                wx *= breath; wy *= breath; wz *= breath;
+                
+                a = 0.8; s = 1.8;
             }
+
                         else if (id === 15) { // 15. 光明普照 (15圓流動交織)
                 let r = 80; // 15個圓的半徑皆為 80
                 

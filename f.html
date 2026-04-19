@@ -3,21 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>華藏世界海 ． 宏觀法界</title>
+    <link rel="manifest" href="manifest.json">
+    <title>華藏大世界 ． 二十重矩陣</title>
     <style>
         :root {
             --bg-deep: #010103; 
             --gold: #f3e5ab; 
             --solid-gold: #d4af37; 
             --cyan: #8ba89c; 
+            --silver: #e0e0e0;
+            --fire: #a83232;
             --text-main: #d0d0d0;
         }
         
         body { 
             margin: 0; background: var(--bg-deep); color: var(--text-main); 
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
-            overflow: hidden; touch-action: none; overscroll-behavior: none;
-            -webkit-user-select: none; user-select: none; 
+            overflow: hidden; touch-action: none; overscroll-behavior: none; user-select: none;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -30,53 +32,68 @@
         }
         .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
 
+        /* 左上角狀態列 */
         #status-panel {
             position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px;
             background: transparent; border-left: 2px solid rgba(212,175,55,0.8); 
-            padding: 10px 20px; z-index: 100; transition: border-color 1s; pointer-events: none;
+            padding: 10px 20px; z-index: 100; transition: border-color 0.8s; pointer-events: none;
         }
-        .status-title { font-size: 1.15rem; font-weight: bold; color: var(--gold); letter-spacing: 2px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 15px rgba(0,0,0,1); transition: color 1s;}
-        .status-desc { font-size: 0.85rem; color: #ddd; line-height: 1.8; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,1); transition: color 1s;}
+        .status-title { font-size: 1.15rem; font-weight: bold; color: var(--gold); letter-spacing: 2px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 15px rgba(0,0,0,1); transition: color 0.8s;}
+        .status-desc { font-size: 0.85rem; color: #ddd; line-height: 1.8; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,1); }
 
-        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; transition: background 0.8s; }
+        /* 3D 畫布 */
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; }
         canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
 
-        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 12px; transition: opacity 1s;}
+        /* 底部 UI 與 Apple Style 導航列 */
+        .ui-layer { position: absolute; bottom: 5%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 15px; }
         
-        .switch-btn {
-            width: 85%; max-width: 320px; justify-content: center;
-            background: linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95)); 
-            border: 1px solid rgba(212,175,55,0.5); color: var(--gold);
-            padding: 14px 20px; border-radius: 30px; font-size: 1rem; font-weight: bold; letter-spacing: 2px;
-            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; gap: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1);
-        }
-        .switch-btn:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(212,175,55,0.6); }
-        .switch-btn.cyan-mode { border-color: rgba(139,168,156,0.5); color: var(--cyan); box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(139,168,156,0.1); }
-        
-        #theory-btn { border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,15,10,0.8); }
+        #drag-hint { color:rgba(212,175,55,0.6); font-size:0.75rem; letter-spacing:2px; margin-bottom: 5px; text-shadow: 0 0 5px #000; }
 
-        #theory-drawer {
-            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
-            border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        /* 橫向無極滾輪 */
+        .realm-picker-container {
+            width: 100%; overflow-x: auto; scroll-snap-type: x mandatory;
+            display: flex; gap: 12px; padding: 10px 50%; /* 讓首尾能置中 */
+            scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;
         }
+        .realm-picker-container::-webkit-scrollbar { display: none; }
+
+        .realm-item {
+            flex: 0 0 auto; scroll-snap-align: center;
+            background: rgba(15,15,15,0.8); border: 1px solid rgba(255,255,255,0.2); 
+            color: #888; padding: 10px 20px; border-radius: 30px; font-size: 0.9rem; font-weight: bold; letter-spacing: 1.5px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        .realm-item .r-num { font-size: 0.6rem; opacity: 0.6; letter-spacing: 1px; }
+        
+        /* 啟用狀態的樣式 */
+        .realm-item.active {
+            transform: scale(1.1); background: rgba(20,20,20,0.95);
+            border-color: var(--solid-gold); color: var(--gold);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.2);
+        }
+        .realm-item.active.cyan-mode { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(139,168,156,0.2); }
+        .realm-item.active.silver-mode { border-color: var(--silver); color: var(--silver); box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(224,224,224,0.2); }
+
+        #theory-btn { 
+            width: 85%; max-width: 320px; justify-content: center;
+            background: linear-gradient(135deg, rgba(5,10,15,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(139,168,156,0.6); color: var(--cyan);
+            padding: 12px 20px; border-radius: 30px; font-size: 0.9rem; font-weight: bold; letter-spacing: 2px;
+            cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.3s;
+        }
+        #theory-btn:active { transform: scale(0.95); }
+
+        /* 玉簡抽屜 (與先前一致) */
+        #theory-drawer { position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px); border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; }
         #theory-drawer.open { transform: translateY(0); }
         .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
         .close-bar { width: 40px; height: 4px; background: rgba(212,175,55,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
-        .close-btn { color: var(--cyan); font-size: 0.85rem; letter-spacing: 2px; font-weight: bold; cursor: pointer; }
         .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
-        
-        .humble-statement { font-size: 0.85rem; color: #b0b0b0; line-height: 1.8; text-align: justify; padding: 20px; border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; background: rgba(20,15,5,0.3); margin-bottom: 50px; font-style: normal; }
-        
         .main-title { color: var(--gold); font-size: 1.5rem; letter-spacing: 3px; text-align: center; margin-bottom: 50px; text-shadow: 0 0 15px rgba(212,175,55,0.3); }
         .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--solid-gold), transparent); margin: 15px auto 0; }
-        
-        .chapter-box { margin-bottom: 50px; }
-        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-        .c-icon { width: 24px; height: 24px; stroke: var(--gold); fill: none; stroke-width: 1.5; filter: drop-shadow(0 0 5px rgba(212,175,55,0.4)); flex-shrink: 0;}
-        .c-title { color: var(--gold); font-size: 1.2rem; letter-spacing: 1.5px; font-weight: bold; }
-        .c-text { color: var(--text-main); font-size: 0.95rem; line-height: 1.9; text-align: justify; padding-left: 39px; letter-spacing: 0.8px;}
-        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
+        .paragraph { font-size: 0.95rem; color: #ccc; line-height: 1.9; letter-spacing: 1px; text-align: justify; margin-bottom: 20px; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -87,35 +104,23 @@
     </div>
 
     <div id="status-panel">
-        <div class="status-title" id="s-title">第九重 ． 妙音聲世界</div>
-        <div class="status-desc" id="s-desc">「以資訊與振動為實體。」<br>滑動星盤，觀想聲波法性疊加之曼陀羅。</div>
+        <div class="status-title" id="s-title">系統啟動中...</div>
+        <div class="status-desc" id="s-desc">讀取法界矩陣</div>
     </div>
 
-    <section class="matrix-section" id="bg-section">
+    <section class="matrix-section">
         <canvas id="realmCanvas"></canvas>
         
         <div class="ui-layer" id="ui-layer">
-            <button class="switch-btn" id="btn-realm9" onclick="toggleRealm(0)">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="12" cy="12" r="10" stroke-dasharray="2 4"/>
-                    <path d="M8 12 Q 12 6, 16 12 Q 12 18, 8 12 Z"/>
-                </svg>
-                <span id="text-realm9">第九重 ． 出妙音聲</span>
-            </button>
-            <button class="switch-btn cyan-mode" id="btn-realm13" onclick="toggleRealm(1)">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="8" cy="12" r="6" stroke="currentColor"/>
-                    <circle cx="16" cy="12" r="6" stroke="var(--gold)"/>
-                </svg>
-                <span id="text-realm13">第十三重 ． 娑婆極樂</span>
-            </button>
+            <div id="drag-hint">360° 全息滑動 ． 撥動選單切換維度</div>
             
-            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+            <div class="realm-picker-container" id="picker-container">
+                </div>
+            
+            <button id="theory-btn" onclick="openTheoryDrawer()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                探究華藏二十重法界
+                探究華藏二十重法義
             </button>
-            
-            <div style="color:rgba(212,175,55,0.6); font-size:0.75rem; letter-spacing:2px; margin-top:5px;" id="drag-hint">360° 全息滑動 ． 觀想微觀宇宙</div>
         </div>
     </section>
 
@@ -123,7 +128,7 @@
         <div class="drawer-header" onclick="closeTheoryDrawer()">
             <div class="close-bar"></div>
             <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
-                <div class="close-btn">收起古卷</div>
+                <div style="color:var(--cyan); font-size:0.85rem; letter-spacing:2px; font-weight:bold; cursor:pointer;" onclick="closeTheoryDrawer()">收起法卷</div>
                 <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
                     <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
                     <span id="tts-text">聆聽法音</span>
@@ -131,46 +136,101 @@
             </div>
         </div>
         <div class="theory-container" id="theory-content-box">
-            <div class="humble-statement">法海浩瀚，唯佛與佛乃能究盡。本文僅為一介在家居士，依經教邏輯與祖師大德之註疏，試圖探求如來真實義之修學略影。若有未盡或錯漏之處，皆屬個人智識之侷限，祈願三寶加被，同修共鑒。</div>
-            <h1 class="main-title">華藏莊嚴 ． 宇宙維度</h1>
-            
-            <div class="chapter-box">
-                <div class="c-header">
-                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                    <div class="c-title">一、第九重 ． 出妙音聲世界</div>
-                </div>
-                <div class="c-text">華藏大世界中，並非所有國土皆以土石、光影為實體。第九重世界名為「出妙音聲」，此維度之底層體性，乃是以「聲波、頻率、資訊」構築而成。此界眾生或許無有視覺之攀緣，純以高維度之震動頻率交織出璀璨之文明。數學上之波形疊加，正如法界中之因緣和合，聲聲相繼，構築了這座不可思議的音頻曼陀羅。</div>
-            </div>
-            <div class="chapter-divider"></div>
-
-            <div class="chapter-box">
-                <div class="c-header">
-                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="8" cy="12" r="6"/><circle cx="16" cy="12" r="6"/></svg>
-                    <div class="c-title">二、第十三重 ． 娑婆與極樂</div>
-                </div>
-                <div class="c-text">二十重世界之第十三層，乃是法界中至關重要之維度樞紐。本師釋迦牟尼佛於此五濁惡世（娑婆世界）度化剛強眾生；而同在此一維度之中，阿彌陀佛則建立了清淨莊嚴之「極樂世界」。兩者宛如宇宙雙星，一者以無盡悲心於濁世拔苦，一者以宏大願力於淨土接引。這是一場跨越時空的慈悲合奏，令一切有情皆能於此第十三重世界中，尋得超越輪迴之永恆歸宿。</div>
-            </div>
+            <h1 class="main-title">華藏大世界 ． 二十重維度</h1>
+            <p class="paragraph">《華嚴經》揭示了「一真法界、事事無礙」之實相。無邊妙華光香水海中，生出千葉大蓮華，承載著由下至上互相重疊之二十重世界種。</p>
+            <p class="paragraph">每一重世界，皆由不同之底層體性構成。或以光學投影為實體，或以聲波振動為本質，或以網絡鏈接為架構。千變萬化，皆是無極光法身之清淨流露。</p>
+            <p class="paragraph">其中第十三重，乃是本師釋迦牟尼佛之「娑婆世界」與阿彌陀佛之「極樂世界」共存之維度。彌陀大悲，於此樞紐設立淨土，接引眾生橫超三界，以期未來圓滿普賢之宏大行願。</p>
         </div>
     </div>
 
 <script>
+    // ================= 1. 20重世界矩陣資料庫 =================
+    const RealmMatrix = [
+        { id: 1, name: "最勝光遍照", theme: "gold", desc: "「純眾寶莊嚴。」<br>以物理性的極致珠寶為構成基礎。" },
+        { id: 2, name: "種種香蓮華", theme: "cyan", desc: "「一切香摩尼。」<br>以氣味與能量波為傳播媒介。" },
+        { id: 3, name: "一切寶莊嚴", theme: "silver", desc: "「一切寶影。」<br>以光學投影為實體，形態隨意念變幻。" },
+        { id: 4, name: "種種光明華", theme: "gold", desc: "「純能量態。」<br>光音眾生以光相互通訊，無固體物質。" },
+        { id: 5, name: "普放妙華光", theme: "cyan", desc: "「一切寶華海。」<br>極度重視美學，文明建立在藝術化結構上。" },
+        { id: 6, name: "淨妙光明", theme: "fire", desc: "「寶燄雲。」<br>高溫與高能態粒子，具強大神通改造力。" },
+        { id: 7, name: "眾華莊嚴", theme: "cyan", desc: "「一切寶色。」<br>以色彩波長為物理基礎，感官維度極廣。" },
+        { id: 8, name: "出生威德", theme: "gold", desc: "「一切寶光。」<br>具穿透力的輻射能，文明記憶高度連續。" },
+        { id: 9, name: "出妙音聲", theme: "gold", desc: "「以資訊與振動為實體。」<br>依靠編碼音頻進行文明建構之立體曼陀羅。" }, // ✨ 專屬引擎
+        { id: 10, name: "金剛幢", theme: "silver", desc: "「金剛摩尼。」<br>極度穩定的硬質代碼結構，無有恐懼動搖。" },
+        { id: 11, name: "恆出藍寶", theme: "cyan", desc: "「寶光明波。」<br>特定藍光頻率窗口，文明偏向內省與探微。" },
+        { id: 12, name: "光明照曜", theme: "gold", desc: "「網絡與鏈接為本質。」<br>個體高度互聯，具備龐大集體意識。" },
+        { id: 13, name: "娑婆與極樂", theme: "cyan", desc: "「雙星共軌，慈悲交織。」<br>混合痛苦與覺醒，一念迴光即生蓮邦。" }, // ✨ 專屬引擎
+        { id: 14, name: "寂靜離塵", theme: "silver", desc: "「以覆蓋與保護層為體。」<br>沒有語言，透過心靈靜默進行深度交流。" },
+        { id: 15, name: "眾妙光明", theme: "gold", desc: "「一切寶華海。」<br>天生具備引導力，類似系統中的導航節點。" },
+        { id: 16, name: "妙圓滿", theme: "cyan", desc: "「一切寶莊嚴。」<br>對稱性極高的完美結構，不存在錯誤偏差。" },
+        { id: 17, name: "赤蓮莊嚴", theme: "fire", desc: "「赤色寶光。」<br>特定頻率的高能光束，具備極強願力與行動力。" },
+        { id: 18, name: "離塵", theme: "cyan", desc: "「眾妙華。」<br>微型生物代碼，生命尺度極小卻能觀微塵國土。" },
+        { id: 19, name: "清淨光普照", theme: "gold", desc: "「無量色香燄。」<br>能量與資訊複合態，具備跨維度觀察力。" },
+        { id: 20, name: "妙寶燄", theme: "gold", desc: "「一切諸天形。」<br>最高層級之純意志形態，具創造新世界之力。" }
+    ];
+
+    let currentRealmIndex = 8; // 預設啟動第9重 (index 8)
+
+    // ================= 2. UI 與導航機構 =================
+    const pickerContainer = document.getElementById('picker-container');
+    
+    function initPicker() {
+        RealmMatrix.forEach((realm, index) => {
+            let btn = document.createElement('div');
+            btn.className = `realm-item ${realm.theme}-mode`;
+            btn.id = `picker-${index}`;
+            btn.innerHTML = `<span class="r-num">TIER ${realm.id}</span><span>${realm.name}</span>`;
+            
+            btn.onclick = () => {
+                selectRealm(index);
+                // 點擊後將該按鈕平滑滾動到中央
+                btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            };
+            pickerContainer.appendChild(btn);
+        });
+    }
+
+    function selectRealm(index) {
+        if(currentRealmIndex === index && document.getElementById(`picker-${index}`).classList.contains('active')) return;
+        currentRealmIndex = index;
+        let data = RealmMatrix[index];
+
+        // 1. 更新 UI 樣式
+        document.querySelectorAll('.realm-item').forEach(el => el.classList.remove('active'));
+        document.getElementById(`picker-${index}`).classList.add('active');
+
+        // 2. 更新左上角面板
+        let pTitle = document.getElementById('s-title');
+        let pDesc = document.getElementById('s-desc');
+        let panel = document.getElementById('status-panel');
+
+        pTitle.innerText = `第${data.id}重 ． ${data.name}`;
+        pDesc.innerHTML = data.desc;
+
+        let baseColor = data.theme === 'gold' ? '#f3e5ab' : (data.theme === 'cyan' ? '#8ba89c' : (data.theme === 'silver' ? '#e0e0e0' : '#a83232'));
+        let borderColor = data.theme === 'gold' ? 'rgba(212,175,55,0.8)' : (data.theme === 'cyan' ? 'rgba(139,168,156,0.8)' : (data.theme === 'silver' ? 'rgba(224,224,224,0.8)' : 'rgba(168,50,50,0.8)'));
+        
+        pTitle.style.color = baseColor;
+        panel.style.borderLeftColor = borderColor;
+
+        // 3. 重置 3D 視角
+        angleX = 0.5; angleY = 0;
+        
+        // 4. 重新初始化粒子引擎
+        initParticleEngines();
+    }
+
+    // ================= 3. 3D 畫布引擎 =================
     const canvas = document.getElementById('realmCanvas');
     const ctx = canvas.getContext('2d');
     let width, height;
     
-    // 狀態 0: 第九重(音聲), 1: 第十三重(娑婆極樂)
-    let currentRealm = 0; 
     let time = 0;
-
     let stars = [];
-    let r9Particles = [];
-    let r13Saha = [];
-    let r13Pure = [];
+    let realmParticles = []; // 通用粒子陣列
     
     let angleX = 0.5, angleY = 0;
     let isDragging = false;
     let lastMouseX = 0, lastMouseY = 0;
-
     const FOV = 400; 
 
     function resize() {
@@ -179,43 +239,6 @@
     }
     window.addEventListener('resize', resize); resize();
 
-    function initEngines() {
-        // --- 宇宙星空 (共用) ---
-        stars = [];
-        for (let i = 0; i < 600; i++) {
-            stars.push({
-                x: (Math.random()-0.5)*3000, y: (Math.random()-0.5)*3000, z: Math.random()*2000, 
-                speed: Math.random()*2+0.5, color: Math.random()>0.5 ? '#8ba89c' : '#f3e5ab',
-                size: Math.random()*1.5 + 0.5
-            });
-        }
-
-        // --- 第九重：出妙音聲 (3D波形疊加) ---
-        r9Particles = [];
-        const layers = 15;
-        const segments = 120;
-        for(let l = 0; l < layers; l++) {
-            let zBase = (l - layers/2) * 30;
-            let radiusBase = 150 * Math.sin((l/layers) * Math.PI) + 20; // 形成紡錘形
-            for(let i = 0; i < segments; i++) {
-                let theta = (i / segments) * Math.PI * 2;
-                r9Particles.push({ layer: l, theta: theta, baseR: radiusBase, zBase: zBase });
-            }
-        }
-
-        // --- 第十三重：娑婆極樂 (雙星共軌蓮花) ---
-        r13Saha = []; r13Pure = [];
-        for(let i = 0; i < 400; i++) {
-            let theta = Math.random() * Math.PI * 2; let phi = Math.acos(Math.random()*2 - 1);
-            let r = Math.random() * 80 + 40;
-            r13Saha.push({ x: r*Math.sin(phi)*Math.cos(theta), y: r*Math.cos(phi), z: r*Math.sin(phi)*Math.sin(theta), size: Math.random()*2+1 });
-            
-            theta = Math.random() * Math.PI * 2; phi = Math.acos(Math.random()*2 - 1);
-            r = Math.random() * 80 + 40;
-            r13Pure.push({ x: r*Math.sin(phi)*Math.cos(theta), y: r*Math.cos(phi), z: r*Math.sin(phi)*Math.sin(theta), size: Math.random()*2+1 });
-        }
-    }
-
     function project3D(x, y, z) {
         let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
         let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
@@ -223,6 +246,127 @@
         if(z2 < -FOV+50) return null;
         let scale = FOV / (FOV + z2 + 100); 
         return { x: (width/2) + x2*scale, y: (height/2) - y1*scale - 50, scale: scale, z: z2 };
+    }
+
+    function initParticleEngines() {
+        // --- 星空 (共用) ---
+        if(stars.length === 0) {
+            for (let i = 0; i < 500; i++) {
+                stars.push({
+                    x: (Math.random()-0.5)*3000, y: (Math.random()-0.5)*3000, z: Math.random()*2000, 
+                    speed: Math.random()*2+0.5, color: Math.random()>0.5 ? '#8ba89c' : '#f3e5ab',
+                    size: Math.random()*1.5 + 0.5
+                });
+            }
+        }
+
+        realmParticles = [];
+        
+        // ✨ 特殊處理：第 9 重 (出妙音聲)
+        if (currentRealmIndex === 8) {
+            const layers = 15; const segments = 120;
+            for(let l = 0; l < layers; l++) {
+                let zBase = (l - layers/2) * 30;
+                let radiusBase = 150 * Math.sin((l/layers) * Math.PI) + 20; 
+                for(let i = 0; i < segments; i++) {
+                    let theta = (i / segments) * Math.PI * 2;
+                    realmParticles.push({ layer: l, theta: theta, baseR: radiusBase, zBase: zBase, type: 'r9' });
+                }
+            }
+        } 
+        // ✨ 特殊處理：第 13 重 (娑婆極樂雙星)
+        else if (currentRealmIndex === 12) {
+            for(let i = 0; i < 300; i++) {
+                let theta = Math.random() * Math.PI * 2; let phi = Math.acos(Math.random()*2 - 1);
+                let r = Math.random() * 80 + 30;
+                realmParticles.push({ x: r*Math.sin(phi)*Math.cos(theta), y: r*Math.cos(phi), z: r*Math.sin(phi)*Math.sin(theta), size: Math.random()*2+1, type: 'r13Saha' });
+                
+                theta = Math.random() * Math.PI * 2; phi = Math.acos(Math.random()*2 - 1);
+                r = Math.random() * 80 + 30;
+                realmParticles.push({ x: r*Math.sin(phi)*Math.cos(theta), y: r*Math.cos(phi), z: r*Math.sin(phi)*Math.sin(theta), size: Math.random()*2+1, type: 'r13Pure' });
+            }
+        }
+        // ✨ 動態佔位符：其他 18 重世界 (依據層數改變邊數與半徑)
+        else {
+            const sides = (currentRealmIndex % 5) + 3; // 產生 3 到 7 邊形的幾何體
+            const rings = 8;
+            for(let r=1; r<=rings; r++) {
+                let radius = r * 25;
+                let pts = sides * r * 2;
+                for(let i=0; i<pts; i++) {
+                    let theta = (i / pts) * Math.PI * 2;
+                    realmParticles.push({ theta: theta, radius: radius, layer: r, type: 'generic', sides: sides });
+                }
+            }
+        }
+    }
+
+    function renderWorld() {
+        let projected = [];
+        let data = RealmMatrix[currentRealmIndex];
+        let baseR = data.theme === 'gold' ? 243 : (data.theme === 'cyan' ? 139 : (data.theme === 'silver' ? 224 : 168));
+        let baseG = data.theme === 'gold' ? 229 : (data.theme === 'cyan' ? 168 : (data.theme === 'silver' ? 224 : 50));
+        let baseB = data.theme === 'gold' ? 171 : (data.theme === 'cyan' ? 156 : (data.theme === 'silver' ? 224 : 50));
+
+        // 第 9 重渲染
+        if(currentRealmIndex === 8) {
+            realmParticles.forEach(p => {
+                let f1 = 8, a1 = 15 * Math.sin(time*2 + p.layer*0.5);
+                let f2 = 24, a2 = 5 * Math.cos(time*3);
+                let r = p.baseR + a1 * Math.sin(f1 * p.theta) + a2 * Math.cos(f2 * p.theta);
+                let x = r * Math.cos(p.theta + time*0.5); let z = r * Math.sin(p.theta + time*0.5); let y = p.zBase; 
+                let proj = project3D(x, y, z);
+                if(proj) projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, a: 0.3 + (p.layer/15)*0.7, c: `rgba(212,175,55,`, isGlow: true });
+            });
+        }
+        // 第 13 重渲染
+        else if(currentRealmIndex === 12) {
+            let orbitSpeed = time * 0.8;
+            let cx1 = 120 * Math.cos(orbitSpeed), cz1 = 120 * Math.sin(orbitSpeed);
+            let cx2 = 120 * Math.cos(orbitSpeed + Math.PI), cz2 = 120 * Math.sin(orbitSpeed + Math.PI);
+            
+            // 光柱
+            let p1 = project3D(cx1, Math.sin(time*2)*20, cz1); let p2 = project3D(cx2, Math.sin(time*2 + Math.PI)*20, cz2);
+            if(p1 && p2) {
+                ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
+                ctx.strokeStyle = `rgba(212,175,55,0.2)`; ctx.lineWidth = 2 * p1.scale; ctx.stroke();
+            }
+
+            realmParticles.forEach(p => {
+                let proj;
+                if(p.type === 'r13Saha') { proj = project3D(p.x + cx1, p.y + Math.sin(time*2)*20, p.z + cz1); if(proj) projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: 'rgba(139,168,156,', a:0.8, s: p.size, isSaha: true }); }
+                else { proj = project3D(p.x + cx2, p.y + Math.sin(time*2 + Math.PI)*20, p.z + cz2); if(proj) projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: 'rgba(243,229,171,', a:0.9, s: p.size, isSaha: false }); }
+            });
+        }
+        // 其他 18 重通用幾何渲染
+        else {
+            realmParticles.forEach(p => {
+                // 利用多邊形方程式製造旋轉曼陀羅
+                let modAngle = p.theta % (Math.PI * 2 / p.sides);
+                let polygonR = p.radius / Math.cos(modAngle - (Math.PI / p.sides));
+                let breath = Math.sin(time * 2 + p.layer * 0.5) * 10;
+                
+                let x = (polygonR + breath) * Math.cos(p.theta + time * 0.2 * (p.layer%2===0?1:-1));
+                let z = (polygonR + breath) * Math.sin(p.theta + time * 0.2 * (p.layer%2===0?1:-1));
+                let y = Math.sin(time + p.theta*3) * 30; // Z軸波浪
+
+                let proj = project3D(x, y, z);
+                if(proj) projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, a: 0.4 + (p.layer/8)*0.6, c: `rgba(${baseR},${baseG},${baseB},`, isGlow: true });
+            });
+        }
+
+        // 統一繪製
+        projected.sort((a,b) => b.z - a.z);
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let s = p.s ? p.s : 1.5;
+            ctx.beginPath(); ctx.arc(p.x, p.y, s * p.sc, 0, Math.PI*2);
+            ctx.fillStyle = `${p.c}${p.a})`;
+            if(p.isGlow || p.type === 'r13Pure') { ctx.shadowBlur = 8 * p.sc; ctx.shadowColor = p.c.replace(',','').replace('rgba(','#'); } 
+            else { ctx.shadowBlur = 0; }
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
     }
 
     function drawStars() {
@@ -239,81 +383,6 @@
         ctx.globalCompositeOperation = 'source-over';
     }
 
-    function renderRealm9() {
-        let projected = [];
-        r9Particles.forEach(p => {
-            // 波形疊加公式 (Fourier-like)
-            let f1 = 8, a1 = 15 * Math.sin(time*2 + p.layer*0.5);
-            let f2 = 24, a2 = 5 * Math.cos(time*3);
-            let r = p.baseR + a1 * Math.sin(f1 * p.theta) + a2 * Math.cos(f2 * p.theta);
-            
-            let x = r * Math.cos(p.theta + time*0.5);
-            let z = r * Math.sin(p.theta + time*0.5);
-            let y = p.zBase; 
-
-            let proj = project3D(x, y, z);
-            if(proj) {
-                let opacity = 0.3 + (p.layer / 15) * 0.7;
-                projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, a: opacity });
-            }
-        });
-        projected.sort((a,b) => b.z - a.z);
-
-        ctx.globalCompositeOperation = 'screen';
-        projected.forEach(p => {
-            ctx.beginPath(); ctx.arc(p.x, p.y, 1.5 * p.sc, 0, Math.PI*2);
-            ctx.fillStyle = `rgba(212,175,55,${p.a})`;
-            ctx.shadowBlur = 5 * p.sc; ctx.shadowColor = '#f3e5ab';
-            ctx.fill();
-        });
-        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
-    }
-
-    function renderRealm13() {
-        let projected = [];
-        let orbitRadius = 150;
-        let orbitSpeed = time * 0.8;
-
-        // 娑婆世界 (青色)
-        let cx1 = orbitRadius * Math.cos(orbitSpeed);
-        let cz1 = orbitRadius * Math.sin(orbitSpeed);
-        r13Saha.forEach(p => {
-            let proj = project3D(p.x + cx1, p.y + Math.sin(time*2)*20, p.z + cz1);
-            if(proj) projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: 'rgba(139,168,156,0.8)', s: p.size, isSaha: true });
-        });
-
-        // 極樂世界 (金色)
-        let cx2 = orbitRadius * Math.cos(orbitSpeed + Math.PI);
-        let cz2 = orbitRadius * Math.sin(orbitSpeed + Math.PI);
-        r13Pure.forEach(p => {
-            let proj = project3D(p.x + cx2, p.y + Math.sin(time*2 + Math.PI)*20, p.z + cz2);
-            if(proj) projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: 'rgba(243,229,171,0.9)', s: p.size, isSaha: false });
-        });
-
-        // 中心連結光柱
-        let pCenter = project3D(0,0,0);
-        let p1 = project3D(cx1, Math.sin(time*2)*20, cz1);
-        let p2 = project3D(cx2, Math.sin(time*2 + Math.PI)*20, cz2);
-
-        projected.sort((a,b) => b.z - a.z);
-
-        ctx.globalCompositeOperation = 'screen';
-        
-        if(p1 && p2) {
-            ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(212,175,55,0.2)`; ctx.lineWidth = 2 * p1.scale; ctx.stroke();
-        }
-
-        projected.forEach(p => {
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.s * p.sc, 0, Math.PI*2);
-            ctx.fillStyle = p.c;
-            ctx.shadowBlur = p.isSaha ? 10*p.sc : 15*p.sc; 
-            ctx.shadowColor = p.isSaha ? '#8ba89c' : '#d4af37';
-            ctx.fill();
-        });
-        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
-    }
-
     function animate() {
         ctx.fillStyle = 'rgba(1, 1, 3, 0.5)';
         ctx.fillRect(0, 0, width, height);
@@ -322,65 +391,32 @@
         if(!isDragging) angleY -= 0.002;
 
         drawStars();
-        if (currentRealm === 0) renderRealm9(); else renderRealm13();
+        renderWorld();
 
         requestAnimationFrame(animate);
     }
 
-    function toggleRealm(type) {
-        if(currentRealm === type) return;
-        currentRealm = type;
-        
-        let title = document.getElementById('s-title'); let desc = document.getElementById('s-desc');
-        let btn9 = document.getElementById('btn-realm9'); let btn13 = document.getElementById('btn-realm13');
-        let panel = document.getElementById('status-panel');
-
-        if (type === 0) {
-            title.innerText = "第九重 ． 出妙音聲世界"; desc.innerHTML = "「以資訊與振動為實體。」<br>滑動星盤，觀想聲波法性疊加之曼陀羅。";
-            title.style.color = 'var(--gold)'; panel.style.borderLeftColor = 'rgba(212,175,55,0.8)';
-            btn9.style.background = 'rgba(20,15,5,0.9)'; btn9.style.color = 'var(--gold)'; btn9.style.borderColor = 'var(--solid-gold)';
-            btn9.classList.remove('cyan-mode');
-            btn13.style.background = 'linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95))'; btn13.style.color = 'var(--cyan)'; btn13.style.borderColor = 'rgba(139,168,156,0.4)';
-            btn13.classList.add('cyan-mode');
-            angleX = 0.5; angleY = 0; 
-        } else {
-            title.innerText = "第十三重 ． 娑婆與極樂"; desc.innerHTML = "「雙星共軌，慈悲交織。」<br>觀想五濁與淨土之交集，一念迴光即生蓮邦。";
-            title.style.color = 'var(--cyan)'; panel.style.borderLeftColor = 'rgba(139,168,156,0.8)';
-            btn13.style.background = 'rgba(10,20,15,0.9)'; btn13.style.color = 'var(--cyan)'; btn13.style.borderColor = 'var(--cyan)';
-            btn13.classList.remove('cyan-mode');
-            btn9.style.background = 'linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95))'; btn9.style.color = 'var(--gold)'; btn9.style.borderColor = 'rgba(212,175,55,0.5)';
-            angleX = 0.3; angleY = 0; 
-        }
-    }
-
-    function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
-    function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
-    document.getElementById('theory-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
-    document.getElementById('ui-layer').addEventListener('pointerdown', (e) => e.stopPropagation());
-
-    function onDown(e) { if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; isDragging = true; lastMouseX = e.touches?e.touches[0].clientX:e.clientX; lastMouseY = e.touches?e.touches[0].clientY:e.clientY; }
+    // 觸控邏輯
+    function onDown(e) { if(e.target.closest('.ui-layer') || e.target.closest('#theory-drawer')) return; isDragging = true; lastMouseX = e.touches?e.touches[0].clientX:e.clientX; lastMouseY = e.touches?e.touches[0].clientY:e.clientY; }
     function onMove(e) { if (!isDragging) return; let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; angleY += (curX-lastMouseX)*0.01; angleX += (curY-lastMouseY)*0.01; angleX = Math.max(-Math.PI/2, Math.min(Math.PI/2, angleX)); lastMouseX=curX; lastMouseY=curY; }
     function onUp() { isDragging = false; }
-
     canvas.addEventListener('mousedown', onDown); canvas.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
     canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
 
-    // ================= 聆聽法音 (TTS) =================
-    let isPlayingTheory = false;
-    let theoryUtterance = null;
-    window.sysUtterances = []; 
-
+    // 玉簡抽屜與語音邏輯
+    function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+    function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+    document.getElementById('theory-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
+    
+    let isPlayingTheory = false; let theoryUtterance = null; window.sysUtterances = []; 
     function toggleTheoryAudio() {
-        if (!window.speechSynthesis) return alert("您的設備不支援語音功能");
+        if (!window.speechSynthesis) return;
         const btnText = document.getElementById('tts-text'); const btnIcon = document.getElementById('tts-icon');
         if (isPlayingTheory) {
             window.speechSynthesis.cancel(); isPlayingTheory = false; btnText.innerText = "聆聽法音";
             btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
         } else {
-            let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text, #theory-content-box .humble-statement');
-            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('。');
-            textToRead = textToRead.replace(/一、/g, '第一章：').replace(/二、/g, '第二章：');
-            
+            let textToRead = Array.from(document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .paragraph, #theory-content-box .humble-statement')).map(n => n.textContent.trim()).join('。');
             let isAndroid = /Android/i.test(navigator.userAgent);
             textToRead = isAndroid ? textToRead : textToRead.replace(/阿/g, 'ㄚ');
             
@@ -399,15 +435,19 @@
                 if(isAndroid) window.sysUtterances = window.sysUtterances.filter(u => u !== theoryUtterance);
             };
             setTimeout(() => { window.speechSynthesis.speak(theoryUtterance); }, isAndroid ? 150 : 50);
-            isPlayingTheory = true; btnText.innerText = "停止聆聽";
-            btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+            isPlayingTheory = true; btnText.innerText = "停止聆聽"; btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
         }
     }
-
     const originalCloseTheoryDrawer = closeTheoryDrawer;
     closeTheoryDrawer = function() { if (isPlayingTheory) toggleTheoryAudio(); originalCloseTheoryDrawer(); }
 
-    initEngines(); toggleRealm(0); animate();
+    // 啟動系統
+    initPicker();
+    selectRealm(currentRealmIndex); // 啟動並預設對齊第9重
+    // 確保初始時軌道滾動到正確位置
+    setTimeout(() => { document.getElementById(`picker-${currentRealmIndex}`).scrollIntoView({ inline: 'center' }); }, 100);
+    animate();
+
 </script>
 </body>
 </html>

@@ -354,14 +354,31 @@
                 addColorfulParticle(x, y, 140*Math.cos(t));
             }
         }
-        else if (id === 12) { // 🛑 12. 12條線圈交融不規則動
+               else if (id === 12) { // ✨ [變更1] 12. 光明照曜 (不規則絲線原 + 圍繞光暈)
+            // 核心光暈粒子 (人造背景光暈塵埃球)
+            for(let i=0; i<150; i++) {
+                let pastel = getRandomPastel();
+                realmParticles.push({
+                    x: (Math.random()-0.5)*120, // 產生一個鬆散的核心塵埃球
+                    y: (Math.random()-0.5)*120,
+                    z: (Math.random()-0.5)*120,
+                    s: Math.random()*2+1, 
+                    type: 'halo-core', col: pastel 
+                });
+            }
+            // 12條不規則混亂動態光絲
             for(let i=0; i<12; i++) {
-                let col = getRandomPastel();
-                for(let a=0; a<Math.PI*2; a+=0.08) {
-                    realmParticles.push({ x:0, y:0, z:0, lineId:i, a:a, col: col, type:'line-12' });
+                // 為每一條絲線生成獨特的混亂頻率參數
+                let params = {
+                    fx: 2 + Math.random()*2, fy: 2 + Math.random()*2, fz: 2 + Math.random()*2,
+                    ph: Math.random()*Math.PI*2, col: getRandomPastel()
+                };
+                for(let a=0; a<Math.PI*2; a+=0.05) { // 提高粒子密度讓線形更明顯
+                    realmParticles.push({ lineId:i, a:a, ...params, type:'line-12chaotic' });
                 }
             }
         }
+
                 else if (id === 13) { // 13. 娑婆極樂雙星 (還原經典青金雙色)
             for(let i = 0; i < 300; i++) {
                 // 娑婆世界 (琉璃青)
@@ -520,18 +537,33 @@
                 }
                 s = p.type==='vimo-v'?4:1.2; a = p.type==='vimo-v'?1:0.7;
             }
-            else if (id === 12) { // 🛑 12. 12條能量線圈 (不規則蠕動交融)
-                let radius = 120;
-                let noise = Math.sin(time*2 + p.lineId); 
-                let rotX = time*0.5 + p.lineId*0.5;
-                let rotY = time*0.3 + p.lineId*0.3;
-                let bx = radius * Math.cos(p.a) + noise*15;
-                let by = radius * Math.sin(p.a) + noise*15;
-                let bz = 0;
-                let x1 = bx, y1 = by*Math.cos(rotX) - bz*Math.sin(rotX), z1 = by*Math.sin(rotX) + bz*Math.cos(rotX);
-                wx = x1*Math.cos(rotY) - z1*Math.sin(rotY); wy = y1; wz = x1*Math.sin(rotY) + z1*Math.cos(rotY);
-                a = 0.5 + noise*0.4; s = 1.8;
+                        else if (id === 12) { // ✨ [變更2] 12. 光明照曜 (強烈光暈與混亂光原)
+                if(p.type === 'halo-core') {
+                    // 核心光暈粒子：呼吸與微弱晃動
+                    let breathe = 1 + Math.sin(time*2)*0.1;
+                    wx = p.x * breathe + Math.sin(time*5+p.x)*2; 
+                    wy = p.y * breathe; wz = p.z * breathe;
+                    a = 0.5 + Math.sin(time*4)*0.2; s = p.s;
+                } else {
+                    // 不規則混亂絲線：使用 Lissajous 曲線配合時間調變 (不Neat、不規則)
+                    let baseR = 120;
+                    // 時間調變幅度
+                    let amp = 1 + Math.sin(time*2 + p.lineId)*0.2;
+                    
+                    // 使用 init 存儲的 unique parameters 產生不規則交織
+                    wx = baseR * Math.cos(p.a * p.fx + time*1.5) * amp;
+                    wy = baseR * Math.sin(p.a * p.fy + time*1.3) * amp;
+                    wz = baseR * Math.sin(p.a * p.fz + time + p.ph) * amp;
+
+                    // 🛑 增加局部混亂度：產生光芒刺刺感
+                    wx += Math.sin(p.a*15 + time*8)*6; wy += Math.cos(p.a*15 + time*8)*6;
+
+                    a = 0.9; s = 2.0; 
+                }
+                // 使用預存色彩
+                c = `rgba(${p.col.hsl},`; glowC = p.col.hex;
             }
+
                         else if (id === 13) { // 13. 娑婆極樂 (還原雙星公轉與獨立色彩)
                 let ob = time * 0.8;
                 // 計算兩顆星的公轉軌道座標
@@ -633,17 +665,27 @@
             if(p1 && p2) { ctx.beginPath(); ctx.moveTo(p1.px, p1.py); ctx.lineTo(p2.px, p2.py); ctx.strokeStyle = `rgba(212,175,55,0.2)`; ctx.lineWidth = 2*p1.scale; ctx.stroke(); }
         }
 
-        // 統一渲染輸出
+                // 統一渲染輸出
         projected.sort((a,b) => b.z - a.z);
         ctx.globalCompositeOperation = 'screen';
         projected.forEach(p => {
             ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.1, p.s * p.sc), 0, Math.PI*2);
             ctx.fillStyle = p.c.includes('hsla') ? p.c + p.a + ')' : p.c + p.a + ')';
-            if(p.isGlow) { ctx.shadowBlur = 12 * p.sc; ctx.shadowColor = p.glowC; } else { ctx.shadowBlur = 0; }
+            
+            if(p.isGlow) { 
+                // 針對第 12 重強制放大光暈強度 (2.5倍)，產生強烈圍繞感
+                let glowFactor = (id === 12) ? 2.5 : 1.0;
+                ctx.shadowBlur = 12 * p.sc * glowFactor; 
+                ctx.shadowColor = p.glowC; 
+            } else { 
+                ctx.shadowBlur = 0; 
+            }
+            
             ctx.fill();
         });
         ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
     }
+
 
     // 星空 (粉藍粉綠繽紛)
     function animate() {

@@ -9,7 +9,7 @@
 **本師釋迦牟尼佛 | 行普賢菩薩願．歸彌陀極樂國**
 
 這是一個基於《無量壽經》、《華嚴經》與《法華經》教義開發的**極簡主義數位修行法寶**。  
-本系統旨在協助現代行者於娑婆塵勞中，透過極簡流暢的數位儀軌介面，將日常修行的福慧資糧，假借轉化並對應至華嚴菩薩道的五十二位階。藉由純粹的幾何與動態向量圖像設計，讓行者在指尖互動中直觀預習極樂世界的清淨法性，進而將「咸修行普賢之德」的願力落實於當下。
+旨在幫助現代行者在娑婆世界中，透過清晰的數位儀軌，將日常修行的福慧資糧，以「借假修真」之善巧，映射於華嚴菩薩道五十二位階之進程。並透過圖像化預覽極樂世界的清淨法性，落實「咸修行普賢之德」。
 
 **[立即進入道場 →]https://namoamitabhapureland.github.io/bodhicitta/**
 
@@ -103,7 +103,7 @@
 
 A minimalist digital cultivation tool developed based on the teachings of the *Infinite Life Sutra*, *Avatamsaka Sutra*, and *Lotus Sutra*.  
 
-This system assists modern practitioners to prepare for the pure Dharma realm of Amitabha’s Pure Land while living in the Saha World, fulfilling the vow that “all shall practice the virtues of Samantabhadra.”
+It aims to assist modern practitioners in the Sahā World through clear digital rituals, employing the skillful means of "borrowing the conventional to cultivate the true" to map daily practice merits onto the 52 stages of the Avatamsaka Bodhisattva Path. Through visualization, it previews the pure nature of the Pure Land, actualizing the "Collective Practice of Samantabhadra's Virtues."
 
 **[Enter the Dojo →]https://namoamitabhapureland.github.io/bodhicitta/index_en.html**
 

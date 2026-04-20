@@ -9,7 +9,7 @@
 **本師釋迦牟尼佛 | 行普賢菩薩願．歸彌陀極樂國**
 
 這是一個基於《無量壽經》、《華嚴經》與《法華經》教義開發的**極簡主義數位修行法寶**。  
-旨在幫助現代行者在娑婆世界中，透過清晰的數位儀軌預習極樂世界的清淨法性，落實「咸修行普賢之德」。
+本系統旨在協助現代行者於娑婆塵勞中，透過極簡流暢的數位儀軌介面，將日常修行的福慧資糧，假借轉化並對應至華嚴菩薩道的五十二位階。藉由純粹的幾何與動態向量圖像設計，讓行者在指尖互動中直觀預習極樂世界的清淨法性，進而將「咸修行普賢之德」的願力落實於當下。
 
 **[立即進入道場 →]https://namoamitabhapureland.github.io/bodhicitta/**
 
@@ -37,7 +37,16 @@
 
 ### 二、深入經藏．心觀無相 (Deep Studies)
 
-- **九大專欄**：包含「俯瞰華藏」、「唯識之旅」、「法華密碼」等，深度解析大乘經典。
+- **九大專欄**：透過九個維度深度解析大乘經典與法界實相。
+1.	俯瞰華藏：神遊大世界，解析華嚴經之壯麗世界觀。
+2.	唯識之旅：探幽輪迴之謎，梳理心意識的運作軌跡。
+3.	法華密碼：一乘寶塔現，揭開開示悟入佛之知見的關鍵。
+4.	地藏願海：誓度幽冥海，體現「地獄未空，誓不成佛」之大願。
+5.	龍華彌勒：贊助千佛出，預習彌勒下生與賢劫千佛之時空長河。
+6.	無相禪心：悟後起修行，直指人心，體悟一葦渡江之圓覺。
+7.	維摩詰經：入不二法門，展現在世俗塵勞中居士修行的自在。
+8.	開悟楞嚴：常住一真心，指引返聞聞自性之修證途徑。
+9.	三密相應：大圓滿壇城，法曼陀羅的立體光芒與心念對頻。
 - **彌陀四十八願海**：系統終極模組，需累積滿 **10,000** 聲念佛資糧後解鎖，直探彌陀本願核心。
 
 ### 三、助道法寶．菩提淨室 (Dharma Supports)
@@ -121,7 +130,16 @@ This system is more than a recitation counter — it is a practical platform for
 
 ### 2. Deep Sutra Study & Formless Contemplation
 
-- **Nine Major Columns** — In-depth explorations including “Overview of the Avatamsaka Realm,” “Journey of Yogacara,” and “Lotus Sutra Cipher.”
+- **Nine Major Columns** — The Nine Columns: In-depth analysis of Mahayana classics, including:
+1.	Overview of Avatamsaka: The magnificent worldview of the Avatamsaka Sutra.
+2.	Journey into Consciousness-only: Mapping the trajectory of the eight consciousnesses.
+3.	Lotus Cipher: Unlocking the Buddha's vision within the One Vehicle.
+4.	Ksitigarbha’s Vow: The compassionate power to save beings in the lower realms.
+5.	Maitreya’s Advent: Previewing the future advent of Maitreya in the Pure Land.
+6.	No-form Zen: Direct pointing to the mind; practice after enlightenment.
+7.	Vimalakirti Sutra: Entering the Non-dual gate; the freedom of lay practice.
+8.	Surangama Seal: The path of returning the hearing to one's self-nature.
+9.	Three Mysteries Correspondence: A 3D Mandala for aligning Body, Speech, and Mind.
 - **Amitabha’s Forty-Eight Vows Ocean** — The ultimate module, unlocked only after accumulating 10,000 sincere Buddha recitations.
 
 ### 3. Dharma Supports

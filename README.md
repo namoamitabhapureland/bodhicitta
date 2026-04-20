@@ -38,7 +38,7 @@
 ### 二、深入經藏．心觀無相 (Deep Studies)
 
 - **九大專欄**
-- 透過九個維度深度解析大乘經典與法界實相。
+  透過九個維度深度解析大乘經典與法界實相。
 1.	俯瞰華藏：神遊大世界，解析華嚴經之壯麗世界觀。
 2.	唯識之旅：探幽輪迴之謎，梳理心意識的運作軌跡。
 3.	法華密碼：一乘寶塔現，揭開開示悟入佛之知見的關鍵。
@@ -131,7 +131,7 @@ This system is more than a recitation counter — it is a practical platform for
 ### 2. Deep Sutra Study & Formless Contemplation
 
 - **Nine Major Columns** —
-- The Nine Columns: In-depth analysis of Mahayana classics, including:
+  The Nine Columns: In-depth analysis of Mahayana classics, including:
 1.	Overview of Avatamsaka: The magnificent worldview of the Avatamsaka Sutra.
 2.	Journey into Consciousness-only: Mapping the trajectory of the eight consciousnesses.
 3.	Lotus Cipher: Unlocking the Buddha's vision within the One Vehicle.
@@ -176,7 +176,6 @@ Visual elements evolve gracefully with accumulated merit, symbolizing the transi
 
 - This Dharma tool is permanently free.  
 - Commercial use, advertising, or any form of monetization is strictly prohibited.
-- The ocean of Dharma is boundless; only Buddhas can fully fathom its ultimate depths. The development of this system is merely the work of a humble lay practitioner. Guided by the logic of the sutras and the commentaries of the Patriarchs and great masters, it represents a modest attempt to reflect a path of practice in pursuit of the Tathāgata's true meaning. Any omissions or errors herein stem entirely from the limitations of my own understanding. I pray for the blessings of the Three Jewels and invite the discernment and guidance of fellow practitioners.
 **Developed with reverence by**  
 **Chief Engineer: Sherman Huang (妙依)**
 

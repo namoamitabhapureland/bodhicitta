@@ -87,7 +87,8 @@
 
 - 永久免費，嚴禁加入廣告或任何商業行為。
 - 法海浩瀚，唯佛與佛乃能究盡。本系統開發僅為一介在家居士，依經教邏輯與祖師大德之註疏，試圖探求如來真實義之修學略影。若有未盡或錯漏之處，皆屬個人智識之侷限，祈願三寶加被，同修共鑒。
-**開發者**：妙依（Sherman Huang）頂禮製作
+  
+**開發者**：妙依 頂禮製作
 
 ---
 
@@ -176,8 +177,9 @@ Visual elements evolve gracefully with accumulated merit, symbolizing the transi
 
 - This Dharma tool is permanently free.  
 - Commercial use, advertising, or any form of monetization is strictly prohibited.
+  
 **Developed with reverence by**  
-**Chief Engineer: Sherman Huang (妙依)**
+**Chief Engineer: Sherman Huang**
 
 ---
 ## 關於作者 (About the Author)

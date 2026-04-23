@@ -764,6 +764,33 @@
 #provision-task-list .task-card.completed { border-color: rgba(212,175,55,0.5); }
 #provision-task-list .task-card .task-text { font-size: 0.88rem; line-height: 1.4; letter-spacing: 0.3px; }
 #provision-task-list .task-card::after { display: none !important; content: none !important; }
+#glass-modal-overlay {
+    position: fixed; inset: 0; z-index: 12000; background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 1; transition: opacity 0.3s ease;
+}
+#glass-modal-overlay.glass-modal-hide { opacity: 0; pointer-events: none; }
+#glass-modal-box {
+    width: 85%; max-width: 360px; text-align: center; transform: scale(1); 
+    background: linear-gradient(135deg, rgba(15,12,5,0.95), rgba(5,4,1,0.99));
+    border: 1px solid rgba(212,175,55,0.35); border-radius: 20px; padding: 25px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.08);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+#glass-modal-overlay.glass-modal-hide #glass-modal-box { transform: scale(0.9); }
+#glass-modal-title {
+    color: var(--gold, #d4af37); font-size: 1.1rem; font-weight: bold; letter-spacing: 2px; 
+    text-shadow: 0 0 8px rgba(212,175,55,0.4); margin-bottom: 15px; 
+    border-bottom: 1px solid rgba(212,175,55,0.15); padding-bottom: 12px;
+}
+#glass-modal-message { color: #e0e0e0; font-size: 0.92rem; line-height: 1.6; margin-bottom: 25px; text-align: left; }
+.gold-text { color: var(--gold, #d4af37); font-weight: bold; text-shadow: 0 0 5px rgba(212,175,55,0.3); }
+#glass-modal-actions { display: flex; gap: 12px; justify-content: center; }
+.glass-btn { flex: 1; padding: 12px 0; border-radius: 12px; cursor: pointer; font-size: 0.9rem; letter-spacing: 1px; font-weight: bold; transition: all 0.2; }
+.glass-btn:active { transform: scale(0.95); }
+.glass-btn.highlight { background: linear-gradient(135deg, rgba(212,175,55,0.25), rgba(212,175,55,0.08)); border: 1px solid rgba(212,175,55,0.5); color: var(--gold, #d4af37); }
+.glass-btn.outline { background: rgba(255,255,255,0.03); border: 1px solid rgba(139,168,156,0.3); color: rgba(139,168,156,0.8); }
 
     </style>
 </head>
@@ -1046,7 +1073,8 @@
     </div>
 
     <div style="display:flex; gap:10px; width:100%; justify-content:center; margin-top: 25px;">
-        <button class="btn-transparent-small btn-sweep" onclick="exportProgress()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"></path><polyline points="1 3 23 3 23 8 1 8 1 3"></polyline></svg> 封存備份</button>
+        <button class="btn-transparent-small btn-sweep" onclick="exportAndShareProgress()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"></path><polyline points="1 3 23 3 23 8 1 8 1 3"></polyline></svg> 封存備份</button>
         <button class="btn-transparent-small btn-sweep" onclick="document.getElementById('import-file').click()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline></svg> 意念導入</button>
         <button class="btn-transparent-small btn-sweep" onclick="document.getElementById('guide-modal').style.display='flex'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path></svg> 使用說明</button>
         <input type="file" id="import-file" style="display:none" onchange="importProgress(this)">
@@ -2094,6 +2122,7 @@
 <script src="config.js"></script>
 <script>
 
+
 // 路由、星軌連動合併 (絕無重複)
 window.addEventListener('DOMContentLoaded', () => {
     // 1. 記憶路由系統 (✨ 強化：自動識別並驗證分頁編號)
@@ -2972,8 +3001,109 @@ function stopAllMeditation() {
     if (audioCtx && audioCtx.state !== 'suspended') { audioCtx.suspend(); }
 }
 
-function exportProgress() { const blob = new Blob([JSON.stringify(db)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `修行備份_${db.name}.json`; a.click(); }
-function importProgress(i) { const reader = new FileReader(); reader.onload = (e) => { try { db = JSON.parse(e.target.result); save(); location.reload(); } catch(err){alert("格式錯誤");} }; reader.readAsText(i.files[0]); }
+// ==========================================
+// 琉璃法身彈窗與 P2P 傳輸模組 (純淨向量版)
+// ==========================================
+function showGlassModal(title, message, isConfirm = false) {
+    return new Promise((resolve) => {
+        const overlay = document.getElementById('glass-modal-overlay');
+        const titleEl = document.getElementById('glass-modal-title');
+        const messageEl = document.getElementById('glass-modal-message');
+        const btnConfirm = document.getElementById('glass-modal-btn-confirm');
+        const btnCancel = document.getElementById('glass-modal-btn-cancel');
+
+        titleEl.innerText = title;
+        messageEl.innerHTML = message;
+        overlay.classList.remove('glass-modal-hide');
+
+        if (isConfirm) {
+            btnCancel.style.display = 'block';
+            btnCancel.innerText = "完全覆蓋";
+            btnConfirm.innerText = "合併累加";
+            btnCancel.onclick = () => { overlay.classList.add('glass-modal-hide'); resolve(false); };
+            btnConfirm.onclick = () => { overlay.classList.add('glass-modal-hide'); resolve(true); };
+        } else {
+            btnCancel.style.display = 'none';
+            btnConfirm.innerText = "確認";
+            btnConfirm.onclick = () => { overlay.classList.add('glass-modal-hide'); resolve(true); };
+        }
+    });
+}
+
+async function exportAndShareProgress() {
+    const dataStr = JSON.stringify(db);
+    const fileName = `修行備份_${db.name || '行者'}.json`;
+    const file = new File([dataStr], fileName, { type: 'application/json' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+            // 純淨分享：只傳檔案，避免產生額外的文字檔
+            await navigator.share({ files: [file] });
+        } catch (err) { console.log("分享取消或中斷"); }
+    } else {
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = fileName;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000); 
+    }
+}
+
+async function importProgress(inputElement) {
+    if (!inputElement.files || inputElement.files.length === 0) return;
+    const file = inputElement.files[0];
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+        try {
+            const incomingData = JSON.parse(e.target.result);
+            if (incomingData && typeof incomingData.totalNian !== 'undefined') {
+                if (db.name === incomingData.name) {
+                    const msgHtml = `發現同名行者「<span class="gold-text">${db.name}</span>」的識藏！<br><br>` +
+                                    `當前設備：<span class="gold-text">${db.totalNian}</span> 念<br>` +
+                                    `傳入檔案：<span class="gold-text">${incomingData.totalNian}</span> 念<br><br>` +
+                                    `<div style="background:rgba(212,175,55,0.1); border:1px solid rgba(212,175,55,0.3); border-radius:8px; padding:12px; font-size:0.8rem; line-height:1.6; color:#bbb;">` +
+                                    `<span style="color:var(--gold); font-weight:bold;">[ 日常備份還原 ]</span><br>請選擇 <b>完全覆蓋</b> 以恢復紀錄。<br><br>` +
+                                    `<span style="color:var(--gold); font-weight:bold;">[ 多機資糧匯聚 ]</span><br>請選擇 <b>合併累加</b> 以總計聲數。` +
+                                    `</div>`;
+                    
+                    const wantsToMerge = await showGlassModal("百川匯海", msgHtml, true);
+                    
+                    if (wantsToMerge) {
+                        db.totalNian += (incomingData.totalNian || 0);
+                        db.points = (db.points || 0) + (incomingData.points || 0);
+                        db.todayCount += (incomingData.todayCount || 0);
+                        db.streakDays = Math.max(db.streakDays || 0, incomingData.streakDays || 0);
+                        if (incomingData.treasures) {
+                            for (let key in incomingData.treasures) {
+                                db.treasures[key] = (db.treasures[key] || 0) + (incomingData.treasures[key] || 0);
+                            }
+                        }
+                        if (incomingData.visitedRealms) {
+                            db.visitedRealms = [...new Set([...(db.visitedRealms || []), ...incomingData.visitedRealms])];
+                        }
+                        await showGlassModal("功德圓滿", `兩地境界已融合！<br>當前總念佛：<span class="gold-text">${db.totalNian}</span> 次`);
+                    } else {
+                        db = incomingData;
+                        await showGlassModal("境界恢復", "已根據備份檔重塑當前境界。");
+                    }
+                } else {
+                    db = incomingData;
+                    await showGlassModal("意念導入", "意念導入圓滿，即將重塑境界。");
+                }
+                save(); 
+                location.reload();
+            } else {
+                await showGlassModal("因緣不契", "此檔案非彌陀系統之識藏，無法讀取。");
+            }
+        } catch(err) {
+            await showGlassModal("識藏染污", "檔案格式解析錯誤。");
+        }
+    };
+    reader.readAsText(file);
+    inputElement.value = ""; 
+}
 
 checkNewDay();
 if(db.name) document.getElementById('user-name').value = db.name;
@@ -3268,6 +3398,16 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 </script>
+<div id="glass-modal-overlay" class="glass-modal-hide">
+    <div id="glass-modal-box">
+        <div id="glass-modal-title">彌陀系統</div>
+        <div id="glass-modal-message"></div>
+        <div id="glass-modal-actions">
+            <button id="glass-modal-btn-cancel" class="glass-btn outline">完全覆蓋</button>
+            <button id="glass-modal-btn-confirm" class="glass-btn highlight">合併累加</button>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

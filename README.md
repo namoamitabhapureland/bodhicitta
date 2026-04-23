@@ -98,7 +98,7 @@
 ---
 
 ## SEO Keywords
-`Namo Amitabha` `Pure Land Buddhism` `彌陀淨土` `阿彌陀佛` `普賢行願` `線上念佛` `數位道場` `佛學 PWA` `極簡修行` `Buddhist Web App` `Offline Practice Tool`
+`Namo Amitabha` `Pure Land Buddhism` `彌陀淨土` `阿彌陀佛` `普賢行願` `線上念佛` `數位道場` `佛學 PWA` `極簡修行` `Buddhist Web App` `Offline Practice Tool` `華嚴` `阿賴耶識` `菩薩` `極樂世界` 
 
 ---
 # Amitabha Pure Land System

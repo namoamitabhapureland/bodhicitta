@@ -2873,6 +2873,9 @@ function showGlassModal(title, message, isConfirm = false) {
     });
 }
 
+// ==========================================
+// P2P Export & Share (Pure File Version)
+// ==========================================
 async function exportAndShareProgress() {
     const dataStr = JSON.stringify(db);
     const fileName = `PureLand_Backup_${db.name || 'Practitioner'}.json`;
@@ -2880,13 +2883,13 @@ async function exportAndShareProgress() {
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
+            // Only share files to prevent extra .txt files from being created
             await navigator.share({
-                files: [file],
-                title: 'Pure Land Backup',
-                text: 'Receive this mind file to continue your practice.'
+                files: [file]
             });
         } catch (err) { console.log("Share canceled:", err.message); }
     } else {
+        // Fallback for environments without P2P Share support
         const blob = new Blob([dataStr], { type: 'application/json' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -2896,6 +2899,10 @@ async function exportAndShareProgress() {
     }
 }
 
+
+// ==========================================
+// P2P Import & Merge (純淨向量導向版)
+// ==========================================
 async function importProgress(inputElement) {
     if (!inputElement.files || inputElement.files.length === 0) return;
     const file = inputElement.files[0];
@@ -2906,12 +2913,17 @@ async function importProgress(inputElement) {
             const incomingData = JSON.parse(e.target.result);
             if (incomingData && typeof incomingData.totalNian !== 'undefined') {
                 if (db.name === incomingData.name) {
-                    const msgHtml = `Found a record for practitioner "<span class="gold-text">${db.name}</span>"!<br><br>` +
-                                    `Current device: <span class="gold-text">${db.totalNian}</span> recitations<br>` +
-                                    `Incoming file: <span class="gold-text">${incomingData.totalNian}</span> recitations<br><br>` +
-                                    `Would you like to "Merge" both records?<br><span class="sub-text">(Selecting Overwrite will discard current progress)</span>`;
                     
-                    const wantsToMerge = await showGlassModal("Merge Records", msgHtml, true);
+                    // 修正：移除所有 Emoji，改用純粹的 HTML 樣式與系統金字
+                    const msgHtml = `Found a record for practitioner "<span class="gold-text">${db.name}</span>"<br><br>` +
+                                    `Current device: <span class="gold-text">${db.totalNian}</span><br>` +
+                                    `Incoming file: <span class="gold-text">${incomingData.totalNian}</span><br><br>` +
+                                    `<div style="background:rgba(212,175,55,0.1); border:1px solid rgba(212,175,55,0.3); border-radius:8px; padding:12px; font-size:0.8rem; line-height:1.6; color:#bbb;">` +
+                                    `<span style="color:var(--gold); font-weight:bold;">[ Daily Backup ]</span><br>Select <b>Overwrite</b> to restore state.<br><br>` +
+                                    `<span style="color:var(--gold); font-weight:bold;">[ Device Sync ]</span><br>Select <b>Merge</b> to combine counts.` +
+                                    `</div>`;
+                    
+                    const wantsToMerge = await showGlassModal("Restore or Merge?", msgHtml, true);
                     
                     if (wantsToMerge) {
                         db.totalNian += (incomingData.totalNian || 0);
@@ -2926,27 +2938,28 @@ async function importProgress(inputElement) {
                         if (incomingData.visitedRealms) {
                             db.visitedRealms = [...new Set([...(db.visitedRealms || []), ...incomingData.visitedRealms])];
                         }
-                        await showGlassModal("Merit Fulfilled", `Realms merged successfully!<br>Total recitations: <span class="gold-text">${db.totalNian}</span>`);
+                        await showGlassModal("Combined", `Numbers merged! Total: <span class="gold-text">${db.totalNian}</span>`);
                     } else {
                         db = incomingData;
-                        await showGlassModal("Realm Overwritten", "Overwritten with incoming realm.");
+                        await showGlassModal("Restored", "Realm state updated from backup.");
                     }
                 } else {
                     db = incomingData;
-                    await showGlassModal("Mind Import", "Import complete. Rebuilding the realm.");
+                    await showGlassModal("Mind Import", "Import complete. Rebuilding realm.");
                 }
                 save(); 
                 location.reload();
             } else {
-                await showGlassModal("Format Mismatch", "This file is not a valid Pure Land record.");
+                await showGlassModal("Error", "Invalid record format.");
             }
         } catch(err) {
-            await showGlassModal("Record Corrupted", "File parsing error. Please check the file's purity.");
+            await showGlassModal("Error", "Record corrupted.");
         }
     };
     reader.readAsText(file);
     inputElement.value = ""; 
 }
+
 
 
 checkNewDay(); if(db.name) document.getElementById('user-name').value = db.name;

@@ -787,7 +787,7 @@
 #glass-modal-message { color: #e0e0e0; font-size: 0.92rem; line-height: 1.6; margin-bottom: 25px; text-align: left; }
 .gold-text { color: var(--gold, #d4af37); font-weight: bold; text-shadow: 0 0 5px rgba(212,175,55,0.3); }
 #glass-modal-actions { display: flex; gap: 12px; justify-content: center; }
-.glass-btn { flex: 1; padding: 12px 0; border-radius: 12px; cursor: pointer; font-size: 0.9rem; letter-spacing: 1px; font-weight: bold; transition: all 0.2; }
+.glass-btn { flex: 1; padding: 12px 0; border-radius: 12px; cursor: pointer; font-size: 0.9rem; letter-spacing: 1px; font-weight: bold; transition: all 0.2s; }
 .glass-btn:active { transform: scale(0.95); }
 .glass-btn.highlight { background: linear-gradient(135deg, rgba(212,175,55,0.25), rgba(212,175,55,0.08)); border: 1px solid rgba(212,175,55,0.5); color: var(--gold, #d4af37); }
 .glass-btn.outline { background: rgba(255,255,255,0.03); border: 1px solid rgba(139,168,156,0.3); color: rgba(139,168,156,0.8); }
@@ -1073,8 +1073,8 @@
     </div>
 
     <div style="display:flex; gap:10px; width:100%; justify-content:center; margin-top: 25px;">
-        <button class="btn-transparent-small btn-sweep" onclick="exportAndShareProgress()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"></path><polyline points="1 3 23 3 23 8 1 8 1 3"></polyline></svg> 封存備份</button>
+ <button class="btn-transparent-small btn-sweep" onclick="exportAndShareProgress()">
+               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"></path><polyline points="1 3 23 3 23 8 1 8 1 3"></polyline></svg> 封存備份</button>
         <button class="btn-transparent-small btn-sweep" onclick="document.getElementById('import-file').click()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline></svg> 意念導入</button>
         <button class="btn-transparent-small btn-sweep" onclick="document.getElementById('guide-modal').style.display='flex'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path></svg> 使用說明</button>
         <input type="file" id="import-file" style="display:none" onchange="importProgress(this)">
@@ -2122,7 +2122,6 @@
 <script src="config.js"></script>
 <script>
 
-
 // 路由、星軌連動合併 (絕無重複)
 window.addEventListener('DOMContentLoaded', () => {
     // 1. 記憶路由系統 (✨ 強化：自動識別並驗證分頁編號)
@@ -3002,7 +3001,7 @@ function stopAllMeditation() {
 }
 
 // ==========================================
-// 琉璃法身彈窗與 P2P 傳輸模組 (純淨向量版)
+// 琉璃法身彈窗與 P2P 傳輸模組 (純淨向量)
 // ==========================================
 function showGlassModal(title, message, isConfirm = false) {
     return new Promise((resolve) => {
@@ -3037,7 +3036,6 @@ async function exportAndShareProgress() {
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
-            // 純淨分享：只傳檔案，避免產生額外的文字檔
             await navigator.share({ files: [file] });
         } catch (err) { console.log("分享取消或中斷"); }
     } else {
@@ -3061,32 +3059,49 @@ async function importProgress(inputElement) {
             if (incomingData && typeof incomingData.totalNian !== 'undefined') {
                 if (db.name === incomingData.name) {
                     const msgHtml = `發現同名行者「<span class="gold-text">${db.name}</span>」的識藏！<br><br>` +
-                                    `當前設備：<span class="gold-text">${db.totalNian}</span> 念<br>` +
-                                    `傳入檔案：<span class="gold-text">${incomingData.totalNian}</span> 念<br><br>` +
+                                    `當前設備：<span class="gold-text">${db.totalNian}</span> 聲 / <span class="gold-text">${Math.floor(db.points || 0)}</span> 點資糧<br>` +
+                                    `傳入檔案：<span class="gold-text">${incomingData.totalNian}</span> 聲 / <span class="gold-text">${Math.floor(incomingData.points || 0)}</span> 點資糧<br><br>` +
                                     `<div style="background:rgba(212,175,55,0.1); border:1px solid rgba(212,175,55,0.3); border-radius:8px; padding:12px; font-size:0.8rem; line-height:1.6; color:#bbb;">` +
-                                    `<span style="color:var(--gold); font-weight:bold;">[ 日常備份還原 ]</span><br>請選擇 <b>完全覆蓋</b> 以恢復紀錄。<br><br>` +
-                                    `<span style="color:var(--gold); font-weight:bold;">[ 多機資糧匯聚 ]</span><br>請選擇 <b>合併累加</b> 以總計聲數。` +
+                                    `<span style="color:var(--gold); font-weight:bold;">[ 日常備份還原 ]</span><br>請選擇 <b>完全覆蓋</b> 以完整恢復所有紀錄。<br><br>` +
+                                    `<span style="color:var(--gold); font-weight:bold;">[ 多機資糧匯聚 ]</span><br>請選擇 <b>合併累加</b> 以總計所有功德。` +
                                     `</div>`;
                     
                     const wantsToMerge = await showGlassModal("百川匯海", msgHtml, true);
                     
                     if (wantsToMerge) {
-                        db.totalNian += (incomingData.totalNian || 0);
+                        db.totalNian = (db.totalNian || 0) + (incomingData.totalNian || 0);
                         db.points = (db.points || 0) + (incomingData.points || 0);
-                        db.todayCount += (incomingData.todayCount || 0);
+                        db.todayCount = (db.todayCount || 0) + (incomingData.todayCount || 0);
+                        db.totalCorrect = (db.totalCorrect || 0) + (incomingData.totalCorrect || 0);
+                        db.prajnaHints = (db.prajnaHints || 0) + (incomingData.prajnaHints || 0);
+                        db.tempBag = (db.tempBag || 0) + (incomingData.tempBag || 0);
+                        
                         db.streakDays = Math.max(db.streakDays || 0, incomingData.streakDays || 0);
+                        db.waterLevel = Math.max(db.waterLevel || 1, incomingData.waterLevel || 1);
+                        
                         if (incomingData.treasures) {
                             for (let key in incomingData.treasures) {
                                 db.treasures[key] = (db.treasures[key] || 0) + (incomingData.treasures[key] || 0);
                             }
                         }
-                        if (incomingData.visitedRealms) {
-                            db.visitedRealms = [...new Set([...(db.visitedRealms || []), ...incomingData.visitedRealms])];
+                        if (incomingData.personalRoom) {
+                            if (!db.personalRoom) db.personalRoom = { sessionCounts:{}, loginDays:0 };
+                            db.personalRoom.loginDays = Math.max(db.personalRoom.loginDays || 0, incomingData.personalRoom.loginDays || 0);
+                            if (incomingData.personalRoom.sessionCounts) {
+                                for(let k in incomingData.personalRoom.sessionCounts) {
+                                    db.personalRoom.sessionCounts[k] = (db.personalRoom.sessionCounts[k] || 0) + incomingData.personalRoom.sessionCounts[k];
+                                }
+                            }
+                            if (incomingData.personalRoom.avatar && !db.personalRoom.avatar) db.personalRoom.avatar = incomingData.personalRoom.avatar;
                         }
-                        await showGlassModal("功德圓滿", `兩地境界已融合！<br>當前總念佛：<span class="gold-text">${db.totalNian}</span> 次`);
+                        if (incomingData.visitedRealms) db.visitedRealms = [...new Set([...(db.visitedRealms || []), ...incomingData.visitedRealms])];
+                        if (incomingData.clearedQ) db.clearedQ = [...new Set([...(db.clearedQ || []), ...incomingData.clearedQ])];
+                        if (incomingData.bodhiRecords) db.bodhiRecords = [...(db.bodhiRecords || []), ...incomingData.bodhiRecords];
+
+                        await showGlassModal("功德圓滿", `兩地境界已融合！<br>當前總聲數：<span class="gold-text">${db.totalNian}</span>`);
                     } else {
                         db = incomingData;
-                        await showGlassModal("境界恢復", "已根據備份檔重塑當前境界。");
+                        await showGlassModal("境界恢復", "已根據備份檔完整重塑當前境界。");
                     }
                 } else {
                     db = incomingData;
@@ -3400,11 +3415,11 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 <div id="glass-modal-overlay" class="glass-modal-hide">
     <div id="glass-modal-box">
-        <div id="glass-modal-title">彌陀系統</div>
+        <div id="glass-modal-title">Pure Land System</div>
         <div id="glass-modal-message"></div>
         <div id="glass-modal-actions">
-            <button id="glass-modal-btn-cancel" class="glass-btn outline">完全覆蓋</button>
-            <button id="glass-modal-btn-confirm" class="glass-btn highlight">合併累加</button>
+            <button id="glass-modal-btn-cancel" class="glass-btn outline">Overwrite</button>
+            <button id="glass-modal-btn-confirm" class="glass-btn highlight">Merge</button>
         </div>
     </div>
 </div>

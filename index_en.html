@@ -2412,183 +2412,74 @@ function speak(t, r) {
     setTimeout(() => { window.speechSynthesis.speak(m); }, 50);
 }
 
-function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
-    // 決定蓮花等級 (1~5)
-    let nLevel = 1;
-    if (overrideLevel !== null) {
-        nLevel = Math.min(overrideLevel, 5); 
-    } else {
-        if (nianCount >= 10000000) nLevel = 5;       
-        else if (nianCount >= 1000000) nLevel = 4;   
-        else if (nianCount >= 100000) nLevel = 3;    
-        else if (nianCount >= 10000) nLevel = 2;     
-        else nLevel = 1;                             
+function getLotusSVG(rankType, nianCount = 0) {
+    const gold = "#f3e5ab"; const darkGold = "#d4af37";
+    let defs = `<defs><radialGradient id="pureGold" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="1"/><stop offset="30%" stop-color="${gold}" stop-opacity="1"/><stop offset="100%" stop-color="${darkGold}" stop-opacity="1"/></radialGradient><linearGradient id="metalGold" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffeba8"/><stop offset="50%" stop-color="#d4af37"/><stop offset="100%" stop-color="#8a6d1c"/></linearGradient><radialGradient id="darkHole" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#000" stop-opacity="0.9"/><stop offset="65%" stop-color="#0a0a0a" stop-opacity="0.7"/><stop offset="100%" stop-color="transparent" stop-opacity="0"/></radialGradient><filter id="holyGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.5" result="blur" /><feComposite in="SourceGraphic" in2="blur" operator="over" /></filter></defs>`;
+    
+    let bgContent = `<circle cx="50" cy="50" r="38" fill="url(#darkHole)"/>`;
+
+    // ── 1. 完美還原 4/24 的 5 種背景 (支援中英文判定) ──
+    if (rankType.includes('信') || rankType.includes('Faith')) {
+        bgContent += `<g opacity="0.85"><ellipse cx="50" cy="72" rx="28" ry="8" fill="none" stroke="#8ba89c" stroke-width="1" opacity="0.4"><animate attributeName="rx" values="15;32;15" dur="4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0;0.6" dur="4s" repeatCount="indefinite"/></ellipse><ellipse cx="50" cy="72" rx="16" ry="4" fill="none" stroke="url(#pureGold)" stroke-width="1.5" filter="url(#holyGlow)"/><path d="M 32 68 Q 50 85 68 68" fill="none" stroke="url(#metalGold)" stroke-width="2" opacity="0.8" filter="url(#holyGlow)"/><circle cx="50" cy="72" r="1.5" fill="#fff"/></g>`; 
+    } else if (rankType.includes('住') || rankType.includes('Abiding')) {
+        bgContent += `<g fill="url(#metalGold)" opacity="0.85"><polygon points="32,72 68,72 73,78 27,78" /><polygon points="36,68 64,68 68,72 32,72" opacity="0.7"/><rect x="27" y="78" width="46" height="2" fill="#fff" opacity="0.5"/></g>`; 
+    } else if (rankType.includes('行') || rankType.includes('Practice')) {
+        bgContent += `<g stroke="#e0e0e0" opacity="0.7"><circle cx="50" cy="50" r="30" fill="none" stroke-width="1" stroke-dasharray="2 4"/><circle cx="50" cy="50" r="26" fill="none" stroke-width="0.5"/><g stroke-width="1.2">${[...Array(12)].map((_,i) => `<line x1="50" y1="50" x2="50" y2="20" transform="rotate(${i*30} 50 50)"/>`).join('')}</g><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="30s" repeatCount="indefinite"/></g>`; 
+    } else if (rankType.includes('迴') || rankType.includes('Dedication')) {
+        bgContent += `<g stroke="#e6a8d7" fill="none" opacity="0.7"><g stroke-width="1"><rect x="26" y="26" width="48" height="48" transform="rotate(0 50 50)"/><rect x="26" y="26" width="48" height="48" transform="rotate(45 50 50)"/></g><circle cx="50" cy="50" r="34" stroke-width="0.5" stroke-dasharray="3 3"/><animateTransform attributeName="transform" type="rotate" from="360 50 50" to="0 50 50" dur="40s" repeatCount="indefinite"/></g>`; 
+    } else if (rankType.includes('地') || rankType.includes('Bhumi')) {
+        bgContent += `<g opacity="0.8"><circle cx="50" cy="50" r="38" fill="none" stroke="url(#pureGold)" stroke-width="0.5" stroke-dasharray="1 5"/>${[...Array(16)].map((_,i) => `<path d="M50 50 Q 68 22 50 12 Q 32 22 50 50" fill="none" stroke="#a8e6cf" stroke-width="0.5" opacity="0.6" transform="rotate(${i*22.5} 50 50)"/>`).join('')}<circle cx="50" cy="50" r="42" fill="none" stroke="#ff8b94" stroke-width="0.3"/><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="60s" repeatCount="indefinite"/></g><circle cx="50" cy="50" r="1.5" fill="#fff" filter="url(#holyGlow)"><animate attributeName="r" values="1.5;3;1.5" dur="3s" repeatCount="indefinite"/></circle>`; 
     }
 
-    const cx = 50, cy = 50;
-    const id = `svg-${Math.random().toString(36).substr(2, 5)}`; // 確保濾鏡 ID 唯一
-
-    // ── 花瓣路徑生成器 ──
-    function P(r0, r1, hw, bulge, shape) {
-        const bx = cx, by = cy - r0, tx = cx, ty = cy - r1;
-        const my = cy - (r0 + r1) / 2;
-        if (shape === 'slim') return `M${bx - hw * .7} ${by} C${bx - bulge * .75} ${my} ${tx - 1.5} ${ty + 3} ${tx} ${ty} C${tx + 1.5} ${ty + 3} ${bx + bulge * .75} ${my} ${bx + hw * .7} ${by}Z`;
-        if (shape === 'wide') return `M${bx - hw} ${by} C${bx - bulge * 1.35} ${my + 4} ${tx - bulge * .45} ${ty + 7} ${tx} ${ty} C${tx + bulge * .45} ${ty + 7} ${bx + bulge * 1.35} ${my + 4} ${bx + hw} ${by}Z`;
-        if (shape === 'point') return `M${bx - hw} ${by} C${bx - bulge} ${my} ${tx - 2} ${ty + 2} ${tx} ${ty} C${tx + 2} ${ty + 2} ${bx + bulge} ${my} ${bx + hw} ${by}Z`;
-        return `M${bx - hw} ${by} C${bx - bulge} ${my} ${tx - bulge * .3} ${ty + 5} ${tx} ${ty} C${tx + bulge * .3} ${ty + 5} ${bx + bulge} ${my} ${bx + hw} ${by}Z`;
+    // ── 2. 原版畫風：擴增為 10 階蓮花演化 ──
+    let lotusContent = "";
+    
+    // L1: 基礎種子 (0-9) - 單一微光花瓣
+    if (nianCount < 10) { 
+        lotusContent = `<g><circle cx="50" cy="55" r="10" fill="url(#pureGold)" opacity="0.1" filter="url(#holyGlow)"/><g filter="url(#holyGlow)"><path d="M50 35 C 55 50, 53 70, 50 72 C 47 70, 45 50, 50 35" fill="url(#metalGold)"/></g></g>`; 
+    } 
+    // L2: 十念圓滿 (10-499) - 雙瓣 (原版的第一階)
+    else if (nianCount < 500) { 
+        lotusContent = `<g><circle cx="50" cy="55" r="15" fill="url(#pureGold)" opacity="0.15" filter="url(#holyGlow)"><animate attributeName="r" values="12;18;12" dur="3s" repeatCount="indefinite"/></circle><g filter="url(#holyGlow)"><path d="M50 25 C 65 50, 58 70, 50 72 C 42 70, 35 50, 50 25" fill="url(#metalGold)"/><path d="M50 25 C 55 50, 53 70, 50 72 C 47 70, 45 50, 50 25" fill="url(#pureGold)"/><animateTransform attributeName="transform" type="scale" values="1;1.02;1" dur="3s" repeatCount="indefinite" transform-origin="50 55"/></g></g>`; 
+    } 
+    // L3: 一念清淨 (500-4999) - 三瓣 (原版的第二階)
+    else if (nianCount < 5000) { 
+        lotusContent = `<g filter="url(#holyGlow)"><path d="M50 68 C 75 50, 75 35, 70 30 C 60 45, 55 60, 50 68" fill="url(#metalGold)"/><path d="M50 68 C 25 50, 25 35, 30 30 C 40 45, 45 60, 50 68" fill="url(#metalGold)"/><path d="M50 28 C 65 48, 58 68, 50 72 C 42 68, 35 48, 50 28" fill="url(#pureGold)"/></g>`; 
+    } 
+    // L4: 淨念相繼 (5000-9999) - 三瓣 ＋ 中心白光心
+    else if (nianCount < 10000) { 
+        lotusContent = `<g filter="url(#holyGlow)"><path d="M50 68 C 75 50, 75 35, 70 30 C 60 45, 55 60, 50 68" fill="url(#metalGold)"/><path d="M50 68 C 25 50, 25 35, 30 30 C 40 45, 45 60, 50 68" fill="url(#metalGold)"/><path d="M50 28 C 65 48, 58 68, 50 72 C 42 68, 35 48, 50 28" fill="url(#pureGold)"/><path d="M50 35 C 58 50, 55 65, 50 68 C 45 65, 42 50, 50 35" fill="#fff"/></g>`; 
+    } 
+    // L5: 信願具足 (10k-99k) - 五瓣 (原版的第三階)
+    else if (nianCount < 100000) { 
+        lotusContent = `<g filter="url(#holyGlow)" transform="translate(0, -2)"><path d="M50 70 C 80 55, 85 40, 75 35 C 65 50, 55 60, 50 70" fill="url(#metalGold)"/><path d="M50 70 C 20 55, 15 40, 25 35 C 35 50, 45 60, 50 70" fill="url(#metalGold)"/><path d="M50 70 C 65 45, 65 30, 60 25 C 55 45, 52 60, 50 70" fill="url(#pureGold)"/><path d="M50 70 C 35 45, 35 30, 40 25 C 45 45, 48 60, 50 70" fill="url(#pureGold)"/><path d="M50 20 C 62 40, 56 65, 50 72 C 44 65, 38 40, 50 20" fill="#fff"/></g>`; 
+    } 
+    // L6: 蓮池海會 (100k-499k) - 五瓣 ＋ 兩側白光暈瓣
+    else if (nianCount < 500000) { 
+        lotusContent = `<g filter="url(#holyGlow)" transform="translate(0, -2)"><path d="M50 72 C 90 60, 95 40, 85 35 C 75 50, 60 65, 50 72" fill="#fff" opacity="0.4"/><path d="M50 72 C 10 60, 5 40, 15 35 C 25 50, 40 65, 50 72" fill="#fff" opacity="0.4"/><path d="M50 70 C 80 55, 85 40, 75 35 C 65 50, 55 60, 50 70" fill="url(#metalGold)"/><path d="M50 70 C 20 55, 15 40, 25 35 C 35 50, 45 60, 50 70" fill="url(#metalGold)"/><path d="M50 70 C 65 45, 65 30, 60 25 C 55 45, 52 60, 50 70" fill="url(#pureGold)"/><path d="M50 70 C 35 45, 35 30, 40 25 C 45 45, 48 60, 50 70" fill="url(#pureGold)"/><path d="M50 20 C 62 40, 56 65, 50 72 C 44 65, 38 40, 50 20" fill="#fff"/></g>`; 
+    } 
+    // L7: 不退轉菩薩 (500k-999k) - 七瓣 ＋ 呼吸星芒 (原版的第四階)
+    else if (nianCount < 1000000) { 
+        lotusContent = `<g filter="url(#holyGlow)" transform="translate(0, -4)"><path d="M50 75 C 90 65, 95 45, 85 40 C 75 55, 60 65, 50 75" fill="url(#metalGold)"/><path d="M50 75 C 10 65, 5 45, 15 40 C 25 55, 40 65, 50 75" fill="url(#metalGold)"/><path d="M50 73 C 80 50, 80 30, 70 25 C 60 45, 55 60, 50 73" fill="url(#pureGold)"/><path d="M50 73 C 20 50, 20 30, 30 25 C 40 45, 45 60, 50 73" fill="url(#pureGold)"/><path d="M50 72 C 65 40, 65 20, 58 15 C 54 35, 52 55, 50 72" fill="#fff"/><path d="M50 72 C 35 40, 35 20, 42 15 C 46 35, 48 55, 50 72" fill="#fff"/><path d="M50 12 C 60 35, 55 60, 50 70 C 45 60, 40 35, 50 12" fill="url(#pureGold)"/><circle cx="50" cy="55" r="4" fill="#fff" filter="drop-shadow(0 0 5px #fff)"><animate attributeName="r" values="3.5;4.5;3.5" dur="2s" repeatCount="indefinite"/></circle></g>`; 
+    } 
+    // L8: 無相念佛 (1M-9.9M) - 七瓣 ＋ 內圈全白 ＋ 外圈全金
+    else if (nianCount < 10000000) { 
+        lotusContent = `<g filter="url(#holyGlow)" transform="translate(0, -4)"><path d="M50 75 C 90 65, 95 45, 85 40 C 75 55, 60 65, 50 75" fill="url(#pureGold)"/><path d="M50 75 C 10 65, 5 45, 15 40 C 25 55, 40 65, 50 75" fill="url(#pureGold)"/><path d="M50 73 C 80 50, 80 30, 70 25 C 60 45, 55 60, 50 73" fill="#fff"/><path d="M50 73 C 20 50, 20 30, 30 25 C 40 45, 45 60, 50 73" fill="#fff"/><path d="M50 72 C 65 40, 65 20, 58 15 C 54 35, 52 55, 50 72" fill="url(#pureGold)"/><path d="M50 72 C 35 40, 35 20, 42 15 C 46 35, 48 55, 50 72" fill="url(#pureGold)"/><path d="M50 12 C 60 35, 55 60, 50 70 C 45 60, 40 35, 50 12" fill="#fff"/><circle cx="50" cy="55" r="5" fill="#fff" filter="drop-shadow(0 0 8px #fff)"><animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite"/></circle></g>`; 
+    } 
+    // L9: 念佛三昧 (10M-99.9M) - 九瓣 ＋ 大金屬外圈 ＋ 整體放大
+    else if (nianCount < 100000000) { 
+        lotusContent = `<g filter="url(#holyGlow)" transform="translate(0, -4) scale(1.05) translate(-2.5, -2.5)"><path d="M50 78 C 100 65, 105 35, 90 30 C 80 50, 65 65, 50 78" fill="url(#metalGold)"/><path d="M50 78 C 0 65, -5 35, 10 30 C 20 50, 35 65, 50 78" fill="url(#metalGold)"/><path d="M50 75 C 90 65, 95 45, 85 40 C 75 55, 60 65, 50 75" fill="url(#pureGold)"/><path d="M50 75 C 10 65, 5 45, 15 40 C 25 55, 40 65, 50 75" fill="url(#pureGold)"/><path d="M50 73 C 80 50, 80 30, 70 25 C 60 45, 55 60, 50 73" fill="#fff"/><path d="M50 73 C 20 50, 20 30, 30 25 C 40 45, 45 60, 50 73" fill="#fff"/><path d="M50 72 C 65 40, 65 20, 58 15 C 54 35, 52 55, 50 72" fill="url(#pureGold)"/><path d="M50 72 C 35 40, 35 20, 42 15 C 46 35, 48 55, 50 72" fill="url(#pureGold)"/><path d="M50 12 C 60 35, 55 60, 50 70 C 45 60, 40 35, 50 12" fill="#fff"/><circle cx="50" cy="55" r="5" fill="#fff" filter="drop-shadow(0 0 8px #fff)"><animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite"/></circle></g>`; 
+    } 
+    // L10: 圓滿成佛 (100M+) - 九瓣終極 ＋ 背後金色旋轉放射光
+    else { 
+        lotusContent = `<g filter="url(#holyGlow)" transform="translate(0, -5) scale(1.1) translate(-4.5, -4.5)"><g opacity="0.6">${[...Array(12)].map((_,i) => `<path d="M50 60 Q 65 25 50 10 Q 35 25 50 60" fill="none" stroke="url(#pureGold)" stroke-width="0.5" opacity="0.5" transform="rotate(${i*30} 50 60)"/>`).join('')}<animateTransform attributeName="transform" type="rotate" from="0 50 60" to="360 50 60" dur="40s" repeatCount="indefinite"/></g><path d="M50 78 C 100 65, 105 35, 90 30 C 80 50, 65 65, 50 78" fill="url(#metalGold)"/><path d="M50 78 C 0 65, -5 35, 10 30 C 20 50, 35 65, 50 78" fill="url(#metalGold)"/><path d="M50 75 C 90 65, 95 45, 85 40 C 75 55, 60 65, 50 75" fill="#fff"/><path d="M50 75 C 10 65, 5 45, 15 40 C 25 55, 40 65, 50 75" fill="#fff"/><path d="M50 73 C 80 50, 80 30, 70 25 C 60 45, 55 60, 50 73" fill="url(#pureGold)"/><path d="M50 73 C 20 50, 20 30, 30 25 C 40 45, 45 60, 50 73" fill="url(#pureGold)"/><path d="M50 72 C 65 40, 65 20, 58 15 C 54 35, 52 55, 50 72" fill="#fff"/><path d="M50 72 C 35 40, 35 20, 42 15 C 46 35, 48 55, 50 72" fill="#fff"/><path d="M50 12 C 60 35, 55 60, 50 70 C 45 60, 40 35, 50 12" fill="url(#pureGold)"/><circle cx="50" cy="55" r="6" fill="#fff" filter="drop-shadow(0 0 12px #fff)"><animate attributeName="r" values="5;7;5" dur="1.5s" repeatCount="indefinite"/></circle></g>`; 
     }
 
-    function rotatedPetals(n, r0, r1, hw, bulge, shape, fill, op, offset = 0) {
-        let s = '';
-        for (let i = 0; i < n; i++) {
-            const a = i * (360 / n) + offset;
-            s += `<path d="${P(r0, r1, hw, bulge, shape)}" fill="${fill}" opacity="${op}" transform="rotate(${a} ${cx} ${cy})"/>`;
-        }
-        return s;
-    }
-
-    // ── 共用定義 (發光濾鏡與統一金底漸層) ──
-    const sharedDefs = `
-    <defs>
-        <filter id="glo${id}" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <filter id="sof${id}" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="1.1" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <radialGradient id="rg-unified-gold" cx="50%" cy="50%" r="60%">
-            <stop offset="0%" stop-color="#fffce0"/><stop offset="28%" stop-color="#f0c030"/><stop offset="65%" stop-color="#906010"/><stop offset="100%" stop-color="#4c3008"/>
-        </radialGradient>
-        <radialGradient id="rg-void" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#111111" stop-opacity="0.95"/>
-            <stop offset="70%" stop-color="#0a0500" stop-opacity="0.8"/>
-            <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
-        </radialGradient>
-    </defs>`;
-
-    const voidBg = `<circle cx="50" cy="50" r="42" fill="url(#rg-void)"><animate attributeName="r" values="41;43;41" dur="6s" repeatCount="indefinite"/></circle>`;
-
-    // ── 位階背景 (統一為大圓滿金) ──
-    let bgContent = '';
-    // 支援中英文雙語判斷
-    if (rankType === '信' || rankType === 'Faith') {
-        bgContent = `
-        <circle cx="${cx}" cy="${cy}" r="21" fill="url(#rg-unified-gold)" stroke="#f0d060" stroke-width=".7"/>
-        <circle cx="${cx}" cy="${cy}" r="15.5" fill="none" stroke="#f0c868" stroke-width=".5" stroke-dasharray="1.8 2.2"/>
-        <polygon points="${cx},${cy-11} ${cx+9.5},${cy+5.5} ${cx-9.5},${cy+5.5}" fill="none" stroke="#fffce0" stroke-width="1.3"/>
-        <polygon points="${cx},${cy-7} ${cx+6},${cy+3.5} ${cx-6},${cy+3.5}" fill="#ffe8a0" opacity=".82"/>
-        <circle cx="${cx}" cy="${cy}" r="2.2" fill="#ffffff"/>`;
-    } else if (rankType === '住' || rankType === 'Abiding') {
-        bgContent = `
-        <circle cx="${cx}" cy="${cy}" r="21" fill="url(#rg-unified-gold)" stroke="#f0d060" stroke-width=".7"/>
-        <rect x="${cx-1.8}" y="${cy-13}" width="3.6" height="18" fill="url(#rg-unified-gold)" rx=".4"/>
-        <rect x="${cx-6}" y="${cy-9}" width="12" height="2.8" fill="url(#rg-unified-gold)" rx=".4"/>
-        <rect x="${cx-9.5}" y="${cy-4.5}" width="19" height="2.8" fill="url(#rg-unified-gold)" rx=".4"/>
-        <rect x="${cx-13}" y="${cy+0.5}" width="26" height="2.8" fill="url(#rg-unified-gold)" rx=".4"/>
-        <polygon points="${cx},${cy-17} ${cx+3},${cy-12} ${cx-3},${cy-12}" fill="#fffce0"/>
-        <circle cx="${cx}" cy="${cy}" r="2.2" fill="#ffffff"/>`;
-    } else if (rankType === '行' || rankType === 'Practice') {
-        let lines = [0,45,90,135].map(a=>{
-            const r=a*Math.PI/180;
-            const x1=cx+Math.cos(r)*4.2, y1=cy+Math.sin(r)*4.2;
-            const x2=cx+Math.cos(r)*14, y2=cy+Math.sin(r)*14;
-            const x3=cx-Math.cos(r)*4.2, y3=cy-Math.sin(r)*4.2;
-            const x4=cx-Math.cos(r)*14, y4=cy-Math.sin(r)*14;
-            return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#f0c868" stroke-width="1"/><line x1="${x3.toFixed(1)}" y1="${y3.toFixed(1)}" x2="${x4.toFixed(1)}" y2="${y4.toFixed(1)}" stroke="#f0c868" stroke-width="1"/>`;
-        }).join('');
-        let dots = [0,45,90,135,180,225,270,315].map(a=>{
-            const r=a*Math.PI/180;
-            return `<circle cx="${(cx+Math.cos(r)*16).toFixed(1)}" cy="${(cy+Math.sin(r)*16).toFixed(1)}" r="1.5" fill="#f0c868"/>`;
-        }).join('');
-        bgContent = `
-        <circle cx="${cx}" cy="${cy}" r="21" fill="url(#rg-unified-gold)" stroke="#f0d060" stroke-width=".7"/>
-        <circle cx="${cx}" cy="${cy}" r="14" fill="none" stroke="#f0c868" stroke-width="1.1"/>
-        <circle cx="${cx}" cy="${cy}" r="4.2" fill="#ffe8a0"/>
-        ${lines}${dots}
-        <circle cx="${cx}" cy="${cy}" r="2" fill="#ffffff"/>`;
-    } else if (rankType === '迴' || rankType === 'Dedication') {
-        bgContent = `
-        <circle cx="${cx}" cy="${cy}" r="21" fill="url(#rg-unified-gold)" stroke="#f0d060" stroke-width=".7"/>
-        <circle cx="${cx}" cy="${cy}" r="5.5" fill="#ffe8a0"/>
-        <path d="M${cx} ${cy-5.5} C${cx} ${cy-13} ${cx+11} ${cy-13} ${cx+11} ${cy-8}" fill="none" stroke="#fffce0" stroke-width="1.4" stroke-linecap="round"/>
-        <polygon points="${cx+11},${cy-5} ${cx+15},${cy-10} ${cx+8},${cy-11}" fill="#fffce0"/>
-        <path d="M${cx+5.5} ${cy} C${cx+13} ${cy} ${cx+13} ${cy+11} ${cx+8} ${cy+11}" fill="none" stroke="#fffce0" stroke-width="1.4" stroke-linecap="round"/>
-        <polygon points="${cx+5},${cy+11} ${cx+10},${cy+15} ${cx+11},${cy+8}" fill="#fffce0"/>
-        <path d="M${cx} ${cy+5.5} C${cx} ${cy+13} ${cx-11} ${cy+13} ${cx-11} ${cy+8}" fill="none" stroke="#fffce0" stroke-width="1.4" stroke-linecap="round"/>
-        <polygon points="${cx-11},${cy+5} ${cx-15},${cy+10} ${cx-8},${cy+11}" fill="#fffce0"/>
-        <path d="M${cx-5.5} ${cy} C${cx-13} ${cy} ${cx-13} ${cy-11} ${cx-8} ${cy-11}" fill="none" stroke="#fffce0" stroke-width="1.4" stroke-linecap="round"/>
-        <polygon points="${cx-5},${cy-11} ${cx-10},${cy-15} ${cx-11},${cy-8}" fill="#fffce0"/>
-        <circle cx="${cx}" cy="${cy}" r="2.2" fill="#ffffff"/>`;
-    } else if (rankType === '地' || rankType === 'Bhumi') {
-        bgContent = `
-        <circle cx="${cx}" cy="${cy}" r="21" fill="url(#rg-unified-gold)" stroke="#f0d060" stroke-width=".7"/>
-        <polygon points="${cx},${cy-17} ${cx+2.5},${cy-7.5} ${cx+12},${cy-12} ${cx+7.5},${cy-2.5}
-          ${cx+17},${cy} ${cx+7.5},${cy+2.5} ${cx+12},${cy+12} ${cx+2.5},${cy+7.5}
-          ${cx},${cy+17} ${cx-2.5},${cy+7.5} ${cx-12},${cy+12} ${cx-7.5},${cy+2.5}
-          ${cx-17},${cy} ${cx-7.5},${cy-2.5} ${cx-12},${cy-12} ${cx-2.5},${cy-7.5}"
-          fill="#fffce0" opacity=".95"/>
-        <circle cx="${cx}" cy="${cy}" r="3.5" fill="#ffffff"/>`;
-    }
-
-    // ── 蓮花蕊心層 ──
-    let lotusContent = '';
-    if (nLevel === 1) { // 1. 粉霞蓮
-        lotusContent = `
-        <defs>
-            <radialGradient id="lA${id}" cx="50%" cy="75%" r="100%"><stop offset="0%" stop-color="#fff0f5"/><stop offset="40%" stop-color="#f5a0bc"/><stop offset="100%" stop-color="#b04470" stop-opacity=".85"/></radialGradient>
-            <radialGradient id="lB${id}" cx="50%" cy="65%" r="100%"><stop offset="0%" stop-color="#ffe8f2"/><stop offset="100%" stop-color="#d87898" stop-opacity=".55"/></radialGradient>
-        </defs>
-        ${rotatedPetals(8,22,46,7,11,'round',`url(#lA${id})`,.92)}
-        ${rotatedPetals(8,22,38,5.5,8,'round',`url(#lB${id})`,.7,22.5)}`;
-    } else if (nLevel === 2) { // 2. 淡藍蓮 (取代紫色)
-        lotusContent = `
-        <defs>
-            <radialGradient id="lA${id}" cx="50%" cy="72%" r="100%"><stop offset="0%" stop-color="#e0f0ff"/><stop offset="38%" stop-color="#58a0d0"/><stop offset="100%" stop-color="#085090" stop-opacity=".88"/></radialGradient>
-            <radialGradient id="lB${id}" cx="50%" cy="58%" r="100%"><stop offset="0%" stop-color="#d4e8ff"/><stop offset="100%" stop-color="#4090c0" stop-opacity=".5"/></radialGradient>
-        </defs>
-        ${rotatedPetals(8,22,46,9,14,'wide',`url(#lA${id})`,.9)}
-        ${rotatedPetals(8,22,37,6,9,'wide',`url(#lB${id})`,.62,22.5)}`;
-    } else if (nLevel === 3) { // 3. 碧玉蓮
-        lotusContent = `
-        <defs>
-            <radialGradient id="lA${id}" cx="50%" cy="78%" r="100%"><stop offset="0%" stop-color="#e0fff8"/><stop offset="42%" stop-color="#28c098"/><stop offset="100%" stop-color="#065c48" stop-opacity=".9"/></radialGradient>
-            <radialGradient id="lB${id}" cx="50%" cy="62%" r="100%"><stop offset="0%" stop-color="#c0fff0"/><stop offset="100%" stop-color="#38c0a8" stop-opacity=".5"/></radialGradient>
-        </defs>
-        ${rotatedPetals(10,22,46,6,9,'point',`url(#lA${id})`,.9)}
-        ${rotatedPetals(10,22,36,4,6,'slim',`url(#lB${id})`,.6,18)}`;
-    } else if (nLevel === 4) { // 4. 彩虹蓮
-        const cols=['#ff8888','#ffb060','#ffe860','#a0e868','#40d898','#40c8e8','#6888ff','#9870e8','#d870c8','#ff70b0','#ff9068','#ffc848'];
-        let p1='', p2='';
-        for(let i=0; i<12; i++){ p1 += `<path d="${P(22,46,7.5,11,'round')}" fill="${cols[i]}" opacity=".87" transform="rotate(${i*30} ${cx} ${cy})"/>`; }
-        for(let i=0; i<12; i++){ p2 += `<path d="${P(22,36,5,7,'round')}" fill="${cols[(i+6)%12]}" opacity=".5" transform="rotate(${i*30+15} ${cx} ${cy})"/>`; }
-        lotusContent = p1 + p2;
-    } else if (nLevel === 5) { // 5. 大金蓮
-        lotusContent = `
-        <defs>
-            <radialGradient id="lA${id}" cx="50%" cy="73%" r="100%"><stop offset="0%" stop-color="#fffce0"/><stop offset="32%" stop-color="#f0c030"/><stop offset="100%" stop-color="#8c5c10" stop-opacity=".92"/></radialGradient>
-            <radialGradient id="lB${id}" cx="50%" cy="63%" r="100%"><stop offset="0%" stop-color="#fff8c0"/><stop offset="48%" stop-color="#e8a820"/><stop offset="100%" stop-color="#7a4c08" stop-opacity=".72"/></radialGradient>
-            <radialGradient id="lC${id}" cx="50%" cy="50%" r="100%"><stop offset="0%" stop-color="#fffde8"/><stop offset="100%" stop-color="#d4a030" stop-opacity=".38"/></radialGradient>
-        </defs>
-        ${rotatedPetals(8,22,47,8.5,12,'round',`url(#lA${id})`,.95)}
-        ${rotatedPetals(8,22,44,8,11,'round',`url(#lB${id})`,.88,22.5)}
-        ${rotatedPetals(8,22,33,5.5,7.5,'round',`url(#lC${id})`,.62,11.25)}`;
-    }
-
-    // ── 組合回傳 SVG ──
-    return `
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
-        ${sharedDefs}
-        ${voidBg}
-        <circle cx="50" cy="50" r="23" fill="none" stroke="#f0d060" stroke-width="1.5" opacity=".95"/>
-        <circle cx="50" cy="50" r="21.5" fill="none" stroke="#f0d060" stroke-width=".35" opacity=".35"/>
-        ${bgContent}
-        <g filter="url(#sof${id})">
-            ${lotusContent}
-            <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="40s" repeatCount="indefinite" additive="sum"/>
-        </g>
-        <circle cx="50" cy="50" r="1.8" fill="#ffffff" opacity=".95" filter="url(#glo${id})"/>
-    </svg>`;
+    return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">${defs}${bgContent}${lotusContent}</svg>`;
 }
+
+
+    
 
 
 // 🌟 獨立沙盒：天數蓮花生成引擎 (英文版)

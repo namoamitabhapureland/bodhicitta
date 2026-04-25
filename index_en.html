@@ -2411,11 +2411,15 @@ function speak(t, r) {
     setTimeout(() => { window.speechSynthesis.speak(m); }, 50);
 }
 
+
 function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
-    // 1. 決定蓮花演化等級 (1~10) - 完全同步勳章門檻
+    // 【加固 1】確保資料尚未讀取完成時，系統不會崩潰
+    const safeRank = rankType || ""; 
+    
+    // 【加固 2】決定蓮花演化等級 (1~10)，並確保 overrideLevel 範圍合法
     let nLevel = 1;
     if (overrideLevel !== null) {
-        nLevel = overrideLevel; 
+        nLevel = Math.max(1, Math.min(overrideLevel, 10)); 
     } else {
         if (nianCount >= 100000000) nLevel = 10;      // [1億] 圓滿成佛
         else if (nianCount >= 10000000) nLevel = 9;   // [1千萬] 念佛三昧
@@ -2450,7 +2454,7 @@ function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
         return s;
     }
 
-    // ── 共用定義 (發光與統一金剛金) ──
+    // ── 共用定義 (發光與統一金剛底座漸層) ──
     const sharedDefs = `
     <defs>
         <filter id="glo${id}" x="-50%" y="-50%" width="200%" height="200%">
@@ -2471,7 +2475,7 @@ function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
 
     // ── 統一金剛底座圖示 (判斷信、住、行、迴、地) ──
     let bgContent = '';
-    const isRank = (t) => rankType.includes(t);
+    const isRank = (t) => safeRank.includes(t); // 使用 safeRank 避免 includes 崩潰
 
     if (isRank('信') || isRank('Faith')) {
         bgContent = `
@@ -2505,24 +2509,27 @@ function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
         bgContent = `
         <circle cx="${cx}" cy="${cy}" r="21" fill="url(#rg-unified-gold)" stroke="#f0d060" stroke-width=".7"/>
         <polygon points="${cx},${cy-17} ${cx+2.5},${cy-7.5} ${cx+12},${cy-12} ${cx+7.5},${cy-2.5} ${cx+17},${cy} ${cx+7.5},${cy+2.5} ${cx+12},${cy+12} ${cx+2.5},${cy+7.5} ${cx},${cy+17} ${cx-2.5},${cy+7.5} ${cx-12},${cy+12} ${cx-7.5},${cy+2.5} ${cx-17},${cy} ${cx-7.5},${cy-2.5} ${cx-12},${cy-12} ${cx-2.5},${cy-7.5}" fill="#fffce0" opacity=".95"/>`;
+    } else {
+        // 保底底座：顯示最基礎的金色圓環，確保 rankType 異常時仍有底盤
+        bgContent = `<circle cx="${cx}" cy="${cy}" r="21" fill="url(#rg-unified-gold)" stroke="#f0d060" stroke-width=".7"/>`;
     }
 
-    // ── 蓮花顏料與生成 ──
+    // ── 蓮花顏料與十階演化生成 ──
     let lotusContent = '';
 
-    if (nLevel === 1) { // [0] 白蓮 (透明多階)
+    if (nLevel === 1) { // [0] 白蓮 (多階透明交錯)
         lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="75%" r="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#ccc" stop-opacity="0.3"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="65%" r="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.8"/><stop offset="100%" stop-color="#eee" stop-opacity="0.4"/></radialGradient></defs>
         ${rotatedPetals(8,22,46,7,11,'round',`url(#lA${id})`,.85)}${rotatedPetals(8,22,38,5.5,8,'round',`url(#lB${id})`,.65,22.5)}`;
-    } else if (nLevel === 2) { // [10] 暖橘 (水潤透明)
+    } else if (nLevel === 2) { // [10] 暖橘 (透明水潤)
         lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="75%" r="100%"><stop offset="0%" stop-color="#fffde7" stop-opacity="0.9"/><stop offset="100%" stop-color="#ef6c00" stop-opacity="0.4"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="65%" r="100%"><stop offset="0%" stop-color="#fff8e1" stop-opacity="0.8"/><stop offset="100%" stop-color="#ffb74d" stop-opacity="0.45"/></radialGradient></defs>
         ${rotatedPetals(8,22,46,7,11,'round',`url(#lA${id})`,.85)}${rotatedPetals(8,22,38,5.5,8,'round',`url(#lB${id})`,.65,22.5)}`;
-    } else if (nLevel === 3) { // [500] 粉霞 (原版)
+    } else if (nLevel === 3) { // [500] 粉霞
         lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="75%" r="100%"><stop offset="0%" stop-color="#fff0f5"/><stop offset="100%" stop-color="#b04470" stop-opacity=".85"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="65%" r="100%"><stop offset="0%" stop-color="#ffe8f2"/><stop offset="100%" stop-color="#d87898" stop-opacity=".55"/></radialGradient></defs>
         ${rotatedPetals(8,22,46,7,11,'round',`url(#lA${id})`,.92)}${rotatedPetals(8,22,38,5.5,8,'round',`url(#lB${id})`,.7,22.5)}`;
     } else if (nLevel === 4) { // [5000] 淡藍 (清透水潤)
         lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="72%" r="100%"><stop offset="0%" stop-color="#e0f0ff" stop-opacity="0.9"/><stop offset="100%" stop-color="#0277bd" stop-opacity="0.5"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="58%" r="100%"><stop offset="0%" stop-color="#e1f5fe" stop-opacity="0.8"/><stop offset="100%" stop-color="#4fc3f7" stop-opacity="0.45"/></radialGradient></defs>
         ${rotatedPetals(8,22,46,9,14,'wide',`url(#lA${id})`,.88)}${rotatedPetals(8,22,37,6,9,'wide',`url(#lB${id})`,.6,22.5)}`;
-    } else if (nLevel === 5) { // [1萬] 碧玉 (原版)
+    } else if (nLevel === 5) { // [1萬] 碧玉
         lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="78%" r="100%"><stop offset="0%" stop-color="#e0fff8"/><stop offset="100%" stop-color="#065c48" stop-opacity=".9"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="62%" r="100%"><stop offset="0%" stop-color="#c0fff0"/><stop offset="100%" stop-color="#38c0a8" stop-opacity=".5"/></radialGradient></defs>
         ${rotatedPetals(10,22,46,6,9,'point',`url(#lA${id})`,.9)}${rotatedPetals(10,22,36,4,6,'slim',`url(#lB${id})`,.6,18)}`;
     } else if (nLevel === 6) { // [10萬] 深藍 (寶池)
@@ -2537,7 +2544,7 @@ function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
     } else if (nLevel === 9) { // [1000萬] 金色 (大圓滿)
         lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="73%" r="100%"><stop offset="0%" stop-color="#fffce0"/><stop offset="100%" stop-color="#8c5c10" stop-opacity=".92"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="63%" r="100%"><stop offset="0%" stop-color="#fff8c0"/><stop offset="100%" stop-color="#7a4c08" stop-opacity=".72"/></radialGradient></defs>
         ${rotatedPetals(8,22,47,8.5,12,'round',`url(#lA${id})`,.95)}${rotatedPetals(8,22,44,8,11,'round',`url(#lB${id})`,.88,22.5)}`;
-    } else if (nLevel === 10) { // [1億] 36瓣純金 (萬佛)
+    } else { // 【加固 3】保底為一億圓滿金蓮 (100M+) - 36瓣純金
         lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="75%" r="100%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#e65100" stop-opacity=".95"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="65%" r="100%"><stop offset="0%" stop-color="#fffde7"/><stop offset="100%" stop-color="#d84315" stop-opacity=".85"/></radialGradient></defs>
         ${rotatedPetals(12,22,48,7,10,'round',`url(#lA${id})`,.98)}${rotatedPetals(12,22,42,6,8.5,'round',`url(#lB${id})`,.9,15)}${rotatedPetals(12,22,34,4.5,6.5,'round',`url(#lA${id})`,.8,7.5)}`;
     }
@@ -2552,7 +2559,6 @@ function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
         <circle cx="50" cy="50" r="1.8" fill="#ffffff" opacity=".95" filter="url(#glo${id})"/>
     </svg>`;
 }
-
 
     
 

@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>彌陀淨土 ‧ 蓮華尋寶陣</title>
+    <title>彌陀淨土 ‧ 法相妙觀陣</title>
     <style>
         :root {
             --bg-deep: #010204; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
-            --slot-size: 48px;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
@@ -19,48 +18,47 @@
 
         #bgCanvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
-        /* 頂部：定課目標 (題目) */
-        #header { padding: 15px 20px; z-index: 10; position: relative; background: rgba(1,2,4,0.6); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(212,175,55,0.15); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        /* 頂部：題目顯示區 */
+        #header { padding: 15px 20px; z-index: 10; position: relative; background: linear-gradient(180deg, rgba(1,2,4,0.9) 0%, rgba(1,2,4,0) 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; }
         .lv-tag { letter-spacing: 4px; color: var(--gold); font-size: 1.1rem; font-weight: bold; text-shadow: 0 0 10px rgba(212,175,55,0.4); width: 100%; text-align: left; }
         
-        /* 題目顯示區塊 */
-        .target-box { background: rgba(20,20,25,0.8); border: 1px solid var(--solid-gold); border-radius: 25px; padding: 6px 20px; font-size: 0.95rem; color: #fff; letter-spacing: 2px; display: flex; align-items: center; gap: 12px; box-shadow: 0 0 15px rgba(212,175,55,0.2); }
-        .target-icon { width: 30px; height: 30px; filter: drop-shadow(0 0 3px rgba(255,255,255,0.5)); }
-        .target-text { font-weight: bold; color: var(--gold); }
+        .question-box { background: rgba(20,25,30,0.85); border: 1px solid var(--solid-gold); border-radius: 30px; padding: 8px 25px; font-size: 1.1rem; color: #fff; letter-spacing: 2px; display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.2); backdrop-filter: blur(10px); }
+        .q-icon { width: 45px; height: 45px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.4)); }
+        .q-text { font-weight: bold; color: var(--gold); }
 
-        /* 核心散落區 */
-        #board { flex: 1; position: relative; width: 100%; overflow: hidden; z-index: 10; }
+        /* 核心觀相區 (不再限制點擊，純展示) */
+        #board { flex: 1; position: relative; width: 100%; overflow: hidden; z-index: 5; }
         
-        /* 脫掉底框的純粹 SVG 道具 (尺寸大幅放大至 85px) */
+        /* 超大法相 SVG */
         .item { 
-            position: absolute; width: 85px; height: 85px; 
+            position: absolute; 
             display: flex; justify-content: center; align-items: center;
-            cursor: pointer; 
-            transition: left 0.35s ease-in-out, top 0.35s ease-in-out, transform 0.2s, filter 0.2s;
-            /* 基本立體懸浮感 */
-            filter: drop-shadow(2px 5px 6px rgba(0,0,0,0.8)) drop-shadow(0 0 2px rgba(212,175,55,0.2));
+            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            /* 2.5D 極致懸浮陰影 */
+            filter: drop-shadow(5px 15px 15px rgba(0,0,0,0.9)) drop-shadow(0 0 2px rgba(212,175,55,0.3));
         }
         .item svg { width: 100%; height: 100%; pointer-events: none; }
 
-        /* ✨ 兩段式點擊：被選中時的發光放大狀態 ✨ */
-        .item.active-select {
-            filter: drop-shadow(0 0 15px var(--solid-gold)) drop-shadow(0 0 30px rgba(255,255,255,0.5)) brightness(1.2);
+        /* 答對時的發光特效 */
+        .item.highlight {
+            filter: drop-shadow(0 0 25px var(--solid-gold)) drop-shadow(0 0 40px rgba(255,255,255,0.8)) brightness(1.3) !important;
             transform: scale(1.15) !important;
-            z-index: 1500 !important;
+            z-index: 2000 !important;
         }
 
-        /* 底部 7 格托盤 */
-        #tray-area { height: 120px; width: 100%; background: rgba(1,2,4,0.8); border-top: 1px solid rgba(212,175,55,0.3); z-index: 20; position: relative; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(10px); flex-direction: column; gap: 10px;}
+        /* 底部：三選一超大按鈕區 */
+        #footer { padding: 25px 15px; width: 100%; background: linear-gradient(0deg, rgba(1,2,4,1) 0%, rgba(1,2,4,0.6) 70%, transparent 100%); z-index: 20; position: relative; display: flex; justify-content: center; align-items: center; gap: 15px;}
         
-        #tray-bg { position: relative; display: flex; gap: 6px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(139,168,156,0.2); box-shadow: inset 0 0 20px rgba(0,0,0,0.8); }
-        .tray-slot { width: var(--slot-size); height: var(--slot-size); border-radius: 8px; background: rgba(0,0,0,0.6); border: 1px dashed rgba(255,255,255,0.15); }
-
-        .dust { position: absolute; border-radius: 50%; pointer-events: none; z-index: 9999; }
+        .ans-btn { flex: 1; height: 75px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.5); background: linear-gradient(135deg, rgba(30,35,45,0.9) 0%, rgba(10,15,20,0.9) 100%); color: var(--gold); font-size: 1.8rem; font-weight: bold; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; box-shadow: 0 10px 20px rgba(0,0,0,0.8), inset 0 2px 5px rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.2;}
+        .ans-btn span { font-size: 0.8rem; color: var(--cyan); font-weight: normal; letter-spacing: 4px; }
+        .ans-btn:active { transform: scale(0.92); background: rgba(212,175,55,0.2); box-shadow: 0 2px 5px rgba(0,0,0,0.8); }
         
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s; }
+        /* 模態框回饋 */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 3000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s; }
         .modal.show { display: flex; opacity: 1; }
-        .m-box { width: 80%; max-width: 320px; background: linear-gradient(135deg, #151515, #050505); border: 1px solid var(--solid-gold); border-radius: 16px; padding: 35px 25px; text-align: center; box-shadow: 0 0 50px rgba(212,175,55,0.2); }
-        .ctrl-btn { padding: 12px 20px; border-radius: 20px; border: 1px solid var(--solid-gold); background: rgba(212,175,55,0.15); color: var(--gold); font-size: 0.9rem; letter-spacing: 2px; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 20px;}
+        .m-box { width: 85%; max-width: 340px; background: linear-gradient(135deg, #151515, #050505); border: 1px solid var(--solid-gold); border-radius: 24px; padding: 40px 25px; text-align: center; box-shadow: 0 0 50px rgba(212,175,55,0.2); transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .modal.show .m-box { transform: scale(1); }
+        .ctrl-btn { padding: 14px 20px; border-radius: 25px; border: 1px solid var(--solid-gold); background: rgba(212,175,55,0.15); color: var(--gold); font-size: 1rem; letter-spacing: 4px; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 25px;}
         .ctrl-btn:active { transform: scale(0.95); }
     </style>
 </head>
@@ -70,12 +68,11 @@
     <defs id="svg-defs">
         <linearGradient id="facet-light" x1="0%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.95"/><stop offset="100%" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
         <linearGradient id="facet-dark" x1="50%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d4af37" stop-opacity="0.2"/><stop offset="100%" stop-color="#b8860b" stop-opacity="0.8"/></linearGradient>
-        
         <linearGradient id="l-white" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="rgba(255,255,255,0.9)"/><stop offset="100%" stop-color="rgba(255,255,255,0.1)"/></linearGradient>
         <linearGradient id="l-red" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#ff9a9e" stop-opacity=".9"/><stop offset="50%" stop-color="#fad0c4" stop-opacity=".8"/><stop offset="100%" stop-color="#a1c4fd" stop-opacity=".7"/></linearGradient>
         <linearGradient id="l-gold" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#D4AF37" stop-opacity="1"/><stop offset="50%" stop-color="#FFD700" stop-opacity=".9"/><stop offset="100%" stop-color="#fff" stop-opacity="1"/></linearGradient>
         <linearGradient id="l-cyan" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#84fab0" stop-opacity=".8"/><stop offset="100%" stop-color="#8fd3f4" stop-opacity=".6"/></linearGradient>
-        
+        <linearGradient id="l-purple" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#ce93d8"/><stop offset="100%" stop-color="#f3e5f5" stop-opacity=".3"/></linearGradient>
         <linearGradient id="g-red" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ff4d4d"/><stop offset="100%" stop-color="#800000"/></linearGradient>
         <linearGradient id="g-blue" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#4da6ff"/><stop offset="100%" stop-color="#000080"/></linearGradient>
     </defs>
@@ -84,266 +81,188 @@
 <canvas id="bgCanvas"></canvas>
 
 <div id="header">
-    <div class="lv-tag" id="lv-display">第一關 ‧ 尋寶定課</div>
-    <div class="target-box">
-        <span style="font-size: 0.8rem;">破陣目標：</span>
-        <div class="target-icon" id="target-icon-display"></div>
-        <span class="target-text" id="target-count-display">0 / 3</span>
+    <div class="lv-tag" id="lv-display">第一階 ‧ 靜心觀相</div>
+    <div class="question-box">
+        <span style="font-size: 0.9rem;">尋出</span>
+        <div class="q-icon" id="q-icon-display"></div>
+        <span class="q-text" id="q-name-display">法相</span>
     </div>
 </div>
 
 <div id="board"></div>
 
-<div id="tray-area">
-    <div id="tray-bg">
-        <div class="tray-slot"></div><div class="tray-slot"></div><div class="tray-slot"></div>
-        <div class="tray-slot"></div><div class="tray-slot"></div><div class="tray-slot"></div><div class="tray-slot"></div>
-    </div>
+<div id="footer">
+    <button class="ans-btn" id="btn-0" onclick="submitAnswer(0)"></button>
+    <button class="ans-btn" id="btn-1" onclick="submitAnswer(1)"></button>
+    <button class="ans-btn" id="btn-2" onclick="submitAnswer(2)"></button>
 </div>
 
 <div class="modal" id="modal">
     <div class="m-box">
-        <div style="color:var(--gold); font-size:1.2rem; letter-spacing:4px; margin-bottom:10px;" id="m-title"></div>
-        <div style="color:var(--cyan); font-size:0.85rem; letter-spacing:2px; line-height:1.6;" id="m-desc"></div>
-        <button class="ctrl-btn" onclick="initGame()">重新入陣</button>
+        <div style="color:var(--gold); font-size:1.3rem; letter-spacing:4px; margin-bottom:15px; font-weight:bold;" id="m-title"></div>
+        <div style="color:#aaa; font-size:0.95rem; letter-spacing:2px; line-height:1.6;" id="m-desc"></div>
+        <button class="ctrl-btn" id="m-btn-action" onclick="closeModal()">繼續精進</button>
     </div>
 </div>
 
 <script>
     // --------------------------------------------------
-    // 1. 純淨 SVG 圖庫 (已放大並脫去外框)
+    // 1. 純淨 SVG 圖庫與命名 (大幅優化細節)
     // --------------------------------------------------
     const LIBRARY = {
-        lotus_white: `<svg viewBox="-150 -150 300 300"><g transform="scale(1.2)"><g transform="rotate(0)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-white)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/></g><g transform="rotate(60)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-white)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/></g><g transform="rotate(120)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-white)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/></g><circle cx="0" cy="0" r="20" fill="url(#l-white)"/></g></svg>`,
+        lotus_white: { name: "白玉淨蓮", svg: `<svg viewBox="-150 -150 300 300"><g transform="scale(1.2)"><g transform="rotate(0)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-white)" stroke="rgba(255,255,255,0.8)" stroke-width="2"/></g><g transform="rotate(60)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-white)" stroke="rgba(255,255,255,0.8)" stroke-width="2"/></g><g transform="rotate(120)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-white)" stroke="rgba(255,255,255,0.8)" stroke-width="2"/></g><circle cx="0" cy="0" r="20" fill="url(#l-white)"/></g></svg>` },
         
-        lotus_gold: `<svg viewBox="-150 -150 300 300"><g transform="scale(1.2)"><g transform="rotate(20)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-gold)" stroke="#fff" stroke-width="2"/></g><g transform="rotate(80)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-gold)" stroke="#fff" stroke-width="2"/></g><g transform="rotate(140)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-gold)" stroke="#fff" stroke-width="2"/></g><circle cx="0" cy="0" r="25" fill="url(#l-gold)"/></g></svg>`,
+        lotus_gold: { name: "大日純金", svg: `<svg viewBox="-150 -150 300 300"><g transform="scale(1.2)"><g transform="rotate(20)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-gold)" stroke="#fff" stroke-width="2"/></g><g transform="rotate(80)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-gold)" stroke="#fff" stroke-width="2"/></g><g transform="rotate(140)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-gold)" stroke="#fff" stroke-width="2"/></g><circle cx="0" cy="0" r="25" fill="url(#l-gold)"/></g></svg>` },
 
-        lotus_red: `<svg viewBox="-150 -150 300 300"><g transform="scale(1.2)"><g transform="rotate(40)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-red)" stroke="rgba(255,255,255,0.8)" stroke-width="2"/></g><g transform="rotate(100)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-red)" stroke="rgba(255,255,255,0.8)" stroke-width="2"/></g><g transform="rotate(160)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-red)" stroke="rgba(255,255,255,0.8)" stroke-width="2"/></g><circle cx="0" cy="0" r="15" fill="url(#l-red)"/></g></svg>`,
+        lotus_red: { name: "法悅粉櫻", svg: `<svg viewBox="-150 -150 300 300"><g transform="scale(1.2)"><g transform="rotate(40)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-red)" stroke="rgba(255,255,255,0.9)" stroke-width="2"/></g><g transform="rotate(100)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-red)" stroke="rgba(255,255,255,0.9)" stroke-width="2"/></g><g transform="rotate(160)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-red)" stroke="rgba(255,255,255,0.9)" stroke-width="2"/></g><circle cx="0" cy="0" r="18" fill="url(#l-red)"/></g></svg>` },
         
-        sword_red: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="50,10 56,40 50,105 44,40" fill="url(#facet-light)" stroke="#fff" stroke-width="1"/><polygon points="50,10 56,40 50,105" fill="url(#g-red)" opacity="0.9"/><polygon points="35,100 65,100 55,110 45,110" fill="url(#facet-dark)" stroke="#d4af37" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="url(#facet-dark)"/></g></svg>`,
+        lotus_purple: { name: "紫檀雲靄", svg: `<svg viewBox="-150 -150 300 300"><g transform="scale(1.2)"><g transform="rotate(15)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-purple)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/></g><g transform="rotate(75)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-purple)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/></g><g transform="rotate(135)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-purple)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/></g><circle cx="0" cy="0" r="16" fill="url(#l-purple)"/></g></svg>` },
+
+        sword_red: { name: "赤焰慧劍", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="50,10 56,40 50,105 44,40" fill="url(#facet-light)" stroke="#fff" stroke-width="1"/><polygon points="50,10 56,40 50,105" fill="url(#g-red)" opacity="0.9"/><polygon points="35,100 65,100 55,110 45,110" fill="url(#facet-dark)" stroke="#d4af37" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="url(#facet-dark)"/></g></svg>` },
         
-        vase_blue: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="url(#facet-light)" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-blue)" opacity="0.9" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="url(#facet-light)" stroke="#f3e5ab" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="url(#facet-dark)" opacity="0.8"/></g></svg>`
+        vase_blue: { name: "琉璃淨瓶", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="url(#facet-light)" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-blue)" opacity="0.9" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="url(#facet-light)" stroke="#f3e5ab" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="url(#facet-dark)" opacity="0.8"/></g></svg>` }
     };
 
     const TYPES = Object.keys(LIBRARY);
 
     // --------------------------------------------------
-    // 2. 遊戲狀態與「題目」設定
+    // 2. 關卡生成與難度控制
     // --------------------------------------------------
-    let items = [];
-    let tray = [];
-    let isAnimating = false;
-    let currentSelected = null; // ✨ 兩段式點擊的追蹤變數
-    
-    // 題目設定
+    let currentLevel = 1;
     let targetType = '';
-    let targetRequired = 3; // 需要消除 3 次(共9個)該目標
-    let targetCollected = 0;
+    let correctCount = 0;
+    let options = [];
 
-    function initGame() {
-        document.getElementById('modal').classList.remove('show');
+    function initLevel(lvl) {
         const board = document.getElementById('board');
         board.innerHTML = '';
-        items = []; tray = []; currentSelected = null;
-        targetCollected = 0;
         
-        // 隨機抽選本關的「題目」
-        targetType = TYPES[Math.floor(Math.random() * TYPES.length)];
-        document.getElementById('target-icon-display').innerHTML = LIBRARY[targetType];
-        updateTargetUI();
+        // 難度曲線設定 (Entropy)
+        let totalItems = Math.min(60, 15 + Math.floor(lvl * 2.5)); // 總數量越來越多
+        correctCount = Math.min(12, 4 + Math.floor(Math.random() * 4) + Math.floor(lvl / 5)); // 答案分佈
+        
+        let poolTypes = [...TYPES];
+        poolTypes.sort(() => Math.random() - 0.5);
+        targetType = poolTypes[0]; // 抽一題
 
-        // 生成法寶山：因為圖變大了，我們減少總數量 (例如 45 個)，避免完全擠成一團
-        // 確保題目法寶一定足夠 (3組 = 9個)
-        let pool = [];
-        for(let i=0; i<9; i++) pool.push(targetType); 
+        // 準備法寶池
+        let itemPool = [];
+        for(let i=0; i<correctCount; i++) itemPool.push(targetType);
         
-        // 填充剩餘的干擾法寶 (36 個)
-        for(let i=0; i<36; i++) {
-            let randomType = TYPES[Math.floor(Math.random() * TYPES.length)];
-            pool.push(randomType);
+        // 填充干擾物 (選用其他 2~4 種圖案來混淆)
+        let distractorVariety = Math.min(poolTypes.length - 1, 2 + Math.floor(lvl / 10));
+        let distractors = poolTypes.slice(1, 1 + distractorVariety);
+        
+        while(itemPool.length < totalItems) {
+            let distractor = distractors[Math.floor(Math.random() * distractors.length)];
+            itemPool.push(distractor);
         }
-        pool.sort(() => Math.random() - 0.5);
+        itemPool.sort(() => Math.random() - 0.5); // 徹底洗牌
 
+        // 更新 UI
+        document.getElementById('lv-display').innerText = `第 ${lvl} 階 ‧ 靜心觀相`;
+        document.getElementById('q-icon-display').innerHTML = LIBRARY[targetType].svg;
+        document.getElementById('q-name-display').innerText = LIBRARY[targetType].name;
+
+        // 生成選項按鈕 (保證包含正確答案，且順序隨機，數字合理不為負)
+        options = [correctCount, correctCount + (Math.random()>0.5?1:-1), correctCount + (Math.random()>0.5?2:-2)];
+        // 確保選項不重複且 > 0
+        while(new Set(options).size !== 3 || Math.min(...options) <= 0) {
+            options = [correctCount, correctCount + Math.floor(Math.random()*3)+1, correctCount - Math.floor(Math.random()*3)-1];
+            if(Math.min(...options) <= 0) options = [correctCount, correctCount+1, correctCount+2];
+        }
+        options.sort(() => Math.random() - 0.5);
+
+        for(let i=0; i<3; i++) {
+            document.getElementById(`btn-${i}`).innerHTML = `${options[i]}<br><span>數量</span>`;
+        }
+
+        // 渲染散落寶山 (極致放大與錯位疊加)
         const boardRect = board.getBoundingClientRect();
-        const centerX = boardRect.width / 2;
-        const centerY = boardRect.height / 2;
         
-        pool.forEach((type, idx) => {
+        itemPool.forEach((type, idx) => {
             let el = document.createElement('div');
-            el.className = 'item';
-            el.id = `item-${idx}`;
-            el.innerHTML = LIBRARY[type];
-            el.dataset.type = type;
+            el.className = `item ${type === targetType ? 'target-item' : ''}`;
+            el.innerHTML = LIBRARY[type].svg;
             
-            // 隨機散落邏輯
-            let radius = Math.random() * (boardRect.width * 0.35);
-            let angle = Math.random() * Math.PI * 2;
-            let randomX = centerX + Math.cos(angle) * radius - 42.5; // 扣掉一半寬度 (85/2)
-            let randomY = centerY + Math.sin(angle) * radius - 42.5;
-            let rotation = (Math.random() - 0.5) * 180;
+            // 尺寸大大小小，增添曼陀羅的錯落美感 (尺寸介於 80px ~ 130px)
+            let baseSize = 80 + Math.random() * 50; 
+            el.style.width = `${baseSize}px`;
+            el.style.height = `${baseSize}px`;
             
-            el.style.left = `${randomX}px`;
-            el.style.top = `${randomY}px`;
-            el.style.transform = `rotate(${rotation}deg)`;
-            el.style.zIndex = idx;
+            // 隨機分佈 (確保不出界太多)
+            let maxLeft = boardRect.width - baseSize + 20;
+            let maxTop = boardRect.height - baseSize + 20;
             
-            // 綁定兩段式點擊事件
-            el.onclick = (e) => handleItemTap(e, el);
+            el.style.left = `${Math.random() * maxLeft - 10}px`;
+            el.style.top = `${Math.random() * maxTop - 10}px`;
+            
+            // 隨機旋轉
+            el.style.transform = `rotate(${(Math.random() - 0.5) * 360}deg)`;
+            el.style.zIndex = idx; // 自動產生上下遮擋
             
             board.appendChild(el);
-            items.push(el);
         });
     }
 
-    function updateTargetUI() {
-        document.getElementById('target-count-display').innerText = `${targetCollected} / ${targetRequired}`;
-    }
-
     // --------------------------------------------------
-    // 3. ✨ 兩段式點擊與托盤邏輯 ✨
+    // 3. 答題驗證與回饋
     // --------------------------------------------------
-    function handleItemTap(e, el) {
-        e.stopPropagation(); // 防止點擊穿透到背景
-        if (isAnimating || tray.length >= 7) return;
-        if (tray.includes(el)) return; // 已經在托盤內的不可點
-
-        if (currentSelected === el) {
-            // 第 2 次點擊：確認收入托盤
-            el.classList.remove('active-select');
-            currentSelected = null;
-            moveToTray(el);
-        } else {
-            // 第 1 次點擊：選中並發光放大
-            if (currentSelected) currentSelected.classList.remove('active-select');
-            currentSelected = el;
-            el.classList.add('active-select');
+    function submitAnswer(btnIdx) {
+        let guess = options[btnIdx];
+        
+        if (guess === correctCount) {
+            // 答對了！將所有目標圖騰高光浮起
+            let targets = document.querySelectorAll('.target-item');
+            targets.forEach(t => t.classList.add('highlight'));
             
-            // 輕微的觸覺反饋 (如果手機支援)
-            if (navigator.vibrate) navigator.vibrate(50);
-        }
-    }
-
-    // 點擊背景空白處，取消選取
-    document.getElementById('board').addEventListener('click', () => {
-        if (currentSelected) {
-            currentSelected.classList.remove('active-select');
-            currentSelected = null;
-        }
-    });
-
-    function moveToTray(el) {
-        tray.push(el);
-        tray.sort((a, b) => a.dataset.type.localeCompare(b.dataset.type));
-        renderTray();
-        setTimeout(() => checkMatch(), 350); 
-    }
-
-    function renderTray() {
-        const traySlots = document.querySelectorAll('.tray-slot');
-        tray.forEach((item, index) => {
-            const targetSlot = traySlots[index].getBoundingClientRect();
-            item.style.position = 'fixed';
-            item.style.left = `${targetSlot.left - 18}px`; // 微調偏移量以適應 85px 的大圖
-            item.style.top = `${targetSlot.top - 18}px`;
-            item.style.transform = `rotate(0deg) scale(0.55)`; // 飛入托盤時縮小塞進 48px 的格子
-            item.style.zIndex = 2000 + index;
-        });
-    }
-
-    function checkMatch() {
-        let matchIndex = -1;
-        for (let i = 0; i <= tray.length - 3; i++) {
-            if (tray[i].dataset.type === tray[i+1].dataset.type && 
-                tray[i+1].dataset.type === tray[i+2].dataset.type) {
-                matchIndex = i;
-                break;
-            }
-        }
-
-        if (matchIndex !== -1) {
-            isAnimating = true;
-            let matchedItems = tray.splice(matchIndex, 3);
-            let matchType = matchedItems[0].dataset.type;
-            
-            matchedItems.forEach(item => {
-                createDustParticles(item, getParticleColor(matchType));
-                item.style.transform = 'scale(0)';
-                item.style.opacity = '0';
-                setTimeout(() => item.remove(), 300);
-            });
-
-            // 檢查是否為「題目目標」
-            if (matchType === targetType) {
-                targetCollected++;
-                updateTargetUI();
-            }
-
             setTimeout(() => {
-                renderTray();
-                isAnimating = false;
-                checkWinCondition();
-            }, 300);
+                showModal("清明照見 ‧ 功德增上", `見相非相，隨緣點算。<br>準確尋得 ${correctCount} 尊【${LIBRARY[targetType].name}】。`, "前往下一階", () => {
+                    currentLevel++;
+                    initLevel(currentLevel);
+                });
+            }, 1000); // 讓長輩欣賞一下發光的圖騰再跳視窗
+
         } else {
-            if (tray.length === 7) {
-                document.getElementById('m-title').innerText = "托盤滿溢 ‧ 陣法氣結";
-                document.getElementById('m-desc').innerText = "六根攀緣過盛，請重新理順心念。";
-                document.getElementById('modal').classList.add('show');
-            }
+            // 答錯了！給予溫柔的提示
+            showModal("心念散亂 ‧ 幻象叢生", `所見為虛妄，數目有異。<br>請安住呼吸，重新細觀畫布。`, "再次觀相", () => {
+                // 不換題目，只關閉視窗讓長輩重數
+            });
         }
     }
 
-    function checkWinCondition() {
-        if (targetCollected >= targetRequired) {
-            document.getElementById('m-title').innerText = "目標達成 ‧ 大陣已破";
-            document.getElementById('m-desc').innerText = "精準尋得法相，觀心通透。";
-            document.getElementById('modal').classList.add('show');
-        }
+    function showModal(title, desc, btnText, callback) {
+        document.getElementById('m-title').innerText = title;
+        document.getElementById('m-desc').innerHTML = desc;
+        document.getElementById('m-btn-action').innerText = btnText;
+        document.getElementById('m-btn-action').onclick = () => {
+            document.getElementById('modal').classList.remove('show');
+            if(callback) callback();
+        };
+        document.getElementById('modal').classList.add('show');
     }
 
-    function getParticleColor(type) {
-        if(type.includes('gold')) return '#d4af37';
-        if(type.includes('red')) return '#ff4d4d';
-        if(type.includes('cyan') || type.includes('blue')) return '#00e5ff';
-        return '#ffffff';
-    }
-
-    function createDustParticles(element, color) {
-        const rect = element.getBoundingClientRect();
-        for(let i=0; i<15; i++) {
-            let dust = document.createElement('div'); 
-            dust.className = 'dust'; dust.style.background = color;
-            dust.style.left = rect.left + rect.width/2 + 'px'; 
-            dust.style.top = rect.top + rect.height/2 + 'px';
-            let size = Math.random() * 4 + 2; dust.style.width = size + 'px'; dust.style.height = size + 'px';
-            dust.style.boxShadow = `0 0 8px ${color}`;
-            document.body.appendChild(dust); 
-            
-            dust.animate([
-                { opacity: 1, transform: `translate(0, 0) scale(1)` },
-                { opacity: 0, transform: `translate(${(Math.random() - 0.5) * 120}px, ${-(Math.random() * 150 + 50)}px) scale(0)` }
-            ], { duration: 600, easing: 'ease-out', fill: 'forwards' });
-            setTimeout(() => dust.remove(), 650);
-        }
-    }
-
-    // 星空背景
+    // --------------------------------------------------
+    // 背景星空
+    // --------------------------------------------------
     const canvas = document.getElementById('bgCanvas'); const ctx = canvas.getContext('2d');
     let cw, ch, stars = [];
     function res() { cw=canvas.width=window.innerWidth; ch=canvas.height=window.innerHeight; }
     window.addEventListener('resize', res); res();
-    for(let i=0; i<80; i++) stars.push({x:(Math.random()-0.5)*2000, y:(Math.random()-0.5)*2000, z:Math.random()*2000, s:Math.random()*2+1});
+    for(let i=0; i<60; i++) stars.push({x:(Math.random()-0.5)*2000, y:(Math.random()-0.5)*2000, z:Math.random()*2000, s:Math.random()*2+1});
     function drawBg() {
         ctx.fillStyle = '#010204'; ctx.fillRect(0,0,cw,ch); ctx.globalCompositeOperation = 'screen';
         stars.forEach(s => {
             s.z -= 1.0; if(s.z<=0){s.z=2000; s.x=(Math.random()-0.5)*2000; s.y=(Math.random()-0.5)*2000;}
             let sc=800/(800+s.z), px=cw/2+s.x*sc, py=ch/2+s.y*sc;
-            if(px>0&&px<cw&&py>0&&py<ch){ ctx.fillStyle = `rgba(212,175,55,${sc*0.6})`; ctx.beginPath(); ctx.arc(px,py,s.s*sc,0,Math.PI*2); ctx.fill(); }
+            if(px>0&&px<cw&&py>0&&py<ch){ ctx.fillStyle = `rgba(212,175,55,${sc*0.5})`; ctx.beginPath(); ctx.arc(px,py,s.s*sc,0,Math.PI*2); ctx.fill(); }
         });
         ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(drawBg);
     }
     drawBg();
 
-    initGame();
+    // 啟動第一關
+    initLevel(currentLevel);
 </script>
 </body>
 </html>

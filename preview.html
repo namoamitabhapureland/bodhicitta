@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>彌陀淨土系統 ‧ 琉璃同心陣 (蓮華演化版)</title>
+    <title>彌陀淨土系統 ‧ 琉璃蓮華大陣</title>
     <style>
         :root {
             --bg-deep: #010204; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
-            --tile-w: 52px; --tile-h: 70px; 
+            /* 針對 144 張大陣的精準 RWD 縮放，確保手機螢幕塞得下 12 排 */
+            --unit-w: 14.5px; 
+            --unit-h: 18px;
+            --tile-w: calc(var(--unit-w) * 2); 
+            --tile-h: calc(var(--unit-h) * 2.2); 
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
@@ -19,42 +23,44 @@
 
         #bgCanvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
-        #header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid rgba(212,175,55,0.15); z-index: 10; position: relative; background: rgba(1,2,4,0.4); backdrop-filter: blur(8px); }
+        #header { padding: 12px 20px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid rgba(212,175,55,0.15); z-index: 10; position: relative; background: rgba(1,2,4,0.4); backdrop-filter: blur(8px); }
         .lv-tag { letter-spacing: 4px; color: var(--gold); font-size: 1.05rem; font-weight: bold; text-shadow: 0 0 10px rgba(212,175,55,0.4); }
         .info-tag { font-size: 0.75rem; color: var(--cyan); letter-spacing: 2px; margin-top: 6px; }
 
         #board { flex: 1; position: relative; width: 100%; overflow: hidden; z-index: 10; display: flex; justify-content: center; align-items: center; }
-        #board-center { position: relative; width: 340px; height: 460px; transition: transform 0.3s; }
+        #board-center { position: relative; width: calc(var(--unit-w) * 24); height: calc(var(--unit-h) * 16); transition: transform 0.3s; }
 
         /* 琉璃牌本體 */
         .tile { 
             position: absolute; width: var(--tile-w); height: var(--tile-h); 
-            background: rgba(20, 20, 25, 0.6); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 8px; 
-            box-shadow: inset 0 0 12px rgba(0,0,0,0.8), 2px 4px 8px rgba(0,0,0,0.8);
+            background: rgba(20, 20, 25, 0.75); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 6px; 
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.9), 2px 3px 6px rgba(0,0,0,0.8);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             cursor: pointer; transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-            backdrop-filter: blur(4px); padding: 4px;
+            backdrop-filter: blur(4px); padding: 2px;
         }
-        .tile::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 50%); pointer-events: none; border-radius: 8px; }
+        .tile::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 50%); pointer-events: none; border-radius: 6px; }
         
-        .tile-svg { width: 100%; height: 100%; pointer-events: none; filter: drop-shadow(0 0 6px rgba(0,0,0,0.5)); }
+        .tile-svg { width: 100%; height: 100%; pointer-events: none; filter: drop-shadow(0 0 4px rgba(0,0,0,0.8)); }
         
-        /* 嚴格狀態：選中、被遮擋 (上下左右) */
-        .tile.selected { border-color: #fff; box-shadow: 0 0 25px rgba(212,175,55,0.8), inset 0 0 15px rgba(212,175,55,0.5); transform: translateY(-4px); z-index: 999 !important; }
-        .tile.covered { filter: brightness(0.2) contrast(0.9); cursor: not-allowed; pointer-events: none; border-color: rgba(139, 168, 156, 0.1); }
+        /* 嚴格狀態：選中、被遮擋 */
+        .tile.selected { border-color: #fff; box-shadow: 0 0 20px rgba(212,175,55,0.9), inset 0 0 10px rgba(212,175,55,0.6); transform: translateY(-3px); z-index: 999 !important; }
+        .tile.covered { filter: brightness(0.25) contrast(0.8); cursor: not-allowed; pointer-events: none; border-color: rgba(139, 168, 156, 0.1); }
+        
+        /* 暗牌/盲牌特效 */
+        .tile.blind { background: rgba(5, 5, 5, 0.95); border-color: rgba(139, 168, 156, 0.3); }
 
-        #footer { height: 80px; width: 100%; background: rgba(1,2,4,0.6); border-top: 1px solid rgba(139,168,156,0.3); z-index: 20; position: relative; display: flex; justify-content: space-around; align-items: center; backdrop-filter: blur(10px); padding: 0 10px; }
-        .ctrl-btn { padding: 10px 15px; border-radius: 20px; border: 1px solid rgba(139,168,156,0.5); background: transparent; color: var(--cyan); font-size: 0.85rem; letter-spacing: 2px; cursor: pointer; transition: 0.3s; }
+        #footer { height: 75px; width: 100%; background: rgba(1,2,4,0.8); border-top: 1px solid rgba(139,168,156,0.3); z-index: 20; position: relative; display: flex; justify-content: space-around; align-items: center; backdrop-filter: blur(10px); padding: 0 5px; gap: 5px;}
+        .ctrl-btn { flex: 1; padding: 10px 0; border-radius: 12px; border: 1px solid rgba(139,168,156,0.5); background: transparent; color: var(--cyan); font-size: 0.8rem; letter-spacing: 1px; cursor: pointer; transition: 0.3s; text-align: center;}
         .ctrl-btn:active { background: rgba(139,168,156,0.2); transform: scale(0.95); }
-        .ctrl-btn.prime { border-color: var(--solid-gold); color: var(--gold); background: rgba(212,175,55,0.1); }
+        .ctrl-btn.prime { border-color: var(--solid-gold); color: var(--gold); background: rgba(212,175,55,0.15); box-shadow: 0 0 10px rgba(212,175,55,0.2); }
 
         .dust { position: absolute; border-radius: 50%; pointer-events: none; z-index: 9999; }
         
-        /* 模態框 */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s; }
         .modal.show { display: flex; opacity: 1; }
-        .m-box { width: 80%; max-width: 300px; background: linear-gradient(135deg, #111, #050505); border: 1px solid var(--solid-gold); border-radius: 16px; padding: 30px; text-align: center; box-shadow: 0 0 40px rgba(212,175,55,0.2); }
-        .m-title { color: var(--gold); font-size: 1.1rem; letter-spacing: 4px; margin-bottom: 20px; line-height: 1.6; }
+        .m-box { width: 80%; max-width: 320px; background: linear-gradient(135deg, #151515, #050505); border: 1px solid var(--solid-gold); border-radius: 16px; padding: 35px 25px; text-align: center; box-shadow: 0 0 50px rgba(212,175,55,0.2); }
+        .m-title { color: var(--gold); font-size: 1.15rem; letter-spacing: 4px; margin-bottom: 25px; line-height: 1.6; text-shadow: 0 0 10px rgba(212,175,55,0.5); }
     </style>
 </head>
 <body>
@@ -78,21 +84,21 @@
 <div id="board"><div id="board-center"></div></div>
 
 <div id="footer">
-    <button class="ctrl-btn" onclick="startGame('medium')">中階 ‧ 蓮華 (36)</button>
-    <button class="ctrl-btn" onclick="startGame('hard')">高階 ‧ 浮屠 (72)</button>
-    <button class="ctrl-btn prime" onclick="shuffleBoard()">打亂重推</button>
+    <button class="ctrl-btn" onclick="startGame('normal')">一般 (144)</button>
+    <button class="ctrl-btn prime" onclick="startGame('blind')">無明 ‧ 暗陣</button>
+    <button class="ctrl-btn" onclick="shuffleBoard()" style="border-color: #8ba89c; color: #8ba89c;">打亂重洗</button>
 </div>
 
 <div class="modal" id="modal">
     <div class="m-box">
         <div class="m-title" id="m-title">理順色相 ‧ 陣法圓滿</div>
-        <button class="ctrl-btn prime" style="width: 100%;" onclick="document.getElementById('modal').classList.remove('show')">善哉</button>
+        <button class="ctrl-btn prime" style="width: 100%;" onclick="document.getElementById('modal').classList.remove('show')">善哉，繼續精進</button>
     </div>
 </div>
 
 <script>
     // --------------------------------------------------
-    // 1. 蓮花圖示資料庫 (取自十念法前 9 階)
+    // 1. 蓮花圖示資料庫 (取 9 種花色)
     // --------------------------------------------------
     const lotusStages = [
         { c: {t:"#ffffff", m:"#ffb7b2", b:"#e2858e", o: 0.9}, l: 3, g: 0.9 }, // 晨曦玫瑰
@@ -118,7 +124,7 @@
                 <radialGradient id="cl-core-${idx}" cx="50%" cy="50%" r="50%">
                     <stop offset="0%" stop-color="#fff"/><stop offset="40%" stop-color="${s.c.m}"/><stop offset="100%" stop-color="transparent"/>
                 </radialGradient>
-                <path id="cl-petal-${idx}" d="M 50 50 C 39 25, 41 9, 50 2 C 59 9, 61 25, 50 50 Z" fill="url(#cl-grad-${idx})" stroke="rgba(255,255,255,0.4)" stroke-width="0.3"/>
+                <path id="cl-petal-${idx}" d="M 50 50 C 39 25, 41 9, 50 2 C 59 9, 61 25, 50 50 Z" fill="url(#cl-grad-${idx})" stroke="rgba(255,255,255,0.3)" stroke-width="0.3"/>
             `;
         });
         document.getElementById('lotus-defs').innerHTML = defsHtml;
@@ -127,7 +133,7 @@
 
     function getLotusSVG(idx) {
         let s = lotusStages[idx];
-        let svgHtml = `<svg viewBox="0 0 100 100" class="tile-svg"><circle cx="50" cy="50" r="45" fill="rgba(5,5,5,0.8)"/><g filter="drop-shadow(0 0 3px rgba(0,0,0,0.8))">`;
+        let svgHtml = `<svg viewBox="0 0 100 100" class="tile-svg"><circle cx="50" cy="50" r="45" fill="rgba(5,5,5,0.5)"/><g filter="drop-shadow(0 0 3px rgba(0,0,0,0.8))">`;
         for (let l = s.l; l > 0; l--) {
             const sc = 0.35 + (l * 0.12);
             const off = (l % 2 === 0) ? 22.5 : 0;
@@ -141,53 +147,41 @@
         return svgHtml;
     }
 
-    // --------------------------------------------------
-    // 2. 嚴格網格佈局定義 (單位：半塊牌的寬高)
-    // --------------------------------------------------
-    const LAYOUTS = {
-        medium: [ // 36張 = 9花色 * 4張
-            // Z=0 (20張)
-            {x:2,y:2,z:0},{x:4,y:2,z:0},{x:6,y:2,z:0},{x:8,y:2,z:0},
-            {x:0,y:4,z:0},{x:2,y:4,z:0},{x:4,y:4,z:0},{x:6,y:4,z:0},{x:8,y:4,z:0},{x:10,y:4,z:0},
-            {x:0,y:6,z:0},{x:2,y:6,z:0},{x:4,y:6,z:0},{x:6,y:6,z:0},{x:8,y:6,z:0},{x:10,y:6,z:0},
-            {x:2,y:8,z:0},{x:4,y:8,z:0},{x:6,y:8,z:0},{x:8,y:8,z:0},
-            // Z=1 (10張)
-            {x:3,y:3,z:1},{x:5,y:3,z:1},{x:7,y:3,z:1},
-            {x:2,y:5,z:1},{x:4,y:5,z:1},{x:6,y:5,z:1},{x:8,y:5,z:1},
-            {x:3,y:7,z:1},{x:5,y:7,z:1},{x:7,y:7,z:1},
-            // Z=2 (4張)
-            {x:4,y:4,z:2},{x:6,y:4,z:2},{x:4,y:6,z:2},{x:6,y:6,z:2},
-            // Z=3,4 (塔頂2張)
-            {x:5,y:5,z:3},{x:5,y:5,z:4}
-        ],
-        hard: [ // 72張 = 9花色 * 8張 (極大陷阱)
-            // Z=0 (40張)
-            {x:2,y:0,z:0},{x:4,y:0,z:0},{x:6,y:0,z:0},{x:8,y:0,z:0},{x:10,y:0,z:0},
-            {x:0,y:2,z:0},{x:2,y:2,z:0},{x:4,y:2,z:0},{x:6,y:2,z:0},{x:8,y:2,z:0},{x:10,y:2,z:0},{x:12,y:2,z:0},
-            {x:0,y:4,z:0},{x:2,y:4,z:0},{x:4,y:4,z:0},{x:6,y:4,z:0},{x:8,y:4,z:0},{x:10,y:4,z:0},{x:12,y:4,z:0},
-            {x:0,y:6,z:0},{x:2,y:6,z:0},{x:4,y:6,z:0},{x:6,y:6,z:0},{x:8,y:6,z:0},{x:10,y:6,z:0},{x:12,y:6,z:0},
-            {x:0,y:8,z:0},{x:2,y:8,z:0},{x:4,y:8,z:0},{x:6,y:8,z:0},{x:8,y:8,z:0},{x:10,y:8,z:0},{x:12,y:8,z:0},
-            {x:2,y:10,z:0},{x:4,y:10,z:0},{x:6,y:10,z:0},{x:8,y:10,z:0},{x:10,y:10,z:0},
-            {x:6,y:-2,z:0},{x:6,y:12,z:0}, // 上下孤島
-            // Z=1 (20張)
-            {x:3,y:1,z:1},{x:5,y:1,z:1},{x:7,y:1,z:1},{x:9,y:1,z:1},
-            {x:1,y:3,z:1},{x:3,y:3,z:1},{x:5,y:3,z:1},{x:7,y:3,z:1},{x:9,y:3,z:1},{x:11,y:3,z:1},
-            {x:1,y:5,z:1},{x:3,y:5,z:1},{x:5,y:5,z:1},{x:7,y:5,z:1},{x:9,y:5,z:1},{x:11,y:5,z:1},
-            {x:3,y:7,z:1},{x:5,y:7,z:1},{x:7,y:7,z:1},{x:9,y:7,z:1},
-            // Z=2 (8張)
-            {x:4,y:3,z:2},{x:8,y:3,z:2},
-            {x:2,y:5,z:2},{x:4,y:5,z:2},{x:8,y:5,z:2},{x:10,y:5,z:2},
-            {x:4,y:7,z:2},{x:8,y:7,z:2},
-            // Z=3,4,5,6 (塔頂4張)
-            {x:6,y:5,z:3},{x:6,y:5,z:4},{x:6,y:5,z:5},{x:6,y:5,z:6}
-        ]
-    };
+    // 迷霧暗牌的背面 SVG
+    function getCardBackSVG() {
+        return `<svg viewBox="0 0 100 100" class="tile-svg">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(212,175,55,0.4)" stroke-width="1" stroke-dasharray="2 4"/>
+            <circle cx="50" cy="50" r="25" fill="none" stroke="rgba(212,175,55,0.2)" stroke-width="1"/>
+            <text x="50" y="58" fill="rgba(212,175,55,0.6)" font-size="28" text-anchor="middle" font-family="serif" font-weight="bold" filter="drop-shadow(0 0 5px rgba(212,175,55,0.5))">?</text>
+        </svg>`;
+    }
 
     // --------------------------------------------------
-    // 3. 核心演算法：絕對有解的逆向生成 (Reverse Gen)
+    // 2. 終極 144 張佈局生成器 (萬佛大陣)
+    // --------------------------------------------------
+    function generate144Layout() {
+        let l = [];
+        // Z=0: 12x6 = 72張 (超級大地基)
+        for(let x=0; x<12; x++) for(let y=0; y<6; y++) l.push({x: x*2, y: y*2, z:0}); 
+        // Z=1: 8x4 = 32張 (向內縮2格)
+        for(let x=2; x<10; x++) for(let y=1; y<5; y++) l.push({x: x*2, y: y*2, z:1}); 
+        // Z=2: 6x4 = 24張
+        for(let x=3; x<9; x++)  for(let y=1; y<5; y++) l.push({x: x*2, y: y*2, z:2}); 
+        // Z=3: 4x2 = 8張
+        for(let x=4; x<8; x++)  for(let y=2; y<4; y++) l.push({x: x*2, y: y*2, z:3}); 
+        // Z=4: 2x2 = 4張
+        for(let x=5; x<7; x++)  for(let y=2; y<4; y++) l.push({x: x*2, y: y*2, z:4}); 
+        // Z=5: 2x2 = 4張 (塔頂)
+        for(let x=5; x<7; x++)  for(let y=2; y<4; y++) l.push({x: x*2, y: y*2, z:5}); 
+        return l; // 總計 144 張
+    }
+
+    // --------------------------------------------------
+    // 3. 核心演算法：絕對有解的逆向生成 & 左右阻擋判定
     // --------------------------------------------------
     let boardTiles = [];
     let selectedId = null;
+    let isBlindMode = false;
 
     // 嚴格判定是否自由：上方無阻擋 AND (左邊無阻擋 OR 右邊無阻擋)
     function isFree(target, currentTiles) {
@@ -198,22 +192,20 @@
         for (let t of currentTiles) {
             if (t.id === target.id) continue;
             
-            // 在網格座標系中，寬高為 2 單位。
-            // 重疊條件：X距離 < 2 且 Y距離 < 2
-            let overlapX = Math.abs(t.x - target.x) < 2;
-            let overlapY = Math.abs(t.y - target.y) < 2;
+            // 單位換算：每張牌寬高為 2單位，因此只要距離 < 2 即為重疊
+            let overlapX = (t.x < target.x + 2) && (t.x + 2 > target.x);
+            let overlapY = (t.y < target.y + 2) && (t.y + 2 > target.y);
 
-            // 1. 上方遮蔽：比它高，且XY重疊
+            // 1. 上方遮蔽：比它高，且XY皆重疊 (哪怕只壓到一個角)
             if (t.z > target.z && overlapX && overlapY) blockedTop = true;
 
-            // 2. 左右遮蔽：通常只算同層 (z相等)，且在正左或正右，且Y重疊
+            // 2. 左右遮蔽：通常判斷同層(Z相等)，且Y重疊，且精準貼齊在左(x-2)或右(x+2)
             if (t.z === target.z && overlapY) {
                 if (t.x === target.x - 2) blockedLeft = true;
                 if (t.x === target.x + 2) blockedRight = true;
             }
         }
         
-        // 核心靈魂：必須上面空，且左右至少一邊空！
         return !blockedTop && (!blockedLeft || !blockedRight);
     }
 
@@ -221,26 +213,24 @@
         let slots = layoutArray.map((pos, idx) => ({ ...pos, id: idx, symbol: null }));
         let result = [];
         
-        // 準備配對池 (保證有解且有4/8張的陷阱)
-        let pairsNeeded = slots.length / 2;
-        let symbolsCount = 9; // 使用 9 種蓮花
-        let pairsPerSymbol = pairsNeeded / symbolsCount; // 中階=2對(4張), 高階=4對(8張)
+        let pairsNeeded = slots.length / 2; // 144/2 = 72對
+        let symbolsCount = 9; // 9 種蓮花
+        let pairsPerSymbol = pairsNeeded / symbolsCount; // 每種蓮花 8 對 (16張)
         
         let pool = [];
         for (let i = 0; i < symbolsCount; i++) {
-            for(let p = 0; p < pairsPerSymbol; p++) pool.push(i); // 塞入配對ID
+            for(let p = 0; p < pairsPerSymbol; p++) pool.push(i);
         }
         pool.sort(() => Math.random() - 0.5); // 洗牌
 
         let tempSlots = [...slots];
         
-        // 逆向倒推：每次拔掉兩張「目前自由」的牌，賦予相同花色
+        // 逆向倒推生成，保證100%有解
         while (tempSlots.length > 0) {
             let freeSlots = tempSlots.filter(s => isFree(s, tempSlots));
             
-            if (freeSlots.length < 2) return null; // 死局退回重算
+            if (freeSlots.length < 2) return null; // 萬一生成過程卡死，退回重做
 
-            // 隨機挑兩張自由牌
             freeSlots.sort(() => Math.random() - 0.5);
             let s1 = freeSlots[0], s2 = freeSlots[1];
             
@@ -248,39 +238,37 @@
             s1.symbol = sym; s2.symbol = sym;
             
             result.push(s1, s2);
-            // 從模擬盤面中移除，解鎖底下的牌
             tempSlots = tempSlots.filter(s => s.id !== s1.id && s.id !== s2.id);
         }
-        return result; // 成功回傳保證有解的盤面
+        return result; 
     }
 
     // --------------------------------------------------
     // 4. 遊戲控制與渲染
     // --------------------------------------------------
-    function startGame(type) {
+    function startGame(mode) {
+        isBlindMode = (mode === 'blind');
         document.getElementById('board-center').innerHTML = '';
         boardTiles = []; selectedId = null;
         
-        document.getElementById('lv-display').innerText = '陣法推演中...';
+        document.getElementById('lv-display').innerText = '無量大陣推演中...';
         
-        // 防呆機制：如果隨機生成卡死，重試直到成功 (通常幾毫秒內搞定)
+        let layout = generate144Layout();
         let attempts = 0;
         while (!boardTiles || boardTiles.length === 0) {
-            boardTiles = generateSolvable(LAYOUTS[type]);
+            boardTiles = generateSolvable(layout);
             attempts++;
-            if (attempts > 50) { alert("生成超時，請重整"); break; }
+            if (attempts > 50) { alert("陣法推演超時，請重整"); break; }
         }
 
-        document.getElementById('lv-display').innerText = type === 'medium' ? '中階 ‧ 蓮華十字陣' : '高階 ‧ 浮屠金剛塔';
-        
+        document.getElementById('lv-display').innerText = isBlindMode ? '【無明】金剛法界大陣' : '金剛法界大陣';
         renderBoard();
     }
 
     function shuffleBoard() {
-        let activeTiles = boardTiles.filter(t => t.symbol !== null); // 剩下的牌
+        let activeTiles = boardTiles.filter(t => t.symbol !== null); 
         let layoutCoords = activeTiles.map(t => ({x: t.x, y: t.y, z: t.z}));
         
-        // 再次利用逆向演算法，保證剩下的牌重新洗完依然 100% 有解
         let tempPool = [];
         let symbolCounts = {};
         activeTiles.forEach(t => { symbolCounts[t.symbol] = (symbolCounts[t.symbol]||0) + 1; });
@@ -294,20 +282,16 @@
             newActive = generateSolvableCustom(layoutCoords, [...tempPool]);
         }
         
-        // 覆寫原有狀態
         newActive.forEach((nt, idx) => {
             activeTiles[idx].symbol = nt.symbol;
-            let el = document.getElementById(`tile-${activeTiles[idx].id}`);
-            if(el) el.innerHTML = getLotusSVG(nt.symbol);
         });
 
         selectedId = null;
-        document.getElementById('board-center').style.transform = 'scale(0.9)';
+        document.getElementById('board-center').style.transform = 'scale(0.95)';
         setTimeout(() => document.getElementById('board-center').style.transform = 'scale(1)', 200);
         renderBoard();
     }
 
-    // 洗牌專用的生成器
     function generateSolvableCustom(layoutCoords, pool) {
         let tempSlots = layoutCoords.map((c, i) => ({...c, id: i, symbol: null}));
         let result = [];
@@ -327,8 +311,6 @@
     function renderBoard() {
         const center = document.getElementById('board-center');
         let remain = 0;
-
-        // 計算當前所有牌的自由狀態
         let activeTiles = boardTiles.filter(t => t.symbol !== null);
         
         boardTiles.forEach(t => {
@@ -338,23 +320,40 @@
             let el = document.getElementById(`tile-${t.id}`);
             if(!el) {
                 el = document.createElement('div');
-                el.id = `tile-${t.id}`; el.className = 'tile';
-                el.innerHTML = getLotusSVG(t.symbol);
-                // 像素轉換：1單位 = 26px寬 / 35px高
-                el.style.left = `${t.x * 26 + 10}px`; 
-                el.style.top = `${t.y * 35 + 30}px`; 
+                el.id = `tile-${t.id}`; 
+                // X: 每單位 var(--unit-w), Y: 每單位 var(--unit-h)
+                el.style.left = `calc(var(--unit-w) * ${t.x})`; 
+                el.style.top = `calc(var(--unit-h) * ${t.y})`; 
                 el.style.zIndex = t.z * 10;
                 el.onclick = () => handleTap(t.id);
                 center.appendChild(el);
             }
             
             let isTileFree = isFree(t, activeTiles);
-            if (!isTileFree) {
-                el.classList.add('covered'); el.classList.remove('selected');
+            
+            // 判定是否被完全覆蓋 (正上方有牌)
+            let isCoveredByTop = false;
+            for (let other of activeTiles) {
+                if (other.id === t.id) continue;
+                let overlapX = (other.x < t.x + 2) && (other.x + 2 > t.x);
+                let overlapY = (other.y < t.y + 2) && (other.y + 2 > t.y);
+                if (other.z > t.z && overlapX && overlapY) {
+                    isCoveredByTop = true; break;
+                }
+            }
+
+            // 無明暗陣邏輯：Z<2的牌，只要上面有牌壓著，就呈現問號暗牌
+            let renderAsBlind = isBlindMode && (t.z < 2) && isCoveredByTop;
+            
+            // 更新 DOM
+            if (renderAsBlind) {
+                el.className = 'tile blind covered';
+                el.innerHTML = getCardBackSVG();
             } else {
-                el.classList.remove('covered');
+                el.className = 'tile';
+                el.innerHTML = getLotusSVG(t.symbol);
+                if (!isTileFree) el.classList.add('covered');
                 if (selectedId === t.id) el.classList.add('selected');
-                else el.classList.remove('selected');
             }
         });
 
@@ -366,7 +365,7 @@
         let activeTiles = boardTiles.filter(t => t.symbol !== null);
         let t = boardTiles.find(x => x.id === id);
         
-        if (!isFree(t, activeTiles)) return; // 夾住或被壓住不可點
+        if (!isFree(t, activeTiles)) return; 
 
         if (selectedId === null) {
             selectedId = id;
@@ -379,7 +378,6 @@
             let t2 = t;
 
             if (t1.symbol === t2.symbol) {
-                // 配對成功：從資料中抹除
                 t1.symbol = null; t2.symbol = null;
                 
                 let el1 = document.getElementById(`tile-${t1.id}`);
@@ -391,9 +389,9 @@
                 setTimeout(() => { el1.remove(); el2.remove(); }, 300);
 
                 selectedId = null;
-                renderBoard(); // 重新計算解鎖的牌
+                renderBoard(); 
             } else {
-                selectedId = id; // 換選
+                selectedId = id; 
                 renderBoard();
             }
         }
@@ -401,7 +399,7 @@
 
     function createDustParticles(element, color) {
         const rect = element.getBoundingClientRect();
-        for(let i=0; i<15; i++) {
+        for(let i=0; i<12; i++) {
             let dust = document.createElement('div'); 
             dust.className = 'dust'; dust.style.background = color;
             dust.style.left = rect.left + rect.width/2 + 'px'; dust.style.top = rect.top + rect.height/2 + 'px';
@@ -411,9 +409,9 @@
             
             dust.animate([
                 { opacity: 1, transform: `translate(0, 0) scale(1)` },
-                { opacity: 0, transform: `translate(${(Math.random() - 0.5) * 150}px, ${-(Math.random() * 200 + 50)}px) scale(0)` }
-            ], { duration: 900, easing: 'ease-out', fill: 'forwards' });
-            setTimeout(() => dust.remove(), 950);
+                { opacity: 0, transform: `translate(${(Math.random() - 0.5) * 120}px, ${-(Math.random() * 180 + 50)}px) scale(0)` }
+            ], { duration: 800, easing: 'ease-out', fill: 'forwards' });
+            setTimeout(() => dust.remove(), 850);
         }
     }
 
@@ -434,8 +432,7 @@
     }
     drawBg();
 
-    // 啟動
-    startGame('medium');
+    startGame('normal');
 </script>
 </body>
 </html>

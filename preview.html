@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>彌陀淨土 ‧ 觀相生存陣 (終極演化版)</title>
+    <title>彌陀淨土 ‧ 觀相悟陣</title>
     <style>
         :root {
             --bg-deep: #010204; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
@@ -30,7 +30,7 @@
         #header { padding: 12px 15px; z-index: 10; position: relative; background: linear-gradient(180deg, rgba(1,2,4,0.98) 0%, rgba(1,2,4,0) 100%); display: flex; flex-direction: column; gap: 10px; }
         .top-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         
-        .btn-return { color: var(--cyan); font-size: 0.9rem; letter-spacing: 2px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 15px; border: 1px solid rgba(139,168,156,0.3); transition: 0.2s;}
+        .btn-return { color: var(--cyan); font-size: 0.95rem; letter-spacing: 2px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 15px; border: 1px solid rgba(139,168,156,0.3); transition: 0.2s;}
         .btn-return:active { background: rgba(255,255,255,0.2); }
         .title-area { display: flex; flex-direction: column; align-items: center; }
         .honor-tag { font-size: 0.7rem; color: var(--solid-gold); letter-spacing: 3px; margin-bottom: 2px; }
@@ -106,7 +106,7 @@
 
 <div id="header">
     <div class="top-bar">
-        <div class="btn-return" onclick="triggerExit()">✕ 退出</div>
+        <div class="btn-return" onclick="triggerExit()">退出</div>
         <div class="title-area">
             <div class="honor-tag" id="honor-display">琉璃行者</div>
             <div class="lv-tag" id="lv-display">結界起建中</div>
@@ -145,17 +145,28 @@
 
 <script>
     // --------------------------------------------------
-    // 0. 資料防護與每日一命通關鎖
+    // 0. 資料庫防護與初始化 (對齊主系統)
     // --------------------------------------------------
     let db = {};
-    const STORAGE_KEY = 'PX_V_Survive_Final_1.0';
-    try { db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e) { db = {}; }
-    db.waterLevel = db.waterLevel || 1;
+    const STORAGE_KEY = 'PX_V15.0'; // 統一主系統 Key
+    try { 
+        db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; 
+    } catch(e) { 
+        db = {}; 
+    }
+
     db.tempBag = db.tempBag || 0;
     db.points = db.points || 0;
     if (!db.treasures) db.treasures = { sword: 0, vase: 0, jewel: 0 };
-    function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
+    if (typeof db.treasures.sword === 'undefined') db.treasures.sword = 0;
+    if (typeof db.treasures.vase === 'undefined') db.treasures.vase = 0;
+    if (typeof db.treasures.jewel === 'undefined') db.treasures.jewel = 0;
 
+    // 觀相專屬境界與時劫鎖
+    db.visionLevel = db.visionLevel || 1; 
+    db.visionLastFailed = db.visionLastFailed || "";
+
+    function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
     const todayStr = new Date().toDateString();
     
     const SCRIPTURES = [
@@ -170,8 +181,6 @@
     // --------------------------------------------------
     // 1. ✨ 法寶庫 (闊刃劍 + 護手寶石 + 基礎放大) ✨
     // --------------------------------------------------
-    // polygon 劍刃加寬 (50,10 65,40 50,105 35,40)
-    // 護手寶石 circle
     const TARGET_LIB = {
         sword_red: { name: "赤焰慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-red)"/><polygon points="25,100 75,100 55,110 45,110" fill="#d4af37" stroke="#d4af37" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-red)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
         sword_gold: { name: "大日慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-gold)"/><polygon points="25,100 75,100 55,110 45,110" fill="#f3e5ab" stroke="#f3e5ab" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-gold)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
@@ -262,10 +271,10 @@
             if (game.timeLeft <= 0) {
                 clearInterval(game.timerInterval);
                 game.isProcessing = true;
-                db.waterLevel = Math.max(1, db.waterLevel - 1); // 輕微退階懲罰
-                db.lastFailedDate = todayStr; // 寫入一命通關鎖
+                db.visionLevel = Math.max(1, db.visionLevel - 1); // 輕微退階懲罰
+                db.visionLastFailed = todayStr; // 寫入一命通關鎖
                 saveDB();
-                showModal("今日定力已盡", "時劫已滿，心神已疲。<br>琉璃結界今日關閉，請安住呼吸，明日再來。", "歸返道場", () => window.location.href = 'index.html?screen=3');
+                showModal("今日定力已盡", "時劫已滿，心神已疲。<br>觀相結界今日關閉，請安住呼吸，明日再來。", "歸返道場", () => window.location.href = 'index.html?screen=3');
             }
         }, 100);
     }
@@ -278,11 +287,11 @@
     }
 
     // --------------------------------------------------
-    // 4. 陣法生成 (含漸進式心理旋轉)
+    // 4. 陣法生成 (漸進式心理旋轉)
     // --------------------------------------------------
     function initLevel() {
         // 一命通關檢查
-        if (db.lastFailedDate === todayStr) {
+        if (db.visionLastFailed === todayStr) {
             showModal("結界關閉", "今日定力已盡，請安住呼吸，明日再來起建結界。", "歸返道場", () => window.location.href = 'index.html?screen=3');
             return;
         }
@@ -291,7 +300,7 @@
         const board = document.getElementById('board');
         board.innerHTML = '';
         
-        let lvl = db.waterLevel;
+        let lvl = db.visionLevel;
         document.getElementById('lv-display').innerText = `第 ${lvl} 重結界`;
         document.getElementById('honor-display').innerText = getTitle(lvl);
         
@@ -376,7 +385,6 @@
             } else if (lvl > 20) {
                 rot = Math.floor(Math.random() * 90) - 45; // 輕微傾斜 -45 ~ +45
             }
-            // 前 20 關保持 0 度直立
             
             el.style.transform = `${flip} rotate(${rot}deg)`;
             el.style.animationDelay = `-${Math.random() * 8}s`;
@@ -414,11 +422,11 @@
     }
 
     function checkWinEvents() {
-        db.waterLevel++; db.tempBag++;
+        db.visionLevel++; db.tempBag++;
         
         let dropMsg = "";
-        let levelPassed = db.waterLevel - 1;
-        // 每 20 關掉落主系統多寶閣法寶
+        let levelPassed = db.visionLevel - 1;
+        
         if (levelPassed % 20 === 0 && levelPassed > 0) { 
             let dropType = TARGET_LIB[targetType].drop; 
             db.treasures[dropType]++; 

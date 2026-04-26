@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>彌陀淨土 ‧ 法相妙觀陣 (事件全開版)</title>
+    <title>彌陀淨土 ‧ 法相妙觀陣 (四階難度實測)</title>
     <style>
         :root {
             --bg-deep: #010204; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
-            --color-red: #ff4d4d; --color-cyan: #00e5ff; --color-gold: #ffe066; --color-purple: #d8b4fe; 
-            --color-green: #80ed99; --color-blue: #4da6ff; 
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
@@ -19,113 +17,91 @@
         }
 
         #bgCanvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+        /* 測試用的控制列 */
+        #test-panel { position: relative; z-index: 50; display: flex; justify-content: space-around; background: rgba(0,0,0,0.8); padding: 8px 5px; border-bottom: 1px solid var(--solid-gold); }
+        .test-btn { background: rgba(212,175,55,0.1); border: 1px solid var(--solid-gold); color: var(--gold); border-radius: 5px; padding: 5px 8px; font-size: 0.75rem; cursor: pointer; transition: 0.2s;}
+        .test-btn:active { background: rgba(212,175,55,0.4); }
+
+        /* 頂部：題目顯示區 */
+        #header { padding: 12px 20px; z-index: 10; position: relative; background: linear-gradient(180deg, rgba(1,2,4,0.95) 0%, rgba(1,2,4,0) 100%); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .lv-tag { letter-spacing: 4px; color: var(--gold); font-size: 1.1rem; font-weight: bold; text-shadow: 0 0 10px rgba(212,175,55,0.5); width: 100%; text-align: center; }
+        .lv-desc { font-size: 0.75rem; color: var(--cyan); text-align: center; letter-spacing: 1px; margin-bottom: 4px; line-height: 1.4;}
         
-        /* ✨ 舊版琉璃水的法界異象特效 CSS ✨ */
-        #vision-overlay { position: fixed; inset: 0; z-index: 100; pointer-events: none; opacity: 0; transition: opacity 0.8s, background 1s; }
-        .vibrate { animation: shake 0.2s infinite; }
-        @keyframes shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -2px); } 100% { transform: translate(1px, -1px); } }
-
-        .huayan-planet {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.1);
-            width: 50vh; height: 50vh; border-radius: 50%; filter: blur(20px); opacity: 0; z-index: 50; pointer-events: none; 
-            transition: transform 2.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 2.5s ease, filter 2.5s ease;
-        }
-        .huayan-planet.active { transform: translate(-50%, -50%) scale(1.5); opacity: 0.85; filter: blur(4px); }
-
-        #center-point {
-            position: absolute; top: 50%; left: 50%; width: 12px; height: 12px; background: #fff; border-radius: 50%;
-            transform: translate(-50%, -50%); z-index: 5; pointer-events: none; opacity: 0;
-            filter: drop-shadow(0 0 15px #fff) drop-shadow(0 0 35px var(--solid-gold));
-            transition: transform 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-
-        /* 頂部題目區 */
-        #header { padding: 15px 20px; z-index: 10; position: relative; background: linear-gradient(180deg, rgba(1,2,4,0.9) 0%, rgba(1,2,4,0) 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; }
-        .header-top { display: flex; justify-content: space-between; width: 100%; align-items: center; }
-        .lv-tag { letter-spacing: 4px; color: var(--gold); font-size: 1.1rem; font-weight: bold; text-shadow: 0 0 10px rgba(212,175,55,0.4); }
-        .bag-tag { font-size: 0.8rem; color: var(--cyan); letter-spacing: 2px; }
-        
-        .question-box { background: rgba(20,25,30,0.85); border: 1px solid var(--solid-gold); border-radius: 30px; padding: 8px 25px; font-size: 1.1rem; color: #fff; letter-spacing: 2px; display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.2); backdrop-filter: blur(10px); }
+        .question-box { background: rgba(20,25,30,0.85); border: 1px solid var(--solid-gold); border-radius: 30px; padding: 4px 25px; font-size: 1rem; color: #fff; letter-spacing: 2px; display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.2); backdrop-filter: blur(10px); }
         .q-icon { width: 45px; height: 45px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.4)); }
         .q-text { font-weight: bold; color: var(--gold); }
 
-        /* 核心觀相區 */
+        /* 核心觀相區 (純展示) */
         #board { flex: 1; position: relative; width: 100%; overflow: hidden; z-index: 5; }
         
+        /* 脫掉底框的大圖騰 */
         .item { 
             position: absolute; display: flex; justify-content: center; align-items: center;
-            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-            filter: drop-shadow(4px 10px 12px rgba(0,0,0,0.9)) drop-shadow(0 0 3px rgba(255,255,255,0.15));
-            animation: float-breathe 6s infinite ease-in-out alternate;
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            filter: drop-shadow(4px 10px 10px rgba(0,0,0,0.9)) drop-shadow(0 0 2px rgba(255,255,255,0.2));
+            animation: float-breathe 8s infinite ease-in-out alternate;
         }
         .item svg { width: 100%; height: 100%; pointer-events: none; }
-        @keyframes float-breathe { 0% { transform: translateY(0px) scale(1); } 100% { transform: translateY(-6px) scale(1.03); } }
 
+        @keyframes float-breathe { 0% { transform: translateY(0px) scale(1); } 100% { transform: translateY(-4px) scale(1.02); } }
+
+        /* 答對高光特效 */
         .item.highlight {
-            filter: drop-shadow(0 0 25px var(--solid-gold)) drop-shadow(0 0 40px rgba(255,255,255,0.8)) brightness(1.4) !important;
-            z-index: 2000 !important; animation: none; transform: scale(1.25) !important;
+            filter: drop-shadow(0 0 20px var(--solid-gold)) drop-shadow(0 0 35px rgba(255,255,255,0.9)) brightness(1.4) !important;
+            transform: scale(1.2) !important; z-index: 2000 !important; animation: none;
         }
 
-        /* 底部作答區 */
-        #footer { padding: 25px 15px; width: 100%; background: linear-gradient(0deg, rgba(1,2,4,1) 0%, rgba(1,2,4,0.6) 70%, transparent 100%); z-index: 20; position: relative; display: flex; justify-content: center; align-items: center; gap: 15px;}
-        .ans-btn { flex: 1; height: 75px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.5); background: linear-gradient(135deg, rgba(30,35,45,0.9) 0%, rgba(10,15,20,0.9) 100%); color: var(--gold); font-size: 1.8rem; font-weight: bold; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; box-shadow: 0 10px 20px rgba(0,0,0,0.8), inset 0 2px 5px rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.2;}
-        .ans-btn span { font-size: 0.8rem; color: var(--cyan); font-weight: normal; letter-spacing: 4px; }
+        /* 底部：三選一按鈕區 */
+        #footer { padding: 15px 15px 25px 15px; width: 100%; background: linear-gradient(0deg, rgba(1,2,4,1) 0%, rgba(1,2,4,0.7) 60%, transparent 100%); z-index: 20; position: relative; display: flex; justify-content: center; align-items: center; gap: 15px;}
+        
+        .ans-btn { flex: 1; height: 75px; border-radius: 16px; border: 1px solid rgba(212,175,55,0.5); background: linear-gradient(135deg, rgba(30,35,45,0.95) 0%, rgba(10,15,20,0.95) 100%); color: var(--gold); font-size: 1.8rem; font-weight: bold; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; box-shadow: 0 10px 20px rgba(0,0,0,0.8), inset 0 2px 5px rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.2;}
+        .ans-btn span { font-size: 0.75rem; color: var(--cyan); font-weight: normal; letter-spacing: 4px; }
         .ans-btn:active { transform: scale(0.92); background: rgba(212,175,55,0.2); box-shadow: 0 2px 5px rgba(0,0,0,0.8); }
         
-        /* 模態框 (相容原版事件) */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 3000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.5s; }
-        .modal-overlay.show { display: flex; opacity: 1; pointer-events: auto; }
-        .modal-box { width: 88%; max-width: 340px; background: linear-gradient(135deg, rgba(20,25,35,0.95), rgba(5,10,15,0.98)); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 24px; padding: 35px 25px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), inset 0 0 20px rgba(212,175,55,0.1); transform: translateY(20px); transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        .modal-overlay.show .modal-box { transform: translateY(0); }
-        
-        .m-title { color: var(--gold); font-size: 1.2rem; letter-spacing: 5px; margin-bottom: 15px; text-shadow: 0 0 15px rgba(212,175,55,0.5); font-weight: bold;}
-        .m-divider { width: 50px; height: 1px; background: var(--solid-gold); margin: 0 auto 20px; opacity: 0.5; }
-        .m-text { font-size: 0.95rem; line-height: 1.8; margin-bottom: 30px; letter-spacing: 2px; color: #e0e0e0; text-align: center; }
-        
-        /* RPG 長按按鈕 */
-        .rpg-btn-wrap { position: relative; width: 100%; height: 52px; border-radius: 26px; border: 1px solid rgba(212,175,55,0.6); background: rgba(0,0,0,0.5); cursor: pointer; overflow: hidden; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8); }
-        .rpg-btn-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0%; transition: width 0.05s linear; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.6)); }
-        .rpg-btn-text { position: relative; z-index: 5; color: #fff; font-size: 0.95rem; letter-spacing: 4px; text-shadow: 0 0 10px rgba(0,0,0,0.9); pointer-events: none; font-weight:bold;}
-        
-        .m-btn { background: transparent; border: 1px solid rgba(139,168,156,0.4); color: var(--cyan); padding: 14px; border-radius: 20px; font-size: 0.95rem; cursor: pointer; transition: all 0.3s; letter-spacing: 3px; width: 100%; margin-bottom: 10px;}
-        .m-btn:active { transform: scale(0.96); background: rgba(139,168,156,0.1); }
-        .m-btn-prime { background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); border-color: var(--solid-gold); color: var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.1); }
-        
-        .drop-icon svg { width: 35px; height: 50px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));}
+        /* 模態框回饋 (嚴格防 Bug 寫法) */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 3000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
+        .modal.show { display: flex; opacity: 1; }
+        .m-box { width: 85%; max-width: 320px; background: linear-gradient(135deg, #151515, #050505); border: 1px solid var(--solid-gold); border-radius: 20px; padding: 35px 25px; text-align: center; box-shadow: 0 0 40px rgba(212,175,55,0.3); transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .modal.show .m-box { transform: scale(1); }
+        .ctrl-btn { padding: 12px 20px; border-radius: 25px; border: 1px solid var(--solid-gold); background: rgba(212,175,55,0.15); color: var(--gold); font-size: 1rem; letter-spacing: 4px; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 25px;}
+        .ctrl-btn:active { transform: scale(0.95); }
     </style>
 </head>
-<body id="main-body">
+<body>
 
 <svg style="width:0; height:0; position:absolute;">
-    <defs>
+    <defs id="svg-defs">
         <linearGradient id="facet-light" x1="0%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.95"/><stop offset="100%" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
         <linearGradient id="facet-dark" x1="50%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d4af37" stop-opacity="0.2"/><stop offset="100%" stop-color="#b8860b" stop-opacity="0.8"/></linearGradient>
-        
+        <linearGradient id="l-white" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="rgba(255,255,255,0.9)"/><stop offset="100%" stop-color="rgba(255,255,255,0.1)"/></linearGradient>
         <linearGradient id="l-red" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#ff9a9e" stop-opacity=".9"/><stop offset="50%" stop-color="#fad0c4" stop-opacity=".8"/><stop offset="100%" stop-color="#a1c4fd" stop-opacity=".7"/></linearGradient>
         <linearGradient id="l-gold" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#D4AF37" stop-opacity="1"/><stop offset="50%" stop-color="#FFD700" stop-opacity=".9"/><stop offset="100%" stop-color="#fff" stop-opacity="1"/></linearGradient>
         <linearGradient id="l-cyan" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#84fab0" stop-opacity=".8"/><stop offset="100%" stop-color="#8fd3f4" stop-opacity=".6"/></linearGradient>
         <linearGradient id="l-purple" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#ce93d8" stop-opacity=".9"/><stop offset="100%" stop-color="#f3e5f5" stop-opacity=".4"/></linearGradient>
-        
-        <linearGradient id="g-red" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ff4d4d" stop-opacity="0.85"/><stop offset="100%" stop-color="#800000" stop-opacity="0.95"/></linearGradient>
-        <linearGradient id="g-blue" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#4da6ff" stop-opacity="0.85"/><stop offset="100%" stop-color="#000080" stop-opacity="0.95"/></linearGradient>
-        <linearGradient id="g-gold" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffd700" stop-opacity="0.9"/><stop offset="100%" stop-color="#b8860b" stop-opacity="0.95"/></linearGradient>
-        <linearGradient id="g-purple" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#d8b4fe" stop-opacity="0.85"/><stop offset="100%" stop-color="#4a148c" stop-opacity="0.95"/></linearGradient>
+        <linearGradient id="g-red" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ff4d4d" stop-opacity="0.8"/><stop offset="100%" stop-color="#800000" stop-opacity="0.9"/></linearGradient>
+        <linearGradient id="g-blue" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#4da6ff" stop-opacity="0.8"/><stop offset="100%" stop-color="#000080" stop-opacity="0.9"/></linearGradient>
+        <linearGradient id="g-gold" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffd700" stop-opacity="0.9"/><stop offset="100%" stop-color="#b8860b" stop-opacity="0.9"/></linearGradient>
         <linearGradient id="g-green" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#80ed99" stop-opacity="0.85"/><stop offset="100%" stop-color="#1b5e20" stop-opacity="0.95"/></linearGradient>
+        <linearGradient id="g-purple" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ea80fc" stop-opacity="0.8"/><stop offset="100%" stop-color="#4a148c" stop-opacity="0.9"/></linearGradient>
         <linearGradient id="facet-rose" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#c2185b" stop-opacity="0.5"/></linearGradient>
     </defs>
 </svg>
 
 <canvas id="bgCanvas"></canvas>
-<div id="vision-overlay"></div>
-<div id="center-point"></div>
+
+<div id="test-panel">
+    <button class="test-btn" onclick="loadLevel('Level_1')">第1關(啟蒙)</button>
+    <button class="test-btn" onclick="loadLevel('Level_60')">第60關(混色)</button>
+    <button class="test-btn" onclick="loadLevel('Level_250')">第250關(遮擋)</button>
+    <button class="test-btn" onclick="loadLevel('Level_600')">第600關(地獄)</button>
+</div>
 
 <div id="header">
-    <div class="header-top">
-        <div class="lv-tag" id="lv-display">結界讀取中</div>
-        <div class="bag-tag" id="bag-ui">資糧：0/100</div>
-    </div>
+    <div class="lv-tag" id="lv-display">第一階 ‧ 啟蒙靜觀</div>
+    <div class="lv-desc" id="lv-desc">【高反差建立信心】</div>
     <div class="question-box">
-        <span style="font-size: 0.95rem;">尋出</span>
+        <span style="font-size: 0.9rem;">尋出</span>
         <div class="q-icon" id="q-icon-display"></div>
         <span class="q-text" id="q-name-display">法相</span>
     </div>
@@ -139,98 +115,101 @@
     <button class="ans-btn" id="btn-2" onclick="submitAnswer(2)"></button>
 </div>
 
-<div class="modal-overlay" id="modal">
-    <div class="modal-box" id="modal-box">
-        <div class="m-title" id="m-title"></div>
-        <div class="m-divider" id="m-div"></div>
-        <div class="m-text" id="m-text"></div>
-        <div class="m-action-group" id="m-actions"></div>
+<div class="modal" id="modal">
+    <div class="m-box">
+        <div style="color:var(--gold); font-size:1.3rem; letter-spacing:4px; margin-bottom:15px; font-weight:bold;" id="m-title"></div>
+        <div style="color:#aaa; font-size:0.95rem; letter-spacing:2px; line-height:1.6;" id="m-desc"></div>
+        <button class="ctrl-btn" id="m-btn-action" onclick="closeModal()">知悉</button>
     </div>
 </div>
 
 <script>
     // --------------------------------------------------
-    // 0. 資料庫防護與法界異象庫 (沿用原版設定)
-    // --------------------------------------------------
-    let db = {};
-    try { db = JSON.parse(localStorage.getItem('PX_V16.0')) || {}; } catch(e) { db = {}; }
-    db.waterLevel = db.waterLevel || 1;
-    db.tempBag = db.tempBag || 0;
-    if (!db.treasures) db.treasures = { sword: 0, vase: 0, jewel: 0 };
-    function saveDB() { localStorage.setItem('PX_V16.0', JSON.stringify(db)); }
-
-    const SCRIPTURES = [
-        { t: "釋迦如來 ‧ 演說大經", c: "【發菩提心，一向專念】。<br>此三輩往生之根本，行者當攝心入定。", b: "南無本師釋迦牟尼佛", color: "rgba(243,229,171,0.25)" },
-        { t: "法藏比丘 ‧ 弘願顯現", c: "【設我得佛，十方眾生，至心信樂】。<br>四十八願，願願皆為導歸極樂。", b: "南無阿彌陀佛", color: "rgba(255,255,255,0.3)" },
-        { t: "地藏菩薩 ‧ 業海震盪", c: "【眾生度盡，方證菩提】。<br>無明業海翻湧，請至誠長按稱唸大願名號，鎮伏波濤。", b: "南無地藏王菩薩", color: "rgba(180,30,30,0.5)", type: "earth" },
-        { t: "大勢至 ‧ 念佛三昧", c: "【都攝六根，淨念相繼】。<br>如子憶母，法界白光恆常護念。", b: "南無大勢至菩薩", color: "rgba(255,255,255,0.4)" },
-        { t: "觀音如來 ‧ 般若照見", c: "【照見五蘊皆空，度一切苦厄】。<br>色即是空，空即是色。", b: "南無觀世音菩薩", color: "rgba(0,200,255,0.2)" },
-        { t: "無常顯現 ‧ 幻象叢生", c: "【世間無常，國土危脆】。<br>六根攀緣，心識散亂。請攝心安住，稱唸佛號以破除幻網。", b: "南無阿彌陀佛", color: "rgba(50,55,60,0.6)" }
-    ];
-
-    let game = { starSpeed: 1, currentEncounter: null, isHuayan: false, isProcessing: false };
-
-    // --------------------------------------------------
-    // 1. 純淨海量 SVG 圖庫 (包含蓮花、劍、瓶、珠，移除白玉蓮花)
+    // 1. 純淨 SVG 圖庫
     // --------------------------------------------------
     const LIBRARY = {
         // 蓮花系
-        lotus_gold: { name: "大日純金蓮", drop: "jewel", svg: `<svg viewBox="-150 -150 300 300"><g transform="scale(1.2)"><g transform="rotate(20)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-gold)" stroke="#fff" stroke-width="2"/></g><g transform="rotate(80)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-gold)" stroke="#fff" stroke-width="2"/></g><g transform="rotate(140)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-gold)" stroke="#fff" stroke-width="2"/></g><circle cx="0" cy="0" r="25" fill="url(#l-gold)"/></g></svg>` },
-        lotus_red: { name: "赤焰紅蓮", drop: "jewel", svg: `<svg viewBox="-150 -150 300 300"><g transform="scale(1.2)"><g transform="rotate(40)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-red)" stroke="rgba(255,255,255,0.9)" stroke-width="2"/></g><g transform="rotate(100)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-red)" stroke="rgba(255,255,255,0.9)" stroke-width="2"/></g><g transform="rotate(160)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-red)" stroke="rgba(255,255,255,0.9)" stroke-width="2"/></g><circle cx="0" cy="0" r="18" fill="url(#l-red)"/></g></svg>` },
-        lotus_cyan: { name: "琉璃水玉蓮", drop: "jewel", svg: `<svg viewBox="-150 -150 300 300"><g transform="scale(1.2)"><g transform="rotate(10)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-cyan)" stroke="rgba(255,255,255,0.7)" stroke-width="2"/></g><g transform="rotate(70)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-cyan)" stroke="rgba(255,255,255,0.7)" stroke-width="2"/></g><g transform="rotate(130)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-cyan)" stroke="rgba(255,255,255,0.7)" stroke-width="2"/></g><circle cx="0" cy="0" r="18" fill="url(#l-cyan)"/></g></svg>` },
-        lotus_purple: { name: "紫檀雲靄蓮", drop: "jewel", svg: `<svg viewBox="-150 -150 300 300"><g transform="scale(1.2)"><g transform="rotate(15)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-purple)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/></g><g transform="rotate(75)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-purple)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/></g><g transform="rotate(135)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-purple)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/></g><circle cx="0" cy="0" r="16" fill="url(#l-purple)"/></g></svg>` },
+        lotus_gold: { name: "大日純金蓮", svg: `<svg viewBox="-150 -150 300 300"><g transform="scale(1.2)"><g transform="rotate(20)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-gold)" stroke="#fff" stroke-width="2"/></g><g transform="rotate(80)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-gold)" stroke="#fff" stroke-width="2"/></g><g transform="rotate(140)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-gold)" stroke="#fff" stroke-width="2"/></g><circle cx="0" cy="0" r="25" fill="url(#l-gold)"/></g></svg>` },
+        lotus_red: { name: "赤焰紅蓮", svg: `<svg viewBox="-150 -150 300 300"><g transform="scale(1.2)"><g transform="rotate(40)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-red)" stroke="rgba(255,255,255,0.9)" stroke-width="2"/></g><g transform="rotate(100)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-red)" stroke="rgba(255,255,255,0.9)" stroke-width="2"/></g><g transform="rotate(160)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-red)" stroke="rgba(255,255,255,0.9)" stroke-width="2"/></g><circle cx="0" cy="0" r="18" fill="url(#l-red)"/></g></svg>` },
+        lotus_cyan: { name: "琉璃水玉蓮", svg: `<svg viewBox="-150 -150 300 300"><g transform="scale(1.2)"><g transform="rotate(10)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-cyan)" stroke="rgba(255,255,255,0.7)" stroke-width="2"/></g><g transform="rotate(70)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-cyan)" stroke="rgba(255,255,255,0.7)" stroke-width="2"/></g><g transform="rotate(130)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-cyan)" stroke="rgba(255,255,255,0.7)" stroke-width="2"/></g><circle cx="0" cy="0" r="18" fill="url(#l-cyan)"/></g></svg>` },
+        lotus_purple: { name: "紫霞仙光蓮", svg: `<svg viewBox="-150 -150 300 300"><g transform="scale(1.2)"><g transform="rotate(15)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-purple)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/></g><g transform="rotate(75)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-purple)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/></g><g transform="rotate(135)"><path d="M 0 0 C 49 -7 60 -69 0 -112 C -60 -69 -49 -7 0 0" fill="url(#l-purple)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/></g><circle cx="0" cy="0" r="16" fill="url(#l-purple)"/></g></svg>` },
 
         // 慧劍系
-        sword_red: { name: "赤焰慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="50,10 56,40 50,105 44,40" fill="url(#facet-light)" stroke="#fff" stroke-width="1"/><polygon points="50,10 56,40 50,105" fill="url(#g-red)" opacity="0.9"/><polygon points="35,100 65,100 55,110 45,110" fill="url(#facet-dark)" stroke="#d4af37" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="url(#facet-dark)"/></g></svg>` },
-        sword_gold: { name: "大日慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="50,10 56,40 50,105 44,40" fill="url(#facet-light)" stroke="#fff" stroke-width="1"/><polygon points="50,10 56,40 50,105" fill="url(#g-gold)" opacity="0.95"/><polygon points="35,100 65,100 55,110 45,110" fill="url(#facet-dark)" stroke="#f3e5ab" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="url(#facet-dark)"/></g></svg>` },
-        sword_blue: { name: "青玉慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="50,10 56,40 50,105 44,40" fill="url(#facet-light)" stroke="#fff" stroke-width="1"/><polygon points="50,10 56,40 50,105" fill="url(#g-blue)" opacity="0.9"/><polygon points="35,100 65,100 55,110 45,110" fill="url(#facet-dark)" stroke="#8ba89c" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="url(#facet-dark)"/></g></svg>` },
+        sword_red: { name: "赤焰慧劍", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="50,10 56,40 50,105 44,40" fill="url(#facet-light)" stroke="#fff" stroke-width="1"/><polygon points="50,10 56,40 50,105" fill="url(#g-red)" opacity="0.9"/><polygon points="35,100 65,100 55,110 45,110" fill="url(#facet-dark)" stroke="#d4af37" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="url(#facet-dark)"/></g></svg>` },
+        sword_gold: { name: "大日慧劍", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="50,10 56,40 50,105 44,40" fill="url(#facet-light)" stroke="#fff" stroke-width="1"/><polygon points="50,10 56,40 50,105" fill="url(#g-gold)" opacity="0.95"/><polygon points="35,100 65,100 55,110 45,110" fill="url(#facet-dark)" stroke="#f3e5ab" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="url(#facet-dark)"/></g></svg>` },
+        sword_blue: { name: "青玉慧劍", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="50,10 56,40 50,105 44,40" fill="url(#facet-light)" stroke="#fff" stroke-width="1"/><polygon points="50,10 56,40 50,105" fill="url(#g-blue)" opacity="0.9"/><polygon points="35,100 65,100 55,110 45,110" fill="url(#facet-dark)" stroke="#8ba89c" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="url(#facet-dark)"/></g></svg>` },
 
         // 淨瓶系
-        vase_blue: { name: "琉璃淨瓶", drop: "vase", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="url(#facet-light)" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-blue)" opacity="0.9" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="url(#facet-light)" stroke="#f3e5ab" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="url(#facet-dark)" opacity="0.8"/></g></svg>` },
-        vase_purple: { name: "紫霞淨瓶", drop: "vase", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="url(#facet-light)" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-purple)" opacity="0.9" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="url(#facet-light)" stroke="#ce93d8" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="url(#facet-dark)" opacity="0.8"/></g></svg>` },
-        vase_green: { name: "翡翠淨瓶", drop: "vase", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="url(#facet-light)" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-green)" opacity="0.9" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="url(#facet-light)" stroke="#80ed99" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="url(#facet-dark)" opacity="0.8"/></g></svg>` },
+        vase_blue: { name: "琉璃淨瓶", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="url(#facet-light)" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-blue)" opacity="0.9" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="url(#facet-light)" stroke="#f3e5ab" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="url(#facet-dark)" opacity="0.8"/></g></svg>` },
+        vase_purple: { name: "紫霞淨瓶", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="url(#facet-light)" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-purple)" opacity="0.9" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="url(#facet-light)" stroke="#ce93d8" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="url(#facet-dark)" opacity="0.8"/></g></svg>` },
+        vase_green: { name: "翡翠淨瓶", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="url(#facet-light)" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-green)" opacity="0.9" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="url(#facet-light)" stroke="#80ed99" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="url(#facet-dark)" opacity="0.8"/></g></svg>` },
 
         // 寶珠系
-        jewel_gold: { name: "大日寶珠", drop: "jewel", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.3) translate(-8, 5)"><polygon points="50,10 80,40 50,55 20,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#g-gold)" opacity="0.95" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="url(#facet-dark)" opacity="0.8" stroke="#fff" stroke-width="0.5"/></g></svg>` },
-        jewel_rose: { name: "粉晶寶珠", drop: "jewel", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.3) translate(-8, 5)"><polygon points="50,10 80,40 50,55 20,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#facet-rose)" opacity="0.95" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="url(#facet-dark)" opacity="0.8" stroke="#fff" stroke-width="0.5"/></g></svg>` },
+        jewel_gold: { name: "大日寶珠", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.3) translate(-8, 5)"><polygon points="50,10 80,40 50,55 20,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#g-gold)" opacity="0.95" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="url(#facet-dark)" opacity="0.8" stroke="#fff" stroke-width="0.5"/></g></svg>` },
+        jewel_rose: { name: "粉晶寶珠", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.3) translate(-8, 5)"><polygon points="50,10 80,40 50,55 20,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#facet-rose)" opacity="0.95" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="url(#facet-dark)" opacity="0.8" stroke="#fff" stroke-width="0.5"/></g></svg>` }
     };
 
-    const TYPES = Object.keys(LIBRARY);
-    let targetType = '';
-    let correctCount = 0;
-    let options = [];
+    // --------------------------------------------------
+    // 2. JSON 關卡劇本設定總表 (模擬後端設定)
+    // --------------------------------------------------
+    const LEVELS = {
+        "Level_1": {
+            "title": "第一階 ‧ 啟蒙靜觀",
+            "desc": "【高反差建立信心】",
+            "target": { "symbol": "sword_red", "count": 3 },
+            "total_pool": 15,
+            "distractors": ["vase_blue", "lotus_gold"]
+        },
+        "Level_60": {
+            "title": "第六十階 ‧ 辨識微觀",
+            "desc": "【近色與形體混淆干擾】",
+            "target": { "symbol": "lotus_cyan", "count": 5 },
+            "total_pool": 45,
+            "distractors": ["vase_blue", "sword_blue", "lotus_purple"]
+        },
+        "Level_250": {
+            "title": "第二百五十階 ‧ 空間尋寶",
+            "desc": "【形體掩護與大小落差】",
+            "target": { "symbol": "jewel_gold", "count": 7 },
+            "total_pool": 85,
+            "distractors": ["lotus_gold", "sword_gold", "lotus_red", "vase_purple"]
+        },
+        "Level_600": {
+            "title": "第六百階 ‧ 萬佛大陣",
+            "desc": "【視覺極限的無量法界】",
+            "target": { "symbol": "lotus_red", "count": 9 },
+            "total_pool": 130, // 滿畫面地獄級
+            "distractors": [
+                "lotus_gold", "lotus_cyan", "lotus_purple", 
+                "sword_red", "sword_gold", "sword_blue", 
+                "vase_blue", "vase_purple", "vase_green", 
+                "jewel_gold", "jewel_rose"
+            ]
+        }
+    };
 
     // --------------------------------------------------
-    // 2. 關卡佈陣與渲染
+    // 3. 陣法生成核心邏輯
     // --------------------------------------------------
-    function initLevel() {
-        game.isProcessing = false;
+    let correctCount = 0;
+    let options = [];
+    let isProcessing = false;
+
+    function loadLevel(levelId) {
+        if(isProcessing) return;
+        const config = LEVELS[levelId];
         const board = document.getElementById('board');
         board.innerHTML = '';
         
-        let lvl = db.waterLevel;
-        document.getElementById('lv-display').innerText = `第 ${lvl} 重結界`;
-        document.getElementById('bag-ui').innerText = `資糧：${db.tempBag}/100`;
-
-        // 難度與干擾
-        let totalItems = Math.min(85, 20 + Math.floor(lvl * 4)); 
-        correctCount = Math.min(20, 5 + Math.floor(Math.random() * 5) + Math.floor(lvl / 3)); 
+        // 1. 設置 UI 與題目
+        document.getElementById('lv-display').innerText = config.title;
+        document.getElementById('lv-desc').innerText = config.desc;
+        document.getElementById('q-icon-display').innerHTML = LIBRARY[config.target.symbol].svg;
+        document.getElementById('q-name-display').innerText = LIBRARY[config.target.symbol].name;
         
-        let poolTypes = [...TYPES];
-        poolTypes.sort(() => Math.random() - 0.5);
-        targetType = poolTypes[0];
+        correctCount = config.target.count;
 
-        let itemPool = [];
-        for(let i=0; i<correctCount; i++) itemPool.push(targetType);
-        
-        while(itemPool.length < totalItems) {
-            itemPool.push(TYPES[Math.floor(Math.random() * TYPES.length)]);
-        }
-        itemPool.sort(() => Math.random() - 0.5);
-
-        document.getElementById('q-icon-display').innerHTML = LIBRARY[targetType].svg;
-        document.getElementById('q-name-display').innerText = LIBRARY[targetType].name;
-
+        // 2. 準備選項按鈕 (保證答案絕對正確且無負數)
         options = [correctCount, correctCount + (Math.random()>0.5?1:-1), correctCount + (Math.random()>0.5?2:-2)];
         while(new Set(options).size !== 3 || Math.min(...options) <= 0) {
             options = [correctCount, correctCount + Math.floor(Math.random()*2)+1, correctCount - Math.floor(Math.random()*2)-1];
@@ -242,35 +221,56 @@
             document.getElementById(`btn-${i}`).innerHTML = `${options[i]}<br><span>數量</span>`;
         }
 
-        // 物理防疊死渲染
+        // 3. 準備法寶池 (嚴格防作弊：題目數量鎖死)
+        let itemPool = [];
+        for(let i=0; i<correctCount; i++) {
+            itemPool.push(config.target.symbol);
+        }
+        
+        // 填充干擾物 (絕對不包含題目)
+        let distractorsPool = config.distractors;
+        while(itemPool.length < config.total_pool) {
+            itemPool.push(distractorsPool[Math.floor(Math.random() * distractorsPool.length)]);
+        }
+        itemPool.sort(() => Math.random() - 0.5);
+
+        // 4. 渲染大陣 (超量圖案防當機演算法)
         const boardRect = board.getBoundingClientRect();
         let placedPositions = []; 
-        const MIN_CORE_DISTANCE = 40; 
+        let baseMinDistance = 45; // 初始安全距離
 
         itemPool.forEach((type, idx) => {
             let el = document.createElement('div');
-            el.className = `item ${type === targetType ? 'target-item' : ''}`;
+            el.className = `item ${type === config.target.symbol ? 'target-item' : ''}`;
             el.innerHTML = LIBRARY[type].svg;
             
-            // 尺寸極致錯落 70px ~ 140px
-            let baseSize = 70 + Math.random() * 70; 
+            // 尺寸極致錯落 50px ~ 130px (第250關的寶珠會偏小，蓮花會偏大，這裡做簡單模擬)
+            let baseSize = type.includes('jewel') ? (40 + Math.random()*20) : (70 + Math.random() * 60); 
             el.style.width = `${baseSize}px`; el.style.height = `${baseSize}px`;
             
-            let maxLeft = boardRect.width - baseSize + 20;
-            let maxTop = boardRect.height - baseSize + 20;
+            let maxLeft = boardRect.width - baseSize;
+            let maxTop = boardRect.height - baseSize;
             
             let finalX, finalY;
             let attempts = 0; let isValid = false;
+            let currentMinDist = baseMinDistance;
 
-            while(!isValid && attempts < 80) {
-                finalX = Math.random() * maxLeft - 10; finalY = Math.random() * maxTop - 10;
+            // ✨ 彈性排斥力：嘗試放置，若一直找不到位置(如第600關)，則縮小安全距離允許重疊
+            while(!isValid && attempts < 150) {
+                finalX = Math.random() * maxLeft; 
+                finalY = Math.random() * maxTop;
                 isValid = true;
+                
                 for(let pos of placedPositions) {
                     let dx = finalX - pos.x; let dy = finalY - pos.y;
-                    if(Math.sqrt(dx*dx + dy*dy) < MIN_CORE_DISTANCE) { isValid = false; break; }
+                    if(Math.hypot(dx, dy) < currentMinDist) { isValid = false; break; }
                 }
+                
                 attempts++;
+                // 找不到位子？慢慢降低排斥力，容許堆疊
+                if (attempts % 20 === 0) currentMinDist -= 5; 
             }
+            
             placedPositions.push({x: finalX, y: finalY});
 
             el.style.left = `${finalX}px`; el.style.top = `${finalY}px`;
@@ -286,166 +286,50 @@
     }
 
     // --------------------------------------------------
-    // 3. 核心：過關判定與【法界異象觸發】
+    // 4. 答題驗證與回饋
     // --------------------------------------------------
-    async function submitAnswer(btnIdx) {
-        if(game.isProcessing) return;
-        game.isProcessing = true;
+    function submitAnswer(btnIdx) {
+        if(isProcessing) return;
+        isProcessing = true;
         
         let guess = options[btnIdx];
         
         if (guess === correctCount) {
-            // 答對特效：高光照見
+            // 答對特效：高光照見 (不會彈出原生 alert，統一用高級 modal)
             let targets = document.querySelectorAll('.target-item');
             targets.forEach(t => t.classList.add('highlight'));
             
-            setTimeout(() => checkWinEvents(), 1200); 
+            setTimeout(() => {
+                showModal("清明照見 ‧ 陣法圓滿", `見相非相，定力深厚。<br>準確尋得 ${correctCount} 尊指定法相。`, () => {
+                    // 可以回到選單或進行下一關
+                });
+            }, 1500); 
 
         } else {
-            showModal("心念散亂 ‧ 幻象叢生", `所見為虛妄，數目有異。<br>請安住呼吸，重新細觀畫布。`, "再次觀相", () => { game.isProcessing = false; });
+            showModal("心念散亂 ‧ 幻象叢生", `所見為虛妄，數目有異。<br>請安住呼吸，重新細觀畫布。`, () => { 
+                isProcessing = false; // 允許重按
+            });
         }
     }
 
-    // ✨ 整合舊版琉璃水的全部過關事件 ✨
-    function checkWinEvents() {
-        const today = new Date().toDateString();
-        let isFirstWinToday = (db.waterLastDate !== today);
-        db.waterLastDate = today; 
-        db.waterLevel++; 
-        
-        let earnedPoints = 1;
-        let clearMsg = "一念清淨，資糧 +1。";
-        if (isFirstWinToday) {
-            earnedPoints += 10;
-            clearMsg = "今日首度理順，獲【每日定課】 +10，過關 +1，共得 +11 點。";
-        }
-        db.tempBag += earnedPoints;
-        
-        // 隨機掉落多寶閣法寶 (逢 20 關或極小機率)
-        let dropMsg = "";
-        let levelPassed = db.waterLevel - 1;
-        
-        if (levelPassed % 20 === 0 && levelPassed > 0) { 
-            let dropType = LIBRARY[targetType].drop; // 根據這關找的法寶決定掉落種類
-            db.treasures[dropType]++; 
-            let dropSvg = LIBRARY[targetType].svg;
-            dropMsg = `
-            <div style="display:flex; justify-content:center; align-items:center; gap:15px; margin: 20px 0; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 16px; border: 1px solid rgba(212,175,55,0.3);">
-                <div class="drop-icon">${dropSvg}</div>
-                <div style="text-align:left;">
-                    <div style="color:var(--solid-gold); font-size:0.9rem; letter-spacing:2px; font-weight:bold;">化現【${LIBRARY[targetType].name}】</div>
-                    <div style="color:#aaa; font-size:0.75rem; letter-spacing:1px; margin-top:3px;">已收入多寶閣</div>
-                </div>
-            </div>`;
-        }
-        saveDB();
-
-        // 啟動全螢幕星空爆發與白霧 (舊版特效)
-        game.starSpeed = 25; 
-        document.getElementById('center-point').style.opacity = '1';
-        const overlay = document.getElementById('vision-overlay');
-        overlay.style.background = 'radial-gradient(circle, #fff 0%, transparent 80%)';
-        overlay.style.opacity = '1';
-        document.getElementById('center-point').style.transform = 'translate(-50%, -50%) scale(50)';
-        
-        setTimeout(() => {
-            game.starSpeed = 1; overlay.style.opacity = '0';
-            document.getElementById('center-point').style.transform = 'translate(-50%, -50%) scale(1)';
-            document.getElementById('center-point').style.opacity = '0';
-            
-            // 判斷法界異象
-            if (levelPassed % 5 === 0 && levelPassed > 0) {
-                const s = SCRIPTURES[Math.floor(Math.random()*SCRIPTURES.length)];
-                triggerRPG(s, clearMsg + dropMsg);
-            } else if (levelPassed % 3 === 0 && levelPassed > 0) {
-                triggerHuayanWorld(levelPassed, clearMsg + dropMsg);
-            } else {
-                showLevelClear(clearMsg + dropMsg);
-            }
-        }, 1800);
-    }
-
-    // 華藏大千世界特效
-    function triggerHuayanWorld(lvl, extraMsg) {
-        game.isHuayan = true;
-        game.starSpeed = 60; // 極速金色星河
-        let layer = Math.floor(lvl / 3) % 20 + 1;
-        
-        const planet = document.createElement('div');
-        planet.className = 'huayan-planet';
-        const cols = ['var(--color-cyan)', 'var(--color-purple)', 'var(--color-gold)', 'var(--color-green)'];
-        planet.style.background = `radial-gradient(circle, ${cols[layer % 4]} 0%, transparent 70%)`;
-        document.body.appendChild(planet);
-        
-        setTimeout(() => planet.classList.add('active'), 100);
-        
-        setTimeout(() => {
-            planet.classList.remove('active'); planet.style.opacity = '0';
-            setTimeout(() => planet.remove(), 1500);
-            game.starSpeed = 1; game.isHuayan = false;
-            
-            showLevelClear(`<span style="color:var(--solid-gold); font-size:1.1rem; font-weight:bold;">神遊華藏大千 ‧ 第 ${layer} 重天</span><br><br>` + extraMsg);
-        }, 3000);
-    }
-
-    function showLevelClear(msg) {
-        document.getElementById('m-div').style.display = 'block';
-        showModal("境界提昇 ‧ 法喜充滿", msg, null, null, `
-            <button class="m-btn m-btn-prime" onclick="closeModalAndNext()">繼續精進</button>
-            <button class="m-btn" onclick="window.location.href='index.html?screen=3'">圓滿退場</button>
-        `);
-    }
-
-    function closeModalAndNext() { closeModal(); initLevel(); }
-
-    function triggerRPG(s, extraMsg) {
-        game.currentEncounter = s;
-        const overlay = document.getElementById('vision-overlay');
-        overlay.style.opacity = '1'; overlay.style.background = s.color;
-        if(s.type === 'earth') document.getElementById('main-body').classList.add('vibrate');
-
-        document.getElementById('m-div').style.display = 'none';
-        showModal(s.t, s.c + "<br><br><span style='font-size:0.8rem; color:var(--gold);'>" + extraMsg + "</span>", null, null, `
-            <div class="rpg-btn-wrap" onmousedown="startRPG()" onmouseup="stopRPG()" ontouchstart="startRPG()" ontouchend="stopRPG()">
-                <div class="rpg-btn-fill" id="fill" style="background:linear-gradient(90deg, transparent, ${s.color.replace(/[\d\.]+\)$/g, '0.8)')})"></div>
-                <div class="rpg-btn-text">${s.b}</div>
-            </div>
-            <div style="font-size:0.7rem; color:#888; letter-spacing:2px; margin-top:5px;">(長按聚光解厄)</div>
-        `);
-    }
-
-    let rpgTimer = null, rpgProg = 0;
-    function startRPG() {
-        clearInterval(rpgTimer); rpgProg = 0;
-        rpgTimer = setInterval(() => {
-            rpgProg += 2; document.getElementById('fill').style.width = rpgProg + '%';
-            if(rpgProg >= 100) { clearInterval(rpgTimer); finishRPG(); }
-        }, 30);
-    }
-    function stopRPG() { clearInterval(rpgTimer); rpgProg = 0; document.getElementById('fill').style.width = '0%'; }
-    function finishRPG() {
-        const overlay = document.getElementById('vision-overlay');
-        overlay.style.background = '#fff'; setTimeout(() => { overlay.style.opacity = '0'; }, 300);
-        document.getElementById('main-body').classList.remove('vibrate');
-        closeModal(); showLevelClear("業障消除，福慧增長。"); 
-    }
-
-    function showModal(title, text, btnText, callback, customHtml) {
-        document.getElementById('m-title').innerHTML = title;
-        document.getElementById('m-text').innerHTML = text;
-        document.getElementById('m-actions').innerHTML = customHtml || `<button class="ctrl-btn prime" onclick="closeModal()">${btnText}</button>`;
-        if(callback) window.currentCallback = callback;
+    // 嚴格防 Bug 模態框
+    function showModal(title, desc, callback) {
+        document.getElementById('m-title').innerText = title;
+        document.getElementById('m-desc').innerHTML = desc;
+        document.getElementById('m-btn-action').onclick = () => {
+            document.getElementById('modal').classList.remove('show');
+            if(callback) callback();
+        };
         document.getElementById('modal').classList.add('show');
     }
-
+    
     function closeModal() { 
         document.getElementById('modal').classList.remove('show'); 
-        game.currentEncounter = null; game.isProcessing = false;
-        if(window.currentCallback) { window.currentCallback(); window.currentCallback = null; } 
+        isProcessing = false; 
     }
 
     // --------------------------------------------------
-    // 4. 繁星背景 (爆量閃爍干擾)
+    // 5. 繁星背景
     // --------------------------------------------------
     const canvas = document.getElementById('bgCanvas'); const ctx = canvas.getContext('2d');
     let cw, ch;
@@ -454,7 +338,7 @@
     
     const starColors = ['#ffffff', '#f3e5ab', '#00e5ff', '#ffb7c5', '#ce93d8'];
     let stars = [];
-    for(let i=0; i<250; i++) { // 星星數量翻倍，增強干擾
+    for(let i=0; i<150; i++) { 
         stars.push({
             x: Math.random() * 2000 - 1000, y: Math.random() * 2000 - 1000, z: Math.random() * 2000, 
             s: Math.random() * 3.5 + 0.5, c: starColors[Math.floor(Math.random() * starColors.length)],
@@ -469,7 +353,7 @@
         ctx.globalCompositeOperation = 'screen';
         
         stars.forEach(s => {
-            s.z -= (2 * game.starSpeed); // 配合過關白光加速
+            s.z -= 1.0; 
             if(s.z<=0){ s.z=2000; s.x=(Math.random()-0.5)*2000; s.y=(Math.random()-0.5)*2000; }
             
             let sc = 800 / (800 + s.z);
@@ -478,13 +362,7 @@
             if(px > 0 && px < cw && py > 0 && py < ch) { 
                 let alpha = (Math.sin(time * s.twinkleSpeed * 10 + s.alphaOffset) * 0.5 + 0.5) * sc;
                 ctx.fillStyle = s.c; ctx.globalAlpha = alpha;
-                ctx.beginPath(); ctx.arc(px, py, s.s * sc * (game.starSpeed > 1 ? 5 : 1), 0, Math.PI*2); ctx.fill(); 
-                
-                if(s.s > 2.5 && game.starSpeed === 1) {
-                    let g = ctx.createRadialGradient(px, py, 0, px, py, s.s * sc * 4);
-                    g.addColorStop(0, s.c); g.addColorStop(1, 'transparent');
-                    ctx.fillStyle = g; ctx.fill();
-                }
+                ctx.beginPath(); ctx.arc(px, py, s.s * sc, 0, Math.PI*2); ctx.fill(); 
             }
         });
         ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; 
@@ -492,7 +370,8 @@
     }
     animateBg();
 
-    initLevel();
+    // 預設載入第一關測試
+    loadLevel('Level_1');
 </script>
 </body>
 </html>

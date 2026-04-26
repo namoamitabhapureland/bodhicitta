@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>彌陀淨土 ‧ 觀相生存陣</title>
+    <title>彌陀淨土 ‧ 觀相生存陣 (終極演化版)</title>
     <style>
         :root {
             --bg-deep: #010204; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
@@ -30,7 +30,8 @@
         #header { padding: 12px 15px; z-index: 10; position: relative; background: linear-gradient(180deg, rgba(1,2,4,0.98) 0%, rgba(1,2,4,0) 100%); display: flex; flex-direction: column; gap: 10px; }
         .top-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         
-        .btn-return { color: var(--cyan); font-size: 0.9rem; letter-spacing: 2px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 15px; border: 1px solid rgba(139,168,156,0.3); }
+        .btn-return { color: var(--cyan); font-size: 0.9rem; letter-spacing: 2px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 15px; border: 1px solid rgba(139,168,156,0.3); transition: 0.2s;}
+        .btn-return:active { background: rgba(255,255,255,0.2); }
         .title-area { display: flex; flex-direction: column; align-items: center; }
         .honor-tag { font-size: 0.7rem; color: var(--solid-gold); letter-spacing: 3px; margin-bottom: 2px; }
         .lv-tag { letter-spacing: 4px; color: var(--gold); font-size: 1.05rem; font-weight: bold; text-shadow: 0 0 10px rgba(212,175,55,0.4); }
@@ -79,7 +80,7 @@
         .rpg-btn-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0%; transition: width 0.05s linear; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.6)); }
         .rpg-btn-text { position: relative; z-index: 5; color: #fff; font-size: 0.95rem; letter-spacing: 4px; font-weight:bold;}
         
-        .m-btn { background: transparent; border: 1px solid rgba(139,168,156,0.4); color: var(--cyan); padding: 12px; border-radius: 20px; font-size: 0.95rem; cursor: pointer; transition: all 0.3s; letter-spacing: 3px; width: 100%; margin-bottom: 10px;}
+        .m-btn { background: transparent; border: 1px solid rgba(139,168,156,0.4); color: var(--cyan); padding: 12px; border-radius: 20px; font-size: 0.95rem; cursor: pointer; transition: all 0.3s; letter-spacing: 3px; width: 100%; margin-bottom: 10px; display: block;}
         .m-btn-prime { background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); border-color: var(--solid-gold); color: var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.1); }
         
         .time-plus { position: absolute; color: #80ed99; font-weight: bold; font-size: 1.4rem; text-shadow: 0 0 10px #80ed99; z-index: 200; pointer-events: none; animation: floatUp 1s forwards; }
@@ -105,7 +106,7 @@
 
 <div id="header">
     <div class="top-bar">
-        <div class="btn-return" onclick="goDojo()">← 回道場</div>
+        <div class="btn-return" onclick="triggerExit()">✕ 退出</div>
         <div class="title-area">
             <div class="honor-tag" id="honor-display">琉璃行者</div>
             <div class="lv-tag" id="lv-display">結界起建中</div>
@@ -147,12 +148,13 @@
     // 0. 資料防護與每日一命通關鎖
     // --------------------------------------------------
     let db = {};
-    try { db = JSON.parse(localStorage.getItem('PX_V_Survive_1.0')) || {}; } catch(e) { db = {}; }
+    const STORAGE_KEY = 'PX_V_Survive_Final_1.0';
+    try { db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e) { db = {}; }
     db.waterLevel = db.waterLevel || 1;
     db.tempBag = db.tempBag || 0;
     db.points = db.points || 0;
     if (!db.treasures) db.treasures = { sword: 0, vase: 0, jewel: 0 };
-    function saveDB() { localStorage.setItem('PX_V_Survive_1.0', JSON.stringify(db)); }
+    function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
 
     const todayStr = new Date().toDateString();
     
@@ -168,14 +170,14 @@
     // --------------------------------------------------
     // 1. ✨ 法寶庫 (闊刃劍 + 護手寶石 + 基礎放大) ✨
     // --------------------------------------------------
-    // SVG transform="scale(1.4) translate(-14, -20)" 讓劍的視覺佔比與瓶子寶珠一致
-    // polygon 劍刃加寬 (50,10 62,40 50,105 38,40)
+    // polygon 劍刃加寬 (50,10 65,40 50,105 35,40)
+    // 護手寶石 circle
     const TARGET_LIB = {
-        sword_red: { name: "赤焰慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 62,40 50,105 38,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 62,40 50,105" fill="url(#g-red)"/><polygon points="30,100 70,100 55,110 45,110" fill="#d4af37" stroke="#d4af37" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="5" fill="url(#g-red)" stroke="#fff" stroke-width="1"/></g></svg>` },
-        sword_gold: { name: "大日慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 62,40 50,105 38,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 62,40 50,105" fill="url(#g-gold)"/><polygon points="30,100 70,100 55,110 45,110" fill="#f3e5ab" stroke="#f3e5ab" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="5" fill="url(#g-gold)" stroke="#fff" stroke-width="1"/></g></svg>` },
-        sword_blue: { name: "青玉慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 62,40 50,105 38,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 62,40 50,105" fill="url(#g-blue)"/><polygon points="30,100 70,100 55,110 45,110" fill="#8ba89c" stroke="#8ba89c" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="5" fill="url(#g-blue)" stroke="#fff" stroke-width="1"/></g></svg>` },
-        sword_green: { name: "翡翠慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 62,40 50,105 38,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 62,40 50,105" fill="url(#g-green)"/><polygon points="30,100 70,100 55,110 45,110" fill="#8ba89c" stroke="#8ba89c" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="5" fill="url(#g-green)" stroke="#fff" stroke-width="1"/></g></svg>` },
-        sword_purple: { name: "紫霞慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 62,40 50,105 38,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 62,40 50,105" fill="url(#g-purple)"/><polygon points="30,100 70,100 55,110 45,110" fill="#8ba89c" stroke="#8ba89c" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="5" fill="url(#g-purple)" stroke="#fff" stroke-width="1"/></g></svg>` },
+        sword_red: { name: "赤焰慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-red)"/><polygon points="25,100 75,100 55,110 45,110" fill="#d4af37" stroke="#d4af37" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-red)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
+        sword_gold: { name: "大日慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-gold)"/><polygon points="25,100 75,100 55,110 45,110" fill="#f3e5ab" stroke="#f3e5ab" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-gold)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
+        sword_blue: { name: "青玉慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-blue)"/><polygon points="25,100 75,100 55,110 45,110" fill="#8ba89c" stroke="#8ba89c" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-blue)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
+        sword_green: { name: "翡翠慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-green)"/><polygon points="25,100 75,100 55,110 45,110" fill="#8ba89c" stroke="#8ba89c" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-green)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
+        sword_purple: { name: "紫霞慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-purple)"/><polygon points="25,100 75,100 55,110 45,110" fill="#8ba89c" stroke="#8ba89c" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-purple)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
 
         vase_blue: { name: "琉璃淨瓶", drop: "vase", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-blue)" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="#f3e5ab" stroke="#f3e5ab" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="#b8860b"/></g></svg>` },
         vase_purple: { name: "紫霞淨瓶", drop: "vase", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-purple)" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="#ce93d8" stroke="#ce93d8" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="#b8860b"/></g></svg>` },
@@ -212,7 +214,7 @@
     let targetType = ''; let correctCount = 0; let options = [];
 
     // --------------------------------------------------
-    // 2. 主系統同步與稱號
+    // 2. 主系統同步、退出選單與稱號
     // --------------------------------------------------
     function getTitle(lvl) {
         if(lvl >= 1000) return "萬法一如";
@@ -231,7 +233,14 @@
         }
     }
 
-    function goDojo() { window.location.href = 'index.html?screen=3'; }
+    // ✨ 退出防護選單 (雙極分支)
+    function triggerExit() {
+        showModal("暫歇觀相", "放下手機，讓眼睛與心神休息。<br>您欲前往何處？", null, null, `
+            <button class="m-btn m-btn-prime" onclick="closeModal()">繼續觀相</button>
+            <button class="m-btn" onclick="window.location.href='index.html?screen=2'">前往琉璃淨水</button>
+            <button class="m-btn" onclick="window.location.href='index.html?screen=3'">歸返主道場</button>
+        `);
+    }
 
     // --------------------------------------------------
     // 3. 生存計時器 (一命通關鎖)
@@ -253,9 +262,10 @@
             if (game.timeLeft <= 0) {
                 clearInterval(game.timerInterval);
                 game.isProcessing = true;
+                db.waterLevel = Math.max(1, db.waterLevel - 1); // 輕微退階懲罰
                 db.lastFailedDate = todayStr; // 寫入一命通關鎖
                 saveDB();
-                showModal("今日定力已盡", "時劫已滿，心神已疲。<br>琉璃結界今日關閉，請安住呼吸，明日再來。", "退出陣法", () => goDojo());
+                showModal("今日定力已盡", "時劫已滿，心神已疲。<br>琉璃結界今日關閉，請安住呼吸，明日再來。", "歸返道場", () => window.location.href = 'index.html?screen=3');
             }
         }, 100);
     }
@@ -268,12 +278,12 @@
     }
 
     // --------------------------------------------------
-    // 4. 陣法生成
+    // 4. 陣法生成 (含漸進式心理旋轉)
     // --------------------------------------------------
     function initLevel() {
-        // ✨ 一命通關檢查
+        // 一命通關檢查
         if (db.lastFailedDate === todayStr) {
-            showModal("結界關閉", "今日定力已盡，請安住呼吸，明日再來起建結界。", "回歸道場", () => goDojo());
+            showModal("結界關閉", "今日定力已盡，請安住呼吸，明日再來起建結界。", "歸返道場", () => window.location.href = 'index.html?screen=3');
             return;
         }
 
@@ -331,7 +341,6 @@
         options = Array.from(optSet); options.sort(() => Math.random() - 0.5);
         for(let i=0; i<3; i++) { document.getElementById(`btn-${i}`).innerHTML = `${options[i]}<br><span>數量</span>`; }
 
-        // 物理渲染 (加入 padding 保護上下 UI 不被遮擋)
         const boardRect = board.getBoundingClientRect();
         let placedPositions = []; 
 
@@ -351,7 +360,6 @@
 
             el.style.width = `${baseSize}px`; el.style.height = `${baseSize}px`;
             
-            // 安全邊距計算，扣除 20px 防止切邊或壓住按鈕
             let maxLeft = boardRect.width - baseSize - 10;
             let maxTop = boardRect.height - baseSize - 20; 
             
@@ -360,9 +368,17 @@
             
             el.style.left = `${finalX}px`; el.style.top = `${finalY}px`;
             
+            // ✨ 漸進式心理旋轉難度 ✨
             let flip = Math.random() > 0.5 ? 'scaleX(-1)' : 'scaleX(1)';
-            let rot = `rotate(${Math.floor(Math.random() * 360)}deg)`;
-            el.style.transform = `${flip} ${rot}`;
+            let rot = 0;
+            if (lvl > 50) {
+                rot = Math.floor(Math.random() * 360); // 360度大亂轉
+            } else if (lvl > 20) {
+                rot = Math.floor(Math.random() * 90) - 45; // 輕微傾斜 -45 ~ +45
+            }
+            // 前 20 關保持 0 度直立
+            
+            el.style.transform = `${flip} rotate(${rot}deg)`;
             el.style.animationDelay = `-${Math.random() * 8}s`;
             
             board.appendChild(el);

@@ -156,6 +156,7 @@
     // Vision Array simplified EN state
     db.visionLevel = db.visionLevel || 1; 
     db.visionLastFailed = db.visionLastFailed || "";
+    db.visionLastDate = db.visionLastDate || ""; 
 
     function saveDB() { localStorage.setItem(EN_KEY, JSON.stringify(db)); }
     const todayStr = new Date().toDateString();
@@ -261,9 +262,11 @@
             if (game.timeLeft <= 0) {
                 clearInterval(game.timerInterval);
                 game.isProcessing = true;
+                    
                 db.visionLevel = Math.max(1, db.visionLevel - 1); 
-                db.visionLastFailed = todayStr; 
+                db.visionLastFailed = new Date().toDateString(); 
                 saveDB();
+
                 showModal("CONCENTRATION DEPLETED", "The kalpa time has expired.<br>The barrier is closed for today. Return tomorrow.", "RETURN HOME", () => window.location.href = 'index_en.html?screen=3');
             }
         }, 100);
@@ -279,11 +282,14 @@
     // --------------------------------------------------
     // 4. Array Generation (Procedural)
     // --------------------------------------------------
-    function initLevel() {
-        if (db.visionLastFailed === todayStr) {
+        function initLevel() {
+        const currentToday = new Date().toDateString(); 
+        
+        if (db.visionLastFailed === currentToday) {
             showModal("BARRIER CLOSED", "Today's concentration is spent. Return tomorrow to rebuild the barrier.", "RETURN HOME", () => window.location.href = 'index_en.html?screen=3');
             return;
         }
+
 
         game.isProcessing = false;
         const board = document.getElementById('board');
@@ -409,11 +415,24 @@
         }
     }
 
-    function checkWinEvents() {
-        db.visionLevel++; db.tempBag++;
+       function checkWinEvents() {
+        const currentToday = new Date().toDateString();
+        let isFirstWinToday = (db.visionLastDate !== currentToday);
+        db.visionLastDate = currentToday;
+        db.visionLevel++; 
+        
+        // ✨ 首勝結算邏輯 (英文版)
+        let earnedPoints = 1;
+        let clearMsg = "";
+        if (isFirstWinToday) {
+            earnedPoints += 10;
+            clearMsg = "First clearance today. [Daily Diligence] +10, Clear +1. Total +11 Provisions.<br><br>";
+        }
+        db.tempBag += earnedPoints;
         
         let dropMsg = "";
         let levelPassed = db.visionLevel - 1;
+        
         if (levelPassed % 20 === 0 && levelPassed > 0) { 
             let dropType = TARGET_LIB[targetType].drop; 
             db.treasures[dropType]++; 
@@ -431,16 +450,18 @@
             
             if (levelPassed % 5 === 0 && levelPassed > 0) {
                 const s = SCRIPTURES[Math.floor(Math.random()*SCRIPTURES.length)];
-                triggerRPG(s, dropMsg);
+                triggerRPG(s, clearMsg + dropMsg);
             } else if (levelPassed % 3 === 0 && levelPassed > 0) {
-                triggerHuayanWorld(levelPassed, dropMsg);
-            } else if (dropMsg !== "") {
-                showModal("STATE ELEVATED", dropMsg, "CONTINUE", () => initLevel());
+                triggerHuayanWorld(levelPassed, clearMsg + dropMsg);
+            } else if (clearMsg !== "" || dropMsg !== "") {
+                // 這裡改用 STATE ELEVATED 彈窗顯示首勝與掉落訊息
+                showModal("STATE ELEVATED", clearMsg + dropMsg, "CONTINUE", () => initLevel());
             } else {
                 initLevel(); 
             }
         }, 1500);
     }
+
 
     function triggerHuayanWorld(lvl, dropMsg) {
         game.isHuayan = true; game.starSpeed = 60; 

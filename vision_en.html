@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Amitabha Pure Land ‧ Visionary Array</title>
+    <style>
+        :root {
+            --bg-deep: #010204; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            margin: 0; background: var(--bg-deep); color: #d0d0d0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden; height: 100dvh; display: flex; flex-direction: column;
+            -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: none; 
+        }
+
+        #bgCanvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+        
+        #vision-overlay { position: fixed; inset: 0; z-index: 100; pointer-events: none; opacity: 0; transition: opacity 0.8s, background 1s; }
+        .vibrate { animation: shake 0.2s infinite; }
+        @keyframes shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -2px); } 100% { transform: translate(1px, -1px); } }
+
+        .huayan-planet { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.1); width: 50vh; height: 50vh; border-radius: 50%; filter: blur(20px); opacity: 0; z-index: 50; pointer-events: none; transition: transform 2.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 2.5s ease, filter 2.5s ease; }
+        .huayan-planet.active { transform: translate(-50%, -50%) scale(1.5); opacity: 0.85; filter: blur(4px); }
+
+        #header { padding: 12px 15px; z-index: 10; position: relative; background: linear-gradient(180deg, rgba(1,2,4,0.98) 0%, rgba(1,2,4,0) 100%); display: flex; flex-direction: column; gap: 10px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        
+        .btn-return { color: var(--cyan); font-size: 0.9rem; letter-spacing: 1px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 15px; border: 1px solid rgba(139,168,156,0.3); transition: 0.2s; text-transform: uppercase; font-weight: bold;}
+        .btn-return:active { background: rgba(255,255,255,0.2); }
+        .title-area { display: flex; flex-direction: column; align-items: center; }
+        .honor-tag { font-size: 0.65rem; color: var(--solid-gold); letter-spacing: 2px; margin-bottom: 2px; text-transform: uppercase; font-weight: bold;}
+        .lv-tag { letter-spacing: 2px; color: var(--gold); font-size: 1rem; font-weight: bold; text-shadow: 0 0 10px rgba(212,175,55,0.4); }
+        .bag-tag { font-size: 0.8rem; color: var(--cyan); letter-spacing: 0.5px; cursor: pointer; }
+        .bag-tag.full { color: var(--solid-gold); font-weight: bold; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { filter: drop-shadow(0 0 2px var(--solid-gold)); } 50% { filter: drop-shadow(0 0 8px var(--solid-gold)); } 100% { filter: drop-shadow(0 0 2px var(--solid-gold)); } }
+
+        .question-row { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 5px; }
+        .question-box { background: rgba(20,25,30,0.85); border: 1px solid var(--solid-gold); border-radius: 30px; padding: 4px 18px; font-size: 0.9rem; color: #fff; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.8); }
+        .q-icon { width: 32px; height: 32px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.4)); }
+        .q-text { font-weight: bold; color: var(--gold); }
+        
+        .timer-wrap { flex: 1; margin-left: 15px; display: flex; flex-direction: column; align-items: flex-end; }
+        .timer-text { font-size: 0.75rem; color: #00e5ff; font-weight: bold; letter-spacing: 1px; margin-bottom: 4px; transition: color 0.3s; }
+        .timer-bar-bg { width: 100%; max-width: 100px; height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+        .timer-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #00e5ff, #80ed99); transition: width 0.1s linear, background 0.3s; box-shadow: 0 0 10px #00e5ff; }
+
+        #board { flex: 1; position: relative; width: 100%; overflow: hidden; z-index: 5; margin: 5px 0; }
+        
+        .item { position: absolute; display: flex; justify-content: center; align-items: center; transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); filter: drop-shadow(4px 8px 6px rgba(0,0,0,0.8)); }
+        .item.distractor-breathe { animation: float-breathe 6s infinite ease-in-out alternate; }
+        .item svg { width: 100%; height: 100%; pointer-events: none; }
+        @keyframes float-breathe { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
+        .item.highlight { filter: drop-shadow(0 0 25px var(--solid-gold)) drop-shadow(0 0 40px rgba(255,255,255,0.9)) brightness(1.4) !important; z-index: 4000 !important; animation: none; transform: scale(1.3) !important; }
+
+        #footer { padding: 15px 15px 25px 15px; width: 100%; background: linear-gradient(0deg, rgba(1,2,4,1) 0%, rgba(1,2,4,0.8) 70%, transparent 100%); z-index: 20; position: relative; display: flex; justify-content: center; align-items: center; gap: 12px;}
+        .ans-btn { flex: 1; height: 65px; border-radius: 16px; border: 1px solid rgba(212,175,55,0.5); background: linear-gradient(135deg, rgba(30,35,45,0.95) 0%, rgba(10,15,20,0.95) 100%); color: var(--gold); font-size: 1.6rem; font-weight: bold; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; box-shadow: 0 10px 20px rgba(0,0,0,0.8), inset 0 2px 5px rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.1;}
+        .ans-btn span { font-size: 0.65rem; color: var(--cyan); font-weight: normal; letter-spacing: 2px; text-transform: uppercase; }
+        .ans-btn:active { transform: scale(0.92); background: rgba(212,175,55,0.2); box-shadow: 0 2px 5px rgba(0,0,0,0.8); }
+        
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 5000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s; }
+        .modal-overlay.show { display: flex; opacity: 1; pointer-events: auto; }
+        .modal-box { width: 85%; max-width: 340px; background: linear-gradient(135deg, #151515, #050505); border: 1px solid var(--solid-gold); border-radius: 20px; padding: 35px 25px; text-align: center; box-shadow: 0 0 50px rgba(212,175,55,0.3); transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .modal-overlay.show .modal-box { transform: scale(1); }
+        
+        .m-title { color: var(--gold); font-size: 1.1rem; letter-spacing: 2px; margin-bottom: 15px; text-shadow: 0 0 15px rgba(212,175,55,0.5); font-weight: bold;}
+        .m-divider { width: 40px; height: 1px; background: var(--solid-gold); margin: 0 auto 20px; opacity: 0.5; }
+        .m-text { font-size: 0.9rem; line-height: 1.6; margin-bottom: 30px; letter-spacing: 0.5px; color: #e0e0e0; text-align: center; }
+        
+        .rpg-btn-wrap { position: relative; width: 100%; height: 52px; border-radius: 26px; border: 1px solid rgba(212,175,55,0.6); background: rgba(0,0,0,0.5); cursor: pointer; overflow: hidden; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; }
+        .rpg-btn-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0%; transition: width 0.05s linear; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.6)); }
+        .rpg-btn-text { position: relative; z-index: 5; color: #fff; font-size: 0.85rem; letter-spacing: 2px; font-weight:bold; text-transform: uppercase;}
+        
+        .m-btn { background: transparent; border: 1px solid rgba(139,168,156,0.4); color: var(--cyan); padding: 12px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; letter-spacing: 1px; width: 100%; margin-bottom: 10px; display: block; text-transform: uppercase; font-weight: bold;}
+        .m-btn-prime { background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); border-color: var(--solid-gold); color: var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.1); }
+        
+        .time-plus { position: absolute; color: #80ed99; font-weight: bold; font-size: 1.4rem; text-shadow: 0 0 10px #80ed99; z-index: 200; pointer-events: none; animation: floatUp 1s forwards; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
+    </style>
+</head>
+<body id="main-body">
+
+<svg style="width:0; height:0; position:absolute;">
+    <defs id="svg-defs">
+        <linearGradient id="g-red" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ff4d4d"/><stop offset="100%" stop-color="#800000"/></linearGradient>
+        <linearGradient id="g-blue" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#4da6ff"/><stop offset="100%" stop-color="#000080"/></linearGradient>
+        <linearGradient id="g-gold" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffd700"/><stop offset="100%" stop-color="#b8860b"/></linearGradient>
+        <linearGradient id="g-green" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#80ed99"/><stop offset="100%" stop-color="#1b5e20"/></linearGradient>
+        <linearGradient id="g-purple" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ea80fc"/><stop offset="100%" stop-color="#4a148c"/></linearGradient>
+        <linearGradient id="g-rose" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffb7c5"/><stop offset="100%" stop-color="#c2185b"/></linearGradient>
+        <linearGradient id="l-white" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#cccccc"/></linearGradient>
+    </defs>
+</svg>
+
+<canvas id="bgCanvas"></canvas>
+<div id="vision-overlay"></div>
+
+<div id="header">
+    <div class="top-bar">
+        <div class="btn-return" onclick="triggerExit()">Exit</div>
+        <div class="title-area">
+            <div class="honor-tag" id="honor-display">Lapis Practitioner</div>
+            <div class="lv-tag" id="lv-display">Initializing...</div>
+        </div>
+        <div class="bag-tag" id="bag-ui" onclick="checkSync()">Provisions: 0/100</div>
+    </div>
+    <div class="question-row">
+        <div class="question-box">
+            <span style="font-size: 0.85rem;">Find Out</span>
+            <div class="q-icon" id="q-icon-display"></div>
+            <span class="q-text" id="q-name-display">Object</span>
+        </div>
+        <div class="timer-wrap">
+            <div class="timer-text" id="timer-text">60.0s</div>
+            <div class="timer-bar-bg"><div class="timer-bar-fill" id="timer-fill"></div></div>
+        </div>
+    </div>
+</div>
+
+<div id="board"></div>
+
+<div id="footer">
+    <button class="ans-btn" id="btn-0" onclick="submitAnswer(0)"></button>
+    <button class="ans-btn" id="btn-1" onclick="submitAnswer(1)"></button>
+    <button class="ans-btn" id="btn-2" onclick="submitAnswer(2)"></button>
+</div>
+
+<div class="modal-overlay" id="modal">
+    <div class="modal-box" id="modal-box">
+        <div class="m-title" id="m-title"></div>
+        <div class="m-divider" id="m-div"></div>
+        <div class="m-text" id="m-text"></div>
+        <div class="m-action-group" id="m-actions"></div>
+    </div>
+</div>
+
+<script>
+    // --------------------------------------------------
+    // 0. English Database Sync (PX_EN_V15.0)
+    // --------------------------------------------------
+    let db = {};
+    const EN_KEY = 'PX_EN_V15.0'; 
+    try { 
+        db = JSON.parse(localStorage.getItem(EN_KEY)) || {}; 
+    } catch(e) { 
+        db = {}; 
+    }
+
+    db.tempBag = db.tempBag || 0;
+    db.points = db.points || 0;
+    if (!db.treasures) db.treasures = { sword: 0, vase: 0, jewel: 0 };
+    
+    // Vision Array EN specific state
+    db.visionLevel_EN = db.visionLevel_EN || 1; 
+    db.visionLastFailed_EN = db.visionLastFailed_EN || "";
+
+    function saveDB() { localStorage.setItem(EN_KEY, JSON.stringify(db)); }
+    const todayStr = new Date().toDateString();
+    
+    const SCRIPTURES = [
+        { t: "Avalokitesvara", c: "[Illuminating the five aggregates are empty, freeing from all suffering.]<br>Form is emptiness, emptiness is form.", b: "Namo Avalokitesvara", color: "rgba(0,200,255,0.2)" },
+        { t: "Ksitigarbha Bodhisattva", c: "[Until the hells are empty, I vow not to become a Buddha.]<br>Karma surges. Long-press to recite the vow and calm the waves.", b: "Namo Ksitigarbha Bodhisattva", color: "rgba(180,30,30,0.5)", type: "earth" },
+        { t: "Samantabhadra", c: "[Even if the void ends, my vows are endless.]<br>In one mote of dust are worlds numerous as dust motes.", b: "Namo Samantabhadra", color: "rgba(216,180,254,0.25)" },
+        { t: "Shakyamuni Buddha", c: "[Arouse the Bodhi Mind, mindful of One Direction.]<br>This is the root of rebirth. Settle your mind in stillness.", b: "Namo Shakyamuni Buddha", color: "rgba(243,229,171,0.25)" }
+    ];
+
+    let game = { starSpeed: 1, currentEncounter: null, isHuayan: false, isProcessing: false, timeLeft: 60, maxTime: 60, timerInterval: null };
+
+    // --------------------------------------------------
+    // 1. Broad-bladed Jeweled Sword (English Set)
+    // --------------------------------------------------
+    const TARGET_LIB = {
+        sword_red: { name: "Red Wisdom Sword", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-red)"/><polygon points="25,100 75,100 55,110 45,110" fill="#d4af37" stroke="#d4af37" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-red)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
+        sword_gold: { name: "Golden Wisdom Sword", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-gold)"/><polygon points="25,100 75,100 55,110 45,110" fill="#f3e5ab" stroke="#f3e5ab" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-gold)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
+        sword_blue: { name: "Lapis Wisdom Sword", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-blue)"/><polygon points="25,100 75,100 55,110 45,110" fill="#8ba89c" stroke="#8ba89c" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-blue)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
+        sword_green: { name: "Jade Wisdom Sword", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-green)"/><polygon points="25,100 75,100 55,110 45,110" fill="#8ba89c" stroke="#8ba89c" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-green)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
+        sword_purple: { name: "Purple Wisdom Sword", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-purple)"/><polygon points="25,100 75,100 55,110 45,110" fill="#8ba89c" stroke="#8ba89c" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-purple)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
+
+        vase_blue: { name: "Lapis Pure Vase", drop: "vase", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-blue)" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="#f3e5ab" stroke="#f3e5ab" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="#b8860b"/></g></svg>` },
+        vase_purple: { name: "Purple Pure Vase", drop: "vase", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-purple)" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="#ce93d8" stroke="#ce93d8" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="#b8860b"/></g></svg>` },
+        vase_green: { name: "Jade Pure Vase", drop: "vase", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-green)" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="#80ed99" stroke="#80ed99" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="#b8860b"/></g></svg>` },
+        vase_gold: { name: "Golden Pure Vase", drop: "vase", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-gold)" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="#f3e5ab" stroke="#f3e5ab" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="#b8860b"/></g></svg>` },
+        vase_red: { name: "Red Pure Vase", drop: "vase", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-red)" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="#f3e5ab" stroke="#f3e5ab" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="#b8860b"/></g></svg>` },
+
+        jewel_gold: { name: "Sun Jewel", drop: "jewel", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.3) translate(-8, 5)"><polygon points="50,10 80,40 50,55 20,40" fill="#fff" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#g-gold)" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="#b8860b" stroke="#fff" stroke-width="0.5"/></g></svg>` },
+        jewel_rose: { name: "Rose Jewel", drop: "jewel", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.3) translate(-8, 5)"><polygon points="50,10 80,40 50,55 20,40" fill="#fff" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#g-rose)" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="#c2185b" stroke="#fff" stroke-width="0.5"/></g></svg>` },
+        jewel_blue: { name: "Lapis Jewel", drop: "jewel", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.3) translate(-8, 5)"><polygon points="50,10 80,40 50,55 20,40" fill="#fff" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#g-blue)" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="#000080" stroke="#fff" stroke-width="0.5"/></g></svg>` },
+        jewel_green: { name: "Jade Jewel", drop: "jewel", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.3) translate(-8, 5)"><polygon points="50,10 80,40 50,55 20,40" fill="#fff" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#g-green)" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="#1b5e20" stroke="#fff" stroke-width="0.5"/></g></svg>` }
+    };
+
+    function getLotusNoiseSVG(colorID) {
+        let svg = `<svg viewBox="-100 -100 200 200">`;
+        for(let i=0; i<8; i++) {
+            let rot = i * 45;
+            svg += `<path d="M 0 0 C 35 -10 45 -65 0 -95 C -45 -65 -35 -10 0 0" fill="url(#${colorID})" transform="rotate(${rot})" stroke="#fff" stroke-width="1.5" opacity="1"/>`;
+        }
+        for(let i=0; i<8; i++) {
+            let rot = i * 45 + 22.5;
+            svg += `<path d="M 0 0 C 20 -5 25 -45 0 -65 C -25 -45 -20 -5 0 0" fill="url(#${colorID})" transform="rotate(${rot})" stroke="#fff" stroke-width="1" opacity="1"/>`;
+        }
+        svg += `<circle cx="0" cy="0" r="14" fill="#d4af37" stroke="#fff" stroke-width="1.5"/><circle cx="0" cy="0" r="10" fill="url(#l-white)" stroke="none"/></svg>`;
+        return svg;
+    }
+
+    const NOISE_LIB = {
+        lotus_gold: getLotusNoiseSVG('g-gold'), lotus_red: getLotusNoiseSVG('g-red'),
+        lotus_cyan: getLotusNoiseSVG('g-blue'), lotus_purple: getLotusNoiseSVG('g-purple'),
+        lotus_green: getLotusNoiseSVG('g-green')
+    };
+
+    let targetType = ''; let correctCount = 0; let options = [];
+
+    // --------------------------------------------------
+    // 2. Honors & Navigation
+    // --------------------------------------------------
+    function getTitle(lvl) {
+        if(lvl >= 1000) return "One with All";
+        if(lvl >= 500) return "Adamantine Focus";
+        if(lvl >= 300) return "Clear Insight";
+        if(lvl >= 100) return "Immovable Practitioner";
+        return "Lapis Practitioner";
+    }
+
+    function checkSync() {
+        if(db.tempBag >= 100) {
+            showModal("Provisions Full", `You have gathered ${db.tempBag} provisions.<br>Transfer to the Home Dojo?`, "TRANSFER", () => {
+                db.points += db.tempBag; db.tempBag = 0; saveDB();
+                window.location.href = 'index_en.html?screen=3';
+            }, `<button class="m-btn" onclick="closeModal()">CONTINUE</button>`);
+        }
+    }
+
+    function triggerExit() {
+        showModal("PAUSE", "Put down your phone and rest your mind.<br>Where would you like to go?", null, null, `
+            <button class="m-btn m-btn-prime" onclick="closeModal()">RESUME ARRAY</button>
+            <button class="m-btn" onclick="window.location.href='index_en.html?screen=2'">DHARMA WATER</button>
+            <button class="m-btn" onclick="window.location.href='index_en.html?screen=3'">RETURN TO DOJO</button>
+        `);
+    }
+
+    // --------------------------------------------------
+    // 3. Time Kalpa (Daily Lockout)
+    // --------------------------------------------------
+    function startTimer() {
+        clearInterval(game.timerInterval);
+        document.getElementById('timer-text').style.color = '#00e5ff';
+        
+        game.timerInterval = setInterval(() => {
+            if(game.isProcessing || game.isHuayan || game.currentEncounter) return;
+            game.timeLeft -= 0.1;
+            updateWaterUI();
+            
+            if (game.timeLeft <= 10) {
+                document.getElementById('timer-text').style.color = '#ff4d4d'; 
+                document.getElementById('timer-fill').style.background = 'linear-gradient(90deg, #ff4d4d, #ffb7c5)';
+            }
+            
+            if (game.timeLeft <= 0) {
+                clearInterval(game.timerInterval);
+                game.isProcessing = true;
+                db.visionLevel_EN = Math.max(1, db.visionLevel_EN - 1); 
+                db.visionLastFailed_EN = todayStr; 
+                saveDB();
+                showModal("CONCENTRATION DEPLETED", "The kalpa time has expired.<br>The barrier is closed for today. Return tomorrow.", "RETURN HOME", () => window.location.href = 'index_en.html?screen=3');
+            }
+        }, 100);
+    }
+
+    function updateWaterUI() {
+        let pct = Math.max(0, (game.timeLeft / game.maxTime) * 100);
+        document.getElementById('timer-fill').style.width = `${pct}%`; 
+        document.getElementById('timer-text').innerText = `${Math.max(0, game.timeLeft).toFixed(1)}s`;
+        if(pct > 20) document.getElementById('timer-fill').style.background = 'linear-gradient(90deg, #00e5ff, #80ed99)';
+    }
+
+    // --------------------------------------------------
+    // 4. Array Generation (Procedural)
+    // --------------------------------------------------
+    function initLevel() {
+        if (db.visionLastFailed_EN === todayStr) {
+            showModal("BARRIER CLOSED", "Today's concentration is spent. Return tomorrow to rebuild the barrier.", "RETURN HOME", () => window.location.href = 'index_en.html?screen=3');
+            return;
+        }
+
+        game.isProcessing = false;
+        const board = document.getElementById('board');
+        board.innerHTML = '';
+        
+        let lvl = db.visionLevel_EN;
+        document.getElementById('lv-display').innerText = `Tier ${lvl}`;
+        document.getElementById('honor-display').innerText = getTitle(lvl);
+        
+        let bagUI = document.getElementById('bag-ui');
+        bagUI.innerText = `Provisions: ${db.tempBag}/100`;
+        if(db.tempBag >= 100) bagUI.classList.add('full'); else bagUI.classList.remove('full');
+
+        game.maxTime = Math.max(25, 60 - Math.floor(lvl * 0.5));
+        game.timeLeft = game.maxTime; 
+        updateWaterUI();
+        startTimer();
+
+        let totalItems = Math.min(85, 20 + Math.floor(lvl * 1.5)); 
+        let lotusLimit = Math.min(10, Math.floor(lvl / 10)); 
+        correctCount = Math.min(15, 4 + Math.floor(Math.random() * 4) + Math.floor(lvl / 5)); 
+        
+        let targetPool = Object.keys(TARGET_LIB); targetPool.sort(() => Math.random() - 0.5);
+        targetType = targetPool[0];
+
+        let itemPool = [];
+        for(let i=0; i<correctCount; i++) itemPool.push({ type: targetType, cat: 'target' });
+        
+        let availableTargets = targetPool.filter(t => t !== targetType);
+        let availableNoise = Object.keys(NOISE_LIB);
+        let lotusAdded = 0;
+        
+        while(itemPool.length < totalItems) {
+            if(lotusAdded < lotusLimit && Math.random() > 0.4) {
+                itemPool.push({ type: availableNoise[Math.floor(Math.random() * availableNoise.length)], cat: 'noise' });
+                lotusAdded++;
+            } else {
+                itemPool.push({ type: availableTargets[Math.floor(Math.random() * availableTargets.length)], cat: 'distractor' });
+            }
+        }
+        itemPool.sort(() => Math.random() - 0.5);
+
+        document.getElementById('q-icon-display').innerHTML = TARGET_LIB[targetType].svg;
+        document.getElementById('q-name-display').innerText = TARGET_LIB[targetType].name;
+
+        let optSet = new Set([correctCount]);
+        while(optSet.size < 3) {
+            let offset = Math.floor(Math.random() * 3) + 1;
+            let sign = Math.random() > 0.5 ? 1 : -1;
+            let val = correctCount + (offset * sign);
+            if(val > 0) optSet.add(val);
+        }
+        options = Array.from(optSet); options.sort(() => Math.random() - 0.5);
+        for(let i=0; i<3; i++) { document.getElementById(`btn-${i}`).innerHTML = `${options[i]}<br><span>COUNT</span>`; }
+
+        const boardRect = board.getBoundingClientRect();
+
+        itemPool.forEach((itemDef, idx) => {
+            let el = document.createElement('div');
+            el.className = `item ${itemDef.cat === 'target' ? 'target-item' : ''}`;
+            
+            let baseSize;
+            if (itemDef.cat === 'noise') {
+                el.innerHTML = NOISE_LIB[itemDef.type]; baseSize = 120 + Math.random() * 80; 
+                el.style.zIndex = 10 + Math.floor(Math.random() * 10); 
+            } else {
+                el.innerHTML = TARGET_LIB[itemDef.type].svg; baseSize = 45 + Math.random() * 40; 
+                el.style.zIndex = 100 + Math.floor(Math.random() * 100); 
+                el.classList.add('distractor-breathe'); 
+            }
+
+            el.style.width = `${baseSize}px`; el.style.height = `${baseSize}px`;
+            
+            let maxLeft = boardRect.width - baseSize - 10;
+            let maxTop = boardRect.height - baseSize - 20; 
+            
+            let finalX = Math.max(10, Math.random() * maxLeft); 
+            let finalY = Math.max(10, Math.random() * maxTop);
+            
+            el.style.left = `${finalX}px`; el.style.top = `${finalY}px`;
+            
+            // Mental Rotation Difficulty
+            let flip = Math.random() > 0.5 ? 'scaleX(-1)' : 'scaleX(1)';
+            let rot = 0;
+            if (lvl > 50) {
+                rot = Math.floor(Math.random() * 360); 
+            } else if (lvl > 20) {
+                rot = Math.floor(Math.random() * 90) - 45; 
+            }
+            
+            el.style.transform = `${flip} rotate(${rot}deg)`;
+            el.style.animationDelay = `-${Math.random() * 8}s`;
+            
+            board.appendChild(el);
+        });
+    }
+
+    // --------------------------------------------------
+    // 5. Verification & Rewards
+    // --------------------------------------------------
+    function submitAnswer(btnIdx) {
+        if(game.isProcessing) return;
+        
+        let guess = options[btnIdx];
+        if (guess === correctCount) {
+            game.isProcessing = true;
+            let bonus = Math.min(game.maxTime - game.timeLeft, 15); 
+            game.timeLeft += bonus; updateWaterUI();
+            
+            let flyText = document.createElement('div'); flyText.className = 'time-plus'; flyText.innerText = `+${Math.floor(bonus)}s`;
+            let r = document.querySelector('.timer-wrap').getBoundingClientRect();
+            flyText.style.left = (r.left + 10) + 'px'; flyText.style.top = (r.top + 10) + 'px';
+            document.body.appendChild(flyText); setTimeout(() => flyText.remove(), 1000);
+
+            let targets = document.querySelectorAll('.target-item');
+            targets.forEach(t => t.classList.add('highlight'));
+            setTimeout(() => checkWinEvents(), 1200); 
+
+        } else {
+            game.timeLeft = Math.max(0, game.timeLeft - 5); updateWaterUI();
+            document.getElementById('board').classList.add('vibrate');
+            setTimeout(() => document.getElementById('board').classList.remove('vibrate'), 300);
+        }
+    }
+
+    function checkWinEvents() {
+        db.visionLevel_EN++; db.tempBag++;
+        
+        let dropMsg = "";
+        let levelPassed = db.visionLevel_EN - 1;
+        if (levelPassed % 20 === 0 && levelPassed > 0) { 
+            let dropType = TARGET_LIB[targetType].drop; 
+            db.treasures[dropType]++; 
+            dropMsg = `<div style="color:var(--solid-gold); font-size:0.85rem; margin-top:15px; border-top:1px dashed var(--solid-gold); padding-top:10px;">Barrier resonance! Manifested [${TARGET_LIB[targetType].name}]<br>Added to Treasure Pavilion.</div>`;
+        }
+        saveDB();
+
+        game.starSpeed = 25; 
+        const overlay = document.getElementById('vision-overlay');
+        overlay.style.background = 'radial-gradient(circle, #fff 0%, transparent 80%)';
+        overlay.style.opacity = '1';
+        
+        setTimeout(() => {
+            game.starSpeed = 1; overlay.style.opacity = '0';
+            
+            if (levelPassed % 5 === 0 && levelPassed > 0) {
+                const s = SCRIPTURES[Math.floor(Math.random()*SCRIPTURES.length)];
+                triggerRPG(s, dropMsg);
+            } else if (levelPassed % 3 === 0 && levelPassed > 0) {
+                triggerHuayanWorld(levelPassed, dropMsg);
+            } else if (dropMsg !== "") {
+                showModal("STATE ELEVATED", dropMsg, "CONTINUE", () => initLevel());
+            } else {
+                initLevel(); 
+            }
+        }, 1500);
+    }
+
+    function triggerHuayanWorld(lvl, dropMsg) {
+        game.isHuayan = true; game.starSpeed = 60; 
+        let layer = Math.floor(lvl / 3) % 20 + 1;
+        const planet = document.createElement('div'); planet.className = 'huayan-planet';
+        const cols = ['var(--color-cyan)', 'var(--color-purple)', 'var(--color-gold)', 'var(--color-green)'];
+        planet.style.background = `radial-gradient(circle, ${cols[layer % 4]} 0%, transparent 70%)`;
+        document.body.appendChild(planet);
+        
+        setTimeout(() => planet.classList.add('active'), 100);
+        setTimeout(() => {
+            planet.classList.remove('active'); planet.style.opacity = '0'; setTimeout(() => planet.remove(), 1500);
+            game.starSpeed = 1; game.isHuayan = false;
+            showModal("JOYFUL STATE", `<span style="color:var(--solid-gold); font-size:1.1rem; font-weight:bold;">Lotus Treasury World ‧ Tier ${layer}</span>${dropMsg}`, "CONTINUE", () => initLevel());
+        }, 3000);
+    }
+
+    function triggerRPG(s, dropMsg) {
+        game.currentEncounter = s;
+        const overlay = document.getElementById('vision-overlay');
+        overlay.style.opacity = '1'; overlay.style.background = s.color;
+        if(s.type === 'earth') document.getElementById('main-body').classList.add('vibrate');
+
+        document.getElementById('m-title').innerText = s.t;
+        document.getElementById('m-text').innerHTML = s.c + dropMsg;
+        document.getElementById('m-actions').innerHTML = `
+            <div class="rpg-btn-wrap" onmousedown="startRPG()" onmouseup="stopRPG()" ontouchstart="startRPG()" ontouchend="stopRPG()">
+                <div class="rpg-btn-fill" id="fill" style="background:linear-gradient(90deg, transparent, ${s.color.replace(/[\d\.]+\)$/g, '0.8)')})"></div>
+                <div class="rpg-btn-text">${s.b}</div>
+            </div><div style="font-size:0.7rem; color:#888; letter-spacing:2px; margin-top:5px;">(Long Press to Dissolve)</div>
+        `;
+        document.getElementById('modal').classList.add('show');
+    }
+
+    let rpgTimer = null, rpgProg = 0;
+    function startRPG() {
+        clearInterval(rpgTimer); rpgProg = 0;
+        rpgTimer = setInterval(() => {
+            rpgProg += 2; document.getElementById('fill').style.width = rpgProg + '%';
+            if(rpgProg >= 100) { clearInterval(rpgTimer); finishRPG(); }
+        }, 30);
+    }
+    function stopRPG() { clearInterval(rpgTimer); rpgProg = 0; document.getElementById('fill').style.width = '0%'; }
+    function finishRPG() {
+        const overlay = document.getElementById('vision-overlay');
+        overlay.style.background = '#fff'; setTimeout(() => { overlay.style.opacity = '0'; }, 300);
+        document.getElementById('main-body').classList.remove('vibrate'); document.getElementById('modal').classList.remove('show');
+        game.currentEncounter = null; game.isProcessing = false;
+        game.timeLeft = game.maxTime; updateWaterUI(); initLevel();
+    }
+
+    function showModal(title, text, btnText, callback, customHtml) {
+        document.getElementById('m-title').innerHTML = title; document.getElementById('m-text').innerHTML = text;
+        document.getElementById('m-actions').innerHTML = customHtml || `<button class="m-btn m-btn-prime" onclick="closeModal()">${btnText}</button>`;
+        if(callback) window.currentCallback = callback; document.getElementById('modal').classList.add('show');
+    }
+    function closeModal() { document.getElementById('modal').classList.remove('show'); game.currentEncounter = null; game.isProcessing = false; if(window.currentCallback) { window.currentCallback(); window.currentCallback = null; } }
+
+    const canvas = document.getElementById('bgCanvas'); const ctx = canvas.getContext('2d');
+    let cw, ch; function res() { cw=canvas.width=window.innerWidth; ch=canvas.height=window.innerHeight; } window.addEventListener('resize', res); res();
+    const starColors = ['#ffffff', '#f3e5ab', '#00e5ff', '#ffb7c5', '#ce93d8']; let stars = [];
+    for(let i=0; i<200; i++) stars.push({x: Math.random() * 2000 - 1000, y: Math.random() * 2000 - 1000, z: Math.random() * 2000, s: Math.random() * 3.5 + 0.5, c: starColors[Math.floor(Math.random() * starColors.length)], alphaOffset: Math.random() * Math.PI * 2, twinkleSpeed: 0.02 + Math.random() * 0.04});
+
+    let time = 0;
+    function animateBg() {
+        time += 0.05; ctx.fillStyle = '#010204'; ctx.fillRect(0,0,cw,ch); ctx.globalCompositeOperation = 'screen';
+        stars.forEach(s => {
+            s.z -= (2 * game.starSpeed); if(s.z<=0){ s.z=2000; s.x=(Math.random()-0.5)*2000; s.y=(Math.random()-0.5)*2000; }
+            let sc = 800 / (800 + s.z); let px = cw / 2 + s.x * sc; let py = ch / 2 + s.y * sc;
+            if(px > 0 && px < cw && py > 0 && py < ch) { let alpha = (Math.sin(time * s.twinkleSpeed * 10 + s.alphaOffset) * 0.5 + 0.5) * sc; ctx.fillStyle = s.c; ctx.globalAlpha = alpha; ctx.beginPath(); ctx.arc(px, py, s.s * sc * (game.starSpeed > 1 ? 5 : 1), 0, Math.PI*2); ctx.fill(); }
+        });
+        ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(animateBg);
+    }
+    animateBg();
+    
+    initLevel();
+</script>
+</body>
+</html>

@@ -2,336 +2,382 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>彌陀淨土系統</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>彌陀淨土系統 ‧ 琉璃蓮華陣</title>
     <style>
         :root {
-            --bg: #010103;
-            --gold: #f3e5ab;
-            --solid-gold: #d4af37;
-            --cyan: #9fdfc8;
+            --bg-deep: #010204; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
+            --tile-w: 56px; --tile-h: 75px; 
         }
-        body {
-            margin: 0; padding: 20px; background: var(--bg); color: #eee;
-            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
-            overflow-x: hidden;
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            margin: 0; background: var(--bg-deep); color: #d0d0d0; 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; height: 100dvh; display: flex; flex-direction: column;
+            -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: none; 
         }
-        h1 { text-align: center; color: var(--solid-gold); letter-spacing: 4px; margin-bottom: 40px; text-shadow: 0 0 15px rgba(212,175,55,0.4); }
-        .section-header {
-            color: var(--cyan); font-size: 1.2rem; letter-spacing: 3px; font-weight: bold;
-            border-bottom: 1px solid rgba(139,168,156,0.3); padding-bottom: 10px; margin-top: 50px; margin-bottom: 20px;
+
+        #bgCanvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+        #header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid rgba(212,175,55,0.15); z-index: 10; position: relative; background: rgba(1,2,4,0.4); backdrop-filter: blur(8px); }
+        .lv-tag { letter-spacing: 4px; color: var(--gold); font-size: 1.05rem; font-weight: bold; }
+        .info-tag { font-size: 0.72rem; color: var(--cyan); letter-spacing: 2px; margin-top: 6px; }
+
+        /* 陣法核心區塊 */
+        #board { flex: 1; position: relative; width: 100%; overflow: hidden; z-index: 10; display: flex; justify-content: center; align-items: center; }
+        #board-center { position: relative; width: 320px; height: 400px; }
+
+        /* 琉璃牌 */
+        .tile { 
+            position: absolute; width: var(--tile-w); height: var(--tile-h); 
+            background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 8px; 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 2px 4px 8px rgba(0,0,0,0.6);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            backdrop-filter: blur(4px); transform-origin: center center;
         }
+        .tile::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 50%); pointer-events: none; border-radius: 8px; }
         
-        .grid-container {
-            display: flex; flex-wrap: wrap; gap: 15px; justify-content: flex-start;
-        }
-        .card {
-            background: linear-gradient(145deg, rgba(20,20,20,0.8), rgba(5,5,5,0.9));
-            border: 1px solid rgba(212,175,55,0.2); border-radius: 12px;
-            padding: 12px; display: flex; flex-direction: column; align-items: center;
-            width: 85px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-        }
-        .svg-wrap {
-            width: 60px; height: 60px; display: flex; justify-content: center; align-items: center;
-            position: relative;
-        }
-        .name-label {
-            color: var(--gold); font-size: 0.7rem; margin-top: 10px; letter-spacing: 1px; word-break: keep-all;
-        }
+        .tile-svg { width: 80%; height: 80%; pointer-events: none; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); }
         
-        .matrix-table {
-            display: flex; flex-direction: column; gap: 10px; overflow-x: auto; padding-bottom: 15px;
-        }
-        .matrix-row {
-            display: flex; align-items: center; gap: 10px;
-        }
-        .row-title {
-            width: 80px; text-align: right; color: var(--gold); font-size: 0.85rem; font-weight: bold; flex-shrink: 0;
-            text-shadow: 0 0 5px rgba(212,175,55,0.4);
-        }
+        /* 被遮擋的牌 */
+        .tile.covered { filter: brightness(0.3) contrast(0.8); cursor: default; pointer-events: none; border-color: rgba(139, 168, 156, 0.2); }
+        /* 進入托盤的牌 */
+        .tile.in-tray { border-color: var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.3); }
+
+        /* 底部托盤 */
+        #tray-area { height: 120px; width: 100%; background: rgba(1,2,4,0.7); border-top: 1px solid rgba(139,168,156,0.3); z-index: 20; position: relative; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
+        #tray-bg { position: relative; width: calc((var(--tile-w) + 6px) * 7 + 10px); height: calc(var(--tile-h) + 16px); background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px dashed rgba(212,175,55,0.4); display: flex; gap: 6px; padding: 8px; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); }
+        .tray-slot { width: var(--tile-w); height: var(--tile-h); border-radius: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); }
+
+        /* 模態框 (沿用琉璃水美學) */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(10px); z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.5s; }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-box { width: 85%; max-width: 320px; background: linear-gradient(135deg, rgba(20,25,35,0.9), rgba(5,10,15,0.95)); border: 1px solid var(--solid-gold); border-radius: 16px; padding: 30px 25px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(212,175,55,0.1); transform: translateY(20px); transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .modal-overlay.show .modal-box { transform: translateY(0); }
+        .m-title { color: var(--gold); font-size: 1.1rem; letter-spacing: 4px; margin-bottom: 20px; }
+        .m-btn { background: transparent; border: 1px solid rgba(139,168,156,0.4); color: var(--cyan); padding: 12px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; letter-spacing: 3px; width: 100%; margin-bottom: 10px; }
+        .m-btn-prime { background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); border-color: var(--solid-gold); color: var(--gold); }
+        .m-btn-prime:active { background: rgba(212,175,55,0.3); }
+
+        /* 粉碎特效 */
+        .dust { position: absolute; border-radius: 50%; pointer-events: none; z-index: 9999; }
     </style>
 </head>
 <body>
 
-    <h1>系統圖示演化總覽</h1>
+<svg style="width:0; height:0; position:absolute;">
+    <defs>
+        <linearGradient id="facet-light" x1="0%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.95"/><stop offset="100%" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
+        <linearGradient id="facet-dark" x1="50%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d4af37" stop-opacity="0.2"/><stop offset="100%" stop-color="#b8860b" stop-opacity="0.8"/></linearGradient>
+        
+        <linearGradient id="grad-red" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ff4d4d"/><stop offset="100%" stop-color="#800000"/></linearGradient>
+        <linearGradient id="grad-cyan" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#00e5ff"/><stop offset="100%" stop-color="#004d40"/></linearGradient>
+        <linearGradient id="grad-gold" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffe066"/><stop offset="100%" stop-color="#8b6508"/></linearGradient>
+        <linearGradient id="grad-purple" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#d8b4fe"/><stop offset="100%" stop-color="#4a148c"/></linearGradient>
+    </defs>
+</svg>
 
-    <svg style="position:absolute;width:0;height:0;" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-            <linearGradient id="grad-10"    x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="rgba(255,255,255,0.9)"/><stop offset="100%" stop-color="rgba(255,255,255,0.1)"/></linearGradient>
-            <linearGradient id="grad-50"    x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#f8bbd0" stop-opacity=".9"/><stop offset="100%" stop-color="#fce4ec" stop-opacity=".4"/></linearGradient>
-            <linearGradient id="grad-100"   x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="rgba(212,175,55,.9)"/><stop offset="100%" stop-color="rgba(255,255,255,.2)"/></linearGradient>
-            <linearGradient id="grad-300"   x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#80deea"/><stop offset="100%" stop-color="#e0f7fa" stop-opacity=".3"/></linearGradient>
-            <linearGradient id="grad-500"   x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#a5d6a7"/><stop offset="100%" stop-color="#e8f5e9" stop-opacity=".3"/></linearGradient>
-            <linearGradient id="grad-700"   x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#ce93d8"/><stop offset="100%" stop-color="#f3e5f5" stop-opacity=".3"/></linearGradient>
-            <linearGradient id="grad-900"   x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#ffcc80"/><stop offset="100%" stop-color="#fff3e0" stop-opacity=".3"/></linearGradient>
-            <linearGradient id="grad-1000"  x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#ff9a9e" stop-opacity=".9"/><stop offset="50%" stop-color="#fad0c4" stop-opacity=".8"/><stop offset="100%" stop-color="#a1c4fd" stop-opacity=".7"/></linearGradient>
-            <linearGradient id="grad-5000"  x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#84fab0" stop-opacity=".8"/><stop offset="100%" stop-color="#8fd3f4" stop-opacity=".6"/></linearGradient>
-            <linearGradient id="grad-10000" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#a18cd1" stop-opacity=".9"/><stop offset="100%" stop-color="#fbc2eb" stop-opacity=".7"/></linearGradient>
-            <linearGradient id="grad-15000" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#ffecd2" stop-opacity=".9"/><stop offset="100%" stop-color="#fcb69f" stop-opacity=".7"/></linearGradient>
-            <linearGradient id="grad-20000" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#e2ebf0" stop-opacity=".9"/><stop offset="100%" stop-color="#cfd9df" stop-opacity=".6"/></linearGradient>
-            <linearGradient id="grad-25000" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#f6d365" stop-opacity=".9"/><stop offset="100%" stop-color="#fda085" stop-opacity=".8"/></linearGradient>
-            <linearGradient id="grad-30000" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#D4AF37" stop-opacity="1"/><stop offset="50%" stop-color="#FFD700" stop-opacity=".9"/><stop offset="100%" stop-color="#fff" stop-opacity="1"/></linearGradient>
-        </defs>
-    </svg>
+<canvas id="bgCanvas"></canvas>
 
-    <div class="section-header">一、華嚴位階與累積念佛矩陣</div>
-    <div id="rank-matrix" class="matrix-table"></div>
+<div id="header">
+    <div>
+        <div class="lv-tag" id="lv-display">第 1 重陣法</div>
+        <div id="status-ui" style="font-size:0.75rem; color:var(--cyan); margin-top:4px; letter-spacing:1px;">理順色相 ‧ 安住心念</div>
+    </div>
+    <div style="text-align:right;">
+        <div class="info-tag" id="bag-ui">陣眼：0 / 0</div>
+    </div>
+</div>
 
-    <div class="section-header">二、每日十念法性蓮花變化</div>
-    <div id="daily-grid" class="grid-container"></div>
+<div id="board"><div id="board-center"></div></div>
 
-    <div class="section-header">三、淨室自性七寶蓮花變化</div>
-    <div id="personal-grid" class="grid-container"></div>
+<div id="tray-area">
+    <div id="tray-bg">
+        <div class="tray-slot"></div><div class="tray-slot"></div><div class="tray-slot"></div>
+        <div class="tray-slot"></div><div class="tray-slot"></div><div class="tray-slot"></div><div class="tray-slot"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal">
+    <div class="modal-box" id="modal-box">
+        <div class="m-title" id="m-title"></div>
+        <div id="m-actions"></div>
+    </div>
+</div>
 
 <script>
-    // ==========================================
-    // 1. 華嚴位階圖示
-    // ==========================================
-    function getLotusSVG(rankType, overrideLevel) {
-        const cx = 50, cy = 50;
-        const id = `svg-${Math.random().toString(36).substr(2, 5)}`; 
+    // --------------------------------------------------
+    // 資料與幾何定義庫
+    // --------------------------------------------------
+    const COLORS = ['red', 'cyan', 'gold', 'purple'];
+    const SYMBOLS = ['sword', 'vase', 'jewel'];
+    
+    // 壓縮版的多寶閣 SVG (為求盤面清爽，移除過多細節保留輪廓光澤)
+    const SVG_DEFS = {
+        sword: (c) => `<svg viewBox="0 0 100 150" class="tile-svg"><g transform="translate(0, 10)"><polygon points="50,10 56,40 50,105 44,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="50,10 56,40 50,105" fill="url(#grad-${c})" opacity="0.8"/><polygon points="35,100 65,100 55,110 45,110" fill="url(#facet-dark)" stroke="#d4af37" stroke-width="1"/><polygon points="46,110 54,110 52,135 48,135" fill="url(#facet-dark)"/></g></svg>`,
+        vase: (c) => `<svg viewBox="0 0 100 150" class="tile-svg"><g transform="translate(0, 15)"><polygon points="45,20 55,20 60,40 40,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#grad-${c})" opacity="0.8" stroke="#fff" stroke-width="0.5"/><polygon points="25,90 75,90 60,120 40,120" fill="url(#facet-light)" stroke="#f3e5ab" stroke-width="0.5"/><polygon points="50,90 75,90 60,120 50,120" fill="url(#facet-dark)" opacity="0.7"/></g></svg>`,
+        jewel: (c) => `<svg viewBox="0 0 100 150" class="tile-svg"><g transform="translate(0, 25)"><polygon points="50,10 80,40 50,55 20,40" fill="url(#facet-light)" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#grad-${c})" opacity="0.9" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="url(#facet-dark)" opacity="0.8" stroke="#fff" stroke-width="0.5"/></g></svg>`
+    };
 
-        function P(r0, r1, hw, bulge, shape) {
-            const bx = cx, by = cy - r0, tx = cx, ty = cy - r1;
-            const my = cy - (r0 + r1) / 2;
-            if (shape === 'slim') return `M${bx - hw * .7} ${by} C${bx - bulge * .75} ${my} ${tx - 1.5} ${ty + 3} ${tx} ${ty} C${tx + 1.5} ${ty + 3} ${bx + bulge * .75} ${my} ${bx + hw * .7} ${by}Z`;
-            if (shape === 'wide') return `M${bx - hw} ${by} C${bx - bulge * 1.35} ${my + 4} ${tx - bulge * .45} ${ty + 7} ${tx} ${ty} C${tx + bulge * .45} ${ty + 7} ${bx + bulge * 1.35} ${my + 4} ${bx + hw} ${by}Z`;
-            return `M${bx - hw} ${by} C${bx - bulge} ${my} ${tx - bulge * .3} ${ty + 5} ${tx} ${ty} C${tx + bulge * .3} ${ty + 5} ${bx + bulge} ${my} ${bx + hw} ${by}Z`;
-        }
+    let level = 1;
+    let tilesData = [];
+    let tray = [];
+    const MAX_TRAY = 7;
+    let isProcessing = false;
 
-        function rotatedPetals(n, r0, r1, hw, bulge, shape, fill, op, offset = 0) {
-            let s = '';
-            for (let i = 0; i < n; i++) {
-                const a = i * (360 / n) + offset;
-                s += `<path d="${P(r0, r1, hw, bulge, shape)}" fill="${fill}" opacity="${op}" transform="rotate(${a} ${cx} ${cy})"/>`;
-            }
-            return s;
-        }
-
-        const sharedDefs = `
-        <defs>
-            <filter id="glo${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-            <filter id="sof${id}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.1" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-            <radialGradient id="rg-unified-gold" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#fffce0"/><stop offset="28%" stop-color="#f0c030"/><stop offset="65%" stop-color="#906010"/><stop offset="100%" stop-color="#4c3008"/></radialGradient>
-            <radialGradient id="rg-void" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#111111" stop-opacity="0.95"/><stop offset="70%" stop-color="#0a0500" stop-opacity="0.8"/><stop offset="100%" stop-color="#000000" stop-opacity="0"/></radialGradient>
-        </defs>`;
-        const voidBg = `<circle cx="50" cy="50" r="42" fill="url(#rg-void)"><animate attributeName="r" values="41;43;41" dur="6s" repeatCount="indefinite"/></circle>`;
+    // --------------------------------------------------
+    // 動態曼陀羅陣法生成器 (Procedural Generation)
+    // --------------------------------------------------
+    function generateLevel(lvl) {
+        document.getElementById('board-center').innerHTML = '';
+        tilesData = []; tray = []; isProcessing = false;
         
-        let bgContent = '';
-        if (rankType === '信') {
-            bgContent = `<circle cx="${cx}" cy="${cy}" r="21" fill="url(#rg-unified-gold)" stroke="#f0d060" stroke-width=".7"/><circle cx="${cx}" cy="${cy}" r="15.5" fill="none" stroke="#f0c868" stroke-width=".5" stroke-dasharray="1.8 2.2"/><polygon points="${cx},${cy-11} ${cx+9.5},${cy+5.5} ${cx-9.5},${cy+5.5}" fill="none" stroke="#fffce0" stroke-width="1.3"/><polygon points="${cx},${cy-7} ${cx+6},${cy+3.5} ${cx-6},${cy+3.5}" fill="#ffe8a0" opacity=".82"/>`;
-        } else if (rankType === '住') {
-            bgContent = `<circle cx="${cx}" cy="${cy}" r="21" fill="url(#rg-unified-gold)" stroke="#f0d060" stroke-width=".7"/><rect x="${cx-1.8}" y="${cy-13}" width="3.6" height="18" fill="url(#rg-unified-gold)" rx=".4"/><rect x="${cx-6}" y="${cy-9}" width="12" height="2.8" fill="url(#rg-unified-gold)" rx=".4"/><rect x="${cx-9.5}" y="${cy-4.5}" width="19" height="2.8" fill="url(#rg-unified-gold)" rx=".4"/><rect x="${cx-13}" y="${cy+0.5}" width="26" height="2.8" fill="url(#rg-unified-gold)" rx=".4"/><polygon points="${cx},${cy-17} ${cx+3},${cy-12} ${cx-3},${cy-12}" fill="#fffce0"/>`;
-        } else if (rankType === '行') {
-            const spokes = [0,45,90,135,180,225,270,315].map(a => {
-                const r = a * Math.PI / 180;
-                const lx = (cx + Math.cos(r) * 14).toFixed(1);
-                const ly = (cy + Math.sin(r) * 14).toFixed(1);
-                const dx = (cx + Math.cos(r) * 16).toFixed(1);
-                const dy = (cy + Math.sin(r) * 16).toFixed(1);
-                return `<line x1="${cx}" y1="${cy}" x2="${lx}" y2="${ly}" stroke="#f0c868" stroke-width="1.2"/><circle cx="${dx}" cy="${dy}" r="1.5" fill="#f0c868"/>`;
-            }).join('');
-            bgContent = `<circle cx="${cx}" cy="${cy}" r="21" fill="url(#rg-unified-gold)" stroke="#f0d060" stroke-width=".7"/><circle cx="${cx}" cy="${cy}" r="14" fill="none" stroke="#f0c868" stroke-width="1.1"/>${spokes}<circle cx="${cx}" cy="${cy}" r="4.2" fill="#ffe8a0"/>`;
-        } else if (rankType === '迴') {
-            bgContent = `<circle cx="${cx}" cy="${cy}" r="21" fill="url(#rg-unified-gold)" stroke="#f0d060" stroke-width=".7"/><circle cx="${cx}" cy="${cy}" r="5.5" fill="#ffe8a0"/>
-            <g>
-                <path d="M${cx} ${cy-5.5} C${cx} ${cy-13} ${cx+11} ${cy-13} ${cx+11} ${cy-8}" fill="none" stroke="#fffce0" stroke-width="1.4" stroke-linecap="round"/>
-                <polygon points="${cx+11},${cy-5} ${cx+15},${cy-10} ${cx+8},${cy-11}" fill="#fffce0"/>
-                <path d="M${cx+5.5} ${cy} C${cx+13} ${cy} ${cx+13} ${cy+11} ${cx+8} ${cy+11}" fill="none" stroke="#fffce0" stroke-width="1.4" stroke-linecap="round"/>
-                <polygon points="${cx+5},${cy+11} ${cx+10},${cy+15} ${cx+11},${cy+8}" fill="#fffce0"/>
-            </g>
-            <g transform="rotate(180 ${cx} ${cy})">
-                <path d="M${cx} ${cy-5.5} C${cx} ${cy-13} ${cx+11} ${cy-13} ${cx+11} ${cy-8}" fill="none" stroke="#fffce0" stroke-width="1.4" stroke-linecap="round"/>
-                <polygon points="${cx+11},${cy-5} ${cx+15},${cy-10} ${cx+8},${cy-11}" fill="#fffce0"/>
-                <path d="M${cx+5.5} ${cy} C${cx+13} ${cy} ${cx+13} ${cy+11} ${cx+8} ${cy+11}" fill="none" stroke="#fffce0" stroke-width="1.4" stroke-linecap="round"/>
-                <polygon points="${cx+5},${cy+11} ${cx+10},${cy+15} ${cx+11},${cy+8}" fill="#fffce0"/>
-            </g>`;
-        } else if (rankType === '地') {
-            bgContent = `<circle cx="${cx}" cy="${cy}" r="21" fill="url(#rg-unified-gold)" stroke="#f0d060" stroke-width=".7"/><polygon points="${cx},${cy-17} ${cx+2.5},${cy-7.5} ${cx+12},${cy-12} ${cx+7.5},${cy-2.5} ${cx+17},${cy} ${cx+7.5},${cy+2.5} ${cx+12},${cy+12} ${cx+2.5},${cy+7.5} ${cx},${cy+17} ${cx-2.5},${cy+7.5} ${cx-12},${cy+12} ${cx-7.5},${cy+2.5} ${cx-17},${cy} ${cx-7.5},${cy-2.5} ${cx-12},${cy-12} ${cx-2.5},${cy-7.5}" fill="#fffce0" opacity=".95"/>`;
+        // 動態難度計算
+        let tripletCount = Math.min(30, 2 + Math.floor(lvl * 1.5)); // 關卡越大，配對數越多
+        let totalTiles = tripletCount * 3;
+        
+        // 準備配對池
+        let pool = [];
+        let colorLimit = Math.min(COLORS.length, 1 + Math.ceil(lvl / 10));
+        let symbolLimit = Math.min(SYMBOLS.length, 1 + Math.ceil(lvl / 15));
+        
+        for(let i=0; i<tripletCount; i++) {
+            let c = COLORS[Math.floor(Math.random() * colorLimit)];
+            let s = SYMBOLS[Math.floor(Math.random() * symbolLimit)];
+            pool.push({c, s}, {c, s}, {c, s});
+        }
+        pool.sort(() => Math.random() - 0.5); // 隨機洗牌
+
+        // 生成陣法座標 (X, Y, Z層)
+        let positions = [];
+        let layers = Math.min(6, 1 + Math.floor(lvl / 5)); // 最多疊加 6 層
+        
+        // 幾何形狀演算法：隨著層數往上，分佈的半徑或格數逐漸縮小，形成塔狀或蓮花狀
+        let currentZ = 0;
+        while(positions.length < totalTiles) {
+            let radiusX = 120 - (currentZ * 15);
+            let radiusY = 160 - (currentZ * 20);
+            if(radiusX < 20) radiusX = 20; if(radiusY < 20) radiusY = 20;
+
+            let remaining = totalTiles - positions.length;
+            let layerCount = Math.min(remaining, 8 + (layers - currentZ) * 4); // 底層多，上層少
+            
+            for(let i=0; i<layerCount; i++) {
+                // 採用橢圓分佈 + 隨機微調
+                let angle = (Math.PI * 2 / layerCount) * i;
+                let x = 160 + Math.cos(angle) * (radiusX * (0.8 + Math.random()*0.4)) - 28; // 28是牌寬一半
+                let y = 200 + Math.sin(angle) * (radiusY * (0.8 + Math.random()*0.4)) - 37; // 37是牌高一半
+                positions.push({ x, y, z: currentZ });
+            }
+            currentZ++;
         }
 
-        let lotusContent = '';
-        if (overrideLevel === 1) { 
-            lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="75%" r="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#ccc" stop-opacity="0.3"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="65%" r="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.8"/><stop offset="100%" stop-color="#eee" stop-opacity="0.4"/></radialGradient></defs>${rotatedPetals(8,22,46,7,11,'round',`url(#lA${id})`,.85)}${rotatedPetals(8,22,38,5.5,8,'round',`url(#lB${id})`,.65,22.5)}`;
-        } else if (overrideLevel === 2) {
-            lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="75%" r="100%"><stop offset="0%" stop-color="#fffde7" stop-opacity="0.9"/><stop offset="100%" stop-color="#ef6c00" stop-opacity="0.4"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="65%" r="100%"><stop offset="0%" stop-color="#fff8e1" stop-opacity="0.8"/><stop offset="100%" stop-color="#ffb74d" stop-opacity="0.45"/></radialGradient></defs>${rotatedPetals(8,22,46,7,11,'round',`url(#lA${id})`,.85)}${rotatedPetals(8,22,38,5.5,8,'round',`url(#lB${id})`,.65,22.5)}`;
-        } else if (overrideLevel === 3) {
-            lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="75%" r="100%"><stop offset="0%" stop-color="#fff0f5"/><stop offset="100%" stop-color="#b04470" stop-opacity=".85"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="65%" r="100%"><stop offset="0%" stop-color="#ffe8f2"/><stop offset="100%" stop-color="#d87898" stop-opacity=".55"/></radialGradient></defs>${rotatedPetals(8,22,46,7,11,'round',`url(#lA${id})`,.92)}${rotatedPetals(8,22,38,5.5,8,'round',`url(#lB${id})`,.7,22.5)}`;
-        } else if (overrideLevel === 4) {
-            lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="72%" r="100%"><stop offset="0%" stop-color="#e0f0ff" stop-opacity="0.9"/><stop offset="100%" stop-color="#0277bd" stop-opacity="0.5"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="58%" r="100%"><stop offset="0%" stop-color="#e1f5fe" stop-opacity="0.8"/><stop offset="100%" stop-color="#4fc3f7" stop-opacity="0.45"/></radialGradient></defs>${rotatedPetals(8,22,46,9,14,'wide',`url(#lA${id})`,.88)}${rotatedPetals(8,22,37,6,9,'wide',`url(#lB${id})`,.6,22.5)}`;
-        } else if (overrideLevel === 5) {
-            lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="78%" r="100%"><stop offset="0%" stop-color="#e0fff8"/><stop offset="100%" stop-color="#065c48" stop-opacity=".9"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="62%" r="100%"><stop offset="0%" stop-color="#c0fff0"/><stop offset="100%" stop-color="#38c0a8" stop-opacity=".5"/></radialGradient></defs>${rotatedPetals(10,22,46,6,9,'point',`url(#lA${id})`,.9)}${rotatedPetals(10,22,36,4,6,'slim',`url(#lB${id})`,.6,18)}`;
-        } else if (overrideLevel === 6) {
-            lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="78%" r="100%"><stop offset="0%" stop-color="#bbdefb"/><stop offset="100%" stop-color="#0d47a1" stop-opacity=".95"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="62%" r="100%"><stop offset="0%" stop-color="#e3f2fd"/><stop offset="100%" stop-color="#1976d2" stop-opacity=".65"/></radialGradient></defs>${rotatedPetals(10,22,47,6.5,10,'point',`url(#lA${id})`,.95)}${rotatedPetals(10,22,38,4.5,7,'slim',`url(#lB${id})`,.7,18)}`;
-        } else if (overrideLevel === 7) {
-            const cols=['#ff8888','#ffb060','#ffe860','#a0e868','#40d898','#40c8e8','#6888ff','#9870e8','#d870c8','#ff70b0'];
-            lotusContent = Array.from({length:10},(_,i)=>`<path d="${P(22,46,7.5,11,'round')}" fill="${cols[i]}" opacity=".87" transform="rotate(${i*36} ${cx} ${cy})"/>`).join('');
-        } else if (overrideLevel === 8) {
-            lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="75%" r="100%"><stop offset="0%" stop-color="#f3e5f5"/><stop offset="100%" stop-color="#4a148c" stop-opacity=".95"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="65%" r="100%"><stop offset="0%" stop-color="#e1bee7"/><stop offset="100%" stop-color="#6a1b9a" stop-opacity=".7"/></radialGradient></defs>${rotatedPetals(10,22,47,7,12,'wide',`url(#lA${id})`,.95)}${rotatedPetals(10,22,38,5,8,'round',`url(#lB${id})`,.75,18)}`;
-        } else if (overrideLevel === 9) {
-            lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="73%" r="100%"><stop offset="0%" stop-color="#fffce0"/><stop offset="100%" stop-color="#8c5c10" stop-opacity=".92"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="63%" r="100%"><stop offset="0%" stop-color="#fff8c0"/><stop offset="100%" stop-color="#7a4c08" stop-opacity=".72"/></radialGradient></defs>${rotatedPetals(8,22,47,8.5,12,'round',`url(#lA${id})`,.95)}${rotatedPetals(8,22,44,8,11,'round',`url(#lB${id})`,.88,22.5)}`;
-        } else {
-            lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="75%" r="100%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#e65100" stop-opacity=".95"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="65%" r="100%"><stop offset="0%" stop-color="#fffde7"/><stop offset="100%" stop-color="#d84315" stop-opacity=".85"/></radialGradient></defs>${rotatedPetals(12,22,48,7,10,'round',`url(#lA${id})`,.98)}${rotatedPetals(12,22,42,6,8.5,'round',`url(#lB${id})`,.9,15)}${rotatedPetals(12,22,34,4.5,6.5,'round',`url(#lA${id})`,.8,7.5)}`;
-        }
+        // 將洗好的牌分配至座標
+        positions.forEach((pos, idx) => {
+            tilesData.push({
+                id: `t-${idx}`, idx: idx,
+                c: pool[idx].c, s: pool[idx].s,
+                x: pos.x, y: pos.y, z: pos.z,
+                state: 'board' // board, tray, cleared
+            });
+        });
 
-        return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">${sharedDefs}${voidBg}${bgContent}<g filter="url(#sof${id})">${lotusContent}<animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="40s" repeatCount="indefinite" additive="sum"/></g><circle cx="50" cy="50" r="1.8" fill="#ffffff" opacity=".95" filter="url(#glo${id})"/></svg>`;
+        renderBoard();
+        document.getElementById('lv-display').innerText = `第 ${lvl} 重結界`;
+        updateCount();
     }
 
-    const rankBases = ['信', '住', '行', '迴', '地'];
-    const rankNames = ['信位底座', '住位底座', '行位底座', '迴向底座', '地位底座'];
-    const petalNames = ["白蓮", "暖橘", "粉霞", "淡藍", "碧玉", "深藍", "彩虹", "紫金", "金色", "大圓滿"];
+    function renderBoard() {
+        const center = document.getElementById('board-center');
+        // 先計算所有遮擋關係 (AABB Collision)
+        updateCovers();
 
-    const matrixContainer = document.getElementById('rank-matrix');
-    rankBases.forEach((base, rowIdx) => {
-        let rowHtml = `<div class="matrix-row"><div class="row-title">${rankNames[rowIdx]}</div>`;
-        for (let level = 1; level <= 10; level++) {
-            rowHtml += `
-                <div class="card">
-                    <div class="svg-wrap">${getLotusSVG(base, level)}</div>
-                    <div class="name-label">${petalNames[level-1]}</div>
-                </div>`;
-        }
-        rowHtml += `</div>`;
-        matrixContainer.innerHTML += rowHtml;
-    });
-
-    // ==========================================
-    // 2. 每日十念法圖示
-    // ==========================================
-    const dailyStages = [
-        { name: "晨曦玫瑰", c: {t:"#ffffff", m:"#ffb7b2", b:"#e2858e", o: 0.9}, l: 3, g: 0.9 },
-        { name: "珍珠幻彩", c: {t:"#ffffff", m:"#cbf0f8", b:"#f8bbd0", o: 0.9}, l: 3, g: 1.0 },
-        { name: "琉璃水玉", c: {t:"#e0f7fa", m:"#4dd0e1", b:"#00838f", o: 0.9}, l: 3, g: 1.1 },
-        { name: "法悅粉櫻", c: {t:"#fce4ec", m:"#f06292", b:"#c2185b", o: 0.9}, l: 3, g: 1.2 },
-        { name: "紫霞仙光", c: {t:"#f3e5f5", m:"#ba68c8", b:"#7b1fa2", o: 0.9}, l: 4, g: 1.3 },
-        { name: "幻海琉璃", c: {t:"#e1f5fe", m:"#29b6f6", b:"#0277bd", o: 0.9}, l: 4, g: 1.4 },
-        { name: "彩雲金蓮", c: {t:"#fff3e0", m:"#ffb74d", b:"#e65100", o: 0.9}, l: 4, g: 1.5 },
-        { name: "赤焰紅蓮", c: {t:"#ffebee", m:"#e53935", b:"#b71c1c", o: 0.9}, l: 4, g: 1.6 },
-        { name: "紫金交輝", c: {t:"#f3e5f5", m:"#ab47bc", b:"#fbc02d", o: 0.9}, l: 5, g: 1.8 },
-        { name: "大日純金", c: {t:"#fffde7", m:"#fdd835", b:"#f57f17", o: 0.9}, l: 5, g: 2.2 },
-        { name: "萬佛金剛", c: {t:"#ffffff", m:"#fff9c4", b:"#fbc02d", o: 0.9}, l: 5, g: 3.0 },
-        { name: "摩尼幻彩", c: {t:"#ffffff", m:"#ff80ab", b:"#00e5ff", o: 0.85}, l: 5, g: 4.0 },
-        { name: "無量金光", c: {t:"#ffffff", m:"#ffeb3b", b:"#ff8f00", o: 1.0}, l: 5, g: 6.0 }
-    ];
-
-    function getDailyLotusSVGByStage(s, idx) {
-        let svgHtml = `
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; overflow:visible;">
-            <defs>
-                <linearGradient id="cl-grad-${idx}" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="${s.c.t}" stop-opacity="0.95"/>
-                    <stop offset="50%" stop-color="${s.c.m}" stop-opacity="${s.c.o}"/>
-                    <stop offset="100%" stop-color="${s.c.b}" stop-opacity="0.95"/>
-                </linearGradient>
-                <radialGradient id="cl-core-${idx}" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stop-color="#fff"/><stop offset="40%" stop-color="${s.c.m}"/><stop offset="100%" stop-color="transparent"/>
-                </radialGradient>
-                <path id="cl-petal-${idx}" d="M 50 50 C 39 25, 41 9, 50 2 C 59 9, 61 25, 50 50 Z" fill="url(#cl-grad-${idx})" stroke="rgba(255,255,255,0.4)" stroke-width="0.3"/>
-            </defs>
-            <circle cx="50" cy="50" r="45" fill="rgba(5,5,5,0.6)"/>
-            <circle cx="50" cy="50" r="38" fill="none" stroke="${s.c.m}" stroke-width="0.5" stroke-dasharray="1 4" opacity="0.5"><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="40s" repeatCount="indefinite"/></circle>
-            <g filter="drop-shadow(0 0 4px rgba(0,0,0,0.5))"><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="120s" repeatCount="indefinite"/>`;
-
-        for (let l = s.l; l > 0; l--) {
-            const sc = 0.35 + (l * 0.12);
-            const off = (l % 2 === 0) ? 22.5 : 0;
-            for (let i = 0; i < 8; i++) {
-                const angle = i * 45 + off;
-                const op = Math.min(1, 0.7 + (l * 0.05));
-                svgHtml += `<use href="#cl-petal-${idx}" transform="rotate(${angle} 50 50) scale(${sc}) translate(${(1-sc)*50/sc} ${(1-sc)*50/sc})" opacity="${op}"/>`;
+        tilesData.forEach(t => {
+            if(t.state !== 'board') return;
+            let el = document.getElementById(t.id);
+            if(!el) {
+                el = document.createElement('div');
+                el.id = t.id; el.className = 'tile';
+                el.innerHTML = SVG_DEFS[t.s](t.c);
+                el.style.left = `${t.x}px`; el.style.top = `${t.y}px`; el.style.zIndex = t.z * 10;
+                el.onclick = () => handleTap(t.idx);
+                center.appendChild(el);
             }
-        }
-        svgHtml += `</g>
-            <circle cx="50" cy="50" r="${3 + (s.l * 0.5) * s.g}" fill="url(#cl-core-${idx})">
-                <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite"/>
-            </circle>
-        </svg>`;
-        return svgHtml;
+            if(t.isCovered) el.classList.add('covered');
+            else el.classList.remove('covered');
+        });
     }
 
-    const dailyContainer = document.getElementById('daily-grid');
-    dailyStages.forEach((stage, idx) => {
-        dailyContainer.innerHTML += `
-            <div class="card">
-                <div class="svg-wrap">${getDailyLotusSVGByStage(stage, idx)}</div>
-                <div class="name-label">${stage.name}</div>
-            </div>`;
-    });
-
-    // ==========================================
-    // 3. 菩提淨室蓮花
-    // ==========================================
-    const personalStages = [
-        { p: 10, fill:"url(#grad-10)", rTxt:"清淨萌芽", stroke:"rgba(255,255,255,0.45)", glow:"none", layers:1 },
-        { p: 50, fill:"url(#grad-50)", rTxt:"粉晶初綻", stroke:"rgba(255,255,255,0.45)", glow:"none", layers:1 },
-        { p: 100, fill:"url(#grad-100)", rTxt:"聖潔初金", stroke:"rgba(212,175,55,0.55)", glow:"none", layers:2 },
-        { p: 300, fill:"url(#grad-300)", rTxt:"琉璃水月", stroke:"rgba(212,175,55,0.55)", glow:"none", layers:2 },
-        { p: 500, fill:"url(#grad-500)", rTxt:"翡翠玉葉", stroke:"rgba(212,175,55,0.55)", glow:"none", layers:2 },
-        { p: 700, fill:"url(#grad-700)", rTxt:"紫檀雲靄", stroke:"rgba(212,175,55,0.55)", glow:"none", layers:2 },
-        { p: 900, fill:"url(#grad-900)", rTxt:"琥珀流光", stroke:"rgba(212,175,55,0.55)", glow:"none", layers:2 },
-        { p: 1000, fill:"url(#grad-1000)", rTxt:"初心幻彩", stroke:"rgba(212,175,55,0.55)", glow:"none", layers:2 },
-        { p: 5000, fill:"url(#grad-5000)", rTxt:"青淨琉璃", stroke:"rgba(212,175,55,0.55)", glow:"none", layers:2 },
-        { p: 10000, fill:"url(#grad-10000)", rTxt:"無染純金", stroke:"rgba(212,175,55,0.55)", glow:"none", layers:2 },
-        { p: 100000, fill:"url(#grad-15000)", rTxt:"紫金霞光", stroke:"rgba(212,175,55,0.55)", glow:"none", layers:2 },
-        { p: 500000, fill:"url(#grad-20000)", rTxt:"晨曦玉露", stroke:"rgba(212,175,55,0.55)", glow:"none", layers:2 },
-        { p: 1000000, fill:"url(#grad-25000)", rTxt:"月魄銀輝", stroke:"rgba(212,175,55,0.55)", glow:"none", layers:2 },
-        { p: 5000000, fill:"url(#grad-30000)", rTxt:"玄黃凝脂", stroke:"rgba(212,175,55,0.55)", glow:"none", layers:2 },
-        { p: 10000000, fill:"url(#grad-30000)", rTxt:"大圓滿耀金", stroke:"#fff", glow:"drop-shadow(0 0 18px rgba(212,175,55,0.8)) drop-shadow(0 0 40px rgba(212,175,55,0.4))", layers:2 }
-    ];
-
-    function getPersonalLotusSVG(stage) {
-        let { p, fill, stroke, glow, layers } = stage;
-        let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-150 -150 300 300" style="width:100%;height:100%;overflow:visible; filter:${glow};">`;
-        
-        for (let l = layers; l > 0; l--) {
-            const sc = 0.44 + l * 0.28;
-            const n  = (l === layers) ? 8 : 6;
-            const rotOffset = l * 22.5 + p * 0.012;
-            for (let i = 0; i < n; i++) {
-                const rot = i * (360/n) + rotOffset;
-                const s   = 112 * sc;
-                const pth = `M 0 0 C ${s*.44} ${-s*.07} ${s*.54} ${-s*.62} 0 ${-s} C ${-s*.54} ${-s*.62} ${-s*.44} ${-s*.07} 0 0`;
-                const vein = `M 0 ${-s*.08} Q 0 ${-s*.55} 0 ${-s*.88}`;
-                svg += `<g transform="rotate(${rot})"><path d="${pth}" fill="${fill}" stroke="${stroke}" stroke-width="0.9" opacity="0.93"/><path d="${vein}" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="0.6"/></g>`;
-            }
-        }
-        
-        if (p >= 300) {
-            const innerSz = 112 * 0.38;
-            for (let i = 0; i < 6; i++) {
-                const rot = i * 60 + 18 + p * 0.018;
-                const pth = `M 0 0 C ${innerSz*.35} ${-innerSz*.08} ${innerSz*.3} ${-innerSz*.7} 0 ${-innerSz} C ${-innerSz*.3} ${-innerSz*.7} ${-innerSz*.35} ${-innerSz*.08} 0 0`;
-                svg += `<g transform="rotate(${rot})"><path d="${pth}" fill="${fill}" stroke="${stroke}" stroke-width="0.7" opacity="0.85"/></g>`;
-            }
-        }
-        
-        if (p >= 50) {
-            const cr = p >= 1000 ? 20 : p >= 300 ? 16 : 12;
-            svg += `<circle cx="0" cy="0" r="${cr}" fill="${fill}" stroke="${stroke}" stroke-width="1.2" opacity="0.96"/>`;
-            if (p >= 100) {
-                const stamens = p >= 5000 ? 12 : 8;
-                for (let s = 0; s < stamens; s++) {
-                    const sa = (s * (360/stamens)) * Math.PI / 180;
-                    const sr = cr + 9;
-                    const ex = (sr * Math.cos(sa)).toFixed(1);
-                    const ey = (sr * Math.sin(sa)).toFixed(1);
-                    svg += `<circle cx="${ex}" cy="${ey}" r="2.8" fill="${fill}" opacity="0.82"/><line x1="${(cr*.6*Math.cos(sa)).toFixed(1)}" y1="${(cr*.6*Math.sin(sa)).toFixed(1)}" x2="${ex}" y2="${ey}" stroke="rgba(255,255,255,0.25)" stroke-width="0.7"/>`;
+    // 核心演算法：檢查是否被上方物件遮擋
+    function updateCovers() {
+        const w = 56, h = 75;
+        const margin = 8; // 容錯邊緣，避免輕微擦邊就被鎖住
+        for(let i=0; i<tilesData.length; i++) {
+            if(tilesData[i].state !== 'board') continue;
+            tilesData[i].isCovered = false;
+            for(let j=0; j<tilesData.length; j++) {
+                if(i === j || tilesData[j].state !== 'board') continue;
+                if(tilesData[j].z > tilesData[i].z) { // 只檢查更高層的牌
+                    let dx = Math.abs(tilesData[i].x - tilesData[j].x);
+                    let dy = Math.abs(tilesData[i].y - tilesData[j].y);
+                    if(dx < (w - margin) && dy < (h - margin)) {
+                        tilesData[i].isCovered = true;
+                        break;
+                    }
                 }
             }
-            svg += `<circle cx="-${cr*.18}" cy="-${cr*.22}" r="${cr*.28}" fill="rgba(255,255,255,0.38)"/>`;
         }
-        svg += `</svg>`;
-        return svg;
     }
 
-    const personalContainer = document.getElementById('personal-grid');
-    personalStages.forEach(stage => {
-        personalContainer.innerHTML += `
-            <div class="card">
-                <div class="svg-wrap">${getPersonalLotusSVG(stage)}</div>
-                <div class="name-label">${stage.rTxt}</div>
-            </div>`;
-    });
+    // --------------------------------------------------
+    // 遊戲邏輯與動畫
+    // --------------------------------------------------
+    async function handleTap(idx) {
+        if(isProcessing) return;
+        let t = tilesData[idx];
+        if(t.state !== 'board' || t.isCovered) return;
+        if(tray.length >= MAX_TRAY) return;
+
+        isProcessing = true;
+        t.state = 'tray';
+        let el = document.getElementById(t.id);
+        el.classList.remove('covered'); el.classList.add('in-tray');
+        
+        // 移至托盤前，先整理托盤陣列 (將同類型的牌排在一起)
+        tray.push(t);
+        tray.sort((a, b) => (a.c + a.s).localeCompare(b.c + b.s));
+
+        // 計算托盤 DOM 的絕對座標位置以供動畫飛行
+        const trayBgRect = document.getElementById('tray-bg').getBoundingClientRect();
+        const centerRect = document.getElementById('board-center').getBoundingClientRect();
+        
+        // 將盤面的相對座標，轉換為視窗絕對座標，再計算至目標
+        tray.forEach((trayItem, trayIdx) => {
+            let targetX = trayBgRect.left + 8 + (trayIdx * 62); // 8是padding, 62是寬度+gap
+            let targetY = trayBgRect.top + 8;
+            
+            let domEl = document.getElementById(trayItem.id);
+            // 由於 domEl 是 absolute 相對於 board-center，我們需要覆寫
+            domEl.style.position = 'fixed';
+            domEl.style.zIndex = 1000 + trayIdx;
+            
+            let currentRect = domEl.getBoundingClientRect();
+            // 只執行動畫一次，針對剛剛點擊的那塊 (其他塊只需滑動)
+            domEl.style.left = `${targetX}px`;
+            domEl.style.top = `${targetY}px`;
+        });
+
+        // 重新渲染盤面解鎖下層
+        renderBoard();
+        updateCount();
+
+        setTimeout(() => checkMatches(), 350); // 等待飛行結束
+    }
+
+    async function checkMatches() {
+        let matchFound = false;
+        // 尋找連續 3 個相同的牌
+        for(let i=0; i <= tray.length - 3; i++) {
+            if(tray[i].c === tray[i+1].c && tray[i].s === tray[i+1].s && 
+               tray[i+1].c === tray[i+2].c && tray[i+1].s === tray[i+2].s) {
+                
+                // 找到三相歸一
+                matchFound = true;
+                let matchedTiles = tray.splice(i, 3);
+                
+                matchedTiles.forEach(mt => {
+                    let domEl = document.getElementById(mt.id);
+                    createDustParticles(domEl, mt.c === 'gold' ? '#d4af37' : '#8ba89c');
+                    domEl.style.transform = 'scale(0)';
+                    domEl.style.opacity = '0';
+                    setTimeout(() => domEl.remove(), 400);
+                });
+
+                // 將托盤剩餘的牌往前遞補
+                tray.forEach((trayItem, trayIdx) => {
+                    let targetX = document.getElementById('tray-bg').getBoundingClientRect().left + 8 + (trayIdx * 62);
+                    let domEl = document.getElementById(trayItem.id);
+                    domEl.style.left = `${targetX}px`;
+                });
+                
+                updateCount();
+                break; // 一次只消一組
+            }
+        }
+
+        if(!matchFound) {
+            if(tray.length >= MAX_TRAY) {
+                showModal("陣法氣結", `<button class="m-btn m-btn-prime" onclick="retryLevel()">重新起陣</button>`);
+            } else if(tilesData.filter(t => t.state === 'board').length === 0) {
+                // 盤面清空
+                level++;
+                showModal("理順色相 ‧ 境界提昇", `
+                    <button class="m-btn m-btn-prime" onclick="nextLevel()">繼續精進</button>
+                    <button class="m-btn" onclick="window.location.reload()">圓滿退場</button>
+                `);
+            }
+        }
+        isProcessing = false;
+    }
+
+    function updateCount() {
+        let remain = tilesData.filter(t => t.state === 'board').length;
+        document.getElementById('bag-ui').innerText = `陣眼：${remain} / ${tilesData.length}`;
+    }
+
+    // --------------------------------------------------
+    // 特效與 UI
+    // --------------------------------------------------
+    function createDustParticles(element, color) {
+        const rect = element.getBoundingClientRect();
+        for(let i=0; i<15; i++) {
+            let dust = document.createElement('div'); 
+            dust.className = 'dust'; dust.style.background = color;
+            dust.style.left = rect.left + rect.width/2 + 'px'; 
+            dust.style.top = rect.top + rect.height/2 + 'px';
+            let size = Math.random() * 4 + 2; dust.style.width = size + 'px'; dust.style.height = size + 'px';
+            document.body.appendChild(dust); 
+            
+            dust.animate([
+                { opacity: 1, transform: `translate(0, 0) scale(1)` },
+                { opacity: 0, transform: `translate(${(Math.random() - 0.5) * 100}px, ${-(Math.random() * 150 + 50)}px) scale(0)` }
+            ], { duration: 800, easing: 'ease-out', fill: 'forwards' });
+            setTimeout(() => dust.remove(), 850);
+        }
+    }
+
+    function showModal(title, html) {
+        document.getElementById('m-title').innerText = title;
+        document.getElementById('m-actions').innerHTML = html;
+        document.getElementById('modal').classList.add('show');
+    }
+    
+    function closeModal() { document.getElementById('modal').classList.remove('show'); }
+
+    function retryLevel() { closeModal(); generateLevel(level); }
+    function nextLevel() { closeModal(); generateLevel(level); }
+
+    // 深空背景星辰
+    const canvas = document.getElementById('bgCanvas'); const ctx = canvas.getContext('2d');
+    let cw, ch, stars = [];
+    function res() { cw=canvas.width=window.innerWidth; ch=canvas.height=window.innerHeight; }
+    window.addEventListener('resize', res); res();
+    for(let i=0; i<100; i++) stars.push({x:(Math.random()-0.5)*2000, y:(Math.random()-0.5)*2000, z:Math.random()*2000, s:Math.random()*2+1});
+    function drawBg() {
+        ctx.fillStyle = '#010204'; ctx.fillRect(0,0,cw,ch); ctx.globalCompositeOperation = 'screen';
+        stars.forEach(s => {
+            s.z -= 1.5; if(s.z<=0){s.z=2000; s.x=(Math.random()-0.5)*2000; s.y=(Math.random()-0.5)*2000;}
+            let sc=800/(800+s.z), px=cw/2+s.x*sc, py=ch/2+s.y*sc;
+            if(px>0&&px<cw&&py>0&&py<ch){ ctx.fillStyle = `rgba(212,175,55,${sc*0.8})`; ctx.beginPath(); ctx.arc(px,py,s.s*sc,0,Math.PI*2); ctx.fill(); }
+        });
+        ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(drawBg);
+    }
+    drawBg();
+
+    // 啟動第一關
+    generateLevel(level);
+
 </script>
 </body>
 </html>

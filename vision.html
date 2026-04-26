@@ -105,27 +105,35 @@
 <canvas id="bgCanvas"></canvas>
 <div id="vision-overlay"></div>
 
-<div id="header">
-    <div class="top-bar">
-        <div class="btn-return" onclick="triggerExit()">退出</div>
-        <div class="title-area">
-            <div class="honor-tag" id="honor-display">琉璃行者</div>
-            <div class="lv-tag" id="lv-display">結界起建中</div>
+<div id="header" style="padding: 15px 15px 10px 15px; z-index: 10; position: relative; background: linear-gradient(180deg, rgba(1,2,4,0.95) 0%, rgba(1,2,4,0.5) 100%); backdrop-filter: blur(8px); display: flex; flex-direction: column; gap: 15px;">
+
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+        <div class="btn-return" onclick="triggerExit()" style="border: none; background: transparent; padding: 0; font-size: 0.95rem; color: var(--cyan); letter-spacing: 2px; text-transform: uppercase;">
+            ← 暫歇
         </div>
-        <div class="bag-tag" id="bag-ui" onclick="checkSync()">資糧：0/100</div>
+
+        <div class="title-area" style="display: flex; flex-direction: column; align-items: center;">
+            <div class="honor-tag" id="honor-display" style="font-size: 0.65rem; color: var(--solid-gold); letter-spacing: 2px;">琉璃行者</div>
+            <div class="lv-tag" id="lv-display" style="font-size: 1.15rem; color: var(--gold); font-weight: bold; letter-spacing: 3px; text-shadow: 0 0 8px rgba(212,175,55,0.4);">結界起建中</div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+            <div class="bag-tag" id="bag-ui" onclick="checkSync()" style="font-size: 0.75rem; color: #aaa; letter-spacing: 1px;">資糧：0/100</div>
+            <div id="timer-text" style="color: #00e5ff; font-size: 1.2rem; font-weight: bold; font-family: monospace; letter-spacing: 1px; text-shadow: 0 0 8px rgba(0,229,255,0.4);">60.0s</div>
+        </div>
     </div>
-    <div class="question-row">
-        <div class="question-box">
-            <span style="font-size: 0.95rem;">尋出</span>
-            <div class="q-icon" id="q-icon-display"></div>
-            <span class="q-text" id="q-name-display">法相</span>
-        </div>
-        <div class="timer-wrap">
-            <div class="timer-text" id="timer-text">60.0s</div>
-            <div class="timer-bar-bg"><div class="timer-bar-fill" id="timer-fill"></div></div>
-        </div>
+
+    <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 5px;">
+        <span style="font-size: 0.9rem; color: #888; letter-spacing: 2px;">尋出</span>
+        <div class="q-icon" id="q-icon-display" style="width: 50px; height: 50px; position: relative; overflow: visible; filter: drop-shadow(0 0 12px rgba(255,255,255,0.2));"></div>
+        <span class="q-text" id="q-name-display" style="font-size: 1.15rem; color: var(--gold); font-weight: bold; letter-spacing: 2px;">法相</span>
+    </div>
+
+    <div class="timer-bar-bg" style="width: 100%; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; margin-top: 5px;">
+        <div class="timer-bar-fill" id="timer-fill" style="height: 100%; width: 100%; background: linear-gradient(90deg, #00e5ff, #80ed99); transition: width 0.1s linear, background 0.3s; box-shadow: 0 0 10px #00e5ff;"></div>
     </div>
 </div>
+
 
 <div id="board"></div>
 
@@ -166,6 +174,8 @@
     // 觀相專屬境界與時劫鎖
     db.visionLevel = db.visionLevel || 1; 
     db.visionLastFailed = db.visionLastFailed || "";
+    db.visionLastDate = db.visionLastDate || ""; // ✨ 新增：每日首勝結算紀錄
+
 
     function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
     const todayStr = new Date().toDateString();
@@ -273,7 +283,8 @@
                 clearInterval(game.timerInterval);
                 game.isProcessing = true;
                 db.visionLevel = Math.max(1, db.visionLevel - 1); // 輕微退階懲罰
-                db.visionLastFailed = todayStr; // 寫入一命通關鎖
+                db.visionLastFailed = new Date().toDateString();
+
                 saveDB();
                 showModal("今日定力已盡", "時劫已滿，心神已疲。<br>觀相結界今日關閉，請安住呼吸，明日再來。", "歸返道場", () => window.location.href = 'index.html?screen=3');
             }
@@ -290,13 +301,15 @@
     // --------------------------------------------------
     // 4. 陣法生成 (漸進式心理旋轉)
     // --------------------------------------------------
-    function initLevel() {
+        function initLevel() {
+        const currentToday = new Date().toDateString(); // 動態抓取當下日期
+        
         // 一命通關檢查
-        if (db.visionLastFailed === todayStr) {
-            showModal("結界關閉", "今日定力已盡，請安住呼吸，明日再來起建結界。", "歸返道場", () => window.location.href = 'index.html?screen=3');
+        if (db.visionLastFailed === currentToday) {
+            showModal("今日定力已盡", "時劫已滿，心神已疲。<br>觀相結界今日關閉，請安住呼吸，明日再來。", "歸返道場", () => window.location.href = 'index.html?screen=3');
             return;
         }
-
+        
         game.isProcessing = false;
         const board = document.getElementById('board');
         board.innerHTML = '';
@@ -422,8 +435,20 @@
         }
     }
 
-    function checkWinEvents() {
-        db.visionLevel++; db.tempBag++;
+       function checkWinEvents() {
+        const currentToday = new Date().toDateString();
+        let isFirstWinToday = (db.visionLastDate !== currentToday);
+        db.visionLastDate = currentToday;
+        db.visionLevel++; 
+        
+        // ✨ 首勝結算邏輯
+        let earnedPoints = 1;
+        let clearMsg = "";
+        if (isFirstWinToday) {
+            earnedPoints += 10;
+            clearMsg = "今日首度理順，獲【每日定課】 +10，過關 +1，共得 +11 點。<br>";
+        }
+        db.tempBag += earnedPoints;
         
         let dropMsg = "";
         let levelPassed = db.visionLevel - 1;
@@ -445,16 +470,17 @@
             
             if (levelPassed % 5 === 0 && levelPassed > 0) {
                 const s = SCRIPTURES[Math.floor(Math.random()*SCRIPTURES.length)];
-                triggerRPG(s, dropMsg);
+                triggerRPG(s, clearMsg + dropMsg);
             } else if (levelPassed % 3 === 0 && levelPassed > 0) {
-                triggerHuayanWorld(levelPassed, dropMsg);
-            } else if (dropMsg !== "") {
-                showModal("境界提昇", dropMsg, "繼續精進", () => initLevel());
+                triggerHuayanWorld(levelPassed, clearMsg + dropMsg);
+            } else if (clearMsg !== "" || dropMsg !== "") {
+                showModal("境界提昇", clearMsg + dropMsg, "繼續精進", () => initLevel());
             } else {
                 initLevel(); 
             }
         }, 1500);
     }
+
 
     function triggerHuayanWorld(lvl, dropMsg) {
         game.isHuayan = true; game.starSpeed = 60; 

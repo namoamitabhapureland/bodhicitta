@@ -42,34 +42,27 @@
 
         .question-row { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 5px; }
         .question-box { background: rgba(20,25,30,0.85); border: 1px solid var(--solid-gold); border-radius: 30px; padding: 4px 20px; font-size: 1rem; color: #fff; letter-spacing: 2px; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.8); }
-        .q-icon { width: 35px; height: 35px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.4)); }
-                /* 讓 SVG 可以破框 */
-        .q-icon svg { 
-            overflow: visible !important; 
-        }
-        
-        /* 讓整個法器圖示往上浮游，改變破框方向 */
-        .q-icon {
-            transform: translateY(-10px); 
-        }
-
+        .q-icon { width: 35px; height: 35px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.4)); transform: translateY(-10px); }
+        .q-icon svg { overflow: visible !important; }
         .q-text { font-weight: bold; color: var(--gold); }
         
         /* 琉璃時間進度條 */
         .timer-wrap { flex: 1; margin-left: 15px; display: flex; flex-direction: column; align-items: flex-end; }
         .timer-text { font-size: 0.8rem; color: #00e5ff; font-weight: bold; letter-spacing: 1px; margin-bottom: 4px; transition: color 0.3s; }
-        .timer-bar-bg { width: 100%; max-width: 120px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
-        .timer-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #00e5ff, #80ed99); transition: width 0.1s linear, background 0.3s; box-shadow: 0 0 10px #00e5ff; }
 
         /* 核心觀相區 */
         #board { flex: 1; position: relative; width: 100%; overflow: hidden; z-index: 5; margin: 10px 0; }
         
-        /* 實體不透明的法寶 */
-        .item { position: absolute; display: flex; justify-content: center; align-items: center; transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); filter: drop-shadow(4px 8px 6px rgba(0,0,0,0.8)); }
-        .item.distractor-breathe { animation: float-breathe 6s infinite ease-in-out alternate; }
+        /* ✨ 效能優化：拔除預設陰影，加入硬體加速 */
+        .item { position: absolute; display: flex; justify-content: center; align-items: center; transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); will-change: transform, filter; }
+        
+        /* ✨ 呼吸動畫改用亮度，不跟JS的旋轉打架 */
+        @keyframes light-breathe { 0% { filter: brightness(1); } 100% { filter: brightness(1.3); } }
+        .item.distractor-breathe { animation: light-breathe 4s infinite ease-in-out alternate; }
+        
         .item svg { width: 100%; height: 100%; pointer-events: none; }
-        @keyframes float-breathe { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
-        .item.highlight { filter: drop-shadow(0 0 25px var(--solid-gold)) drop-shadow(0 0 40px rgba(255,255,255,0.9)) brightness(1.4) !important; z-index: 4000 !important; animation: none; transform: scale(1.3) !important; }
+        /* 只有選中時才套用高效能陰影 */
+        .item.highlight { filter: drop-shadow(0 0 25px var(--solid-gold)) brightness(1.4) !important; z-index: 4000 !important; animation: none; transform: scale(1.3) !important; }
 
         /* 底部作答區 */
         #footer { padding: 15px 15px 25px 15px; width: 100%; background: linear-gradient(0deg, rgba(1,2,4,1) 0%, rgba(1,2,4,0.8) 70%, transparent 100%); z-index: 20; position: relative; display: flex; justify-content: center; align-items: center; gap: 15px;}
@@ -117,13 +110,10 @@
 
 
 <div id="header" style="padding: 15px; z-index: 10; position: relative; background: linear-gradient(180deg, rgba(1,2,4,0.98) 0%, rgba(1,2,4,0) 100%); min-height: 120px;">
-    
     <div style="position: absolute; left: 15px; top: 15px; z-index: 5;">
         <div class="btn-return" onclick="triggerExit()">退出</div>
     </div>
-
-        <div style="position: absolute; right: 15px; top: 15px; z-index: 5; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-        
+    <div style="position: absolute; right: 15px; top: 15px; z-index: 5; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
         <div class="bag-tag" id="bag-ui" onclick="checkSync()" style="color: var(--gold); border: 1px solid rgba(212,175,55,0.3); background: rgba(10,15,20,0.6); padding: 3px 10px; border-radius: 10px;">資糧：0/100</div>
         
         <div style="position: relative; width: 56px; height: 56px;">
@@ -141,27 +131,19 @@
         </div>
     </div>
     <div style="display: flex; flex-direction: column; align-items: center; width: 100%; position: relative; z-index: 1;">
-        
         <div class="title-area" style="display: flex; flex-direction: column; align-items: center;">
             <div class="honor-tag" id="honor-display">琉璃行者</div>
             <div class="lv-tag" id="lv-display">結界起建中</div>
         </div>
-
         <div class="question-row" style="justify-content: center; margin-top: 10px;">
             <div class="question-box">
                 <span style="font-size: 0.95rem;">尋出</span>
-                <div class="q-icon" id="q-icon-display" style="transform: translateY(-8px);">
-                    <style> #q-icon-display svg { overflow: visible !important; } </style>
-                </div>
+                <div class="q-icon" id="q-icon-display"></div>
                 <span class="q-text" id="q-name-display">法相</span>
             </div>
         </div>
-
     </div>
 </div>
-
-
-
 
 <div id="board"></div>
 
@@ -185,28 +167,18 @@
     // 0. 資料庫防護與初始化 (對齊主系統)
     // --------------------------------------------------
     let db = {};
-    const STORAGE_KEY = 'PX_V15.0'; // 統一主系統 Key
-    try { 
-        db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; 
-    } catch(e) { 
-        db = {}; 
-    }
+    const STORAGE_KEY = 'PX_V15.0'; 
+    try { db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e) { db = {}; }
 
     db.tempBag = db.tempBag || 0;
     db.points = db.points || 0;
     if (!db.treasures) db.treasures = { sword: 0, vase: 0, jewel: 0 };
-    if (typeof db.treasures.sword === 'undefined') db.treasures.sword = 0;
-    if (typeof db.treasures.vase === 'undefined') db.treasures.vase = 0;
-    if (typeof db.treasures.jewel === 'undefined') db.treasures.jewel = 0;
-
-    // 觀相專屬境界與時劫鎖
+    
     db.visionLevel = db.visionLevel || 1; 
     db.visionLastFailed = db.visionLastFailed || "";
-    db.visionLastDate = db.visionLastDate || ""; // ✨ 新增：每日首勝結算紀錄
-
+    db.visionLastDate = db.visionLastDate || ""; 
 
     function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
-    const todayStr = new Date().toDateString();
     
     const SCRIPTURES = [
         { t: "觀音如來 ‧ 般若照見", c: "【照見五蘊皆空，度一切苦厄】。<br>色即是空，空即是色。", b: "南無觀世音菩薩", color: "rgba(0,200,255,0.2)" },
@@ -215,11 +187,10 @@
         { t: "釋迦如來 ‧ 演說大經", c: "【發菩提心，一向專念】。<br>此三輩往生之根本，行者當攝心入定。", b: "南無本師釋迦牟尼佛", color: "rgba(243,229,171,0.25)" }
     ];
 
-        let game = { starSpeed: 1, currentEncounter: null, isHuayan: false, isProcessing: false, timeLeft: 60, maxTime: 180, timerInterval: null, wrongCount: 0 };
-
+    let game = { starSpeed: 1, currentEncounter: null, isHuayan: false, isProcessing: false, timeLeft: 60, maxTime: 180, timerInterval: null, wrongCount: 0 };
 
     // --------------------------------------------------
-    // 1. ✨ 法寶庫 (闊刃劍 + 護手寶石 + 基礎放大) ✨
+    // 1. ✨ 法寶庫 ✨
     // --------------------------------------------------
     const TARGET_LIB = {
         sword_red: { name: "赤焰慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-red)"/><polygon points="25,100 75,100 55,110 45,110" fill="#d4af37" stroke="#d4af37" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-red)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
@@ -240,15 +211,12 @@
         jewel_green: { name: "翡翠寶珠", drop: "jewel", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.3) translate(-8, 5)"><polygon points="50,10 80,40 50,55 20,40" fill="#fff" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#g-green)" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="#1b5e20" stroke="#fff" stroke-width="0.5"/></g></svg>` }
     };
 
+    // ✨ 效能優化：精簡為 6 片花瓣，完全不透明
     function getLotusNoiseSVG(colorID) {
         let svg = `<svg viewBox="-100 -100 200 200">`;
-        for(let i=0; i<8; i++) {
-            let rot = i * 45;
+        for(let i=0; i<6; i++) {
+            let rot = i * 60;
             svg += `<path d="M 0 0 C 35 -10 45 -65 0 -95 C -45 -65 -35 -10 0 0" fill="url(#${colorID})" transform="rotate(${rot})" stroke="#fff" stroke-width="1.5" opacity="1"/>`;
-        }
-        for(let i=0; i<8; i++) {
-            let rot = i * 45 + 22.5;
-            svg += `<path d="M 0 0 C 20 -5 25 -45 0 -65 C -25 -45 -20 -5 0 0" fill="url(#${colorID})" transform="rotate(${rot})" stroke="#fff" stroke-width="1" opacity="1"/>`;
         }
         svg += `<circle cx="0" cy="0" r="14" fill="#d4af37" stroke="#fff" stroke-width="1.5"/><circle cx="0" cy="0" r="10" fill="url(#l-white)" stroke="none"/></svg>`;
         return svg;
@@ -273,7 +241,7 @@
         return "琉璃行者";
     }
 
-        function checkSync() {
+    function checkSync() {
         if(db.tempBag >= 100) {
             let tAmt = Math.floor(db.tempBag / 100) * 100;
             showModal("資糧結集", `已匯聚 ${db.tempBag} 點資糧。<br>即將把 ${tAmt} 點存入主系統。`, "確認結集", () => {
@@ -283,8 +251,6 @@
         }
     }
 
-
-    // ✨ 退出防護選單 (雙極分支)
     function triggerExit() {
         showModal("暫歇觀相", "放下手機，讓眼睛與心神休息。<br>您欲前往何處？", null, null, `
             <button class="m-btn m-btn-prime" onclick="closeModal()">繼續觀相</button>
@@ -296,7 +262,7 @@
     // --------------------------------------------------
     // 3. 生存計時器 (一命通關鎖)
     // --------------------------------------------------
-        function startTimer() {
+    function startTimer() {
         clearInterval(game.timerInterval);
         updateWaterUI();
         
@@ -305,11 +271,10 @@
             game.timeLeft -= 0.1;
             updateWaterUI(); 
             
-                       if (game.timeLeft <= 0) {
+            if (game.timeLeft <= 0) {
                 clearInterval(game.timerInterval);
                 game.isProcessing = true;
                 
-                // ✨ 抓取結算數據 (降階前先存起來)
                 let finalLvl = db.visionLevel;
                 let finalBag = db.tempBag;
                 
@@ -317,12 +282,11 @@
                 db.visionLastFailed = new Date().toDateString();
                 saveDB();
                 
-                // ✨ 顯示結算彈窗 (修改文案：目前累積資糧)
                 showModal("今日定力已盡", `本次止步於：<span style="color:var(--solid-gold)">第 ${finalLvl} 重結界</span><br>目前累積資糧：<span style="color:var(--solid-gold)">${finalBag} 點</span><br><br>時劫已滿，心神已疲，請安住呼吸明日再來。`, "歸返道場", () => window.location.href = 'index.html?screen=3');
-
             }
         }, 100);
     }
+
     function updateWaterUI() {
         let pct = Math.max(0, (game.timeLeft / game.maxTime));
         const arc = document.getElementById('timer-arc');
@@ -331,34 +295,28 @@
         if (arc) arc.style.strokeDashoffset = 163.36 * (1 - pct);
         if (txt) txt.innerText = Math.max(0, game.timeLeft).toFixed(1);
 
-        // 動態顏色切換 (剩餘 10 秒以內變紅，其餘為金)
         if (game.timeLeft <= 10) {
             if (arc) { arc.style.stroke = '#ff4d4d'; arc.style.filter = 'drop-shadow(0 0 5px rgba(255,77,77,0.8))'; }
             if (txt) txt.style.color = '#ff4d4d';
         } else {
-            // ✨ 改為金色光芒
             if (arc) { arc.style.stroke = '#f3e5ab'; arc.style.filter = 'drop-shadow(0 0 4px rgba(212,175,55,0.5))'; }
             if (txt) txt.style.color = '#f3e5ab';
         }
     }
 
-
-
-
     // --------------------------------------------------
     // 4. 陣法生成 (漸進式心理旋轉)
     // --------------------------------------------------
-         function initLevel() {
+    function initLevel() {
         const currentToday = new Date().toDateString(); 
         
-        // 每日限制防護 (如果今天死過，直接擋住)
         if (db.visionLastFailed === currentToday) {
             showModal("今日定力已盡", "時劫已滿，心神已疲。<br>觀相結界今日關閉，請安住呼吸，明日再來。", "歸返道場", () => window.location.href = 'index.html?screen=3');
             return;
         }
-        
+
         game.isProcessing = false;
-        game.wrongCount = 0; // ✨ 每次新題目，錯誤次數歸零
+        game.wrongCount = 0; 
         
         const board = document.getElementById('board');
         board.innerHTML = '';
@@ -371,27 +329,9 @@
         bagUI.innerText = `資糧：${db.tempBag}/100`;
         if(db.tempBag >= 100) bagUI.classList.add('full'); else bagUI.classList.remove('full');
 
-                // ✨ 終極完美邏輯：分開「總上限」與「開局保底」
-        game.maxTime = 180; // 整個遊戲的最高上限就是 3 分鐘
-
-        let baseTime;
-        if (lvl >= 50) {
-            baseTime = 180; // 最難關卡：開局保底 3 分鐘
-        } else if (lvl >= 20) {
-            baseTime = 120; // 變難關卡：開局保底 2 分鐘
-        } else {
-            baseTime = 60;  // 基礎關卡：開局保底 60 秒
-        }
-        
-        // 繼承剩餘時間：如果低於保底就補血，最高不超過 180 秒
-        game.timeLeft = Math.min(game.maxTime, Math.max(baseTime, game.timeLeft)); 
-
-        updateWaterUI();
-        startTimer();
-
-
-        let totalItems = Math.min(85, 20 + Math.floor(lvl * 1.5)); 
-        let lotusLimit = Math.min(10, Math.floor(lvl / 10)); 
+        // ✨ 效能大升級：限制最大 55 個圖案，最多 6 朵蓮花
+        let totalItems = Math.min(55, 20 + Math.floor(lvl * 1.0)); 
+        let lotusLimit = Math.min(6, Math.floor(lvl / 10)); 
         correctCount = Math.min(15, 4 + Math.floor(Math.random() * 4) + Math.floor(lvl / 5)); 
         
         let targetPool = Object.keys(TARGET_LIB); targetPool.sort(() => Math.random() - 0.5);
@@ -425,17 +365,17 @@
             if(val > 0) optSet.add(val);
         }
         options = Array.from(optSet); options.sort(() => Math.random() - 0.5);
-               for(let i=0; i<3; i++) { 
+        
+        // ✨ 按鈕數字重置，並清除上一關的亮光顏色
+        for(let i=0; i<3; i++) { 
             let b = document.getElementById(`btn-${i}`);
             b.innerHTML = `${options[i]}<br><span>數量</span>`; 
-            // ✨ 每次新題目，重置按鈕顏色
             b.style.background = '';
             b.style.borderColor = '';
             b.style.boxShadow = '';
         }
 
         const boardRect = board.getBoundingClientRect();
-        let placedPositions = []; 
 
         itemPool.forEach((itemDef, idx) => {
             let el = document.createElement('div');
@@ -443,54 +383,56 @@
             
             let baseSize;
             if (itemDef.cat === 'noise') {
-                el.innerHTML = NOISE_LIB[itemDef.type]; baseSize = 120 + Math.random() * 80; 
-                el.style.zIndex = 10 + Math.floor(Math.random() * 10); 
+                el.innerHTML = NOISE_LIB[itemDef.type]; 
+                baseSize = 110 + Math.random() * 70; 
+                el.style.zIndex = 5; 
+                el.style.opacity = "1"; // 蓮花保持不透明
             } else {
-                el.innerHTML = TARGET_LIB[itemDef.type].svg; baseSize = 45 + Math.random() * 40; 
+                el.innerHTML = TARGET_LIB[itemDef.type].svg; 
+                baseSize = 45 + Math.random() * 35; 
                 el.style.zIndex = 100 + Math.floor(Math.random() * 100); 
-                el.classList.add('distractor-breathe'); 
+                // ✨ 動畫優化：只有少部分物品用亮度呼吸
+                if (Math.random() > 0.6) el.classList.add('distractor-breathe'); 
             }
 
             el.style.width = `${baseSize}px`; el.style.height = `${baseSize}px`;
             
             let maxLeft = boardRect.width - baseSize - 10;
             let maxTop = boardRect.height - baseSize - 20; 
-            
             let finalX = Math.max(10, Math.random() * maxLeft); 
             let finalY = Math.max(10, Math.random() * maxTop);
             
             el.style.left = `${finalX}px`; el.style.top = `${finalY}px`;
             
-            // ✨ 漸進式心理旋轉難度 ✨
             let flip = Math.random() > 0.5 ? 'scaleX(-1)' : 'scaleX(1)';
             let rot = 0;
-            if (lvl > 50) {
-                rot = Math.floor(Math.random() * 360); // 360度大亂轉
-            } else if (lvl > 20) {
-                rot = Math.floor(Math.random() * 90) - 45; // 輕微傾斜 -45 ~ +45
-            }
+            if (lvl > 50) rot = Math.floor(Math.random() * 360); 
+            else if (lvl > 20) rot = Math.floor(Math.random() * 90) - 45; 
             
             el.style.transform = `${flip} rotate(${rot}deg)`;
-            el.style.animationDelay = `-${Math.random() * 8}s`;
-            
             board.appendChild(el);
         });
+
+        game.maxTime = 180; 
+        let baseTime = lvl >= 50 ? 180 : (lvl >= 20 ? 120 : 60);
+        game.timeLeft = Math.min(game.maxTime, Math.max(baseTime, game.timeLeft)); 
+        updateWaterUI();
+        startTimer();
     }
 
     // --------------------------------------------------
     // 5. 答題驗證與回血
     // --------------------------------------------------
-     
-       function submitAnswer(btnIdx) {
+    function submitAnswer(btnIdx) {
         if(game.isProcessing) return;
         
         let guess = options[btnIdx];
-        let clickedBtn = document.getElementById(`btn-${btnIdx}`); // ✨ 抓取點擊的按鈕
+        let clickedBtn = document.getElementById(`btn-${btnIdx}`); 
         
         if (guess === correctCount) {
             game.isProcessing = true;
             
-            // ✨ 答對發綠光
+            // ✨ 答對發出綠光
             clickedBtn.style.background = 'linear-gradient(135deg, rgba(128,237,153,0.4) 0%, rgba(30,80,40,0.8) 100%)';
             clickedBtn.style.borderColor = '#80ed99';
             clickedBtn.style.boxShadow = '0 0 20px rgba(128,237,153,0.5)';
@@ -516,7 +458,7 @@
         } else {
             game.wrongCount++; 
             
-            // ✨ 答錯發紅光
+            // ✨ 答錯發出紅光
             clickedBtn.style.background = 'linear-gradient(135deg, rgba(255,77,77,0.4) 0%, rgba(80,20,20,0.8) 100%)';
             clickedBtn.style.borderColor = '#ff4d4d';
             
@@ -558,7 +500,6 @@
             game.isProcessing = true;
             document.getElementById('board').classList.add('vibrate');
             
-            // ✨ 1 秒後把紅光復原
             setTimeout(() => { 
                 document.getElementById('board').classList.remove('vibrate'); 
                 clickedBtn.style.background = '';
@@ -568,10 +509,7 @@
         }
     }
 
-
-
-
-      function checkWinEvents() {
+    function checkWinEvents() {
         const currentToday = new Date().toDateString();
         let isFirstWinToday = (db.visionLastDate !== currentToday);
         db.visionLastDate = currentToday;
@@ -585,7 +523,7 @@
         }
         db.tempBag += earnedPoints;
 
-                // ✨ 滿百自動提領邏輯 (精準找零版)
+        // ✨ 滿百精準找零
         let syncMsg = "";
         if (db.tempBag >= 100) {
             let transferAmount = Math.floor(db.tempBag / 100) * 100;
@@ -594,7 +532,6 @@
             syncMsg = `<br><span style="color:#00e5ff; font-weight:bold;">✨ 資糧圓滿！已將 ${transferAmount} 點自動匯入主系統。</span>`;
         }
 
-        
         let dropMsg = "";
         let levelPassed = db.visionLevel - 1;
         
@@ -626,14 +563,11 @@
         }, 1500);
     }
 
-
-
-     function triggerHuayanWorld(lvl, dropMsg) {
+    function triggerHuayanWorld(lvl, dropMsg) {
         game.isHuayan = true; game.starSpeed = 60; 
         let layer = Math.floor(lvl / 3) % 20 + 1;
         const planet = document.createElement('div'); planet.className = 'huayan-planet';
         
-        // ✨ 改用絕對色碼，徹底避開 CSS 變數讀不到的名稱 Bug！
         const cols = ['rgba(0,229,255,0.4)', 'rgba(206,147,216,0.4)', 'rgba(243,229,171,0.4)', 'rgba(128,237,153,0.4)'];
         planet.style.background = `radial-gradient(circle, ${cols[layer % 4]} 0%, transparent 70%)`;
         document.body.appendChild(planet);
@@ -645,7 +579,6 @@
             showModal("法喜充滿", `<span style="color:var(--solid-gold); font-size:1.1rem; font-weight:bold;">神遊華藏大千 ‧ 第 ${layer} 重天</span><br>${dropMsg}`, "繼續精進", () => initLevel());
         }, 3000);
     }
-
 
     function triggerRPG(s, dropMsg) {
         game.currentEncounter = s;
@@ -673,14 +606,14 @@
         }, 30);
     }
     function stopRPG() { clearInterval(rpgTimer); rpgProg = 0; document.getElementById('fill').style.width = '0%'; }
-        function finishRPG() {
+    
+    function finishRPG() {
         const overlay = document.getElementById('vision-overlay');
         overlay.style.background = '#fff'; setTimeout(() => { overlay.style.opacity = '0'; }, 300);
         document.getElementById('main-body').classList.remove('vibrate'); document.getElementById('modal').classList.remove('show');
         game.currentEncounter = null; game.isProcessing = false;
-        updateWaterUI(); initLevel(); // ✨ 已刪除 game.timeLeft = game.maxTime; 這樣才不會遇到菩薩就洗秒數！
+        updateWaterUI(); initLevel(); 
     }
-
 
     function showModal(title, text, btnText, callback, customHtml) {
         document.getElementById('m-title').innerHTML = title; document.getElementById('m-text').innerHTML = text;

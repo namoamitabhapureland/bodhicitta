@@ -402,14 +402,23 @@ db.visionLastFailed = db.visionLastFailed || "";
             db.waterLevel++; 
             
             let earnedPoints = 1;
-            let clearMsg = "一念清淨，資糧 +1。";
+            let clearMsg = "一念清淨，資糧 +1。<br>";
             if (isFirstWinToday) {
                 earnedPoints += 10;
-                clearMsg = "今日首度理順，獲【每日定課】 +10，過關 +1，共得 +11 點。";
+                clearMsg = "今日首度理順，獲【每日定課】 +10，過關 +1，共得 +11 點。<br>";
             }
             db.tempBag += earnedPoints;
             
-            // 每 20 關固定化現淨瓶 (使用真實 SVG 圖示)
+            // ✨ 滿百自動提領邏輯 (精準找零版)
+            let syncMsg = "";
+            if (db.tempBag >= 100) {
+                let transferAmount = Math.floor(db.tempBag / 100) * 100; 
+                db.points += transferAmount; 
+                db.tempBag -= transferAmount; 
+                syncMsg = `<br><span style="color:#00e5ff; font-weight:bold;">✨ 資糧圓滿！已將 ${transferAmount} 點自動匯入主系統。</span><br>`;
+            }
+            
+            // 每 20 關固定化現淨瓶
             let dropMsg = "";
             let levelPassed = db.waterLevel - 1;
             if (levelPassed % 20 === 0 && levelPassed > 0) { 
@@ -438,28 +447,32 @@ db.visionLastFailed = db.visionLastFailed || "";
                 game.starSpeed = 1; overlay.style.opacity = '0';
                 document.getElementById('center-point').style.transform = 'translate(-50%, -50%) scale(1)';
                 
-                // 判斷異象順序：華藏 (3倍數) 與 佛菩薩 (5倍數)
+                // ✨ 把 syncMsg 加入到所有彈窗裡
                 if (levelPassed % 5 === 0 && levelPassed > 0) {
                     const s = SCRIPTURES[Math.floor(Math.random()*SCRIPTURES.length)];
-                    triggerRPG(s, clearMsg + dropMsg);
+                    triggerRPG(s, clearMsg + syncMsg + dropMsg);
                 } else if (levelPassed % 3 === 0 && levelPassed > 0) {
-                    triggerHuayanWorld(levelPassed, clearMsg + dropMsg);
+                    triggerHuayanWorld(levelPassed, clearMsg + syncMsg + dropMsg);
                 } else {
-                    showLevelClear(clearMsg + dropMsg);
+                    showLevelClear(clearMsg + syncMsg + dropMsg);
                 }
             }, 1800);
+
         }
     }
 
     // ✨ 華藏二十重世界 (每 3 關觸發)
-    function triggerHuayanWorld(lvl, extraMsg) {
+   function triggerHuayanWorld(lvl, extraMsg) {
         game.isHuayan = true;
-        game.starSpeed = 60; // 極速金色星河
+        game.starSpeed = 60; 
         let layer = Math.floor(lvl / 3) % 20 + 1;
         
         const planet = document.createElement('div');
         planet.className = 'huayan-planet';
-        const cols = ['var(--color-cyan)', 'var(--color-purple)', 'var(--color-gold)', 'var(--color-magenta)'];
+        
+        // ✨ 改用絕對色碼，防止在部分裝置或變數丟失時變成隱形透明！
+        const cols = ['rgba(0,229,255,0.4)', 'rgba(216,180,254,0.4)', 'rgba(255,224,102,0.4)', 'rgba(255,102,204,0.4)'];
+        
         planet.style.background = `radial-gradient(circle, ${cols[layer % 4]} 0%, transparent 70%)`;
         document.body.appendChild(planet);
         
@@ -543,14 +556,22 @@ db.visionLastFailed = db.visionLastFailed || "";
         synth.speak(utterThis);
     }
 
-    function triggerExit() {
-        let html = `<button class="m-btn" onclick="window.location.href='vision.html'">觀相悟陣</button>`;
-        if (db.tempBag >= 100) { html += `<button class="m-btn m-btn-prime" onclick="syncPoints()">資糧結集 (${db.tempBag} 點入庫)</button>`; } 
-        else { html += `<button class="m-btn" onclick="window.location.href='index.html?screen=3'">歸返道場</button>`; }
-        html += `<button class="m-btn" onclick="closeModal()">繼續觀心</button>`;
-        showModal("法水觀心 ‧ 暫歇", "放下手機，請給身邊的人一個微笑，或在心中默默感恩。<br><br>清淨，即在當下。", null, null, html);
+        function triggerExit() {
+        let html = `<button class="m-btn" onclick="window.location.href='vision_en.html'">Visionary Array</button>`;
+        if (db.tempBag >= 100) { 
+            // ✨ Only show exact hundreds for withdrawal
+            let tAmt = Math.floor(db.tempBag / 100) * 100;
+            html += `<button class="m-btn m-btn-prime" onclick="syncPoints()">Accumulate (${tAmt} Points)</button>`; 
+        } else { 
+            html += `<button class="m-btn" onclick="window.location.href='index_en.html?screen=3'">Return to Home</button>`; 
+        }
+        html += `<button class="m-btn" onclick="closeModal()">Continue</button>`;
+        showModal("Dharma Water ‧ Rest", "Put down your phone, give a smile to those around you, or silently express gratitude.<br><br>Purity is in the present moment.", null, null, html);
         document.getElementById('m-text').style.display = 'block';
     }
+
+    
+
 
     function showModal(title, text, btnText, callback, customHtml) {
         document.getElementById('m-title').innerHTML = title;
@@ -567,23 +588,42 @@ db.visionLastFailed = db.visionLastFailed || "";
         if(window.currentCallback) { window.currentCallback(); window.currentCallback = null; } 
     }
 
-    function syncPoints() { db.points += db.tempBag; db.tempBag = 0; saveDB(); window.location.href = 'index.html'; }
-
+    // ✨ Exact change manual withdrawal
+    function syncPoints() { 
+        let transferAmount = Math.floor(db.tempBag / 100) * 100;
+        if (transferAmount > 0) {
+            db.points += transferAmount; 
+            db.tempBag -= transferAmount; 
+        }
+        saveDB(); 
+        window.location.href = 'index_en.html?screen=3'; 
+    }
     // 動態時劫
-    function startTimer() {
+        function startTimer() {
         clearInterval(timerInterval);
         const limit = (30 + db.waterLevel) * 60 * 1000;
         timerInterval = setInterval(() => {
             const elapsed = Date.now() - game.startTime;
             if (elapsed > limit) { 
                 clearInterval(timerInterval); 
-                showModal("時劫已滿", "一念執著，心神已疲。<br>請暫且放下，明日再來理順。", null, null, `<button class="m-btn m-btn-prime" onclick="window.location.href='index.html?screen=3'">安住呼吸</button>`); 
+                
+                // ✨ Grab final stats and save, keeping the loose change safe!
+                let finalLvl = db.waterLevel;
+                let finalBag = db.tempBag;
+                saveDB(); 
+                
+                let endMsg = `Reached: <span style="color:var(--solid-gold)">Tier ${finalLvl}</span><br>`;
+                endMsg += `Retained Provisions: <span style="color:var(--solid-gold)">${finalBag}</span><br><br>`;
+                endMsg += `Attachment arises, the mind is weary.<br>Please let go for now and return tomorrow.`;
+                
+                showModal("Kalpa Expired", endMsg, null, null, `<button class="m-btn m-btn-prime" onclick="window.location.href='index_en.html?screen=3'">Mindful Breathing</button>`); 
                 document.getElementById('m-text').style.display = 'block';
             }
             const min = Math.floor((limit - elapsed) / 60000);
-            document.getElementById('timer-ui').innerText = `觀心餘時：${min} 分鐘`;
+            document.getElementById('timer-ui').innerText = `Time left: ${min} min`;
         }, 10000); 
     }
+
 
             
 

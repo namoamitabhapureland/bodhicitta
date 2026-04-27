@@ -338,16 +338,18 @@
     // --------------------------------------------------
     // 4. 陣法生成 (漸進式心理旋轉)
     // --------------------------------------------------
-        function initLevel() {
-        const currentToday = new Date().toDateString(); // 動態抓取當下日期
+         function initLevel() {
+        const currentToday = new Date().toDateString(); 
         
-        // 一命通關檢查
+        // 每日限制防護 (如果今天死過，直接擋住)
         if (db.visionLastFailed === currentToday) {
             showModal("今日定力已盡", "時劫已滿，心神已疲。<br>觀相結界今日關閉，請安住呼吸，明日再來。", "歸返道場", () => window.location.href = 'index.html?screen=3');
             return;
         }
         
         game.isProcessing = false;
+        game.wrongCount = 0; // ✨ 每次新題目，錯誤次數歸零
+        
         const board = document.getElementById('board');
         board.innerHTML = '';
         
@@ -359,10 +361,19 @@
         bagUI.innerText = `資糧：${db.tempBag}/100`;
         if(db.tempBag >= 100) bagUI.classList.add('full'); else bagUI.classList.remove('full');
 
-        game.maxTime = Math.max(25, 60 - Math.floor(lvl * 0.5));
-        game.timeLeft = game.maxTime; 
+        // ✨ 難度時間邏輯：依據關卡直接給滿
+        if (lvl >= 50) {
+            game.maxTime = 180; // 後期最難：3分鐘
+        } else if (lvl >= 20) {
+            game.maxTime = 120; // 中期變難：2分鐘
+        } else {
+            game.maxTime = 60;  // 前期基礎：60秒
+        }
+        
+        game.timeLeft = game.maxTime; // 開局直接滿血
         updateWaterUI();
         startTimer();
+
 
         let totalItems = Math.min(85, 20 + Math.floor(lvl * 1.5)); 
         let lotusLimit = Math.min(10, Math.floor(lvl / 10)); 
@@ -447,18 +458,26 @@
     // --------------------------------------------------
     // 5. 答題驗證與回血
     // --------------------------------------------------
-    function submitAnswer(btnIdx) {
+     function submitAnswer(btnIdx) {
         if(game.isProcessing) return;
         
         let guess = options[btnIdx];
+        
         if (guess === correctCount) {
             game.isProcessing = true;
-            let bonus = Math.min(game.maxTime - game.timeLeft, 15); 
-            game.timeLeft += bonus; updateWaterUI();
             
-            let flyText = document.createElement('div'); flyText.className = 'time-plus'; flyText.innerText = `+${Math.floor(bonus)}s`;
-           let r = document.getElementById('timer-text').getBoundingClientRect();
-            flyText.style.left = (r.left + 20) + 'px'; flyText.style.top = (r.top + 20) + 'px';
+            // ✨ 答對獎勵：一發命中才給時間，不超過該局上限
+            let bonus = Math.min(game.maxTime - game.timeLeft, 15); 
+            game.timeLeft += bonus; 
+            updateWaterUI();
+            
+            // 飛出綠色加秒數字
+            let flyText = document.createElement('div'); flyText.className = 'time-plus'; 
+            flyText.innerText = `+${Math.floor(bonus)}s`;
+            let r = document.getElementById('timer-text').getBoundingClientRect();
+            flyText.style.position = 'fixed';
+            flyText.style.left = (r.left + 10) + 'px'; 
+            flyText.style.top = (r.top + 10) + 'px';
             document.body.appendChild(flyText); setTimeout(() => flyText.remove(), 1000);
 
             let targets = document.querySelectorAll('.target-item');
@@ -466,11 +485,48 @@
             setTimeout(() => checkWinEvents(), 1200); 
 
         } else {
-            game.timeLeft = Math.max(0, game.timeLeft - 5); updateWaterUI();
+            // ✨ 答錯懲罰機制
+            game.wrongCount++;
+            
+            if (game.wrongCount >= 2) {
+                // 錯 2 次：親手執行死亡程序 (保證一日限制生效)
+                game.timeLeft = 0; 
+                updateWaterUI(); // 讓畫面時間變 0
+                
+                clearInterval(game.timerInterval);
+                game.isProcessing = true;
+                db.visionLevel = Math.max(1, db.visionLevel - 1); 
+                db.visionLastFailed = new Date().toDateString(); // ✨ 寫入今日死亡紀錄
+                saveDB();
+                showModal("定力渙散 ‧ 結界關閉", "心念散亂，盲目攀緣。<br>今日時劫已滿，請安住呼吸，明日再來。", "歸返道場", () => window.location.href = 'index.html?screen=3');
+                return; 
+            }
+
+            // 錯 1 次：扣 10 秒
+            game.timeLeft = Math.max(0, game.timeLeft - 10); 
+            updateWaterUI();
+            
+            // 如果扣完剛好 <= 0，也是親手執行死亡程序
+            if (game.timeLeft <= 0) {
+                clearInterval(game.timerInterval);
+                game.isProcessing = true;
+                db.visionLevel = Math.max(1, db.visionLevel - 1); 
+                db.visionLastFailed = new Date().toDateString(); // ✨ 寫入今日死亡紀錄
+                saveDB();
+                showModal("今日定力已盡", "時劫已滿，心神已疲。<br>觀相結界今日關閉，請安住呼吸，明日再來。", "歸返道場", () => window.location.href = 'index.html?screen=3');
+                return; 
+            }
+
+            // 畫面震動防狂按 (只鎖 1 秒)
+            game.isProcessing = true;
             document.getElementById('board').classList.add('vibrate');
-            setTimeout(() => document.getElementById('board').classList.remove('vibrate'), 300);
+            setTimeout(() => { 
+                document.getElementById('board').classList.remove('vibrate'); 
+                game.isProcessing = false; 
+            }, 1000);
         }
     }
+
 
        function checkWinEvents() {
         const currentToday = new Date().toDateString();

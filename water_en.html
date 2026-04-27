@@ -391,13 +391,22 @@ db.visionLastFailed = db.visionLastFailed || "";
             db.waterLastDate = today; 
             db.waterLevel++; 
             
-            let earnedPoints = 1;
-            let clearMsg = "Mind purified, Provisions +1.";
+                        let earnedPoints = 1;
+            let clearMsg = "Mind purified, Provisions +1.<br>";
             if (isFirstWinToday) {
                 earnedPoints += 10;
-                clearMsg = "First clearance today. [Daily Diligence] +10, Clear +1. Total +11 Provisions.";
+                clearMsg = "First clearance today. [Daily Diligence] +10, Clear +1. Total +11 Provisions.<br>";
             }
             db.tempBag += earnedPoints;
+            
+            // ✨ Auto-deposit at 100 points (Exact change)
+            let syncMsg = "";
+            if (db.tempBag >= 100) {
+                let transferAmount = Math.floor(db.tempBag / 100) * 100; 
+                db.points += transferAmount; 
+                db.tempBag -= transferAmount; 
+                syncMsg = `<br><span style="color:#00e5ff; font-weight:bold;">✨ Provisions full! ${transferAmount} points auto-transferred to Dojo.</span><br>`;
+            }
             
             let dropMsg = "";
             let levelPassed = db.waterLevel - 1;
@@ -426,26 +435,30 @@ db.visionLastFailed = db.visionLastFailed || "";
                 game.starSpeed = 1; overlay.style.opacity = '0';
                 document.getElementById('center-point').style.transform = 'translate(-50%, -50%) scale(1)';
                 
+                // ✨ Add syncMsg to all popup scenarios
                 if (levelPassed % 5 === 0 && levelPassed > 0) {
                     const s = SCRIPTURES[Math.floor(Math.random()*SCRIPTURES.length)];
-                    triggerRPG(s, clearMsg + dropMsg);
+                    triggerRPG(s, clearMsg + syncMsg + dropMsg);
                 } else if (levelPassed % 3 === 0 && levelPassed > 0) {
-                    triggerHuayanWorld(levelPassed, clearMsg + dropMsg);
+                    triggerHuayanWorld(levelPassed, clearMsg + syncMsg + dropMsg);
                 } else {
-                    showLevelClear(clearMsg + dropMsg);
+                    showLevelClear(clearMsg + syncMsg + dropMsg);
                 }
             }, 1800);
         }
     }
 
-    function triggerHuayanWorld(lvl, extraMsg) {
+     function triggerHuayanWorld(lvl, extraMsg) {
         game.isHuayan = true;
         game.starSpeed = 60; 
         let layer = Math.floor(lvl / 3) % 20 + 1;
         
         const planet = document.createElement('div');
         planet.className = 'huayan-planet';
-        const cols = ['var(--color-cyan)', 'var(--color-purple)', 'var(--color-gold)', 'var(--color-magenta)'];
+        
+        // ✨ Use absolute RGBA to prevent invisible planet bug
+        const cols = ['rgba(0,229,255,0.4)', 'rgba(216,180,254,0.4)', 'rgba(255,224,102,0.4)', 'rgba(255,102,204,0.4)'];
+        
         planet.style.background = `radial-gradient(circle, ${cols[layer % 4]} 0%, transparent 70%)`;
         document.body.appendChild(planet);
         
@@ -528,10 +541,15 @@ db.visionLastFailed = db.visionLastFailed || "";
         synth.speak(utterThis);
     }
 
-    function triggerExit() {
+       function triggerExit() {
         let html = `<button class="m-btn" onclick="window.location.href='vision_en.html'">Visionary Array</button>`;
-        if (db.tempBag >= 100) { html += `<button class="m-btn m-btn-prime" onclick="syncPoints()">Accumulate (${db.tempBag} Points)</button>`; } 
-        else { html += `<button class="m-btn" onclick="window.location.href='index_en.html?screen=3'">Return to Home</button>`; }
+        if (db.tempBag >= 100) { 
+            // ✨ Only show exact hundreds for withdrawal
+            let tAmt = Math.floor(db.tempBag / 100) * 100;
+            html += `<button class="m-btn m-btn-prime" onclick="syncPoints()">Accumulate (${tAmt} Points)</button>`; 
+        } else { 
+            html += `<button class="m-btn" onclick="window.location.href='index_en.html?screen=3'">Return to Home</button>`; 
+        }
         html += `<button class="m-btn" onclick="closeModal()">Continue</button>`;
         showModal("Dharma Water ‧ Rest", "Put down your phone, give a smile to those around you, or silently express gratitude.<br><br>Purity is in the present moment.", null, null, html);
         document.getElementById('m-text').style.display = 'block';
@@ -552,22 +570,43 @@ db.visionLastFailed = db.visionLastFailed || "";
         if(window.currentCallback) { window.currentCallback(); window.currentCallback = null; } 
     }
 
-    function syncPoints() { db.points += db.tempBag; db.tempBag = 0; saveDB(); window.location.href = 'index_en.html?screen=3'; }
+   // ✨ Exact change manual withdrawal
+    function syncPoints() { 
+        let transferAmount = Math.floor(db.tempBag / 100) * 100;
+        if (transferAmount > 0) {
+            db.points += transferAmount; 
+            db.tempBag -= transferAmount; 
+        }
+        saveDB(); 
+        window.location.href = 'index_en.html?screen=3'; 
+    }
 
-    function startTimer() {
+
+        function startTimer() {
         clearInterval(timerInterval);
         const limit = (30 + db.waterLevel) * 60 * 1000;
         timerInterval = setInterval(() => {
             const elapsed = Date.now() - game.startTime;
             if (elapsed > limit) { 
                 clearInterval(timerInterval); 
-                showModal("Kalpa Expired", "Attachment arises, the mind is weary.<br>Please let go for now and return tomorrow.", null, null, `<button class="m-btn m-btn-prime" onclick="window.location.href='index_en.html?screen=3'">Mindful Breathing</button>`); 
+                
+                // ✨ Grab final stats and save, keeping the loose change safe!
+                let finalLvl = db.waterLevel;
+                let finalBag = db.tempBag;
+                saveDB(); 
+                
+                let endMsg = `Reached: <span style="color:var(--solid-gold)">Tier ${finalLvl}</span><br>`;
+                endMsg += `Retained Provisions: <span style="color:var(--solid-gold)">${finalBag}</span><br><br>`;
+                endMsg += `Attachment arises, the mind is weary.<br>Please let go for now and return tomorrow.`;
+                
+                showModal("Kalpa Expired", endMsg, null, null, `<button class="m-btn m-btn-prime" onclick="window.location.href='index_en.html?screen=3'">Mindful Breathing</button>`); 
                 document.getElementById('m-text').style.display = 'block';
             }
             const min = Math.floor((limit - elapsed) / 60000);
             document.getElementById('timer-ui').innerText = `Time left: ${min} min`;
         }, 10000); 
     }
+
 
 
 

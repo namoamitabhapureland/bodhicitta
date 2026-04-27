@@ -293,9 +293,9 @@
     // --------------------------------------------------
     // 3. 生存計時器 (一命通關鎖)
     // --------------------------------------------------
-      function startTimer() {
+        function startTimer() {
         clearInterval(game.timerInterval);
-        updateWaterUI(); // 開局先校準一次顏色與圓環
+        updateWaterUI();
         
         game.timerInterval = setInterval(() => {
             if(game.isProcessing || game.isHuayan || game.currentEncounter) return;
@@ -305,11 +305,17 @@
             if (game.timeLeft <= 0) {
                 clearInterval(game.timerInterval);
                 game.isProcessing = true;
+                
+                // ✨ 抓取結算數據 (降階前先存起來)
+                let finalLvl = db.visionLevel;
+                let finalBag = db.tempBag;
+                
                 db.visionLevel = Math.max(1, db.visionLevel - 1); 
                 db.visionLastFailed = new Date().toDateString();
-
                 saveDB();
-                showModal("今日定力已盡", "時劫已滿，心神已疲。<br>觀相結界今日關閉，請安住呼吸，明日再來。", "歸返道場", () => window.location.href = 'index.html?screen=3');
+                
+                // ✨ 顯示結算彈窗
+                showModal("今日定力已盡", `本次止步於：<span style="color:var(--solid-gold)">第 ${finalLvl} 重結界</span><br>已匯聚資糧：<span style="color:var(--solid-gold)">${finalBag} 點</span><br><br>時劫已滿，心神已疲，請安住呼吸明日再來。`, "歸返道場", () => window.location.href = 'index.html?screen=3');
             }
         }, 100);
     }
@@ -458,66 +464,76 @@
     // --------------------------------------------------
     // 5. 答題驗證與回血
     // --------------------------------------------------
-     function submitAnswer(btnIdx) {
+     
+    function submitAnswer(btnIdx) {
         if(game.isProcessing) return;
         
         let guess = options[btnIdx];
-        
         if (guess === correctCount) {
             game.isProcessing = true;
             
-            // ✨ 答對獎勵：一發命中才給時間，不超過該局上限
-            let bonus = Math.min(game.maxTime - game.timeLeft, 15); 
-            game.timeLeft += bonus; 
-            updateWaterUI();
-            
-            // 飛出綠色加秒數字
-            let flyText = document.createElement('div'); flyText.className = 'time-plus'; 
-            flyText.innerText = `+${Math.floor(bonus)}s`;
-            let r = document.getElementById('timer-text').getBoundingClientRect();
-            flyText.style.position = 'fixed';
-            flyText.style.left = (r.left + 10) + 'px'; 
-            flyText.style.top = (r.top + 10) + 'px';
-            document.body.appendChild(flyText); setTimeout(() => flyText.remove(), 1000);
+            // 只有「0失誤」才給予 +15 秒獎勵
+            if (game.wrongCount === 0) {
+                let bonus = Math.min(game.maxTime - game.timeLeft, 15); 
+                game.timeLeft += bonus; 
+                updateWaterUI();
+                
+                let flyText = document.createElement('div'); flyText.className = 'time-plus'; 
+                flyText.innerText = `+${Math.floor(bonus)}s`;
+                let r = document.getElementById('timer-text').getBoundingClientRect();
+                flyText.style.position = 'fixed';
+                flyText.style.left = (r.left + 10) + 'px'; 
+                flyText.style.top = (r.top + 10) + 'px';
+                document.body.appendChild(flyText); setTimeout(() => flyText.remove(), 1000);
+            }
 
             let targets = document.querySelectorAll('.target-item');
             targets.forEach(t => t.classList.add('highlight'));
             setTimeout(() => checkWinEvents(), 1200); 
 
         } else {
-            // ✨ 答錯懲罰機制
-            game.wrongCount++;
+            game.wrongCount++; 
             
             if (game.wrongCount >= 2) {
-                // 錯 2 次：親手執行死亡程序 (保證一日限制生效)
                 game.timeLeft = 0; 
-                updateWaterUI(); // 讓畫面時間變 0
+                updateWaterUI(); 
                 
                 clearInterval(game.timerInterval);
                 game.isProcessing = true;
+                
+                // ✨ 抓取結算數據
+                let finalLvl = db.visionLevel;
+                let finalBag = db.tempBag;
+                
                 db.visionLevel = Math.max(1, db.visionLevel - 1); 
-                db.visionLastFailed = new Date().toDateString(); // ✨ 寫入今日死亡紀錄
+                db.visionLastFailed = new Date().toDateString();
                 saveDB();
-                showModal("定力渙散 ‧ 結界關閉", "心念散亂，盲目攀緣。<br>今日時劫已滿，請安住呼吸，明日再來。", "歸返道場", () => window.location.href = 'index.html?screen=3');
+                
+                // ✨ 顯示結算彈窗
+                showModal("定力渙散 ‧ 結界關閉", `心念散亂，盲目攀緣。<br><br>本次止步於：<span style="color:var(--solid-gold)">第 ${finalLvl} 重結界</span><br>已匯聚資糧：<span style="color:var(--solid-gold)">${finalBag} 點</span><br><br>今日時劫已滿，請安住呼吸明日再來。`, "歸返道場", () => window.location.href = 'index.html?screen=3');
                 return; 
             }
 
-            // 錯 1 次：扣 10 秒
             game.timeLeft = Math.max(0, game.timeLeft - 10); 
             updateWaterUI();
             
-            // 如果扣完剛好 <= 0，也是親手執行死亡程序
             if (game.timeLeft <= 0) {
                 clearInterval(game.timerInterval);
                 game.isProcessing = true;
+                
+                // ✨ 抓取結算數據
+                let finalLvl = db.visionLevel;
+                let finalBag = db.tempBag;
+                
                 db.visionLevel = Math.max(1, db.visionLevel - 1); 
-                db.visionLastFailed = new Date().toDateString(); // ✨ 寫入今日死亡紀錄
+                db.visionLastFailed = new Date().toDateString();
                 saveDB();
-                showModal("今日定力已盡", "時劫已滿，心神已疲。<br>觀相結界今日關閉，請安住呼吸，明日再來。", "歸返道場", () => window.location.href = 'index.html?screen=3');
+                
+                // ✨ 顯示結算彈窗
+                showModal("今日定力已盡", `本次止步於：<span style="color:var(--solid-gold)">第 ${finalLvl} 重結界</span><br>已匯聚資糧：<span style="color:var(--solid-gold)">${finalBag} 點</span><br><br>時劫已滿，心神已疲，請安住呼吸明日再來。`, "歸返道場", () => window.location.href = 'index.html?screen=3');
                 return; 
             }
 
-            // 畫面震動防狂按 (只鎖 1 秒)
             game.isProcessing = true;
             document.getElementById('board').classList.add('vibrate');
             setTimeout(() => { 
@@ -526,6 +542,7 @@
             }, 1000);
         }
     }
+
 
 
        function checkWinEvents() {

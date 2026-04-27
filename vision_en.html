@@ -60,28 +60,11 @@
 
         #board { flex: 1; position: relative; width: 100%; overflow: hidden; z-index: 5; margin: 5px 0; }
         
-                /* 核心優化：移除預設投影減少負擔，加入硬體加速 */
-        .item { 
-            position: absolute; display: flex; justify-content: center; align-items: center; 
-            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-            will-change: transform, filter; 
-        }
-
-        /* ✨ 不透明呼吸：改用亮度(brightness)閃爍，不再跟旋轉衝突 */
-        @keyframes light-breathe { 
-            0% { filter: brightness(1); } 
-            100% { filter: brightness(1.2); } 
-        }
-
-        .item.distractor-breathe { 
-            animation: light-breathe 4s infinite ease-in-out alternate; 
-        }
-
-        /* 只有選中時才使用高效能陰影 */
-        .item.highlight { 
-            filter: drop-shadow(0 0 25px var(--solid-gold)) brightness(1.4) !important; 
-            z-index: 4000 !important; transform: scale(1.3) !important; animation: none;
-        }
+        .item { position: absolute; display: flex; justify-content: center; align-items: center; transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); filter: drop-shadow(4px 8px 6px rgba(0,0,0,0.8)); }
+        .item.distractor-breathe { animation: float-breathe 6s infinite ease-in-out alternate; }
+        .item svg { width: 100%; height: 100%; pointer-events: none; }
+        @keyframes float-breathe { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
+        .item.highlight { filter: drop-shadow(0 0 25px var(--solid-gold)) drop-shadow(0 0 40px rgba(255,255,255,0.9)) brightness(1.4) !important; z-index: 4000 !important; animation: none; transform: scale(1.3) !important; }
 
         #footer { padding: 15px 15px 25px 15px; width: 100%; background: linear-gradient(0deg, rgba(1,2,4,1) 0%, rgba(1,2,4,0.8) 70%, transparent 100%); z-index: 20; position: relative; display: flex; justify-content: center; align-items: center; gap: 12px;}
         .ans-btn { flex: 1; height: 65px; border-radius: 16px; border: 1px solid rgba(212,175,55,0.5); background: linear-gradient(135deg, rgba(30,35,45,0.95) 0%, rgba(10,15,20,0.95) 100%); color: var(--gold); font-size: 1.6rem; font-weight: bold; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; box-shadow: 0 10px 20px rgba(0,0,0,0.8), inset 0 2px 5px rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.1;}
@@ -243,18 +226,19 @@
         jewel_green: { name: "Jade Jewel", drop: "jewel", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.3) translate(-8, 5)"><polygon points="50,10 80,40 50,55 20,40" fill="#fff" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#g-green)" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="#1b5e20" stroke="#fff" stroke-width="0.5"/></g></svg>` }
     };
 
-      function getLotusNoiseSVG(colorID) {
+    function getLotusNoiseSVG(colorID) {
         let svg = `<svg viewBox="-100 -100 200 200">`;
-        // ✨ 精簡為 6 片大花瓣，且完全不透明 (opacity="1")，避免顏色混疊
-        for(let i=0; i<6; i++) {
-            let rot = i * 60;
+        for(let i=0; i<8; i++) {
+            let rot = i * 45;
             svg += `<path d="M 0 0 C 35 -10 45 -65 0 -95 C -45 -65 -35 -10 0 0" fill="url(#${colorID})" transform="rotate(${rot})" stroke="#fff" stroke-width="1.5" opacity="1"/>`;
         }
-        // 中心點加強對比
-        svg += `<circle cx="0" cy="0" r="14" fill="#d4af37" stroke="#fff" stroke-width="2"/><circle cx="0" cy="0" r="10" fill="url(#l-white)" stroke="none"/></svg>`;
+        for(let i=0; i<8; i++) {
+            let rot = i * 45 + 22.5;
+            svg += `<path d="M 0 0 C 20 -5 25 -45 0 -65 C -25 -45 -20 -5 0 0" fill="url(#${colorID})" transform="rotate(${rot})" stroke="#fff" stroke-width="1" opacity="1"/>`;
+        }
+        svg += `<circle cx="0" cy="0" r="14" fill="#d4af37" stroke="#fff" stroke-width="1.5"/><circle cx="0" cy="0" r="10" fill="url(#l-white)" stroke="none"/></svg>`;
         return svg;
     }
-
 
     const NOISE_LIB = {
         lotus_gold: getLotusNoiseSVG('g-gold'), lotus_red: getLotusNoiseSVG('g-red'),
@@ -275,19 +259,14 @@
         return "Lapis Practitioner";
     }
 
-           function checkSync() { // ✨ 這裡必須是小寫 function
+    function checkSync() {
         if(db.tempBag >= 100) {
-            let tAmt = Math.floor(db.tempBag / 100) * 100;
-            showModal("Transfer Provisions", `You have gathered ${db.tempBag} provisions.<br>${tAmt} points will be deposited to the Dojo.`, "CONFIRM", () => {
-                db.points += tAmt; 
-                db.tempBag -= tAmt; 
-                saveDB();
+            showModal("Provisions Full", `You have gathered ${db.tempBag} provisions.<br>Transfer to the Home Dojo?`, "TRANSFER", () => {
+                db.points += db.tempBag; db.tempBag = 0; saveDB();
                 window.location.href = 'index_en.html?screen=3';
             }, `<button class="m-btn" onclick="closeModal()">CONTINUE</button>`);
         }
     }
-
-
 
     function triggerExit() {
         showModal("PAUSE", "Put down your phone and rest your mind.<br>Where would you like to go?", null, null, `
@@ -352,7 +331,7 @@
     // --------------------------------------------------
     // 4. Array Generation (Procedural)
     // --------------------------------------------------
-         function initLevel() {
+      function initLevel() {
         const currentToday = new Date().toDateString(); 
         
         if (db.visionLastFailed === currentToday) {
@@ -361,7 +340,7 @@
         }
 
         game.isProcessing = false;
-        game.wrongCount = 0; 
+        game.wrongCount = 0; // ✨ Reset mistake counter for this tier
         
         const board = document.getElementById('board');
         board.innerHTML = '';
@@ -374,90 +353,23 @@
         bagUI.innerText = `Provisions: ${db.tempBag}/100`;
         if(db.tempBag >= 100) bagUI.classList.add('full'); else bagUI.classList.remove('full');
 
-        // ✨ [性能圓滿]：總數限流 55，蓮花限流 6
-        let totalItems = Math.min(55, 20 + Math.floor(lvl * 1.0)); 
-        let lotusLimit = Math.min(6, Math.floor(lvl / 10)); 
-        correctCount = Math.min(15, 4 + Math.floor(Math.random() * 4) + Math.floor(lvl / 5)); 
-        
-        let targetPool = Object.keys(TARGET_LIB); targetPool.sort(() => Math.random() - 0.5);
-        targetType = targetPool[0];
+                // ✨ Ultimate Logic: Separate Absolute Max and Base Starting Time
+        game.maxTime = 180; // Absolute ceiling is 3 minutes
 
-        let itemPool = [];
-        for(let i=0; i<correctCount; i++) itemPool.push({ type: targetType, cat: 'target' });
-        
-        let availableTargets = targetPool.filter(t => t !== targetType);
-        let availableNoise = Object.keys(NOISE_LIB);
-        let lotusAdded = 0;
-        
-        while(itemPool.length < totalItems) {
-            if(lotusAdded < lotusLimit && Math.random() > 0.4) {
-                itemPool.push({ type: availableNoise[Math.floor(Math.random() * availableNoise.length)], cat: 'noise' });
-                lotusAdded++;
-            } else {
-                itemPool.push({ type: availableTargets[Math.floor(Math.random() * availableTargets.length)], cat: 'distractor' });
-            }
+        let baseTime;
+        if (lvl >= 50) {
+            baseTime = 180; // Hard: Start with at least 3 mins
+        } else if (lvl >= 20) {
+            baseTime = 120; // Medium: Start with at least 2 mins
+        } else {
+            baseTime = 60;  // Normal: Start with at least 60 secs
         }
-        itemPool.sort(() => Math.random() - 0.5);
-
-        document.getElementById('q-icon-display').innerHTML = TARGET_LIB[targetType].svg;
-        document.getElementById('q-name-display').innerText = TARGET_LIB[targetType].name;
-
-        let optSet = new Set([correctCount]);
-        while(optSet.size < 3) {
-            let offset = Math.floor(Math.random() * 3) + 1;
-            let sign = Math.random() > 0.5 ? 1 : -1;
-            let val = correctCount + (offset * sign);
-            if(val > 0) optSet.add(val);
-        }
-        options = Array.from(optSet); options.sort(() => Math.random() - 0.5);
         
-        // ✨ [按鈕原樣]：不動任何顏色代碼
-        for(let i=0; i<3; i++) { document.getElementById(`btn-${i}`).innerHTML = `${options[i]}<br><span>COUNT</span>`; }
-
-        const boardRect = board.getBoundingClientRect();
-
-        itemPool.forEach((itemDef, idx) => {
-            let el = document.createElement('div');
-            el.className = `item ${itemDef.cat === 'target' ? 'target-item' : ''}`;
-            
-            let baseSize;
-            if (itemDef.cat === 'noise') {
-                el.innerHTML = NOISE_LIB[itemDef.type]; 
-                baseSize = 110 + Math.random() * 70; 
-                el.style.zIndex = 5; 
-                el.style.opacity = "1"; // ✨ [辨識圓滿]：完全不透明，不變色
-            } else {
-                el.innerHTML = TARGET_LIB[itemDef.type].svg; 
-                baseSize = 45 + Math.random() * 35; 
-                el.style.zIndex = 100 + Math.floor(Math.random() * 100); 
-                // 🛑 [移除呼吸]：不再添加 classList.add('distractor-breathe')
-            }
-
-            el.style.width = `${baseSize}px`; el.style.height = `${baseSize}px`;
-            
-            let maxLeft = boardRect.width - baseSize - 10;
-            let maxTop = boardRect.height - baseSize - 20; 
-            let finalX = Math.max(10, Math.random() * maxLeft); 
-            let finalY = Math.max(10, Math.random() * maxTop);
-            
-            el.style.left = `${finalX}px`; el.style.top = `${finalY}px`;
-            
-            let flip = Math.random() > 0.5 ? 'scaleX(-1)' : 'scaleX(1)';
-            let rot = 0;
-            if (lvl > 50) rot = Math.floor(Math.random() * 360); 
-            else if (lvl > 20) rot = Math.floor(Math.random() * 90) - 45; 
-            
-            el.style.transform = `${flip} rotate(${rot}deg)`;
-            board.appendChild(el);
-        });
-
-        game.maxTime = 180; 
-        let baseTime = lvl >= 50 ? 180 : (lvl >= 20 ? 120 : 60);
+        // Inherit time: Boost to baseTime if lower, cap at maxTime if higher
         game.timeLeft = Math.min(game.maxTime, Math.max(baseTime, game.timeLeft)); 
+
         updateWaterUI();
         startTimer();
-    }
-
 
 
 
@@ -496,14 +408,7 @@
             if(val > 0) optSet.add(val);
         }
         options = Array.from(optSet); options.sort(() => Math.random() - 0.5);
-        for(let i=0; i<3; i++) { 
-            let b = document.getElementById(`btn-${i}`);
-            b.innerHTML = `${options[i]}<br><span>COUNT</span>`; 
-            // ✨ Reset button colors for the new round
-            b.style.background = '';
-            b.style.borderColor = '';
-            b.style.boxShadow = '';
-        }
+        for(let i=0; i<3; i++) { document.getElementById(`btn-${i}`).innerHTML = `${options[i]}<br><span>COUNT</span>`; }
 
         const boardRect = board.getBoundingClientRect();
 
@@ -550,20 +455,14 @@
     // --------------------------------------------------
     // 5. Verification & Rewards
     // --------------------------------------------------
-           function submitAnswer(btnIdx) {
+       function submitAnswer(btnIdx) {
         if(game.isProcessing) return;
         
         let guess = options[btnIdx];
-        let clickedBtn = document.getElementById(`btn-${btnIdx}`); // ✨ Grab the clicked button
-        
         if (guess === correctCount) {
             game.isProcessing = true;
             
-            // ✨ Visual feedback: Green glow
-            clickedBtn.style.background = 'linear-gradient(135deg, rgba(128,237,153,0.4) 0%, rgba(30,80,40,0.8) 100%)';
-            clickedBtn.style.borderColor = '#80ed99';
-            clickedBtn.style.boxShadow = '0 0 20px rgba(128,237,153,0.5)';
-            
+            // [REWARD]: Give +15 seconds ONLY if 0 mistakes.
             if (game.wrongCount === 0) {
                 let bonus = Math.min(game.maxTime - game.timeLeft, 15); 
                 game.timeLeft += bonus; 
@@ -583,15 +482,36 @@
             setTimeout(() => checkWinEvents(), 1200); 
 
         } else {
+            // Increment mistake counter
             game.wrongCount++; 
             
-            // ✨ Visual feedback: Red glow
-            clickedBtn.style.background = 'linear-gradient(135deg, rgba(255,77,77,0.4) 0%, rgba(80,20,20,0.8) 100%)';
-            clickedBtn.style.borderColor = '#ff4d4d';
-            
+            // [FATAL PENALTY]: 2nd mistake -> Instant Death with Settlement
             if (game.wrongCount >= 2) {
                 game.timeLeft = 0; 
                 updateWaterUI(); 
+                
+                clearInterval(game.timerInterval);
+                game.isProcessing = true;
+                
+                // Grab settlement stats
+                let finalLvl = db.visionLevel;
+                let finalBag = db.tempBag;
+                
+                db.visionLevel = Math.max(1, db.visionLevel - 1); 
+                db.visionLastFailed = new Date().toDateString();
+                saveDB();
+                
+                // Show settlement modal
+                showModal("CONCENTRATION DEPLETED", `Mind scattered, focus lost.<br><br>Reached: <span style="color:var(--solid-gold)">Tier ${finalLvl}</span><br>Provisions: <span style="color:var(--solid-gold)">${finalBag}</span><br><br>The barrier is closed for today. Return tomorrow.`, "RETURN HOME", () => window.location.href = 'index_en.html?screen=3');
+                return; 
+            }
+
+            // [NORMAL PENALTY]: 1st mistake -> Deduct 10s
+            game.timeLeft = Math.max(0, game.timeLeft - 10); 
+            updateWaterUI();
+            
+            // Death by running out of time after penalty
+            if (game.timeLeft <= 0) {
                 clearInterval(game.timerInterval);
                 game.isProcessing = true;
                 
@@ -602,42 +522,19 @@
                 db.visionLastFailed = new Date().toDateString();
                 saveDB();
                 
-                showModal("CONCENTRATION DEPLETED", `Mind scattered, focus lost.<br><br>Reached: <span style="color:var(--solid-gold)">Tier ${finalLvl}</span><br>Retained Provisions: <span style="color:var(--solid-gold)">${finalBag}</span><br><br>The barrier is closed for today. Return tomorrow.`, "RETURN HOME", () => window.location.href = 'index_en.html?screen=3');
+                showModal("CONCENTRATION DEPLETED", `Reached: <span style="color:var(--solid-gold)">Tier ${finalLvl}</span><br>Provisions: <span style="color:var(--solid-gold)">${finalBag}</span><br><br>The kalpa time has expired. Return tomorrow.`, "RETURN HOME", () => window.location.href = 'index_en.html?screen=3');
                 return; 
             }
 
-            game.timeLeft = Math.max(0, game.timeLeft - 10); 
-            updateWaterUI();
-            
-                      if (game.timeLeft <= 0) {
-                clearInterval(game.timerInterval);
-                game.isProcessing = true;
-                
-                let finalLvl = db.visionLevel;
-                let finalBag = db.tempBag;
-                    
-                db.visionLevel = Math.max(1, db.visionLevel - 1); 
-                db.visionLastFailed = new Date().toDateString(); 
-                saveDB();
-
-                showModal("CONCENTRATION DEPLETED", `Reached: <span style="color:var(--solid-gold)">Tier ${finalLvl}</span><br>Retained Provisions: <span style="color:var(--solid-gold)">${finalBag}</span><br><br>The kalpa time has expired. Return tomorrow.`, "RETURN HOME", () => window.location.href = 'index_en.html?screen=3');
-
-                return; 
-            }
-
+            // [FREEZE PENALTY]: Lock for 1 second
             game.isProcessing = true;
             document.getElementById('board').classList.add('vibrate');
-            
-            // ✨ Revert red button after 1 sec
             setTimeout(() => { 
                 document.getElementById('board').classList.remove('vibrate'); 
-                clickedBtn.style.background = '';
-                clickedBtn.style.borderColor = '';
                 game.isProcessing = false; 
             }, 1000);
         }
     }
-
 
     function checkWinEvents() {
         const currentToday = new Date().toDateString();
@@ -654,15 +551,13 @@
         db.tempBag += earnedPoints;
 
         // ✨ Auto-deposit at 100 points
-              // ✨ Exact change auto-deposit
         let syncMsg = "";
         if (db.tempBag >= 100) {
-            let transferAmount = Math.floor(db.tempBag / 100) * 100;
-            db.points += transferAmount; 
-            db.tempBag -= transferAmount;
-            syncMsg = `<br><span style="color:#00e5ff; font-weight:bold;">✨ ${transferAmount} Provisions auto-transferred to Home Dojo!</span><br>`;
+            let saved = db.tempBag;
+            db.points += db.tempBag; // To main account
+            db.tempBag = 0;          // Reset bag
+            syncMsg = `<br><span style="color:#00e5ff; font-weight:bold;">✨ ${saved} Provisions auto-transferred to Home Dojo!</span><br>`;
         }
-
         
         let dropMsg = "";
         let levelPassed = db.visionLevel - 1;

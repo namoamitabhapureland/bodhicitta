@@ -273,14 +273,16 @@
         return "琉璃行者";
     }
 
-    function checkSync() {
+        function checkSync() {
         if(db.tempBag >= 100) {
-            showModal("資糧圓滿", `已匯聚 ${db.tempBag} 點資糧。<br>是否回傳主系統道場？`, "資糧結集", () => {
-                db.points += db.tempBag; db.tempBag = 0; saveDB();
+            let tAmt = Math.floor(db.tempBag / 100) * 100;
+            showModal("資糧結集", `已匯聚 ${db.tempBag} 點資糧。<br>即將把 ${tAmt} 點存入主系統。`, "確認結集", () => {
+                db.points += tAmt; db.tempBag -= tAmt; saveDB();
                 window.location.href = 'index.html';
             }, `<button class="m-btn" onclick="closeModal()">繼續觀相</button>`);
         }
     }
+
 
     // ✨ 退出防護選單 (雙極分支)
     function triggerExit() {
@@ -303,7 +305,7 @@
             game.timeLeft -= 0.1;
             updateWaterUI(); 
             
-            if (game.timeLeft <= 0) {
+                       if (game.timeLeft <= 0) {
                 clearInterval(game.timerInterval);
                 game.isProcessing = true;
                 
@@ -315,8 +317,9 @@
                 db.visionLastFailed = new Date().toDateString();
                 saveDB();
                 
-                // ✨ 顯示結算彈窗
-                showModal("今日定力已盡", `本次止步於：<span style="color:var(--solid-gold)">第 ${finalLvl} 重結界</span><br>已匯聚資糧：<span style="color:var(--solid-gold)">${finalBag} 點</span><br><br>時劫已滿，心神已疲，請安住呼吸明日再來。`, "歸返道場", () => window.location.href = 'index.html?screen=3');
+                // ✨ 顯示結算彈窗 (修改文案：目前累積資糧)
+                showModal("今日定力已盡", `本次止步於：<span style="color:var(--solid-gold)">第 ${finalLvl} 重結界</span><br>目前累積資糧：<span style="color:var(--solid-gold)">${finalBag} 點</span><br><br>時劫已滿，心神已疲，請安住呼吸明日再來。`, "歸返道場", () => window.location.href = 'index.html?screen=3');
+
             }
         }, 100);
     }
@@ -422,7 +425,14 @@
             if(val > 0) optSet.add(val);
         }
         options = Array.from(optSet); options.sort(() => Math.random() - 0.5);
-        for(let i=0; i<3; i++) { document.getElementById(`btn-${i}`).innerHTML = `${options[i]}<br><span>數量</span>`; }
+               for(let i=0; i<3; i++) { 
+            let b = document.getElementById(`btn-${i}`);
+            b.innerHTML = `${options[i]}<br><span>數量</span>`; 
+            // ✨ 每次新題目，重置按鈕顏色
+            b.style.background = '';
+            b.style.borderColor = '';
+            b.style.boxShadow = '';
+        }
 
         const boardRect = board.getBoundingClientRect();
         let placedPositions = []; 
@@ -471,14 +481,20 @@
     // 5. 答題驗證與回血
     // --------------------------------------------------
      
-    function submitAnswer(btnIdx) {
+       function submitAnswer(btnIdx) {
         if(game.isProcessing) return;
         
         let guess = options[btnIdx];
+        let clickedBtn = document.getElementById(`btn-${btnIdx}`); // ✨ 抓取點擊的按鈕
+        
         if (guess === correctCount) {
             game.isProcessing = true;
             
-            // 只有「0失誤」才給予 +15 秒獎勵
+            // ✨ 答對發綠光
+            clickedBtn.style.background = 'linear-gradient(135deg, rgba(128,237,153,0.4) 0%, rgba(30,80,40,0.8) 100%)';
+            clickedBtn.style.borderColor = '#80ed99';
+            clickedBtn.style.boxShadow = '0 0 20px rgba(128,237,153,0.5)';
+            
             if (game.wrongCount === 0) {
                 let bonus = Math.min(game.maxTime - game.timeLeft, 15); 
                 game.timeLeft += bonus; 
@@ -500,14 +516,16 @@
         } else {
             game.wrongCount++; 
             
+            // ✨ 答錯發紅光
+            clickedBtn.style.background = 'linear-gradient(135deg, rgba(255,77,77,0.4) 0%, rgba(80,20,20,0.8) 100%)';
+            clickedBtn.style.borderColor = '#ff4d4d';
+            
             if (game.wrongCount >= 2) {
                 game.timeLeft = 0; 
                 updateWaterUI(); 
-                
                 clearInterval(game.timerInterval);
                 game.isProcessing = true;
                 
-                // ✨ 抓取結算數據
                 let finalLvl = db.visionLevel;
                 let finalBag = db.tempBag;
                 
@@ -515,8 +533,7 @@
                 db.visionLastFailed = new Date().toDateString();
                 saveDB();
                 
-                // ✨ 顯示結算彈窗
-                showModal("定力渙散 ‧ 結界關閉", `心念散亂，盲目攀緣。<br><br>本次止步於：<span style="color:var(--solid-gold)">第 ${finalLvl} 重結界</span><br>已匯聚資糧：<span style="color:var(--solid-gold)">${finalBag} 點</span><br><br>今日時劫已滿，請安住呼吸明日再來。`, "歸返道場", () => window.location.href = 'index.html?screen=3');
+                showModal("定力渙散 ‧ 結界關閉", `心念散亂，盲目攀緣。<br><br>本次止步於：<span style="color:var(--solid-gold)">第 ${finalLvl} 重結界</span><br>目前累積資糧：<span style="color:var(--solid-gold)">${finalBag} 點</span><br><br>今日時劫已滿，請安住呼吸明日再來。`, "歸返道場", () => window.location.href = 'index.html?screen=3');
                 return; 
             }
 
@@ -527,7 +544,6 @@
                 clearInterval(game.timerInterval);
                 game.isProcessing = true;
                 
-                // ✨ 抓取結算數據
                 let finalLvl = db.visionLevel;
                 let finalBag = db.tempBag;
                 
@@ -535,19 +551,23 @@
                 db.visionLastFailed = new Date().toDateString();
                 saveDB();
                 
-                // ✨ 顯示結算彈窗
-                showModal("今日定力已盡", `本次止步於：<span style="color:var(--solid-gold)">第 ${finalLvl} 重結界</span><br>已匯聚資糧：<span style="color:var(--solid-gold)">${finalBag} 點</span><br><br>時劫已滿，心神已疲，請安住呼吸明日再來。`, "歸返道場", () => window.location.href = 'index.html?screen=3');
+                showModal("今日定力已盡", `本次止步於：<span style="color:var(--solid-gold)">第 ${finalLvl} 重結界</span><br>目前累積資糧：<span style="color:var(--solid-gold)">${finalBag} 點</span><br><br>時劫已滿，心神已疲，請安住呼吸明日再來。`, "歸返道場", () => window.location.href = 'index.html?screen=3');
                 return; 
             }
 
             game.isProcessing = true;
             document.getElementById('board').classList.add('vibrate');
+            
+            // ✨ 1 秒後把紅光復原
             setTimeout(() => { 
                 document.getElementById('board').classList.remove('vibrate'); 
+                clickedBtn.style.background = '';
+                clickedBtn.style.borderColor = '';
                 game.isProcessing = false; 
             }, 1000);
         }
     }
+
 
 
 
@@ -565,14 +585,15 @@
         }
         db.tempBag += earnedPoints;
 
-        // ✨ 滿百自動提領邏輯 (修復妳說的代碼邏輯問題)
+                // ✨ 滿百自動提領邏輯 (精準找零版)
         let syncMsg = "";
         if (db.tempBag >= 100) {
-            let saved = db.tempBag;
-            db.points += db.tempBag; // 存入主系統
-            db.tempBag = 0;          // 暫存包歸零
-            syncMsg = `<br><span style="color:#00e5ff; font-weight:bold;">✨ 資糧已達 ${saved} 點，自動匯入主系統！</span>`;
+            let transferAmount = Math.floor(db.tempBag / 100) * 100;
+            db.points += transferAmount; 
+            db.tempBag -= transferAmount;
+            syncMsg = `<br><span style="color:#00e5ff; font-weight:bold;">✨ 資糧圓滿！已將 ${transferAmount} 點自動匯入主系統。</span>`;
         }
+
         
         let dropMsg = "";
         let levelPassed = db.visionLevel - 1;
@@ -652,13 +673,14 @@
         }, 30);
     }
     function stopRPG() { clearInterval(rpgTimer); rpgProg = 0; document.getElementById('fill').style.width = '0%'; }
-    function finishRPG() {
+        function finishRPG() {
         const overlay = document.getElementById('vision-overlay');
         overlay.style.background = '#fff'; setTimeout(() => { overlay.style.opacity = '0'; }, 300);
         document.getElementById('main-body').classList.remove('vibrate'); document.getElementById('modal').classList.remove('show');
         game.currentEncounter = null; game.isProcessing = false;
-        game.timeLeft = game.maxTime; updateWaterUI(); initLevel();
+        updateWaterUI(); initLevel(); // ✨ 已刪除 game.timeLeft = game.maxTime; 這樣才不會遇到菩薩就洗秒數！
     }
+
 
     function showModal(title, text, btnText, callback, customHtml) {
         document.getElementById('m-title').innerHTML = title; document.getElementById('m-text').innerHTML = text;

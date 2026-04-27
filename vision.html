@@ -551,13 +551,12 @@
 
 
 
-       function checkWinEvents() {
+      function checkWinEvents() {
         const currentToday = new Date().toDateString();
         let isFirstWinToday = (db.visionLastDate !== currentToday);
         db.visionLastDate = currentToday;
         db.visionLevel++; 
         
-        // ✨ 首勝結算邏輯
         let earnedPoints = 1;
         let clearMsg = "";
         if (isFirstWinToday) {
@@ -565,6 +564,15 @@
             clearMsg = "今日首度理順，獲【每日定課】 +10，過關 +1，共得 +11 點。<br>";
         }
         db.tempBag += earnedPoints;
+
+        // ✨ 滿百自動提領邏輯 (修復妳說的代碼邏輯問題)
+        let syncMsg = "";
+        if (db.tempBag >= 100) {
+            let saved = db.tempBag;
+            db.points += db.tempBag; // 存入主系統
+            db.tempBag = 0;          // 暫存包歸零
+            syncMsg = `<br><span style="color:#00e5ff; font-weight:bold;">✨ 資糧已達 ${saved} 點，自動匯入主系統！</span>`;
+        }
         
         let dropMsg = "";
         let levelPassed = db.visionLevel - 1;
@@ -586,11 +594,11 @@
             
             if (levelPassed % 5 === 0 && levelPassed > 0) {
                 const s = SCRIPTURES[Math.floor(Math.random()*SCRIPTURES.length)];
-                triggerRPG(s, clearMsg + dropMsg);
+                triggerRPG(s, clearMsg + syncMsg + dropMsg);
             } else if (levelPassed % 3 === 0 && levelPassed > 0) {
-                triggerHuayanWorld(levelPassed, clearMsg + dropMsg);
-            } else if (clearMsg !== "" || dropMsg !== "") {
-                showModal("境界提昇", clearMsg + dropMsg, "繼續精進", () => initLevel());
+                triggerHuayanWorld(levelPassed, clearMsg + syncMsg + dropMsg);
+            } else if (clearMsg !== "" || syncMsg !== "" || dropMsg !== "") {
+                showModal("境界提昇", clearMsg + syncMsg + dropMsg, "繼續精進", () => initLevel());
             } else {
                 initLevel(); 
             }
@@ -598,11 +606,14 @@
     }
 
 
-    function triggerHuayanWorld(lvl, dropMsg) {
+
+     function triggerHuayanWorld(lvl, dropMsg) {
         game.isHuayan = true; game.starSpeed = 60; 
         let layer = Math.floor(lvl / 3) % 20 + 1;
         const planet = document.createElement('div'); planet.className = 'huayan-planet';
-        const cols = ['var(--color-cyan)', 'var(--color-purple)', 'var(--color-gold)', 'var(--color-green)'];
+        
+        // ✨ 改用絕對色碼，徹底避開 CSS 變數讀不到的名稱 Bug！
+        const cols = ['rgba(0,229,255,0.4)', 'rgba(206,147,216,0.4)', 'rgba(243,229,171,0.4)', 'rgba(128,237,153,0.4)'];
         planet.style.background = `radial-gradient(circle, ${cols[layer % 4]} 0%, transparent 70%)`;
         document.body.appendChild(planet);
         
@@ -610,9 +621,10 @@
         setTimeout(() => {
             planet.classList.remove('active'); planet.style.opacity = '0'; setTimeout(() => planet.remove(), 1500);
             game.starSpeed = 1; game.isHuayan = false;
-            showModal("法喜充滿", `<span style="color:var(--solid-gold); font-size:1.1rem; font-weight:bold;">神遊華藏大千 ‧ 第 ${layer} 重天</span>${dropMsg}`, "繼續精進", () => initLevel());
+            showModal("法喜充滿", `<span style="color:var(--solid-gold); font-size:1.1rem; font-weight:bold;">神遊華藏大千 ‧ 第 ${layer} 重天</span><br>${dropMsg}`, "繼續精進", () => initLevel());
         }, 3000);
     }
+
 
     function triggerRPG(s, dropMsg) {
         game.currentEncounter = s;

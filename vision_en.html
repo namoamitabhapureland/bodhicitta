@@ -536,21 +536,28 @@
         }
     }
 
-
-       function checkWinEvents() {
+    function checkWinEvents() {
         const currentToday = new Date().toDateString();
         let isFirstWinToday = (db.visionLastDate !== currentToday);
         db.visionLastDate = currentToday;
         db.visionLevel++; 
         
-        // ✨ 首勝結算邏輯 (英文版)
         let earnedPoints = 1;
         let clearMsg = "";
         if (isFirstWinToday) {
             earnedPoints += 10;
-            clearMsg = "First clearance today. [Daily Diligence] +10, Clear +1. Total +11 Provisions.<br><br>";
+            clearMsg = "First clearance today. [Daily Diligence] +10, Clear +1. Total +11 Provisions.<br>";
         }
         db.tempBag += earnedPoints;
+
+        // ✨ Auto-deposit at 100 points
+        let syncMsg = "";
+        if (db.tempBag >= 100) {
+            let saved = db.tempBag;
+            db.points += db.tempBag; // To main account
+            db.tempBag = 0;          // Reset bag
+            syncMsg = `<br><span style="color:#00e5ff; font-weight:bold;">✨ ${saved} Provisions auto-transferred to Home Dojo!</span><br>`;
+        }
         
         let dropMsg = "";
         let levelPassed = db.visionLevel - 1;
@@ -572,24 +579,24 @@
             
             if (levelPassed % 5 === 0 && levelPassed > 0) {
                 const s = SCRIPTURES[Math.floor(Math.random()*SCRIPTURES.length)];
-                triggerRPG(s, clearMsg + dropMsg);
+                triggerRPG(s, clearMsg + syncMsg + dropMsg);
             } else if (levelPassed % 3 === 0 && levelPassed > 0) {
-                triggerHuayanWorld(levelPassed, clearMsg + dropMsg);
-            } else if (clearMsg !== "" || dropMsg !== "") {
-                // 這裡改用 STATE ELEVATED 彈窗顯示首勝與掉落訊息
-                showModal("STATE ELEVATED", clearMsg + dropMsg, "CONTINUE", () => initLevel());
+                triggerHuayanWorld(levelPassed, clearMsg + syncMsg + dropMsg);
+            } else if (clearMsg !== "" || syncMsg !== "" || dropMsg !== "") {
+                showModal("STATE ELEVATED", clearMsg + syncMsg + dropMsg, "CONTINUE", () => initLevel());
             } else {
                 initLevel(); 
             }
         }, 1500);
     }
 
-
     function triggerHuayanWorld(lvl, dropMsg) {
         game.isHuayan = true; game.starSpeed = 60; 
         let layer = Math.floor(lvl / 3) % 20 + 1;
         const planet = document.createElement('div'); planet.className = 'huayan-planet';
-        const cols = ['var(--color-cyan)', 'var(--color-purple)', 'var(--color-gold)', 'var(--color-green)'];
+        
+        // ✨ Fix invisible planet with RGBA colors
+        const cols = ['rgba(0,229,255,0.4)', 'rgba(206,147,216,0.4)', 'rgba(243,229,171,0.4)', 'rgba(128,237,153,0.4)'];
         planet.style.background = `radial-gradient(circle, ${cols[layer % 4]} 0%, transparent 70%)`;
         document.body.appendChild(planet);
         
@@ -597,9 +604,10 @@
         setTimeout(() => {
             planet.classList.remove('active'); planet.style.opacity = '0'; setTimeout(() => planet.remove(), 1500);
             game.starSpeed = 1; game.isHuayan = false;
-            showModal("JOYFUL STATE", `<span style="color:var(--solid-gold); font-size:1.1rem; font-weight:bold;">Lotus Treasury World ‧ Tier ${layer}</span>${dropMsg}`, "CONTINUE", () => initLevel());
+            showModal("JOYFUL STATE", `<span style="color:var(--solid-gold); font-size:1.1rem; font-weight:bold;">Lotus Treasury World ‧ Tier ${layer}</span><br>${dropMsg}`, "CONTINUE", () => initLevel());
         }, 3000);
     }
+
 
     function triggerRPG(s, dropMsg) {
         game.currentEncounter = s;

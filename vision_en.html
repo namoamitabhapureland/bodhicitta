@@ -202,7 +202,7 @@
         { t: "Shakyamuni Buddha", c: "[Arouse the Bodhi Mind, mindful of One Direction.]<br>This is the root of rebirth. Settle your mind in stillness.", b: "Namo Shakyamuni Buddha", color: "rgba(243,229,171,0.25)" }
     ];
 
-    let game = { starSpeed: 1, currentEncounter: null, isHuayan: false, isProcessing: false, timeLeft: 60, maxTime: 60, timerInterval: null };
+        let game = { starSpeed: 1, currentEncounter: null, isHuayan: false, isProcessing: false, timeLeft: 60, maxTime: 180, timerInterval: null, wrongCount: 0 };
 
     // --------------------------------------------------
     // 1. Broad-bladed Jeweled Sword (English Set)
@@ -279,9 +279,9 @@
     // --------------------------------------------------
     // 3. Time Kalpa (Daily Lockout)
     // --------------------------------------------------
-        function startTimer() {
+         function startTimer() {
         clearInterval(game.timerInterval);
-        updateWaterUI(); // 開局先校準一次顏色與圓環
+        updateWaterUI(); 
         
         game.timerInterval = setInterval(() => {
             if(game.isProcessing || game.isHuayan || game.currentEncounter) return;
@@ -291,15 +291,21 @@
             if (game.timeLeft <= 0) {
                 clearInterval(game.timerInterval);
                 game.isProcessing = true;
+                
+                // ✨ Grab settlement stats
+                let finalLvl = db.visionLevel;
+                let finalBag = db.tempBag;
                     
                 db.visionLevel = Math.max(1, db.visionLevel - 1); 
                 db.visionLastFailed = new Date().toDateString(); 
                 saveDB();
 
-                showModal("CONCENTRATION DEPLETED", "The kalpa time has expired.<br>The barrier is closed for today. Return tomorrow.", "RETURN HOME", () => window.location.href = 'index_en.html?screen=3');
+                // ✨ Show settlement modal
+                showModal("CONCENTRATION DEPLETED", `Reached: <span style="color:var(--solid-gold)">Tier ${finalLvl}</span><br>Provisions: <span style="color:var(--solid-gold)">${finalBag}</span><br><br>The kalpa time has expired. Return tomorrow.`, "RETURN HOME", () => window.location.href = 'index_en.html?screen=3');
             }
         }, 100);
     }
+
 
     function updateWaterUI() {
         let pct = Math.max(0, (game.timeLeft / game.maxTime));
@@ -325,7 +331,7 @@
     // --------------------------------------------------
     // 4. Array Generation (Procedural)
     // --------------------------------------------------
-        function initLevel() {
+      function initLevel() {
         const currentToday = new Date().toDateString(); 
         
         if (db.visionLastFailed === currentToday) {
@@ -333,8 +339,9 @@
             return;
         }
 
-
         game.isProcessing = false;
+        game.wrongCount = 0; // ✨ Reset mistake counter for this tier
+        
         const board = document.getElementById('board');
         board.innerHTML = '';
         
@@ -346,10 +353,25 @@
         bagUI.innerText = `Provisions: ${db.tempBag}/100`;
         if(db.tempBag >= 100) bagUI.classList.add('full'); else bagUI.classList.remove('full');
 
-        game.maxTime = Math.max(25, 60 - Math.floor(lvl * 0.5));
-        game.timeLeft = game.maxTime; 
+                // ✨ Ultimate Logic: Separate Absolute Max and Base Starting Time
+        game.maxTime = 180; // Absolute ceiling is 3 minutes
+
+        let baseTime;
+        if (lvl >= 50) {
+            baseTime = 180; // Hard: Start with at least 3 mins
+        } else if (lvl >= 20) {
+            baseTime = 120; // Medium: Start with at least 2 mins
+        } else {
+            baseTime = 60;  // Normal: Start with at least 60 secs
+        }
+        
+        // Inherit time: Boost to baseTime if lower, cap at maxTime if higher
+        game.timeLeft = Math.min(game.maxTime, Math.max(baseTime, game.timeLeft)); 
+
         updateWaterUI();
         startTimer();
+
+
 
         let totalItems = Math.min(85, 20 + Math.floor(lvl * 1.5)); 
         let lotusLimit = Math.min(10, Math.floor(lvl / 10)); 
@@ -433,30 +455,87 @@
     // --------------------------------------------------
     // 5. Verification & Rewards
     // --------------------------------------------------
-    function submitAnswer(btnIdx) {
+       function submitAnswer(btnIdx) {
         if(game.isProcessing) return;
         
         let guess = options[btnIdx];
         if (guess === correctCount) {
             game.isProcessing = true;
-            let bonus = Math.min(game.maxTime - game.timeLeft, 15); 
-            game.timeLeft += bonus; updateWaterUI();
             
-            let flyText = document.createElement('div'); flyText.className = 'time-plus'; flyText.innerText = `+${Math.floor(bonus)}s`;
-            let r = document.getElementById('timer-text').getBoundingClientRect();
-            flyText.style.left = (r.left + 10) + 'px'; flyText.style.top = (r.top + 10) + 'px';
-            document.body.appendChild(flyText); setTimeout(() => flyText.remove(), 1000);
+            // [REWARD]: Give +15 seconds ONLY if 0 mistakes.
+            if (game.wrongCount === 0) {
+                let bonus = Math.min(game.maxTime - game.timeLeft, 15); 
+                game.timeLeft += bonus; 
+                updateWaterUI();
+                
+                let flyText = document.createElement('div'); flyText.className = 'time-plus'; 
+                flyText.innerText = `+${Math.floor(bonus)}s`;
+                let r = document.getElementById('timer-text').getBoundingClientRect();
+                flyText.style.position = 'fixed';
+                flyText.style.left = (r.left + 10) + 'px'; 
+                flyText.style.top = (r.top + 10) + 'px';
+                document.body.appendChild(flyText); setTimeout(() => flyText.remove(), 1000);
+            }
 
             let targets = document.querySelectorAll('.target-item');
             targets.forEach(t => t.classList.add('highlight'));
             setTimeout(() => checkWinEvents(), 1200); 
 
         } else {
-            game.timeLeft = Math.max(0, game.timeLeft - 5); updateWaterUI();
+            // Increment mistake counter
+            game.wrongCount++; 
+            
+            // [FATAL PENALTY]: 2nd mistake -> Instant Death with Settlement
+            if (game.wrongCount >= 2) {
+                game.timeLeft = 0; 
+                updateWaterUI(); 
+                
+                clearInterval(game.timerInterval);
+                game.isProcessing = true;
+                
+                // Grab settlement stats
+                let finalLvl = db.visionLevel;
+                let finalBag = db.tempBag;
+                
+                db.visionLevel = Math.max(1, db.visionLevel - 1); 
+                db.visionLastFailed = new Date().toDateString();
+                saveDB();
+                
+                // Show settlement modal
+                showModal("CONCENTRATION DEPLETED", `Mind scattered, focus lost.<br><br>Reached: <span style="color:var(--solid-gold)">Tier ${finalLvl}</span><br>Provisions: <span style="color:var(--solid-gold)">${finalBag}</span><br><br>The barrier is closed for today. Return tomorrow.`, "RETURN HOME", () => window.location.href = 'index_en.html?screen=3');
+                return; 
+            }
+
+            // [NORMAL PENALTY]: 1st mistake -> Deduct 10s
+            game.timeLeft = Math.max(0, game.timeLeft - 10); 
+            updateWaterUI();
+            
+            // Death by running out of time after penalty
+            if (game.timeLeft <= 0) {
+                clearInterval(game.timerInterval);
+                game.isProcessing = true;
+                
+                let finalLvl = db.visionLevel;
+                let finalBag = db.tempBag;
+                
+                db.visionLevel = Math.max(1, db.visionLevel - 1); 
+                db.visionLastFailed = new Date().toDateString();
+                saveDB();
+                
+                showModal("CONCENTRATION DEPLETED", `Reached: <span style="color:var(--solid-gold)">Tier ${finalLvl}</span><br>Provisions: <span style="color:var(--solid-gold)">${finalBag}</span><br><br>The kalpa time has expired. Return tomorrow.`, "RETURN HOME", () => window.location.href = 'index_en.html?screen=3');
+                return; 
+            }
+
+            // [FREEZE PENALTY]: Lock for 1 second
+            game.isProcessing = true;
             document.getElementById('board').classList.add('vibrate');
-            setTimeout(() => document.getElementById('board').classList.remove('vibrate'), 300);
+            setTimeout(() => { 
+                document.getElementById('board').classList.remove('vibrate'); 
+                game.isProcessing = false; 
+            }, 1000);
         }
     }
+
 
        function checkWinEvents() {
         const currentToday = new Date().toDateString();

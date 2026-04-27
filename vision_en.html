@@ -259,14 +259,19 @@
         return "Lapis Practitioner";
     }
 
-    function checkSync() {
+           function checkSync() { // ✨ 這裡必須是小寫 function
         if(db.tempBag >= 100) {
-            showModal("Provisions Full", `You have gathered ${db.tempBag} provisions.<br>Transfer to the Home Dojo?`, "TRANSFER", () => {
-                db.points += db.tempBag; db.tempBag = 0; saveDB();
+            let tAmt = Math.floor(db.tempBag / 100) * 100;
+            showModal("Transfer Provisions", `You have gathered ${db.tempBag} provisions.<br>${tAmt} points will be deposited to the Dojo.`, "CONFIRM", () => {
+                db.points += tAmt; 
+                db.tempBag -= tAmt; 
+                saveDB();
                 window.location.href = 'index_en.html?screen=3';
             }, `<button class="m-btn" onclick="closeModal()">CONTINUE</button>`);
         }
     }
+
+
 
     function triggerExit() {
         showModal("PAUSE", "Put down your phone and rest your mind.<br>Where would you like to go?", null, null, `
@@ -408,7 +413,14 @@
             if(val > 0) optSet.add(val);
         }
         options = Array.from(optSet); options.sort(() => Math.random() - 0.5);
-        for(let i=0; i<3; i++) { document.getElementById(`btn-${i}`).innerHTML = `${options[i]}<br><span>COUNT</span>`; }
+        for(let i=0; i<3; i++) { 
+            let b = document.getElementById(`btn-${i}`);
+            b.innerHTML = `${options[i]}<br><span>COUNT</span>`; 
+            // ✨ Reset button colors for the new round
+            b.style.background = '';
+            b.style.borderColor = '';
+            b.style.boxShadow = '';
+        }
 
         const boardRect = board.getBoundingClientRect();
 
@@ -455,14 +467,20 @@
     // --------------------------------------------------
     // 5. Verification & Rewards
     // --------------------------------------------------
-       function submitAnswer(btnIdx) {
+           function submitAnswer(btnIdx) {
         if(game.isProcessing) return;
         
         let guess = options[btnIdx];
+        let clickedBtn = document.getElementById(`btn-${btnIdx}`); // ✨ Grab the clicked button
+        
         if (guess === correctCount) {
             game.isProcessing = true;
             
-            // [REWARD]: Give +15 seconds ONLY if 0 mistakes.
+            // ✨ Visual feedback: Green glow
+            clickedBtn.style.background = 'linear-gradient(135deg, rgba(128,237,153,0.4) 0%, rgba(30,80,40,0.8) 100%)';
+            clickedBtn.style.borderColor = '#80ed99';
+            clickedBtn.style.boxShadow = '0 0 20px rgba(128,237,153,0.5)';
+            
             if (game.wrongCount === 0) {
                 let bonus = Math.min(game.maxTime - game.timeLeft, 15); 
                 game.timeLeft += bonus; 
@@ -482,18 +500,18 @@
             setTimeout(() => checkWinEvents(), 1200); 
 
         } else {
-            // Increment mistake counter
             game.wrongCount++; 
             
-            // [FATAL PENALTY]: 2nd mistake -> Instant Death with Settlement
+            // ✨ Visual feedback: Red glow
+            clickedBtn.style.background = 'linear-gradient(135deg, rgba(255,77,77,0.4) 0%, rgba(80,20,20,0.8) 100%)';
+            clickedBtn.style.borderColor = '#ff4d4d';
+            
             if (game.wrongCount >= 2) {
                 game.timeLeft = 0; 
                 updateWaterUI(); 
-                
                 clearInterval(game.timerInterval);
                 game.isProcessing = true;
                 
-                // Grab settlement stats
                 let finalLvl = db.visionLevel;
                 let finalBag = db.tempBag;
                 
@@ -501,40 +519,42 @@
                 db.visionLastFailed = new Date().toDateString();
                 saveDB();
                 
-                // Show settlement modal
-                showModal("CONCENTRATION DEPLETED", `Mind scattered, focus lost.<br><br>Reached: <span style="color:var(--solid-gold)">Tier ${finalLvl}</span><br>Provisions: <span style="color:var(--solid-gold)">${finalBag}</span><br><br>The barrier is closed for today. Return tomorrow.`, "RETURN HOME", () => window.location.href = 'index_en.html?screen=3');
+                showModal("CONCENTRATION DEPLETED", `Mind scattered, focus lost.<br><br>Reached: <span style="color:var(--solid-gold)">Tier ${finalLvl}</span><br>Retained Provisions: <span style="color:var(--solid-gold)">${finalBag}</span><br><br>The barrier is closed for today. Return tomorrow.`, "RETURN HOME", () => window.location.href = 'index_en.html?screen=3');
                 return; 
             }
 
-            // [NORMAL PENALTY]: 1st mistake -> Deduct 10s
             game.timeLeft = Math.max(0, game.timeLeft - 10); 
             updateWaterUI();
             
-            // Death by running out of time after penalty
-            if (game.timeLeft <= 0) {
+                      if (game.timeLeft <= 0) {
                 clearInterval(game.timerInterval);
                 game.isProcessing = true;
                 
                 let finalLvl = db.visionLevel;
                 let finalBag = db.tempBag;
-                
+                    
                 db.visionLevel = Math.max(1, db.visionLevel - 1); 
-                db.visionLastFailed = new Date().toDateString();
+                db.visionLastFailed = new Date().toDateString(); 
                 saveDB();
-                
-                showModal("CONCENTRATION DEPLETED", `Reached: <span style="color:var(--solid-gold)">Tier ${finalLvl}</span><br>Provisions: <span style="color:var(--solid-gold)">${finalBag}</span><br><br>The kalpa time has expired. Return tomorrow.`, "RETURN HOME", () => window.location.href = 'index_en.html?screen=3');
+
+                showModal("CONCENTRATION DEPLETED", `Reached: <span style="color:var(--solid-gold)">Tier ${finalLvl}</span><br>Retained Provisions: <span style="color:var(--solid-gold)">${finalBag}</span><br><br>The kalpa time has expired. Return tomorrow.`, "RETURN HOME", () => window.location.href = 'index_en.html?screen=3');
+
                 return; 
             }
 
-            // [FREEZE PENALTY]: Lock for 1 second
             game.isProcessing = true;
             document.getElementById('board').classList.add('vibrate');
+            
+            // ✨ Revert red button after 1 sec
             setTimeout(() => { 
                 document.getElementById('board').classList.remove('vibrate'); 
+                clickedBtn.style.background = '';
+                clickedBtn.style.borderColor = '';
                 game.isProcessing = false; 
             }, 1000);
         }
     }
+
 
     function checkWinEvents() {
         const currentToday = new Date().toDateString();
@@ -551,13 +571,15 @@
         db.tempBag += earnedPoints;
 
         // ✨ Auto-deposit at 100 points
+              // ✨ Exact change auto-deposit
         let syncMsg = "";
         if (db.tempBag >= 100) {
-            let saved = db.tempBag;
-            db.points += db.tempBag; // To main account
-            db.tempBag = 0;          // Reset bag
-            syncMsg = `<br><span style="color:#00e5ff; font-weight:bold;">✨ ${saved} Provisions auto-transferred to Home Dojo!</span><br>`;
+            let transferAmount = Math.floor(db.tempBag / 100) * 100;
+            db.points += transferAmount; 
+            db.tempBag -= transferAmount;
+            syncMsg = `<br><span style="color:#00e5ff; font-weight:bold;">✨ ${transferAmount} Provisions auto-transferred to Home Dojo!</span><br>`;
         }
+
         
         let dropMsg = "";
         let levelPassed = db.visionLevel - 1;

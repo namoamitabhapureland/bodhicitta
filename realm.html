@@ -308,13 +308,37 @@
             await sleep(2000);
             document.getElementById('profound-text').style.opacity = '1'; 
 
-            // --- 自主資料庫讀取與判定 ---
+            // ==========================================
+            // 💥 【終極防呆】：自動同步主系統的位階並存檔，徹底打破迴圈 Bug
+            // ==========================================
             let db;
             try { db = JSON.parse(localStorage.getItem('PX_V15.0')) || {}; } catch(e) { db = {}; }
             let currentDays = (db.points || 0) / 100; 
             if (!db.milestones) db.milestones = {};
 
-            if (currentDays >= 100 && !db.milestones['rank_10']) {
+            // 不管行者現在幾階，強制幫主系統算好正確位階並存檔！
+            let calculatedRank = "";
+            if (currentDays >= 111100) { 
+                let lv = Math.min(10, Math.floor((currentDays - 111100) / 100000) + 1);
+                calculatedRank = ["初地", "二地", "三地", "四地", "五地", "六地", "七地", "八地", "九地", "十地"][lv - 1] + "菩薩";
+            } else if (currentDays >= 11100) { 
+                let lv = Math.floor((currentDays - 11100) / 10000) + 1;
+                calculatedRank = ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][lv - 1] + "迴向位";
+            } else if (currentDays >= 1100) { 
+                let lv = Math.floor((currentDays - 1100) / 1000) + 1;
+                calculatedRank = ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][lv - 1] + "行位";
+            } else if (currentDays >= 100) { 
+                let lv = Math.floor((currentDays - 100) / 100) + 1;
+                calculatedRank = ["初住", "二住", "三住", "四住", "五住", "六住", "七住", "八住", "九住", "十住"][lv - 1] + "位";
+            } else { 
+                let lv = Math.min(10, Math.floor(currentDays / 10) + 1);
+                calculatedRank = ["初信位", "二信位", "三信位", "四信位", "五信位", "六信位", "七信位", "八信位", "九信位", "十信位"][lv - 1];
+            }
+            db.currentRank = calculatedRank;
+            localStorage.setItem('PX_V15.0', JSON.stringify(db)); // 立即存檔，阻斷主系統迴圈
+
+            // 💥 【關鍵判定】：滿 90 日進入十信位，且尚未領獎
+            if (currentDays >= 90 && !db.milestones['rank_10']) {
                 await sleep(3000); 
                 document.getElementById('profound-text').style.opacity = '0'; 
                 
@@ -323,6 +347,7 @@
                 rewardUI.style.opacity = '1';
                 rewardUI.style.pointerEvents = 'auto';
 
+                // 法寶逐一顯化
                 setTimeout(() => { document.getElementById('ri-1').style.opacity = '1'; document.getElementById('ri-1').style.transform = 'translateY(0)'; }, 500);
                 setTimeout(() => { document.getElementById('ri-2').style.opacity = '1'; document.getElementById('ri-2').style.transform = 'translateY(0)'; }, 1500);
                 setTimeout(() => { document.getElementById('ri-3').style.opacity = '1'; document.getElementById('ri-3').style.transform = 'translateY(0)'; }, 2500);
@@ -339,7 +364,7 @@
             }
         }
 
-        // ================= 收下寶物並存檔 =================
+        // ================= 收下寶物並歸返 =================
         function collectAndReturn() {
             document.getElementById('rr-btn').style.transform = 'scale(0.9)';
             document.getElementById('realm-reward').style.opacity = '0';
@@ -354,7 +379,7 @@
             db.treasures.vase += 10;
             db.treasures.jewel += 10;
             
-            db.milestones['rank_10'] = true; 
+            db.milestones['rank_10'] = true; // 鎖上防呆鎖
             
             localStorage.setItem('PX_V15.0', JSON.stringify(db));
 

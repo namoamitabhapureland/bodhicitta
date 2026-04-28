@@ -242,7 +242,7 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle, rgba(212,175,55,0.3) 0%, rgba(0,0,0,0.95) 80%);
             display: none; justify-content: center; align-items: center; flex-direction: column;
-            z-index: 3000; opacity: 0; transition: opacity 0.3s ease;
+            z-index: 20000; opacity: 0; transition: opacity 0.3s ease;
         }
         .level-text-glow {
             color: var(--gold); font-size: 2rem; font-weight: bold; letter-spacing: 5px;
@@ -2774,6 +2774,9 @@ function getDaysLotusSVG(totalDays) {
     return svgHtml;
 }
 
+let lastMiniSeedSVG = "";
+let lastBigSeedSVG = "";
+
     function updateUI() {
     const total = db.totalNian || 0; const points = db.points || 0;
     document.getElementById('total-count').innerText = total.toLocaleString();
@@ -2818,7 +2821,18 @@ function getDaysLotusSVG(totalDays) {
 
     const titleEl = document.getElementById('rank-title'); if(titleEl) { titleEl.innerText = rank.l; titleEl.style.color = rank.c; }
     document.getElementById('display-name').innerText = db.name || "行者";
-    document.getElementById('mini-seed').innerHTML = rank.i; document.getElementById('big-seed').innerHTML = getDaysLotusSVG(currentDays);
+        // ✨ 替換開始：只有當圖形代碼真的改變時，才執行重繪
+    if (lastMiniSeedSVG !== rank.i) {
+        document.getElementById('mini-seed').innerHTML = rank.i;
+        lastMiniSeedSVG = rank.i;
+    }
+    
+    let newBigSeedSVG = getDaysLotusSVG(currentDays);
+    if (lastBigSeedSVG !== newBigSeedSVG) {
+        document.getElementById('big-seed').innerHTML = newBigSeedSVG;
+        lastBigSeedSVG = newBigSeedSVG;
+    }
+    // ✨ 替換結束
     
     let progress = ((currentDays - base) / (threshold - base)) * 100;
     document.getElementById('streak-val').innerText = currentDays.toFixed(1);
@@ -2830,21 +2844,6 @@ function getDaysLotusSVG(totalDays) {
     db.currentRank = rank.l; 
 }
 
-function initLotus() {
-    const group = document.getElementById('lotus-petals'); if(!group) return; group.innerHTML = "";
-    for (let i = 0; i < 10; i++) {
-        const angle = i * 36; 
-        const petal = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        petal.setAttribute("d", "M50 35 C 65 30, 70 20, 50 1 C 30 20, 35 30, 50 35"); 
-        petal.setAttribute("transform", `rotate(${angle} 50 50)`);
-        petal.setAttribute("fill", "rgba(243, 229, 171, 0.05)"); 
-        petal.setAttribute("stroke", "var(--solid-gold)"); 
-        petal.setAttribute("stroke-width", "0.8");
-        petal.setAttribute("id", `petal-${i}`); 
-        petal.style.transition = "all 0.8s cubic-bezier(0.25, 0.1, 0.25, 1)"; 
-        group.appendChild(petal);
-    }
-}
 
 
 function save() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }

@@ -622,6 +622,19 @@
     <div class="mala-wrap" id="mala-wrap">
         <svg class="mala-svg" id="mala-svg" viewBox="0 0 380 168" xmlns="http://www.w3.org/2000/svg" style="overflow:hidden;">
             <defs>
+                <radialGradient id="bead-main" cx="34%" cy="28%" r="68%" fx="34%" fy="28%">
+    <stop offset="0%" stop-color="#fffbee" stop-opacity="1"/>
+    <stop offset="25%" stop-color="#fce57a" stop-opacity="0.95"/>
+    <stop offset="65%" stop-color="#c07d12" stop-opacity="0.9"/>
+    <stop offset="100%" stop-color="#2a1001" stop-opacity="1"/>
+</radialGradient>
+<radialGradient id="bead-marker" cx="34%" cy="28%" r="68%" fx="34%" fy="28%">
+    <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+    <stop offset="30%" stop-color="#fff8dc" stop-opacity="0.95"/>
+    <stop offset="70%" stop-color="#d4af37" stop-opacity="0.9"/>
+    <stop offset="100%" stop-color="#3e1f00" stop-opacity="1"/>
+</radialGradient>
+
                 <radialGradient id="bead-amber" cx="34%" cy="28%" r="68%" fx="34%" fy="28%">
                     <stop offset="0%"   stop-color="#fffbee" stop-opacity="1"/>
                     <stop offset="14%"  stop-color="#fce57a" stop-opacity=".95"/>
@@ -822,35 +835,51 @@ function initMala() {
     const g = document.getElementById('mala-g');
     let html = '';
 
-    html += `<circle cx="${MALA_CX}" cy="${MALA_CY}" r="${MALA_R}" fill="none" stroke="url(#cord-grad)" stroke-width="2" opacity="0.7"/>`;
+    html += `<circle cx="${MALA_CX}" cy="${MALA_CY}" r="${MALA_R+2}" fill="none" stroke="rgba(0,0,0,0.45)" stroke-width="7" opacity="0.55"/>`;
+    html += `<circle cx="${MALA_CX}" cy="${MALA_CY}" r="${MALA_R}" fill="none" stroke="url(#cord-grad)" stroke-width="4" opacity="0.82"/>`;
+    html += `<circle cx="${MALA_CX}" cy="${MALA_CY}" r="${MALA_R-1.5}" fill="none" stroke="rgba(255,230,160,0.16)" stroke-width="1.2"/>`;
 
     for (let i = 0; i < MALA_N; i++) {
         const deg = (i * MALA_STEP) - 90;
         const rad = deg * Math.PI / 180;
-        const x = MALA_CX + MALA_R * Math.cos(rad);
-        const y = MALA_CY + MALA_R * Math.sin(rad);
-        const isGuru = (i === 0); 
+        const x   = MALA_CX + MALA_R * Math.cos(rad);
+        const y   = MALA_CY + MALA_R * Math.sin(rad);
 
-        const r       = isGuru ? 22   : 15;
-        const fill    = isGuru ? 'url(#bead-guru)' : 'url(#bead-amber)';
-        const stroke  = isGuru ? 'rgba(255,220,80,0.85)' : 'rgba(212,175,55,0.52)';
-        const sw      = isGuru ? 1.5  : 0.9;
-        const filter  = isGuru ? 'filter:url(#guru-glow)' : '';
+        const isGuru   = (i === 0);
+        const isMarker = !isGuru && (i % 9 === 0);
 
-        html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" style="${filter}"/>`;
+        const r      = isGuru ? 23 : isMarker ? 15.5 : 13.5;
+        const fill   = isGuru   ? 'url(#bead-guru)'   :
+                       isMarker ? 'url(#bead-marker)' : 'url(#bead-main)';
+        const stroke = isGuru   ? 'rgba(255,215,60,0.88)' :
+                       isMarker ? 'rgba(210,168,38,0.72)'  : 'rgba(155,78,22,0.52)';
+        const sw     = isGuru ? 1.6 : isMarker ? 1.1 : 0.75;
 
-        const hx = (x - r * 0.27).toFixed(2);
-        const hy = (y - r * 0.31).toFixed(2);
-        html += `<circle cx="${hx}" cy="${hy}" r="${(r * 0.22).toFixed(2)}" fill="rgba(255,255,255,${isGuru ? 0.72 : 0.52})"/>`;
+        html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" filter="url(#${isGuru ? 'guru-glow' : 'bead-glow'})"/>`;
+
+        const hx = (x - r * 0.30).toFixed(2);
+        const hy = (y - r * 0.33).toFixed(2);
+        const hr = (r * 0.21).toFixed(2);
+        html += `<ellipse cx="${hx}" cy="${hy}" rx="${hr}" ry="${(r*0.17).toFixed(2)}" fill="rgba(255,255,255,${isGuru ? 0.70 : isMarker ? 0.65 : 0.55})"/>`;
+
+        const h2x = (x - r * 0.13).toFixed(2);
+        const h2y = (y - r * 0.16).toFixed(2);
+        html += `<circle cx="${h2x}" cy="${h2y}" r="${(r * 0.065).toFixed(2)}" fill="rgba(255,255,255,0.92)"/>`;
 
         if (isGuru) {
-            html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="26" fill="none" stroke="rgba(212,175,55,0.35)" stroke-width="2.5"/>`;
+            html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r+6}" fill="none" stroke="rgba(212,175,55,0.45)" stroke-width="2.5" stroke-dasharray="4 3"/>`;
+            html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(r*0.52).toFixed(1)}" fill="none" stroke="rgba(255,220,80,0.28)" stroke-width="1.2"/>`;
+        }
+
+        if (isMarker) {
+            html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r+2.5}" fill="none" stroke="rgba(212,175,55,0.35)" stroke-width="1"/>`;
         }
     }
 
     g.innerHTML = html;
     g.setAttribute('transform', `rotate(${malaAngle}, ${MALA_CX}, ${MALA_CY})`);
 }
+
 
 function animateMala(from, to) {
     const duration = 360;
@@ -870,31 +899,40 @@ function animateMala(from, to) {
     malaAnimFrame = requestAnimationFrame(step);
 }
 
-// ── Touch & Click Logic ──
+// ── Touch & Click Logic (Low-Entropy Optimized) ──
 const malaWrap = document.getElementById('mala-wrap');
-let malaStartY  = 0;
-let malaTouched = false;
+let malaStartY = 0;
+let nianLocked = false; 
+
+function fireMala(x, y) {
+    if (nianLocked) return;
+    nianLocked = true;
+    // 120ms lock to prevent ghost clicks without hindering rapid practice
+    setTimeout(() => { nianLocked = false; }, 120); 
+    triggerNian(x, y);
+    animateMala(malaAngle, malaAngle + MALA_STEP);
+}
 
 malaWrap.addEventListener('touchstart', e => {
-    malaStartY  = e.touches[0].clientY;
-    malaTouched = true;
+    malaStartY = e.touches[0].clientY;
 }, { passive: true });
 
 malaWrap.addEventListener('touchend', e => {
-    const touch  = e.changedTouches[0];
-    const deltaY = touch.clientY - malaStartY;
-    if (deltaY > -10) {
-        triggerNian(touch.clientX, touch.clientY);
-        animateMala(malaAngle, malaAngle + MALA_STEP);
+    e.preventDefault(); // Block native synthetic clicks
+    const touch = e.changedTouches[0];
+    const deltaY = Math.abs(touch.clientY - malaStartY);
+    
+    // Allow minor movement (<20px) to count as tap
+    if (deltaY < 20) {
+        fireMala(touch.clientX, touch.clientY);
     }
-    setTimeout(() => { malaTouched = false; }, 600);
-});
+}, { passive: false });
 
 malaWrap.addEventListener('click', e => {
-    if (malaTouched) return;
-    triggerNian(e.clientX, e.clientY);
-    animateMala(malaAngle, malaAngle + MALA_STEP);
+    // Fallback for desktop environments
+    fireMala(e.clientX, e.clientY);
 });
+
 
 // ══════════════════════════════════════════
 //  Counter Core

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <title>系統 ． 一真法界 (3D 全息圓滿版)</title>
+    <style>
+        :root { --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c; --bg-deep: #000000; --text-main: #d0d0d0; }
+        body { margin: 0; padding: 0; height: 100vh; overflow: hidden; background: var(--bg-deep); color: #fff; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
+
+        .top-nav-btn {
+            position: absolute; top: 20px; left: 20px;
+            background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(212,175,55,0.3); color: var(--gold); 
+            padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; letter-spacing: 1px; 
+            display: flex; align-items: center; gap: 6px; z-index: 1000; cursor: pointer; 
+            backdrop-filter: blur(5px); transition: 0.3s;
+        }
+        .top-nav-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px;
+            border-left: 2px solid rgba(212,175,55,0.8); padding: 10px 20px; z-index: 100; pointer-events: none;
+            opacity: 0; transition: opacity 2s ease-in-out;
+        }
+        .status-title { font-size: 1.15rem; font-weight: bold; color: var(--gold); letter-spacing: 2px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); }
+        .status-desc { font-size: 0.85rem; color: #ddd; line-height: 1.8; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
+
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+        #golden-flash { 
+            position: fixed; inset: 0; background: radial-gradient(circle, #ffffff 0%, #f3e5ab 40%, #d4af37 100%);
+            mix-blend-mode: screen; opacity: 0; z-index: 99998; pointer-events: none; transition: opacity 0.2s ease-out; 
+        }
+
+        /* 終極種子：脫離 Canvas 獨立存在 */
+        #immortal-seed {
+            position: absolute; top: 50%; left: 50%; margin-top: -12px; margin-left: -12px;
+            width: 24px; height: 24px; background: radial-gradient(circle, #fff 10%, #ffe 30%, var(--gold) 60%, var(--solid-gold) 100%);
+            border-radius: 50%; opacity: 0; filter: blur(1.5px); transition: opacity 2s; z-index: 100;
+        }
+        
+        .seed-heartbeat { animation: heartbeat-pulse 1.4s infinite cubic-bezier(0.2, 0.8, 0.4, 1); }
+        @keyframes heartbeat-pulse {
+            0% { transform: scale(1); box-shadow: 0 0 30px var(--gold), 0 0 60px var(--solid-gold); }
+            15% { transform: scale(1.6); box-shadow: 0 0 60px var(--gold), 0 0 120px var(--solid-gold), 0 0 180px #fff; }
+            30% { transform: scale(1.2); box-shadow: 0 0 40px var(--gold), 0 0 80px var(--solid-gold); }
+            45% { transform: scale(1.6); box-shadow: 0 0 60px var(--gold), 0 0 120px var(--solid-gold), 0 0 180px #fff; }
+            100% { transform: scale(1); box-shadow: 0 0 30px var(--gold), 0 0 60px var(--solid-gold); }
+        }
+
+        #profound-text { 
+            position: absolute; top: calc(50% + 60px); width: 100%;
+            color: var(--gold); font-size: 1.35rem; letter-spacing: 12px; opacity: 0; transition: opacity 4s; text-align: center; 
+            text-shadow: 0 0 20px var(--solid-gold), 0 0 40px #fff; line-height: 2.8; font-weight: bold; z-index: 100; pointer-events: none;
+        }
+
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; opacity: 0; transition: opacity 2s;}
+        .drag-hint { color:rgba(212,175,55,0.6); font-size:0.75rem; letter-spacing:2px; text-shadow: 0 0 5px rgba(0,0,0,0.8); }
+    </style>
+</head>
+<body>
+    <div id="page-curtain" style="position:fixed; inset:0; background:#000; z-index: 9999999; pointer-events: none; transition: opacity 1s; opacity: 1;"></div>
+
+    <div class="top-nav-btn" onclick="navigateTo('index.html')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        回道場
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title">一真法界 ． 萬法唯心</div>
+        <div class="status-desc">「成住壞空，周而復始。<br>唯有菩提，歷劫不滅。」</div>
+    </div>
+
+    <canvas id="realmCanvas"></canvas>
+    <div id="golden-flash"></div>
+    <div id="immortal-seed"></div>
+    <div id="profound-text">菩提之心 ． 歷劫不滅<br>一真法界 ． 本自如如</div>
+
+    <div class="ui-layer" id="ui-layer">
+        <div class="drag-hint">360° 全息滑動 ． 觀相一真</div>
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        // ================= 音頻引擎 (無相法音) =================
+        let audioCtx;
+        function playDharmaSound(phase) {
+            try {
+                if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                
+                if (phase === 'form') { // 成：低沉漸強
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(108, audioCtx.currentTime); 
+                    osc.frequency.linearRampToValueAtTime(216, audioCtx.currentTime + 8);
+                    gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 4);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 10);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(); osc.stop(audioCtx.currentTime + 10);
+                } else if (phase === 'seed') { // 空與重生：清脆一聲
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(864, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 4);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(); osc.stop(audioCtx.currentTime + 4);
+                }
+            } catch(e) {}
+        }
+
+        // ================= 3D 核心引擎 =================
+        const canvas = document.getElementById('realmCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        let time = 0;
+        let angleX = 0.3, angleY = 0;
+        let isDragging = false;
+        let lastMouseX = 0, lastMouseY = 0;
+        const FOV = 450;
+        
+        let state = 0; // 0: 散亂星空, 1: 匯聚成形, 2: 安住旋轉, 3: 坍縮
+
+        function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+        window.addEventListener('resize', resize); resize();
+
+        // 建立粒子：同時賦予「散亂座標」與「蓮花矩陣目標座標」
+        function initParticles() {
+            particles = [];
+            const totalLayers = 6;
+            const pointsPerLayer = 108;
+
+            for (let l = 0; l < totalLayers; l++) {
+                let radius = 50 + l * 50;
+                let yOffset = Math.pow(l, 1.5) * 15 - 50; 
+                
+                for (let p = 0; p < pointsPerLayer; p++) {
+                    let theta = (p / pointsPerLayer) * Math.PI * 2;
+                    let wave = Math.sin(theta * 8) * (10 + l * 5); // 花瓣起伏
+                    
+                    let targetX = (radius + wave) * Math.cos(theta);
+                    let targetY = yOffset + Math.abs(wave) * 0.5;
+                    let targetZ = (radius + wave) * Math.sin(theta);
+
+                    // 初始為深空宇宙的隨機座標
+                    particles.push({
+                        x: (Math.random() - 0.5) * 3000,
+                        y: (Math.random() - 0.5) * 3000,
+                        z: (Math.random() - 0.5) * 3000,
+                        tx: targetX, ty: targetY, tz: targetZ,
+                        c: (l % 2 === 0) ? 'rgba(212,175,55,' : 'rgba(139,168,156,',
+                        size: Math.random() * 1.5 + 0.5,
+                        baseSize: Math.random() * 1.5 + 0.5,
+                        phase: Math.random() * Math.PI * 2
+                    });
+                }
+            }
+            // 核心光球
+            for (let i = 0; i < 50; i++) {
+                particles.push({
+                    x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: (Math.random() - 0.5) * 2000,
+                    tx: (Math.random() - 0.5) * 20, ty: (Math.random() - 0.5) * 20, tz: (Math.random() - 0.5) * 20,
+                    c: 'rgba(255,255,255,', size: 2.5, baseSize: 2.5, phase: 0
+                });
+            }
+        }
+
+        function project3D(x, y, z) {
+            let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+            let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+            let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
+            if(z2 < -FOV+10) return null; 
+            let scale = FOV / (FOV + z2); 
+            return { x: (width/2) + x2*scale, y: (height/2) - y1*scale, scale: scale, z: z2 };
+        }
+
+        function animate() {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = (state === 3) ? `rgba(0,0,0,0.4)` : `rgba(1,1,2,0.6)`;
+            ctx.fillRect(0, 0, width, height);
+
+            time += 0.02;
+            if(!isDragging && state >= 1 && state < 3) angleY -= 0.002; 
+            if(state === 3) angleY -= 0.05; // 坍縮時極速自轉
+
+            ctx.globalCompositeOperation = 'screen';
+            let projected = [];
+
+            particles.forEach(p => {
+                // 狀態機控制物理行為
+                if (state === 0) { // 散亂星空 (Z軸衝刺)
+                    p.z -= 5;
+                    if(p.z < -1000) { p.z = 2000; p.x = (Math.random() - 0.5) * 3000; p.y = (Math.random() - 0.5) * 3000; }
+                } else if (state === 1) { // 匯聚 (Lerp 至目標)
+                    p.x += (p.tx - p.x) * 0.015;
+                    p.y += (p.ty - p.y) * 0.015;
+                    p.z += (p.tz - p.z) * 0.015;
+                } else if (state === 2) { // 呼吸波浪
+                    p.y = p.ty + Math.sin(time * 2 + p.phase) * 5;
+                    p.size = p.baseSize * (1 + Math.sin(time * 3 + p.phase) * 0.5);
+                } else if (state === 3) { // 坍縮奇點
+                    p.x *= 0.85; p.y *= 0.85; p.z *= 0.85;
+                }
+
+                let proj = project3D(p.x, p.y, p.z);
+                if(proj) projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: p.c, s: p.size });
+            });
+
+            projected.sort((a,b) => b.z - a.z);
+
+            projected.forEach(p => {
+                let s = p.s * p.sc; if(s < 0.1) return;
+                ctx.beginPath(); ctx.arc(p.x, p.y, s, 0, Math.PI*2);
+                
+                let alpha = (state === 0) ? Math.min(1, p.sc * 2) : Math.min(1, p.sc * 0.8);
+                ctx.fillStyle = p.c + `${alpha})`;
+                
+                if (state >= 1 && state < 3 && s > 1.5) {
+                    ctx.shadowBlur = 10; ctx.shadowColor = p.c + '1)';
+                } else { ctx.shadowBlur = 0; }
+                
+                ctx.fill();
+            });
+
+            if (state < 4) requestAnimationFrame(animate);
+            else { ctx.clearRect(0,0,width,height); } // 徹底寂滅
+        }
+
+        // ================= 互動控制 =================
+        function onDown(e) { if(state === 3 || state === 4) return; isDragging = true; lastMouseX = e.touches?e.touches[0].clientX:e.clientX; lastMouseY = e.touches?e.touches[0].clientY:e.clientY; }
+        function onMove(e) { if (!isDragging) return; let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; angleY += (curX-lastMouseX)*0.008; angleX += (curY-lastMouseY)*0.008; angleX = Math.max(-Math.PI/2, Math.min(Math.PI/2, angleX)); lastMouseX=curX; lastMouseY=curY; }
+        function onUp() { isDragging = false; }
+        canvas.addEventListener('mousedown', onDown); window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+        canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
+
+        // ================= 劇本：成住壞空引擎 =================
+        async function runZenEngine() {
+            initParticles();
+            animate();
+            
+            await sleep(100);
+            document.getElementById('page-curtain').style.opacity = '0';
+
+            // 1. 散亂 (觀賞星空)
+            await sleep(2000);
+
+            // 2. 成：萬法匯聚 (觸發法音)
+            state = 1;
+            playDharmaSound('form');
+            document.getElementById('status-panel').style.opacity = '1';
+            await sleep(6000); // 等待粒子歸位
+
+            // 3. 住：安住觀察
+            state = 2;
+            document.getElementById('ui-layer').style.opacity = '1';
+            await sleep(12000); // 讓行者把玩 360 度旋轉
+
+            // 4. 壞：奇點坍縮
+            state = 3;
+            document.getElementById('ui-layer').style.opacity = '0';
+            document.getElementById('status-panel').style.opacity = '0';
+            await sleep(2500);
+
+            // 5. 空：極光寂滅
+            const flash = document.getElementById('golden-flash');
+            flash.style.opacity = '1'; 
+            playDharmaSound('seed');
+            await sleep(200); 
+            
+            state = 4; // Canvas 停止渲染
+            flash.style.transition = 'opacity 4s ease-in';
+            flash.style.opacity = '0';
+            await sleep(3000); 
+
+            // 6. 菩提心：0 + 1
+            const immortalSeed = document.getElementById('immortal-seed');
+            immortalSeed.style.opacity = '1'; 
+            immortalSeed.classList.add('seed-heartbeat');
+
+            await sleep(2000);
+            document.getElementById('profound-text').style.opacity = '1'; 
+
+            await sleep(10000); 
+            navigateTo('index.html'); 
+        }
+
+        function navigateTo(url) {
+            document.getElementById('page-curtain').style.opacity = '1';
+            setTimeout(() => { window.location.href = url; }, 1000);
+        }
+
+        window.addEventListener('load', runZenEngine);
+    </script>
+</body>
+</html>

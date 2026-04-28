@@ -622,6 +622,7 @@
     <div class="mala-wrap" id="mala-wrap">
         <svg class="mala-svg" id="mala-svg" viewBox="0 0 380 168" xmlns="http://www.w3.org/2000/svg" style="overflow:hidden;">
             <defs>
+                
                 <radialGradient id="bead-main" cx="34%" cy="28%" r="68%" fx="34%" fy="28%">
     <stop offset="0%" stop-color="#fffbee" stop-opacity="1"/>
     <stop offset="25%" stop-color="#fce57a" stop-opacity="0.95"/>
@@ -634,6 +635,13 @@
     <stop offset="70%" stop-color="#d4af37" stop-opacity="0.9"/>
     <stop offset="100%" stop-color="#3e1f00" stop-opacity="1"/>
 </radialGradient>
+<radialGradient id="guru-halo" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#fff8dc" stop-opacity="0.8"/>
+    <stop offset="35%" stop-color="#d4af37" stop-opacity="0.55"/>
+    <stop offset="65%" stop-color="#b8860b" stop-opacity="0.15"/>
+    <stop offset="100%" stop-color="#d4af37" stop-opacity="0"/>
+</radialGradient>
+
 
                 <radialGradient id="bead-amber" cx="34%" cy="28%" r="68%" fx="34%" fy="28%">
                     <stop offset="0%"   stop-color="#fffbee" stop-opacity="1"/>
@@ -835,6 +843,7 @@ function initMala() {
     const g = document.getElementById('mala-g');
     let html = '';
 
+    // ── 繩線三層（陰影＋主繩＋高光線）──
     html += `<circle cx="${MALA_CX}" cy="${MALA_CY}" r="${MALA_R+2}" fill="none" stroke="rgba(0,0,0,0.45)" stroke-width="7" opacity="0.55"/>`;
     html += `<circle cx="${MALA_CX}" cy="${MALA_CY}" r="${MALA_R}" fill="none" stroke="url(#cord-grad)" stroke-width="4" opacity="0.82"/>`;
     html += `<circle cx="${MALA_CX}" cy="${MALA_CY}" r="${MALA_R-1.5}" fill="none" stroke="rgba(255,230,160,0.16)" stroke-width="1.2"/>`;
@@ -848,15 +857,24 @@ function initMala() {
         const isGuru   = (i === 0);
         const isMarker = !isGuru && (i % 9 === 0);
 
-        const r      = isGuru ? 23 : isMarker ? 15.5 : 13.5;
+        // 1. 調整半徑：整體珠子放大，自然縮減間距；主珠特別放大彰顯莊嚴
+        const r      = isGuru ? 28 : isMarker ? 18.5 : 16.5;
+
         const fill   = isGuru   ? 'url(#bead-guru)'   :
                        isMarker ? 'url(#bead-marker)' : 'url(#bead-main)';
         const stroke = isGuru   ? 'rgba(255,215,60,0.88)' :
                        isMarker ? 'rgba(210,168,38,0.72)'  : 'rgba(155,78,22,0.52)';
         const sw     = isGuru ? 1.6 : isMarker ? 1.1 : 0.75;
 
+        // 2. 主珠專屬的柔和光暈 (取代原本生硬的虛線觸角)
+        if (isGuru) {
+            html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r * 2.3}" fill="url(#guru-halo)" pointer-events="none"/>`;
+        }
+
+        // ── 珠體 ──
         html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" filter="url(#${isGuru ? 'guru-glow' : 'bead-glow'})"/>`;
 
+        // ── 光斑：依賴變數 r 動態計算，確保放大後光澤依然正確 ──
         const hx = (x - r * 0.30).toFixed(2);
         const hy = (y - r * 0.33).toFixed(2);
         const hr = (r * 0.21).toFixed(2);
@@ -866,9 +884,9 @@ function initMala() {
         const h2y = (y - r * 0.16).toFixed(2);
         html += `<circle cx="${h2x}" cy="${h2y}" r="${(r * 0.065).toFixed(2)}" fill="rgba(255,255,255,0.92)"/>`;
 
+        // ── 裝飾線：移除主珠虛線，僅保留細緻內環；記數珠維持細金線 ──
         if (isGuru) {
-            html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r+6}" fill="none" stroke="rgba(212,175,55,0.45)" stroke-width="2.5" stroke-dasharray="4 3"/>`;
-            html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(r*0.52).toFixed(1)}" fill="none" stroke="rgba(255,220,80,0.28)" stroke-width="1.2"/>`;
+            html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(r*0.52).toFixed(1)}" fill="none" stroke="rgba(255,220,80,0.35)" stroke-width="1.2"/>`;
         }
 
         if (isMarker) {
@@ -879,6 +897,7 @@ function initMala() {
     g.innerHTML = html;
     g.setAttribute('transform', `rotate(${malaAngle}, ${MALA_CX}, ${MALA_CY})`);
 }
+
 
 
 function animateMala(from, to) {

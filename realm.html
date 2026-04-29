@@ -98,6 +98,25 @@
             box-shadow: 0 0 25px rgba(212,175,55,0.3); backdrop-filter: blur(5px);
         }
         .rr-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.3); }
+        
+        #fast-preview { 
+    position: absolute; 
+    top: 50%; 
+    width: 100%; 
+    transform: translateY(-50%);
+    color: var(--cyan); 
+    font-size: 1.6rem; 
+    letter-spacing: 8px; 
+    opacity: 0; 
+    text-align: center; 
+    text-shadow: 0 0 20px rgba(139,168,156,0.8);
+    font-weight: bold; 
+    z-index: 100; 
+    pointer-events: none; 
+    transition: opacity 0.15s ease-in-out; 
+}
+
+        
     </style>
 </head>
 <body>
@@ -128,6 +147,8 @@
     </div>
 
     <canvas id="realmCanvas"></canvas>
+    <div id="fast-preview"></div>
+
     <div id="golden-flash"></div>
     <div id="immortal-seed"></div>
     
@@ -195,10 +216,30 @@
                 if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if(audioCtx.state === 'suspended') audioCtx.resume();
                 let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
+                
+else if (phase === 'preview') { 
+    osc.type = 'sine';
+    // 頻率從 108Hz 揚升到 864Hz (約 3.5 秒)
+    osc.frequency.setValueAtTime(108, audioCtx.currentTime); 
+    osc.frequency.exponentialRampToValueAtTime(864, audioCtx.currentTime + 3.5);
+    
+    // 音量淡入淡出控制
+    gain.gain.setValueAtTime(0.01, audioCtx.currentTime); 
+    gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.5); 
+    gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 3.0); 
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 3.5);
+    
+    osc.connect(gain); 
+    gain.connect(audioCtx.destination); 
+    osc.start(); 
+    osc.stop(audioCtx.currentTime + 3.5);
+}
+
                 if (phase === 'form') { 
                     osc.type = 'sine'; osc.frequency.setValueAtTime(108, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(216, audioCtx.currentTime + 8);
                     gain.gain.setValueAtTime(0.01, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 4); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 10);
                     osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 10);
+                    
                 } else if (phase === 'seed') { 
                     osc.type = 'triangle'; osc.frequency.setValueAtTime(864, audioCtx.currentTime);
                     gain.gain.setValueAtTime(1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 4);
@@ -267,6 +308,24 @@
             initParticles(); animate();
             await sleep(100); document.getElementById('page-curtain').style.opacity = '0';
             await sleep(2000);
+
+    const RealmNames = [
+        "最勝光遍照", "種種香蓮華妙莊嚴", "一切寶莊嚴普照光", "種種光明華莊嚴", 
+        "普放妙華光", "淨妙光明", "眾華光莊嚴", "出生威德光", "出妙音聲", "金剛幢", 
+        "恆出現帝青寶光明", "光明照耀", "娑婆與極樂", "寂靜離塵光", "眾妙光明燈", 
+        "清淨光遍照", "寶莊嚴", "離塵", "清淨光普照", "妙寶焰"
+    ];
+    
+    const previewEl = document.getElementById('fast-preview');
+    previewEl.style.opacity = '1';
+    playDharmaSound('preview'); // 播放揚升音效
+    
+    for(let i = 0; i < 20; i++) {
+        previewEl.innerText = `第${i+1}重 ． ${RealmNames[i]}`;
+        await sleep(150); // 每重停留 0.15 秒，總共 3 秒
+    }
+    previewEl.style.opacity = '0';
+    await sleep(500); // 留一點空白轉場時間
 
             state = 1; playDharmaSound('form'); document.getElementById('status-panel').style.opacity = '1'; await sleep(6000); 
             state = 2; document.getElementById('ui-layer').style.opacity = '1'; await sleep(12000); 

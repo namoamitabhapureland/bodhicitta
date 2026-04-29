@@ -67,10 +67,7 @@
             display: flex; flex-direction: column; align-items: center;
         }
 
-        .cert-header {
-            color: rgba(243,229,171,0.6); font-size: 0.85rem; letter-spacing: 6px; 
-            margin-bottom: 20px;
-        }
+        .cert-header { color: rgba(243,229,171,0.6); font-size: 0.85rem; letter-spacing: 6px; margin-bottom: 20px; }
 
         /* 聖物：無相金剛蓮印 */
         .cert-mandala {
@@ -84,10 +81,7 @@
         .cert-name-label { color: var(--cyan); font-size: 0.75rem; letter-spacing: 3px; margin-bottom: 8px; }
         .cert-name { color: var(--gold); font-size: 1.5rem; font-weight: bold; letter-spacing: 4px; text-shadow: 0 0 12px rgba(212,175,55,0.6); }
 
-        .cert-desc {
-            color: #ddd; font-size: 0.9rem; line-height: 2.2; letter-spacing: 2px; text-align: center;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8); margin-bottom: 30px;
-        }
+        .cert-desc { color: #ddd; font-size: 0.9rem; line-height: 2.2; letter-spacing: 2px; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.8); margin-bottom: 30px; }
 
         .cert-actions { display: flex; width: 100%; gap: 15px; transition: opacity 0.8s; }
         
@@ -386,7 +380,7 @@
         canvas.addEventListener('mousedown', onDown); window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
         canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
 
-        // 🌟 主流程引擎：完全移除防呆條件，無條件降臨法旨 (優化時間軸)
+        // 🌟 主流程引擎
         async function runZenEngine() {
             state = -1; animate();
             await sleep(100); document.getElementById('page-curtain').style.opacity = '0';
@@ -440,15 +434,26 @@
             } catch(e) {}
         }
 
-        // 🌟 核心：寫入印記並歸返，絕對斷絕迴圈
+        // 🌟 核心：寫入印記並同步「主系統階位」，絕對斷絕迴圈！
         function claimCertificate() {
             document.getElementById('cert-ui').style.opacity = '0';
             
             let db; try { db = JSON.parse(localStorage.getItem('PX_V15.0')) || {}; } catch(e) { db = {}; }
             
+            // 1. 蓋上印記
             if (!db.milestones) db.milestones = {};
             db.milestones['rank_10'] = true;
             
+            // 2. 幫主系統算出當前階位並存檔 (打破迴圈的究極防護)
+            let currentDays = (db.points || 0) / 100; 
+            let calculatedRank = "";
+            if (currentDays >= 111100) { let lv = Math.min(10, Math.floor((currentDays - 111100) / 100000) + 1); calculatedRank = ["初地", "二地", "三地", "四地", "五地", "六地", "七地", "八地", "九地", "十地"][lv - 1] + "菩薩"; }
+            else if (currentDays >= 11100) { let lv = Math.floor((currentDays - 11100) / 10000) + 1; calculatedRank = ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][lv - 1] + "迴向位"; }
+            else if (currentDays >= 1100) { let lv = Math.floor((currentDays - 1100) / 1000) + 1; calculatedRank = ["初", "二", "三", "四", "五", "六", "七", "八", "九", "十"][lv - 1] + "行位"; }
+            else if (currentDays >= 100) { let lv = Math.floor((currentDays - 100) / 100) + 1; calculatedRank = ["初住", "二住", "三住", "四住", "五住", "六住", "七住", "八住", "九住", "十住"][lv - 1] + "位"; }
+            else { let lv = Math.min(10, Math.floor(currentDays / 10) + 1); calculatedRank = ["初信位", "二信位", "三信位", "四信位", "五信位", "六信位", "七信位", "八信位", "九信位", "十信位"][lv - 1]; }
+            db.currentRank = calculatedRank;
+
             localStorage.setItem('PX_V15.0', JSON.stringify(db));
             navigateTo('index.html');
         }

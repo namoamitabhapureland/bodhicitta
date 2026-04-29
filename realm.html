@@ -58,7 +58,7 @@
         .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; opacity: 0; transition: opacity 2s;}
         .drag-hint { color:rgba(212,175,55,0.6); font-size:0.75rem; letter-spacing:2px; text-shadow: 0 0 5px rgba(0,0,0,0.8); }
 
-             /* ================= 賜寶法旨卡片全新排版 ================= */
+        /* ================= 賜寶法旨卡片全新排版 ================= */
         #realm-reward {
             position: absolute; top: 53%; left: 50%; transform: translate(-50%, -50%);
             display: flex; flex-direction: column; align-items: center; z-index: 200;
@@ -214,7 +214,7 @@
                 if (phase === 'preview') { 
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(108, audioCtx.currentTime); 
-                    osc.frequency.exponentialRampToValueAtTime(864, audioCtx.currentTime + 7.0); // 7秒縮時
+                    osc.frequency.exponentialRampToValueAtTime(864, audioCtx.currentTime + 7.0); 
                     gain.gain.setValueAtTime(0.01, audioCtx.currentTime); 
                     gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.5); 
                     gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 6.5); 
@@ -250,7 +250,6 @@
         function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
         window.addEventListener('resize', resize); resize();
 
-        // 預覽粒子生成器
         function initPreviewRealm(id) {
             realmParticles = [];
             currentPreviewId = id;
@@ -375,7 +374,6 @@
             ctx.shadowBlur = 0; 
         }
 
-        // 動畫主迴圈
         function animate() {
             ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = (state === 3) ? `rgba(0,0,0,0.4)` : `rgba(1,1,2,0.6)`; ctx.fillRect(0, 0, width, height);
             time += 0.02; 
@@ -413,15 +411,12 @@
         canvas.addEventListener('mousedown', onDown); window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
         canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
 
-        // 主流程引擎
         async function runZenEngine() {
-            // 進入預覽狀態
             state = -1; 
             animate();
             await sleep(100); document.getElementById('page-curtain').style.opacity = '0';
             await sleep(1000);
 
-            // --- 20重極速縮時放映 ---
             const RealmNames = [
                 "最勝光遍照", "種種香蓮華妙莊嚴", "一切寶莊嚴普照光", "種種光明華莊嚴", 
                 "普放妙華光", "淨妙光明", "眾華光莊嚴", "出生威德光", "出妙音聲", "金剛幢", 
@@ -442,20 +437,21 @@
             realmParticles = []; 
             await sleep(500);
             
-            // --- 切換回一真法界 ---
             state = 0;
             initParticles();
             await sleep(500);
 
-            state = 1; playDharmaSound('form'); document.getElementById('status-panel').style.opacity = '1'; await sleep(6000); 
-            state = 2; document.getElementById('ui-layer').style.opacity = '1'; await sleep(12000); 
-            state = 3; document.getElementById('ui-layer').style.opacity = '0'; document.getElementById('status-panel').style.opacity = '0'; await sleep(2500);
+            // ⚡ 【時間軸優化】：把等待時間大幅縮短，讓升階儀式更加明快
+            state = 1; playDharmaSound('form'); document.getElementById('status-panel').style.opacity = '1'; await sleep(3000); // 縮短為 3秒
+            state = 2; document.getElementById('ui-layer').style.opacity = '1'; await sleep(4000); // 呼吸縮短為 4秒
+            state = 3; document.getElementById('ui-layer').style.opacity = '0'; document.getElementById('status-panel').style.opacity = '0'; await sleep(1500); 
+            
             const flash = document.getElementById('golden-flash'); flash.style.opacity = '1'; playDharmaSound('seed'); await sleep(200); 
-            state = 4; flash.style.transition = 'opacity 4s ease-in'; flash.style.opacity = '0'; await sleep(3000); 
+            state = 4; flash.style.transition = 'opacity 4s ease-in'; flash.style.opacity = '0'; await sleep(1500); 
 
             const immortalSeed = document.getElementById('immortal-seed');
             immortalSeed.style.opacity = '1'; immortalSeed.classList.add('seed-heartbeat');
-            await sleep(2000); document.getElementById('profound-text').style.opacity = '1'; 
+            await sleep(1500); document.getElementById('profound-text').style.opacity = '1'; 
 
             let db;
             try { db = JSON.parse(localStorage.getItem('PX_V15.0')) || {}; } catch(e) { db = {}; }
@@ -471,8 +467,9 @@
             db.currentRank = calculatedRank;
             localStorage.setItem('PX_V15.0', JSON.stringify(db));
 
-            if (currentDays >= 90 && currentDays < 100 && !db.milestones?.['rank_10']) {
-                await sleep(3000); 
+            // ⚡ 【語法防呆優化】：避免舊版手機瀏覽器看不懂 ?. 語法
+            if (currentDays >= 90 && currentDays < 100 && !(db.milestones && db.milestones['rank_10'])) {
+                await sleep(2000); 
                 document.getElementById('profound-text').style.opacity = '0'; 
                 
                 document.getElementById('immortal-seed').style.top = '15%';
@@ -487,13 +484,12 @@
                 setTimeout(() => { document.getElementById('ri-3').style.opacity = '1'; document.getElementById('ri-3').style.transform = 'translateY(0)'; }, 2500);
                 setTimeout(() => { document.getElementById('rr-btn').style.opacity = '1'; }, 4000);
 
-                 
                 try {
                     let m = new SpeechSynthesisUtterance("十信功圓，法界賜寶，請領受法益。"); 
                     m.lang = 'zh-TW'; m.rate = 0.85; window.speechSynthesis.speak(m);
                 } catch(e) {}
             } else {
-                await sleep(9000); navigateTo('index.html'); 
+                await sleep(5000); navigateTo('index.html'); 
             }
         }
 
@@ -529,15 +525,9 @@
             setTimeout(() => { window.location.href = url; }, 1000);
         }
 
-        
-        // --- 全域防呆喚醒音效 (Global Audio Unlocker) ---
         function unlockAudio() {
-            if (audioCtx && audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            } else if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                audioCtx.resume();
-            }
+            if (audioCtx && audioCtx.state === 'suspended') { audioCtx.resume(); } 
+            else if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); }
         }
         window.addEventListener('click', unlockAudio);
         window.addEventListener('touchstart', unlockAudio, { passive: true });

@@ -1,670 +1,197 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="manifest" href="manifest_en.json">
-    <title>System · One True Realm (Ascension Decree)</title>
+    <title>自性金蓮 ． 視覺動畫測試</title>
     <style>
-        :root { --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c; --bg-deep: #000000; }
-        body { margin: 0; padding: 0; height: 100vh; overflow: hidden; background: radial-gradient(circle at 50% 50%, #1a2228 0%, #000000 70%); color: #fff; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
-
-        .top-nav-btn {
-            position: absolute; top: 20px; left: 20px;
-            background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(212,175,55,0.3); color: var(--gold); 
-            padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; letter-spacing: 1px; 
-            display: flex; align-items: center; gap: 6px; z-index: 1000; cursor: pointer; 
-            backdrop-filter: blur(5px); transition: opacity 0.8s, transform 0.3s;
-        }
-        .top-nav-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
-
-        #status-panel {
-            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 340px;
-            border-left: 2px solid rgba(212,175,55,0.8); padding: 10px 20px; z-index: 100; pointer-events: none;
-            opacity: 0; transition: opacity 2s ease-in-out;
-        }
-        .status-title { font-size: 1.15rem; font-weight: bold; color: var(--gold); letter-spacing: 2px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); }
-        .status-desc { font-size: 0.85rem; color: #ddd; line-height: 1.8; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
-
-        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
-
-        #golden-flash { 
-            position: fixed; inset: 0; background: radial-gradient(circle, #ffffff 0%, #f3e5ab 40%, #d4af37 100%);
-            mix-blend-mode: screen; opacity: 0; z-index: 99998; pointer-events: none; transition: opacity 0.2s ease-out; 
-        }
-
-        #immortal-seed {
-            position: absolute; top: 50%; left: 50%; margin-top: -12px; margin-left: -12px;
-            width: 24px; height: 24px; background: radial-gradient(circle, #fff 10%, #ffe 30%, var(--gold) 60%, var(--solid-gold) 100%);
-            border-radius: 50%; opacity: 0; filter: blur(1.5px); 
-            transition: opacity 2s, top 2s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 100;
+        :root { 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --bg-deep: #020203; 
         }
         
-        .seed-heartbeat { animation: heartbeat-pulse 1.4s infinite cubic-bezier(0.2, 0.8, 0.4, 1); }
-        @keyframes heartbeat-pulse {
-            0% { transform: scale(1); box-shadow: 0 0 30px var(--gold), 0 0 60px var(--solid-gold); }
-            15% { transform: scale(1.6); box-shadow: 0 0 60px var(--gold), 0 0 120px var(--solid-gold), 0 0 180px #fff; }
-            30% { transform: scale(1.2); box-shadow: 0 0 40px var(--gold), 0 0 80px var(--solid-gold); }
-            45% { transform: scale(1.6); box-shadow: 0 0 60px var(--gold), 0 0 120px var(--solid-gold), 0 0 180px #fff; }
-            100% { transform: scale(1); box-shadow: 0 0 30px var(--gold), 0 0 60px var(--solid-gold); }
+        body { 
+            margin: 0; padding: 0; height: 100vh; height: 100dvh; 
+            overflow: hidden; 
+            background: radial-gradient(circle at 50% 50%, #111518 0%, var(--bg-deep) 100%); 
+            color: #fff; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
-        #profound-text { 
-            position: absolute; top: calc(15% + 40px); width: 100%; color: var(--gold); 
-            font-size: 1.05rem; letter-spacing: 5px; word-spacing: 8px; opacity: 0; 
-            transition: opacity 4s ease; text-align: center; text-shadow: 0 0 15px var(--solid-gold), 0 0 3px #fff; 
-            line-height: 1.8; font-weight: 300; z-index: 100; pointer-events: none; text-transform: uppercase; 
+        /* 宇宙光點 */
+        .center-glow {
+            position: absolute; width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%);
+            border-radius: 50%; pointer-events: none; z-index: 0;
+            animation: pulse-glow 4s infinite alternate;
         }
+        @keyframes pulse-glow { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.2); opacity: 1; } }
 
-        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; opacity: 0; transition: opacity 2s;}
-        .drag-hint { color:rgba(212,175,55,0.6); font-size:0.75rem; letter-spacing:2px; text-transform: uppercase; text-shadow: 0 0 5px rgba(0,0,0,0.8); }
-
-        /* ================= 頂級法旨證書 UI ================= */
+        /* 證書 UI 框架 */
         #cert-ui {
-            position: absolute; top: 62%; left: 50%; transform: translate(-50%, -40%);
-            width: 88%; max-width: 380px; z-index: 200;
-            opacity: 0; pointer-events: none; 
-            transition: opacity 2.5s ease, transform 2.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-            
-            background: linear-gradient(135deg, rgba(12, 15, 14, 0.85), rgba(2, 3, 2, 0.95));
-            border: 1px solid rgba(212, 175, 55, 0.35);
-            border-radius: 24px; padding: 40px 25px 30px 25px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.9), inset 0 0 25px rgba(243,229,171,0.05);
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            width: 88%; max-width: 380px; z-index: 10;
+            background: linear-gradient(135deg, rgba(15,15,10,0.85), rgba(0,0,0,0.9));
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 20px; padding: 40px 20px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            backdrop-filter: blur(15px);
             display: flex; flex-direction: column; align-items: center;
+            transition: all 1s ease;
         }
 
-        /* 證書背後神聖光暈 */
-        #cert-ui::before {
-            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 100%; height: 100%; border-radius: 24px;
-            background: radial-gradient(circle at 50% 15%, rgba(212,175,55,0.15) 0%, transparent 60%);
-            pointer-events: none; z-index: -1;
-        }
+        .cert-header { color: var(--gold); font-size: 0.9rem; letter-spacing: 6px; margin-bottom: 30px; font-weight: bold; }
 
-        .cert-header {
-            color: rgba(243,229,171,0.7); font-size: 0.85rem; letter-spacing: 6px; 
-            margin-bottom: 25px; font-weight: bold; text-transform: uppercase;
-        }
-
-        /* 靜止寶石容器 */
-        .gem-container {
-            width: 160px; height: 160px; margin-bottom: 20px;
-            position: relative; display: flex; justify-content: center; align-items: center;
-        }
-        .gem-svg {
-            position: absolute; width: 100%; height: 100%;
-            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-            filter: drop-shadow(0 0 12px rgba(255,255,255,0.15));
-        }
-
-        .cert-name-wrap { text-align: center; margin-bottom: 20px; width: 100%; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 20px; }
-        .cert-name-label { color: var(--cyan); font-size: 0.7rem; letter-spacing: 3px; margin-bottom: 8px; text-transform: uppercase; }
-        .cert-name { color: var(--gold); font-size: 1.4rem; font-weight: bold; letter-spacing: 4px; text-shadow: 0 0 12px rgba(212,175,55,0.6); }
-
-        .cert-desc {
-            color: #ddd; font-size: 0.8rem; line-height: 2.2; letter-spacing: 1.5px; text-align: center;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8); margin-bottom: 30px; min-height: 120px;
-        }
-        .cert-desc span.highlight { color: var(--solid-gold); font-weight: bold; }
-        
-        /* 首句金色蓮花排版 */
-        .cert-desc-title {
-            display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 12px;
-            color: var(--gold); font-size: 0.9rem; letter-spacing: 2px; font-weight: bold; text-shadow: 0 0 8px rgba(212,175,55,0.4); text-transform: uppercase;
-        }
-        .cert-desc-title svg { width: 14px; height: 14px; fill: rgba(212, 175, 55, 0.85); }
-
-        .cert-actions { display: flex; width: 100%; gap: 15px; transition: opacity 0.8s; }
-        
-        .btn-claim {
-            flex: 1; padding: 14px 0; border-radius: 30px; border: 1px solid var(--solid-gold);
-            background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(0,0,0,0.8));
-            color: var(--gold); font-size: 0.85rem; font-weight: bold; letter-spacing: 2px;
-            cursor: pointer; box-shadow: 0 0 20px rgba(212,175,55,0.15); transition: all 0.3s;
-            text-transform: uppercase;
-        }
-        .btn-claim:active { transform: scale(0.95); background: rgba(212,175,55,0.4); }
-
-        /* 截圖模式按鈕 */
-        .btn-screenshot {
+        /* 🌸 蓮花容器 */
+        #lotus-box {
+            width: 180px; height: 180px; margin-bottom: 25px;
             display: flex; align-items: center; justify-content: center;
-            width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(139,168,156,0.4);
-            background: rgba(255,255,255,0.03); color: var(--cyan); cursor: pointer; transition: all 0.3s;
+            position: relative;
         }
-        .btn-screenshot:active { transform: scale(0.9); background: rgba(139,168,156,0.2); }
-        .btn-screenshot svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; }
 
-        #fast-preview { 
-            position: absolute; top: 50%; width: 100%; transform: translateY(-50%);
-            color: var(--cyan); font-size: 1.2rem; letter-spacing: 4px; opacity: 0; 
-            text-align: center; text-shadow: 0 0 20px rgba(139,168,156,0.8);
-            font-weight: bold; z-index: 100; pointer-events: none; transition: opacity 0.1s ease-in-out; 
-            text-transform: uppercase; padding: 0 20px;
+        /* 蓮花自轉 */
+        .lotus-spin { 
+            animation: slow-spin 40s linear infinite; 
+            filter: drop-shadow(0 0 15px rgba(212,175,55,0.4));
         }
+        @keyframes slow-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* ✨ 核心動畫：線條描繪與色彩淡入 ✨ */
+        .draw-petal {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            fill-opacity: 0; /* 初始完全透明 */
+            animation: 
+                dash-draw 3s cubic-bezier(0.4, 0, 0.2, 1) forwards 0.5s, /* 0.5秒後開始畫線，持續3秒 */
+                color-fade 3s ease forwards 2.5s; /* 2.5秒時開始注入琉璃色彩，持續3秒 */
+        }
+        
+        .draw-vein {
+            stroke-dasharray: 500;
+            stroke-dashoffset: 500;
+            animation: dash-draw 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards 1s;
+        }
+
+        @keyframes dash-draw { to { stroke-dashoffset: 0; } }
+        @keyframes color-fade { to { fill-opacity: 0.75; } } /* 保持半透明琉璃感 */
+
+        /* 文字區 */
+        .rank-name { color: var(--gold); font-size: 1.4rem; font-weight: bold; letter-spacing: 4px; margin-bottom: 10px; transition: 0.5s; }
+        .rank-desc { color: #ccc; font-size: 0.85rem; letter-spacing: 2px; transition: 0.5s; }
+
+        /* 控制按鈕 */
+        .controls { position: absolute; bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 100%; z-index: 20; }
+        .demo-btn { padding: 8px 12px; font-size: 0.8rem; border-radius: 20px; border: 1px solid rgba(212,175,55,0.4); background: rgba(0,0,0,0.7); color: var(--gold); cursor: pointer; transition: 0.3s; }
+        .demo-btn:hover { background: rgba(212,175,55,0.2); }
     </style>
 </head>
 <body>
-    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
+
+    <svg style="position: absolute; width: 0; height: 0;">
         <defs>
-            <linearGradient id="facet-light" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.85"/><stop offset="100%" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
-            <linearGradient id="facet-dark" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#000" stop-opacity="0.1"/><stop offset="100%" stop-color="#000" stop-opacity="0.4"/></linearGradient>
-            
-            <linearGradient id="c-cyan" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e0f7fa"/><stop offset="100%" stop-color="#80deea"/></linearGradient>
-            <linearGradient id="c-pink" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fce4ec"/><stop offset="100%" stop-color="#f48fb1"/></linearGradient>
-            <linearGradient id="c-purple" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f3e5f5"/><stop offset="100%" stop-color="#ce93d8"/></linearGradient>
-            <linearGradient id="c-gold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fffde7"/><stop offset="100%" stop-color="#ffd54f"/></linearGradient>
-            <linearGradient id="c-blue" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e3f2fd"/><stop offset="100%" stop-color="#90caf9"/></linearGradient>
-
-            <g id="crystal-shape">
-                <polygon points="50,10 20,40 50,48" fill="url(#facet-light)" />
-                <polygon points="20,40 50,95 50,48" fill="url(#facet-dark)" />
-                <polygon points="50,10 80,40 50,48" fill="url(#facet-dark)" />
-                <polygon points="80,40 50,95 50,48" fill="url(#facet-light)" />
-                <polyline points="50,10 20,40 50,95 80,40 50,10" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="0.8" stroke-linejoin="round"/>
-                <polyline points="20,40 50,48 80,40" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="0.8" stroke-linejoin="round"/>
-                <line x1="50" y1="10" x2="50" y2="95" stroke="rgba(255,255,255,0.5)" stroke-width="0.8"/>
-            </g>
-
-            <g id="nine-gems">
-                <g transform="translate(62, 5) scale(0.25) rotate(25 50 50)"><polygon points="50,10 20,40 50,95 80,40" fill="url(#c-gold)" /><use href="#crystal-shape" /></g>
-                <g transform="translate(73, 28) scale(0.2) rotate(60 50 50)"><polygon points="50,10 20,40 50,95 80,40" fill="url(#c-pink)" /><use href="#crystal-shape" /></g>
-                <g transform="translate(60, 62) scale(0.22) rotate(15 50 50)"><polygon points="50,10 20,40 50,95 80,40" fill="url(#c-purple)" /><use href="#crystal-shape" /></g>
-                <g transform="translate(43, 76) scale(0.18) rotate(10 50 50)"><polygon points="50,10 20,40 50,95 80,40" fill="url(#c-blue)" /><use href="#crystal-shape" /></g>
-                <g transform="translate(18, 65) scale(0.25) rotate(-30 50 50)"><polygon points="50,10 20,40 50,95 80,40" fill="url(#c-gold)" /><use href="#crystal-shape" /></g>
-                <g transform="translate(6, 40) scale(0.16) rotate(45 50 50)"><polygon points="50,10 20,40 50,95 80,40" fill="url(#c-cyan)" /><use href="#crystal-shape" /></g>
-                <g transform="translate(12, 12) scale(0.23) rotate(-20 50 50)"><polygon points="50,10 20,40 50,95 80,40" fill="url(#c-pink)" /><use href="#crystal-shape" /></g>
-                <g transform="translate(36, 0) scale(0.18) rotate(-10 50 50)"><polygon points="50,10 20,40 50,95 80,40" fill="url(#c-blue)" /><use href="#crystal-shape" /></g>
-                <g transform="translate(54, 18) scale(0.12) rotate(-40 50 50)"><polygon points="50,10 20,40 50,95 80,40" fill="url(#c-cyan)" /><use href="#crystal-shape" /></g>
-            </g>
-            
-            <g id="lotus-petal"><path d="M12 2C16 8 18 14 12 22C6 14 8 8 12 2Z"/></g>
+            <radialGradient id="grad-purple" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#f3e5f5" />
+                <stop offset="100%" stop-color="#ce93d8" />
+            </radialGradient>
+            <radialGradient id="grad-blue" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#e0f7fa" />
+                <stop offset="100%" stop-color="#81d4fa" />
+            </radialGradient>
+            <radialGradient id="grad-pink" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#fce4ec" />
+                <stop offset="100%" stop-color="#f48fb1" />
+            </radialGradient>
+            <radialGradient id="grad-multi" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#b2ebf2" /> <stop offset="50%" stop-color="#f8bbd0" /> <stop offset="100%" stop-color="#fff9c4" /> </radialGradient>
+            <radialGradient id="grad-gold" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#fffde7" />
+                <stop offset="100%" stop-color="#ffd54f" />
+            </radialGradient>
         </defs>
     </svg>
 
-    <div id="page-curtain" style="position:fixed; inset:0; background:#000; z-index: 9999999; pointer-events: none; transition: opacity 1s; opacity: 1;"></div>
-
-    <div class="top-nav-btn" id="top-nav" onclick="navigateTo('index_en.html')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-        Return
-    </div>
-
-    <div id="status-panel">
-        <div class="status-title">One True Realm · All is Mind</div>
-        <div class="status-desc">"Formation, existence, destruction, emptiness.<br>Only Bodhi remains indestructible."</div>
-    </div>
-
-    <canvas id="realmCanvas"></canvas>
-    
-    <div id="fast-preview"></div>
-    <div id="golden-flash"></div>
-    <div id="immortal-seed"></div>
-    
-    <div id="profound-text">
-        Bodhicitta · Eternally Indestructible<br>
-        One True Realm · Intrinsically Thus
-    </div>
+    <div class="center-glow"></div>
 
     <div id="cert-ui">
-        <div class="cert-header">✦ Ascension Decree ✦</div>
+        <div class="cert-header">✦ 菩提契印 ✦</div>
         
-        <div class="gem-container">
-            <svg id="svg-faith" class="gem-svg" viewBox="0 0 100 100" style="opacity: 0; transform: scale(0.8);"><use href="#nine-gems" /><g transform="translate(22, 22) scale(0.56)"><polygon points="50,10 20,40 50,95 80,40" fill="url(#c-cyan)" /><use href="#crystal-shape" /></g></svg>
-            <svg id="svg-abode" class="gem-svg" viewBox="0 0 100 100" style="opacity: 0; transform: scale(0.8);"><use href="#nine-gems" /><g transform="translate(22, 22) scale(0.56)"><polygon points="50,10 20,40 50,95 80,40" fill="url(#c-purple)" /><use href="#crystal-shape" /></g></svg>
-            <svg id="svg-practice" class="gem-svg" viewBox="0 0 100 100" style="opacity: 0; transform: scale(0.8);"><use href="#nine-gems" /><g transform="translate(22, 22) scale(0.56)"><polygon points="50,10 20,40 50,95 80,40" fill="url(#c-pink)" /><use href="#crystal-shape" /></g></svg>
-            <svg id="svg-dedication" class="gem-svg" viewBox="0 0 100 100" style="opacity: 0; transform: scale(0.8);"><use href="#nine-gems" /><g transform="translate(22, 22) scale(0.56)"><polygon points="50,10 20,40 50,95 80,40" fill="url(#c-blue)" /><use href="#crystal-shape" /></g></svg>
-            <svg id="svg-ground" class="gem-svg" viewBox="0 0 100 100" style="opacity: 0; transform: scale(0.8);"><use href="#nine-gems" /><g transform="translate(22, 22) scale(0.56)"><polygon points="50,10 20,40 50,95 80,40" fill="url(#c-gold)" /><use href="#crystal-shape" /></g></svg>
-        </div>
+        <div id="lotus-box"></div>
 
-        <div class="cert-name-wrap">
-            <div class="cert-name-label">Practitioner</div>
-            <div class="cert-name" id="cert-name-insert">Unknown</div>
-        </div>
-
-        <div class="cert-desc" id="cert-text-body">
-            </div>
-
-        <div class="cert-actions" id="cert-actions">
-            <button class="btn-claim" onclick="claimCertificate()">Acknowledge & Return</button>
-            <button class="btn-screenshot" onclick="toggleScreenshotMode()" title="Screenshot Mode">
-                <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            </button>
-        </div>
+        <div class="rank-name" id="rank-name">請選擇境界</div>
+        <div class="rank-desc" id="rank-desc">...</div>
     </div>
 
-    <div class="ui-layer" id="ui-layer">
-        <div class="drag-hint">360° Holographic Swipe · Contemplate</div>
+    <div class="controls">
+        <button class="demo-btn" onclick="playAnimation('grad-purple', '蓮池海會', '淡紫琉璃 ． 霞光初現', 'rgba(206, 147, 216, 0.6)')">10萬 (淡紫)</button>
+        <button class="demo-btn" onclick="playAnimation('grad-blue', '不退轉菩薩', '青藍玉露 ． 永不退轉', 'rgba(129, 212, 250, 0.6)')">50萬 (淡藍)</button>
+        <button class="demo-btn" onclick="playAnimation('grad-pink', '無相念佛', '粉櫻湛然 ． 心佛合一', 'rgba(244, 143, 177, 0.6)')">100萬 (粉紅)</button>
+        <button class="demo-btn" onclick="playAnimation('grad-multi', '念佛三昧', '彩色斑斕 ． 入深三昧', 'rgba(248, 187, 208, 0.6)')">1千萬 (彩色)</button>
+        <button class="demo-btn" onclick="playAnimation('grad-gold', '圓滿成佛', '大圓滿耀金 ． 金剛不壞', 'rgba(255, 213, 79, 0.8)')">1億 (耀金)</button>
     </div>
 
     <script>
-        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-        let audioCtx;
-        function playDharmaSound(phase) {
-            try {
-                if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if(audioCtx.state === 'suspended') audioCtx.resume();
-                let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
-                
-                if (phase === 'preview') { 
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(108, audioCtx.currentTime); 
-                    osc.frequency.exponentialRampToValueAtTime(864, audioCtx.currentTime + 7.0); 
-                    gain.gain.setValueAtTime(0.01, audioCtx.currentTime); 
-                    gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.5); 
-                    gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 6.5); 
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 7.0);
-                    osc.connect(gain); gain.connect(audioCtx.destination); 
-                    osc.start(); osc.stop(audioCtx.currentTime + 7.0);
-                } else if (phase === 'form') { 
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(108, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(216, audioCtx.currentTime + 8);
-                    gain.gain.setValueAtTime(0.01, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 4); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 10);
-                    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 10);
-                } else if (phase === 'seed') { 
-                    osc.type = 'triangle'; osc.frequency.setValueAtTime(864, audioCtx.currentTime);
-                    gain.gain.setValueAtTime(1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 4);
-                    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 4);
-                }
-            } catch(e) {}
-        }
-
-        const canvas = document.getElementById('realmCanvas'); const ctx = canvas.getContext('2d');
-        let width, height; let particles = []; let time = 0; let angleX = 0.3, angleY = 0; let isDragging = false; let lastMouseX = 0, lastMouseY = 0; const FOV = 450; let state = -1; 
-
-        let realmParticles = [];
-        let currentPreviewId = 1;
-        const PastelColors = [
-            { hsl: "350, 100%, 85%", hex: "#FFB7C5" }, { hsl: "120, 100%, 85%", hex: "#98FB98" },
-            { hsl: "210, 100%, 85%", hex: "#87CEFA" }, { hsl: "30, 100%, 80%", hex: "#FFDAB9" },  
-            { hsl: "0, 0%, 80%", hex: "#D3D3D3" },     { hsl: "270, 100%, 85%", hex: "#E6E6FA" }
-        ];
-        function getRandomPastel() { return PastelColors[Math.floor(Math.random()*PastelColors.length)]; }
-        function addColorfulParticle(x, y, z, extra = {}) { realmParticles.push({ x, y, z, ...extra, col: getRandomPastel() }); }
-
-        function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
-        window.addEventListener('resize', resize); resize();
-
-        function initPreviewRealm(id) {
-            realmParticles = []; currentPreviewId = id;
-            if (id === 1) { 
-                let N = 800, R = 180, goldenAngle = Math.PI * (3 - Math.sqrt(5));
-                for(let i=0; i<N; i++) { let y = 1 - (i / (N - 1)) * 2, radius = Math.sqrt(1 - y*y), theta = goldenAngle * i; addColorfulParticle(Math.cos(theta)*radius*R, y*R, Math.sin(theta)*radius*R, { seed: Math.random()*Math.PI*2, type: 'mani' }); }
-            } else if (id === 2) { 
-                for (let l = 0; l < 4; l++) { let pCount = [6, 8, 10, 12][l], rOut = 40 + l * 25, hUp = 20 + l * 20;
-                for (let p = 0; p < pCount; p++) { let aC = (Math.PI * 2 / pCount) * p + (l * 0.3);
-                for (let t = 0; t <= 1; t += 0.1) { for (let w = -1; w <= 1; w += 0.4) { let pW = Math.sin(t * Math.PI) * (15 + l * 5), cR = t * rOut, cY = -t * hUp + (w * w * 12); realmParticles.push({ x: cR * Math.cos(aC) - (w * pW) * Math.sin(aC), y: cY + 40, z: cR * Math.sin(aC) + (w * pW) * Math.cos(aC), type: 'lotus', l: l, t: t, col: {hsl: "139, 168, 156"} }); } } } }
-                for(let i=0; i<300; i++) addColorfulParticle((Math.random()-0.5)*300, Math.random()*200-50, (Math.random()-0.5)*300, { type: 'aroma', sy: Math.random()*0.8+0.3, seed: Math.random()*Math.PI*2 });
-            } else if (id === 3) { 
-                for(let b = 1; b < 16; b++) { let phi = (Math.PI / 16) * b; for(let s = 0; s < 32; s++) { let theta = (Math.PI * 2 / 32) * s; realmParticles.push({ x: 130 * Math.sin(phi) * Math.cos(theta), y: 130 * Math.cos(phi), z: 130 * Math.sin(phi) * Math.sin(theta), theta: theta, phi: phi, type: 'grid', col:{hsl:"0,0%,88%"} }); } }
-                for(let i = 0; i < 150; i++) { let t = Math.random() * Math.PI * 2, p = Math.acos((Math.random() * 2) - 1), r = Math.random() * 50; realmParticles.push({ x: r*Math.sin(p)*Math.cos(t), y: r*Math.cos(p), z: r*Math.sin(p)*Math.sin(t), speed: Math.random()*0.05+0.02, type: 'core', col:{hsl:"0,0%,100%"} }); }
-            } else if (id === 4) { 
-                for(let l = 1; l <= 6; l++) { let rL = l * 25, yO = Math.sin(l * 0.5) * 20; for(let p = 0; p < 12; p++) { let ang = (Math.PI * 2 / 12) * p + (l * 0.2); for(let t = 0; t <= 1; t += 0.15) { realmParticles.push({ x: rL * t * Math.cos(ang), y: yO * t - (t * t * 40), z: rL * t * Math.sin(ang), l: l, p: p, t: t, type: 'net' }); } } }
-            } else if (id === 5) { 
-                for(let i=0; i<300; i++) { let t = Math.random() * Math.PI * 2, p = Math.acos((Math.random() * 2) - 1), r = Math.random() * 40; addColorfulParticle(r*Math.sin(p)*Math.cos(t), r*Math.cos(p), r*Math.sin(p)*Math.sin(t), { type: 'mani-core' }); }
-                for(let i=0; i<12; i++) { let col = getRandomPastel(); let bandAngle = (i / 12) * Math.PI * 2; for(let a=0; a<Math.PI*2; a+=0.1) { realmParticles.push({ lineId:i, a:a, bandAng:bandAngle, col: col, type:'mani-cage' }); } }
-            } else if (id === 6) { 
-                let layers = 15; let segments = 120; for(let l = 0; l < layers; l++) { let zBase = (l - layers/2) * 25; let radiusBase = 120 * Math.sin((l/layers) * Math.PI) + 20; for(let i = 0; i < segments; i++) { let theta = (i / segments) * Math.PI * 2; let col = getRandomPastel(); realmParticles.push({ x: 0, y: 0, z: zBase, bR: radiusBase, th: theta, l: l, type: 'old9', col: col }); } }
-            } else if (id === 7) { 
-                for(let i=0; i<1200; i++) { let t = i / 1200, a = t * Math.PI * 15, r = t * 160; let baseHue = (t * 360 * 3) % 360; realmParticles.push({ x: r*Math.cos(a), y: (Math.random()-0.5)*30, z: r*Math.sin(a), hue: baseHue }); realmParticles.push({ x: r*Math.cos(a+Math.PI), y: (Math.random()-0.5)*30, z: r*Math.sin(a+Math.PI), hue: (baseHue + 180) % 360 }); }
-            } else if (id === 8) { 
-                for(let i=0; i<600; i++) { let t = Math.random() * Math.PI, p = Math.acos((Math.random() * 2) - 1); addColorfulParticle(140*Math.sin(p)*Math.cos(t), 140*Math.sin(p)*Math.sin(t), 140*Math.cos(p)); }
-            } else if (id === 9) { 
-                let w = 120, h = 40, d = 160; for(let x = -w; x <= w; x += 15) { for(let y = -h; y <= h; y += 15) { for(let z = -d; z <= d; z += 15) { if(Math.abs(x) === w || Math.abs(y) === h || Math.abs(z) === d) addColorfulParticle(x, y, z); } } }
-            } else if (id === 10) { 
-                let size = 110; let v = [[-size,-size,-size],[size,-size,-size],[size,size,-size],[-size,size,-size],[-size,-size,size],[size,-size,size],[size,size,size],[-size,size,size]]; v.forEach(pt => realmParticles.push({ x:pt[0], y:pt[1], z:pt[2], type:'vimo-v', col: PastelColors[4] }));
-                for(let i=0; i<1200; i++) { let col = getRandomPastel(); let x = (Math.random()-0.5)*size*1.9, y = (Math.random()-0.5)*size*1.9, z = (Math.random()-0.5)*size*1.9; if(Math.random()>0.5) { x = (Math.random()>0.5?size:-size)*Math.random(); } else { z = (Math.random()>0.5?size:-size)*Math.random(); } realmParticles.push({ x, y, z, type:'vimo-line', col: col }); }
-            } else if (id === 11) { 
-                for(let i=0; i<800; i++) { let t = Math.random()*Math.PI*2, p = Math.random()*Math.PI; let x = 140 * Math.pow(Math.abs(Math.cos(p)), 0.5) * Math.sign(Math.cos(p)) * Math.cos(t); let y = 140 * Math.pow(Math.abs(Math.sin(p)), 0.5) * Math.sign(Math.sin(p)) * Math.sin(t); addColorfulParticle(x, y, 140*Math.cos(t)); }
-            } else if (id === 12) { 
-                for(let i=0; i<150; i++) { let pastel = getRandomPastel(); realmParticles.push({ x: (Math.random()-0.5)*120, y: (Math.random()-0.5)*120, z: (Math.random()-0.5)*120, s: Math.random()*2+1, type: 'halo-core', col: pastel }); }
-                for(let i=0; i<12; i++) { let params = { fx: 2 + Math.random()*2, fy: 2 + Math.random()*2, fz: 2 + Math.random()*2, ph: Math.random()*Math.PI*2, col: getRandomPastel() }; for(let a=0; a<Math.PI*2; a+=0.05) { realmParticles.push({ lineId:i, a:a, ...params, type:'line-12chaotic' }); } }
-            } else if (id === 13) { 
-                for(let i = 0; i < 300; i++) { let t = Math.random() * Math.PI * 2, p = Math.acos(Math.random()*2 - 1), r = Math.random() * 50 + 10; realmParticles.push({ x: r*Math.sin(p)*Math.cos(t), y: r*Math.cos(p), z: r*Math.sin(p)*Math.sin(t), s: Math.random()*2+1, type: 'saha' }); t = Math.random() * Math.PI * 2; p = Math.acos(Math.random()*2 - 1); r = Math.random() * 50 + 10; realmParticles.push({ x: r*Math.sin(p)*Math.cos(t), y: r*Math.cos(p), z: r*Math.sin(p)*Math.sin(t), s: Math.random()*2+1.5, type: 'pure' }); }
-            } else if (id === 14) { 
-                for(let band = 0; band < 14; band++) { let col = PastelColors[band % PastelColors.length]; let angleOffset = (band / 14) * Math.PI * 2; for(let i = 0; i < 60; i++) { let t = (i / 60) * Math.PI * 2; realmParticles.push({ x: 0, y: 0, z: 0, tOffset: t, angOff: angleOffset, band: band, col: col, type: 'ribbon-14' }); } }
-            } else if (id === 15) { 
-                for(let i = 0; i < 15; i++) { let centerAng = (i / 15) * Math.PI * 2; let cx = 60 * Math.cos(centerAng); let cy = 60 * Math.sin(centerAng); let cz = Math.sin(i * 1.5) * 20; let col = PastelColors[Math.floor(Math.random() * PastelColors.length)]; for(let a = 0; a < Math.PI * 2; a += 0.1) { realmParticles.push({ cx: cx, cy: cy, cz: cz, ang: a, col: col, type: 'lotus-15' }); } }
-            } else if (id === 16) { 
-                for(let i=0; i<1000; i++) { let p = Math.acos(1 - 2*i/1000), t = Math.PI * (1 + Math.sqrt(5)) * i; realmParticles.push({ x: 140*Math.sin(p)*Math.cos(t), y: 140*Math.cos(p), z: 140*Math.sin(p)*Math.sin(t), col:{hsl:"48, 100%, 65%"}, glow: "#d4af37" }); }
-            } else if (id === 17) { 
-                for(let i=0; i<17; i++) { let col = getRandomPastel(); let rX = Math.random()*Math.PI*2, rY = Math.random()*Math.PI*2, rZ = Math.random()*Math.PI*2; for(let a=0; a<Math.PI*2; a+=0.1) { realmParticles.push({ x:0, y:0, z:0, a:a, rX:rX, rY:rY, rZ:rZ, col:col, type:'knot-17' }); } }
-            } else if (id === 18) { 
-                for(let i=0; i<800; i++) { addColorfulParticle((Math.random()-0.5)*260, (Math.random()-0.5)*260, (Math.random()-0.5)*260, { hueOffset: Math.random()*360 }); }
-            } else if (id === 19) { 
-                for(let i=0; i<800; i++) { let u = Math.random()*Math.PI*2, v = Math.random()*Math.PI*2; let x = (100 + 40*Math.cos(v)) * Math.cos(u); let y = (100 + 40*Math.cos(v)) * Math.sin(u); let z = 40 * Math.sin(v); realmParticles.push({ x, y, z, col: {hsl: "48, 100%, 65%"}, hex: "#d4af37", type: 'dharma-19' }); }
-            } else if (id === 20) { 
-                for(let i=0; i<1200; i++) { let t = Math.random()*Math.PI*2, p = Math.acos((Math.random()*2)-1); let noise = Math.sin(t*6)*20 + Math.cos(p*4)*25; let isC = Math.random()>0.85; realmParticles.push({ x:0,y:0,z:0, baseR:80+noise+Math.random()*15, t, p, isC, oS:isC?Math.random()*0.08+0.03:0, hue:30+Math.random()*40, s:isC?Math.random()*3+2:Math.random()*1.5+0.5 }); }
-            }
-        }
-
-        function initParticles() {
-            particles = []; const totalLayers = 6; const pointsPerLayer = 108;
-            for (let l = 0; l < totalLayers; l++) {
-                let radius = 50 + l * 50; let yOffset = Math.pow(l, 1.5) * 15 - 50; 
-                for (let p = 0; p < pointsPerLayer; p++) {
-                    let theta = (p / pointsPerLayer) * Math.PI * 2; let wave = Math.sin(theta * 8) * (10 + l * 5); 
-                    particles.push({
-                        x: (Math.random() - 0.5) * 3000, y: (Math.random() - 0.5) * 3000, z: (Math.random() - 0.5) * 3000,
-                        tx: (radius + wave) * Math.cos(theta), ty: yOffset + Math.abs(wave) * 0.5, tz: (radius + wave) * Math.sin(theta),
-                        c: (l % 2 === 0) ? 'rgba(212,175,55,' : 'rgba(139,168,156,', size: Math.random() * 1.5 + 0.5, baseSize: Math.random() * 1.5 + 0.5, phase: Math.random() * Math.PI * 2
-                    });
-                }
-            }
-            for (let i = 0; i < 50; i++) { particles.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: (Math.random() - 0.5) * 2000, tx: (Math.random() - 0.5) * 20, ty: (Math.random() - 0.5) * 20, tz: (Math.random() - 0.5) * 20, c: 'rgba(255,255,255,', size: 2.5, baseSize: 2.5, phase: 0 }); }
-        }
-
-        function project3D(x, y, z) {
-            let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
-            let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX; let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
-            if(z2 < -FOV+10) return null; let scale = FOV / (FOV + z2); return { x: (width/2) + x2*scale, y: (height/2) - y1*scale, scale: scale, z: z2 };
-        }
-
-        function renderPreviewRealm() {
-            let projected = [];
-            let id = currentPreviewId;
-            if(!isDragging && id !== 9 && id !== 13) angleY += 0.005;
-            if(!isDragging && id === 9) { angleY += 0.008; angleX = Math.sin(time*0.5)*0.3; } 
-
-            realmParticles.forEach(p => {
-                let wx = p.x, wy = p.y, wz = p.z;
-                let a = 0.7, s = 1.5, isGlow = true;
-                let pastel = p.col ? p.col : getRandomPastel();
-                let c = `rgba(${pastel.hsl},`;
-                let glowC = pastel.hex ? pastel.hex : `hsl(${pastel.hsl.split(',')[0]}, 100%, 75%)`;
-
-                if (id === 1) { let breath = 1 + Math.sin(time*1.5 + p.seed)*0.03; wx *= breath; wy *= breath; wz *= breath; let isBright = Math.sin(time*4 + p.seed) > 0.85; a = isBright ? 1 : 0.4; s = isBright ? 2.5 : 1.2; }
-                else if (id === 2) { if (p.type === 'lotus') { let breath = 1 + Math.sin(time*2 + p.l)*0.06*p.t; wx *= breath; wy += Math.sin(time*1.5)*5; wz *= breath; a = 0.2 + (p.t*0.6); isGlow = p.t > 0.8; } else { wy -= p.sy; if (wy < -200) wy = 150; p.y = wy; wx += Math.sin(wy*0.02 + time + p.seed)*20; wz += Math.cos(wy*0.02 + time + p.seed)*20; a = (Math.sin(time*3 + p.seed)+1)/2 * 0.8; } }
-                else if (id === 3) { if (p.type === 'grid') { let wave = 1 + Math.sin(time*3 + p.theta*4 + p.phi*2)*0.05; wx *= wave; wy *= wave; wz *= wave; a = 0.3 + Math.sin(p.phi)*0.6; } else { let pulseR = 1 + Math.sin(time*5 + p.speed*100)*0.5; let rotA = time * p.speed * 10; wx = (p.x*Math.cos(rotA) - p.z*Math.sin(rotA)) * pulseR; wz = (p.x*Math.sin(rotA) + p.z*Math.cos(rotA)) * pulseR; wy *= pulseR; a = 1; s = 2.5; } }
-                else if (id === 4) { let breath = 1 + Math.sin(time*2 + p.l)*0.1; wx *= breath; wy *= breath; wz *= breath; let hue = (p.l*40 + p.p*20 + time*40) % 360; c = `hsla(${hue}, 100%, 75%,`; glowC = `hsl(${hue}, 100%, 75%)`; a = 0.4 + p.t*0.6; s = 1.8; }
-                else if (id === 5) { if(p.type === 'mani-core') { let pulse = 1 + Math.sin(time*10)*0.1; wx = p.x * pulse; wy = p.y * pulse; wz = p.z * pulse; c = `rgba(255,255,255,`; glowC = "#fff"; a = 0.9 + Math.sin(time*15)*0.1; s = 2.5; isGlow = true; } else { let radius = 130; let rotX = time*0.5 + p.lineId*0.3; let orbitY = time * 0.3 + p.bandAng; let bx = radius * Math.cos(p.a); let by = radius * Math.sin(p.a); let bz = 0; let x1 = bx * Math.cos(p.bandAng) - bz * Math.sin(p.bandAng); let y1 = by; let z1 = bx * Math.sin(p.bandAng) + bz * Math.cos(p.bandAng); let rotY = time * 0.2; wx = x1*Math.cos(rotY) - z1*Math.sin(rotY); wy = y1; wz = x1*Math.sin(rotY) + z1*Math.cos(rotY); let breathe = 1 + Math.sin(time*1.5 + wy*0.01)*0.08; wx*=breathe; wy*=breathe; wz*=breathe; c = `rgba(${p.col.hsl},`; glowC = p.col.hex; a = 0.8; s = 1.8; isGlow = true; } }
-                else if (id === 6) { let f1 = 8, a1 = 15 * Math.sin(time*2 + p.l*0.5); let f2 = 24, a2 = 5 * Math.cos(time*3); let r = p.bR + a1 * Math.sin(f1 * p.th) + a2 * Math.cos(f2 * p.th); wx = r * Math.cos(p.th + time*0.5); wz = r * Math.sin(p.th + time*0.5); wy = p.z; a = 0.3 + (p.l / 15) * 0.7; }
-                else if (id === 7) { let rot = time * (1.5 + p.x / 200); wx = p.x * Math.cos(rot) - p.z * Math.sin(rot); wz = p.x * Math.sin(rot) + p.z * Math.cos(rot); let currentHue = (p.hue + time * 40) % 360; c = `hsla(${currentHue}, 90%, 65%,`; glowC = `hsl(${currentHue}, 90%, 65%)`; a = 0.8; s = 1.8; }
-                else if (id === 9) { let jump = Math.abs(Math.sin(p.x * 0.08 + time * 6) * Math.cos(p.z * 0.08 + time * 4)); if (Math.abs(p.y) >= 40) { wy += (p.y > 0 ? 1 : -1) * jump * 35; } else { wx += Math.sin(time * 10 + p.y * 0.1) * 4; wz += Math.cos(time * 10 + p.y * 0.1) * 4; } wy += Math.sin(time * 3 + p.x * 0.05) * 10; a = 0.4 + jump * 0.6; s = 1.2 + jump * 2.5; }
-                else if (id === 10) { if(p.type==='vimo-net') { wx += Math.sin(time*2 + wz)*2; wy += Math.cos(time*2 + wx)*2; wz += Math.sin(time*2 + wy)*2; if(wx>110)wx=-110; if(wx<-110)wx=110; if(wy>110)wy=-110; if(wy<-110)wy=110; if(wz>110)wz=-110; if(wz<-110)wz=110; p.x=wx; p.y=wy; p.z=wz; } s = p.type==='vimo-v'?4:1.2; a = p.type==='vimo-v'?1:0.7; }
-                else if (id === 13) { let ob = time * 0.8; let cx = 120 * Math.cos(p.type === 'saha' ? ob : ob + Math.PI); let cz = 120 * Math.sin(p.type === 'saha' ? ob : ob + Math.PI); let cyOffset = Math.sin(time * 2 + (p.type === 'saha' ? 0 : Math.PI)) * 20; wx = p.x + cx; wy = p.y + cyOffset; wz = p.z + cz; if (p.type === 'saha') { c = 'rgba(139,168,156,'; glowC = '#8ba89c'; a = 0.8; } else { c = 'rgba(243,229,171,'; glowC = '#d4af37'; a = 0.9; } s = p.s; }
-                else if (id === 14) { let flow = p.tOffset + time * 1.5; let bx = (90 + 30 * Math.cos(flow / 2)) * Math.cos(flow); let by = (90 + 30 * Math.cos(flow / 2)) * Math.sin(flow); let bz = 40 * Math.sin(flow / 2); wx = bx * Math.cos(p.angOff) - bz * Math.sin(p.angOff); wy = by; wz = bx * Math.sin(p.angOff) + bz * Math.cos(p.angOff); let breath = 1 + Math.sin(time * 2 + p.band) * 0.05; wx *= breath; wy *= breath; wz *= breath; a = 0.8; s = 1.8; }
-                else if (id === 15) { let r = 80; let flowAng = p.ang + time * 3; let localX = r * Math.cos(flowAng); let localY = r * Math.sin(flowAng); wx = p.cx + localX; wy = p.cy + localY; wz = p.cz + Math.sin(p.ang * 3) * 15; c = `rgba(${p.col.hsl},`; glowC = p.col.hex; a = 0.8; s = 1.5; }
-                else if (id === 16) { c = `rgba(212,175,55,`; glowC = "#fff"; s = 1.8; a = 0.8; }
-                else if (id === 17) { let r = 130; let bx = r * Math.cos(p.a); let by = r * Math.sin(p.a); let bz = 0; let y1 = by*Math.cos(p.rX) - bz*Math.sin(p.rX), z1 = by*Math.sin(p.rX) + bz*Math.cos(p.rX); let x2 = bx*Math.cos(p.rY) - z1*Math.sin(p.rY), z2 = bx*Math.sin(p.rY) + z1*Math.cos(p.rY); wx = x2*Math.cos(p.rZ) - y1*Math.sin(p.rZ); wy = x2*Math.sin(p.rZ) + y1*Math.cos(p.rZ); wz = z2; a = 0.8; }
-                else if (id === 18) { let hue = (time * 60 + p.hueOffset) % 360; c = `hsla(${hue}, 90%, 70%,`; glowC = `hsl(${hue}, 90%, 70%)`; s = 2.5; }
-                else if (id === 19) { wy += Math.sin(time * 2 + wx * 0.02) * 10; wz += Math.cos(time * 2 + wy * 0.02) * 10; c = `rgba(212,175,55,`; glowC = "#fff"; a = 0.8; s = 1.8; }
-                else if (id === 20) { if(p.isC) { p.t += p.oS; p.p += p.oS * 0.5; } let breath = 1 + Math.sin(time*3 + p.t)*0.1; let r = p.baseR * breath; wx = r*Math.sin(p.p)*Math.cos(p.t); wy = r*Math.cos(p.p) - 20; wz = r*Math.sin(p.p)*Math.sin(p.t); let hue = p.isC ? 60 : (p.hue + time*20)%360; let lgt = p.isC ? 85 : 65; c = `hsla(${hue}, 100%, ${lgt}%,`; glowC = `hsl(${hue}, 100%, ${lgt}%)`; s = p.s; a = p.isC?1:0.4+Math.sin(time*5+p.t)*0.3; }
-
-                let proj = project3D(wx, wy, wz);
-                if(proj) { projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, a: a, c: c, s: s, isGlow: isGlow, glowC: glowC }); }
-            });
-
-            projected.sort((a,b) => b.z - a.z);
-            projected.forEach(p => {
-                ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.1, p.s * p.sc), 0, Math.PI*2);
-                ctx.fillStyle = p.c.includes('hsla') ? p.c + p.a + ')' : p.c + p.a + ')';
-                if(p.isGlow) { ctx.shadowBlur = 12 * p.sc; ctx.shadowColor = p.glowC; } else { ctx.shadowBlur = 0; }
-                ctx.fill();
-            });
-            ctx.shadowBlur = 0; 
-        }
-
-        function animate() {
-            ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = (state === 3) ? `rgba(0,0,0,0.4)` : `rgba(1,1,2,0.6)`; ctx.fillRect(0, 0, width, height);
-            time += 0.02; 
-            if(!isDragging && state >= 1 && state < 3) angleY -= 0.002; 
-            if(state === 3) angleY -= 0.05; 
+        function playAnimation(gradId, rName, rDesc, glowColor) {
+            const box = document.getElementById('lotus-box');
+            document.getElementById('rank-name').innerText = rName;
+            document.getElementById('rank-desc').innerText = rDesc;
             
-            ctx.globalCompositeOperation = 'screen'; 
+            // 讓整個卡片發出對應顏色的微光
+            document.getElementById('cert-ui').style.boxShadow = `0 20px 60px rgba(0,0,0,0.9), inset 0 0 40px ${glowColor}`;
+
+            // 先清空，確保動畫重新觸發
+            box.innerHTML = '';
             
-            if (state === -1) {
-                renderPreviewRealm();
-            } else {
-                let projected = [];
-                particles.forEach(p => {
-                    if (state === 0) { p.z -= 5; if(p.z < -1000) { p.z = 2000; p.x = (Math.random() - 0.5) * 3000; p.y = (Math.random() - 0.5) * 3000; } } 
-                    else if (state === 1) { p.x += (p.tx - p.x) * 0.015; p.y += (p.ty - p.y) * 0.015; p.z += (p.tz - p.z) * 0.015; } 
-                    else if (state === 2) { p.y = p.ty + Math.sin(time * 2 + p.phase) * 5; p.size = p.baseSize * (1 + Math.sin(time * 3 + p.phase) * 0.5); } 
-                    else if (state === 3) { p.x *= 0.85; p.y *= 0.85; p.z *= 0.85; }
-                    let proj = project3D(p.x, p.y, p.z); if(proj) projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: p.c, s: p.size });
-                });
-                projected.sort((a,b) => b.z - a.z);
-                projected.forEach(p => {
-                    let s = p.s * p.sc; if(s < 0.1) return;
-                    ctx.beginPath(); ctx.arc(p.x, p.y, s, 0, Math.PI*2);
-                    let alpha = (state === 0) ? Math.min(1, p.sc * 2) : Math.min(1, p.sc * 0.8); ctx.fillStyle = p.c + `${alpha})`;
-                    if (state >= 1 && state < 3 && s > 1.5) { ctx.shadowBlur = 10; ctx.shadowColor = p.c + '1)'; } else { ctx.shadowBlur = 0; }
-                    ctx.fill();
-                });
-            }
-            if (state < 4) requestAnimationFrame(animate); else { ctx.clearRect(0,0,width,height); } 
-        }
-
-        function onDown(e) { if(state === 3 || state === 4) return; isDragging = true; lastMouseX = e.touches?e.touches[0].clientX:e.clientX; lastMouseY = e.touches?e.touches[0].clientY:e.clientY; }
-        function onMove(e) { if (!isDragging) return; let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; angleY += (curX-lastMouseX)*0.008; angleX += (curY-lastMouseY)*0.008; angleX = Math.max(-Math.PI/2, Math.min(Math.PI/2, angleX)); lastMouseX=curX; lastMouseY=curY; }
-        function onUp() { isDragging = false; }
-        canvas.addEventListener('mousedown', onDown); window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
-        canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
-
-        // 用於紀錄行者這次核准領取的階位鎖
-        window.currentMilestoneLock = null;
-
-        // 🌟 主流程引擎
-        async function runZenEngine() {
-            state = -1; animate();
-            await sleep(100); document.getElementById('page-curtain').style.opacity = '0';
-            await sleep(1000);
-
-            // 【 門禁與法旨派發中心 】
-            let db; try { db = JSON.parse(localStorage.getItem('PX_EN_V15.0')) || {}; } catch(e) { db = {}; }
-            let currentDays = (db.points || 0) / 100;
-            let ms = db.milestones || {};
-            let rankData = null;
-
-            // 依序由最低階往上判定，確保行者不會錯過任何一個未領取的法旨
-            if (currentDays >= 90 && !ms['rank_10']) {
-                rankData = {
-                    lock: 'rank_10', svg: 'svg-faith', tts: 'Ascension to the Tenth Faith.',
-                    html: `
-                        <div class="cert-desc-title">
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                            A Hundred Days of Pure Practice
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                        </div>
-                        The Ten Faiths are fulfilled. You have perfected faith, mindfulness, and diligence.<br>
-                        Entering the First Abiding Rank,<br>
-                        prepare with the Six Paramitas. Focus on <span class="highlight">Generosity</span><br>
-                        to cure stinginess and liberate all beings.
-                    `
-                };
-            } else if (currentDays >= 1000 && !ms['rank_abiding_10']) {
-                rankData = {
-                    lock: 'rank_abiding_10', svg: 'svg-abode', tts: 'Ascension to the Tenth Abiding.',
-                    html: `
-                        <div class="cert-desc-title">
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                            A Thousand Days of Steadfastness
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                        </div>
-                        The Ten Abodes are accomplished. Born into the Tathagata's family, abiding in the True Nature.<br>
-                        Entering the First Practice Rank,<br>
-                        focus on <span class="highlight">Discipline</span> to adorn Bodhi<br>
-                        and never abandon sentient beings.
-                    `
-                };
-            } else if (currentDays >= 10000 && !ms['rank_practice_10']) {
-                rankData = {
-                    lock: 'rank_practice_10', svg: 'svg-practice', tts: 'Ascension to the Tenth Practice.',
-                    html: `
-                        <div class="cert-desc-title">
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                            Ten Thousand Days of Fulfillment
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                        </div>
-                        The Ten Practices are completed. Practicing the formless true practice within all dharmas.<br>
-                        Entering the First Dedication Rank,<br>
-                        ground yourself in <span class="highlight">Patience</span> and <span class="highlight">Diligence</span>,<br>
-                        dedicating all merits to the absolute truth.
-                    `
-                };
-            } else if (currentDays >= 100000 && !ms['rank_dedication_10']) {
-                rankData = {
-                    lock: 'rank_dedication_10', svg: 'svg-dedication', tts: 'Ascension to the Tenth Dedication.',
-                    html: `
-                        <div class="cert-desc-title">
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                            Hundred Thousand Days of Perseverance
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                        </div>
-                        The Dedications are fulfilled. The mind dwells nowhere yet generates boundless compassion.<br>
-                        Ascending to the First Ground of Joy,<br>
-                        realize the truth of non-arising. Enter deep Samadhi through <span class="highlight">Meditation</span><br>
-                        to shelter the universe with the Dharma Cloud.
-                    `
-                };
-            } else if (currentDays >= 1000000 && !ms['rank_ground_10']) {
-                rankData = {
-                    lock: 'rank_ground_10', svg: 'svg-ground', tts: 'Ascension to the Tenth Ground.',
-                    html: `
-                        <div class="cert-desc-title">
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                            A Million Days of Non-retrogression
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                        </div>
-                        The Ten Grounds are perfected. Merit and wisdom fully complete, Supreme Buddhahood is near.<br>
-                        Entering the Unsurpassed Perfect Enlightenment,<br>
-                        illuminate the emptiness of all dharmas through <span class="highlight">Prajna</span>,<br>
-                        saving all beings across the ten directions.
-                    `
-                };
-            }
-
-            const RealmNames = [
-                "Supreme Light Illuminating", "Fragrant Lotus Adornments", "Jewel Adornments Universal Light", "Bright Flower Adornments",
-                "Radiating Wondrous Flower Light", "Pure Wondrous Brightness", "Flower Lights Adornment", "Majestic Light", "Wondrous Sounds", "Vajra Banner",
-                "Emerging Sapphire Light", "Illuminating Brightness", "Saha & Ultimate Bliss", "Tranquil Dustless Light", "Wondrous Bright Lamps",
-                "Pure Light Illuminating", "Jewel Adornment", "Free from Dust", "Pure Light Universal Illumination", "Wondrous Jewel Flame"
-            ];
-            
-            const previewEl = document.getElementById('fast-preview');
-            previewEl.style.opacity = '1'; playDharmaSound('preview'); 
-            
-            // 20重華藏世界輪迴 (不可省略的法理)
-            for(let i = 1; i <= 20; i++) {
-                previewEl.innerText = `Realm ${i} · ${RealmNames[i-1]}`;
-                initPreviewRealm(i); await sleep(350); 
-            }
-            previewEl.style.opacity = '0'; realmParticles = []; await sleep(500);
-            
-            state = 0; initParticles(); await sleep(500);
-
-            state = 1; playDharmaSound('form'); document.getElementById('status-panel').style.opacity = '1'; await sleep(3000); 
-            state = 2; document.getElementById('ui-layer').style.opacity = '1'; await sleep(8000); 
-            state = 3; document.getElementById('ui-layer').style.opacity = '0'; document.getElementById('status-panel').style.opacity = '0'; await sleep(2000);
-            
-            const flash = document.getElementById('golden-flash'); flash.style.opacity = '1'; playDharmaSound('seed'); await sleep(200); 
-            state = 4; flash.style.transition = 'opacity 4s ease-in'; flash.style.opacity = '0'; await sleep(2500); 
-
-            const immortalSeed = document.getElementById('immortal-seed');
-            immortalSeed.style.opacity = '1'; immortalSeed.classList.add('seed-heartbeat');
-            await sleep(1000); 
-            
-            immortalSeed.style.top = '15%'; 
-            // 🌟 點亮菩提之心神聖文字
-            document.getElementById('profound-text').style.opacity = '1'; 
-            await sleep(1000);
-
-            // 🌟 嚴格門禁核准執行區
-            if (rankData) {
-                // 將鎖定目標存入全域，供領取按鈕使用
-                window.currentMilestoneLock = rankData.lock;
-                
-                // 動態注入文案與行者名號
-                document.getElementById('cert-text-body').innerHTML = rankData.html;
-                document.getElementById('cert-name-insert').innerText = db.name || "Practitioner";
-
-                // 動態切換對應的靜止寶石圖騰
-                ['svg-faith', 'svg-abode', 'svg-practice', 'svg-dedication', 'svg-ground'].forEach(id => {
-                    let el = document.getElementById(id);
-                    if (el) {
-                        if (id === rankData.svg) {
-                            el.style.opacity = '1'; el.style.transform = 'scale(1)';
-                        } else {
-                            el.style.opacity = '0'; el.style.transform = 'scale(0.8)';
-                        }
-                    }
-                });
-
-                // 證書浮現
-                const certUI = document.getElementById('cert-ui');
-                certUI.style.opacity = '1'; 
-                certUI.style.pointerEvents = 'auto';
-
-                try {
-                    let m = new SpeechSynthesisUtterance(rankData.tts + " Please receive the decree of the Dharma Realm."); 
-                    m.lang = 'en-US'; m.rate = 0.85; window.speechSynthesis.speak(m);
-                } catch(e) {}
-
-            } else {
-                // 🛑 門禁擋下：不具資格或皆已領取，默然歸返
-                await sleep(4000);
-                navigateTo('index_en.html');
-            }
-        }
-
-        // 🌟 核心：寫入對應的印記並同步「主系統階位」，絕對斷絕迴圈！
-        function claimCertificate() {
-            document.getElementById('cert-ui').style.opacity = '0';
-            
-            let db; try { db = JSON.parse(localStorage.getItem('PX_EN_V15.0')) || {}; } catch(e) { db = {}; }
-            
-            // 1. 蓋上對應階位的印記鎖
-            if (!db.milestones) db.milestones = {};
-            if (window.currentMilestoneLock) {
-                db.milestones[window.currentMilestoneLock] = true;
-            }
-            
-            // 2. 幫主系統算出當前階位並存檔 (打破迴圈的究極防護)
-            let currentDays = (db.points || 0) / 100; 
-            let calculatedRank = "";
-            if (currentDays >= 111100) { let lv = Math.min(10, Math.floor((currentDays - 111100) / 100000) + 1); calculatedRank = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"][lv - 1] + " Ground Bodhisattva"; }
-            else if (currentDays >= 11100) { let lv = Math.floor((currentDays - 11100) / 10000) + 1; calculatedRank = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"][lv - 1] + " Dedication Rank"; }
-            else if (currentDays >= 1100) { let lv = Math.floor((currentDays - 1100) / 1000) + 1; calculatedRank = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"][lv - 1] + " Practice Rank"; }
-            else if (currentDays >= 100) { let lv = Math.floor((currentDays - 100) / 100) + 1; calculatedRank = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"][lv - 1] + " Abiding Rank"; }
-            else { let lv = Math.min(10, Math.floor(currentDays / 10) + 1); calculatedRank = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"][lv - 1] + " Faith Rank"; }
-            db.currentRank = calculatedRank;
-
-            localStorage.setItem('PX_EN_V15.0', JSON.stringify(db));
-            navigateTo('index_en.html');
-        }
-
-        // 👁️ 截圖模式：隱藏 UI，點擊任意處恢復
-        function toggleScreenshotMode() {
-            document.getElementById('cert-actions').style.opacity = '0';
-            document.getElementById('top-nav').style.opacity = '0';
-            
-            const restoreUI = () => {
-                document.getElementById('cert-actions').style.opacity = '1';
-                document.getElementById('top-nav').style.opacity = '1';
-                window.removeEventListener('click', restoreUI);
-                window.removeEventListener('touchstart', restoreUI);
-            };
-            
+            // 短暫延遲後注入 SVG (確保瀏覽器重新讀取 CSS 動畫)
             setTimeout(() => {
-                window.addEventListener('click', restoreUI);
-                window.addEventListener('touchstart', restoreUI, { passive: true });
-                setTimeout(restoreUI, 5000); // 5秒自動恢復
-            }, 100);
+                let fill = `url(#${gradId})`;
+                let stroke = "rgba(243,229,171,0.8)"; // 金色描邊
+                let layers = 3;
+
+                // 使用您精美的多層貝茲曲線演算法
+                let svg = `<svg class="lotus-spin" viewBox="-150 -150 300 300" style="width:100%;height:100%;overflow:visible;">`;
+
+                for (let l = layers; l > 0; l--) {
+                    const sc = 0.44 + l * 0.28;
+                    const n = (l === layers) ? 8 : 6;
+                    const rotOffset = l * 22.5; 
+                    for (let i = 0; i < n; i++) {
+                        const rot = i * (360/n) + rotOffset;
+                        const s = 112 * sc;
+                        // 花瓣路徑
+                        const pth = `M 0 0 C ${s*.44} ${-s*.07} ${s*.54} ${-s*.62} 0 ${-s} C ${-s*.54} ${-s*.62} ${-s*.44} ${-s*.07} 0 0`;
+                        // 花脈路徑
+                        const vein = `M 0 ${-s*.08} Q 0 ${-s*.55} 0 ${-s*.88}`;
+                        
+                        svg += `<g transform="rotate(${rot})">
+                            <path class="draw-petal" d="${pth}" fill="${fill}" stroke="${stroke}" stroke-width="1.2" />
+                            <path class="draw-vein" d="${vein}" fill="none" stroke="rgba(243,229,171,0.4)" stroke-width="0.8"/>
+                        </g>`;
+                    }
+                }
+
+                // 中心蓮蓬 (延遲顯示)
+                const cr = 16;
+                svg += `<circle cx="0" cy="0" r="${cr}" fill="${fill}" stroke="${stroke}" stroke-width="1.2" style="opacity:0; animation: color-fade 2s ease forwards 4s;"/>`;
+                
+                // 花蕊
+                for (let s = 0; s < 10; s++) {
+                    const sa = (s * 36) * Math.PI / 180;
+                    const sr = cr + 10;
+                    const ex = (sr * Math.cos(sa)).toFixed(1);
+                    const ey = (sr * Math.sin(sa)).toFixed(1);
+                    svg += `
+                    <g style="opacity:0; animation: color-fade 2s ease forwards 4.5s;">
+                        <circle cx="${ex}" cy="${ey}" r="3" fill="${fill}" />
+                        <line x1="${(cr*.6*Math.cos(sa)).toFixed(1)}" y1="${(cr*.6*Math.sin(sa)).toFixed(1)}" x2="${ex}" y2="${ey}" stroke="${stroke}" stroke-width="0.8"/>
+                    </g>`;
+                }
+                
+                svg += `</svg>`;
+                box.innerHTML = svg;
+            }, 50);
         }
 
-        function navigateTo(url) {
-            document.getElementById('page-curtain').style.opacity = '1';
-            setTimeout(() => { window.location.href = url; }, 1000);
-        }
-
-        function unlockAudio() {
-            if (audioCtx && audioCtx.state === 'suspended') { audioCtx.resume(); } 
-            else if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); }
-        }
-        window.addEventListener('click', unlockAudio);
-        window.addEventListener('touchstart', unlockAudio, { passive: true });
-
-        window.addEventListener('load', runZenEngine);
+        // 初始不顯示蓮花，等待行者點擊
     </script>
 </body>
 </html>

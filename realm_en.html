@@ -7,7 +7,6 @@
     <title>System · One True Realm (Bodhi Seal)</title>
     <style>
         :root { --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c; --bg-deep: #000000; }
-        /* 🌟 修正 1：加入 height: 100dvh，解決手機底部網址列吃掉畫面的問題 */
         body { margin: 0; padding: 0; height: 100vh; height: 100dvh; overflow: hidden; background: radial-gradient(circle at 50% 50%, #1a2228 0%, #000000 70%); color: #fff; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
 
         .top-nav-btn {
@@ -50,7 +49,6 @@
             100% { transform: scale(1); box-shadow: 0 0 30px var(--gold), 0 0 60px var(--solid-gold); }
         }
 
-        /* 🌟 修正 2：將文字稍微上移，避免與卡片擠在一起 */
         #profound-text { 
             position: absolute; top: calc(12% + 20px); width: 100%; color: var(--gold); 
             font-size: 0.95rem; letter-spacing: 4px; word-spacing: 6px; opacity: 0; 
@@ -61,8 +59,6 @@
         .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; opacity: 0; transition: opacity 2s;}
         .drag-hint { color:rgba(212,175,55,0.6); font-size:0.75rem; letter-spacing:2px; text-transform: uppercase; text-shadow: 0 0 5px rgba(0,0,0,0.8); }
 
-        /* ================= 頂級法旨證書 UI ================= */
-        /* 🌟 修正 3：卡片位置從 62% 提升到 55%，padding 微調，絕對不會切掉按鈕 */
         #cert-ui {
             position: absolute; top: 55%; left: 50%; transform: translate(-50%, -40%);
             width: 88%; max-width: 380px; z-index: 200;
@@ -148,7 +144,6 @@
         <defs>
             <linearGradient id="facet-light" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.85"/><stop offset="100%" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
             <linearGradient id="facet-dark" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#000" stop-opacity="0.1"/><stop offset="100%" stop-color="#000" stop-opacity="0.4"/></linearGradient>
-            
             <linearGradient id="c-cyan" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e0f7fa"/><stop offset="100%" stop-color="#80deea"/></linearGradient>
             <linearGradient id="c-pink" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fce4ec"/><stop offset="100%" stop-color="#f48fb1"/></linearGradient>
             <linearGradient id="c-purple" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f3e5f5"/><stop offset="100%" stop-color="#ce93d8"/></linearGradient>
@@ -271,12 +266,20 @@
         function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
         window.addEventListener('resize', resize); resize();
 
+        function project3D(x, y, z) {
+            let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+            let y1 = y * cosX - z * sinX, z1 = y * sinX + z * cosX;
+            let x2 = x * cosY - z1 * sinY, z2 = x * sinY + z1 * cosY;
+            let scale = FOV / (FOV + z2);
+            return { x: width/2 + x2 * scale, y: height/2 + y1 * scale, z: z2, scale: scale };
+        }
+
         function initPreviewRealm(id) {
             realmParticles = []; currentPreviewId = id;
             if (id === 1) { let N = 400, R = 180, goldenAngle = Math.PI * (3 - Math.sqrt(5)); for(let i=0; i<N; i++) { let y = 1 - (i / (N - 1)) * 2, radius = Math.sqrt(1 - y*y), theta = goldenAngle * i; addColorfulParticle(Math.cos(theta)*radius*R, y*R, Math.sin(theta)*radius*R, { seed: Math.random()*Math.PI*2, type: 'mani' }); } }
             else if (id === 2) { for (let l = 0; l < 3; l++) { let pCount = [6, 8, 10][l], rOut = 40 + l * 25, hUp = 20 + l * 20; for (let p = 0; p < pCount; p++) { let aC = (Math.PI * 2 / pCount) * p + (l * 0.3); for (let t = 0; t <= 1; t += 0.2) { for (let w = -1; w <= 1; w += 0.5) { let pW = Math.sin(t * Math.PI) * (15 + l * 5), cR = t * rOut, cY = -t * hUp + (w * w * 12); realmParticles.push({ x: cR * Math.cos(aC) - (w * pW) * Math.sin(aC), y: cY + 40, z: cR * Math.sin(aC) + (w * pW) * Math.cos(aC), type: 'lotus', l: l, t: t, col: {hsl: "139, 168, 156"} }); } } } } }
             else if (id === 3) { for(let b = 1; b < 10; b+=2) { let phi = (Math.PI / 10) * b; for(let s = 0; s < 16; s++) { let theta = (Math.PI * 2 / 16) * s; realmParticles.push({ x: 130 * Math.sin(phi) * Math.cos(theta), y: 130 * Math.cos(phi), z: 130 * Math.sin(phi) * Math.sin(theta), theta: theta, phi: phi, type: 'grid', col:{hsl:"0,0%,88%"} }); } } }
-            else if (id === 4) { for(let l = 1; l <= 4; l++) { let rL = l * 30, yO = Math.sin(l * 0.5) * 20; for(let p = 0; p < 8; p++) { let ang = (Math.PI * 2 / 8) * p + (l * 0.2); for(let t = 0; t <= 1; t += 0.2) { realmParticles.push({ x: rL * t * Math.cos(ang), y: yO * t - (t * t * 40), z: rL * t * Math.sin(ang), l: l, p: p, t: t, type: 'net' }); } } } }
+            else if (id === 4) { for(let l = 1; l <= 4; l++) { let rL = l * 30, yO = Math.sin(l * 0.5) * 20; for(let p = 0; p < 8; p++) { let ang = (Math.PI * 2 / 8) * p + (l * 0.2); for (let t = 0; t <= 1; t += 0.2) { realmParticles.push({ x: rL * t * Math.cos(ang), y: yO * t - (t * t * 40), z: rL * t * Math.sin(ang), l: l, p: p, t: t, type: 'net' }); } } } }
             else if (id === 5) { for(let i=0; i<150; i++) { let t = Math.random() * Math.PI * 2, p = Math.acos((Math.random() * 2) - 1), r = Math.random() * 40; addColorfulParticle(r*Math.sin(p)*Math.cos(t), r*Math.cos(p), r*Math.sin(p)*Math.sin(t), { type: 'mani-core' }); } }
             else if (id === 6) { let layers = 8; let segments = 60; for(let l = 0; l < layers; l++) { let zBase = (l - layers/2) * 30; let radiusBase = 120 * Math.sin((l/layers) * Math.PI) + 20; for(let i = 0; i < segments; i++) { let theta = (i / segments) * Math.PI * 2; let col = getRandomPastel(); realmParticles.push({ x: 0, y: 0, z: zBase, bR: radiusBase, th: theta, l: l, type: 'old9', col: col }); } } }
             else if (id === 7) { for(let i=0; i<600; i++) { let t = i / 600, a = t * Math.PI * 10, r = t * 160; let baseHue = (t * 360 * 3) % 360; realmParticles.push({ x: r*Math.cos(a), y: (Math.random()-0.5)*30, z: r*Math.sin(a), hue: baseHue }); } }
@@ -392,90 +395,89 @@
         window.currentMilestoneLock = null;
 
         // 🌟 主流程引擎
-        // 🌟 Optimized Flow Engine for English Version
-async function runZenEngine() {
-    state = -1; animate();
-    await sleep(100); document.getElementById('page-curtain').style.opacity = '0';
-    await sleep(1000);
+        async function runZenEngine() {
+            state = -1; animate();
+            await sleep(100); document.getElementById('page-curtain').style.opacity = '0';
+            await sleep(1000);
 
-    let db; try { db = JSON.parse(localStorage.getItem('PX_EN_V15.0')) || {}; } catch(e) { db = {}; }
-    let currentDays = (db.points || 0) / 100;
-    let ms = db.milestones || {};
-    
-    // --- Step 1: Dynamic Realm Selection (Always 4 Realms) ---
-    let displayRealms = [1, 2, 3, 4]; // Default: Faith Levels
-    let ttsText = "Bodhi Seal achieved. Please return in peace.";
+            let db; try { db = JSON.parse(localStorage.getItem('PX_EN_V15.0')) || {}; } catch(e) { db = {}; }
+            let currentDays = (db.points || 0) / 100;
+            let ms = db.milestones || {};
+            
+            // 🌟 觀想境界決定：永遠根據點數播放對應的 4 重動畫 (不論是否領證)
+            let displayRealms = [1, 2, 3, 4];
+            if (currentDays >= 111100) displayRealms = [17, 18, 19, 20];
+            else if (currentDays >= 11100) displayRealms = [13, 14, 15, 16];
+            else if (currentDays >= 1100) displayRealms = [9, 10, 11, 12];
+            else if (currentDays >= 100) displayRealms = [5, 6, 7, 8];
 
-    if (currentDays >= 1011100) displayRealms = [17, 18, 19, 20];
-    else if (currentDays >= 101100) displayRealms = [13, 14, 15, 16];
-    else if (currentDays >= 10100) displayRealms = [9, 10, 11, 12];
-    else if (currentDays >= 1000) displayRealms = [5, 6, 7, 8];
+            const RealmNames = [
+                "Supreme Light Illuminating", "Fragrant Lotus Adornments", "Jewel Adornments Universal Light", "Bright Flower Adornments",
+                "Radiating Wondrous Flower Light", "Pure Wondrous Brightness", "Flower Lights Adornment", "Majestic Light", "Wondrous Sounds", "Vajra Banner",
+                "Emerging Sapphire Light", "Illuminating Brightness", "Saha & Ultimate Bliss", "Tranquil Dustless Light", "Wondrous Bright Lamps",
+                "Pure Light Illuminating", "Jewel Adornment", "Free from Dust", "Pure Light Universal Illumination", "Wondrous Jewel Flame"
+            ];
+            
+            const previewEl = document.getElementById('fast-preview');
+            previewEl.style.opacity = '1'; playDharmaSound('preview'); 
+            
+            for(let id of displayRealms) {
+                previewEl.innerText = `Realm ${id} · ${RealmNames[id-1]}`;
+                initPreviewRealm(id); 
+                await sleep(1000);
+            }
+            
+            previewEl.style.opacity = '0'; realmParticles = []; await sleep(500);
+            
+            state = 0; initParticles(); await sleep(500);
 
-    const RealmNames = [
-        "Supreme Light Illuminating", "Fragrant Lotus Adornments", "Jewel Adornments Universal Light", "Bright Flower Adornments",
-        "Radiating Wondrous Flower Light", "Pure Wondrous Brightness", "Flower Lights Adornment", "Majestic Light", "Wondrous Sounds", "Vajra Banner",
-        "Emerging Sapphire Light", "Illuminating Brightness", "Saha & Ultimate Bliss", "Tranquil Dustless Light", "Wondrous Bright Lamps",
-        "Pure Light Illuminating", "Jewel Adornment", "Free from Dust", "Pure Light Universal Illumination", "Wondrous Jewel Flame"
-    ];
-    
-    const previewEl = document.getElementById('fast-preview');
-    previewEl.style.opacity = '1'; playDharmaSound('preview'); 
-    
-    // 🌟 Guaranteed 4-animation sequence regardless of certificate status
-    for(let id of displayRealms) {
-        previewEl.innerText = `Realm ${id} · ${RealmNames[id-1]}`;
-        initPreviewRealm(id); 
-        await sleep(1200); 
-    }
-    
-    previewEl.style.opacity = '0'; realmParticles = []; await sleep(500);
-    
-    // --- Step 2: Core Contemplation Flow ---
-    state = 0; initParticles(); await sleep(500);
-    state = 1; playDharmaSound('form'); document.getElementById('status-panel').style.opacity = '1'; await sleep(3000); 
-    state = 2; document.getElementById('ui-layer').style.opacity = '1'; await sleep(6000); 
-    state = 3; document.getElementById('ui-layer').style.opacity = '0'; document.getElementById('status-panel').style.opacity = '0'; await sleep(2000);
-    
-    const flash = document.getElementById('golden-flash'); flash.style.opacity = '1'; playDharmaSound('seed'); await sleep(200); 
-    state = 4; flash.style.transition = 'opacity 4s ease-in'; flash.style.opacity = '0'; await sleep(2500); 
+            state = 1; playDharmaSound('form'); document.getElementById('status-panel').style.opacity = '1'; await sleep(3000); 
+            state = 2; document.getElementById('ui-layer').style.opacity = '1'; await sleep(6000); 
+            state = 3; document.getElementById('ui-layer').style.opacity = '0'; document.getElementById('status-panel').style.opacity = '0'; await sleep(2000);
+            
+            const flash = document.getElementById('golden-flash'); flash.style.opacity = '1'; playDharmaSound('seed'); await sleep(200); 
+            state = 4; flash.style.transition = 'opacity 4s ease-in'; flash.style.opacity = '0'; await sleep(2500); 
 
-    const immortalSeed = document.getElementById('immortal-seed');
-    immortalSeed.style.opacity = '1'; immortalSeed.classList.add('seed-heartbeat');
-    await sleep(1000); 
-    immortalSeed.style.top = '15%'; 
-    document.getElementById('profound-text').style.opacity = '1'; 
-    await sleep(1000);
+            const immortalSeed = document.getElementById('immortal-seed');
+            immortalSeed.style.opacity = '1'; immortalSeed.classList.add('seed-heartbeat');
+            await sleep(1000); 
+            
+            immortalSeed.style.top = '15%'; 
+            document.getElementById('profound-text').style.opacity = '1'; 
+            await sleep(1000);
 
-    // --- Step 3: Certificate Issuance Logic ---
-    let rankData = null;
-    if (currentDays >= 1011100 && !ms['rank_ground_10']) {
-        rankData = { lock: 'rank_ground_10', svg: 'svg-ground', tts: 'Ascension to the Tenth Ground.', html: `...` }; // (Keep your existing HTML)
-    } else if (currentDays >= 101100 && !ms['rank_dedication_10']) {
-        rankData = { lock: 'rank_dedication_10', svg: 'svg-dedication', tts: 'Ascension to the Tenth Dedication.', html: `...` };
-    } else if (currentDays >= 10100 && !ms['rank_practice_10']) {
-        rankData = { lock: 'rank_practice_10', svg: 'svg-practice', tts: 'Ascension to the Tenth Practice.', html: `...` };
-    } else if (currentDays >= 1000 && !ms['rank_abiding_10']) {
-        rankData = { lock: 'rank_abiding_10', svg: 'svg-abode', tts: 'Ascension to the Tenth Abiding.', html: `...` };
-    } else if (currentDays >= 90 && !ms['rank_10']) {
-        rankData = { lock: 'rank_10', svg: 'svg-faith', tts: 'Ascension to the Tenth Faith.', html: `...` };
-    }
+            // 🌟 證書判定邏輯 (僅當達標且尚未領取時，才會阻擋並彈出證書)
+            let rankData = null;
+            if (currentDays >= 111100 && !ms['rank_ground_10']) {
+                rankData = { lock: 'rank_ground_10', svg: 'svg-ground', tts: 'Ascension to the Tenth Ground.', html: `<div class="cert-desc-title"><svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>A Million Days of Non-retrogression<svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg></div>The Ten Grounds are perfected. Merit and wisdom fully complete, Supreme Buddhahood is near.<br>Entering the Unsurpassed Perfect Enlightenment,<br>illuminate the emptiness of all dharmas through <span class="highlight">Prajna</span>,<br>saving all beings across the ten directions.` };
+            } else if (currentDays >= 11100 && !ms['rank_dedication_10']) {
+                rankData = { lock: 'rank_dedication_10', svg: 'svg-dedication', tts: 'Ascension to the Tenth Dedication.', html: `<div class="cert-desc-title"><svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>Hundred Thousand Days of Perseverance<svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg></div>The Dedications are fulfilled. The mind dwells nowhere yet generates boundless compassion.<br>Ascending to the First Ground of Joy,<br>realize the truth of non-arising. Enter deep Samadhi through <span class="highlight">Meditation</span><br>to shelter the universe with the Dharma Cloud.` };
+            } else if (currentDays >= 1100 && !ms['rank_practice_10']) {
+                rankData = { lock: 'rank_practice_10', svg: 'svg-practice', tts: 'Ascension to the Tenth Practice.', html: `<div class="cert-desc-title"><svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>Ten Thousand Days of Fulfillment<svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg></div>The Ten Practices are completed. Practicing the formless true practice within all dharmas.<br>Entering the First Dedication Rank,<br>ground yourself in <span class="highlight">Patience</span> and <span class="highlight">Diligence</span>,<br>dedicating all merits to the absolute truth.` };
+            } else if (currentDays >= 1000 && !ms['rank_abiding_10']) {
+                rankData = { lock: 'rank_abiding_10', svg: 'svg-abode', tts: 'Ascension to the Tenth Abiding.', html: `<div class="cert-desc-title"><svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>A Thousand Days of Steadfastness<svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg></div>The Ten Abodes are accomplished. Born into the Tathagata's family, abiding in the True Nature.<br>Entering the First Practice Rank,<br>focus on <span class="highlight">Discipline</span> to adorn Bodhi<br>and never abandon sentient beings.` };
+            } else if (currentDays >= 90 && !ms['rank_10']) {
+                rankData = { lock: 'rank_10', svg: 'svg-faith', tts: 'Ascension to the Tenth Faith.', html: `<div class="cert-desc-title"><svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>A Hundred Days of Pure Practice<svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg></div>The Ten Faiths are fulfilled. You have perfected faith, mindfulness, and diligence.<br>Entering the First Abiding Rank,<br>prepare with the Six Paramitas. Focus on <span class="highlight">Generosity</span><br>to cure stinginess and liberate all beings.` };
+            }
 
-    if (rankData) {
-        window.currentMilestoneLock = rankData.lock;
-        document.getElementById('cert-text-body').innerHTML = rankData.html;
-        document.getElementById('cert-name-insert').innerText = db.name || "Practitioner";
-        ['svg-faith', 'svg-abode', 'svg-practice', 'svg-dedication', 'svg-ground'].forEach(id => {
-            let el = document.getElementById(id);
-            if (el) { el.style.opacity = (id === rankData.svg) ? '1' : '0'; el.style.transform = (id === rankData.svg) ? 'scale(1)' : 'scale(0.8)'; }
-        });
-        const certUI = document.getElementById('cert-ui');
-        certUI.style.opacity = '1'; certUI.style.pointerEvents = 'auto';
-        try { let m = new SpeechSynthesisUtterance(rankData.tts); m.lang = 'en-US'; m.rate = 0.85; window.speechSynthesis.speak(m); } catch(e) {}
-    } else {
-        await sleep(3000); navigateTo('index_en.html');
-    }
-}
+            if (rankData) {
+                window.currentMilestoneLock = rankData.lock;
+                document.getElementById('cert-text-body').innerHTML = rankData.html;
+                document.getElementById('cert-name-insert').innerText = db.name || "Practitioner";
 
+                ['svg-faith', 'svg-abode', 'svg-practice', 'svg-dedication', 'svg-ground'].forEach(id => {
+                    let el = document.getElementById(id);
+                    if (el) { el.style.opacity = (id === rankData.svg) ? '1' : '0'; el.style.transform = (id === rankData.svg) ? 'scale(1)' : 'scale(0.8)'; }
+                });
+
+                const certUI = document.getElementById('cert-ui');
+                certUI.style.opacity = '1'; certUI.style.pointerEvents = 'auto';
+
+                try { let m = new SpeechSynthesisUtterance(rankData.tts); m.lang = 'en-US'; m.rate = 0.85; window.speechSynthesis.speak(m); } catch(e) {}
+            } else {
+                await sleep(3000); navigateTo('index_en.html');
+            }
+        }
 
         function claimCertificate() {
             document.getElementById('cert-ui').style.opacity = '0';

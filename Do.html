@@ -3,192 +3,290 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>自性金蓮 ． 境界色彩還原測試</title>
+    <title>自性金蓮 ． 念佛功德契印</title>
     <style>
-        :root { 
-            --gold: #f3e5ab; 
-            --solid-gold: #d4af37; 
-            --bg-deep: #020203; 
+        :root {
+            --gold: #f3e5ab;
+            --solid-gold: #d4af37;
+            --bg-deep: #020203;
+            /* 境界色彩變數 */
+            --c-100k: #ba68c8;
+            --c-500k: #4dd0e1;
+            --c-1m: #f48fb1;
+            --c-10m: #f8bbd0; /* 彩色背景基礎 */
+            --c-100m: #ffb300;
         }
-        
-        body { 
-            margin: 0; padding: 0; height: 100vh; height: 100dvh; 
-            overflow: hidden; 
-            background: radial-gradient(circle at 50% 50%, #111518 0%, var(--bg-deep) 100%); 
-            color: #fff; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; 
+
+        body {
+            margin: 0; padding: 0;
+            height: 100vh; height: 100dvh;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 50%, #111518 0%, var(--bg-deep) 100%);
+            color: #fff; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
+            user-select: none; -webkit-tap-highlight-color: transparent;
         }
 
-        /* 宇宙微光 */
-        .center-glow {
-            position: absolute; width: 320px; height: 320px;
-            background: radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 70%);
-            border-radius: 50%; pointer-events: none; z-index: 0;
-            animation: pulse-glow 4s infinite alternate;
-        }
-        @keyframes pulse-glow { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.1); opacity: 1; } }
+        /* 宇宙星空畫布 */
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
-        /* 證書 UI 框架 */
-        #cert-ui {
-            width: 88%; max-width: 380px; z-index: 10;
-            background: linear-gradient(135deg, rgba(15,15,10,0.85), rgba(0,0,0,0.9));
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            border-radius: 20px; padding: 40px 20px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-            backdrop-filter: blur(15px);
-            display: flex; flex-direction: column; align-items: center;
-            transition: all 1s ease;
-        }
-
-        .cert-header { color: var(--gold); font-size: 0.9rem; letter-spacing: 6px; margin-bottom: 30px; font-weight: bold; }
-
-        /* 🌸 蓮花容器 */
-        #lotus-box {
-            width: 180px; height: 180px; margin-bottom: 25px;
-            display: flex; align-items: center; justify-content: center;
+        /* 🌟 卡牌容器：孔雀開屏 */
+        #deck-container {
             position: relative;
+            width: 100%; height: 480px;
+            display: flex; justify-content: center; align-items: flex-end;
+            padding-bottom: 60px;
+            z-index: 10;
+            perspective: 1500px;
         }
 
-        .lotus-spin { animation: slow-spin 40s linear infinite; }
+        .card {
+            position: absolute;
+            width: 240px; height: 380px;
+            transition: all 1.2s cubic-bezier(0.2, 0.8, 0.2, 1.1);
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%; height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 3D 翻轉效果 */
+        .card.is-flipped .card-inner { transform: rotateY(180deg); }
+
+        .card-face {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            display: flex; flex-direction: column; align-items: center;
+            overflow: hidden;
+        }
+
+        /* --- 卡牌背面：封印圖騰 --- */
+        .card-back {
+            background: linear-gradient(145deg, #0a0c0e, #010101);
+            justify-content: center;
+        }
+        .totem-prajna {
+            width: 100px; height: 100px;
+            fill: none; stroke: var(--solid-gold);
+            stroke-width: 1; opacity: 0.5;
+        }
+
+        /* --- 卡牌正面：琉璃證書 --- */
+        .card-front {
+            background: linear-gradient(135deg, rgba(15,15,12,0.92), rgba(2,2,0,0.98));
+            transform: rotateY(180deg);
+            padding: 25px 15px;
+            justify-content: space-between;
+        }
+
+        /* 🌟 蓮花專屬容器 */
+        .lotus-box {
+            width: 160px; height: 160px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .lotus-spin { animation: slow-spin 50s linear infinite; }
         @keyframes slow-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* ✨ 核心動畫 ✨ */
+        /* 蓮花生長動畫 */
         .draw-petal {
-            stroke-dasharray: 1000; stroke-dashoffset: 1000; fill-opacity: 0; 
-            animation: dash-draw 3s cubic-bezier(0.4, 0, 0.2, 1) forwards 0.5s, color-fade 3s ease forwards 2.5s; 
-        }
-        .draw-vein {
-            stroke-dasharray: 500; stroke-dashoffset: 500;
-            animation: dash-draw 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards 1s;
+            stroke-dasharray: 1000; stroke-dashoffset: 1000; fill-opacity: 0;
+            animation: dash-draw 3s cubic-bezier(0.4, 0, 0.2, 1) forwards 0.5s, color-fade 2.5s ease forwards 2.5s;
         }
         @keyframes dash-draw { to { stroke-dashoffset: 0; } }
-        @keyframes color-fade { to { fill-opacity: 0.8; } } /* 保持琉璃半透明 */
+        @keyframes color-fade { to { fill-opacity: 0.8; } }
 
-        /* 文字區 */
-        .rank-name { color: var(--gold); font-size: 1.4rem; font-weight: bold; letter-spacing: 4px; margin-bottom: 10px; transition: 0.5s; text-shadow: 0 0 10px rgba(212,175,55,0.4); }
-        .rank-desc { color: #ccc; font-size: 0.85rem; letter-spacing: 2px; transition: 0.5s; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        /* 文案樣式 */
+        .cert-header { color: var(--gold); font-size: 0.85rem; letter-spacing: 5px; font-weight: bold; text-transform: uppercase; }
+        .cert-user { color: var(--gold); font-size: 1.4rem; font-weight: bold; letter-spacing: 4px; margin: 8px 0; }
+        .cert-desc { color: #ccc; font-size: 0.78rem; line-height: 1.9; text-align: center; padding: 0 10px; }
+        .cert-desc b { color: var(--solid-gold); }
 
-        /* 底部控制列 */
-        .controls { position: absolute; bottom: 15px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 100%; z-index: 20; }
-        .demo-btn { padding: 8px 12px; font-size: 0.8rem; border-radius: 20px; border: 1px solid rgba(212,175,55,0.4); background: rgba(0,0,0,0.7); color: var(--gold); cursor: pointer; transition: 0.3s; }
-        .demo-btn:hover { background: rgba(212,175,55,0.2); }
+        .btn-confirm {
+            margin-top: 15px; width: 90%; padding: 12px 0; border-radius: 25px;
+            border: 1px solid var(--solid-gold); background: rgba(212,175,55,0.1);
+            color: var(--gold); font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        .btn-confirm:active { background: rgba(212,175,55,0.3); }
+
+        /* 🌟 孔雀開屏各卡片位置 (扇形) */
+        .card-0 { transform: rotateZ(-12deg) translateX(-200px) translateY(50px); z-index: 5; }
+        .card-1 { transform: rotateZ(-6deg) translateX(-100px) translateY(15px); z-index: 6; }
+        .card-2 { transform: rotateZ(0deg) translateX(0px) translateY(0px); z-index: 7; }
+        .card-3 { transform: rotateZ(6deg) translateX(100px) translateY(15px); z-index: 6; }
+        .card-4 { transform: rotateZ(12deg) translateX(200px) translateY(50px); z-index: 5; }
+
+        /* 🌟 聚焦抽牌飛出動畫 */
+        .card.is-active {
+            transform: scale(1.3) rotateZ(0deg) translateX(0px) translateY(-140px) !important;
+            z-index: 100 !important;
+        }
+
+        #page-curtain { position: fixed; inset: 0; background: #000; z-index: 999999; pointer-events: none; transition: opacity 1s; opacity: 1; }
     </style>
 </head>
 <body>
 
+    <div id="page-curtain"></div>
+
     <svg style="position: absolute; width: 0; height: 0;">
         <defs>
-            <radialGradient id="grad-100k" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#fff" />
-                <stop offset="60%" stop-color="#e1bee7" />
-                <stop offset="100%" stop-color="#ba68c8" />
-            </radialGradient>
+            <radialGradient id="grad-100k" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff"/><stop offset="60%" stop-color="#e1bee7"/><stop offset="100%" stop-color="#ba68c8"/></radialGradient>
+            <radialGradient id="grad-500k" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff"/><stop offset="50%" stop-color="#e0f7fa"/><stop offset="100%" stop-color="#4dd0e1"/></radialGradient>
+            <radialGradient id="grad-1m" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff"/><stop offset="50%" stop-color="#fce4ec"/><stop offset="100%" stop-color="#f48fb1"/></radialGradient>
+            <radialGradient id="grad-10m" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#b2ebf2"/><stop offset="50%" stop-color="#f8bbd0"/><stop offset="100%" stop-color="#fff9c4"/></radialGradient>
+            <radialGradient id="grad-100m" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff"/><stop offset="40%" stop-color="#fff59d"/><stop offset="100%" stop-color="#ffb300"/></radialGradient>
             
-            <radialGradient id="grad-500k" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#fff" />
-                <stop offset="50%" stop-color="#e0f7fa" />
-                <stop offset="100%" stop-color="#4dd0e1" />
-            </radialGradient>
-            
-            <radialGradient id="grad-1m" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#ffffff" />
-                <stop offset="70%" stop-color="#f5f5f5" />
-                <stop offset="100%" stop-color="#e0e0e0" />
-            </radialGradient>
-            
-            <radialGradient id="grad-10m" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#fffde7" />
-                <stop offset="60%" stop-color="#ffe082" />
-                <stop offset="100%" stop-color="#ffca28" />
-            </radialGradient>
-            
-            <radialGradient id="grad-100m" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#ffffff" />
-                <stop offset="40%" stop-color="#fff59d" />
-                <stop offset="100%" stop-color="#ffb300" />
-            </radialGradient>
+            <g id="totem-prajna-symbol">
+                <path d="M50 10 C 75 40, 75 70, 50 95 C 25 70, 25 40, 50 10 Z" />
+                <path d="M50 35 L 65 55 L 50 75 L 35 55 Z" stroke-width="0.8"/>
+                <circle cx="50" cy="55" r="5" stroke-width="0.8"/>
+            </g>
         </defs>
     </svg>
 
-    <div class="center-glow"></div>
-
-    <div id="cert-ui">
-        <div class="cert-header">✦ 菩提契印 ✦</div>
-        
-        <div id="lotus-box"></div>
-
-        <div class="rank-name" id="rank-name">請選擇境界</div>
-        <div class="rank-desc" id="rank-desc">...</div>
-    </div>
-
-    <div class="controls">
-        <button class="demo-btn" onclick="playAnimation('grad-100k', '紫金霞光', '蓮池海會 ． 霞光初現', 'rgba(186, 104, 200, 0.4)', false)">10萬(紫金)</button>
-        <button class="demo-btn" onclick="playAnimation('grad-500k', '晨曦玉露', '不退轉菩薩 ． 如露清涼', 'rgba(77, 208, 225, 0.4)', false)">50萬(玉露)</button>
-        <button class="demo-btn" onclick="playAnimation('grad-1m', '月魄銀輝', '無相念佛 ． 湛藍如月', 'rgba(224, 224, 224, 0.4)', false)">100萬(銀輝)</button>
-        <button class="demo-btn" onclick="playAnimation('grad-10m', '玄黃凝脂', '念佛三昧 ． 定力如山', 'rgba(255, 202, 40, 0.4)', false)">1千萬(玄黃)</button>
-        <button class="demo-btn" onclick="playAnimation('grad-100m', '大圓滿耀金', '圓滿成佛 ． 金剛不壞', 'rgba(255, 179, 0, 0.6)', true)">1億(耀金)</button>
-    </div>
+    <canvas id="starCanvas"></canvas>
+    <div id="deck-container"></div>
 
     <script>
-        function playAnimation(gradId, rName, rDesc, glowColor, isMaxLevel) {
-            const box = document.getElementById('lotus-box');
-            document.getElementById('rank-name').innerText = rName;
-            document.getElementById('rank-desc').innerText = rDesc;
+        const MILESTONES = [
+            { key: 'nian_100k', target: 100000, title: '蓮池海會', desc: '初入蓮池，霞光環繞。<br>諸上善人同聚一處，共修淨業。', grad: 'grad-100k', color: '#ba68c8' },
+            { key: 'nian_500k', target: 500000, title: '不退轉菩薩', desc: '淨業初成，如露清涼。<br>不墮凡夫位，志求無上菩提。', grad: 'grad-500k', color: '#4dd0e1' },
+            { key: 'nian_1m',   target: 1000000, title: '無相念佛', desc: '粉櫻湛然，心佛合一。<br>行無相之行，證無礙之智。', grad: 'grad-1m', color: '#f48fb1' },
+            { key: 'nian_10m',  target: 10000000, title: '念佛三昧', desc: '彩色斑斕，入深三昧。<br>定力如山，法界一相。', grad: 'grad-10m', color: '#81d4fa' },
+            { key: 'nian_100m', target: 100000000, title: '圓滿成佛', desc: '大圓滿耀金，金剛不壞。<br>萬德莊嚴，大放光明照十方。', grad: 'grad-100m', color: '#ffb300' }
+        ];
+
+        // 1. 星空背景
+        const canvas = document.getElementById('starCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, stars = [];
+        function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+        window.addEventListener('resize', resize); resize();
+        for(let i=0; i<150; i++) stars.push({ x: (Math.random()-0.5)*2000, y: (Math.random()-0.5)*2000, z: Math.random()*1000, s: Math.random()*2 });
+        function draw() {
+            ctx.fillStyle = 'rgba(2, 2, 4, 0.4)'; ctx.fillRect(0,0,width,height);
+            ctx.globalCompositeOperation = 'screen';
+            stars.forEach(s => { s.z -= 0.8; if(s.z<=0) s.z=1000; let sc = 300/(300+s.z), sx = width/2+s.x*sc, sy = height/2+s.y*sc; ctx.beginPath(); ctx.arc(sx,sy,s.s*sc,0,Math.PI*2); ctx.fillStyle=`rgba(243,229,171,${sc*1.5})`; ctx.fill(); });
+            requestAnimationFrame(draw);
+        }
+        draw();
+
+        // 2. 初始化資料與卡牌
+        let db; try { db = JSON.parse(localStorage.getItem('PX_V15.0')) || {}; } catch(e) { db = {}; }
+        const milestones = db.milestones || {};
+        const currentTotal = db.totalNian || 0;
+        const userName = db.name || "妙 依";
+        const deck = document.getElementById('deck-container');
+        let activeIdx = -1;
+
+        MILESTONES.forEach((m, idx) => {
+            const alreadyClaimed = milestones[m.key] === true;
             
-            // 卡片邊緣微光
-            let cardShadow = isMaxLevel ? 
-                `0 20px 60px rgba(0,0,0,0.9), inset 0 0 50px rgba(255,255,255,0.2)` : 
-                `0 20px 60px rgba(0,0,0,0.9), inset 0 0 30px ${glowColor}`;
-            document.getElementById('cert-ui').style.boxShadow = cardShadow;
+            // 找出本次觸發的位階
+            if (currentTotal >= m.target && !alreadyClaimed && activeIdx === -1) {
+                activeIdx = idx;
+            }
 
-            // 清空重繪
-            box.innerHTML = '';
+            const card = document.createElement('div');
+            card.className = `card card-${idx} ${alreadyClaimed ? 'is-flipped' : ''}`;
             
-            setTimeout(() => {
-                let fill = `url(#${gradId})`;
-                // 🌟 完全對應您的邏輯：1億大圓滿使用白色描邊，其餘使用淡金
-                let stroke = isMaxLevel ? "#ffffff" : "rgba(243,229,171,0.6)"; 
-                let dropShadow = isMaxLevel ? 
-                    "drop-shadow(0 0 18px rgba(212,175,55,0.8)) drop-shadow(0 0 40px rgba(212,175,55,0.4))" : 
-                    `drop-shadow(0 0 15px ${glowColor})`;
+            card.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-back card-face" style="box-shadow: inset 0 0 25px ${m.color}55">
+                        <svg class="totem-prajna" style="stroke:${m.color}" viewBox="0 0 100 100"><use href="#totem-prajna-symbol"/></svg>
+                        <div style="margin-top:25px; color:${m.color}; font-size:0.75rem; letter-spacing:3px; font-weight:bold; opacity:0.8">修行中</div>
+                    </div>
+                    <div class="card-front card-face" style="box-shadow: inset 0 0 40px ${m.color}33">
+                        <div class="cert-header">✦ ${m.title} ✦</div>
+                        <div class="lotus-box" id="lotus-box-${idx}">
+                            ${alreadyClaimed ? renderStaticLotus(m.grad, idx === 4) : ''}
+                        </div>
+                        <div class="cert-name-wrap">
+                            <div class="cert-label">行 者</div>
+                            <div class="cert-user">${userName}</div>
+                        </div>
+                        <div class="cert-desc">累積念佛達 <b>${m.target.toLocaleString()}</b> 聲<br>${m.desc}</div>
+                        <button class="btn-confirm" onclick="returnToSystem('${m.key}')">歡喜功德 ． 返回系統</button>
+                    </div>
+                </div>
+            `;
+            deck.appendChild(card);
+        });
 
-                let layers = 3;
-                let svg = `<svg class="lotus-spin" viewBox="-150 -150 300 300" style="width:100%;height:100%;overflow:visible; filter:${dropShadow}">`;
+        // 3. 啟動動畫流程
+        window.onload = () => {
+            setTimeout(() => { document.getElementById('page-curtain').style.opacity = '0'; }, 300);
+            
+            if (activeIdx !== -1) {
+                setTimeout(() => {
+                    const targetCard = document.querySelector(`.card-${activeIdx}`);
+                    targetCard.classList.add('is-active');
+                    setTimeout(() => {
+                        targetCard.classList.add('is-flipped');
+                        startLotusAnimation(activeIdx);
+                    }, 1200);
+                }, 1500);
+            }
+        };
 
-                for (let l = layers; l > 0; l--) {
-                    const sc = 0.44 + l * 0.28;
-                    const n = (l === layers) ? 8 : 6;
-                    const rotOffset = l * 22.5; 
-                    for (let i = 0; i < n; i++) {
-                        const rot = i * (360/n) + rotOffset;
-                        const s = 112 * sc;
-                        const pth = `M 0 0 C ${s*.44} ${-s*.07} ${s*.54} ${-s*.62} 0 ${-s} C ${-s*.54} ${-s*.62} ${-s*.44} ${-s*.07} 0 0`;
-                        const vein = `M 0 ${-s*.08} Q 0 ${-s*.55} 0 ${-s*.88}`;
-                        
-                        svg += `<g transform="rotate(${rot})">
-                            <path class="draw-petal" d="${pth}" fill="${fill}" stroke="${stroke}" stroke-width="${isMaxLevel ? 1.5 : 1.2}" />
-                            <path class="draw-vein" d="${vein}" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
-                        </g>`;
-                    }
-                }
-
-                const cr = 16;
-                svg += `<circle cx="0" cy="0" r="${cr}" fill="${fill}" stroke="${stroke}" stroke-width="1.2" style="opacity:0; animation: color-fade 2s ease forwards 4s;"/>`;
-                for (let s = 0; s < 10; s++) {
-                    const sa = (s * 36) * Math.PI / 180;
-                    const sr = cr + 10;
-                    const ex = (sr * Math.cos(sa)).toFixed(1);
-                    const ey = (sr * Math.sin(sa)).toFixed(1);
-                    svg += `
-                    <g style="opacity:0; animation: color-fade 2s ease forwards 4.5s;">
-                        <circle cx="${ex}" cy="${ey}" r="3" fill="${fill}" />
-                        <line x1="${(cr*.6*Math.cos(sa)).toFixed(1)}" y1="${(cr*.6*Math.sin(sa)).toFixed(1)}" x2="${ex}" y2="${ey}" stroke="${stroke}" stroke-width="0.8"/>
+        function startLotusAnimation(idx) {
+            const m = MILESTONES[idx];
+            const box = document.getElementById(`lotus-box-${idx}`);
+            const isMax = (idx === 4);
+            let fill = `url(#${m.grad})`;
+            let stroke = isMax ? "#ffffff" : "rgba(243,229,171,0.8)";
+            let glow = isMax ? "drop-shadow(0 0 15px rgba(212,175,55,0.8))" : "none";
+            
+            let svg = `<svg class="lotus-spin" viewBox="-150 -150 300 300" style="width:100%;height:100%;overflow:visible; filter:${glow}">`;
+            for (let l = 3; l > 0; l--) {
+                const sc = 0.44 + l * 0.28;
+                const n = (l === 3) ? 8 : 6;
+                const rotOffset = l * 22.5;
+                for (let i = 0; i < n; i++) {
+                    const rot = i * (360/n) + rotOffset;
+                    const s = 112 * sc;
+                    const pth = `M 0 0 C ${s*.44} ${-s*.07} ${s*.54} ${-s*.62} 0 ${-s} C ${-s*.54} ${-s*.62} ${-s*.44} ${-s*.07} 0 0`;
+                    svg += `<g transform="rotate(${rot})">
+                        <path class="draw-petal" d="${pth}" fill="${fill}" stroke="${stroke}" stroke-width="${isMax?1.5:1.2}" />
                     </g>`;
                 }
-                
-                svg += `</svg>`;
-                box.innerHTML = svg;
-            }, 50);
+            }
+            svg += `</svg>`;
+            box.innerHTML = svg;
+        }
+
+        function renderStaticLotus(gradId, isMax) {
+            let fill = `url(#${gradId})`;
+            let stroke = isMax ? "#ffffff" : "rgba(243,229,171,0.5)";
+            let svg = `<svg class="lotus-spin" viewBox="-150 -150 300 300" style="width:100%;height:100%;overflow:visible;">`;
+            for (let l = 3; l > 0; l--) {
+                const sc = 0.44 + l * 0.28;
+                const n = (l === 3) ? 8 : 6;
+                for (let i = 0; i < n; i++) {
+                    const rot = i * (360/n) + l * 22.5;
+                    const s = 112 * sc;
+                    const pth = `M 0 0 C ${s*.44} ${-s*.07} ${s*.54} ${-s*.62} 0 ${-s} C ${-s*.54} ${-s*.62} ${-s*.44} ${-s*.07} 0 0`;
+                    svg += `<g transform="rotate(${rot})"><path d="${pth}" fill="${fill}" stroke="${stroke}" stroke-width="1" fill-opacity="0.8"/></g>`;
+                }
+            }
+            svg += `</svg>`;
+            return svg;
+        }
+
+        function returnToSystem(key) {
+            document.getElementById('page-curtain').style.opacity = '1';
+            db.milestones[key] = true;
+            const targetM = MILESTONES.find(x => x.key === key);
+            if(targetM) db.currentRank = `[${targetM.title}]`;
+            localStorage.setItem('PX_V15.0', JSON.stringify(db));
+            setTimeout(() => { window.location.href = 'index.html'; }, 800);
         }
     </script>
 </body>

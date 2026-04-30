@@ -588,161 +588,89 @@
         window.currentMilestoneLock = null;
 
         // 🌟 主流程引擎
-        async function runZenEngine() {
-            state = -1; animate();
-            await sleep(100); document.getElementById('page-curtain').style.opacity = '0';
-            await sleep(1000);
+     async function runZenEngine() {
+    state = -1; animate();
+    await sleep(100); document.getElementById('page-curtain').style.opacity = '0';
+    await sleep(1000);
 
-            let db; try { db = JSON.parse(localStorage.getItem('PX_V15.0')) || {}; } catch(e) { db = {}; }
-            let currentDays = (db.points || 0) / 100;
-            let ms = db.milestones || {};
-            let rankData = null;
+    let db; try { db = JSON.parse(localStorage.getItem('PX_V15.0')) || {}; } catch(e) { db = {}; }
+    let currentDays = (db.points || 0) / 100;
+    let ms = db.milestones || {};
+    
+    // --- 第一部分：動態判定當前位階對應的「四重境界」 ---
+    let displayRealms = [1, 2, 3, 4]; // 預設
+    if (currentDays >= 111100) displayRealms = [17, 18, 19, 20];
+    else if (currentDays >= 11100) displayRealms = [13, 14, 15, 16];
+    else if (currentDays >= 1100) displayRealms = [9, 10, 11, 12];
+    else if (currentDays >= 100) displayRealms = [5, 6, 7, 8];
 
-            // 🌟 由高至低攔截：依據位階派發 4 個專屬境界
-            if (currentDays >= 1011100 && !ms['rank_ground_10']) {
-                rankData = {
-                    lock: 'rank_ground_10', svg: 'svg-ground', tts: '十地行圓。請斂心為印，默然歸返。',
-                    realms: [17, 18, 19, 20],
-                    html: `
-                        <div class="cert-desc-title">
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                            百萬不退，十地行圓。
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                        </div>
-                        福慧兩足，等覺妙覺在望。<br>
-                        法界一相，今趣「無上正等正覺」，<br>
-                        以「般若」徹照萬法皆空，<br>
-                        無功用行，圓滿佛果，普度十方。
-                    `
-                };
-            } else if (currentDays >= 101100 && !ms['rank_dedication_10']) {
-                rankData = {
-                    lock: 'rank_dedication_10', svg: 'svg-dedication', tts: '迴向功圓。請斂心為印，默然歸返。',
-                    realms: [13, 14, 15, 16],
-                    html: `
-                        <div class="cert-desc-title">
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                            十萬恆持，迴向功圓。
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                        </div>
-                        三處迴向，心無所住而生其心。<br>
-                        聖凡同體，今登「初地」歡喜地，<br>
-                        當證無生忍，以「禪定」入深三昧，<br>
-                        破除無明，法雲普蔭大千。
-                    `
-                };
-            } else if (currentDays >= 10100 && !ms['rank_practice_10']) {
-                rankData = {
-                    lock: 'rank_practice_10', svg: 'svg-practice', tts: '十行圓滿。請斂心為印，默然歸返。',
-                    realms: [9, 10, 11, 12],
-                    html: `
-                        <div class="cert-desc-title">
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                            萬日踐履，十行圓滿。
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                        </div>
-                        於一切法中，行無相真實行。<br>
-                        大乘心廣，今邁入「初迴向位」，<br>
-                        當以「忍辱」與「精進」為基，<br>
-                        迴事向理，迴自向他，悲智雙運。
-                    `
-                };
-            } else if (currentDays >= 1000 && !ms['rank_abiding_10']) {
-                rankData = {
-                    lock: 'rank_abiding_10', svg: 'svg-abode', tts: '十住功成。請斂心為印，默然歸返。',
-                    realms: [5, 6, 7, 8],
-                    html: `
-                        <div class="cert-desc-title">
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                            千日堅守，十住功成。
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                        </div>
-                        生如來家，安住真如本性。<br>
-                        菩薩行深，今邁入「初行位」，<br>
-                        當勤修六度，側重<span class="highlight">「持戒」</span>，<br>
-                        以清淨梵行，嚴飾菩提，不捨有情。
-                    `
-                };
-            } else if (currentDays >= 90 && !ms['rank_10']) {
-                rankData = {
-                    lock: 'rank_10', svg: 'svg-faith', tts: '十信功圓。請斂心為印，默然歸返。',
-                    realms: [1, 2, 3, 4],
-                    html: `
-                        <div class="cert-desc-title">
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                            百日梵行，十信功圓。
-                            <svg viewBox="0 0 24 24"><use href="#lotus-petal"/></svg>
-                        </div>
-                        已成就信、念、精進等菩提心要。<br>
-                        菩薩行起，今邁入「初住位」，<br>
-                        當預修六度，首重<span class="highlight">「布施」</span>，<br>
-                        以捨對治慳貪，廣度有情。
-                    `
-                };
+    const RealmNames = [
+        "普光明照", "香蓮華寶", "普光摩尼", "妙華光明", "出妙華光", "清淨妙明", "華光莊嚴", "威光普照", "出妙音聲", "金剛寶幢", 
+        "出青蓮華", "普照大明", "娑婆極樂", "無塵寂靜", "妙明寶燈", "清淨光照", "寶華莊嚴", "離塵清淨", "普照十方", "妙寶焰光"
+    ];
+    
+    const previewEl = document.getElementById('fast-preview');
+    previewEl.style.opacity = '1'; playDharmaSound('preview'); 
+    
+    // 🌟 無論是否發證書，都一定會執行這 4 個動畫
+    for(let id of displayRealms) {
+        previewEl.innerText = `第 ${id} 重 ． ${RealmNames[id-1]}`;
+        initPreviewRealm(id); 
+        await sleep(1200); 
+    }
+    
+    previewEl.style.opacity = '0'; realmParticles = []; await sleep(500);
+    
+    // --- 第二部分：核心觀想流轉 ---
+    state = 0; initParticles(); await sleep(500);
+    state = 1; playDharmaSound('form'); document.getElementById('status-panel').style.opacity = '1'; await sleep(3000); 
+    state = 2; document.getElementById('ui-layer').style.opacity = '1'; await sleep(6000); 
+    state = 3; document.getElementById('ui-layer').style.opacity = '0'; document.getElementById('status-panel').style.opacity = '0'; await sleep(2000);
+    
+    const flash = document.getElementById('golden-flash'); flash.style.opacity = '1'; playDharmaSound('seed'); await sleep(200); 
+    state = 4; flash.style.transition = 'opacity 4s ease-in'; flash.style.opacity = '0'; await sleep(2500); 
+
+    const immortalSeed = document.getElementById('immortal-seed');
+    immortalSeed.style.opacity = '1'; immortalSeed.classList.add('seed-heartbeat');
+    await sleep(1000); 
+    immortalSeed.style.top = '15%'; 
+    document.getElementById('profound-text').style.opacity = '1'; 
+    await sleep(1000);
+
+    // --- 第三部分：證書判定與鎖定 ---
+    let rankData = null;
+    // 這裡的邏輯：如果達到門檻 且 尚未領取過里程碑，才賦予 rankData
+    if (currentDays >= 111100 && !ms['rank_ground_10']) {
+        rankData = { lock: 'rank_ground_10', svg: 'svg-ground', tts: '十地行圓。請歡喜功德，歸返系統。', html: '...十地內容...' };
+    } else if (currentDays >= 11100 && !ms['rank_dedication_10']) {
+        rankData = { lock: 'rank_dedication_10', svg: 'svg-dedication', tts: '迴向功圓。請歡喜功德，歸返系統。', html: '...迴向內容...' };
+    } else if (currentDays >= 1100 && !ms['rank_practice_10']) {
+        rankData = { lock: 'rank_practice_10', svg: 'svg-practice', tts: '十行圓滿。請歡喜功德，歸返系統。', html: '...十行內容...' };
+    } else if (currentDays >= 100 && !ms['rank_abiding_10']) {
+        rankData = { lock: 'rank_abiding_10', svg: 'svg-abode', tts: '十住功成。請歡喜功德，歸返系統。', html: '...十住內容...' };
+    } else if (currentDays >= 90 && !ms['rank_10']) {
+        rankData = { lock: 'rank_10', svg: 'svg-faith', tts: '十信功圓。請歡喜功德，歸返系統。', html: '...十信內容...' };
+    }
+
+    if (rankData) {
+        window.currentMilestoneLock = rankData.lock;
+        document.getElementById('cert-text-body').innerHTML = rankData.html;
+        document.getElementById('cert-name-insert').innerText = db.name || "行者";
+        ['svg-faith', 'svg-abode', 'svg-practice', 'svg-dedication', 'svg-ground'].forEach(id => {
+            let el = document.getElementById(id);
+            if (el) {
+                el.style.opacity = (id === rankData.svg) ? '1' : '0';
+                el.style.transform = (id === rankData.svg) ? 'scale(1)' : 'scale(0.8)';
             }
+        });
+        const certUI = document.getElementById('cert-ui');
+        certUI.style.opacity = '1'; certUI.style.pointerEvents = 'auto';
+        try { let m = new SpeechSynthesisUtterance(rankData.tts); m.lang = 'zh-TW'; m.rate = 0.85; window.speechSynthesis.speak(m); } catch(e) {}
+    } else {
+        await sleep(3000); navigateTo('index.html');
+    }
+}
 
-            const RealmNames = [
-                "普光明照", "香蓮華寶", "普光摩尼", "妙華光明", "出妙華光", "清淨妙明", "華光莊嚴", "威光普照", "出妙音聲", "金剛寶幢", 
-                "出青蓮華", "普照大明", "娑婆極樂", "無塵寂靜", "妙明寶燈", "清淨光照", "寶華莊嚴", "離塵清淨", "普照十方", "妙寶焰光"
-            ];
-            
-            const previewEl = document.getElementById('fast-preview');
-            previewEl.style.opacity = '1'; playDharmaSound('preview'); 
-            
-            if (rankData) {
-                for(let id of rankData.realms) {
-                    previewEl.innerText = `第 ${id} 重 ． ${RealmNames[id-1]}`;
-                    initPreviewRealm(id); 
-                    await sleep(1000); 
-                }
-            } else {
-                for(let id of [1, 2, 3]) {
-                    previewEl.innerText = `第 ${id} 重 ． ${RealmNames[id-1]}`;
-                    initPreviewRealm(id); 
-                    await sleep(1000);
-                }
-            }
-            
-            previewEl.style.opacity = '0'; realmParticles = []; await sleep(500);
-            
-            state = 0; initParticles(); await sleep(500);
-
-            state = 1; playDharmaSound('form'); document.getElementById('status-panel').style.opacity = '1'; await sleep(3000); 
-            state = 2; document.getElementById('ui-layer').style.opacity = '1'; await sleep(6000); 
-            state = 3; document.getElementById('ui-layer').style.opacity = '0'; document.getElementById('status-panel').style.opacity = '0'; await sleep(2000);
-            
-            const flash = document.getElementById('golden-flash'); flash.style.opacity = '1'; playDharmaSound('seed'); await sleep(200); 
-            state = 4; flash.style.transition = 'opacity 4s ease-in'; flash.style.opacity = '0'; await sleep(2500); 
-
-            const immortalSeed = document.getElementById('immortal-seed');
-            immortalSeed.style.opacity = '1'; immortalSeed.classList.add('seed-heartbeat');
-            await sleep(1000); 
-            
-            immortalSeed.style.top = '15%'; 
-            document.getElementById('profound-text').style.opacity = '1'; 
-            await sleep(1000);
-
-            if (rankData) {
-                window.currentMilestoneLock = rankData.lock;
-                document.getElementById('cert-text-body').innerHTML = rankData.html;
-                document.getElementById('cert-name-insert').innerText = db.name || "無 名";
-
-                ['svg-faith', 'svg-abode', 'svg-practice', 'svg-dedication', 'svg-ground'].forEach(id => {
-                    let el = document.getElementById(id);
-                    if (el) {
-                        el.style.opacity = (id === rankData.svg) ? '1' : '0';
-                        el.style.transform = (id === rankData.svg) ? 'scale(1)' : 'scale(0.8)';
-                    }
-                });
-
-                const certUI = document.getElementById('cert-ui');
-                certUI.style.opacity = '1'; certUI.style.pointerEvents = 'auto';
-
-                try { let m = new SpeechSynthesisUtterance(rankData.tts); m.lang = 'zh-TW'; m.rate = 0.85; window.speechSynthesis.speak(m); } catch(e) {}
-            } else {
-                await sleep(3000); navigateTo('index.html');
-            }
-        }
 
         function claimCertificate() {
             document.getElementById('cert-ui').style.opacity = '0';

@@ -2,183 +2,411 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>一真法界 ‧ 菩提契印系統</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>一真法界 ． 菩提契印</title>
     <style>
         :root {
-            --bg: #020203;
             --gold: #f3e5ab;
             --solid-gold: #d4af37;
-            --cyan: #8ba89c;
+            --bg-deep: #020203;
+            --copper: #4a3728; /* 暗銅色 */
         }
 
         body {
-            margin: 0; padding: 0; overflow: hidden;
-            background: var(--bg);
-            font-family: "PingFang TC", "Microsoft JhengHei", serif;
-            color: #fff; height: 100dvh;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-
-        /* 星空背景簡化版 */
-        #bg-canvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-
-        #deck {
-            position: relative; width: 100%; height: 400px;
-            display: flex; justify-content: center; align-items: flex-end;
-            z-index: 10; perspective: 1000px;
-        }
-
-        .card {
-            position: absolute; width: 220px; height: 220px;
-            cursor: pointer; transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-            will-change: transform;
-        }
-
-        .card-inner {
-            position: relative; width: 100%; height: 100%;
-            transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .card.is-active { transform: scale(1.2) translateY(-100px) !important; z-index: 100 !important; }
-        .card.is-flipped .card-inner { transform: rotateY(180deg); }
-
-        .card-face {
-            position: absolute; inset: 0; border-radius: 50%;
-            backface-visibility: hidden; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(212, 175, 55, 0.1);
+            margin: 0; padding: 0;
+            height: 100vh; height: 100dvh;
             overflow: hidden;
+            background: radial-gradient(circle at 50% 50%, #0a0e14 0%, var(--bg-deep) 100%);
+            color: #fff; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            user-select: none; -webkit-tap-highlight-color: transparent;
         }
 
-        .card-back { background: linear-gradient(145deg, #0f1215, #020203); }
-        .card-front { background: #050505; transform: rotateY(180deg); padding: 20px; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
-        /* SVG 晶石裝飾 */
-        .crystal-container { width: 100%; height: 100%; position: absolute; inset: 0; }
-        .seed-label { font-size: 0.8rem; color: var(--gold); letter-spacing: 4px; margin-top: 10px; z-index: 5; }
+        .top-nav-btn {
+            position: absolute; top: 20px; left: 20px;
+            background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(212,175,55,0.3); color: var(--gold); 
+            padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; letter-spacing: 1px; 
+            display: flex; align-items: center; gap: 6px; z-index: 1000; cursor: pointer; 
+            backdrop-filter: blur(5px); transition: opacity 0.8s, transform 0.3s;
+        }
+        .top-nav-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
 
-        /* 介面文案 */
-        #ui-hint { position: absolute; bottom: 10%; color: var(--cyan); font-size: 0.85rem; letter-spacing: 2px; z-index: 20; }
-        
-        /* 扇形位置 */
-        .pos-0 { transform: rotateZ(-15deg) translateX(-160px) translateY(40px); }
-        .pos-1 { transform: rotateZ(-7deg) translateX(-80px) translateY(10px); }
-        .pos-2 { transform: rotateZ(0deg) translateX(0px); }
-        .pos-3 { transform: rotateZ(7deg) translateX(80px) translateY(10px); }
-        .pos-4 { transform: rotateZ(15deg) translateX(160px) translateY(40px); }
+        /* 🌟 星軌陣列容器 */
+        #orbit-container {
+            position: absolute;
+            top: 25%;
+            width: 100%; height: 350px;
+            display: flex; align-items: center;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            padding: 0 50vw; /* 讓第一個和最後一個能置中 */
+            gap: 40px;
+            z-index: 10;
+        }
+        #orbit-container::-webkit-scrollbar { display: none; }
 
+        /* 🌟 圓形法印 (Mandala) */
+        .mandala-wrapper {
+            flex: 0 0 auto;
+            scroll-snap-align: center;
+            position: relative;
+            width: 240px; height: 240px;
+            display: flex; justify-content: center; align-items: center;
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transform: scale(0.7) translateY(20px);
+            opacity: 0.6;
+            cursor: pointer;
+        }
+
+        .mandala-wrapper.is-focused {
+            transform: scale(1.1) translateY(0px);
+            opacity: 1;
+            z-index: 50;
+        }
+
+        /* 法印外框 */
+        .mandala-ring {
+            position: absolute;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            border: 3px solid var(--copper);
+            background: radial-gradient(circle at 50% 50%, rgba(20,20,25,0.9), rgba(0,0,0,0.95));
+            box-shadow: inset 0 0 20px rgba(0,0,0,1);
+            transition: all 1.5s ease;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* 已解鎖狀態的外框光暈會由 JS 動態賦予 */
+        .mandala-wrapper.is-achieved .mandala-ring {
+            border-color: var(--theme-color);
+            box-shadow: 0 0 30px var(--theme-color), inset 0 0 30px var(--theme-color);
+            animation: slow-spin 40s linear infinite;
+        }
+
+        @keyframes slow-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* 晶石容器 */
+        .crystal-svg {
+            position: absolute;
+            width: 100%; height: 100%;
+            overflow: visible;
+        }
+
+        /* 晶石初始狀態 (黯淡磨砂) */
+        .crystal-group {
+            transition: all 0.5s ease;
+            filter: grayscale(1) brightness(0.3);
+            transform-origin: center;
+        }
+
+        /* 晶石點亮狀態 */
+        .crystal-group.is-lit {
+            filter: grayscale(0) brightness(1.2) drop-shadow(0 0 8px var(--theme-color));
+        }
+
+        /* 中央金剛種子 */
+        .core-seed {
+            position: absolute;
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            background: #111;
+            box-shadow: inset 0 0 10px #000;
+            transition: all 1.5s ease;
+        }
+
+        .mandala-wrapper.is-burst .core-seed {
+            background: radial-gradient(circle, #fff 10%, var(--theme-color) 60%, transparent 100%);
+            box-shadow: 0 0 40px var(--theme-color), 0 0 80px #fff;
+            transform: scale(1.5);
+            animation: seed-pulse 2s infinite alternate;
+        }
+
+        @keyframes seed-pulse { 0% { transform: scale(1.4); } 100% { transform: scale(1.6); box-shadow: 0 0 60px var(--theme-color), 0 0 100px #fff; } }
+
+        /* 🌟 資訊面板 (固定在下方) */
+        #info-panel {
+            position: absolute;
+            bottom: 6%; width: 90%; max-width: 360px;
+            background: linear-gradient(135deg, rgba(15,15,18,0.9), rgba(5,5,8,0.95));
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px; padding: 25px 20px;
+            text-align: center;
+            opacity: 0; pointer-events: none;
+            transform: translateY(20px);
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 100;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        #info-panel.is-visible {
+            opacity: 1; pointer-events: auto; transform: translateY(0);
+        }
+
+        .info-title { color: var(--gold); font-size: 1.3rem; font-weight: bold; letter-spacing: 4px; margin-bottom: 5px; text-shadow: 0 0 10px rgba(212,175,55,0.5); }
+        .info-subtitle { color: var(--cyan); font-size: 0.75rem; letter-spacing: 2px; margin-bottom: 15px; }
+        .info-desc { color: #ccc; font-size: 0.8rem; line-height: 1.8; margin-bottom: 20px; }
+        .info-desc b { color: var(--solid-gold); }
+
+        .btn-claim {
+            width: 100%; padding: 12px 0; border-radius: 30px;
+            border: 1px solid var(--solid-gold); 
+            background: linear-gradient(to right, rgba(212,175,55,0.1), rgba(212,175,55,0.2));
+            color: var(--gold); font-size: 0.85rem; font-weight: bold; 
+            cursor: pointer; transition: 0.3s; letter-spacing: 2px;
+        }
+        .btn-claim:active { transform: scale(0.95); background: rgba(212,175,55,0.4); }
+
+        #page-curtain { position: fixed; inset: 0; background: #000; z-index: 999999; pointer-events: none; transition: opacity 1s; opacity: 1; }
     </style>
 </head>
-<body onclick="resetCards()">
+<body>
 
-<canvas id="bg-canvas"></canvas>
+    <div id="page-curtain"></div>
 
-<div id="deck"></div>
+    <div class="top-nav-btn" onclick="goHome('index.html')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        歸返道場
+    </div>
 
-<div id="ui-hint">觀想位階 ‧ 啟動契印</div>
-
-<script>
-    // 妙依居士 ‧ 一真法界位階資料
-    const RANKS = [
-        { title: '十信位', color: '#87CEFA' },
-        { title: '十住位', color: '#E6E6FA' },
-        { title: '十行位', color: '#98FB98' },
-        { title: '十迴向', color: '#FFB7C5' },
-        { title: '十地位', color: '#FFD700' }
-    ];
-
-    // 初始化背景
-    const canvas = document.getElementById('bg-canvas');
-    const ctx = canvas.getContext('2d');
-    let stars = [];
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    window.addEventListener('resize', resize); resize();
-    for(let i=0; i<100; i++) stars.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*1.5});
-    function draw() {
-        ctx.fillStyle = '#020203'; ctx.fillRect(0,0,canvas.width, canvas.height);
-        ctx.fillStyle = '#fff';
-        stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, Math.PI*2); ctx.fill(); });
-        requestAnimationFrame(draw);
-    }
-    draw();
-
-    // 生成卡片
-    const deck = document.getElementById('deck');
-    RANKS.forEach((rank, i) => {
-        const card = document.createElement('div');
-        card.className = `card pos-${i}`;
-        card.onclick = (e) => { e.stopPropagation(); toggleCard(i); };
-        
-        card.innerHTML = `
-            <div class="card-inner">
-                <div class="card-back card-face">
-                    <div style="font-size:0.7rem; color:rgba(212,175,55,0.5); letter-spacing:2px;">IMMORTAL</div>
-                    <div style="width:40px; height:1px; background:var(--solid-gold); margin:10px 0; opacity:0.3;"></div>
-                    <div style="font-size:0.9rem; color:var(--gold); letter-spacing:3px;">${rank.title}</div>
-                </div>
-                <div class="card-front card-face">
-                    <div class="crystal-container">${drawCrystals(rank.color)}</div>
-                    <div class="seed-label">${rank.title}</div>
-                    <div style="font-size:0.6rem; color:#666; margin-top:5px; letter-spacing:1px;">BODHICITTA</div>
-                </div>
-            </div>
-        `;
-        deck.appendChild(card);
-    });
-
-    // SVG 晶石陣列繪製 (10顆)
-    function drawCrystals(baseColor) {
-        let crystals = '';
-        for (let i = 0; i < 10; i++) {
-            const angle = (i * 36) * (Math.PI / 180);
-            const radius = 70;
-            const x = 110 + Math.cos(angle) * radius;
-            const y = 110 + Math.sin(angle) * radius;
-            const scale = 0.6 + (i % 3) * 0.2;
-            const rot = i * 45;
+    <svg style="position: absolute; width: 0; height: 0;">
+        <defs>
+            <linearGradient id="f-light" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#fff" stop-opacity="0.2"/></linearGradient>
+            <linearGradient id="f-dark" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#000" stop-opacity="0.1"/><stop offset="100%" stop-color="#000" stop-opacity="0.6"/></linearGradient>
             
-            crystals += `
-                <g transform="translate(${x}, ${y}) scale(${scale}) rotate(${rot})">
-                    <polygon points="0,-15 12,0 0,18 -12,0" fill="${baseColor}" opacity="0.8" />
-                    <polygon points="0,-15 12,0 0,0" fill="rgba(255,255,255,0.4)" />
-                    <polygon points="-12,0 0,18 0,0" fill="rgba(0,0,0,0.2)" />
-                </g>`;
+            <g id="crystal-model">
+                <polygon points="50,15 35,45 50,55" fill="url(#f-light)"/>
+                <polygon points="35,45 50,85 50,55" fill="url(#f-dark)"/>
+                <polygon points="50,15 65,45 50,55" fill="url(#f-dark)"/>
+                <polygon points="65,45 50,85 50,55" fill="url(#f-light)"/>
+                <polyline points="50,15 35,45 50,85 65,45 50,15" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1" stroke-linejoin="round"/>
+                <polyline points="35,45 50,55 65,45" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1" stroke-linejoin="round"/>
+                <line x1="50" y1="15" x2="50" y2="85" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+            </g>
+
+            <linearGradient id="grad-0" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e0f7fa"/><stop offset="100%" stop-color="#4dd0e1"/></linearGradient>
+            <linearGradient id="grad-1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f3e5f5"/><stop offset="100%" stop-color="#ba68c8"/></linearGradient>
+            <linearGradient id="grad-2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e3f2fd"/><stop offset="100%" stop-color="#2196f3"/></linearGradient>
+            <linearGradient id="grad-3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#b2ebf2"/><stop offset="50%" stop-color="#f8bbd0"/><stop offset="100%" stop-color="#fff9c4"/></linearGradient>
+            <linearGradient id="grad-4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff59d"/><stop offset="100%" stop-color="#ff8f00"/></linearGradient>
+        </defs>
+    </svg>
+
+    <canvas id="starCanvas"></canvas>
+    
+    <div id="orbit-container">
+        </div>
+
+    <div id="info-panel">
+        <div class="info-title" id="info-title">位階名稱</div>
+        <div class="info-subtitle" id="info-subtitle">行者 妙依</div>
+        <div class="info-desc" id="info-desc">描述內容</div>
+        <button class="btn-claim" id="btn-claim" onclick="claimMandala()">歡喜功德 ． 締結法印</button>
+    </div>
+
+    <script>
+        // 🌟 1. 定義 5 大圓滿法印的數據
+        const MANDALAS = [
+            { key: 'rank_10', targetDays: 90, title: '十信圓滿', sub: '初發心 ‧ 信願具足', color: '#4dd0e1', grad: 'url(#grad-0)', desc: '琉璃青光，象徵初發心的清淨。<br>已成就信、念、精進等菩提心要。' },
+            { key: 'rank_abiding_10', targetDays: 1000, title: '十住功成', sub: '安住真如 ‧ 生如來家', color: '#ba68c8', grad: 'url(#grad-1)', desc: '溫潤粉紫，象徵安住不退。<br>生如來家，安住真如本性，清淨梵行。' },
+            { key: 'rank_practice_10', targetDays: 1100, title: '十行圓滿', sub: '萬行莊嚴 ‧ 悲智雙運', color: '#2196f3', grad: 'url(#grad-2)', desc: '湛藍深邃，象徵萬行如海。<br>於一切法中，行無相真實行，迴自向他。' },
+            { key: 'rank_dedication_10', targetDays: 11100, title: '迴向功圓', sub: '三處迴向 ‧ 心無所住', color: '#f8bbd0', grad: 'url(#grad-3)', desc: '彩霓流光，象徵功德普被法界。<br>聖凡同體，證無生忍，法雲普蔭大千。' },
+            { key: 'rank_ground_10', targetDays: 111100, title: '十地行圓', sub: '圓滿佛果 ‧ 無上正覺', color: '#ffb300', grad: 'url(#grad-4)', desc: '純金赤焰，等覺妙覺在望。<br>以般若徹照萬法皆空，無功用行，普度十方。' }
+        ];
+
+        // 🌟 2. 星空背景
+        const canvas = document.getElementById('starCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, stars = [];
+        function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+        window.addEventListener('resize', resize); resize();
+        for(let i=0; i<200; i++) stars.push({ x: (Math.random()-0.5)*2000, y: (Math.random()-0.5)*2000, z: Math.random()*1000, s: Math.random()*2 });
+        function draw() {
+            ctx.fillStyle = 'rgba(2, 2, 4, 0.6)'; ctx.fillRect(0,0,width,height);
+            ctx.globalCompositeOperation = 'screen';
+            stars.forEach(s => { 
+                s.z -= 0.5; if(s.z<=0) s.z=1000; 
+                let sc = 300/(300+s.z), sx = width/2+s.x*sc, sy = height/2+s.y*sc; 
+                ctx.beginPath(); ctx.arc(sx,sy,s.s*sc,0,Math.PI*2); ctx.fillStyle=`rgba(243,229,171,${sc*1.2})`; ctx.fill(); 
+            });
+            requestAnimationFrame(draw);
         }
+        draw();
+
+        // 🌟 3. 讀取資料庫
+        let db; try { db = JSON.parse(localStorage.getItem('PX_V15.0')) || {}; } catch(e) { db = {}; }
+        const milestones = db.milestones || {};
+        const currentDays = (db.points || 0) / 100;
+        const userName = db.name || "行者";
         
-        return `
-        <svg viewBox="0 0 220 220" width="220" height="220">
-            <defs>
-                <radialGradient id="seed-glow"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="${baseColor}" stop-opacity="0"/></radialGradient>
-            </defs>
-            <circle cx="110" cy="110" r="105" fill="none" stroke="${baseColor}" stroke-opacity="0.1" stroke-width="0.5"/>
-            <circle cx="110" cy="110" r="25" fill="url(#seed-glow)" opacity="0.6" />
-            <g>${crystals}</g>
-            <circle cx="110" cy="110" r="3" fill="#fff" />
-        </svg>`;
-    }
+        const orbitContainer = document.getElementById('orbit-container');
+        let autoActiveIdx = -1;
+        let audioCtx = null;
 
-    function toggleCard(idx) {
-        const cards = document.querySelectorAll('.card');
-        const target = cards[idx];
-        const isActive = target.classList.contains('is-active');
+        // 🌟 4. 生成星軌陣列 (5枚法印)
+        MANDALAS.forEach((m, idx) => {
+            const alreadyClaimed = milestones[m.key] === true;
+            if (currentDays >= m.targetDays && !alreadyClaimed && autoActiveIdx === -1) { 
+                autoActiveIdx = idx; 
+            }
 
-        resetCards();
+            const wrapper = document.createElement('div');
+            wrapper.className = `mandala-wrapper mandala-${idx}`;
+            wrapper.style.setProperty('--theme-color', m.color);
 
-        if (!isActive) {
-            target.classList.add('is-active');
-            setTimeout(() => target.classList.add('is-flipped'), 100);
-        }
-    }
+            // 如果已經領過，直接設定為成就狀態
+            if (alreadyClaimed) {
+                wrapper.classList.add('is-achieved', 'is-burst');
+                wrapper.onclick = () => focusMandala(idx, true);
+            } else if (currentDays >= m.targetDays) {
+                // 已達標但還沒點亮 (本次將自動點亮)
+                wrapper.onclick = () => focusMandala(idx, false);
+            } else {
+                // 未達標，只能看不能點
+                wrapper.style.cursor = 'default';
+            }
 
-    function resetCards() {
-        document.querySelectorAll('.card').forEach(c => {
-            c.classList.remove('is-active');
-            c.classList.remove('is-flipped');
+            // 生成 10 顆不同大小的晶石
+            let crystalsHTML = '';
+            for(let i=0; i<10; i++) {
+                let rot = i * 36;
+                let scale = 0.25 + (i % 3) * 0.05; // 產生大中小不一的節奏感
+                let tr = `rotate(${rot} 50 50) translate(0 -32) scale(${scale})`;
+                
+                // 為了讓每顆晶石都有各自的色彩填充
+                crystalsHTML += `
+                    <g class="crystal-group crystal-${idx}-${i}" transform="${tr}" style="transform-origin: 50px 50px;">
+                        <polygon points="50,15 35,45 50,85 65,45" fill="${m.grad}" opacity="0.8"/>
+                        <use href="#crystal-model"/>
+                    </g>
+                `;
+            }
+
+            wrapper.innerHTML = `
+                <div class="mandala-ring">
+                    <svg class="crystal-svg" viewBox="0 0 100 100">
+                        ${crystalsHTML}
+                    </svg>
+                    <div class="core-seed"></div>
+                </div>
+            `;
+            
+            orbitContainer.appendChild(wrapper);
         });
-    }
 
-</script>
+        // 🌟 5. 初始載入判斷
+        window.onload = () => {
+            document.getElementById('info-subtitle').innerText = `行者 ${userName}`;
+            setTimeout(() => { document.getElementById('page-curtain').style.opacity = '0'; }, 300);
+            
+            // 如果有新成就，將視角滾動過去並開始儀式
+            if (autoActiveIdx !== -1) {
+                setTimeout(() => {
+                    focusMandala(autoActiveIdx, false);
+                }, 1000);
+            } else {
+                // 如果沒有新成就，預設捲動到第一枚，讓行者自由瀏覽
+                const first = document.querySelector('.mandala-0');
+                if(first) first.scrollIntoView({ inline: 'center' });
+            }
+        };
+
+        // 🌟 6. 聚焦與點亮儀式
+        let currentLockKey = null;
+
+        function focusMandala(idx, isReview) {
+            // 復原所有法印狀態
+            document.querySelectorAll('.mandala-wrapper').forEach(w => w.classList.remove('is-focused'));
+            
+            const target = document.querySelector(`.mandala-${idx}`);
+            target.classList.add('is-focused');
+            target.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+
+            const m = MANDALAS[idx];
+            document.getElementById('info-title').innerText = m.title;
+            document.getElementById('info-desc').innerHTML = m.desc;
+            
+            const btn = document.getElementById('btn-claim');
+            if (isReview) {
+                btn.innerText = "收起契印";
+                btn.style.background = "rgba(255,255,255,0.1)";
+                currentLockKey = ''; // 空字串代表不需寫入資料庫
+                document.getElementById('info-panel').classList.add('is-visible');
+            } else {
+                // 執行點亮儀式
+                btn.innerText = "歡喜功德 ． 締結法印";
+                btn.style.background = `linear-gradient(to right, ${m.color}22, ${m.color}66)`;
+                currentLockKey = m.key;
+                
+                // 確保外框亮起
+                target.classList.add('is-achieved');
+                runLightingSequence(idx);
+            }
+        }
+
+        async function runLightingSequence(idx) {
+            // 初始化音效
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+
+            // 10 顆晶石依次點亮
+            for (let i = 0; i < 10; i++) {
+                await sleep(200); // 每 0.2 秒亮一顆
+                const crystal = document.querySelector(`.crystal-${idx}-${i}`);
+                if (crystal) crystal.classList.add('is-lit');
+                playCrystalDing(1000 + i * 50); // 音調漸高
+            }
+
+            await sleep(500);
+
+            // 中央種子爆發
+            document.querySelector(`.mandala-${idx}`).classList.add('is-burst');
+            playCrystalDing(2000, 'triangle', 1.0); // 爆發音
+
+            await sleep(800);
+            document.getElementById('info-panel').classList.add('is-visible');
+        }
+
+        // 簡化版法音產生器
+        function playCrystalDing(freq, type='sine', duration=0.3) {
+            if(!audioCtx) return;
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        // 🌟 7. 返回道場邏輯
+        function goHome(targetUrl) {
+            document.getElementById('page-curtain').style.opacity = '1';
+            setTimeout(() => { window.location.href = targetUrl; }, 800);
+        }
+
+        function claimMandala() {
+            if (currentLockKey === '') {
+                // 回顧模式，僅收起面板，不跳轉
+                document.getElementById('info-panel').classList.remove('is-visible');
+                document.querySelector('.is-focused').classList.remove('is-focused');
+                return;
+            }
+
+            // 新達標締結法印，寫入資料庫並返回
+            document.getElementById('page-curtain').style.opacity = '1';
+            if (!db.milestones) db.milestones = {};
+            db.milestones[currentLockKey] = true;
+            localStorage.setItem('PX_V15.0', JSON.stringify(db));
+            
+            setTimeout(() => { window.location.href = 'index.html'; }, 800);
+        }
+    </script>
 </body>
 </html>

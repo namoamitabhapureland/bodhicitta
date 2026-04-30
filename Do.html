@@ -9,12 +9,6 @@
             --gold: #f3e5ab;
             --solid-gold: #d4af37;
             --bg-deep: #020203;
-            /* 境界色彩變數 */
-            --c-100k: #ba68c8;
-            --c-500k: #4dd0e1;
-            --c-1m: #f48fb1;
-            --c-10m: #f8bbd0;
-            --c-100m: #ffb300;
         }
 
         body {
@@ -27,10 +21,9 @@
             user-select: none; -webkit-tap-highlight-color: transparent;
         }
 
-        /* 宇宙星空畫布 */
         canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
-        /* 🌟 卡牌容器：錨定在底部，避免被 Safari 網址列擠壓 */
+        /* 🌟 卡牌容器：錨定底部避免裁切 */
         #deck-container {
             position: absolute;
             bottom: 3%; 
@@ -41,7 +34,6 @@
             perspective: 1500px;
         }
 
-        /* 🌟 修正：縮小卡片基礎尺寸以適應所有手機 */
         .card {
             position: absolute;
             width: 220px; height: 350px; 
@@ -68,13 +60,13 @@
             overflow: hidden;
         }
 
-        /* --- 卡牌背面 --- */
+        /* --- 卡牌背面：統一顯示 --- */
         .card-back {
             background: linear-gradient(145deg, #0a0c0e, #010101);
             justify-content: center;
         }
         .totem-prajna {
-            width: 90px; height: 90px; /* 微調圖騰大小 */
+            width: 90px; height: 90px;
             fill: none; stroke: var(--solid-gold);
             stroke-width: 1; opacity: 0.5;
         }
@@ -83,11 +75,10 @@
         .card-front {
             background: linear-gradient(135deg, rgba(15,15,12,0.92), rgba(2,2,0,0.98));
             transform: rotateY(180deg);
-            padding: 20px 15px; /* 縮減內距 */
+            padding: 20px 15px; 
             justify-content: space-between;
         }
 
-        /* 蓮花容器微調 */
         .lotus-box {
             width: 140px; height: 140px;
             display: flex; align-items: center; justify-content: center;
@@ -102,7 +93,6 @@
         @keyframes dash-draw { to { stroke-dashoffset: 0; } }
         @keyframes color-fade { to { fill-opacity: 0.8; } }
 
-        /* 文案與按鈕微調 */
         .cert-header { color: var(--gold); font-size: 0.8rem; letter-spacing: 5px; font-weight: bold; text-transform: uppercase; margin-top: 5px; }
         .cert-user { color: var(--gold); font-size: 1.25rem; font-weight: bold; letter-spacing: 4px; margin: 6px 0; }
         .cert-desc { color: #ccc; font-size: 0.72rem; line-height: 1.8; text-align: center; padding: 0 5px; }
@@ -115,17 +105,24 @@
         }
         .btn-confirm:active { background: rgba(212,175,55,0.3); }
 
-        /* 🌟 修正：收攏孔雀開屏的寬幅，確保左右不被切掉 */
+        /* 🌟 孔雀開屏扇形位置 */
         .card-0 { transform: rotateZ(-12deg) translateX(-140px) translateY(35px); z-index: 5; }
         .card-1 { transform: rotateZ(-6deg) translateX(-70px) translateY(10px); z-index: 6; }
         .card-2 { transform: rotateZ(0deg) translateX(0px) translateY(0px); z-index: 7; }
         .card-3 { transform: rotateZ(6deg) translateX(70px) translateY(10px); z-index: 6; }
         .card-4 { transform: rotateZ(12deg) translateX(140px) translateY(35px); z-index: 5; }
 
-        /* 🌟 修正：溫和的放大 (1.15倍)，並往上推適當距離，絕對不切底 */
+        /* 🌟 聚焦飛出動畫 */
         .card.is-active {
             transform: scale(1.15) rotateZ(0deg) translateX(0px) translateY(-110px) !important;
             z-index: 100 !important;
+        }
+        /* 鎖定抖動動畫 */
+        .card.is-locked { animation: shake-card 0.4s ease-in-out; }
+        @keyframes shake-card {
+            0%, 100% { transform: translateY(0); }
+            25% { transform: translateY(-8px) rotateZ(-2deg); }
+            75% { transform: translateY(-8px) rotateZ(2deg); }
         }
 
         #page-curtain { position: fixed; inset: 0; background: #000; z-index: 999999; pointer-events: none; transition: opacity 1s; opacity: 1; }
@@ -163,6 +160,7 @@
             { key: 'nian_100m', target: 100000000, title: '圓滿成佛', desc: '大圓滿耀金，金剛不壞。<br>萬德莊嚴，大放光明照十方。', grad: 'grad-100m', color: '#ffb300' }
         ];
 
+        // 1. 星空背景
         const canvas = document.getElementById('starCanvas');
         const ctx = canvas.getContext('2d');
         let width, height, stars = [];
@@ -177,32 +175,35 @@
         }
         draw();
 
+        // 2. 初始化資料與卡牌
         let db; try { db = JSON.parse(localStorage.getItem('PX_V15.0')) || {}; } catch(e) { db = {}; }
         const milestones = db.milestones || {};
         const currentTotal = db.totalNian || 0;
-        const userName = db.name || "妙依居士";
+        const userName = db.name || "妙 依";
         const deck = document.getElementById('deck-container');
         
         let autoActiveIdx = -1;
 
         MILESTONES.forEach((m, idx) => {
             const alreadyClaimed = milestones[m.key] === true;
+            // 找出新達標的卡片
             if (currentTotal >= m.target && !alreadyClaimed && autoActiveIdx === -1) { autoActiveIdx = idx; }
 
             const card = document.createElement('div');
-            card.className = `card card-${idx} ${alreadyClaimed ? 'is-flipped' : ''}`;
+            // 🌟 修正點 1：一律只給預設 class，拔除初始的 is-flipped
+            card.className = `card card-${idx}`;
             
             card.innerHTML = `
                 <div class="card-inner">
                     <div class="card-back card-face" style="box-shadow: inset 0 0 25px ${m.color}55">
                         <svg class="totem-prajna" style="stroke:${m.color}" viewBox="0 0 100 100"><use href="#totem-prajna-symbol"/></svg>
-                        <div style="margin-top:20px; color:${m.color}; font-size:0.75rem; letter-spacing:3px; font-weight:bold; opacity:0.8">修行中</div>
+                        <div style="margin-top:20px; color:${m.color}; font-size:0.75rem; letter-spacing:3px; font-weight:bold; opacity:0.8">
+                            ${(currentTotal >= m.target || alreadyClaimed) ? '功德圓滿' : '修行中'}
+                        </div>
                     </div>
                     <div class="card-front card-face" style="box-shadow: inset 0 0 40px ${m.color}33">
                         <div class="cert-header">✦ ${m.title} ✦</div>
-                        <div class="lotus-box" id="lotus-box-${idx}">
-                            ${alreadyClaimed ? renderStaticLotus(m.grad, idx === 4) : ''}
-                        </div>
+                        <div class="lotus-box" id="lotus-box-${idx}"></div>
                         <div class="cert-name-wrap">
                             <div class="cert-label">行 者</div>
                             <div class="cert-user">${userName}</div>
@@ -213,13 +214,23 @@
                 </div>
             `;
             
-            // 開啟任意點擊測試功能
+            // 🌟 點擊互動邏輯
             card.onclick = () => {
+                // 防呆：如果念佛數不夠，抖動一下並拒絕翻面
+                if (currentTotal < m.target && !alreadyClaimed) {
+                    card.classList.remove('is-locked');
+                    void card.offsetWidth; // 觸發 reflow 讓動畫重置
+                    card.classList.add('is-locked');
+                    return;
+                }
+
+                // 收回所有卡片
                 document.querySelectorAll('.card').forEach(c => {
                     c.classList.remove('is-active', 'is-flipped');
                     c.querySelector('.lotus-box').innerHTML = ''; 
                 });
                 
+                // 將這張卡飛出並翻面
                 setTimeout(() => {
                     card.classList.add('is-active');
                     setTimeout(() => {
@@ -232,6 +243,7 @@
             deck.appendChild(card);
         });
 
+        // 3. 初始載入與自動運鏡 (只飛出新解鎖的牌)
         window.onload = () => {
             setTimeout(() => { document.getElementById('page-curtain').style.opacity = '0'; }, 300);
             if (autoActiveIdx !== -1) {
@@ -270,30 +282,15 @@
             box.innerHTML = svg;
         }
 
-        function renderStaticLotus(gradId, isMax) {
-            let fill = `url(#${gradId})`;
-            let stroke = isMax ? "#ffffff" : "rgba(243,229,171,0.5)";
-            let svg = `<svg class="lotus-spin" viewBox="-150 -150 300 300" style="width:100%;height:100%;overflow:visible;">`;
-            for (let l = 3; l > 0; l--) {
-                const sc = 0.44 + l * 0.28;
-                const n = (l === 3) ? 8 : 6;
-                for (let i = 0; i < n; i++) {
-                    const rot = i * (360/n) + l * 22.5;
-                    const s = 112 * sc;
-                    const pth = `M 0 0 C ${s*.44} ${-s*.07} ${s*.54} ${-s*.62} 0 ${-s} C ${-s*.54} ${-s*.62} ${-s*.44} ${-s*.07} 0 0`;
-                    svg += `<g transform="rotate(${rot})"><path d="${pth}" fill="${fill}" stroke="${stroke}" stroke-width="1" fill-opacity="0.8"/></g>`;
-                }
-            }
-            svg += `</svg>`;
-            return svg;
-        }
-
+        // 🌟 4. 極簡返回系統邏輯 (不碰 currentMedal 或 currentRank)
         function returnToSystem(key) {
             document.getElementById('page-curtain').style.opacity = '1';
+            
+            // 單純記錄里程碑印記，其餘顯示交還給主系統動態運算
+            if (!db.milestones) db.milestones = {};
             db.milestones[key] = true;
-            const targetM = MILESTONES.find(x => x.key === key);
-            if(targetM) db.currentRank = `[${targetM.title}]`;
             localStorage.setItem('PX_V15.0', JSON.stringify(db));
+
             setTimeout(() => { window.location.href = 'index.html'; }, 800);
         }
     </script>

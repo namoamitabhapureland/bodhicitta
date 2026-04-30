@@ -154,7 +154,8 @@
     <canvas id="starCanvas"></canvas>
     <div id="deck-container"></div>
 
-    <script>
+    
+              <script>
         const MILESTONES = [
             { key: 'nian_100k', target: 100000, title: '蓮池海會', desc: '初入蓮池，霞光環繞。<br>諸上善人同聚一處，共修淨業。', grad: 'grad-100k', color: '#ba68c8' },
             { key: 'nian_500k', target: 500000, title: '不退轉菩薩', desc: '淨業初成，如露清涼。<br>不墮凡夫位，志求無上菩提。', grad: 'grad-500k', color: '#4dd0e1' },
@@ -184,15 +185,13 @@
         const currentTotal = db.totalNian || 0;
         const userName = db.name || "妙 依";
         const deck = document.getElementById('deck-container');
-        let activeIdx = -1;
+        
+        // 自動偵測要彈出的牌 (真實環境邏輯)
+        let autoActiveIdx = -1;
 
         MILESTONES.forEach((m, idx) => {
             const alreadyClaimed = milestones[m.key] === true;
-            
-            // 找出本次觸發的位階
-            if (currentTotal >= m.target && !alreadyClaimed && activeIdx === -1) {
-                activeIdx = idx;
-            }
+            if (currentTotal >= m.target && !alreadyClaimed && autoActiveIdx === -1) { autoActiveIdx = idx; }
 
             const card = document.createElement('div');
             card.className = `card card-${idx} ${alreadyClaimed ? 'is-flipped' : ''}`;
@@ -213,24 +212,44 @@
                             <div class="cert-user">${userName}</div>
                         </div>
                         <div class="cert-desc">累積念佛達 <b>${m.target.toLocaleString()}</b> 聲<br>${m.desc}</div>
-                        <button class="btn-confirm" onclick="returnToSystem('${m.key}')">歡喜功德 ． 返回系統</button>
+                        <button class="btn-confirm" onclick="event.stopPropagation(); returnToSystem('${m.key}')">歡喜功德 ． 返回系統</button>
                     </div>
                 </div>
             `;
+            
+            // 🌟 點擊測試功能：點擊任何卡牌即可觸發飛出翻轉
+            card.onclick = () => {
+                // 將其他卡牌歸位
+                document.querySelectorAll('.card').forEach(c => {
+                    c.classList.remove('is-active', 'is-flipped');
+                    c.querySelector('.lotus-box').innerHTML = ''; // 清空舊動畫
+                });
+                
+                // 讓被點擊的卡牌飛出
+                setTimeout(() => {
+                    card.classList.add('is-active');
+                    setTimeout(() => {
+                        card.classList.add('is-flipped');
+                        startLotusAnimation(idx); // 播放生長動畫
+                    }, 800);
+                }, 100);
+            };
+
             deck.appendChild(card);
         });
 
-        // 3. 啟動動畫流程
+        // 3. 初始載入與自動運鏡
         window.onload = () => {
             setTimeout(() => { document.getElementById('page-curtain').style.opacity = '0'; }, 300);
             
-            if (activeIdx !== -1) {
+            // 如果真實數據有達標，依然會自動飛出
+            if (autoActiveIdx !== -1) {
                 setTimeout(() => {
-                    const targetCard = document.querySelector(`.card-${activeIdx}`);
+                    const targetCard = document.querySelector(`.card-${autoActiveIdx}`);
                     targetCard.classList.add('is-active');
                     setTimeout(() => {
                         targetCard.classList.add('is-flipped');
-                        startLotusAnimation(activeIdx);
+                        startLotusAnimation(autoActiveIdx);
                     }, 1200);
                 }, 1500);
             }
@@ -289,5 +308,6 @@
             setTimeout(() => { window.location.href = 'index.html'; }, 800);
         }
     </script>
+
 </body>
 </html>

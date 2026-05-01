@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>普賢行願 ． 菩提心室</title>
+    <style>
+        :root {
+            --bg-deep: #010204; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
+        }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        body { 
+            background: var(--bg-deep); color: #d0d0d0; 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; height: 100dvh; display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* 背景星塵與柔光 */
+        #bg-glow { position: fixed; inset: 0; background: radial-gradient(circle at 50% 30%, rgba(212,175,55,0.05) 0%, transparent 60%); z-index: 0; pointer-events: none; }
+        
+        /* 頂部導航 */
+        .top-nav { width: 100%; padding: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .btn-nav { background: rgba(255,255,255,0.03); border: 1px solid rgba(139,168,156,0.3); color: var(--cyan); padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; letter-spacing: 2px; cursor: pointer; transition: 0.3s; backdrop-filter: blur(5px); }
+        .btn-nav:active { background: rgba(139,168,156,0.15); transform: scale(0.95); }
+        .btn-gold { border-color: rgba(212,175,55,0.4); color: var(--gold); }
+
+        /* 核心卡片 */
+        .card { width: 88%; max-width: 400px; background: linear-gradient(145deg, rgba(15,20,25,0.8), rgba(5,8,10,0.95)); border: 1px solid rgba(212,175,55,0.25); border-radius: 24px; padding: 40px 30px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 20px rgba(212,175,55,0.05); z-index: 10; position: relative; margin-top: 5vh; }
+        
+        .streak-display { font-size: 0.75rem; color: var(--cyan); letter-spacing: 3px; margin-bottom: 20px; text-transform: uppercase; }
+        .streak-num { color: var(--gold); font-weight: bold; font-size: 1rem; }
+        
+        .vow-title { color: var(--gold); font-size: 1.15rem; letter-spacing: 5px; margin-bottom: 25px; text-shadow: 0 0 10px rgba(212,175,55,0.3); font-weight: 300; border-bottom: 1px solid rgba(212,175,55,0.15); padding-bottom: 15px; }
+        .vow-text { color: #e0e0e0; font-size: 1rem; line-height: 2.2; letter-spacing: 2px; text-align: justify; text-align-last: center; font-weight: 300; min-height: 120px; }
+
+        /* 長按印心按鈕 */
+        .seal-wrap { position: relative; width: 100px; height: 100px; margin: 40px auto 10px auto; cursor: pointer; }
+        .seal-bg { position: absolute; inset: 0; border-radius: 50%; border: 1px dashed rgba(212,175,55,0.3); animation: spin 20s linear infinite; }
+        .seal-fill { position: absolute; inset: -5px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--solid-gold); border-right-color: var(--solid-gold); transform: rotate(-45deg); opacity: 0; transition: opacity 0.3s; }
+        .seal-icon { position: absolute; inset: 15px; width: 70px; height: 70px; filter: drop-shadow(0 0 8px rgba(212,175,55,0.4)); transition: all 0.3s; }
+        .seal-wrap.pressing .seal-fill { opacity: 1; animation: fillRing 2.5s linear forwards; }
+        .seal-wrap.pressing .seal-icon { filter: drop-shadow(0 0 20px var(--solid-gold)) brightness(1.3); transform: scale(0.95); }
+        .seal-wrap.done .seal-bg { border: 1px solid var(--solid-gold); animation: none; box-shadow: 0 0 20px rgba(212,175,55,0.3); }
+        .seal-wrap.done .seal-icon { filter: drop-shadow(0 0 15px var(--solid-gold)); }
+        
+        .seal-hint { font-size: 0.7rem; color: #666; letter-spacing: 2px; margin-top: 15px; transition: 0.5s; }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes fillRing { 0% { transform: rotate(-45deg); border-top-color: var(--solid-gold); border-right-color: transparent; border-bottom-color: transparent; border-left-color: transparent; } 25% { border-right-color: var(--solid-gold); border-bottom-color: transparent; border-left-color: transparent; } 50% { border-bottom-color: var(--solid-gold); border-left-color: transparent; } 75% { border-left-color: var(--solid-gold); } 100% { transform: rotate(315deg); border-color: var(--solid-gold); } }
+
+        /* 收藏室 Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 5000; display: none; justify-content: center; align-items: center; opacity: 0; transition: 0.5s; }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-box { width: 90%; max-width: 600px; height: 80vh; background: linear-gradient(135deg, #111, #050505); border: 1px solid var(--solid-gold); border-radius: 20px; padding: 30px 20px; display: flex; flex-direction: column; }
+        
+        .treasury-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding-bottom: 20px; }
+        .treasury-item { background: rgba(255,255,255,0.02); border: 1px solid rgba(212,175,55,0.15); border-radius: 16px; padding: 20px 10px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .treasury-item.locked { opacity: 0.3; filter: grayscale(100%); }
+        .treasury-svg { width: 60px; height: 60px; margin-bottom: 12px; }
+        .treasury-name { color: var(--gold); font-size: 0.85rem; letter-spacing: 2px; margin-bottom: 5px; }
+        .treasury-cond { color: #666; font-size: 0.65rem; letter-spacing: 1px; }
+
+        /* 結算/升級 滿版特效 */
+        #flash-overlay { position: fixed; inset: 0; z-index: 9000; background: #fff; opacity: 0; pointer-events: none; transition: opacity 0.8s; }
+    </style>
+</head>
+<body>
+
+<div id="bg-glow"></div>
+
+<div class="top-nav">
+    <div class="btn-nav" onclick="window.location.href='index.html?screen=3'">歸返道場</div>
+    <div class="btn-nav btn-gold" onclick="openTreasury()">行願收藏室</div>
+</div>
+
+<div class="card">
+    <div class="streak-display">行願相繼 ． 第 <span class="streak-num" id="streak-ui">0</span> 日</div>
+    <div class="vow-title" id="vow-title">【 讀取中 】</div>
+    <div class="vow-text" id="vow-text">...</div>
+
+    <div class="seal-wrap" id="seal-btn">
+        <div class="seal-bg"></div>
+        <div class="seal-fill"></div>
+        <svg class="seal-icon" viewBox="0 0 100 100">
+            <!-- 菩提契印 SVG -->
+            <polygon points="50,10 65,40 95,45 70,65 80,95 50,80 20,95 30,65 5,45 35,40" fill="none" stroke="rgba(243,229,171,0.5)" stroke-width="1.5" stroke-linejoin="round"/>
+            <circle cx="50" cy="50" r="18" fill="none" stroke="#d4af37" stroke-width="2" stroke-dasharray="4 4"/>
+            <circle cx="50" cy="50" r="8" fill="#f3e5ab" filter="drop-shadow(0 0 5px #d4af37)"/>
+        </svg>
+    </div>
+    <div class="seal-hint" id="seal-hint">長按印心 ． 圓滿今日</div>
+</div>
+
+<!-- 收藏室 Modal -->
+<div class="modal-overlay" id="treasury-modal">
+    <div class="modal-box">
+        <div style="text-align:center; color:var(--gold); font-size:1.1rem; letter-spacing:5px; margin-bottom:20px; font-weight:300; border-bottom:1px solid rgba(212,175,55,0.2); padding-bottom:15px;">法界行願 ． 多寶閣</div>
+        <div class="treasury-grid" id="treasury-grid">
+            <!-- JS 動態生成 -->
+        </div>
+        <div class="btn-nav" style="margin: 15px auto 0 auto; width: 120px; text-align: center;" onclick="closeTreasury()">關閉</div>
+    </div>
+</div>
+
+<div id="flash-overlay"></div>
+
+<script>
+    // --------------------------------------------------
+    // 資料庫與題庫初始化
+    // --------------------------------------------------
+    const STORAGE_KEY = 'PX_V15.0';
+    let db = {};
+    try { db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e) { db = {}; }
+    
+    // 初始化所需變數
+    db.points = db.points || 0;
+    db.vowStreak = db.vowStreak || 0;
+    db.vowLastDate = db.vowLastDate || "";
+    db.vowTreasures = db.vowTreasures || []; // 存放已解鎖的寶物 ID
+    
+    function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
+
+    // 普賢十大願題庫 (可擴充至365題，此處示範核心輪迴)
+    const vowQuestions = [
+        { t: "一者禮敬諸佛", q: "今日之中，我是否放下了傲慢？對待周遭的親朋、同事乃至陌生人，是否皆能如敬未來佛般，給予基本的尊重與平和？" },
+        { t: "二者稱讚如來", q: "今日之中，我的言語是否清淨？是否多出讚歎、鼓勵與真實之語，而減少了抱怨、批評與兩舌妄語？" },
+        { t: "三者廣修供養", q: "今日之中，我是否吝嗇？是否能在能力所及內，以財物、勞力或一抹微笑，無私地給予他人幫助？" },
+        { t: "四者懺悔業障", q: "今日之中，我是否覺察到了自己的過失？對於有意無意間造成的傷害，是否在心中生起慚愧，並誓願不再犯？" },
+        { t: "五者隨喜功德", q: "今日之中，看到他人獲得成就或利益時，我是否生起了真誠的歡喜心，而非隱微的嫉妒與比較？" },
+        { t: "六者請轉法輪", q: "今日之中，我是否保持對真理的渴求？是否主動閱讀經典、聽聞善知識，並將好的觀念分享給有緣人？" },
+        { t: "七者請佛住世", q: "今日之中，我是否珍惜了修行的因緣？對於能指引我向善的人事物，是否心存感恩並盡力護持？" },
+        { t: "八者常隨佛學", q: "今日之中，我的抉擇是否與佛法相符？在面對生活中的逆境與考驗時，是否能以智慧與慈悲為引導？" },
+        { t: "九者恆順眾生", q: "今日之中，我是否過於堅持己見？是否能放下自我的執著，以同理心去體會他人的難處，並給予包容？" },
+        { t: "十者普皆迴向", q: "今日之中，我是否執著於自己所做的善事？是否能將一切微小的善念與功德，毫無保留地願與法界眾生共享？" }
+    ];
+
+    // 收藏室寶物設定
+    const ARTIFACTS = [
+        { id: 'art_100', req: 100, name: '初發心 ． 琉璃印', svg: '<svg viewBox="0 0 100 100"><rect x="25" y="25" width="50" height="50" fill="none" stroke="#00e5ff" stroke-width="2" transform="rotate(45 50 50)"/><circle cx="50" cy="50" r="15" fill="rgba(0,229,255,0.3)" stroke="#fff" stroke-width="1.5"/></svg>' },
+        { id: 'art_200', req: 200, name: '深信 ． 金剛杵', svg: '<svg viewBox="0 0 100 100"><path d="M50 10 L60 30 L55 50 L60 70 L50 90 L40 70 L45 50 L40 30 Z" fill="rgba(212,175,55,0.2)" stroke="#d4af37" stroke-width="2"/><circle cx="50" cy="50" r="8" fill="#fff"/></svg>' },
+        { id: 'art_300', req: 300, name: '大悲 ． 摩尼珠', svg: '<svg viewBox="0 0 100 100"><path d="M50 20 C70 20 80 50 50 80 C20 50 30 20 50 20 Z" fill="rgba(255,183,197,0.3)" stroke="#ffb7c5" stroke-width="2"/><circle cx="50" cy="45" r="5" fill="#fff"/></svg>' },
+        { id: 'art_365', req: 365, name: '圓滿 ． 普賢華', svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" fill="none" stroke="#d8b4fe" stroke-width="2" stroke-dasharray="5 5"/><path d="M50 15 C65 35 75 65 50 85 C25 65 35 35 50 15 Z" fill="rgba(216,180,254,0.4)" stroke="#fff" stroke-width="1.5"/></svg>' }
+    ];
+
+    const todayStr = new Date().toDateString();
+    let isDoneToday = (db.vowLastDate === todayStr);
+
+    // --------------------------------------------------
+    // 邏輯：檢查連續天數 (Streak)
+    // --------------------------------------------------
+    function checkStreak() {
+        if (!db.vowLastDate || isDoneToday) return;
+        
+        let lastDate = new Date(db.vowLastDate).setHours(0,0,0,0);
+        let now = new Date(todayStr).setHours(0,0,0,0);
+        
+        // 如果相距超過 1 天 (86400000 毫秒)，表示中斷了
+        if (now - lastDate > 86400000) {
+            db.vowStreak = 0; // 嚴格防線：中斷即歸零
+            saveDB();
+        }
+    }
+
+    // --------------------------------------------------
+    // 介面初始化
+    // --------------------------------------------------
+    function initUI() {
+        checkStreak();
+        document.getElementById('streak-ui').innerText = db.vowStreak;
+
+        const sealWrap = document.getElementById('seal-btn');
+        const sealHint = document.getElementById('seal-hint');
+
+        if (isDoneToday) {
+            document.getElementById('vow-title').innerText = "【 今日已圓滿 】";
+            document.getElementById('vow-text').innerHTML = "<span style='color:var(--cyan);'>菩提心已發，普賢行已立。<br>功德已匯入主系統，請明日再來。</span>";
+            sealWrap.classList.add('done');
+            sealWrap.style.pointerEvents = 'none';
+            sealHint.innerText = "明日再續 ． 菩提道業";
+        } else {
+            // 決定今天的題目 (依據總天數或日期輪替)
+            let qIndex = db.vowStreak % vowQuestions.length;
+            let currentQ = vowQuestions[qIndex];
+            
+            document.getElementById('vow-title').innerText = `【 ${currentQ.t} 】`;
+            document.getElementById('vow-text').innerText = currentQ.q;
+            bindSealEvents();
+        }
+    }
+
+    // --------------------------------------------------
+    // 長按印心邏輯 (2.5 秒)
+    // --------------------------------------------------
+    let pressTimer;
+    let isPressing = false;
+
+    function bindSealEvents() {
+        const btn = document.getElementById('seal-btn');
+        const startPress = (e) => {
+            if (e.type !== 'mousedown' && e.type !== 'touchstart') return;
+            e.preventDefault();
+            isPressing = true;
+            btn.classList.add('pressing');
+            document.getElementById('seal-hint').innerText = "注心觀照中...";
+            
+            pressTimer = setTimeout(() => {
+                completeVow();
+            }, 2500); // 2.5 秒長按
+        };
+
+        const cancelPress = () => {
+            if (!isPressing) return;
+            clearTimeout(pressTimer);
+            isPressing = false;
+            btn.classList.remove('pressing');
+            document.getElementById('seal-hint').innerText = "長按印心 ． 圓滿今日";
+        };
+
+        btn.addEventListener('mousedown', startPress);
+        btn.addEventListener('touchstart', startPress, {passive: false});
+        
+        window.addEventListener('mouseup', cancelPress);
+        window.addEventListener('touchend', cancelPress);
+        btn.addEventListener('mouseleave', cancelPress);
+    }
+
+    // --------------------------------------------------
+    // 圓滿結算邏輯
+    // --------------------------------------------------
+    function completeVow() {
+        isPressing = false;
+        isDoneToday = true;
+        
+        // 基礎給分與天數推進
+        db.vowLastDate = todayStr;
+        db.vowStreak++;
+        db.points += 100; // 每日 100 點回傳主系統
+        
+        let isMilestone = false;
+        let milestoneReward = null;
+
+        // 檢查百日大賞
+        ARTIFACTS.forEach(art => {
+            if (db.vowStreak === art.req && !db.vowTreasures.includes(art.id)) {
+                db.vowTreasures.push(art.id);
+                db.points += 10000; // 里程碑 10,000 點
+                isMilestone = true;
+                milestoneReward = art;
+            }
+        });
+
+        saveDB();
+
+        // 視覺回饋
+        const btn = document.getElementById('seal-btn');
+        btn.classList.remove('pressing');
+        btn.classList.add('done');
+        btn.style.pointerEvents = 'none';
+        
+        const flash = document.getElementById('flash-overlay');
+        flash.style.opacity = '1';
+        
+        setTimeout(() => {
+            flash.style.opacity = '0';
+            document.getElementById('streak-ui').innerText = db.vowStreak;
+            document.getElementById('vow-title').innerText = "【 今日已圓滿 】";
+            document.getElementById('seal-hint').innerText = "功德已匯入 ． 明日再續";
+            
+            if (isMilestone) {
+                document.getElementById('vow-text').innerHTML = `
+                    <span style="color:#ff8888; font-weight:bold; font-size:1.1rem; line-height:1.8;">
+                    法界震動 ． 行願堅固<br>
+                    行者已相繼行持 ${db.vowStreak} 日！<br><br>
+                    蒙十方諸佛護念，特賜資糧 <span style="color:var(--solid-gold);">10,000</span> 點<br>
+                    化現法器【${milestoneReward.name}】存入收藏室。
+                    </span>`;
+            } else {
+                document.getElementById('vow-text').innerHTML = "<span style='color:var(--cyan);'>菩提心已發，普賢行已立。<br>今日資糧 100 點已匯入主系統。</span>";
+            }
+        }, 800);
+    }
+
+    // --------------------------------------------------
+    // 收藏室 (多寶閣) 邏輯
+    // --------------------------------------------------
+    function openTreasury() {
+        const grid = document.getElementById('treasury-grid');
+        grid.innerHTML = '';
+
+        ARTIFACTS.forEach(art => {
+            const isUnlocked = db.vowTreasures.includes(art.id) || db.vowStreak >= art.req;
+            const item = document.createElement('div');
+            item.className = `treasury-item ${isUnlocked ? '' : 'locked'}`;
+            
+            item.innerHTML = `
+                <div class="treasury-svg">${art.svg}</div>
+                <div class="treasury-name">${isUnlocked ? art.name : '未化現'}</div>
+                <div class="treasury-cond">需相繼 ${art.req} 日</div>
+            `;
+            grid.appendChild(item);
+        });
+
+        const modal = document.getElementById('treasury-modal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('show'), 10);
+    }
+
+    function closeTreasury() {
+        const modal = document.getElementById('treasury-modal');
+        modal.classList.remove('show');
+        setTimeout(() => modal.style.display = 'none', 500);
+    }
+
+    // 啟動
+    initUI();
+
+</script>
+</body>
+</html>

@@ -208,27 +208,54 @@ db.visionLastFailed = db.visionLastFailed || "";
         </svg>`;
     }
 
-    // 開局防呆機制：確保不會有完成的瓶子
+     // 修正一：導入「反向推演法」，杜絕數學死局，保證 100% 有解
     function generateVessels(total, colorCount) {
-        let isValid = false;
+        // 1. 初始化完美理順狀態 (完成態)
         let v = [];
-        while(!isValid) {
-            let pool = [];
-            for(let i=0; i<colorCount; i++) { for(let j=0; j<3; j++) pool.push(COLORS[i]); } 
-            pool.sort(() => Math.random() - 0.5);
-            v = [];
-            for(let i=0; i<total; i++) v.push(i < colorCount ? pool.splice(0, 3) : []);
-            
-            // 驗證是否有初始即同色的狀況
-            isValid = true;
-            for(let i=0; i<colorCount; i++) {
-                if (v[i].length === 3 && v[i][0] === v[i][1] && v[i][1] === v[i][2]) {
-                    isValid = false; break;
-                }
-            }
+        for (let i = 0; i < total; i++) {
+            v.push(i < colorCount ? [COLORS[i], COLORS[i], COLORS[i]] : []);
         }
+
+        // 2. 反向亂序引擎：模擬「合法倒水」的逆動作
+        const scrambleSteps = colorCount * 40; // 依顏色數量決定打亂深度
+
+        for (let step = 0; step < scrambleSteps; step++) {
+            // A. 尋找合法的「反向來源」(T)
+            // 規則：正向只能倒入空瓶或同色瓶，故反向抽離時，頂部必須是單層，或是兩層以上同色。
+            let validSources = [];
+            v.forEach((bottle, idx) => {
+                if (bottle.length === 1) {
+                    validSources.push(idx);
+                } else if (bottle.length > 1 && bottle[bottle.length - 1] === bottle[bottle.length - 2]) {
+                    validSources.push(idx);
+                }
+            });
+
+            if (validSources.length === 0) break; // 防護機制
+            
+            let sourceIdx = validSources[Math.floor(Math.random() * validSources.length)];
+            let colorToMove = v[sourceIdx][v[sourceIdx].length - 1];
+
+            // B. 尋找合法的「反向目標」(S)
+            // 規則：不能是滿瓶，且不能是來源瓶本身
+            let validTargets = [];
+            v.forEach((bottle, idx) => {
+                if (bottle.length < 3 && idx !== sourceIdx) {
+                    validTargets.push(idx);
+                }
+            });
+
+            if (validTargets.length === 0) continue;
+            let targetIdx = validTargets[Math.floor(Math.random() * validTargets.length)];
+
+            // C. 執行反向倒水
+            v[sourceIdx].pop();
+            v[targetIdx].push(colorToMove);
+        }
+
         return v;
     }
+
 
 
  // ✨ 莊嚴入口選擇器 (防卡死優化版)
@@ -368,16 +395,32 @@ db.visionLastFailed = db.visionLastFailed || "";
 
     function animateJump(sx, sy, ex, ey, cid) {
         return new Promise(resolve => {
-            const j = document.createElement('div'); j.className = 'drop-jump'; j.style.background = `var(--color-${cid})`;
+            const j = document.createElement('div'); 
+            j.className = 'drop-jump'; 
+            j.style.background = `var(--color-${cid})`;
             document.body.appendChild(j);
+            
             const anim = j.animate([
                 { transform: `translate(${sx}px, ${sy}px) scale(1)`, opacity: 1 },
                 { transform: `translate(${(sx+ex)/2}px, ${Math.min(sy,ey)-150}px) scale(1.3)`, opacity: 1 },
                 { transform: `translate(${ex}px, ${ey}px) scale(0.6)`, opacity: 0 }
             ], { duration: 380, easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)', fill: 'forwards' });
-            anim.onfinish = () => { j.remove(); resolve(); };
+            
+            // 設立狀態鎖，防止設備休眠導致的 Promise 永遠不解析
+            let isResolved = false;
+            const finishAnim = () => {
+                if(isResolved) return;
+                isResolved = true;
+                if(j.parentNode) j.remove(); 
+                resolve();
+            };
+            
+            anim.onfinish = finishAnim;
+            // 450毫秒後若動畫未正常結束，強制釋放狀態
+            setTimeout(finishAnim, 450); 
         });
     }
+
 
     // --------------------------------------------------
     // 結算與法界異象庫
@@ -600,16 +643,17 @@ db.visionLastFailed = db.visionLastFailed || "";
     }
 
 
-    // 動態時劫
-            function startTimer() {
+          // 修正二：時劫封頂機制，避免無限膨脹
+    function startTimer() {
         clearInterval(timerInterval);
-        const limit = (30 + db.waterLevel) * 60 * 1000;
+        // 加入上限封頂：無論幾百關，時劫最高鎖定為 90 分鐘
+        const limit = Math.min(90, 30 + db.waterLevel) * 60 * 1000;
+        
         timerInterval = setInterval(() => {
             const elapsed = Date.now() - game.startTime;
             if (elapsed > limit) { 
                 clearInterval(timerInterval); 
                 
-                // ✨ 抓取結算數據，確保零錢包有存檔
                 let finalLvl = db.waterLevel;
                 let finalBag = db.tempBag;
                 saveDB(); 
@@ -625,6 +669,7 @@ db.visionLastFailed = db.visionLastFailed || "";
             document.getElementById('timer-ui').innerText = `觀心餘時：${min} 分鐘`;
         }, 10000); 
     }
+
 
 
 

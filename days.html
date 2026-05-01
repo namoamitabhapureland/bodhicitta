@@ -1,217 +1,268 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>7日菩提心階梯</title>
-<style>
-    body {
-        margin: 0;
-        padding: 0;
-        background: radial-gradient(circle at 70% 30%, #1a1e36, #000000);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        overflow: hidden;
-    }
-
-    .staircase-container {
-        width: 100%;
-        max-width: 600px;
-        height: auto;
-    }
-
-    svg {
-        width: 100%;
-        height: 100%;
-        display: block;
-    }
-
-    /* 階梯互動效果 */
-    .step-group {
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .step-tread {
-        opacity: 0.5;
-        transition: opacity 0.3s ease;
-    }
-
-    .step-front {
-        opacity: 0.7;
-        transition: opacity 0.3s ease;
-    }
-
-    /* 點亮後的狀態 */
-    .step-group.active .step-tread {
-        opacity: 0.95;
-        filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6));
-    }
-
-    .step-group.active .step-front {
-        opacity: 1;
-    }
-
-    /* 菩提心呼吸動畫 */
-    @keyframes breathe {
-        0%, 100% { 
-            transform: scale(1); 
-            filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6)); 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>七重行願 ． 琉璃天梯</title>
+    <style>
+        :root {
+            --bg-deep: #020203; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
         }
-        50% { 
-            transform: scale(1.15); 
-            filter: drop-shadow(0 0 30px rgba(255, 255, 100, 1)); 
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; }
+        body { 
+            background: radial-gradient(circle at 50% 50%, #0a0e14 0%, var(--bg-deep) 100%); 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; width: 100vw; height: 100dvh;
+            display: flex; justify-content: center; align-items: center;
         }
-    }
 
-    .bodhi-heart {
-        transform-origin: 445px 200px;
-        animation: breathe 4s ease-in-out infinite;
-    }
-</style>
+        /* ---------------- 星空背景 ---------------- */
+        #starCanvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+        #vignette { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(circle at 50% 30%, transparent 10%, rgba(1, 1, 3, 0.95) 100%); }
+
+        /* ---------------- 穿越容器 (完美同步 SVG 與 HTML) ---------------- */
+        #warp-container {
+            position: absolute; inset: 0; z-index: 10;
+            display: flex; justify-content: center; align-items: center;
+            perspective: 1200px;
+        }
+
+        .warp-inner {
+            position: relative; width: 100%; max-width: 600px; height: 100%; max-height: 900px;
+            /* 縮放中心點精準對齊菩提心座標 */
+            transform-origin: 57.5% 15.5%; 
+            transition: transform 2.2s cubic-bezier(0.6, 0.05, 0.1, 1), opacity 1.8s ease-in;
+        }
+
+        .warp-inner.warp-drive { transform: scale(20) translateY(10%); opacity: 0; pointer-events: none; }
+
+        /* ---------------- SVG 天梯 (金框與厚實材質) ---------------- */
+        #stair-svg { width: 100%; height: 100%; overflow: visible; }
+
+        .stair-step { 
+            stroke: #d4af37; /* 金色發光線框 */
+            stroke-linejoin: round; transition: all 0.5s; 
+        }
+        .step-top { stroke-width: 1.5px; }
+        .step-front { stroke-width: 1.5px; }
+        .step-side { stroke-width: 1.5px; } /* 新增的厚度側牆 */
+        
+        /* 未解鎖的階梯 */
+        .step-locked .step-top { fill-opacity: 0.15; stroke: rgba(212,175,55,0.4); }
+        .step-locked .step-front { fill-opacity: 0.1; stroke: rgba(212,175,55,0.3); }
+        .step-locked .step-side { fill-opacity: 0.05; stroke: rgba(212,175,55,0.2); }
+
+        /* 已完成的階梯 */
+        .step-done .step-top { fill-opacity: 0.6; stroke: rgba(212,175,55,0.9); }
+        .step-done .step-front { fill-opacity: 0.4; stroke: rgba(212,175,55,0.6); }
+        .step-done .step-side { fill-opacity: 0.2; stroke: rgba(212,175,55,0.4); }
+
+        /* 當前閃爍的階梯 */
+        .step-current { cursor: pointer; }
+        .step-current .step-top { 
+            fill-opacity: 0.95; stroke: #fff; stroke-width: 2.5px;
+            animation: breathe-gold 1.5s infinite alternate ease-in-out;
+        }
+        .step-current .step-front { fill-opacity: 0.8; stroke: #f3e5ab; stroke-width: 2px; }
+        .step-current .step-side { fill-opacity: 0.6; stroke: #d4af37; }
+        
+        @keyframes breathe-gold {
+            0% { filter: drop-shadow(0 0 10px rgba(212,175,55,0.8)) brightness(1); }
+            100% { filter: drop-shadow(0 0 30px #f3e5ab) drop-shadow(0 0 50px #d4af37) brightness(1.3); }
+        }
+
+        /* ---------------- 原封不動抄襲的「菩提心」代碼 ---------------- */
+        #immortal-seed { 
+            position: absolute; 
+            /* 精準對齊天梯頂部 (X: 345/600, Y: 140/900) */
+            left: 57.5%; top: 15.5%; 
+            transform: translate(-50%, -50%) scale(1); 
+            width: 30px; height: 30px; border-radius: 50%; 
+            background: radial-gradient(circle, #fff 10%, #ffe 30%, var(--gold) 60%, var(--solid-gold) 100%); 
+            box-shadow: 0 0 var(--seed-glow) var(--solid-gold); 
+            opacity: 1; z-index: 100; 
+            transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1); 
+        }
+        .seed-heartbeat { animation: hb-pulse 1.5s infinite cubic-bezier(0.2, 0.8, 0.4, 1); }
+        @keyframes hb-pulse { 
+            0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 var(--seed-glow) var(--gold); } 
+            50% { transform: translate(-50%, -50%) scale(1.3); box-shadow: 0 0 calc(var(--seed-glow)*2) var(--gold), 0 0 calc(var(--seed-glow)*3) #fff; } 
+            100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 var(--seed-glow) var(--gold); } 
+        }
+
+        /* ---------------- UI ---------------- */
+        #ui-layer {
+            position: absolute; top: 12%; width: 100%; text-align: center; z-index: 20;
+            transition: opacity 0.5s; pointer-events: none;
+        }
+        .main-title { color: var(--gold); font-size: 1.25rem; letter-spacing: 8px; font-weight: bold; text-shadow: 0 0 20px rgba(212,175,55,0.6); margin-bottom: 12px; }
+        .sub-title { color: var(--cyan); font-size: 0.85rem; letter-spacing: 5px; }
+        #flash-overlay { position: fixed; inset: 0; background: radial-gradient(circle, #fff 0%, #f3e5ab 50%, transparent 100%); opacity: 0; z-index: 9999; pointer-events: none; transition: opacity 0.8s; mix-blend-mode: screen; }
+    </style>
 </head>
 <body>
 
-<div class="staircase-container">
-    <svg viewBox="0 0 600 800" xmlns="http://www.w3.org/2000/svg">
+    <!-- SVG 漸層庫 -->
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
         <defs>
-            <!-- 模糊濾鏡：用於最上方的門 -->
-            <filter id="portalBlur" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="15" />
-            </filter>
-
-            <!-- 門的發光漸層 -->
-            <radialGradient id="portalGrad" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#ffffff" stop-opacity="1" />
-                <stop offset="50%" stop-color="#fffacd" stop-opacity="0.8" />
-                <stop offset="100%" stop-color="#ffd700" stop-opacity="0" />
-            </radialGradient>
-
-            <!-- 七色淡色漸層 (Pastel Gradients) -->
-            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#ffc6ce" />
-                <stop offset="100%" stop-color="#ff9ea8" />
-            </linearGradient>
-            <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#ffe4c4" />
-                <stop offset="100%" stop-color="#ffcba4" />
-            </linearGradient>
-            <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#fffacd" />
-                <stop offset="100%" stop-color="#ffeb73" />
-            </linearGradient>
-            <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#d4edda" />
-                <stop offset="100%" stop-color="#a3d9b1" />
-            </linearGradient>
-            <linearGradient id="grad5" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#d1ecf1" />
-                <stop offset="100%" stop-color="#9ad3de" />
-            </linearGradient>
-            <linearGradient id="grad6" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#e2d9f3" />
-                <stop offset="100%" stop-color="#c1a7e2" />
-            </linearGradient>
-            <linearGradient id="grad7" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#f3d9f1" />
-                <stop offset="100%" stop-color="#e2a7dd" />
-            </linearGradient>
+            <linearGradient id="f-light" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.6"/><stop offset="100%" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
+            <linearGradient id="f-dark" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#000" stop-opacity="0.1"/><stop offset="100%" stop-color="#000" stop-opacity="0.7"/></linearGradient>
+            <!-- 七彩色階漸層 -->
+            <linearGradient id="g-0" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ba68c8"/><stop offset="100%" stop-color="#f3e5f5"/></linearGradient>
+            <linearGradient id="g-1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f48fb1"/><stop offset="100%" stop-color="#fce4ec"/></linearGradient>
+            <linearGradient id="g-2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4dd0e1"/><stop offset="100%" stop-color="#e0f7fa"/></linearGradient>
+            <linearGradient id="g-3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2196f3"/><stop offset="100%" stop-color="#e3f2fd"/></linearGradient>
+            <linearGradient id="g-4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#81c784"/><stop offset="100%" stop-color="#e8f5e9"/></linearGradient>
+            <linearGradient id="g-5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffb300"/><stop offset="100%" stop-color="#fff59d"/></linearGradient>
+            <linearGradient id="g-6" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d4af37"/><stop offset="100%" stop-color="#f3e5ab"/></linearGradient>
         </defs>
-
-        <!-- 星空背景 (純向量繪製) -->
-        <g fill="#ffffff" opacity="0.6">
-            <circle cx="100" cy="150" r="1.5" />
-            <circle cx="250" cy="80" r="2" opacity="0.9" />
-            <circle cx="480" cy="50" r="1" />
-            <circle cx="550" cy="250" r="1.5" />
-            <circle cx="80" cy="350" r="2" />
-            <circle cx="180" cy="450" r="1" />
-            <circle cx="520" cy="550" r="2" opacity="0.8" />
-            <circle cx="60" cy="650" r="1.5" />
-            <circle cx="560" cy="750" r="1" />
-        </g>
-
-        <!-- 頂端的模糊門 -->
-        <ellipse cx="445" cy="200" rx="80" ry="120" fill="url(#portalGrad)" filter="url(#portalBlur)" />
-
-        <!-- 發亮的菩提心 -->
-        <path class="bodhi-heart" 
-              d="M445,215 A18,18 0 0,0 409,215 C409,245 445,265 445,265 C445,265 481,245 481,215 A18,18 0 0,0 445,215 Z" 
-              fill="#FFD700" stroke="#FFF" stroke-width="2"/>
-
-        <!-- 3D 階梯群組 (由上至下繪製以確保圖層正確覆蓋，但邏輯是從下往上) -->
-        
-        <!-- Day 7 (Top) -->
-        <g class="step-group" data-day="6">
-            <polygon class="step-tread" points="400,250 490,250 460,320 360,320" fill="url(#grad7)" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"/>
-            <polygon class="step-front" points="360,320 460,320 460,350 360,350" fill="url(#grad7)" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"/>
-        </g>
-
-        <!-- Day 6 -->
-        <g class="step-group" data-day="5">
-            <polygon class="step-tread" points="360,320 460,320 440,390 320,390" fill="url(#grad6)" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"/>
-            <polygon class="step-front" points="320,390 440,390 440,420 320,420" fill="url(#grad6)" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"/>
-        </g>
-
-        <!-- Day 5 -->
-        <g class="step-group" data-day="4">
-            <polygon class="step-tread" points="320,390 440,390 430,460 280,460" fill="url(#grad5)" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"/>
-            <polygon class="step-front" points="280,460 430,460 430,490 280,490" fill="url(#grad5)" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"/>
-        </g>
-
-        <!-- Day 4 -->
-        <g class="step-group" data-day="3">
-            <polygon class="step-tread" points="280,460 430,460 430,530 230,530" fill="url(#grad4)" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"/>
-            <polygon class="step-front" points="230,530 430,530 430,560 230,560" fill="url(#grad4)" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"/>
-        </g>
-
-        <!-- Day 3 -->
-        <g class="step-group" data-day="2">
-            <polygon class="step-tread" points="230,530 430,530 440,600 180,600" fill="url(#grad3)" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"/>
-            <polygon class="step-front" points="180,600 440,600 440,630 180,630" fill="url(#grad3)" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"/>
-        </g>
-
-        <!-- Day 2 -->
-        <g class="step-group" data-day="1">
-            <polygon class="step-tread" points="180,600 440,600 460,670 130,670" fill="url(#grad2)" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"/>
-            <polygon class="step-front" points="130,670 460,670 460,700 130,700" fill="url(#grad2)" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"/>
-        </g>
-
-        <!-- Day 1 (Bottom) -->
-        <g class="step-group" data-day="0">
-            <polygon class="step-tread" points="130,670 460,670 480,740 80,740" fill="url(#grad1)" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"/>
-            <polygon class="step-front" points="80,740 480,740 480,770 80,770" fill="url(#grad1)" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"/>
-        </g>
     </svg>
-</div>
+
+    <!-- 星空背景 -->
+    <canvas id="starCanvas"></canvas>
+    <div id="vignette"></div>
+
+    <div id="ui-layer">
+        <div class="main-title">七日行願 ． 步步生蓮</div>
+        <div class="sub-title" id="day-hint">點擊發光之法階入陣</div>
+    </div>
+
+    <!-- 穿越容器 (完美同步 SVG 階梯與 HTML 菩提心) -->
+    <div id="warp-container">
+        <div class="warp-inner" id="warp-inner">
+            
+            <!-- 核心：大彎道、有側牆厚度的 3D 天梯 -->
+            <svg id="stair-svg" viewBox="0 0 600 900">
+                <g id="steps-group"></g>
+            </svg>
+
+            <!-- 原封不動的菩提心代碼！ -->
+            <div id="immortal-seed" style="--seed-glow: 25px;" class="seed-heartbeat"></div>
+
+        </div>
+    </div>
+
+    <div id="flash-overlay"></div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        // 從下到上取得所有階梯，將 NodeList 轉為 Array 並反轉，讓 Day 1 成為陣列索引 0
-        const stepElements = Array.from(document.querySelectorAll('.step-group')).reverse();
-        
-        // 讀取 localStorage 狀態，預設為 7 天皆未完成 (false)
-        const storageKey = 'bodhicitta_7day_progress';
-        let progress = JSON.parse(localStorage.getItem(storageKey)) || Array(7).fill(false);
+    // ================= 星空引擎 =================
+    const canvas = document.getElementById('starCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, stars = [], warpSpeed = 1;
 
-        // 初始化階梯發亮狀態
-        stepElements.forEach((step, index) => {
-            if (progress[index]) {
-                step.classList.add('active');
-            }
+    function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+    window.addEventListener('resize', resize); resize();
 
-            // 綁定點擊事件
-            step.addEventListener('click', () => {
-                const isActive = step.classList.toggle('active');
-                progress[index] = isActive;
-                
-                // 儲存回 localStorage
-                localStorage.setItem(storageKey, JSON.stringify(progress));
-            });
+    for (let i = 0; i < 200; i++) {
+        let color = Math.random() > 0.8 ? '#f3e5ab' : (Math.random() > 0.5 ? '#8ba89c' : '#ffffff');
+        stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, color: color, s: Math.random() * 1.5 + 0.5 });
+    }
+
+    function renderStars() {
+        ctx.fillStyle = 'rgba(2, 2, 3, 0.5)'; ctx.fillRect(0, 0, width, height); ctx.globalCompositeOperation = 'screen';
+        stars.forEach(s => {
+            s.z -= warpSpeed;
+            if (s.z <= 0) { s.z = 2000; s.x = (Math.random() - 0.5) * 2000; s.y = (Math.random() - 0.5) * 2000; } 
+            let sc = 400 / (400 + s.z);
+            let px = (width / 2) + s.x * sc; let py = (height / 2) + s.y * sc;
+            ctx.beginPath(); ctx.arc(px, py, s.s * sc * (warpSpeed > 2 ? 4 : 1), 0, Math.PI * 2);
+            ctx.fillStyle = s.color; ctx.globalAlpha = Math.min(1, sc * 2); ctx.fill(); ctx.globalAlpha = 1;
         });
-    });
+        ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(renderStars);
+    }
+    renderStars();
+
+    // ================= 帶有 3D 厚度的大彎道天梯 =================
+    const stepsGroup = document.getElementById('steps-group');
+    
+    // 大智精算的 8 個節點：打造極致的大'S'型或大'C'型弧線
+    // xl: 左下角X, xr: 右下角X, y: 底部Y, h: 階梯高度 (厚度)
+    const ANCHORS = [
+        { xl: 40,  xr: 380, y: 820, h: 50 }, // 第 1 階 (靠左底)
+        { xl: 120, xr: 430, y: 690, h: 45 }, // 第 2 階 (向右大甩尾)
+        { xl: 220, xr: 480, y: 570, h: 40 }, // 第 3 階 (右側極點)
+        { xl: 300, xr: 470, y: 460, h: 35 }, // 第 4 階
+        { xl: 350, xr: 440, y: 360, h: 30 }, // 第 5 階 (開始向左迴旋)
+        { xl: 365, xr: 405, y: 270, h: 25 }, // 第 6 階
+        { xl: 355, xr: 380, y: 190, h: 20 }, // 第 7 階
+        { xl: 335, xr: 355, y: 140, h: 15 }  // 頂部菩提心基座
+    ];
+
+    const GRADIENTS = ['url(#g-0)', 'url(#g-1)', 'url(#g-2)', 'url(#g-3)', 'url(#g-4)', 'url(#g-5)', 'url(#g-6)'];
+
+    let currentDay = 4; // 設定今天是第 4 天發光
+
+    function buildStairs() {
+        let html = '';
+        for (let i = 0; i < 7; i++) {
+            let curr = ANCHORS[i];
+            let next = ANCHORS[i+1];
+            let gradColor = GRADIENTS[i];
+            
+            // 狀態與點擊判定
+            let stateClass = ''; let clickAttr = '';
+            if (i + 1 < currentDay) stateClass = 'step-done';
+            else if (i + 1 === currentDay) { stateClass = 'step-current'; clickAttr = 'onclick="triggerWarp()"'; }
+            else stateClass = 'step-locked';
+
+            // 1. 左側牆 (Left Side Face) - 提供立體厚度
+            let leftPts = `${curr.xl},${curr.y} ${curr.xl},${curr.y - curr.h} ${next.xl},${next.y} ${next.xl},${next.y + curr.h * 0.8}`;
+            
+            // 2. 右側牆 (Right Side Face) - 提供立體厚度
+            let rightPts = `${curr.xr},${curr.y} ${curr.xr},${curr.y - curr.h} ${next.xr},${next.y} ${next.xr},${next.y + curr.h * 0.8}`;
+
+            // 3. 正面 (Front Face)
+            let frontPts = `${curr.xl},${curr.y} ${curr.xr},${curr.y} ${curr.xr},${curr.y - curr.h} ${curr.xl},${curr.y - curr.h}`;
+            
+            // 4. 頂面 (Top Face)
+            let topPts = `${curr.xl},${curr.y - curr.h} ${curr.xr},${curr.y - curr.h} ${next.xr},${next.y} ${next.xl},${next.y}`;
+
+            // 嚴格遵守 Painter's Algorithm (畫家演算法)
+            // 先畫側面牆壁，再畫正面與頂面，完美覆蓋接縫
+            html += `
+                <g class="stair-step ${stateClass}" ${clickAttr}>
+                    <!-- 側牆 (套用暗部材質增加陰影) -->
+                    <polygon class="step-side" points="${leftPts}" fill="url(#f-dark)" />
+                    <polygon class="step-side" points="${rightPts}" fill="url(#f-dark)" />
+                    
+                    <!-- 正面 -->
+                    <polygon class="step-front" points="${frontPts}" fill="${gradColor}" />
+                    <polygon class="step-front" points="${frontPts}" fill="url(#f-dark)" opacity="0.3"/>
+                    
+                    <!-- 頂面 -->
+                    <polygon class="step-top" points="${topPts}" fill="${gradColor}" />
+                    <polygon class="step-top" points="${topPts}" fill="url(#f-light)" opacity="0.5"/>
+                </g>
+            `;
+        }
+        stepsGroup.innerHTML = html;
+        document.getElementById('day-hint').innerText = `請踏上第 ${currentDay} 日之法階`;
+    }
+    buildStairs();
+
+    // ================= 星際穿越特效 =================
+    function triggerWarp() {
+        warpSpeed = 40; 
+        document.getElementById('ui-layer').style.opacity = '0';
+        
+        // 菩提心極限脈動
+        const seed = document.getElementById('immortal-seed');
+        seed.style.filter = "drop-shadow(0 0 50px #fff)";
+        seed.style.animationDuration = "0.3s";
+
+        // HTML & SVG 同步衝刺放大
+        document.getElementById('warp-inner').classList.add('warp-drive');
+
+        setTimeout(() => {
+            document.getElementById('flash-overlay').style.opacity = '1';
+            
+            setTimeout(() => {
+                alert("【過場震撼演示完畢】\n此處白光將無縫銜接至『第二頁：煥彩能量柱與印心陣法』！");
+                location.reload(); 
+            }, 1000);
+        }, 1200); 
+    }
+
 </script>
 </body>
 </html>

@@ -3,23 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>普賢行願 ． 十階天梯</title>
+    <title>七重行願 ． 琉璃天梯</title>
     <style>
         :root {
-            --bg-deep: #010103;
-            --solid-gold: #d4af37;
+            --bg-deep: #020203; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
         }
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; }
         body { 
-            background: var(--bg-deep); 
+            background: radial-gradient(circle at 50% 50%, #0a0e14 0%, var(--bg-deep) 100%); 
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
             overflow: hidden; touch-action: none; width: 100vw; height: 100dvh;
             display: flex; justify-content: center; align-items: center;
         }
 
-        /* ---------------- 星空引擎 ---------------- */
+        /* ---------------- 星空背景 (取自您的代碼) ---------------- */
         #starCanvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-        #vignette { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(circle at 50% 30%, transparent 10%, rgba(1, 1, 3, 0.95) 100%); }
+
+        /* ---------------- 全局 SVG 漸層 (取自您的多寶閣) ---------------- */
+        .global-defs { position: absolute; width: 0; height: 0; pointer-events: none; }
 
         /* ---------------- 天梯容器與 SVG ---------------- */
         #stair-container {
@@ -29,84 +30,92 @@
         }
 
         #stair-svg {
-            width: 100%; max-width: 600px; height: 100%; max-height: 900px;
-            overflow: visible; transform-origin: 50% 18%; /* 縮放中心點對準頂端的菩提心 */
-            transition: transform 1.8s cubic-bezier(0.6, 0.05, 0.1, 1), opacity 1.5s ease-in;
+            width: 100%; max-width: 500px; height: 100%; max-height: 850px;
+            overflow: visible; transform-origin: 65% 25%; /* 縮放中心點對準頂端的菩提心 */
+            transition: transform 2s cubic-bezier(0.6, 0.05, 0.1, 1), opacity 1.5s ease-in;
         }
 
         /* 飛越過場動畫 */
-        #stair-svg.warp-drive {
-            transform: scale(25) translateY(10%);
-            opacity: 0;
-            pointer-events: none;
-        }
+        #stair-svg.warp-drive { transform: scale(25) translateY(15%); opacity: 0; pointer-events: none; }
 
-        /* 階梯的毛玻璃與光影質感 */
-        .step-top { stroke: rgba(255,255,255,0.7); stroke-width: 1px; transition: all 0.5s; }
-        .step-front { stroke: rgba(255,255,255,0.3); stroke-width: 1px; transition: all 0.5s; }
+        /* 階梯的玻璃材質與狀態 */
+        .stair-step { transition: filter 0.3s; }
+        .step-top { stroke: rgba(255,255,255,0.8); stroke-width: 1.5px; stroke-linejoin: round; transition: all 0.5s; }
+        .step-front { stroke: rgba(255,255,255,0.4); stroke-width: 1px; stroke-linejoin: round; transition: all 0.5s; }
+        .step-side { stroke: rgba(255,255,255,0.2); stroke-width: 1px; stroke-linejoin: round; transition: all 0.5s; }
         
         /* 鎖定的階梯（未走到） */
-        .step-locked .step-top { fill-opacity: 0.1; stroke: rgba(255,255,255,0.2); }
-        .step-locked .step-front { fill-opacity: 0.05; stroke: rgba(255,255,255,0.1); }
+        .step-locked .step-top { fill-opacity: 0.15; stroke: rgba(255,255,255,0.2); }
+        .step-locked .step-front { fill-opacity: 0.1; stroke: rgba(255,255,255,0.1); }
+        .step-locked .step-side { fill-opacity: 0.05; stroke: rgba(255,255,255,0.05); }
 
         /* 已完成的階梯 */
-        .step-done .step-top { fill-opacity: 0.4; }
-        .step-done .step-front { fill-opacity: 0.2; }
+        .step-done .step-top { fill-opacity: 0.5; }
+        .step-done .step-front { fill-opacity: 0.3; }
+        .step-done .step-side { fill-opacity: 0.2; }
 
         /* 當前閃爍的階梯 (Current) */
         .step-current { cursor: pointer; }
         .step-current .step-top { 
-            fill-opacity: 0.8; stroke: #fff; stroke-width: 2px;
-            filter: drop-shadow(0 0 15px currentColor);
+            fill-opacity: 0.9; stroke: #fff; stroke-width: 2.5px;
             animation: breathe-step 2s infinite alternate ease-in-out;
         }
-        .step-current .step-front { fill-opacity: 0.5; stroke: #fff; }
+        .step-current .step-front { fill-opacity: 0.7; stroke: #fff; stroke-width: 1.5px; }
+        .step-current .step-side { fill-opacity: 0.5; }
         
         @keyframes breathe-step {
             0% { filter: drop-shadow(0 0 10px currentColor) brightness(1); }
             100% { filter: drop-shadow(0 0 30px currentColor) brightness(1.4); }
         }
 
-        /* ---------------- 頂端菩提心 ---------------- */
-        #bodhi-heart {
+        /* ---------------- 頂端菩提心 (取自您的華嚴位階) ---------------- */
+        #bodhi-heart-group {
             transform-origin: center;
-            animation: heart-beat 3s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
-            filter: drop-shadow(0 0 20px var(--solid-gold));
+            animation: hb-pulse 2s infinite cubic-bezier(0.2, 0.8, 0.4, 1);
         }
-        @keyframes heart-beat {
-            0% { transform: scale(0.9); filter: drop-shadow(0 0 15px var(--solid-gold)); opacity: 0.8; }
-            100% { transform: scale(1.15); filter: drop-shadow(0 0 40px #fff) drop-shadow(0 0 20px var(--solid-gold)); opacity: 1; }
+        #immortal-seed {
+            fill: url(#seed-grad);
+        }
+        @keyframes hb-pulse { 
+            0% { transform: scale(1); filter: drop-shadow(0 0 20px var(--gold)); } 
+            50% { transform: scale(1.2); filter: drop-shadow(0 0 40px var(--gold)) drop-shadow(0 0 60px #fff); } 
+            100% { transform: scale(1); filter: drop-shadow(0 0 20px var(--gold)); } 
         }
 
         /* ---------------- UI 文字 ---------------- */
         #ui-layer {
-            position: absolute; top: 10%; width: 100%; text-align: center; z-index: 20;
+            position: absolute; top: 12%; width: 100%; text-align: center; z-index: 20;
             transition: opacity 0.5s; pointer-events: none;
         }
-        .main-title { color: #fff; font-size: 1.2rem; letter-spacing: 8px; font-weight: 300; text-shadow: 0 0 20px rgba(255,255,255,0.6); margin-bottom: 10px; }
-        .sub-title { color: #8ba89c; font-size: 0.85rem; letter-spacing: 4px; }
-
-        /* ---------------- 第二頁模擬 (過場後顯示) ---------------- */
-        #screen-2 {
-            position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: opacity 1s 1s; /* 延遲1秒淡入 */
-        }
-        #screen-2.show { opacity: 1; pointer-events: auto; }
-        
-        .s2-box {
-            width: 85%; max-width: 400px; padding: 40px 30px; border-radius: 20px; text-align: center;
-            background: linear-gradient(145deg, rgba(15, 20, 25, 0.85), rgba(5, 8, 10, 0.95));
-            border: 1px solid rgba(212, 175, 55, 0.4); box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 20px rgba(212,175,55,0.1);
-            backdrop-filter: blur(15px);
-        }
-        .s2-title { color: var(--solid-gold); font-size: 1.3rem; letter-spacing: 6px; margin-bottom: 20px; font-weight: bold; text-shadow: 0 0 15px rgba(212,175,55,0.5); }
-        .s2-text { color: #e0e0e0; font-size: 0.95rem; line-height: 2; letter-spacing: 2px; }
+        .main-title { color: var(--gold); font-size: 1.25rem; letter-spacing: 8px; font-weight: bold; text-shadow: 0 0 20px rgba(212,175,55,0.6); margin-bottom: 12px; }
+        .sub-title { color: var(--cyan); font-size: 0.85rem; letter-spacing: 5px; }
 
         /* 白金閃光 */
-        #flash-overlay { position: fixed; inset: 0; background: #fff; opacity: 0; z-index: 9999; pointer-events: none; transition: opacity 0.8s; }
+        #flash-overlay { position: fixed; inset: 0; background: radial-gradient(circle, #fff 0%, #f3e5ab 50%, transparent 100%); opacity: 0; z-index: 9999; pointer-events: none; transition: opacity 0.8s; mix-blend-mode: screen; }
+
     </style>
 </head>
 <body>
+
+    <!-- 植入您的漸層庫 -->
+    <svg class="global-defs">
+        <defs>
+            <linearGradient id="f-light" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.85"/><stop offset="100%" stop-color="#fff" stop-opacity="0.2"/></linearGradient>
+            <linearGradient id="f-dark" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#000" stop-opacity="0.1"/><stop offset="100%" stop-color="#000" stop-opacity="0.5"/></linearGradient>
+            <!-- 七彩色階 -->
+            <linearGradient id="g-0" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ba68c8"/><stop offset="100%" stop-color="#f3e5f5"/></linearGradient>
+            <linearGradient id="g-1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f48fb1"/><stop offset="100%" stop-color="#fce4ec"/></linearGradient>
+            <linearGradient id="g-2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4dd0e1"/><stop offset="100%" stop-color="#e0f7fa"/></linearGradient>
+            <linearGradient id="g-3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2196f3"/><stop offset="100%" stop-color="#e3f2fd"/></linearGradient>
+            <linearGradient id="g-4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#81c784"/><stop offset="100%" stop-color="#e8f5e9"/></linearGradient>
+            <linearGradient id="g-5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffb300"/><stop offset="100%" stop-color="#fff59d"/></linearGradient>
+            <linearGradient id="g-6" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d4af37"/><stop offset="100%" stop-color="#f3e5ab"/></linearGradient>
+            
+            <radialGradient id="seed-grad" cx="50%" cy="50%" r="50%">
+                <stop offset="10%" stop-color="#fff"/><stop offset="30%" stop-color="#ffe"/><stop offset="60%" stop-color="#f3e5ab"/><stop offset="100%" stop-color="#d4af37"/>
+            </radialGradient>
+        </defs>
+    </svg>
 
     <!-- 星空背景 -->
     <canvas id="starCanvas"></canvas>
@@ -114,118 +123,99 @@
 
     <!-- UI 標題 -->
     <div id="ui-layer">
-        <div class="main-title">十信滿願 ． 步步生蓮</div>
-        <div class="sub-title">請踏上今日之階</div>
+        <div class="main-title">七日行願 ． 步步生蓮</div>
+        <div class="sub-title">點擊發光之法階入陣</div>
     </div>
 
-    <!-- 核心：十階立體天梯 -->
+    <!-- 核心：七階弧線琉璃天梯 -->
     <div id="stair-container">
-        <svg id="stair-svg" viewBox="0 0 400 650">
-            <!-- 菩提心 (頂端) -->
-            <g id="bodhi-heart" transform="translate(200, 110)">
-                <!-- 放射光芒 -->
-                <circle cx="0" cy="0" r="30" fill="none" stroke="#f3e5ab" stroke-width="1" stroke-dasharray="2 6" opacity="0.8"/>
-                <!-- 蓮心幾何 -->
-                <path d="M 0 -25 C 20 -5, 25 15, 0 30 C -25 15, -20 -5, 0 -25 Z" fill="rgba(255,255,255,0.9)" stroke="#d4af37" stroke-width="2"/>
-                <circle cx="0" cy="5" r="5" fill="#d4af37"/>
-            </g>
-
-            <!-- 階梯將由 JS 動態生成，確保數學精準 -->
+        <svg id="stair-svg" viewBox="0 0 500 800">
+            <!-- 階梯將由 JS 動態生成 -->
             <g id="steps-group"></g>
+
+            <!-- 菩提心 (頂端第 7 階之上) -->
+            <!-- 座標精準對齊第 7 階的中心點上方 -->
+            <g id="bodhi-heart-group" transform="translate(325, 230)">
+                <!-- 放射光芒 -->
+                <circle cx="0" cy="0" r="35" fill="none" stroke="#f3e5ab" stroke-width="1.5" stroke-dasharray="3 8" opacity="0.8"/>
+                <circle cx="0" cy="0" r="22" fill="none" stroke="#d4af37" stroke-width="1" opacity="0.6"/>
+                <!-- 菩提種子 -->
+                <circle id="immortal-seed" cx="0" cy="0" r="12" />
+            </g>
         </svg>
     </div>
 
-    <!-- 第二幕：過場後的模擬畫面 -->
-    <div id="screen-2">
-        <div class="s2-box">
-            <div class="s2-title">【 菩提心室 】</div>
-            <div class="s2-text">
-                行者，您已穿透法界屏障。<br><br>
-                此處將連接您的煥彩光柱與<br>「長按印心」集氣陣法。<br><br>
-                <span style="color:#8ba89c; font-size:0.8rem;">( 視覺起承轉合演練完畢 )</span>
-            </div>
-            <button onclick="location.reload()" style="margin-top:30px; padding: 10px 25px; border-radius: 20px; background:transparent; border: 1px solid #8ba89c; color:#8ba89c; letter-spacing:2px; cursor:pointer;">重置展現</button>
-        </div>
-    </div>
-
+    <!-- 白金閃光 -->
     <div id="flash-overlay"></div>
 
 <script>
     // ==========================================
-    // 1. 星空引擎 (Star Engine)
+    // 1. 星空引擎 (取自您的代碼)
     // ==========================================
     const canvas = document.getElementById('starCanvas');
     const ctx = canvas.getContext('2d');
-    let width, height, stars = [], warpSpeed = 0.5;
+    let width, height, stars = [], warpSpeed = 1;
 
     function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
     window.addEventListener('resize', resize); resize();
 
-    for (let i = 0; i < 250; i++) {
-        let c = Math.random() > 0.6 ? '#f3e5ab' : (Math.random() > 0.5 ? '#00f2fe' : '#c471ed');
-        stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, color: c, size: Math.random() * 1.5 + 0.5 });
+    for (let i = 0; i < 200; i++) {
+        let cType = Math.random();
+        let color = cType > 0.8 ? '243,229,171' : (cType > 0.5 ? '139,168,156' : '255,255,255');
+        stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, color: color, s: Math.random() * 1.5 + 0.5 });
     }
 
     function renderStars() {
-        ctx.fillStyle = 'rgba(1, 1, 3, 0.4)'; ctx.fillRect(0, 0, width, height); ctx.globalCompositeOperation = 'screen';
+        ctx.fillStyle = 'rgba(2, 2, 3, 0.5)'; ctx.fillRect(0, 0, width, height); ctx.globalCompositeOperation = 'screen';
         stars.forEach(s => {
             s.z -= warpSpeed;
             if (s.z <= 0) { s.z = 2000; s.x = (Math.random() - 0.5) * 2000; s.y = (Math.random() - 0.5) * 2000; } 
-            let scale = 400 / (400 + s.z);
-            let px = (width / 2) + s.x * scale;
-            let py = (height / 2) + s.y * scale;
-            ctx.beginPath(); ctx.arc(px, py, Math.max(0.1, s.size * scale * (warpSpeed > 2 ? 3 : 1)), 0, Math.PI * 2);
-            ctx.fillStyle = s.color; ctx.globalAlpha = Math.min(1, scale * 2); ctx.fill(); ctx.globalAlpha = 1;
+            let sc = 400 / (400 + s.z);
+            let px = (width / 2) + s.x * sc;
+            let py = (height / 2) + s.y * sc;
+            ctx.beginPath(); ctx.arc(px, py, s.s * sc * (warpSpeed > 2 ? 4 : 1), 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${s.color}, ${Math.min(1, sc * 2)})`; ctx.fill(); 
         });
         ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(renderStars);
     }
     renderStars();
 
     // ==========================================
-    // 2. SVG 立體透視階梯生成器
+    // 2. SVG 七階弧線透視階梯生成器
     // ==========================================
     const stepsGroup = document.getElementById('steps-group');
     
-    // 預先計算好的 10 階透視數學座標 (Width, Bottom Y, Front Height)
+    // 手工精算 7 階弧線透視座標 (X偏左下至右上)
+    // cx: 中心X, y: 底部Y, w: 寬度, h: 正面高度
     const STAIR_MATH = [
-        { w: 350, y: 620, h: 35 }, // 第 1 階 (最底、最寬)
-        { w: 305, y: 550, h: 30 }, // 第 2 階
-        { w: 265, y: 488, h: 26 }, // 第 3 階
-        { w: 230, y: 433, h: 22 }, // 第 4 階
-        { w: 200, y: 385, h: 19 }, // 第 5 階
-        { w: 175, y: 343, h: 16 }, // 第 6 階
-        { w: 155, y: 306, h: 14 }, // 第 7 階
-        { w: 138, y: 274, h: 12 }, // 第 8 階
-        { w: 124, y: 246, h: 10 }, // 第 9 階
-        { w: 112, y: 222, h: 9 }   // 第 10 階 (最頂、最窄，接向菩提心)
+        { cx: 160, y: 720, w: 320, h: 35 }, // 第 1 階 (最底、偏左)
+        { cx: 200, y: 630, w: 280, h: 30 }, // 第 2 階
+        { cx: 240, y: 550, w: 240, h: 26 }, // 第 3 階
+        { cx: 275, y: 475, w: 200, h: 22 }, // 第 4 階
+        { cx: 300, y: 405, w: 165, h: 18 }, // 第 5 階
+        { cx: 315, y: 340, w: 135, h: 15 }, // 第 6 階
+        { cx: 325, y: 280, w: 110, h: 12 }  // 第 7 階 (最頂、偏右、接向菩提心)
     ];
 
-    // 絕美琉璃煥彩漸層 (深空紫 -> 琉璃青 -> 玫瑰粉 -> 佛性真金)
-    const STAIR_COLORS = [
-        '#4a00e0', // 1
-        '#8e2de2', // 2
-        '#c471ed', // 3
-        '#ff7eb3', // 4
-        '#f64f59', // 5
-        '#00f2fe', // 6
-        '#4facfe', // 7
-        '#43e97b', // 8
-        '#fee140', // 9
-        '#d4af37'  // 10
-    ];
+    // 對應 7 天的 7 種琉璃漸層 (呼叫您的 <linearGradient>)
+    const STAIR_COLORS = ['#ba68c8', '#f48fb1', '#4dd0e1', '#2196f3', '#81c784', '#ffb300', '#d4af37'];
+    const GRADIENTS = ['url(#g-0)', 'url(#g-1)', 'url(#g-2)', 'url(#g-3)', 'url(#g-4)', 'url(#g-5)', 'url(#g-6)'];
 
-    let currentDay = 4; // 假設行者今天是第 4 天
+    let currentDay = 4; // 假設今天是第 4 天（藍色階梯發光）
 
     function buildStairs() {
         let html = '';
-        const centerX = 200;
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 7; i++) {
             let s = STAIR_MATH[i];
-            let nextY = (i === 9) ? 195 : STAIR_MATH[i+1].y; // 頂面延伸到下一階的底部
-            let nextW = (i === 9) ? 102 : STAIR_MATH[i+1].w;
             
-            let color = STAIR_COLORS[i];
+            // 下一階的底部，用來連接當前階的頂部深度
+            let nextY = (i === 6) ? 245 : STAIR_MATH[i+1].y; 
+            let nextW = (i === 6) ? 80 : STAIR_MATH[i+1].w;
+            let nextCx = (i === 6) ? 330 : STAIR_MATH[i+1].cx;
+            
+            let baseColor = STAIR_COLORS[i];
+            let gradColor = GRADIENTS[i];
             
             // 狀態判斷
             let stateClass = '';
@@ -238,28 +228,40 @@
             else stateClass = 'step-locked';
 
             // SVG Polygon 座標計算
-            // 正面 (Front Face)
+            // 1. 正面 (Front Face)
             let frontPts = `
-                ${centerX - s.w/2}, ${s.y} 
-                ${centerX + s.w/2}, ${s.y} 
-                ${centerX + s.w/2}, ${s.y - s.h} 
-                ${centerX - s.w/2}, ${s.y - s.h}
+                ${s.cx - s.w/2}, ${s.y} 
+                ${s.cx + s.w/2}, ${s.y} 
+                ${s.cx + s.w/2}, ${s.y - s.h} 
+                ${s.cx - s.w/2}, ${s.y - s.h}
             `;
             
-            // 頂面 (Top Face) - 連接當前階的頂部與下一階的底部
+            // 2. 頂面 (Top Face) - 從正面頂部連到下一階的底部
             let topPts = `
-                ${centerX - s.w/2}, ${s.y - s.h} 
-                ${centerX + s.w/2}, ${s.y - s.h} 
-                ${centerX + nextW/2}, ${nextY} 
-                ${centerX - nextW/2}, ${nextY}
+                ${s.cx - s.w/2}, ${s.y - s.h} 
+                ${s.cx + s.w/2}, ${s.y - s.h} 
+                ${nextCx + nextW/2}, ${nextY} 
+                ${nextCx - nextW/2}, ${nextY}
+            `;
+
+            // 3. 左側面 (Side Face) - 補足弧線轉彎產生的厚度立體感
+            let sidePts = `
+                ${s.cx - s.w/2}, ${s.y}
+                ${s.cx - s.w/2}, ${s.y - s.h}
+                ${nextCx - nextW/2}, ${nextY}
+                ${nextCx - nextW/2}, ${nextY + s.h*0.8}
             `;
 
             html += `
-                <g class="stair-step ${stateClass}" style="color: ${color};" ${clickAttr}>
-                    <!-- 頂面 (受光面) -->
-                    <polygon class="step-top" points="${topPts}" fill="${color}" />
+                <g class="stair-step ${stateClass}" style="color: ${baseColor};" ${clickAttr}>
+                    <!-- 側面 (用 facet-dark 加深) -->
+                    <polygon class="step-side" points="${sidePts}" fill="url(#f-dark)" />
                     <!-- 正面 (背光面) -->
-                    <polygon class="step-front" points="${frontPts}" fill="${color}" />
+                    <polygon class="step-front" points="${frontPts}" fill="${gradColor}" />
+                    <polygon class="step-front" points="${frontPts}" fill="url(#f-dark)" opacity="0.3"/>
+                    <!-- 頂面 (受光面) -->
+                    <polygon class="step-top" points="${topPts}" fill="${gradColor}" />
+                    <polygon class="step-top" points="${topPts}" fill="url(#f-light)" opacity="0.5"/>
                 </g>
             `;
         }
@@ -271,30 +273,31 @@
     // 3. 飛越天梯，衝入菩提心 (Warp Animation)
     // ==========================================
     function triggerWarp() {
-        // 1. 星空引擎極限加速 (Warp Speed)
-        warpSpeed = 35;
+        // 1. 星空引擎極限加速
+        warpSpeed = 40;
 
         // 2. 隱藏 UI 文字
         document.getElementById('ui-layer').style.opacity = '0';
 
-        // 3. 階梯 SVG 整體放大並衝向鏡頭
+        // 3. 階梯 SVG 衝向鏡頭
         const stairSvg = document.getElementById('stair-svg');
         stairSvg.classList.add('warp-drive');
 
-        // 4. 閃光白屏過渡
+        // 4. 菩提心劇烈發光
+        const heart = document.getElementById('immortal-seed');
+        heart.style.filter = "drop-shadow(0 0 100px #fff)";
+
+        // 5. 閃光白屏過渡 (準備銜接第二幕)
         setTimeout(() => {
             const flash = document.getElementById('flash-overlay');
             flash.style.opacity = '1';
-            warpSpeed = 1; // 星空恢復平靜
             
-            // 5. 切換到第二幕 (光柱心室)
             setTimeout(() => {
-                flash.style.opacity = '0';
-                document.getElementById('stair-container').style.display = 'none';
-                document.getElementById('screen-2').classList.add('show');
-            }, 800);
+                alert("【視覺展示完畢】\n此處白光將無縫銜接至『集氣任務第二頁』！");
+                location.reload(); // 展示用，重置畫面
+            }, 1000);
             
-        }, 1200); // 階梯放大動畫持續時間
+        }, 1200); 
     }
 
 </script>

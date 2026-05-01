@@ -230,25 +230,46 @@ db.visionLastFailed = db.visionLastFailed || "";
         </svg>`;
     }
 
-    function generateVessels(total, colorCount) {
-        let isValid = false;
+     function generateVessels(total, colorCount) {
         let v = [];
-        while(!isValid) {
-            let pool = [];
-            for(let i=0; i<colorCount; i++) { for(let j=0; j<3; j++) pool.push(COLORS[i]); } 
-            pool.sort(() => Math.random() - 0.5);
-            v = [];
-            for(let i=0; i<total; i++) v.push(i < colorCount ? pool.splice(0, 3) : []);
-            
-            isValid = true;
-            for(let i=0; i<colorCount; i++) {
-                if (v[i].length === 3 && v[i][0] === v[i][1] && v[i][1] === v[i][2]) {
-                    isValid = false; break;
-                }
-            }
+        for (let i = 0; i < total; i++) {
+            v.push(i < colorCount ? [COLORS[i], COLORS[i], COLORS[i]] : []);
         }
+
+        const scrambleSteps = colorCount * 40;
+
+        for (let step = 0; step < scrambleSteps; step++) {
+            let validSources = [];
+            v.forEach((bottle, idx) => {
+                if (bottle.length === 1) {
+                    validSources.push(idx);
+                } else if (bottle.length > 1 && bottle[bottle.length - 1] === bottle[bottle.length - 2]) {
+                    validSources.push(idx);
+                }
+            });
+
+            if (validSources.length === 0) break;
+            
+            let sourceIdx = validSources[Math.floor(Math.random() * validSources.length)];
+            let colorToMove = v[sourceIdx][v[sourceIdx].length - 1];
+
+            let validTargets = [];
+            v.forEach((bottle, idx) => {
+                if (bottle.length < 3 && idx !== sourceIdx) {
+                    validTargets.push(idx);
+                }
+            });
+
+            if (validTargets.length === 0) continue;
+            let targetIdx = validTargets[Math.floor(Math.random() * validTargets.length)];
+
+            v[sourceIdx].pop();
+            v[targetIdx].push(colorToMove);
+        }
+
         return v;
     }
+
 
     function initLevel() {
         const carousel = document.getElementById('carousel'); carousel.innerHTML = '';
@@ -356,7 +377,7 @@ db.visionLastFailed = db.visionLastFailed || "";
         }
     }
 
-    function animateJump(sx, sy, ex, ey, cid) {
+       function animateJump(sx, sy, ex, ey, cid) {
         return new Promise(resolve => {
             const j = document.createElement('div'); j.className = 'drop-jump'; j.style.background = `var(--color-${cid})`;
             document.body.appendChild(j);
@@ -365,9 +386,20 @@ db.visionLastFailed = db.visionLastFailed || "";
                 { transform: `translate(${(sx+ex)/2}px, ${Math.min(sy,ey)-150}px) scale(1.3)`, opacity: 1 },
                 { transform: `translate(${ex}px, ${ey}px) scale(0.6)`, opacity: 0 }
             ], { duration: 380, easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)', fill: 'forwards' });
-            anim.onfinish = () => { j.remove(); resolve(); };
+            
+            let isResolved = false;
+            const finishAnim = () => {
+                if(isResolved) return;
+                isResolved = true;
+                if(j.parentNode) j.remove(); 
+                resolve();
+            };
+            
+            anim.onfinish = finishAnim;
+            setTimeout(finishAnim, 450); 
         });
     }
+
 
     // --------------------------------------------------
     // English Dharma Encounters
@@ -582,15 +614,16 @@ db.visionLastFailed = db.visionLastFailed || "";
     }
 
 
-        function startTimer() {
+           function startTimer() {
         clearInterval(timerInterval);
-        const limit = (30 + db.waterLevel) * 60 * 1000;
+        // Cap at 90 minutes
+        const limit = Math.min(90, 30 + db.waterLevel) * 60 * 1000;
+        
         timerInterval = setInterval(() => {
             const elapsed = Date.now() - game.startTime;
             if (elapsed > limit) { 
                 clearInterval(timerInterval); 
                 
-                // ✨ Grab final stats and save, keeping the loose change safe!
                 let finalLvl = db.waterLevel;
                 let finalBag = db.tempBag;
                 saveDB(); 
@@ -606,6 +639,7 @@ db.visionLastFailed = db.visionLastFailed || "";
             document.getElementById('timer-ui').innerText = `Time left: ${min} min`;
         }, 10000); 
     }
+
 
 
 

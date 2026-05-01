@@ -3,380 +3,298 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <link rel="manifest" href="manifest.json">
-    <title>普賢行願 ． 雙極法界</title>
+    <title>普賢行願 ． 十階天梯</title>
     <style>
         :root {
-            --bg-deep: #010103; 
-            --gold: #f3e5ab; --solid-gold: #d4af37; 
-            /* 煥彩變數 */
-            --glass-bg: rgba(25, 20, 35, 0.65);
-            --neon-pink: #ff7eb3; --neon-cyan: #00f2fe; 
-            --neon-purple: #c471ed; --neon-green: #4facfe;
+            --bg-deep: #010103;
+            --solid-gold: #d4af37;
         }
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; }
         body { 
-            background: var(--bg-deep); color: #d0d0d0; 
+            background: var(--bg-deep); 
             font-family: "PingFang TC", "Microsoft JhengHei", serif;
             overflow: hidden; touch-action: none; width: 100vw; height: 100dvh;
             display: flex; justify-content: center; align-items: center;
         }
 
-        /* ================= 星空背景 ================= */
+        /* ---------------- 星空引擎 ---------------- */
         #starCanvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-        #vignette { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(circle at center, transparent 10%, rgba(1, 1, 3, 0.95) 100%); }
+        #vignette { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(circle at 50% 30%, transparent 10%, rgba(1, 1, 3, 0.95) 100%); }
 
-        /* ================= 頂部導航 (共用) ================= */
-        .top-nav { position: absolute; top: 0; width: 100%; padding: calc(max(20px, env(safe-area-inset-top, 20px))) 20px 20px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
-        .btn-nav { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; letter-spacing: 2px; cursor: pointer; transition: 0.3s; backdrop-filter: blur(8px); display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);}
-        .btn-nav:active { transform: scale(0.95); }
+        /* ---------------- 天梯容器與 SVG ---------------- */
+        #stair-container {
+            position: absolute; inset: 0; z-index: 10;
+            display: flex; justify-content: center; align-items: center;
+            perspective: 1000px;
+        }
 
-        /* ================= 第一幕：兩道星門 ================= */
-        #screen-1 { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s; }
-        .portal-title { color: #fff; font-size: 1.1rem; letter-spacing: 6px; margin-bottom: 50px; text-shadow: 0 0 15px rgba(255,255,255,0.6); font-weight: 300; animation: float 3s ease-in-out infinite; }
-        
-        .doors-container { display: flex; gap: 40px; justify-content: center; align-items: center; width: 100%; padding: 0 20px; }
-        
-        .portal { width: 140px; height: 220px; position: relative; cursor: pointer; transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; align-items: center; }
-        .portal-svg { width: 100%; height: 100%; filter: drop-shadow(0 0 15px rgba(255,255,255,0.2)); transition: all 0.5s; animation: float 4s ease-in-out infinite alternate; }
-        .portal-name { position: absolute; bottom: -35px; color: #fff; font-size: 0.85rem; letter-spacing: 4px; text-shadow: 0 0 10px rgba(255,255,255,0.8); opacity: 0.8; transition: 0.3s; }
-        
-        /* 門的懸浮與點擊特效 */
-        .portal:hover .portal-svg { filter: drop-shadow(0 0 30px rgba(255,255,255,0.6)) brightness(1.2); transform: scale(1.05); }
-        .portal:hover .portal-name { opacity: 1; transform: translateY(5px); }
-        
-        /* 過場動畫 Class */
-        .portal.fade-out { opacity: 0; transform: scale(0.5) translateY(50px); pointer-events: none; filter: blur(10px); }
-        .portal.warp-in { transform: scale(15) translateY(20px); opacity: 0; filter: blur(5px) brightness(3); z-index: 50; }
-        @keyframes float { 0% { transform: translateY(0); } 100% { transform: translateY(-12px); } }
+        #stair-svg {
+            width: 100%; max-width: 600px; height: 100%; max-height: 900px;
+            overflow: visible; transform-origin: 50% 18%; /* 縮放中心點對準頂端的菩提心 */
+            transition: transform 1.8s cubic-bezier(0.6, 0.05, 0.1, 1), opacity 1.5s ease-in;
+        }
 
-        /* ================= 第二幕：煥彩光柱與任務 ================= */
-        #screen-2 { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 1s 0.5s; }
+        /* 飛越過場動畫 */
+        #stair-svg.warp-drive {
+            transform: scale(25) translateY(10%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 階梯的毛玻璃與光影質感 */
+        .step-top { stroke: rgba(255,255,255,0.7); stroke-width: 1px; transition: all 0.5s; }
+        .step-front { stroke: rgba(255,255,255,0.3); stroke-width: 1px; transition: all 0.5s; }
+        
+        /* 鎖定的階梯（未走到） */
+        .step-locked .step-top { fill-opacity: 0.1; stroke: rgba(255,255,255,0.2); }
+        .step-locked .step-front { fill-opacity: 0.05; stroke: rgba(255,255,255,0.1); }
+
+        /* 已完成的階梯 */
+        .step-done .step-top { fill-opacity: 0.4; }
+        .step-done .step-front { fill-opacity: 0.2; }
+
+        /* 當前閃爍的階梯 (Current) */
+        .step-current { cursor: pointer; }
+        .step-current .step-top { 
+            fill-opacity: 0.8; stroke: #fff; stroke-width: 2px;
+            filter: drop-shadow(0 0 15px currentColor);
+            animation: breathe-step 2s infinite alternate ease-in-out;
+        }
+        .step-current .step-front { fill-opacity: 0.5; stroke: #fff; }
+        
+        @keyframes breathe-step {
+            0% { filter: drop-shadow(0 0 10px currentColor) brightness(1); }
+            100% { filter: drop-shadow(0 0 30px currentColor) brightness(1.4); }
+        }
+
+        /* ---------------- 頂端菩提心 ---------------- */
+        #bodhi-heart {
+            transform-origin: center;
+            animation: heart-beat 3s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 0 20px var(--solid-gold));
+        }
+        @keyframes heart-beat {
+            0% { transform: scale(0.9); filter: drop-shadow(0 0 15px var(--solid-gold)); opacity: 0.8; }
+            100% { transform: scale(1.15); filter: drop-shadow(0 0 40px #fff) drop-shadow(0 0 20px var(--solid-gold)); opacity: 1; }
+        }
+
+        /* ---------------- UI 文字 ---------------- */
+        #ui-layer {
+            position: absolute; top: 10%; width: 100%; text-align: center; z-index: 20;
+            transition: opacity 0.5s; pointer-events: none;
+        }
+        .main-title { color: #fff; font-size: 1.2rem; letter-spacing: 8px; font-weight: 300; text-shadow: 0 0 20px rgba(255,255,255,0.6); margin-bottom: 10px; }
+        .sub-title { color: #8ba89c; font-size: 0.85rem; letter-spacing: 4px; }
+
+        /* ---------------- 第二頁模擬 (過場後顯示) ---------------- */
+        #screen-2 {
+            position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 1s 1s; /* 延遲1秒淡入 */
+        }
         #screen-2.show { opacity: 1; pointer-events: auto; }
-
-        /* 煥彩大能量棒 */
-        #pillar-container { position: absolute; top: 15%; bottom: 15%; left: 50%; transform: translateX(-50%); width: 160px; z-index: 5; pointer-events: none; display: flex; justify-content: center; }
-        .pillar-svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 20px rgba(255,255,255,0.1)); }
-        #pillar-core { transition: height 1.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
-
-        /* 煥彩毛玻璃面板 */
-        #task-panel { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: 88%; max-width: 420px; background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 24px; padding: 40px 30px; box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.1); z-index: 50; text-align: center; overflow: hidden; }
-        /* 彩色動態邊框 */
-        #task-panel::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(transparent, var(--neon-cyan), transparent 30%); animation: borderSpin 4s linear infinite; z-index: -1; opacity: 0.5; }
-        #task-panel::after { content: ''; position: absolute; inset: 2px; background: rgba(15, 12, 20, 0.85); border-radius: 22px; z-index: -1; backdrop-filter: blur(10px); }
-        @keyframes borderSpin { 100% { transform: rotate(360deg); } }
-
-        .accumulate-text { color: var(--neon-cyan); font-size: 0.75rem; letter-spacing: 4px; margin-bottom: 20px; text-transform: uppercase; text-shadow: 0 0 10px rgba(0,242,254,0.4); }
-        #task-title { color: #fff; font-size: 1.15rem; letter-spacing: 5px; margin-bottom: 20px; text-shadow: 0 0 15px rgba(255,255,255,0.6); font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 15px; }
-        #task-text { color: #e0e0e0; font-size: 0.95rem; line-height: 2.2; letter-spacing: 2px; text-align: justify; text-align-last: center; font-weight: 300; min-height: 100px; }
-
-        /* 長按印心法陣 (煥彩版) */
-        #seal-wrap { position: absolute; bottom: 8%; left: 50%; transform: translateX(-50%); width: 120px; height: 120px; z-index: 60; cursor: pointer; display: flex; justify-content: center; align-items: center; }
-        .seal-bg-svg { position: absolute; inset: 0; width: 100%; height: 100%; animation: slow-spin 15s linear infinite; opacity: 0.6; }
-        .seal-progress-svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); pointer-events: none; }
-        .seal-icon { position: absolute; width: 50px; height: 50px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.4)); transition: all 0.3s; }
         
-        #seal-wrap.pressing .seal-icon { filter: drop-shadow(0 0 25px var(--neon-cyan)) brightness(1.5); transform: scale(0.9); }
-        #seal-wrap.done .seal-bg-svg { animation: none; filter: drop-shadow(0 0 20px var(--neon-cyan)); opacity: 1; }
-        #seal-wrap.done .seal-icon { filter: drop-shadow(0 0 15px #fff); }
+        .s2-box {
+            width: 85%; max-width: 400px; padding: 40px 30px; border-radius: 20px; text-align: center;
+            background: linear-gradient(145deg, rgba(15, 20, 25, 0.85), rgba(5, 8, 10, 0.95));
+            border: 1px solid rgba(212, 175, 55, 0.4); box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 20px rgba(212,175,55,0.1);
+            backdrop-filter: blur(15px);
+        }
+        .s2-title { color: var(--solid-gold); font-size: 1.3rem; letter-spacing: 6px; margin-bottom: 20px; font-weight: bold; text-shadow: 0 0 15px rgba(212,175,55,0.5); }
+        .s2-text { color: #e0e0e0; font-size: 0.95rem; line-height: 2; letter-spacing: 2px; }
 
-        #seal-hint { position: absolute; bottom: 3%; width: 100%; text-align: center; font-size: 0.8rem; color: #8ba89c; letter-spacing: 4px; transition: 0.5s; z-index: 60; }
-        @keyframes slow-spin { 100% { transform: rotate(360deg); } }
-
-        /* ================= 結算特效 ================= */
-        #flash-overlay { position: fixed; inset: 0; z-index: 9000; background: radial-gradient(circle, #fff 0%, var(--neon-cyan) 40%, var(--bg-deep) 100%); mix-blend-mode: screen; opacity: 0; pointer-events: none; transition: opacity 0.8s; }
-        
+        /* 白金閃光 */
+        #flash-overlay { position: fixed; inset: 0; background: #fff; opacity: 0; z-index: 9999; pointer-events: none; transition: opacity 0.8s; }
     </style>
 </head>
 <body>
-
-    <!-- 全局 SVG 煥彩漸層定義 -->
-    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
-        <defs>
-            <!-- 門1: 蓮華 (粉紫青) -->
-            <linearGradient id="door1-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#ff7eb3"/><stop offset="50%" stop-color="#c471ed"/><stop offset="100%" stop-color="#00f2fe"/>
-            </linearGradient>
-            <!-- 門2: 金剛 (藍綠金) -->
-            <linearGradient id="door2-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#00f2fe"/><stop offset="50%" stop-color="#4facfe"/><stop offset="100%" stop-color="#d4af37"/>
-            </linearGradient>
-            <!-- 光柱能量液體漸層 -->
-            <linearGradient id="pillar-grad" x1="0%" y1="100%" x2="0%" y2="0%">
-                <stop offset="0%" stop-color="#c471ed" stop-opacity="0.6"/>
-                <stop offset="50%" stop-color="#00f2fe" stop-opacity="0.8"/>
-                <stop offset="100%" stop-color="#fff" stop-opacity="1"/>
-            </linearGradient>
-        </defs>
-    </svg>
 
     <!-- 星空背景 -->
     <canvas id="starCanvas"></canvas>
     <div id="vignette"></div>
 
-    <!-- 頂部導航 -->
-    <div class="top-nav">
-        <div class="btn-nav" onclick="location.reload()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> 歸返
-        </div>
-        <div class="btn-nav" id="bag-ui" style="border-color: rgba(0,242,254,0.4); color: #00f2fe;">資糧：0 / 1000</div>
+    <!-- UI 標題 -->
+    <div id="ui-layer">
+        <div class="main-title">十信滿願 ． 步步生蓮</div>
+        <div class="sub-title">請踏上今日之階</div>
     </div>
 
-    <!-- ================= 第一幕：擇門而入 ================= -->
-    <div id="screen-1">
-        <div class="portal-title">一念三千 ． 擇境入關</div>
-        <div class="doors-container">
-            
-            <!-- 門 1: 悲願蓮華 -->
-            <div class="portal" id="portal-1" onclick="enterPortal(1)">
-                <svg class="portal-svg" viewBox="0 0 100 160">
-                    <!-- 煥彩幾何門框 -->
-                    <path d="M50 5 C 80 20, 95 60, 95 100 L 95 150 L 5 150 L 5 100 C 5 60, 20 20, 50 5 Z" fill="rgba(255,255,255,0.03)" stroke="url(#door1-grad)" stroke-width="2"/>
-                    <!-- 內部曼陀羅 -->
-                    <circle cx="50" cy="80" r="30" fill="none" stroke="url(#door1-grad)" stroke-width="1" stroke-dasharray="2 4"/>
-                    <path d="M50 35 L 65 65 L 85 80 L 65 95 L 50 125 L 35 95 L 15 80 L 35 65 Z" fill="url(#door1-grad)" opacity="0.4"/>
-                    <circle cx="50" cy="80" r="8" fill="#fff" filter="drop-shadow(0 0 10px #ff7eb3)"/>
-                </svg>
-                <div class="portal-name">悲 願</div>
-            </div>
+    <!-- 核心：十階立體天梯 -->
+    <div id="stair-container">
+        <svg id="stair-svg" viewBox="0 0 400 650">
+            <!-- 菩提心 (頂端) -->
+            <g id="bodhi-heart" transform="translate(200, 110)">
+                <!-- 放射光芒 -->
+                <circle cx="0" cy="0" r="30" fill="none" stroke="#f3e5ab" stroke-width="1" stroke-dasharray="2 6" opacity="0.8"/>
+                <!-- 蓮心幾何 -->
+                <path d="M 0 -25 C 20 -5, 25 15, 0 30 C -25 15, -20 -5, 0 -25 Z" fill="rgba(255,255,255,0.9)" stroke="#d4af37" stroke-width="2"/>
+                <circle cx="0" cy="5" r="5" fill="#d4af37"/>
+            </g>
 
-            <!-- 門 2: 般若金剛 -->
-            <div class="portal" id="portal-2" onclick="enterPortal(2)">
-                <svg class="portal-svg" viewBox="0 0 100 160">
-                    <!-- 煥彩幾何門框 -->
-                    <polygon points="50,5 95,45 95,150 5,150 5,45" fill="rgba(255,255,255,0.03)" stroke="url(#door2-grad)" stroke-width="2"/>
-                    <!-- 內部曼陀羅 -->
-                    <polygon points="50,30 75,55 75,105 50,130 25,105 25,55" fill="none" stroke="url(#door2-grad)" stroke-width="1.5"/>
-                    <polygon points="50,50 65,80 50,110 35,80" fill="url(#door2-grad)" opacity="0.5"/>
-                    <circle cx="50" cy="80" r="6" fill="#fff" filter="drop-shadow(0 0 10px #00f2fe)"/>
-                </svg>
-                <div class="portal-name">般 若</div>
-            </div>
-
-        </div>
+            <!-- 階梯將由 JS 動態生成，確保數學精準 -->
+            <g id="steps-group"></g>
+        </svg>
     </div>
 
-    <!-- ================= 第二幕：煥彩光柱與任務 ================= -->
+    <!-- 第二幕：過場後的模擬畫面 -->
     <div id="screen-2">
-        
-        <!-- 通天大能量棒 -->
-        <div id="pillar-container">
-            <svg class="pillar-svg" viewBox="0 0 100 400" preserveAspectRatio="none">
-                <polygon points="50,10 80,30 80,380 50,400 20,380 20,30" fill="rgba(0,0,0,0.5)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
-                <defs><clipPath id="pillar-mask"><rect x="0" id="pillar-clip-rect" y="400" width="100" height="0" /></clipPath></defs>
-                <g clip-path="url(#pillar-mask)">
-                    <polygon points="50,10 80,30 80,380 50,400 20,380 20,30" fill="url(#pillar-grad)"/>
-                    <polygon points="50,10 80,30 50,400 20,30" fill="#fff" opacity="0.3"/>
-                </g>
-                <polygon points="50,0 85,25 85,35 50,55 15,35 15,25" fill="rgba(20,20,30,0.9)" stroke="url(#door2-grad)" stroke-width="1.5"/>
-                <polygon points="50,345 85,365 85,375 50,400 15,375 15,365" fill="rgba(20,20,30,0.9)" stroke="url(#door2-grad)" stroke-width="1.5"/>
-            </svg>
+        <div class="s2-box">
+            <div class="s2-title">【 菩提心室 】</div>
+            <div class="s2-text">
+                行者，您已穿透法界屏障。<br><br>
+                此處將連接您的煥彩光柱與<br>「長按印心」集氣陣法。<br><br>
+                <span style="color:#8ba89c; font-size:0.8rem;">( 視覺起承轉合演練完畢 )</span>
+            </div>
+            <button onclick="location.reload()" style="margin-top:30px; padding: 10px 25px; border-radius: 20px; background:transparent; border: 1px solid #8ba89c; color:#8ba89c; letter-spacing:2px; cursor:pointer;">重置展現</button>
         </div>
-
-        <!-- 任務面板 -->
-        <div id="task-panel">
-            <div class="accumulate-text">法界實修 ． 嚴選任務</div>
-            <div id="task-title">【 讀取中 】</div>
-            <div id="task-text">...</div>
-        </div>
-
-        <!-- 長按印心法陣 -->
-        <div id="seal-wrap">
-            <svg class="seal-bg-svg" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-dasharray="2 8"/>
-                <polygon points="50,5 90,50 50,95 10,50" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
-            </svg>
-            <svg class="seal-progress-svg" viewBox="0 0 100 100">
-                <circle id="seal-progress" cx="50" cy="50" r="46" fill="none" stroke="url(#door1-grad)" stroke-width="4" stroke-dasharray="289" stroke-dashoffset="289" stroke-linecap="round"/>
-            </svg>
-            <svg class="seal-icon" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="25" fill="url(#pillar-grad)" opacity="0.8"/>
-                <circle cx="50" cy="50" r="10" fill="#fff" filter="drop-shadow(0 0 8px #fff)"/>
-            </svg>
-        </div>
-        <div id="seal-hint">長按印心 ． 圓滿任務</div>
     </div>
 
-    <!-- 結算閃光 -->
     <div id="flash-overlay"></div>
 
 <script>
-    // ================= 星空引擎 =================
+    // ==========================================
+    // 1. 星空引擎 (Star Engine)
+    // ==========================================
     const canvas = document.getElementById('starCanvas');
     const ctx = canvas.getContext('2d');
-    let width, height, stars = [], warpSpeed = 1;
+    let width, height, stars = [], warpSpeed = 0.5;
 
     function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
     window.addEventListener('resize', resize); resize();
 
-    for (let i = 0; i < 200; i++) {
-        // 色彩改為煥彩粉藍系列
-        let c = Math.random() > 0.5 ? '#00f2fe' : (Math.random() > 0.5 ? '#ff7eb3' : '#f3e5ab');
-        stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, color: c });
+    for (let i = 0; i < 250; i++) {
+        let c = Math.random() > 0.6 ? '#f3e5ab' : (Math.random() > 0.5 ? '#00f2fe' : '#c471ed');
+        stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, color: c, size: Math.random() * 1.5 + 0.5 });
     }
 
     function renderStars() {
-        ctx.fillStyle = 'rgba(1, 1, 3, 0.5)'; ctx.fillRect(0, 0, width, height); ctx.globalCompositeOperation = 'screen';
-        stars.forEach(star => {
-            star.z -= warpSpeed;
-            if (star.z <= 0) { star.z = 2000; star.x = (Math.random() - 0.5) * 2000; star.y = (Math.random() - 0.5) * 2000; } 
-            let scale = 400 / (400 + star.z);
-            ctx.beginPath(); ctx.arc((width / 2) + star.x * scale, (height / 2) + star.y * scale, Math.max(0.5, 2 * scale), 0, Math.PI * 2);
-            ctx.fillStyle = star.color; ctx.globalAlpha = Math.min(1, scale * 2); ctx.fill(); ctx.globalAlpha = 1;
+        ctx.fillStyle = 'rgba(1, 1, 3, 0.4)'; ctx.fillRect(0, 0, width, height); ctx.globalCompositeOperation = 'screen';
+        stars.forEach(s => {
+            s.z -= warpSpeed;
+            if (s.z <= 0) { s.z = 2000; s.x = (Math.random() - 0.5) * 2000; s.y = (Math.random() - 0.5) * 2000; } 
+            let scale = 400 / (400 + s.z);
+            let px = (width / 2) + s.x * scale;
+            let py = (height / 2) + s.y * scale;
+            ctx.beginPath(); ctx.arc(px, py, Math.max(0.1, s.size * scale * (warpSpeed > 2 ? 3 : 1)), 0, Math.PI * 2);
+            ctx.fillStyle = s.color; ctx.globalAlpha = Math.min(1, scale * 2); ctx.fill(); ctx.globalAlpha = 1;
         });
         ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(renderStars);
     }
     renderStars();
 
-    // ================= 資料庫與 UI 初始化 =================
-    const STORAGE_KEY = 'PX_V15.0';
-    let db = {};
-    try { db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e) { db = {}; }
-    db.points = db.points || 0;
-    db.vowTempBag = db.vowTempBag || 0; 
-    db.vowLastDate = db.vowLastDate || "";
-
-    const todayStr = new Date().toDateString();
-    let isDoneToday = (db.vowLastDate === todayStr);
-
-    // 艱難任務庫 (非選擇題，是實作要求)
-    const taskBank = [
-        { t: "靜默觀照", q: "今日請撥出一段完整的 90 分鐘，關閉所有通訊設備，禁語且不閱世俗資訊。唯將心念安住於佛號或呼吸中，感受身心的生滅流轉。" },
-        { t: "無相佈施", q: "今日請匿名行一件善事（如：捐款、清掃公共環境、施食），且絕不向任何人提及此事。讓善行純粹，不著我相。" },
-        { t: "精進受持", q: "今日請受持一日一夜之『八關齋戒』，過午不食，斷除淫欲香華。以清淨身心，專志念佛 3000 聲。" }
+    // ==========================================
+    // 2. SVG 立體透視階梯生成器
+    // ==========================================
+    const stepsGroup = document.getElementById('steps-group');
+    
+    // 預先計算好的 10 階透視數學座標 (Width, Bottom Y, Front Height)
+    const STAIR_MATH = [
+        { w: 350, y: 620, h: 35 }, // 第 1 階 (最底、最寬)
+        { w: 305, y: 550, h: 30 }, // 第 2 階
+        { w: 265, y: 488, h: 26 }, // 第 3 階
+        { w: 230, y: 433, h: 22 }, // 第 4 階
+        { w: 200, y: 385, h: 19 }, // 第 5 階
+        { w: 175, y: 343, h: 16 }, // 第 6 階
+        { w: 155, y: 306, h: 14 }, // 第 7 階
+        { w: 138, y: 274, h: 12 }, // 第 8 階
+        { w: 124, y: 246, h: 10 }, // 第 9 階
+        { w: 112, y: 222, h: 9 }   // 第 10 階 (最頂、最窄，接向菩提心)
     ];
 
-    function updatePillar() {
-        const clipRect = document.getElementById('pillar-clip-rect');
-        let pct = (db.vowTempBag / 1000); 
-        let fillHeight = pct * 340; 
-        let yPos = 380 - fillHeight; 
-        clipRect.setAttribute('y', yPos);
-        clipRect.setAttribute('height', fillHeight);
-        document.getElementById('bag-ui').innerText = `資糧：${db.vowTempBag} / 1000`;
-    }
-    updatePillar();
+    // 絕美琉璃煥彩漸層 (深空紫 -> 琉璃青 -> 玫瑰粉 -> 佛性真金)
+    const STAIR_COLORS = [
+        '#4a00e0', // 1
+        '#8e2de2', // 2
+        '#c471ed', // 3
+        '#ff7eb3', // 4
+        '#f64f59', // 5
+        '#00f2fe', // 6
+        '#4facfe', // 7
+        '#43e97b', // 8
+        '#fee140', // 9
+        '#d4af37'  // 10
+    ];
 
-    // ================= 過場動畫：擇門而入 =================
-    function enterPortal(selectedId) {
-        // 1. 星空加速
-        warpSpeed = 15;
-        
-        const p1 = document.getElementById('portal-1');
-        const p2 = document.getElementById('portal-2');
+    let currentDay = 4; // 假設行者今天是第 4 天
 
-        // 2. 門的過場特效
-        if(selectedId === 1) {
-            p2.classList.add('fade-out');
-            p1.classList.add('warp-in');
-        } else {
-            p1.classList.add('fade-out');
-            p2.classList.add('warp-in');
-        }
+    function buildStairs() {
+        let html = '';
+        const centerX = 200;
 
-        // 3. 準備切換到第二幕
-        setTimeout(() => {
-            document.getElementById('screen-1').style.opacity = '0';
+        for (let i = 0; i < 10; i++) {
+            let s = STAIR_MATH[i];
+            let nextY = (i === 9) ? 195 : STAIR_MATH[i+1].y; // 頂面延伸到下一階的底部
+            let nextW = (i === 9) ? 102 : STAIR_MATH[i+1].w;
             
-            // 設定任務文字
-            if (isDoneToday) {
-                document.getElementById('task-title').innerText = "【 任務已圓滿 】";
-                document.getElementById('task-text').innerHTML = "<span style='color:var(--neon-cyan);'>100 點資糧已注入光柱。<br>請安住法喜，明日再承接挑戰。</span>";
-                const seal = document.getElementById('seal-wrap');
-                seal.classList.add('done'); seal.style.pointerEvents = 'none';
-                document.getElementById('seal-progress').style.strokeDashoffset = '0';
-                document.getElementById('seal-hint').innerText = "明日再續";
-            } else {
-                // 隨機選一個艱難任務
-                let task = taskBank[Math.floor(Math.random() * taskBank.length)];
-                document.getElementById('task-title').innerText = `【 ${task.t} 】`;
-                document.getElementById('task-text').innerText = task.q;
-                bindSealEvents();
+            let color = STAIR_COLORS[i];
+            
+            // 狀態判斷
+            let stateClass = '';
+            let clickAttr = '';
+            if (i + 1 < currentDay) stateClass = 'step-done';
+            else if (i + 1 === currentDay) {
+                stateClass = 'step-current';
+                clickAttr = 'onclick="triggerWarp()"'; // 只有當前階梯可點擊
             }
+            else stateClass = 'step-locked';
 
-            document.getElementById('screen-2').classList.add('show');
-            warpSpeed = 1; // 恢復正常星空
-        }, 1200);
-    }
-
-    // ================= 核心互動：長按印心 =================
-    let reqAnimId;
-    let pressStartTime;
-    const PRESS_DURATION = 3000; // 3秒集氣
-
-    function bindSealEvents() {
-        const btn = document.getElementById('seal-wrap');
-        const progressCircle = document.getElementById('seal-progress');
-        
-        const drawProgress = (timestamp) => {
-            let elapsed = timestamp - pressStartTime;
-            let pct = Math.min(elapsed / PRESS_DURATION, 1);
-            progressCircle.style.strokeDashoffset = 289 - (289 * pct);
+            // SVG Polygon 座標計算
+            // 正面 (Front Face)
+            let frontPts = `
+                ${centerX - s.w/2}, ${s.y} 
+                ${centerX + s.w/2}, ${s.y} 
+                ${centerX + s.w/2}, ${s.y - s.h} 
+                ${centerX - s.w/2}, ${s.y - s.h}
+            `;
             
-            if (pct < 1) { reqAnimId = requestAnimationFrame(drawProgress); } 
-            else { completeTask(); }
-        };
+            // 頂面 (Top Face) - 連接當前階的頂部與下一階的底部
+            let topPts = `
+                ${centerX - s.w/2}, ${s.y - s.h} 
+                ${centerX + s.w/2}, ${s.y - s.h} 
+                ${centerX + nextW/2}, ${nextY} 
+                ${centerX - nextW/2}, ${nextY}
+            `;
 
-        const startPress = (e) => {
-            if (e.type !== 'mousedown' && e.type !== 'touchstart') return;
-            e.preventDefault();
-            warpSpeed = 6; // 集氣時稍微加速星空
-            btn.classList.add('pressing');
-            document.getElementById('seal-hint').innerText = "能量注入中...";
-            pressStartTime = performance.now();
-            reqAnimId = requestAnimationFrame(drawProgress);
-        };
-
-        const cancelPress = () => {
-            if (btn.classList.contains('done')) return;
-            cancelAnimationFrame(reqAnimId);
-            warpSpeed = 1;
-            btn.classList.remove('pressing');
-            progressCircle.style.strokeDashoffset = '289'; 
-            document.getElementById('seal-hint').innerText = "長按印心 ． 圓滿任務";
-        };
-
-        btn.addEventListener('mousedown', startPress);
-        btn.addEventListener('touchstart', startPress, {passive: false});
-        window.addEventListener('mouseup', cancelPress);
-        window.addEventListener('touchend', cancelPress);
-        btn.addEventListener('mouseleave', cancelPress);
+            html += `
+                <g class="stair-step ${stateClass}" style="color: ${color};" ${clickAttr}>
+                    <!-- 頂面 (受光面) -->
+                    <polygon class="step-top" points="${topPts}" fill="${color}" />
+                    <!-- 正面 (背光面) -->
+                    <polygon class="step-front" points="${frontPts}" fill="${color}" />
+                </g>
+            `;
+        }
+        stepsGroup.innerHTML = html;
     }
+    buildStairs();
 
-    // ================= 任務圓滿與千點結算 =================
-    function completeTask() {
-        isDoneToday = true;
-        warpSpeed = 1;
-        
-        // 固定給予 100 點
-        db.vowLastDate = todayStr;
-        db.vowTempBag += 100;
-        
-        // 滿千點送回主系統
-        if (db.vowTempBag >= 1000) {
-            db.points += 1000;
-            db.vowTempBag -= 1000;
-            // 全螢幕超大閃光
+    // ==========================================
+    // 3. 飛越天梯，衝入菩提心 (Warp Animation)
+    // ==========================================
+    function triggerWarp() {
+        // 1. 星空引擎極限加速 (Warp Speed)
+        warpSpeed = 35;
+
+        // 2. 隱藏 UI 文字
+        document.getElementById('ui-layer').style.opacity = '0';
+
+        // 3. 階梯 SVG 整體放大並衝向鏡頭
+        const stairSvg = document.getElementById('stair-svg');
+        stairSvg.classList.add('warp-drive');
+
+        // 4. 閃光白屏過渡
+        setTimeout(() => {
             const flash = document.getElementById('flash-overlay');
             flash.style.opacity = '1';
-            setTimeout(() => { flash.style.opacity = '0'; }, 1000);
+            warpSpeed = 1; // 星空恢復平靜
             
-            document.getElementById('task-title').innerText = "【 千點圓滿 ． 匯入法界 】";
-            document.getElementById('task-text').innerHTML = "<span style='color:#fff; font-size:1.1rem;'>十重艱難任務已盡數圓滿。<br>1000 點資糧化作流光注入主道場！</span>";
-        } else {
-            // 普通每日完成
-            document.getElementById('task-title').innerText = "【 任務已圓滿 】";
-            document.getElementById('task-text').innerHTML = "<span style='color:var(--neon-cyan);'>克服萬難，定力增長。<br>100 點資糧已注入光柱。</span>";
-        }
-
-        saveDB();
-        updatePillar();
-
-        const btn = document.getElementById('seal-wrap');
-        btn.classList.remove('pressing');
-        btn.classList.add('done');
-        btn.style.pointerEvents = 'none';
-        document.getElementById('seal-hint').innerText = "明日再承接挑戰";
+            // 5. 切換到第二幕 (光柱心室)
+            setTimeout(() => {
+                flash.style.opacity = '0';
+                document.getElementById('stair-container').style.display = 'none';
+                document.getElementById('screen-2').classList.add('show');
+            }, 800);
+            
+        }, 1200); // 階梯放大動畫持續時間
     }
 
 </script>

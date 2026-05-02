@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>彌陀淨土系統 ． 七重行願</title>
+    <style>
+        :root {
+            --bg-deep: #010103; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c; --text-gold: #f3e5ab;
+        }
+        /* 全局防選取、防右鍵 */
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; }
+        body { 
+            background: radial-gradient(circle at 50% 50%, #0a0e14 0%, var(--bg-deep) 100%); 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100dvh; width: 100vw; overflow: hidden; color: #fff;
+        }
+
+        /* ---------------- 共用：星空與白霧 ---------------- */
+        #starCanvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+        #vignette { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(circle at 50% 30%, transparent 10%, rgba(1, 1, 3, 0.95) 100%); }
+
+        #mist-layer {
+            position: absolute; bottom: -10%; left: -10%; width: 120%; height: 60%;
+            z-index: 3; pointer-events: none; mix-blend-mode: screen; overflow: hidden;
+        }
+        .mist-cloud { position: absolute; filter: blur(45px); border-radius: 50%; animation: drift-mist 15s infinite alternate ease-in-out; }
+        .mist-1 { width: 1000px; height: 500px; left: -10%; bottom: -50px; background: radial-gradient(ellipse, rgba(212,175,55,0.25) 0%, transparent 70%); animation-duration: 18s; }
+        .mist-2 { width: 1200px; height: 600px; right: -15%; bottom: -100px; background: radial-gradient(ellipse, rgba(196,113,237,0.2) 0%, transparent 70%); animation-duration: 22s; animation-delay: -5s; }
+        .mist-3 { width: 900px; height: 450px; left: 15%; bottom: 0px; background: radial-gradient(ellipse, rgba(0,242,254,0.2) 0%, transparent 70%); animation-duration: 16s; animation-delay: -2s; }
+        
+        @keyframes drift-mist { 0% { transform: translateX(-40px) translateY(10px) scale(1); opacity: 0.6; } 100% { transform: translateX(40px) translateY(-10px) scale(1.1); opacity: 1; } }
+
+        .neon-flow {
+            background: linear-gradient(90deg, #FDF5D3, #D4AF37, #E5989B, #89CFF0, #C9A0DC, #D4AF37, #FDF5D3);
+            background-size: 200% 100%; animation: energyFlow 4s linear infinite;
+        }
+        @keyframes energyFlow { 0%{background-position:200% 0;} 100%{background-position:0% 0;} }
+
+        /* ==================== PAGE 1: 琉璃天梯 ==================== */
+        #page-1 {
+            position: absolute; inset: 0; z-index: 10;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+            transition: opacity 1.5s;
+        }
+        #ui-layer-p1 {
+            position: absolute; top: 12%; width: 100%; text-align: center; z-index: 20;
+            transition: opacity 0.5s; pointer-events: none;
+        }
+        .main-title-p1 { color: var(--gold); font-size: 1.3rem; letter-spacing: 8px; font-weight: bold; text-shadow: 0 0 20px rgba(212,175,55,0.6); margin-bottom: 12px; }
+        .sub-title-p1 { color: var(--cyan); font-size: 0.85rem; letter-spacing: 5px; transition: 0.5s; }
+        
+        #warp-container { position: absolute; inset: 0; z-index: 10; display: flex; justify-content: center; align-items: center; perspective: 1200px; }
+        .warp-inner {
+            position: relative; width: 100%; max-width: 600px; height: 100%; max-height: 900px;
+            transform-origin: 59.1% 28.8%; transition: transform 2.2s cubic-bezier(0.6, 0.05, 0.1, 1), opacity 1.8s ease-in;
+        }
+        .warp-inner.warp-drive { transform: scale(25) translateY(10%); opacity: 0; pointer-events: none; }
+        
+        #stair-svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 30px rgba(212,175,55,0.1)); }
+        .stair-step { stroke-linejoin: round; transition: all 0.8s ease-out; }
+        
+        /* 階梯未亮起狀態 (極低存在感) */
+        .step-dark .step-top { fill-opacity: 0.05; stroke: rgba(255,255,255,0.1); stroke-width: 1px; }
+        .step-dark .step-front { fill-opacity: 0.05; stroke: rgba(212,175,55,0.1); stroke-width: 1px; }
+        .step-dark .step-side { fill-opacity: 0.05; stroke: rgba(212,175,55,0.1); stroke-width: 1px; }
+
+        /* 階梯亮起狀態 */
+        .step-lit { animation: breathe-gold-wireframe 3s infinite alternate ease-in-out; }
+        .step-lit .step-top { fill-opacity: 0.85; stroke: #fff; stroke-width: 2px; }
+        .step-lit .step-front { fill-opacity: 0.75; stroke: #f3e5ab; stroke-width: 1.5px; }
+        .step-lit .step-side { fill-opacity: 0.6; stroke: #d4af37; stroke-width: 1.5px; }
+        
+        @keyframes breathe-gold-wireframe {
+            0% { filter: drop-shadow(0 0 10px rgba(212,175,55,0.6)) brightness(1); }
+            100% { filter: drop-shadow(0 0 25px rgba(243,229,171,0.9)) drop-shadow(0 0 10px #fff) brightness(1.25); }
+        }
+
+        #immortal-seed { 
+            position: absolute; left: 59.1%; top: 28.8%; transform: translate(-50%, -50%) scale(1); 
+            width: 32px; height: 32px; border-radius: 50%; 
+            background: radial-gradient(circle, #fff 10%, #ffe 30%, var(--gold) 60%, var(--solid-gold) 100%); 
+            box-shadow: 0 0 25px var(--solid-gold); z-index: 100; transition: all 1.5s;
+        }
+
+        #flash-overlay { position: fixed; inset: 0; background: radial-gradient(circle, #fff 0%, #f3e5ab 50%, transparent 100%); opacity: 0; z-index: 9999; pointer-events: none; transition: opacity 0.8s; mix-blend-mode: screen; }
+
+        /* ==================== PAGE 2: 實修任務 ==================== */
+        #page-2 {
+            position: absolute; inset: 0; z-index: 10;
+            display: none; /* 初始隱藏 */
+            flex-direction: column; align-items: center;
+        }
+
+        .nav-top {
+            width: 90%; max-width: 480px; z-index: 20; display: flex; justify-content: space-between; align-items: center;
+            margin-top: max(20px, env(safe-area-inset-top)); padding: 12px 20px;
+            background: rgba(5, 5, 8, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(212,175,55,0.2); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        .nav-btn { display: flex; align-items: center; gap: 8px; color: var(--gold-light); font-size: 0.85rem; letter-spacing: 2px; cursor: pointer; transition: 0.3s;}
+        .nav-btn:active { color: #fff; }
+        .nav-btn svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.5; fill: none; }
+        .nav-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.1); }
+
+        .tracker-container { z-index: 20; margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .tracker-title { color: var(--gold-light); font-size: 0.85rem; letter-spacing: 4px; text-shadow: 0 0 10px var(--gold-solid); font-weight: bold; }
+        .tracker-circles { display: flex; gap: 10px; align-items: center; }
+        
+        .track-circle { width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(212,175,55,0.4); display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.5); transition: 0.4s; }
+        .track-circle svg { width: 16px; height: 16px; fill: rgba(255,255,255,0.2); transition: 0.4s; }
+        .track-circle.lit { border-color: #fff; background: rgba(212,175,55,0.25); box-shadow: 0 0 10px var(--gold-solid), inset 0 0 8px var(--gold-solid); }
+        .track-circle.lit svg { fill: #fff; filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 10px var(--gold-solid)); }
+
+        .task-container {
+            position: relative; z-index: 10; margin-top: 2vh;
+            width: 95%; max-width: 450px; aspect-ratio: 3 / 4; display: flex; justify-content: center; align-items: center;
+        }
+        .tusks-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 25px rgba(212,175,55,0.6)); animation: breathe-frame 3s infinite alternate ease-in-out; }
+        @keyframes breathe-frame { 0% { filter: drop-shadow(0 0 15px rgba(212,175,55,0.4)); } 100% { filter: drop-shadow(0 0 35px var(--gold-solid)) drop-shadow(0 0 15px #fff); } }
+        .tusk-inner-line { fill: none; stroke: var(--gold-light); stroke-width: 1.5; opacity: 0.95; }
+
+        .task-content {
+            position: relative; z-index: 20; text-align: center; width: 75%;
+            background: rgba(5, 5, 10, 0.85); border: 1px solid rgba(212,175,55,0.6);
+            border-radius: 20px; padding: 25px 20px; backdrop-filter: blur(15px);
+            box-shadow: inset 0 0 30px rgba(212,175,55,0.15), 0 15px 40px rgba(0,0,0,0.9);
+            opacity: 0; transform: scale(0.9) translateY(20px); pointer-events: none; transition: 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .task-content.show { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
+        .task-subtitle { color: var(--cyan); font-size: 0.8rem; letter-spacing: 4px; margin-bottom: 12px; }
+        
+        .task-title {
+            color: var(--gold-light); font-size: 1.2rem; font-weight: bold; letter-spacing: 5px;
+            text-shadow: 0 0 15px rgba(212,175,55,0.8); margin-bottom: 15px; padding-bottom: 12px;
+            border-bottom: 1px dashed rgba(212,175,55,0.4);
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
+        /* TTS 按鈕 */
+        .tts-icon { width: 18px; height: 18px; fill: var(--cyan); cursor: pointer; transition: 0.3s; }
+        .tts-icon:active { fill: #fff; transform: scale(1.1); }
+        
+        .task-desc { color: #eee; font-size: 0.9rem; line-height: 2; letter-spacing: 1px; text-align: justify; text-align-last: center; }
+
+        .action-zone { z-index: 20; position: absolute; bottom: 5%; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; opacity: 0; transition: opacity 1.5s 1s; pointer-events: none; }
+        .action-zone.show { opacity: 1; pointer-events: auto; }
+        
+        .seal-btn { position: relative; width: 90px; height: 90px; border-radius: 50%; cursor: pointer; -webkit-touch-callout: none; }
+        .seal-bg { position: absolute; inset: 0; border: 1px dashed rgba(212,175,55,0.4); border-radius: 50%; animation: slow-spin 10s linear infinite; }
+        .seal-progress { position: absolute; top: -4px; left: -4px; width: 98px; height: 98px; transform: rotate(-90deg); pointer-events: none; }
+        .seal-core { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle, var(--gold-light) 0%, var(--gold-solid) 100%); box-shadow: 0 0 15px var(--gold-solid); transition: 0.3s; }
+        .seal-text { position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); color: var(--cyan); font-size: 0.7rem; letter-spacing: 3px; transition: 0.3s; white-space: nowrap; }
+        .seal-btn:active .seal-core { transform: translate(-50%, -50%) scale(0.85); filter: brightness(1.3) drop-shadow(0 0 25px #fff); }
+
+        .pool-wrap { width: 70%; max-width: 300px; text-align: center; margin-top: 15px; }
+        .pool-label { font-size: 0.7rem; color: var(--gold-light); letter-spacing: 2px; margin-bottom: 6px; opacity: 0.8; }
+        .pool-bar-bg { width: 100%; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5); }
+        .pool-bar-fill { height: 100%; width: 0%; transition: width 1s cubic-bezier(0.2,0.8,0.2,1); }
+
+        @keyframes slow-spin { 100% { transform: rotate(360deg); } }
+
+        /* 大數據 Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 9999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.4s; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .data-card { width: 90%; max-width: 400px; border: 1px solid rgba(212,175,55,0.42); border-radius: 20px; padding: 30px 22px; box-shadow: 0 10px 55px rgba(212,175,55,0.15); background: rgba(2,2,5,0.96); }
+        .data-title { color: var(--gold-solid); font-size: 1.05rem; letter-spacing: 4px; text-align: center; margin-bottom: 5px; font-weight: bold;}
+        .glass-energy-bar { width: 100%; margin: 8px 0 35px 0; position: relative; }
+        .bar-track { width: 100%; height: 10px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.55); }
+        .bar-fill { height: 100%; width: 0%; opacity: 0.95; transition: width 1.2s cubic-bezier(0.2,0.8,0.2,1); }
+        .bar-labels { position: absolute; width: 100%; height: 20px; top: 16px; }
+        .bar-labels span { position: absolute; font-size: 9px; color: var(--text-gold); letter-spacing: 1px; transform: translateX(-50%); white-space: nowrap; opacity: 0.7; }
+        .bar-labels span::before { content: ''; position: absolute; top: -11px; left: 50%; transform: translateX(-50%); width: 3px; height: 3px; background: rgba(255,255,255,0.8); border-radius: 50%; box-shadow: 0 0 4px #fff; }
+        .close-btn { width: 100%; padding: 12px; margin-top: 10px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #aaa; border-radius: 10px; cursor: pointer; letter-spacing: 4px; transition: 0.3s; font-family: inherit; }
+        .close-btn:active { background: rgba(212,175,55,0.2); color: var(--gold-light); border-color: var(--gold-solid); }
+
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <!-- SVG 漸層庫 -->
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
+        <defs>
+            <linearGradient id="f-light" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.8"/><stop offset="100%" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
+            <linearGradient id="f-dark" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#000" stop-opacity="0.05"/><stop offset="100%" stop-color="#000" stop-opacity="0.4"/></linearGradient>
+            <linearGradient id="g-gold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff8dc"/><stop offset="50%" stop-color="#f3e5ab"/><stop offset="100%" stop-color="#d4af37"/></linearGradient>
+            <linearGradient id="tusk-gold" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#8a6518" stop-opacity="0.95"/>
+                <stop offset="35%" stop-color="#d4af37" stop-opacity="0.95"/>
+                <stop offset="70%" stop-color="#f3e5ab" stop-opacity="1"/>
+                <stop offset="100%" stop-color="#fffde7" stop-opacity="1"/>
+            </linearGradient>
+            <g id="single-tusk">
+                <path fill="url(#tusk-gold)" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 20,400 C 10,250 80,100 200,40 C 110,130 80,240 70,400 Q 45,410 20,400 Z" />
+                <path class="tusk-inner-line" d="M 35,395 C 30,280 80,150 170,60" />
+                <path class="tusk-inner-line" d="M 50,395 C 45,300 80,200 130,110" />
+                <path fill="none" stroke="var(--gold-light)" stroke-width="2.5" stroke-linecap="round" d="M 15,380 Q 45,395 73,380" />
+                <path fill="none" stroke="var(--gold-light)" stroke-width="2.5" stroke-linecap="round" d="M 20,400 Q 45,415 70,400" />
+            </g>
+        </defs>
+    </svg>
+
+    <!-- 共用背景 -->
+    <canvas id="starCanvas"></canvas>
+    <div id="vignette"></div>
+    <div id="mist-layer">
+        <div class="mist-cloud mist-1"></div><div class="mist-cloud mist-2"></div>
+        <div class="mist-cloud mist-3"></div>
+    </div>
+
+    <!-- ================= PAGE 1 ================= -->
+    <div id="page-1">
+        <div id="ui-layer-p1">
+            <div class="main-title-p1">七日行願 ． 步步生蓮</div>
+            <div class="sub-title-p1" id="day-hint">法階凝聚中...</div>
+        </div>
+        <div id="warp-container">
+            <div class="warp-inner" id="warp-inner">
+                <svg id="stair-svg" viewBox="0 0 600 900"><g id="steps-group"></g></svg>
+                <div id="immortal-seed" style="--seed-glow: 25px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 穿越白光 -->
+    <div id="flash-overlay"></div>
+
+    <!-- ================= PAGE 2 ================= -->
+    <div id="page-2">
+        <div class="nav-top">
+            <div class="nav-btn" onclick="returnToMainHall()"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> 返回道場</div>
+            <div class="nav-divider"></div>
+            <div class="nav-btn" onclick="openDataModal()"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20V14"></path></svg> 歷史大數據</div>
+        </div>
+
+        <div class="tracker-container">
+            <div class="tracker-title" id="ui-week-title">【 普賢十願 ． 行願軌跡 】</div>
+            <div class="tracker-circles" id="ui-trackers"></div>
+        </div>
+
+        <div class="task-container">
+            <svg class="tusks-frame" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid meet">
+                <g id="left-tusks"><use href="#single-tusk" x="-30" y="20" transform="scale(1)" /><use href="#single-tusk" x="30" y="100" transform="scale(0.85)" /><use href="#single-tusk" x="90" y="200" transform="scale(0.7)" /></g>
+                <g id="right-tusks" transform="scale(-1, 1) translate(-400, 0)"><use href="#single-tusk" x="-30" y="20" transform="scale(1)" /><use href="#single-tusk" x="30" y="100" transform="scale(0.85)" /><use href="#single-tusk" x="90" y="200" transform="scale(0.7)" /></g>
+            </svg>
+            <div class="task-content" id="task-box">
+                <div class="task-subtitle" id="ui-task-sub">法界讀取中...</div>
+                <div class="task-title">
+                    <span id="ui-task-title">...</span>
+                    <!-- TTS 朗讀按鈕 -->
+                    <svg class="tts-icon" onclick="playTTS()" viewBox="0 0 24 24">
+                        <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                    </svg>
+                </div>
+                <div class="task-desc" id="ui-task-desc">...</div>
+            </div>
+        </div>
+
+        <div class="action-zone" id="action-zone">
+            <div class="seal-btn" id="seal-btn">
+                <div class="seal-bg"></div>
+                <svg class="seal-progress" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                    <circle id="progress-circle" cx="50" cy="50" r="46" fill="none" stroke="url(#g-gold)" stroke-width="4" stroke-dasharray="289" stroke-dashoffset="289" stroke-linecap="round"/>
+                </svg>
+                <div class="seal-core"></div>
+                <div class="seal-text" id="seal-text">長按契印 ． 圓滿今日</div>
+            </div>
+            <div class="pool-wrap">
+                <div class="pool-label" id="ui-pool-text">法界暫存資糧 : 0 / 1000</div>
+                <div class="pool-bar-bg"><div class="pool-bar-fill neon-flow" id="ui-pool-bar"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 大數據 Modal -->
+    <div class="modal-overlay" id="dataModal">
+        <div class="data-card" onclick="event.stopPropagation()">
+            <div class="data-title">十方結緣 ‧ 歷史軌跡</div>
+            <div style="text-align:center;font-size:11px;color:var(--text-gold);margin-bottom:30px;letter-spacing:1px;opacity:0.6;">(合本願與諸佛之畢生大數據)</div>
+            
+            <div style="margin-bottom: 25px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span style="font-size:13px; color:var(--gold-light); letter-spacing:2px;">歲星軌跡 (日)</span>
+                    <span style="font-size:14px; color:#fff; font-weight:bold;" id="ui-txt-365">0</span>
+                </div>
+                <div class="glass-energy-bar">
+                    <div class="bar-track"><div class="bar-fill neon-flow" id="ui-bar-365"></div></div>
+                    <div class="bar-labels">
+                        <span style="left:0%">0</span><span style="left:27%">100</span><span style="left:54%">200</span><span style="left:82%">300</span><span style="left:100%">365</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 10px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span style="font-size:13px; color:var(--gold-light); letter-spacing:2px;">劫波蓮花 (年)</span>
+                    <span style="font-size:14px; color:#fff; font-weight:bold;" id="ui-txt-108">0</span>
+                </div>
+                <div class="glass-energy-bar">
+                    <div class="bar-track"><div class="bar-fill neon-flow" id="ui-bar-108"></div></div>
+                    <div class="bar-labels">
+                        <span style="left:0%">0</span><span style="left:33%">36</span><span style="left:66%">72</span><span style="left:100%">108</span>
+                    </div>
+                </div>
+            </div>
+            <button class="close-btn" onclick="closeDataModal()">合十收攝</button>
+        </div>
+    </div>
+
+<script>
+    // ================= 任務資料庫架構 (無限擴展) =================
+    const VOWS_DB = {
+        // 正規任務：[願1陣列(7題)], [願2陣列(7題)], ... 共10願
+        regular: [
+            [ { title: "範例：無聲的合十", desc: "今日無論在通勤...<br><br>【定課】稱念聖號 100 遍。" } ], // 第一願
+            [ { title: "範例：無私的讚語", desc: "今日請真誠地讚美...<br><br>【定課】稱念聖號 100 遍。" } ], // 第二願
+            // ... 留待後續填入 70 題
+        ],
+        // 突發法門：12 題 (系統會根據機率或月份抽出)
+        hidden: [
+            { title: "一日止語", desc: "今日從此刻起至睡前，實行禁語...<br><br>【定課】默念不斷。", points: 800 },
+            { title: "千聲連心", desc: "請撥出完整時間，連續專注稱念 1000 遍...<br><br>【定課】今日唯一大定課。", points: 1000 }
+            // ... 留待後續填入 12 題
+        ]
+    };
+
+    // ================= 初始化與 DB =================
+    const DB_KEY = 'Mita_PureLand_V1';
+    let db = JSON.parse(localStorage.getItem(DB_KEY));
+    let todayStr = new Date().toDateString();
+
+    if (!db) {
+        db = {
+            startDate: Date.now(), lastLogin: todayStr,
+            weekRecord: [false, false, false, false, false, false, false],
+            poolPoints: 0, totalDays365: 0, totalYears108: 0
+        };
+    }
+
+    let daysPassed = Math.floor((Date.now() - db.startDate) / (1000 * 60 * 60 * 24));
+    let currentVowIndex = Math.floor(daysPassed / 7) % 10;
+    let currentDayOfWeek = daysPassed % 7;
+
+    if (db.lastLogin !== todayStr) {
+        let lastLoginWeek = Math.floor(Math.floor((new Date(db.lastLogin).getTime() - db.startDate) / 86400000) / 7);
+        let currentWeek = Math.floor(daysPassed / 7);
+
+        if (currentWeek > lastLoginWeek) {
+            let successCount = db.weekRecord.filter(Boolean).length;
+            db.poolPoints += (successCount === 7) ? 1000 : (successCount * 100);
+            
+            if (db.poolPoints >= 1000) {
+                alert(`法界迴向圓滿\n已將 ${db.poolPoints} 點資糧匯入彌陀淨土主系統。`);
+                db.poolPoints = 0; 
+            }
+            db.weekRecord = [false, false, false, false, false, false, false];
+        }
+        db.lastLogin = todayStr; saveDB();
+    }
+    function saveDB() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+    // ================= 頁面一：天梯邏輯 =================
+    const ANCHORS = [ { xl: 30, xr: 370, y: 800, h: 45 }, { xl: 115, xr: 405, y: 675, h: 40 }, { xl: 190, xr: 430, y: 570, h: 35 }, { xl: 245, xr: 445, y: 485, h: 30 }, { xl: 285, xr: 445, y: 415, h: 25 }, { xl: 310, xr: 430, y: 360, h: 20 }, { xl: 320, xr: 410, y: 320, h: 15 }, { xl: 322, xr: 388, y: 290, h: 0 } ];
+
+    function buildStairs() {
+        let html = '';
+        for (let i = 0; i < 7; i++) {
+            let c = ANCHORS[i], n = ANCHORS[i+1];
+            let lPts = `${c.xl},${c.y} ${c.xl},${c.y - c.h} ${n.xl},${n.y} ${n.xl},${n.y + c.h * 0.8}`;
+            let rPts = `${c.xr},${c.y} ${c.xr},${c.y - c.h} ${n.xr},${n.y} ${n.xr},${n.y + c.h * 0.8}`;
+            let fPts = `${c.xl},${c.y} ${c.xr},${c.y} ${c.xr},${c.y - c.h} ${c.xl},${c.y - c.h}`;
+            let tPts = `${c.xl},${c.y - c.h} ${c.xr},${c.y - c.h} ${n.xr},${n.y} ${n.xl},${n.y}`;
+            // 初始狀態為暗 (step-dark)
+            html += `<g class="stair-step step-dark">
+                <polygon class="step-side" points="${lPts}" fill="url(#g-gold)" /><polygon class="step-side" points="${lPts}" fill="url(#f-dark)"/>
+                <polygon class="step-side" points="${rPts}" fill="url(#g-gold)" /><polygon class="step-side" points="${rPts}" fill="url(#f-dark)"/>
+                <polygon class="step-front" points="${fPts}" fill="url(#g-gold)" /><polygon class="step-front" points="${fPts}" fill="url(#f-dark)"/>
+                <polygon class="step-top" points="${tPts}" fill="url(#g-gold)" /><polygon class="step-top" points="${tPts}" fill="url(#f-light)"/>
+            </g>`;
+        }
+        document.getElementById('steps-group').innerHTML = html;
+    }
+
+    function animateStairsSequence() {
+        const steps = document.querySelectorAll('.stair-step');
+        let i = 0;
+        let interval = setInterval(() => {
+            if (i < steps.length) {
+                steps[i].classList.remove('step-dark');
+                steps[i].classList.add('step-lit');
+                i++;
+            } else {
+                clearInterval(interval);
+                document.getElementById('day-hint').innerText = "法階圓滿 ． 請輕觸螢幕入陣";
+                document.getElementById('page-1').style.cursor = 'pointer';
+                document.getElementById('page-1').addEventListener('click', enterPageTwo, {once:true});
+            }
+        }, 500); // 每0.5秒亮一階
+    }
+
+    // ================= 頁面切換邏輯 (SPA) =================
+    function enterPageTwo() {
+        warpSpeed = 40; 
+        document.getElementById('ui-layer-p1').style.opacity = '0';
+        const seed = document.getElementById('immortal-seed');
+        seed.style.filter = "drop-shadow(0 0 80px #fff)";
+        document.getElementById('warp-inner').classList.add('warp-drive');
+
+        setTimeout(() => {
+            document.getElementById('flash-overlay').style.opacity = '1';
+            setTimeout(() => { 
+                // 無縫切換 DOM 顯示
+                document.getElementById('page-1').style.display = 'none';
+                document.getElementById('page-2').style.display = 'flex';
+                updateUI(); // 準備第二頁資料
+                document.getElementById('flash-overlay').style.opacity = '0';
+                
+                // 第二頁延遲浮現動畫
+                setTimeout(() => { 
+                    document.getElementById('task-box').classList.add('show'); 
+                    document.getElementById('action-zone').classList.add('show');
+                }, 1000);
+            }, 800);
+        }, 1200); 
+    }
+
+    function returnToMainHall() {
+        alert("即將返回主道場 (彌陀淨土系統)");
+        // 實作時可改為 location.href = 'index.html';
+    }
+
+    // ================= 頁面二：UI與互動 =================
+    function updateUI() {
+        // 安全機制：若資料庫尚未填滿，預防報錯，取預設或第一筆
+        let vowList = VOWS_DB.regular[currentVowIndex] || VOWS_DB.regular[0]; 
+        let vowData = vowList ? (vowList[currentDayOfWeek] || vowList[0]) : { title: "系統擴建中", desc: "請靜候法界更新。" };
+
+        document.getElementById('ui-task-sub').innerText = `普賢十願 ． 第 ${currentVowIndex + 1} 願 ． 軌跡 ${currentDayOfWeek + 1}/7`;
+        document.getElementById('ui-task-title').childNodes[1].textContent = vowData.title + " ";
+        document.getElementById('ui-task-desc').innerHTML = vowData.desc;
+
+        let trackersHTML = '';
+        for (let i = 0; i < 7; i++) {
+            let isLit = db.weekRecord[i] ? 'lit' : '';
+            let svgIcon = i === 6 
+                ? `<svg viewBox="0 0 24 24"><path d="M12 3 C9 9 7 13 12 19 C17 13 15 9 12 3 Z M12 19 C6 17 2 11 7 9 C9 9 10 14 12 19 Z M12 19 C18 17 22 11 17 9 C15 9 14 14 12 19 Z"/><path d="M7 21 Q12 23 17 21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
+                : `<svg viewBox="0 0 24 24"><path d="M6 19 C5 10 11 3 19 2 C13 7 10 13 10 19 Q8 20 6 19 Z"/></svg>`;
+            trackersHTML += `<div class="track-circle ${isLit}">${svgIcon}</div>`;
+        }
+        document.getElementById('ui-trackers').innerHTML = trackersHTML;
+
+        document.getElementById('ui-pool-text').innerText = `法界暫存資糧 : ${db.poolPoints} / 1000`;
+        document.getElementById('ui-pool-bar').style.width = `${(db.poolPoints / 1000) * 100}%`;
+
+        let btnText = document.getElementById('seal-text');
+        if (db.weekRecord[currentDayOfWeek]) {
+            btnText.innerText = "【 今日行願已圓滿 】"; btnText.style.color = "var(--gold-solid)";
+            document.getElementById('progress-circle').style.strokeDashoffset = 0;
+        } else {
+            btnText.innerText = "長按契印 ． 圓滿今日"; btnText.style.color = "var(--cyan)";
+            document.getElementById('progress-circle').style.strokeDashoffset = 289;
+        }
+    }
+
+    // TTS 語音朗讀功能
+    function playTTS() {
+        if (!('speechSynthesis' in window)) return alert("您的設備不支援語音朗讀功能。");
+        window.speechSynthesis.cancel(); // 停止先前的語音
+        
+        let title = document.getElementById('ui-task-title').innerText;
+        let desc = document.getElementById('ui-task-desc').innerText; // 取純文字
+        
+        let utterance = new SpeechSynthesisUtterance(title + "。" + desc);
+        utterance.lang = 'zh-TW';
+        utterance.rate = 0.9; // 語速稍慢以示莊嚴
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // 印心邏輯
+    const btn = document.getElementById('seal-btn');
+    const progCircle = document.getElementById('progress-circle');
+    const hintText = document.getElementById('seal-text');
+    let reqAnimId, startTime, DURATION = 2000;
+
+    function drawProgress(timestamp) {
+        if (!startTime) startTime = timestamp;
+        let pct = Math.min((timestamp - startTime) / DURATION, 1);
+        progCircle.style.strokeDashoffset = 289 - (289 * pct);
+        if (pct < 1) reqAnimId = requestAnimationFrame(drawProgress); 
+        else completeTodayTask();
+    }
+    function startPress(e) { if (db.weekRecord[currentDayOfWeek]) return; e.preventDefault(); hintText.innerText = "能量注入中..."; hintText.style.color = "#fff"; startTime = null; reqAnimId = requestAnimationFrame(drawProgress); }
+    function cancelPress() { if (db.weekRecord[currentDayOfWeek]) return; cancelAnimationFrame(reqAnimId); progCircle.style.strokeDashoffset = 289; hintText.innerText = "長按契印 ． 圓滿今日"; hintText.style.color = "var(--cyan)"; }
+    function completeTodayTask() {
+        if (db.weekRecord[currentDayOfWeek]) return;
+        db.weekRecord[currentDayOfWeek] = true;
+        db.totalDays365++;
+        if (db.totalDays365 >= 365) {
+            db.totalDays365 = 0; db.totalYears108++;
+            alert("歲星圓滿\n365日行願已成，劫波蓮花歲數 + 1。");
+        }
+        saveDB(); updateUI();
+        const core = document.querySelector('.seal-core');
+        core.style.transform = "translate(-50%, -50%) scale(1.5)"; core.style.opacity = "0";
+        setTimeout(() => { core.style.transform = "translate(-50%, -50%) scale(1)"; core.style.opacity = "1"; }, 500);
+    }
+    btn.addEventListener('mousedown', startPress); btn.addEventListener('touchstart', startPress, {passive: false});
+    window.addEventListener('mouseup', cancelPress); window.addEventListener('touchend', cancelPress);
+    window.addEventListener('mouseleave', cancelPress); btn.addEventListener('touchcancel', cancelPress);
+
+    // 大數據視窗
+    function openDataModal() {
+        document.getElementById('dataModal').classList.add('active');
+        document.getElementById('ui-txt-365').innerText = db.totalDays365;
+        document.getElementById('ui-txt-108').innerText = db.totalYears108;
+        setTimeout(() => {
+            document.getElementById('ui-bar-365').style.width = (Math.min(db.totalDays365 / 365, 1) * 100) + '%';
+            document.getElementById('ui-bar-108').style.width = (Math.min(db.totalYears108 / 108, 1) * 100) + '%';
+        }, 100);
+    }
+    function closeDataModal() {
+        document.getElementById('dataModal').classList.remove('active');
+        document.getElementById('ui-bar-365').style.width = '0%'; document.getElementById('ui-bar-108').style.width = '0%';
+    }
+
+    // ================= 星空引擎 (共用) =================
+    const canvas = document.getElementById('starCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, stars = [], warpSpeed = 1;
+    function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+    window.addEventListener('resize', resize); resize();
+    const STAR_COLORS = ['#f3e5ab', '#ffffff', '#00f2fe', '#ff7eb3', '#c471ed', '#43e97b', '#d4af37'];
+    for (let i = 0; i < 350; i++) { stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)], s: Math.random() * 2 + 1 }); }
+    function renderStars() {
+        ctx.fillStyle = 'rgba(2, 2, 4, 0.4)'; ctx.fillRect(0, 0, width, height); ctx.globalCompositeOperation = 'screen';
+        stars.forEach(s => {
+            s.z -= warpSpeed; if (s.z <= 0) { s.z = 2000; s.x = (Math.random() - 0.5) * 2000; s.y = (Math.random() - 0.5) * 2000; } 
+            let sc = 400 / (400 + s.z);
+            ctx.beginPath(); ctx.arc((width / 2) + s.x * sc, (height / 2) + s.y * sc, s.s * sc * (warpSpeed > 2 ? 4 : 1), 0, Math.PI * 2);
+            ctx.fillStyle = s.color; ctx.globalAlpha = Math.min(1, sc * 2.5); ctx.fill(); ctx.globalAlpha = 1;
+        });
+        ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(renderStars);
+    }
+
+    // ================= 系統啟動 =================
+    window.addEventListener('load', () => {
+        buildStairs();
+        renderStars();
+        animateStairsSequence(); // 啟動階梯亮起邏輯
+    });
+</script>
+</body>
+</html>

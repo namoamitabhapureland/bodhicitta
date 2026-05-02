@@ -831,7 +831,7 @@
         setTimeout(() => { showSettlement(true, false); }, 500);
     }
 
-    function showSettlement(isPerfect, passedBoss, isFail = false) {
+function showSettlement(isPerfect, passedBoss, isFail = false) {
         isProcessing = false; 
         warpSpeed = 0.2; 
         document.getElementById('question-content').style.display = 'none';
@@ -842,15 +842,24 @@
         const stageText = document.getElementById('stage-text');
         stageText.innerText = isFail ? "A Subtle Thought ‧ Matrix Terminated" : "Inquiry Complete ‧ Merits Gathered";
         stageText.style.color = isFail ? "#ff6666" : "#8ba89c";
+        // ✨ 加上與中文版一致的文字放大與粗體特效
+        stageText.style.fontSize = "1.25rem"; 
+        stageText.style.fontWeight = "bold";  
+        stageText.style.letterSpacing = "2px";
         
         let basePoints = 10 + (correctCount * 4);
         let finalPoints = passedBoss ? basePoints + 10 : basePoints;
         
         db.tempBag += finalPoints;
         db.totalCorrect += correctCount;
-        if (isPerfect) db.treasures.sword += 1;
-        db.lastMatrixDate = todayStr;
         
+        // ✨ 加固：確保 treasures 與 sword 存在，避免產生 NaN 錯誤
+        if (isPerfect) {
+            if (!db.treasures) db.treasures = {};
+            db.treasures.sword = (db.treasures.sword || 0) + 1;
+        }
+        
+        db.lastMatrixDate = todayStr;
         localStorage.setItem('PX_EN_V15.0', JSON.stringify(db));
 
         document.getElementById('cert-content').style.display = 'flex';
@@ -860,7 +869,7 @@
         html += `<br><span style="color:#d4af37; font-size:1.4rem; font-weight:bold; text-shadow:0 0 25px rgba(212,175,55,0.6); letter-spacing: 2px;">Total Acquired: ${finalPoints} Points</span>`;
 
         if (isFail) {
-            html += `<br><br><span style="color:#ff6666; font-size:0.9rem; letter-spacing: 1px;">The Bodhi path is long ‧ Please return tomorrow</span>`;
+            html += `<br><br><span style="color:#ff6666; font-size:0.95rem; letter-spacing: 1px;">The Bodhi path is long ‧ Please return tomorrow</span>`;
         } else if (isPerfect) {
             document.getElementById('sword-svg').style.display = 'block';
             html += `<br><br><span style="color:#f3e5ab; font-size:0.95rem; letter-spacing: 1px;">Prajna Perfected!<br>Manifested [Sword of Geometric Wisdom], stored in the Treasure Pavilion.</span>`;
@@ -869,7 +878,9 @@
         
         const actionDiv = document.getElementById('action-btns');
         if (db.tempBag >= 100) {
-            actionDiv.innerHTML = `<button class="btn-main" style="margin:0;" onclick="syncToMain()">Gather Merits ‧ Sync to Main System</button>`;
+            // ✨ 顯示 100 的倍數讓行者知道匯入了多少
+            let tAmt = Math.floor(db.tempBag / 100) * 100;
+            actionDiv.innerHTML = `<button class="btn-main" style="margin:0;" onclick="syncToMain()">Sync ${tAmt} Points to Main System</button>`;
         } else {
             actionDiv.innerHTML = `
                 <div style="color:#8ba89c; font-size:0.8rem; letter-spacing:1px; margin-bottom:10px;">Accumulating Merits ‧ Not Yet Sufficient (${db.tempBag}/100)</div>
@@ -881,13 +892,21 @@
 
     function syncToMain() {
         if (isProcessing) return; isProcessing = true;
-        db.points += db.tempBag; db.tempBag = 0;
+        
+        // ✨ 精準找零機制：只轉 100 的倍數，留下零頭
+        let transferAmount = Math.floor(db.tempBag / 100) * 100;
+        if (transferAmount > 0) {
+            db.points += transferAmount; 
+            db.tempBag -= transferAmount; 
+        }
+        
         localStorage.setItem('PX_EN_V15.0', JSON.stringify(db));
         
         document.getElementById('q-panel').classList.remove('show');
         flashEffect('gold');
         setTimeout(() => { returnToDaochang(); }, 1500);
     }
+
 
     function returnToDaochang() {
         window.location.href = 'index_en.html?screen=3';

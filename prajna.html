@@ -918,14 +918,13 @@
         setTimeout(() => { showSettlement(true, false); }, 500);
     }
 
-    function showSettlement(isPerfect, passedBoss, isFail = false) {
+function showSettlement(isPerfect, passedBoss, isFail = false) {
         isProcessing = false; warpSpeed = 0.2; 
         document.getElementById('question-content').style.display = 'none';
         document.getElementById('karma-dot').style.display = 'none';
         document.getElementById('q-panel').classList.remove('karma-border');
         document.getElementById('btn-hint').style.display = 'none';
         
-        // ✨ 強制放大結算畫面的標題，增加氣勢
         const stageText = document.getElementById('stage-text');
         stageText.innerText = isFail ? "一念微細 ． 陣法中止" : "問心圓滿 ． 資糧結集";
         stageText.style.color = isFail ? "#ff6666" : "#8ba89c";
@@ -937,7 +936,13 @@
         let finalPoints = passedBoss ? basePoints + 10 : basePoints;
         
         db.tempBag += finalPoints; db.totalCorrect += correctCount;
-        if (isPerfect) db.treasures.sword += 1;
+        
+        // ✨ 加固：確保 treasures 與 sword 存在，避免產生 NaN 錯誤
+        if (isPerfect) {
+            if (!db.treasures) db.treasures = {};
+            db.treasures.sword = (db.treasures.sword || 0) + 1;
+        }
+        
         db.lastMatrixDate = todayStr;
         localStorage.setItem('PX_V15.0', JSON.stringify(db));
 
@@ -948,18 +953,18 @@
         html += `<br><span style="color:#d4af37; font-size:1.8rem; font-weight:bold; text-shadow:0 0 25px rgba(212,175,55,0.6); letter-spacing: 4px;">本次共得：${finalPoints} 分</span>`;
 
         if (isFail) {
-            // ✨ 放大失敗提示文字
             html += `<br><br><span style="color:#ff6666; font-size:1.05rem; letter-spacing: 2px;">菩提道長 ． 請明日再來</span>`;
         } else if (isPerfect) {
             document.getElementById('sword-svg').style.display = 'block';
-            // ✨ 放大寶劍獲取提示文字
             html += `<br><br><span style="color:#f3e5ab; font-size:1.05rem; letter-spacing: 3px;">般若圓滿！<br>化現【幾何慧劍】一尊，已收入多寶閣。</span>`;
         }
         document.getElementById('cert-text').innerHTML = html;
         
         const actionDiv = document.getElementById('action-btns');
         if (db.tempBag >= 100) {
-            actionDiv.innerHTML = `<button class="btn-main" style="margin:0;" onclick="syncToMain()">資糧結集 ． 匯入主系統</button>`;
+            // ✨ 顯示 100 的倍數讓行者知道匯入了多少
+            let tAmt = Math.floor(db.tempBag / 100) * 100;
+            actionDiv.innerHTML = `<button class="btn-main" style="margin:0;" onclick="syncToMain()">匯入 ${tAmt} 點至主系統</button>`;
         } else {
             actionDiv.innerHTML = `
                 <div style="color:#8ba89c; font-size:0.9rem; letter-spacing:2px; margin-bottom:10px;">資糧累積中 ． 尚未具足 (${db.tempBag}/100)</div>
@@ -969,14 +974,23 @@
         document.getElementById('q-panel').classList.add('show');
     }
 
+
     function syncToMain() {
         if (isProcessing) return; isProcessing = true;
-        db.points += db.tempBag; db.tempBag = 0;
+        
+        // ✨ 精準找零機制：只轉 100 的倍數，留下零頭
+        let transferAmount = Math.floor(db.tempBag / 100) * 100;
+        if (transferAmount > 0) {
+            db.points += transferAmount; 
+            db.tempBag -= transferAmount; 
+        }
+        
         localStorage.setItem('PX_V15.0', JSON.stringify(db));
         document.getElementById('q-panel').classList.remove('show');
         flashEffect('gold');
         setTimeout(() => { returnToDaochang(); }, 1500);
     }
+
 
     function returnToDaochang() { window.location.href = 'index.html?screen=3'; }
 

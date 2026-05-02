@@ -50,20 +50,23 @@
         }
         .warp-inner.warp-drive { transform: scale(25) translateY(10%); opacity: 0; pointer-events: none; }
 
-        /* ---------------- SVG 天梯 (純金統一材質) ---------------- */
+        /* ---------------- SVG 天梯 (純金漸層 + 線框發光) ---------------- */
         #stair-svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 20px rgba(212,175,55,0.1)); }
 
-        .stair-step { stroke: #d4af37; stroke-linejoin: round; transition: all 0.6s; cursor: pointer; }
+        .stair-step { 
+            stroke: #d4af37; /* 金色發光線框 */
+            stroke-linejoin: round; transition: all 0.6s; cursor: pointer; 
+        }
         .step-top { stroke-width: 1.5px; transition: all 0.6s; }
         .step-front { stroke-width: 1.5px; transition: all 0.6s; }
         .step-side { stroke-width: 1.5px; transition: all 0.6s; }
         
-        /* 【未點亮】的階梯：半透明黃金玻璃 */
+        /* 【未點亮】的階梯：半透明黃金玻璃感 */
         .step-locked .step-top { fill-opacity: 0.15; stroke: rgba(212,175,55,0.4); }
         .step-locked .step-front { fill-opacity: 0.1; stroke: rgba(212,175,55,0.2); }
         .step-locked .step-side { fill-opacity: 0.05; stroke: rgba(212,175,55,0.15); }
 
-        /* 【已點亮】的階梯：常駐發光金框 */
+        /* 【已點亮】的階梯：全亮純金 + 發光金框呼吸 */
         .step-lit .step-top { 
             fill-opacity: 0.85; stroke: #fff; stroke-width: 2.5px;
             animation: breathe-gold 3s infinite alternate ease-in-out;
@@ -86,7 +89,7 @@
             transform: translate(-50%, -50%) scale(1); 
             width: 28px; height: 28px; border-radius: 50%; 
             background: radial-gradient(circle, #fff 10%, #ffe 30%, var(--gold) 60%, var(--solid-gold) 100%); 
-            box-shadow: 0 0 25px var(--solid-gold); 
+            box-shadow: 0 0 var(--seed-glow) var(--solid-gold); 
             opacity: 1; z-index: 100; 
             animation: hb-pulse 1.5s infinite cubic-bezier(0.2, 0.8, 0.4, 1);
         }
@@ -118,11 +121,12 @@
 </head>
 <body>
 
+    <!-- SVG 漸層庫 -->
     <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
         <defs>
             <!-- 拱門發光濾鏡 -->
             <filter id="arch-glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="5" result="blur"/>
+                <feGaussianBlur stdDeviation="6" result="blur"/>
                 <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter>
 
@@ -174,10 +178,10 @@
                 <!-- ✨ 頂端模糊細金剛拱門 (完美接地) ✨ -->
                 <!-- 拱門向下平移至 Y=290，寬度 ±35，完美對齊第 7 階的寬度 (450-380=70) -->
                 <g id="arch-group" transform="translate(415, 290)">
-                    <!-- 底層模糊光暈 (細緻不搶戲) -->
-                    <path d="M -35 0 L -35 -40 A 35 45 0 0 1 35 -40 L 35 0" fill="rgba(212,175,55,0.03)" stroke="#d4af37" stroke-width="2" filter="url(#arch-glow)" opacity="0.6"/>
-                    <!-- 內層細緻金線 -->
-                    <path d="M -35 0 L -35 -40 A 35 45 0 0 1 35 -40 L 35 0" fill="none" stroke="#f3e5ab" stroke-width="0.8" opacity="0.5"/>
+                    <!-- 底層模糊光暈 (極度細緻不搶戲) -->
+                    <path d="M -35 0 L -35 -45 A 35 50 0 0 1 35 -45 L 35 0" fill="rgba(212,175,55,0.03)" stroke="#d4af37" stroke-width="1.5" filter="url(#arch-glow)" opacity="0.5"/>
+                    <!-- 內層極細金線 (不強調門的實體，僅作結界暗示) -->
+                    <path d="M -35 0 L -35 -45 A 35 50 0 0 1 35 -45 L 35 0" fill="none" stroke="#f3e5ab" stroke-width="0.8" opacity="0.4"/>
                 </g>
 
                 <!-- 七階純金天梯 -->
@@ -216,6 +220,7 @@
             let sc = 400 / (400 + s.z);
             let px = (width / 2) + s.x * sc; let py = (height / 2) + s.y * sc;
             ctx.beginPath(); ctx.arc(px, py, s.s * sc * (warpSpeed > 2 ? 4 : 1), 0, Math.PI * 2);
+            // 提高星光透明度
             ctx.fillStyle = s.color; ctx.globalAlpha = Math.min(1, sc * 3); ctx.fill(); ctx.globalAlpha = 1;
         });
         ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(renderStars);
@@ -236,7 +241,7 @@
 
     // ================= 七日點燈邏輯 =================
     // True: 有來 (全亮) / False: 沒來 (鏤空透明)
-    let cycleState = [true, true, true, false, false, false, false]; 
+    let cycleState = [true, false, true, true, false, false, false]; 
     let isDemoRunning = false;
 
     function buildStairs() {
@@ -260,7 +265,7 @@
 
             html += `
                 <g class="stair-step ${stateClass}" ${clickAttr}>
-                    <!-- 側牆 -->
+                    <!-- 完美填滿的側牆 -->
                     <polygon class="step-side" points="${leftPts}" fill="url(#g-gold)" />
                     <polygon class="step-side" points="${leftPts}" fill="url(#f-dark)" opacity="0.6"/>
                     <polygon class="step-side" points="${rightPts}" fill="url(#g-gold)" />
@@ -305,10 +310,12 @@
         });
     }
 
+    // 播放 1~7 階逐漸點亮動畫
     function playProgressDemo() {
         if (isDemoRunning) return;
         isDemoRunning = true;
         
+        // 先全部熄滅
         cycleState = [false, false, false, false, false, false, false];
         buildStairs(); updateCheatUI();
 
@@ -322,9 +329,10 @@
                 clearInterval(interval);
                 isDemoRunning = false;
             }
-        }, 600); 
+        }, 600); // 每 0.6 秒亮一階
     }
 
+    // 初始化
     initCheatUI();
     buildStairs();
 
@@ -334,10 +342,12 @@
         document.getElementById('ui-layer').style.opacity = '0';
         document.getElementById('cheat-panel').style.opacity = '0';
         
+        // 菩提心極限脈動
         const seed = document.getElementById('immortal-seed');
         seed.style.filter = "drop-shadow(0 0 80px #fff)";
         seed.style.animationDuration = "0.3s";
 
+        // 容器衝刺放大
         document.getElementById('warp-inner').classList.add('warp-drive');
 
         setTimeout(() => {

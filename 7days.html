@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>第二頁 ． 實修與結算</title>
+    <style>
+        :root {
+            --bg-deep: #020203; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
+            --glass-bg: rgba(15, 15, 20, 0.4); --glass-border: rgba(212, 175, 55, 0.2);
+        }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; }
+        body { 
+            background: var(--bg-deep); color: #fff;
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; width: 100vw; height: 100dvh;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* ---------------- 星空背景 ---------------- */
+        #starCanvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+        #vignette { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(circle at 50% 50%, transparent 20%, rgba(1, 1, 3, 0.95) 100%); }
+
+        /* ---------------- 頂部導航 ---------------- */
+        .nav-top {
+            width: 90%; max-width: 480px; z-index: 10;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: max(20px, env(safe-area-inset-top)); padding: 12px 20px;
+            background: rgba(5, 5, 8, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border); border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        .nav-btn {
+            display: flex; align-items: center; gap: 8px;
+            color: var(--gold); font-size: 0.85rem; letter-spacing: 2px; cursor: pointer;
+        }
+        .nav-btn svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.5; fill: none; }
+        .nav-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.1); }
+
+        /* ---------------- 七日星軌進度 ---------------- */
+        .progress-wrapper {
+            z-index: 10; margin-top: 30px; display: flex; flex-direction: column; align-items: center; gap: 12px;
+        }
+        .progress-title { color: var(--cyan); font-size: 0.8rem; letter-spacing: 4px; }
+        .nodes-container { display: flex; gap: 15px; align-items: center; }
+        .node-svg { width: 20px; height: 20px; overflow: visible; transition: all 0.5s; }
+        .node-locked { fill: rgba(255,255,255,0.05); stroke: rgba(212,175,55,0.3); stroke-width: 1; }
+        .node-lit { fill: var(--solid-gold); stroke: #fff; stroke-width: 1.5; filter: drop-shadow(0 0 8px var(--solid-gold)); }
+        
+        /* 連接線 */
+        .node-line { width: 15px; height: 1px; background: rgba(212,175,55,0.2); }
+
+        /* ---------------- 任務玉簡面板 ---------------- */
+        .task-panel {
+            z-index: 10; width: 85%; max-width: 400px; margin-top: 40px;
+            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); border-radius: 24px;
+            padding: 35px 25px; text-align: center;
+            box-shadow: inset 0 0 20px rgba(212,175,55,0.05), 0 20px 40px rgba(0,0,0,0.6);
+            position: relative; overflow: hidden;
+        }
+        /* 面板光澤 */
+        .task-panel::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 60%);
+            animation: slow-spin 20s linear infinite; pointer-events: none;
+        }
+        .task-title { color: var(--gold); font-size: 1.1rem; letter-spacing: 5px; margin-bottom: 20px; font-weight: bold; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 15px; }
+        .task-content { color: #ddd; font-size: 0.95rem; line-height: 2.2; letter-spacing: 2px; text-align: justify; text-align-last: center; }
+
+        /* ---------------- 底部印心法陣與資糧棒 ---------------- */
+        .action-zone {
+            z-index: 10; position: absolute; bottom: 8%; width: 100%;
+            display: flex; flex-direction: column; align-items: center; gap: 20px;
+        }
+        
+        /* 長按印心按鈕 */
+        .seal-btn {
+            position: relative; width: 100px; height: 100px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; cursor: pointer;
+        }
+        .seal-bg { position: absolute; inset: 0; border: 1px dashed rgba(212,175,55,0.4); border-radius: 50%; animation: slow-spin 10s linear infinite; }
+        .seal-progress { position: absolute; inset: -5px; transform: rotate(-90deg); pointer-events: none; }
+        .seal-core { 
+            position: absolute; width: 50px; height: 50px; border-radius: 50%;
+            background: radial-gradient(circle, var(--gold) 0%, var(--solid-gold) 100%);
+            box-shadow: 0 0 15px var(--solid-gold); transition: 0.3s;
+        }
+        .seal-text { position: absolute; bottom: -30px; color: var(--cyan); font-size: 0.75rem; letter-spacing: 3px; transition: 0.3s; }
+
+        /* 按下時的特效 */
+        .seal-btn:active .seal-core { transform: scale(0.9); filter: brightness(1.3) drop-shadow(0 0 25px #fff); }
+
+        /* 資糧淨瓶能量棒 */
+        .pool-wrap { width: 70%; max-width: 300px; text-align: center; }
+        .pool-label { font-size: 0.7rem; color: var(--gold); letter-spacing: 3px; margin-bottom: 8px; opacity: 0.8; }
+        .pool-bar-bg { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+        .pool-bar-fill { 
+            height: 100%; width: 40%; /* 預設 400/1000 */
+            background: linear-gradient(90deg, #d4af37, #fffde7, #d4af37);
+            background-size: 200% 100%; animation: flow 3s linear infinite;
+            transition: width 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes slow-spin { 100% { transform: rotate(360deg); } }
+        @keyframes flow { 100% { background-position: 200% 0; } }
+
+        #flash-overlay { position: fixed; inset: 0; background: #fff; opacity: 0; z-index: 9999; pointer-events: none; transition: opacity 0.8s; mix-blend-mode: screen; }
+    </style>
+</head>
+<body>
+
+    <canvas id="starCanvas"></canvas>
+    <div id="vignette"></div>
+
+    <!-- 頂部導航 -->
+    <div class="nav-top">
+        <div class="nav-btn">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg> 歸返天梯
+        </div>
+        <div class="nav-divider"></div>
+        <div class="nav-btn">
+            <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20V14"></path></svg> 歷史大數據
+        </div>
+    </div>
+
+    <!-- 七日星軌 -->
+    <div class="progress-wrapper">
+        <div class="progress-title">行願軌跡 ． 3 / 7</div>
+        <div class="nodes-container" id="nodes-container">
+            <!-- JS 產生 7 顆星軌 -->
+        </div>
+    </div>
+
+    <!-- 任務面板 -->
+    <div class="task-panel">
+        <div class="task-title">【 無相佈施 】</div>
+        <div class="task-content">
+            今日請匿名行一件善事（如捐款、清掃、施食），且絕不向任何人提及此事。<br><br>
+            讓善行純粹，不著我相，完滿今日之行願。
+        </div>
+    </div>
+
+    <!-- 底部互動區 -->
+    <div class="action-zone">
+        <!-- 長按印心 -->
+        <div class="seal-btn" id="seal-btn">
+            <div class="seal-bg"></div>
+            <!-- SVG 進度環 -->
+            <svg class="seal-progress" viewBox="0 0 110 110">
+                <circle cx="55" cy="55" r="50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                <circle id="progress-circle" cx="55" cy="55" r="50" fill="none" stroke="url(#g-gold)" stroke-width="4" stroke-dasharray="314" stroke-dashoffset="314" stroke-linecap="round"/>
+            </svg>
+            <div class="seal-core"></div>
+            <div class="seal-text" id="seal-text">長按契印 ． 圓滿任務</div>
+        </div>
+
+        <!-- 暫存資糧棒 -->
+        <div class="pool-wrap">
+            <div class="pool-label">法界暫存資糧 : 400 / 1000</div>
+            <div class="pool-bar-bg">
+                <div class="pool-bar-fill" id="pool-fill" style="width: 40%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="flash-overlay"></div>
+
+    <svg style="position: absolute; width: 0; height: 0;">
+        <defs>
+            <linearGradient id="g-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fff8dc"/><stop offset="50%" stop-color="#f3e5ab"/><stop offset="100%" stop-color="#d4af37"/>
+            </linearGradient>
+        </defs>
+    </svg>
+
+<script>
+    // 星空背景 (純粹襯托)
+    const canvas = document.getElementById('starCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, stars = [];
+    function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+    window.addEventListener('resize', resize); resize();
+    for (let i = 0; i < 150; i++) { stars.push({ x: Math.random() * 2000, y: Math.random() * 2000, z: Math.random() * 2000 }); }
+    function renderStars() {
+        ctx.fillStyle = 'rgba(2, 2, 3, 0.3)'; ctx.fillRect(0, 0, width, height); ctx.globalCompositeOperation = 'screen';
+        stars.forEach(s => {
+            s.z -= 0.5; if (s.z <= 0) { s.z = 2000; s.x = Math.random() * 2000; s.y = Math.random() * 2000; }
+            let sc = 400 / (400 + s.z);
+            ctx.beginPath(); ctx.arc((width/2) + (s.x-1000)*sc, (height/2) + (s.y-1000)*sc, 1.5*sc, 0, Math.PI*2);
+            ctx.fillStyle = `rgba(243,229,171, ${Math.min(1, sc * 2)})`; ctx.fill();
+        });
+        ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(renderStars);
+    }
+    renderStars();
+
+    // 繪製 7 日星軌 (前 3 天已完成)
+    const nodesContainer = document.getElementById('nodes-container');
+    let nodesHTML = '';
+    for(let i=0; i<7; i++) {
+        let isLit = i < 3; // 假裝完成了 3 天
+        let cls = isLit ? 'node-lit' : 'node-locked';
+        nodesHTML += `<svg class="node-svg ${cls}" viewBox="0 0 20 20"><polygon points="10,2 18,10 10,18 2,10"/></svg>`;
+        if(i < 6) nodesHTML += `<div class="node-line"></div>`;
+    }
+    nodesContainer.innerHTML = nodesHTML;
+
+    // 長按印心邏輯
+    const btn = document.getElementById('seal-btn');
+    const progCircle = document.getElementById('progress-circle');
+    const hintText = document.getElementById('seal-text');
+    let pressTimer, reqAnimId, startTime;
+    const DURATION = 2000; // 長按 2 秒
+    let isCompleted = false;
+
+    function drawProgress(timestamp) {
+        let elapsed = timestamp - startTime;
+        let pct = Math.min(elapsed / DURATION, 1);
+        progCircle.style.strokeDashoffset = 314 - (314 * pct);
+        
+        if (pct < 1) { reqAnimId = requestAnimationFrame(drawProgress); } 
+        else { completeTask(); }
+    }
+
+    function startPress(e) {
+        if(isCompleted) return;
+        e.preventDefault();
+        hintText.innerText = "能量注入中...";
+        hintText.style.color = "#fff";
+        startTime = performance.now();
+        reqAnimId = requestAnimationFrame(drawProgress);
+    }
+
+    function cancelPress() {
+        if(isCompleted) return;
+        cancelAnimationFrame(reqAnimId);
+        progCircle.style.strokeDashoffset = 314;
+        hintText.innerText = "長按契印 ． 圓滿任務";
+        hintText.style.color = "var(--cyan)";
+    }
+
+    function completeTask() {
+        isCompleted = true;
+        hintText.innerText = "【 任務已圓滿 】";
+        hintText.style.color = "var(--gold)";
+        
+        // 模擬加 100 點
+        document.querySelector('.pool-label').innerText = "法界暫存資糧 : 500 / 1000";
+        document.getElementById('pool-fill').style.width = "50%";
+
+        // 模擬星軌點亮第 4 顆
+        setTimeout(() => {
+            const nodes = document.querySelectorAll('.node-svg');
+            nodes[3].classList.remove('node-locked');
+            nodes[3].classList.add('node-lit');
+            document.querySelector('.progress-title').innerText = "行願軌跡 ． 4 / 7";
+        }, 500);
+    }
+
+    btn.addEventListener('mousedown', startPress);
+    btn.addEventListener('touchstart', startPress, {passive: false});
+    window.addEventListener('mouseup', cancelPress);
+    window.addEventListener('touchend', cancelPress);
+</script>
+</body>
+</html>

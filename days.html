@@ -2,86 +2,115 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>彩色寶幢 ． 契印預覽</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>寶幢與證書 ． 版面佈局測試</title>
     <style>
-        body {
-            background: radial-gradient(circle at 50% 50%, #0a0e14 0%, #020203 100%);
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh; margin: 0; color: #fff; font-family: "PingFang TC", "Microsoft JhengHei", serif;
-            gap: 80px;
+        :root {
+            --gold-light: #f3e5ab;
+            --gold-solid: #d4af37;
         }
-        .preview-container {
-            display: flex; flex-direction: column; align-items: center; gap: 30px;
-        }
-        .label {
-            color: #f3e5ab; letter-spacing: 5px; font-size: 0.85rem;
-            text-shadow: 0 0 10px rgba(212,175,55,0.4);
-        }
-        .jewel-box {
-            width: 160px; height: 240px; /* 拉長比例 */
-            position: relative;
-        }
-        svg { width: 100%; height: 100%; overflow: visible; }
-        
-        /* 狀態 1：未點亮 (僅留微弱的燙金線框) */
-        .unlit {
-            opacity: 0.25;
-            filter: grayscale(100%) brightness(1.5) drop-shadow(0 0 5px rgba(212,175,55,0.2));
-            transition: 1s;
+        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+        body { 
+            background: radial-gradient(circle at 50% 50%, #0a0e14 0%, #020203 100%); 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; width: 100vw; height: 100dvh;
+            color: #fff;
         }
 
-        /* 狀態 2：已點亮 (彩色顯化，帶有莊嚴的懸浮感) */
-        .lit {
-            opacity: 1;
-            animation: float-jewel 5s infinite alternate ease-in-out;
-            filter: drop-shadow(0 0 25px rgba(212,175,55,0.3));
+        /* 模擬主系統中央的 UI 佔位框 (讓您確認寶幢會不會擠到主視覺) */
+        #mock-main-ui {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 85%; max-width: 400px; height: 75vh;
+            border: 1px dashed rgba(212,175,55,0.4); border-radius: 20px;
+            background: rgba(5,5,10,0.6); backdrop-filter: blur(5px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 10; pointer-events: none;
         }
-        
-        @keyframes float-jewel {
-            0% { transform: translateY(0); filter: drop-shadow(0 0 15px rgba(212,175,55,0.2)); }
-            100% { transform: translateY(-15px); filter: drop-shadow(0 0 35px rgba(231,111,81,0.5)) drop-shadow(0 0 15px rgba(255,255,255,0.4)); }
+        .mock-text { color: rgba(255,255,255,0.3); letter-spacing: 5px; font-size: 0.9rem; text-align: center; line-height: 2; }
+
+        /* ================= 寶幢 ． 星空深處佈局 ================= */
+        #constellation-layer {
+            position: absolute; inset: 0; z-index: 5; /* 在背景之上，主UI之下 */
+            pointer-events: none; overflow: hidden;
         }
+        .banner-jewel {
+            position: absolute;
+            pointer-events: auto; /* 讓寶幢可以被點擊 */
+            cursor: pointer;
+            opacity: 0.85; 
+            animation: breathe-banner 4s infinite alternate ease-in-out;
+            transition: transform 0.2s;
+        }
+        .banner-jewel:active { transform: scale(0.9) !important; }
+
+        @keyframes breathe-banner {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+
+        /* 四個角落的座標佈局 (避開中央主 UI) */
+        #banner-70 { top: 12%; left: 3%; width: 55px; height: 95px; animation-delay: 0s; filter: drop-shadow(0 0 15px rgba(233,196,106,0.6)); }
+        #banner-700 { top: 20%; right: 3%; width: 65px; height: 110px; animation-delay: -1s; filter: drop-shadow(0 0 20px rgba(42,157,143,0.6)); }
+        #banner-7000 { bottom: 22%; left: 4%; width: 80px; height: 135px; animation-delay: -2s; filter: drop-shadow(0 0 25px rgba(193,18,31,0.6)); }
+        #banner-70000 { bottom: 12%; right: 4%; width: 100px; height: 170px; animation-delay: -3s; filter: drop-shadow(0 0 35px rgba(255,255,255,0.6)); }
+
+        /* ================= 契印證書 彈框 ================= */
+        .cert-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+            z-index: 10000; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .cert-overlay.show { opacity: 1; pointer-events: auto; }
+
+        .cert-box {
+            background: linear-gradient(180deg, rgba(20,20,20,0.95) 0%, rgba(5,5,5,0.98) 100%);
+            border: 1px solid rgba(212,175,55,0.4); border-radius: 20px;
+            width: 85%; max-width: 360px; padding: 40px 25px; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.9), inset 0 0 30px rgba(212,175,55,0.1);
+            transform: translateY(30px) scale(0.95); transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .cert-overlay.show .cert-box { transform: translateY(0) scale(1); }
+
+        .cert-header { color: var(--gold-light); font-size: 0.9rem; letter-spacing: 6px; margin-bottom: 25px; text-shadow: 0 0 10px rgba(212,175,55,0.5); }
+        .cert-svg-wrap { width: 100px; height: 160px; margin: 0 auto 25px auto; animation: breathe-cert 3s infinite alternate; }
+        .cert-svg-wrap svg { width: 100%; height: 100%; overflow: visible; }
+        @keyframes breathe-cert { 0% { transform: translateY(0); } 100% { transform: translateY(-8px); } }
+
+        .cert-user { color: #aaa; font-size: 0.8rem; letter-spacing: 3px; margin-bottom: 10px; }
+        .cert-name { color: var(--gold-solid); font-size: 1.3rem; font-weight: bold; letter-spacing: 5px; margin-bottom: 25px; text-shadow: 0 0 15px rgba(212,175,55,0.6); }
+        .cert-divider { width: 60%; height: 1px; background: radial-gradient(circle, rgba(212,175,55,0.6) 0%, transparent 100%); margin: 0 auto 20px auto; }
+        .cert-desc { color: #ddd; font-size: 0.9rem; line-height: 2; letter-spacing: 1.5px; margin-bottom: 35px; }
+
+        .cert-btn {
+            background: transparent; color: var(--gold-light); border: 1px solid rgba(212,175,55,0.5);
+            padding: 12px 35px; border-radius: 30px; letter-spacing: 3px; font-size: 0.9rem;
+            cursor: pointer; transition: 0.3s; outline: none; display: inline-block;
+        }
+        .cert-btn:active { background: rgba(212,175,55,0.2); transform: scale(0.95); }
     </style>
 </head>
 <body>
 
+    <!-- SVG 定義區 (彩色寶幢) -->
     <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
         <defs>
-            <!-- 東方美學 ． 彩色寶幢/火焰紋 幾何模型 -->
             <g id="oriental-banner">
-                
-                <!-- 1. 頂端真火 (橘紅/金) -->
                 <path d="M60,10 Q65,25 60,35 Q55,25 60,10" fill="#E76F51"/>
                 <path d="M60,18 Q62,26 60,30 Q58,26 60,18" fill="#F4A261"/>
-
-                <!-- 2. 第一層法焰 (青琉璃) -->
                 <path d="M60,25 C78,35 88,55 78,75 C68,55 63,55 60,62 C57,55 52,55 42,75 C32,55 42,35 60,25 Z" fill="#2A9D8F"/>
-
-                <!-- 3. 第二層法焰 (真金色) -->
                 <path d="M60,40 C85,50 100,75 88,95 C78,75 68,75 60,82 C52,75 42,75 32,95 C20,75 35,50 60,40 Z" fill="#E9C46A"/>
-
-                <!-- 4. 第三層主體 (赤紅色) -->
                 <path d="M60,55 C95,65 112,95 100,115 C88,95 72,95 60,105 C48,95 32,95 20,115 C8,95 25,65 60,55 Z" fill="#C1121F"/>
-
-                <!-- 5. 底部托葉/層疊 (深海藍/墨綠) -->
                 <path d="M60,75 C105,85 125,120 108,145 C92,120 75,118 60,130 C45,118 28,120 12,145 C-5,120 15,85 60,75 Z" fill="#1D3557"/>
-
-                <!-- 6. 兩側如意翻捲飄帶 (象牙白) -->
                 <path d="M38,100 C15,120 10,155 25,175 C38,195 12,185 5,160 C-2,135 18,110 38,100 Z" fill="#FDFCDC"/>
                 <path d="M82,100 C105,120 110,155 95,175 C82,195 108,185 115,160 C122,135 102,110 82,100 Z" fill="#FDFCDC"/>
-
-                <!-- 7. 底部摩尼水滴與金剛結 -->
                 <path d="M60,128 C70,140 70,155 60,165 C50,155 50,140 60,128 Z" fill="#2A9D8F"/>
                 <circle cx="60" cy="172" r="5" fill="#E9C46A"/>
                 <path d="M60,177 Q65,185 60,195 Q55,185 60,177" fill="#C1121F"/>
-
-                <!-- 8. 整體燙金描邊 (增加層次感與細節) -->
+                
                 <path d="M60,25 C78,35 88,55 78,75" fill="none" stroke="#F3E5AB" stroke-width="1.5" opacity="0.6"/>
                 <path d="M60,40 C85,50 100,75 88,95" fill="none" stroke="#F3E5AB" stroke-width="1.5" opacity="0.6"/>
                 <path d="M60,55 C95,65 112,95 100,115" fill="none" stroke="#F3E5AB" stroke-width="1.5" opacity="0.6"/>
                 <path d="M60,75 C105,85 125,120 108,145" fill="none" stroke="#F3E5AB" stroke-width="1.5" opacity="0.6"/>
-                
                 <path d="M60,25 C42,35 32,55 42,75" fill="none" stroke="#F3E5AB" stroke-width="1.5" opacity="0.6"/>
                 <path d="M60,40 C35,50 20,75 32,95" fill="none" stroke="#F3E5AB" stroke-width="1.5" opacity="0.6"/>
                 <path d="M60,55 C25,65 8,95 20,115" fill="none" stroke="#F3E5AB" stroke-width="1.5" opacity="0.6"/>
@@ -90,19 +119,69 @@
         </defs>
     </svg>
 
-    <div class="preview-container">
-        <div class="label">未點亮 ． 潛藏星空</div>
-        <div class="jewel-box">
-            <svg class="unlit" viewBox="0 0 120 200"><use href="#oriental-banner"/></svg>
+    <!-- 模擬主系統中央介面 (測試會不會擋到) -->
+    <div id="mock-main-ui">
+        <div class="mock-text">此區塊模擬主系統的<br>任務框與按鈕<br><br>請點擊四角落的寶幢<br>測試彈框</div>
+    </div>
+
+    <!-- 星空深處 ． 寶幢圖層 (點擊觸發) -->
+    <div id="constellation-layer">
+        <svg class="banner-jewel" id="banner-70" viewBox="0 0 120 200" onclick="openCert(70)"><use href="#oriental-banner"/></svg>
+        <svg class="banner-jewel" id="banner-700" viewBox="0 0 120 200" onclick="openCert(700)"><use href="#oriental-banner"/></svg>
+        <svg class="banner-jewel" id="banner-7000" viewBox="0 0 120 200" onclick="openCert(7000)"><use href="#oriental-banner"/></svg>
+        <svg class="banner-jewel" id="banner-70000" viewBox="0 0 120 200" onclick="openCert(70000)"><use href="#oriental-banner"/></svg>
+    </div>
+
+    <!-- 契印證書 彈框 -->
+    <div class="cert-overlay" id="cert-modal">
+        <div class="cert-box">
+            <div class="cert-header" id="cert-title">✦ 菩提契印 ✦</div>
+            <div class="cert-svg-wrap" id="cert-glow">
+                <svg viewBox="0 0 120 200"><use href="#oriental-banner"/></svg>
+            </div>
+            <div class="cert-user">行 者</div>
+            <div class="cert-name">妙 依</div>
+            <div class="cert-divider"></div>
+            <div class="cert-desc" id="cert-text">...</div>
+            <button class="cert-btn" onclick="closeCert()">歡喜功德 ． 締結契印</button>
         </div>
     </div>
 
-    <div class="preview-container">
-        <div class="label">已契印 ． 彩光顯化</div>
-        <div class="jewel-box">
-            <svg class="lit" viewBox="0 0 120 200"><use href="#oriental-banner"/></svg>
-        </div>
-    </div>
+<script>
+    // 證書文案資料庫
+    const CERT_DATA = {
+        70: { 
+            title: "✦ 初地 ． 歡喜契印 ✦", 
+            glow: "drop-shadow(0 0 25px rgba(233,196,106,1))",
+            text: "已圓滿七十日普賢行願。<br>初發心成，真金寶幢於星空初現。<br>願此生步步生蓮，永不退轉。"
+        },
+        700: { 
+            title: "✦ 遠行 ． 琉璃契印 ✦", 
+            glow: "drop-shadow(0 0 35px rgba(42,157,143,1))",
+            text: "歷經七百日大願薰修。<br>煩惱漸除，青琉璃寶幢高懸法界。<br>願身心清淨，內外明徹。"
+        },
+        7000: { 
+            title: "✦ 善慧 ． 妙法契印 ✦", 
+            glow: "drop-shadow(0 0 45px rgba(193,18,31,1))",
+            text: "七千日行願，不疲不厭。<br>赤紅寶幢燃起三昧真火。<br>願大悲拔苦，普度一切有情。"
+        },
+        70000: { 
+            title: "✦ 等覺 ． 圓滿契印 ✦", 
+            glow: "drop-shadow(0 0 60px #fff) drop-shadow(0 0 20px #E9C46A)",
+            text: "盡未來際，行願無盡。<br>七萬日功德化為無上白金佛光。<br>法界授記，十方如來同聲讚歎。"
+        }
+    };
 
+    function openCert(tier) {
+        document.getElementById('cert-title').innerText = CERT_DATA[tier].title;
+        document.getElementById('cert-text').innerHTML = CERT_DATA[tier].text;
+        document.getElementById('cert-glow').style.filter = CERT_DATA[tier].glow;
+        document.getElementById('cert-modal').classList.add('show');
+    }
+
+    function closeCert() {
+        document.getElementById('cert-modal').classList.remove('show');
+    }
+</script>
 </body>
 </html>

@@ -25,7 +25,7 @@
         #vignette { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(circle at 50% 30%, transparent 10%, rgba(1, 1, 3, 0.95) 100%); }
 
         #mist-layer { position: absolute; bottom: -10%; left: -10%; width: 120%; height: 60%; z-index: 5; pointer-events: none; mix-blend-mode: screen; overflow: hidden; }
-        /* 移除 blur 濾鏡，加入 translateZ 啟動 GPU 加速 */
+        /* 移除 filter: blur(45px); 加入 translateZ 觸發 GPU 獨立圖層運算 */
 .mist-cloud { 
     position: absolute; border-radius: 50%; 
     animation: drift-mist 15s infinite alternate ease-in-out; 
@@ -66,7 +66,7 @@
         @keyframes hb-pulse { 0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 var(--seed-glow) var(--gold); } 50% { transform: translate(-50%, -50%) scale(1.3); box-shadow: 0 0 calc(var(--seed-glow)*2) var(--gold), 0 0 calc(var(--seed-glow)*3) #fff; } 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 var(--seed-glow) var(--gold); } }
 
         /* PAGE 2 */
-       #page-2 { position: absolute; inset: 0; z-index: 10; display: none; flex-direction: column; align-items: center; width: 100%; height: 100%; padding-bottom: max(15px, env(safe-area-inset-bottom)); }
+        #page-2 { position: absolute; inset: 0; z-index: 10; display: none; flex-direction: column; align-items: center; width: 100%; height: 100%; }
         .neon-flow { background: linear-gradient(90deg, #FDF5D3, #D4AF37, #E5989B, #89CFF0, #C9A0DC, #D4AF37, #FDF5D3); background-size: 200% 100%; animation: energyFlow 4s linear infinite; }
         .nav-top { width: 90%; max-width: 480px; z-index: 20; display: flex; justify-content: space-between; align-items: center; margin-top: max(20px, env(safe-area-inset-top)); padding: 12px 20px; background: rgba(5, 5, 8, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(212,175,55,0.2); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         .nav-btn { display: flex; align-items: center; gap: 8px; color: var(--gold-light); font-size: 0.85rem; letter-spacing: 2px; cursor: pointer; transition: 0.3s; }
@@ -81,7 +81,7 @@
         .track-circle.lit { border-color: #fff; background: rgba(212,175,55,0.25); box-shadow: 0 0 10px var(--gold-solid), inset 0 0 8px var(--gold-solid); }
         .track-circle.lit svg { fill: #fff; filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 10px var(--gold-solid)); }
 
-        .task-container { position: relative; z-index: 10; margin-top: 2vh; width: 95%; max-width: 450px; flex-grow: 1; max-height: 48vh; min-height: 250px; display: flex; justify-content: center; align-items: center; }
+        .task-container { position: relative; z-index: 10; margin-top: 2vh; width: 95%; max-width: 450px; aspect-ratio: 3 / 4; display: flex; justify-content: center; align-items: center; }
         .tusks-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 25px rgba(212,175,55,0.6)); animation: breathe-frame 3s infinite alternate ease-in-out; }
         @keyframes breathe-frame { 0% { filter: drop-shadow(0 0 15px rgba(212,175,55,0.4)); } 100% { filter: drop-shadow(0 0 35px var(--gold-solid)) drop-shadow(0 0 20px #fff); } }
         .tusk-inner-line { fill: none; stroke: var(--gold-light); stroke-width: 1.5; opacity: 0.95; }
@@ -94,7 +94,7 @@
         .tts-icon:active { fill: #fff; transform: scale(1.1); }
         .task-desc { color: #eee; font-size: 0.9rem; line-height: 2; letter-spacing: 1px; text-align: justify; text-align-last: center; }
 
-        .action-zone { z-index: 20; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; opacity: 0; transition: opacity 1.5s 1s; pointer-events: none; margin-top: auto; }
+        .action-zone { z-index: 20; position: absolute; bottom: 5%; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; opacity: 0; transition: opacity 1.5s 1s; pointer-events: none; }
         .action-zone.show { opacity: 1; pointer-events: auto; }
         .seal-btn { position: relative; width: 90px; height: 90px; border-radius: 50%; cursor: pointer; }
         .seal-bg { position: absolute; inset: 0; border: 1px dashed rgba(212,175,55,0.4); border-radius: 50%; animation: slow-spin 10s linear infinite; }
@@ -341,24 +341,29 @@
 <script>
 // ================= 法界導航與彈框交互邏輯 =================
 
+// 返回主道場 (根據妳彌陀淨土系統的路徑，假設為 index.html)
 function returnToMainHall() {
-    const curtain = document.getElementById('page-transition-curtain');
-    if(curtain) curtain.style.opacity = '1';
-    setTimeout(() => { window.location.href = 'index.html?screen=3'; }, 800);
+    document.getElementById('page-transition-curtain').style.opacity = '1';
+    setTimeout(() => {
+        window.location.href = 'index.html'; 
+    }, 800);
 }
 
+// 顯示法門說明與顯化訊息
 function showVowAlert(msg) {
     const alertMsg = document.getElementById('vow-alert-msg');
     const overlay = document.getElementById('vow-alert-overlay');
     if(alertMsg && overlay) {
         alertMsg.innerHTML = msg;
         overlay.style.display = 'flex';
-        void overlay.offsetWidth; // 強制重繪
+        // 強制重繪以觸發過渡動畫
+        void overlay.offsetWidth; 
         overlay.style.opacity = '1';
         document.getElementById('vow-alert-box').style.transform = 'scale(1)';
     }
 }
 
+// 關閉顯化訊息
 function closeVowAlert() {
     const overlay = document.getElementById('vow-alert-overlay');
     const box = document.getElementById('vow-alert-box');
@@ -712,18 +717,18 @@ function closeVowAlert() {
         progCircle.style.strokeDashoffset = 289 - (289 * pct);
         if (pct < 1) reqAnimId = requestAnimationFrame(drawProgress); else completeTodayTask();
     }
-    function startPress(e) { 
-        if (db.weekRecord[currentDayOfWeek]) return; 
-        e.preventDefault(); 
-        hintText.innerText = "能量注入中..."; 
-        hintText.style.color = "#fff"; 
-        
-        // 阻絕重疊的動畫迴圈
-        if (reqAnimId) cancelAnimationFrame(reqAnimId);
-        
-        startTime = null; 
-        reqAnimId = requestAnimationFrame(drawProgress); 
-    }
+function startPress(e) { 
+    if (db.weekRecord[currentDayOfWeek]) return; 
+    e.preventDefault(); 
+    hintText.innerText = "能量注入中..."; 
+    hintText.style.color = "#fff"; 
+    
+    // 防呆：若已有動畫正在運行，先強制中止，避免事件重疊導致進度暴衝
+    if (reqAnimId) { cancelAnimationFrame(reqAnimId); }
+    
+    startTime = null; 
+    reqAnimId = requestAnimationFrame(drawProgress); 
+}
 
     function cancelPress() { if (db.weekRecord[currentDayOfWeek]) return; cancelAnimationFrame(reqAnimId); progCircle.style.strokeDashoffset = 289; hintText.innerText = "長按契印 ． 圓滿今日"; hintText.style.color = "var(--cyan)"; }
     

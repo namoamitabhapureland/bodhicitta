@@ -14,10 +14,8 @@
         #indra-bg { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; transition: opacity 2s; background-image: repeating-radial-gradient(circle at 50% 50%, transparent 0, rgba(156, 39, 176, 0.03) 2px, transparent 6px), radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.05) 0%, transparent 70%); animation: slow-spin 180s linear infinite; }
         @keyframes slow-spin { from { transform: rotate(0deg) scale(1.5); } to { transform: rotate(360deg) scale(1.5); } }
 
-        /* ✨ 修復 iPad Bug：拆分寫法，使用最穩固的 fallback 防禦蘋果的解析崩潰 */
         header { position: relative; z-index: 10; padding: 20px; padding-top: 40px; padding-top: max(40px, env(safe-area-inset-top)); text-align: center; border-bottom: 1px solid rgba(243, 229, 171, 0.1); background: rgba(1,1,3,0.5); backdrop-filter: blur(10px); display: flex; justify-content: space-between; align-items: center; width: 100%; top: 0;}
 
-        /* ✨ 依然保留動態高度 dvh 以避開網址列吃畫面的問題 */
         #treasure-grid { position: relative; z-index: 10; height: calc(100dvh - 120px); overflow-y: auto; padding: 20px 15px 120px 15px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; align-content: start; scrollbar-width: none; }
         
         .t-cell { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(139, 168, 156, 0.3); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; position: relative; cursor: pointer; transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: inset 0 0 20px rgba(0,0,0,0.5); padding: 15px 10px; min-height: 220px; }
@@ -78,11 +76,6 @@
 
         .voice-btn { margin: 15px auto 0; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; color: #d4af37; border: 1px solid rgba(212,175,55,0.4); padding: 8px 15px; border-radius: 20px; width: fit-content; font-size: 0.8rem; transition: 0.3s; }
         .voice-btn:active { background: rgba(212,175,55,0.2); }
-
-        #dev-panel { margin-top: 15px; border-top: 1px dashed #555; padding-top: 15px; display: none; text-align: center; }
-        .dev-btn { padding: 6px 12px; border: none; border-radius: 5px; font-size: 0.8rem; margin: 0 5px; cursor: pointer; }
-        .dev-btn.success { background: rgba(76, 175, 80, 0.3); border: 1px solid #4CAF50; color: #fff; }
-        .dev-btn.fail { background: rgba(244, 67, 54, 0.3); border: 1px solid #F44336; color: #fff; }
 
         #anim-overlay { position: fixed; inset: 0; background: #010103; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 1s; }
         #anim-overlay.show { opacity: 1; pointer-events: auto; }
@@ -163,12 +156,6 @@
             </div>
             
             <button class="modal-confirm-btn" id="m-confirm-btn" onclick="executeAction()">Activate</button>
-
-            <div id="dev-panel">
-                <div style="font-size: 0.7rem; color: #8ba89c; margin-bottom: 8px; letter-spacing: 2px;">[ Developer Test Mode ]</div>
-                <button class="dev-btn success" onclick="executeAction(true)">Force Success</button>
-                <button class="dev-btn fail" onclick="executeAction(false)">Force Fail</button>
-            </div>
         </div>
     </div>
 
@@ -180,7 +167,6 @@
     </div>
 
     <script>
-        // ✨ English TTS Engine
         window.sysUtterances = [];
         function speak(t, r = 0.85) {
             if (!window.speechSynthesis) return; 
@@ -216,28 +202,24 @@
         document.body.addEventListener('touchstart', unlockAudio, { once: true });
         document.body.addEventListener('mousedown', unlockAudio, { once: true });
 
-                let db;
+        let db;
         try { 
-            // ✨ 修正1：使用英文版專屬的記憶體鑰匙，完美對接英文主系統 ✨
             db = JSON.parse(localStorage.getItem('PX_EN_V15.0')); 
             if (!db || typeof db !== 'object') db = null; 
         } catch(e) {}
         
-        // 確保寶物庫存存在
         if (!db || !db.treasures) {
             db = { treasures: { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 } };
         }
         let inventory = db.treasures;
         
         function saveDB() {
-            // ✨ 修正2：存檔時也必須使用英文版專屬鑰匙 ✨
             if(localStorage.getItem('PX_EN_V15.0')) {
                 let realDb = JSON.parse(localStorage.getItem('PX_EN_V15.0'));
                 realDb.treasures = inventory;
                 localStorage.setItem('PX_EN_V15.0', JSON.stringify(realDb));
             }
         }
-
 
         if (inventory.indra_net > 0) { setTimeout(() => { document.getElementById('indra-bg').style.opacity = '1'; }, 500); }
 
@@ -348,7 +330,6 @@
                             btn.classList.add('ready'); 
                             isChecked = true; 
                             
-                            document.getElementById('dev-panel').style.display = 'none';
                             document.getElementById('modal-overlay').classList.add('show');
                         };
                         cell.innerHTML = `<div class="t-svg">${item.svg}</div><div class="t-info"><div class="t-name" style="color:#d4af37;">${item.name}</div><div class="t-lvl">Eternal Mandala</div><span class="t-tag">[${item.tag}]</span></div>`;
@@ -388,7 +369,6 @@
         const mCheckBtn = document.getElementById('m-checkbox');
         const mConfirmBtn = document.getElementById('m-confirm-btn');
         const mWarning = document.getElementById('m-warning');
-        const devPanel = document.getElementById('dev-panel');
         const dedicateInputWrap = document.getElementById('dedicate-input-wrap');
         const dedicateTarget = document.getElementById('dedicate-target');
         const mContentWrap = document.getElementById('m-content-wrap');
@@ -404,7 +384,7 @@
         function closeModal() {
             modal.classList.remove('show');
             isChecked = false; mCheckBtn.classList.remove('checked'); mConfirmBtn.classList.remove('ready');
-            mWarning.style.display = 'none'; devPanel.style.display = 'none'; dedicateInputWrap.style.display = 'none';
+            mWarning.style.display = 'none'; dedicateInputWrap.style.display = 'none';
             mContentWrap.style.display = 'block'; mInfoWrap.style.display = 'none'; mConfirmBtn.style.display = 'block';
             document.getElementById('m-check-wrap').style.display = 'flex';
             if (window.speechSynthesis) window.speechSynthesis.cancel();
@@ -464,7 +444,6 @@
             document.getElementById('m-check-text').innerHTML = "I have faithfully completed:<br>．Sincere recitation of Buddha's name (or mantra) 100 times.";
             mConfirmBtn.innerText = "Embrace Impermanence ． Resonate";
             
-            devPanel.style.display = 'block';
             modal.classList.add('show');
         }
 
@@ -489,7 +468,7 @@
             }
         }
 
-        function executeAction(forceResult = null) {
+        function executeAction() {
             if (currentAction === 'go_dedicate') {
                 closeModal();
                 const animOverlay = document.getElementById('anim-overlay');
@@ -552,8 +531,7 @@
                 return;
             }
 
-
-            if (forceResult === null && !isChecked) return; 
+            if (!isChecked) return; 
             
             let targetName = "All Sentient Beings";
             if (currentAction === 'dedicate') {
@@ -600,9 +578,7 @@
                     }, 2200); 
                     
                 } else if (currentAction === 'merge') {
-                    let isSuccess = false;
-                    if (forceResult !== null) { isSuccess = forceResult; } 
-                    else { isSuccess = (Math.random() * 100) < currentMergeProb; }
+                    let isSuccess = (Math.random() * 100) < currentMergeProb;
                     
                     inventory[selectedItems[0]] = 0;
                     inventory[selectedItems[1]] = 0;

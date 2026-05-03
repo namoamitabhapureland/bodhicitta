@@ -23,7 +23,13 @@
         #vignette { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(circle at 50% 30%, transparent 10%, rgba(1, 1, 3, 0.95) 100%); }
 
         #mist-layer { position: absolute; bottom: -10%; left: -10%; width: 120%; height: 60%; z-index: 5; pointer-events: none; mix-blend-mode: screen; overflow: hidden; }
-        .mist-cloud { position: absolute; filter: blur(45px); border-radius: 50%; animation: drift-mist 15s infinite alternate ease-in-out; }
+        .mist-cloud { 
+    position: absolute; border-radius: 50%; 
+    animation: drift-mist 15s infinite alternate ease-in-out; 
+    will-change: transform, opacity; 
+    transform: translateZ(0); 
+}
+
         .mist-1 { width: 1000px; height: 500px; left: -10%; bottom: -50px; background: radial-gradient(ellipse, rgba(212,175,55,0.25) 0%, transparent 70%); animation-duration: 18s; }
         .mist-2 { width: 1200px; height: 600px; right: -15%; bottom: -100px; background: radial-gradient(ellipse, rgba(196,113,237,0.2) 0%, transparent 70%); animation-duration: 22s; animation-delay: -5s; }
         .mist-3 { width: 900px; height: 450px; left: 15%; bottom: 0px; background: radial-gradient(ellipse, rgba(0,242,254,0.2) 0%, transparent 70%); animation-duration: 16s; animation-delay: -2s; }
@@ -326,6 +332,37 @@
     </div>
 
 <script>
+// ================= Realm Navigation & Alert Logic =================
+
+function returnToMainHall() {
+    const curtain = document.getElementById('page-transition-curtain');
+    if(curtain) curtain.style.opacity = '1';
+    // Redirect to the English main system with the specific screen
+    setTimeout(() => { window.location.href = 'index_en.html?screen=3'; }, 800);
+}
+
+function showVowAlert(msg) {
+    const alertMsg = document.getElementById('vow-alert-msg');
+    const overlay = document.getElementById('vow-alert-overlay');
+    if(alertMsg && overlay) {
+        alertMsg.innerHTML = msg;
+        overlay.style.display = 'flex';
+        void overlay.offsetWidth; // Force reflow
+        overlay.style.opacity = '1';
+        document.getElementById('vow-alert-box').style.transform = 'scale(1)';
+    }
+}
+
+function closeVowAlert() {
+    const overlay = document.getElementById('vow-alert-overlay');
+    const box = document.getElementById('vow-alert-box');
+    if(overlay && box) {
+        overlay.style.opacity = '0';
+        box.style.transform = 'scale(0.95)';
+        setTimeout(() => { overlay.style.display = 'none'; }, 400); 
+    }
+}
+
     const VOWS_DB = {
         regular: [
             [
@@ -666,7 +703,16 @@
         progCircle.style.strokeDashoffset = 289 - (289 * pct);
         if (pct < 1) reqAnimId = requestAnimationFrame(drawProgress); else completeTodayTask();
     }
-    function startPress(e) { if (db.weekRecord[currentDayOfWeek]) return; e.preventDefault(); hintText.innerText = "Infusing Merit..."; hintText.style.color = "#fff"; startTime = null; reqAnimId = requestAnimationFrame(drawProgress); }
+function startPress(e) { 
+    if (db.weekRecord[currentDayOfWeek]) return; 
+    e.preventDefault(); 
+    hintText.innerText = "Infusing Merit..."; 
+    hintText.style.color = "#fff"; 
+    if (reqAnimId) cancelAnimationFrame(reqAnimId);
+    startTime = null; 
+    reqAnimId = requestAnimationFrame(drawProgress); 
+}
+
     function cancelPress() { if (db.weekRecord[currentDayOfWeek]) return; cancelAnimationFrame(reqAnimId); progCircle.style.strokeDashoffset = 289; hintText.innerText = "Hold to Complete"; hintText.style.color = "var(--cyan)"; }
     
     function completeTodayTask() {

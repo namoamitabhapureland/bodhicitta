@@ -5,230 +5,234 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>無相懺 ． 琉璃洗心</title>
     <style>
-        :root { --bg: #000; --gold: #f3e5ab; --cyan: #8ba89c; }
+        :root { --bg: #000; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c; }
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; outline: none; }
         body { background: var(--bg); font-family: "PingFang TC", serif; overflow: hidden; touch-action: none; width: 100vw; height: 100dvh; color: #fff; }
 
-        /* UI 殼：承襲主系統美學 */
-        .back-btn { position: absolute; top: 20px; left: 20px; z-index: 1000; color: var(--gold); display: flex; align-items: center; gap: 8px; cursor: pointer; background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3); backdrop-filter: blur(5px); font-size: 0.9rem; }
-        #status-panel { position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px; border-left: 2px solid var(--cyan); padding: 10px 20px; z-index: 100; pointer-events: none; opacity: 0; transition: 1.5s; }
-        .s-title { font-size: 1.1rem; font-weight: bold; color: var(--cyan); letter-spacing: 2px; margin-bottom: 5px; }
-        .s-desc { font-size: 0.8rem; color: #bbb; line-height: 1.6; }
+        /* 畫布層 */
+        canvas { position: absolute; inset: 0; }
+        #starCanvas { z-index: 1; }
+        #waterCanvas { z-index: 2; opacity: 0.8; }
 
-        /* 畫布：八功德水 */
-        canvas { position: absolute; inset: 0; z-index: 1; }
+        /* 1. 大光芒爆發過場 */
+        #burst-light { position: fixed; top: 50%; left: 50%; width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 0 100px 50px #fff, 0 0 200px 100px var(--gold); transform: translate(-50%, -50%) scale(0); opacity: 0; z-index: 9999; pointer-events: none; transition: transform 1.2s cubic-bezier(0.8, 0, 0.2, 1), opacity 0.8s; }
 
-        /* 過場光球 */
-        #warp-light { position: fixed; inset: 0; background: #fff; z-index: 9999; opacity: 0; pointer-events: none; }
+        /* 第一頁 UI */
+        #page-1 { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; }
+        .p1-title { color: var(--gold); font-size: 1.6rem; letter-spacing: 12px; font-weight: bold; text-shadow: 0 0 25px rgba(212,175,55,0.8); margin-bottom: 20px; }
+        .p1-sub { color: #888; font-size: 0.9rem; letter-spacing: 5px; animation: breath 2s infinite alternate; }
+        @keyframes breath { from { opacity: 0.2; } to { opacity: 1; } }
 
-        /* 第一頁文字 */
-        #p1-ui { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; }
-        .p1-title { color: var(--gold); font-size: 1.5rem; letter-spacing: 10px; font-weight: bold; text-shadow: 0 0 20px rgba(212,175,55,0.8); margin-bottom: 15px; }
-        .p1-sub { color: #888; font-size: 0.85rem; letter-spacing: 5px; animation: breath 2s infinite alternate; }
-        @keyframes breath { from { opacity: 0.3; } to { opacity: 1; } }
-
-        /* 第二頁：卡片層 */
+        /* 第二頁 UI */
         #page-2 { position: absolute; inset: 0; z-index: 20; display: none; }
-        .g-card { 
-            position: absolute; width: 260px; height: 380px; left: 50%; top: 45%; margin: -190px 0 0 -130px; 
-            background: rgba(255,255,255,0.05); border-radius: 24px; padding: 30px;
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.1);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: all 1s cubic-bezier(0.15, 0.85, 0.35, 1); cursor: pointer;
-        }
         
-        /* 漂浮態 (無字) */
-        .floating { transform: scale(0.4) rotateX(60deg) translateY(200px); opacity: 0.8; z-index: 5; }
-        /* 飛出態 (顯字) */
-        .active-card { transform: scale(1) rotateX(0deg) translateY(0); opacity: 1; z-index: 100; cursor: default; }
-        .shatter { opacity: 0; transform: scale(1.2) translateY(-100px); filter: brightness(2) blur(10px); pointer-events: none; }
+        /* 狀態面板與返回鍵 (Page 2 才出現) */
+        .back-btn { position: absolute; top: 20px; left: 20px; z-index: 1000; color: var(--gold); display: flex; align-items: center; gap: 8px; cursor: pointer; background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3); backdrop-filter: blur(5px); font-size: 0.9rem; }
+        #status-panel { position: absolute; top: 75px; left: 5%; width: 90%; max-width: 320px; border-left: 2px solid var(--cyan); padding: 10px 20px; z-index: 100; pointer-events: none; }
 
-        .n-border { position: absolute; inset: 0; border-radius: 24px; padding: 2px; background: linear-gradient(135deg, var(--c1), var(--c2), var(--c3)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: flow 4s linear infinite; }
-        @keyframes flow { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+        /* 四種眼睛的向量容器 */
+        #eyes-container { position: absolute; inset: 0; z-index: 30; display: flex; justify-content: center; align-items: center; pointer-events: none; }
+        .eye-icon { position: absolute; width: 60px; height: 60px; pointer-events: auto; cursor: pointer; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); filter: drop-shadow(0 0 10px var(--cyan)); opacity: 0.8; }
+        .eye-icon:active { transform: scale(0.85); }
+        .eye-icon.hidden { opacity: 0; transform: scale(0) rotate(180deg); pointer-events: none; }
 
-        .c-inner { opacity: 0; text-align: center; transition: 0.8s 0.5s; }
-        .active-card .c-inner { opacity: 1; }
-        .c-type { color: rgba(255,255,255,0.4); font-size: 0.7rem; letter-spacing: 4px; margin-bottom: 15px; font-weight: bold; }
-        .c-title { color: #fff; font-size: 1.3rem; font-weight: bold; letter-spacing: 3px; margin-bottom: 25px; }
-        .c-desc { color: #ccc; font-size: 0.9rem; line-height: 2; text-align: justify; }
+        /* 琉璃洗心卡 */
+        #card-wrap { position: absolute; inset: 0; z-index: 100; display: flex; justify-content: center; align-items: center; pointer-events: none; perspective: 1000px; }
+        .g-card { position: absolute; width: 280px; height: 400px; background: rgba(255,255,255,0.03); border-radius: 28px; padding: 35px; backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 20px rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transform: scale(0.5) translateY(100px) rotateX(45deg); transition: all 1s cubic-bezier(0.15, 0.85, 0.35, 1); border: 1px solid rgba(255,255,255,0.1); }
+        .g-card.active { opacity: 1; transform: scale(1) translateY(0) rotateX(0deg); pointer-events: auto; }
+        
+        /* 文字消融動畫 */
+        .c-inner { text-align: center; transition: filter 1.5s, opacity 1.5s; }
+        .c-inner.dissolving { filter: blur(20px); opacity: 0; transform: translateY(-20px); }
 
-        /* 洗滌按鈕 */
-        #wash-zone { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; opacity: 0; transition: 0.5s; pointer-events: none; z-index: 200; }
+        .c-type { color: rgba(255,255,255,0.4); font-size: 0.75rem; letter-spacing: 5px; margin-bottom: 20px; font-weight: bold; }
+        .c-title { color: #fff; font-size: 1.4rem; font-weight: bold; letter-spacing: 4px; margin-bottom: 30px; }
+        .c-desc { color: #bbb; font-size: 0.95rem; line-height: 2.2; text-align: justify; }
+
+        /* 洗滌控制 */
+        #wash-zone { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; opacity: 0; transition: 0.8s; pointer-events: none; z-index: 110; }
         #wash-zone.show { opacity: 1; pointer-events: auto; }
-        .w-btn { width: 80px; height: 80px; border-radius: 50%; border: 1.5px dashed rgba(255,255,255,0.4); position: relative; cursor: pointer; display: flex; justify-content: center; align-items: center; }
-        .w-core { width: 30px; height: 30px; border-radius: 50%; background: #fff; box-shadow: 0 0 20px #fff; }
+        .w-btn { width: 80px; height: 80px; border-radius: 50%; position: relative; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .w-core { width: 32px; height: 32px; border-radius: 50%; background: #fff; box-shadow: 0 0 20px #fff, 0 0 40px var(--cyan); transition: 0.4s; }
+        .w-btn:active .w-core { transform: scale(0.8); filter: brightness(1.5); }
         .w-prog { position: absolute; inset: -5px; transform: rotate(-90deg); }
-        .w-text { margin-top: 15px; font-size: 0.75rem; color: var(--cyan); letter-spacing: 3px; }
+        .w-txt { margin-top: 15px; font-size: 0.8rem; color: var(--cyan); letter-spacing: 3px; font-weight: bold; }
 
-        #end-msg { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 2s; text-align: center; }
+        /* 昇華光塵 */
+        .dust { position: fixed; border-radius: 50%; pointer-events: none; mix-blend-mode: screen; z-index: 9999; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-    <div class="back-btn" onclick="location.href='index.html?screen=3'">返回道場</div>
-
-    <div id="status-panel">
-        <div class="s-title">無相懺 ． 琉璃洗心</div>
-        <div class="s-desc">「罪從心起將心懺，心若滅時罪亦亡。」<br>洗滌塵垢，復本清明。</div>
-    </div>
-
+    <canvas id="starCanvas"></canvas>
     <canvas id="waterCanvas"></canvas>
-    <div id="warp-light"></div>
+    <div id="burst-light"></div>
 
-    <div id="page-1" onclick="toPage2()">
-        <div id="p1-ui">
-            <div class="p1-title">八功德水 ． 照心</div>
-            <div class="p1-sub">輕觸水面入陣</div>
-        </div>
+    <!-- PAGE 1: 啟程 -->
+    <div id="page-1" onclick="triggerBurst()">
+        <div class="p1-title">琉璃洗心 ． 照心鏡</div>
+        <div class="p1-sub">輕觸螢幕 ． 破繭入陣</div>
     </div>
 
+    <!-- PAGE 2: 洗心 -->
     <div id="page-2">
-        <div id="card-layer"></div>
+        <div class="back-btn" onclick="location.href='index.html?screen=3'">返回道場</div>
+        <div id="status-panel">
+            <div class="s-title">四眼覺照 ． 塵垢昇華</div>
+            <div class="s-desc">點擊水面浮現之覺眼，引導深層心垢飛出，長按法水明點進行淨化。</div>
+        </div>
+
+        <div id="eyes-container">
+            <!-- 四種覺眼 SVG (向量圖形) -->
+            <svg class="eye-icon" style="top:30%; left:35%;" onclick="popCard(0)" viewBox="0 0 100 100"><path d="M10 50 Q50 10 90 50 Q50 90 10 50 Z" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="50" cy="50" r="15" fill="currentColor"/></svg>
+            <svg class="eye-icon" style="top:35%; right:30%;" onclick="popCard(1)" viewBox="0 0 100 100"><path d="M10 50 C20 20 80 20 90 50 C80 80 20 80 10 50 Z" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="50" cy="50" r="12" stroke="currentColor" fill="none" stroke-width="2"/><circle cx="50" cy="50" r="5" fill="currentColor"/></svg>
+            <svg class="eye-icon" style="bottom:40%; left:25%;" onclick="popCard(2)" viewBox="0 0 100 100"><path d="M10 50 Q50 -10 90 50 Q50 110 10 50" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="5 3"/><circle cx="50" cy="50" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M40 50 L60 50 M50 40 L50 60" stroke="currentColor" stroke-width="2"/></svg>
+            <svg class="eye-icon" style="bottom:35%; right:20%;" onclick="popCard(3)" viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" fill="none" stroke="currentColor" stroke-width="2"/><path d="M25 50 Q50 20 75 50 Q50 80 25 50" fill="currentColor" opacity="0.3"/><circle cx="50" cy="50" r="8" fill="currentColor"/></svg>
+        </div>
+
+        <div id="card-wrap">
+            <div class="g-card" id="main-card">
+                <div class="c-inner" id="card-inner">
+                    <div class="c-type" id="ui-type"></div>
+                    <div class="c-title" id="ui-title"></div>
+                    <div class="c-desc" id="ui-desc"></div>
+                </div>
+            </div>
+        </div>
+
         <div id="wash-zone">
             <div class="w-btn" id="w-btn">
-                <svg class="w-prog" width="90" height="90"><circle id="prog-c" cx="45" cy="45" r="42" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round"/></svg>
+                <svg class="w-prog" width="90" height="90"><circle id="prog-c" cx="45" cy="45" r="42" fill="none" stroke="#fff" stroke-width="4" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round"/></svg>
                 <div class="w-core"></div>
             </div>
-            <div class="w-text">長按洗滌 ． 塵垢昇華</div>
-        </div>
-        <div id="end-msg">
-            <div style="color:var(--gold); font-size:1.5rem; letter-spacing:8px; margin-bottom:20px;">心垢消融</div>
-            <div style="color:#aaa; font-size:0.9rem; letter-spacing:2px;">心若無塵 ． 法界自明</div>
+            <div class="w-txt" id="w-txt">長按洗滌 ． 塵垢昇華</div>
         </div>
     </div>
 
 <script>
-    // --- 核心：彩色流體水波渲染 ---
-    const canvas = document.getElementById('waterCanvas'), ctx = canvas.getContext('2d');
-    let w, h, time = 0;
-    function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
-    window.addEventListener('resize', resize); resize();
+    // --- 1. 彩色星空引擎 (中、小、彩) ---
+    const sCvs = document.getElementById('starCanvas'), sCtx = sCvs.getContext('2d');
+    let sw, sh, stars = [];
+    const CLRS = ['#f3e5ab', '#ffffff', '#89CFF0', '#C9A0DC', '#ff9a9e'];
+    function resS() { sw = sCvs.width = window.innerWidth; sh = sCvs.height = window.innerHeight; }
+    window.addEventListener('resize', resS); resS();
+    for(let i=0; i<300; i++) stars.push({ x:Math.random()*2000-1000, y:Math.random()*2000-1000, z:Math.random()*2000, c:CLRS[i%5], s:Math.random()*1.5+0.5 });
+    function drawS() {
+        sCtx.fillStyle = '#000'; sCtx.fillRect(0,0,sw,sh); sCtx.globalCompositeOperation = 'screen';
+        stars.forEach(s => {
+            s.z -= 0.5; if(s.z<=0) s.z=2000;
+            let sc = 400/(400+s.z);
+            sCtx.beginPath(); sCtx.arc(sw/2+s.x*sc, sh/2+s.y*sc, s.s*sc*1.5, 0, Math.PI*2);
+            sCtx.fillStyle = s.c; sCtx.globalAlpha = Math.min(1, sc*2); sCtx.fill();
+        });
+        sCtx.globalCompositeOperation = 'source-over'; requestAnimationFrame(drawS);
+    } drawS();
 
-    // 模擬彩色功德水：使用多個重疊的色彩頻譜
-    function drawWater() {
-        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
-        time += 0.005;
-
-        for (let i = 0; i < 3; i++) { // 三層波浪疊加
-            ctx.beginPath();
-            let shift = i * 2;
-            let grad = ctx.createLinearGradient(0, 0, w, h);
-            // 隨時間變化的彩色漸層
-            let hue1 = Math.sin(time) * 30 + 190; // 青色系
-            let hue2 = Math.cos(time) * 30 + 45;  // 金色系
-            grad.addColorStop(0, `hsla(${hue1}, 70%, 20%, 0.4)`);
-            grad.addColorStop(0.5, `hsla(${hue2}, 60%, 30%, 0.3)`);
-            grad.addColorStop(1, `hsla(${hue1 + 40}, 80%, 15%, 0.5)`);
-            
-            ctx.fillStyle = grad;
-
-            // 繪製立體晃動感：使用多重正弦波
-            for (let x = 0; x <= w; x += 5) {
-                let y = Math.sin(x * 0.005 + time + shift) * 40 
-                      + Math.sin(x * 0.01 - time * 2) * 20 
-                      + (h * 0.6) 
-                      + Math.cos(time + i) * 30;
-                if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    // --- 2. 彩色立體波浪引擎 (八功德水) ---
+    const wCvs = document.getElementById('waterCanvas'), wCtx = wCvs.getContext('2d');
+    let ww, wh, wTime = 0;
+    function resW() { ww = wCvs.width = window.innerWidth; wh = wCvs.height = window.innerHeight; }
+    window.addEventListener('resize', resW); resW();
+    function drawW() {
+        wTime += 0.005; wCtx.clearRect(0,0,ww,wh);
+        for (let i = 0; i < 3; i++) {
+            wCtx.beginPath();
+            let grad = wCtx.createLinearGradient(0, 0, ww, wh);
+            grad.addColorStop(0, `hsla(${190 + i*20}, 70%, 20%, 0.3)`);
+            grad.addColorStop(0.5, `hsla(${45 + i*15}, 60%, 30%, 0.2)`);
+            grad.addColorStop(1, `hsla(${230 + i*10}, 80%, 15%, 0.4)`);
+            wCtx.fillStyle = grad;
+            for (let x = 0; x <= ww; x += 10) {
+                let y = Math.sin(x*0.005 + wTime + i)*40 + Math.cos(x*0.01 - wTime*2)*20 + (wh*0.65) + Math.cos(wTime+i)*30;
+                if (x === 0) wCtx.moveTo(x, y); else wCtx.lineTo(x, y);
             }
-            ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.fill();
+            wCtx.lineTo(ww, wh); wCtx.lineTo(0, wh); wCtx.fill();
         }
-        
-        // 頂部反光：增加琉璃感
-        ctx.globalCompositeOperation = 'screen';
-        ctx.fillStyle = 'rgba(255,255,255,0.05)';
-        ctx.beginPath();
-        ctx.ellipse(w/2, h*0.5, w*0.8, h*0.2, 0, 0, Math.PI*2);
-        ctx.fill();
-        ctx.globalCompositeOperation = 'source-over';
+        requestAnimationFrame(drawW);
+    } drawW();
 
-        requestAnimationFrame(drawWater);
-    }
-    drawWater();
-
-    // --- 機制：卡片庫與邏輯 ---
+    // --- 3. 爆發過場與卡片邏輯 ---
     const DB = [
-        { t: "語業之垢", h: "妄語惡言", d: "今日是否曾因情緒，以言語傷人、抱怨、誇大其詞，或說人是非？", c: "--c1:#ff9a9e;--c2:#fecfef;--c3:#fccb90" },
-        { t: "意業之垢", h: "瞋恚結怨", d: "今日是否曾因外境不順，於心中生起怒火，懷忿不捨，遲遲不願放下？", c: "--c1:#a18cd1;--c2:#fbc2eb;--c3:#e0c3fc" },
-        { t: "意業之垢", h: "傲慢自讚", d: "今日是否曾於心中暗自比較，覺得他人不如自己，甚至為了面子自讚毀他？", c: "--c1:#f6d365;--c2:#fda085;--c3:#f3e5ab" },
-        { t: "身業之垢", h: "貪吝不捨", d: "今日是否在應當付出或助人時，生起慳吝之心，不願給予方便？", c: "--c1:#84fab0;--c2:#8fd3f4;--c3:#8ba89c" },
-        { t: "意業之垢", h: "懈怠散亂", d: "今日是否耽溺於無意義的娛樂，荒廢了定課，任由時光虛度？", c: "--c1:#cfd9df;--c2:#e2ebf0;--c3:#ffffff" }
+        { t: "語業之垢", h: "妄語惡言", d: "今日是否曾因情緒或利益，以言語傷人、抱怨、誇大其詞，或於背後說人是非？" },
+        { t: "意業之垢", h: "瞋恚結怨", d: "今日是否曾因外境不順，於心中生起怒火，甚至懷忿不捨，遲遲不願放下？" },
+        { t: "意業之垢", h: "傲慢自讚", d: "今日是否曾於心中暗自比較，覺得他人不如自己，甚至為了面子而自讚毀他？" },
+        { t: "身業之垢", h: "貪吝不捨", d: "今日是否在應當付出資源時，生起慳吝之心，不願給予他人方便？" }
     ];
-    let cardsLeft = DB.length, activeIdx = -1;
+    let curIdx = -1;
 
-    function toPage2() {
-        const light = document.getElementById('warp-light');
-        light.style.opacity = '1';
+    function triggerBurst() {
+        const light = document.getElementById('burst-light');
+        light.style.opacity = '1'; light.style.transform = 'translate(-50%, -50%) scale(250)';
         setTimeout(() => {
             document.getElementById('page-1').style.display = 'none';
             document.getElementById('page-2').style.display = 'block';
-            document.getElementById('status-panel').style.opacity = '1';
-            initCards();
             light.style.opacity = '0';
-            light.style.transition = '2s';
-        }, 300);
+        }, 1000);
     }
 
-    function initCards() {
-        const layer = document.getElementById('card-layer');
-        layer.innerHTML = DB.map((x, i) => `
-            <div class="g-card floating" id="c-${i}" onclick="zoomCard(${i})">
-                <div class="n-border" style="${x.c}"></div>
-                <div class="c-inner">
-                    <div class="c-type">${x.t}</div>
-                    <div class="c-title">${x.h}</div>
-                    <div class="c-desc">${x.d}</div>
-                </div>
-            </div>
-        `).join('');
-        // 隨機錯開漂浮位置
-        DB.forEach((_, i) => {
-            const c = document.getElementById(`c-${i}`);
-            c.style.left = (30 + Math.random() * 40) + '%';
-            c.style.top = (40 + Math.random() * 20) + '%';
-        });
+    function popCard(idx) {
+        if(curIdx !== -1) return;
+        curIdx = idx;
+        const card = document.getElementById('main-card');
+        const inner = document.getElementById('card-inner');
+        const eye = document.querySelectorAll('.eye-icon')[idx];
+        
+        eye.classList.add('hidden');
+        document.getElementById('ui-type').innerText = DB[idx].t;
+        document.getElementById('ui-title').innerText = DB[idx].h;
+        document.getElementById('ui-desc').innerText = DB[idx].d;
+        
+        inner.classList.remove('dissolving');
+        card.classList.add('active');
+        setTimeout(() => { document.getElementById('wash-zone').classList.add('show'); }, 800);
     }
 
-    function zoomCard(i) {
-        if (activeIdx !== -1) return;
-        activeIdx = i;
-        const c = document.getElementById(`c-${i}`);
-        c.className = 'g-card active-card';
-        c.style.left = '50%'; c.style.top = '45%';
-        document.getElementById('wash-zone').classList.add('show');
-    }
-
-    // --- 長按洗滌邏輯 ---
+    // --- 4. 長按洗滌與消融動畫 ---
     const wBtn = document.getElementById('w-btn'), prog = document.getElementById('prog-c');
     let timer, startT;
 
     function onDown(e) {
-        if (activeIdx === -1) return;
-        e.preventDefault();
-        startT = Date.now();
+        if(curIdx === -1) return;
+        e.preventDefault(); startT = Date.now();
         timer = setInterval(() => {
             let p = Math.min((Date.now() - startT) / 2000, 1);
             prog.style.strokeDashoffset = 264 - (264 * p);
             if (p >= 1) complete();
         }, 30);
     }
-
     function onUp() { clearInterval(timer); prog.style.strokeDashoffset = 264; }
 
     function complete() {
         clearInterval(timer);
-        const c = document.getElementById(`c-${activeIdx}`);
-        c.classList.add('shat');
+        const card = document.getElementById('main-card');
+        const inner = document.getElementById('card-inner');
+        
+        inner.classList.add('dissolving'); // 文字消融動畫啟動
+        genDust(); // 發射昇華粒子
         document.getElementById('wash-zone').classList.remove('show');
         
         setTimeout(() => {
-            c.remove();
-            activeIdx = -1; cardsLeft--;
-            if (cardsLeft <= 0) {
-                document.getElementById('end-msg').style.opacity = '1';
-                setTimeout(() => location.href='index.html?screen=3', 4000);
+            card.classList.remove('active');
+            curIdx = -1;
+            prog.style.strokeDashoffset = 264;
+            // 檢查是否全空
+            if(document.querySelectorAll('.eye-icon:not(.hidden)').length === 0) {
+                setTimeout(() => { alert("洗心圓滿，復本清淨。"); location.href='index.html?screen=3'; }, 1000);
             }
-        }, 1000);
+        }, 1500);
+    }
+
+    function genDust() {
+        const rc = document.getElementById('main-card').getBoundingClientRect();
+        for(let i=0; i<40; i++) {
+            let d = document.createElement('div'); d.className = 'dust'; 
+            d.style.left = rc.left + Math.random()*rc.width + 'px'; d.style.top = rc.top + Math.random()*rc.height + 'px';
+            let s = Math.random()*6 + 2; d.style.width = s + 'px'; d.style.height = s + 'px';
+            d.style.background = CLRS[Math.floor(Math.random()*5)]; d.style.boxShadow = `0 0 10px #fff`;
+            document.body.appendChild(d);
+            d.animate([{opacity: 1, transform: 'translate(0,0) scale(1)'}, {opacity: 0, transform: `translate(${(Math.random()-0.5)*150}px, -300px) scale(0)`}], {duration: 2500, easing: 'ease-out', fill: 'forwards'});
+            setTimeout(() => d.remove(), 2600);
+        }
     }
 
     wBtn.addEventListener('mousedown', onDown); wBtn.addEventListener('touchstart', onDown);

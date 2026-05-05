@@ -17,6 +17,7 @@
         canvas { position: absolute; inset: 0; }
         #starCanvas { z-index: 1; pointer-events: none; }
         #waterCanvas { z-index: 2; mix-blend-mode: screen; opacity: 0.85; pointer-events: none; }
+        #rainCanvas { z-index: 9998; pointer-events: none; opacity: 0; transition: opacity 1s; mix-blend-mode: screen; }
 
         /* 光芒閃爆遮罩 */
         #flash-overlay { position: fixed; inset: 0; background: radial-gradient(circle, #fff 0%, #e0f7fa 50%, transparent 100%); opacity: 0; z-index: 9999; pointer-events: none; transition: opacity 0.8s; mix-blend-mode: screen; }
@@ -44,25 +45,28 @@
         .theory-btn { position: absolute; top: 20px; right: 20px; z-index: 1000; color: var(--cyan); display: flex; align-items: center; gap: 6px; cursor: pointer; background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(139,168,156,0.3); backdrop-filter: blur(5px); font-size: 0.85rem; letter-spacing: 1px; }
         .theory-btn:active { transform: scale(0.95); }
 
-        /* ================= 核心：放大一倍的手繪感行者 SVG ================= */
+        /* ================= 核心：發光呼吸與位置下移 ================= */
         #meditator-layer { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: none; }
         
         .meditator-container {
             width: 320px; 
             height: 320px; 
             cursor: pointer; pointer-events: auto;
-            animation: float-meditator 5s ease-in-out infinite alternate;
+            margin-top: 20px; /* 往下移近提示文字 */
+            animation: breathe-scale 5s ease-in-out infinite alternate;
             transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
-            margin-top: -60px;
         }
         
-        .meditator-svg { width: 100%; height: 100%; animation: breathe-glow 4s ease-in-out infinite alternate; }
-        .meditator-container:active { transform: scale(0.95); }
+        .meditator-svg { width: 100%; height: 100%; }
+        .meditator-container:active { transform: scale(0.95) !important; animation: none; filter: brightness(1.5); }
 
-        @keyframes float-meditator { 0% { transform: translateY(0px); } 100% { transform: translateY(-20px); } }
-        @keyframes breathe-glow { 0% { opacity: 0.85; } 100% { opacity: 1; } }
+        /* 行者與蓮花整體的放大縮小與光芒呼吸 */
+        @keyframes breathe-scale { 
+            0% { transform: translateY(0px) scale(0.95); filter: drop-shadow(0 0 15px rgba(243,229,171,0.3)); } 
+            100% { transform: translateY(-15px) scale(1.03); filter: drop-shadow(0 0 35px rgba(243,229,171,0.8)); } 
+        }
 
-        .hint-text { margin-top: 10px; color: var(--gold); font-size: 0.85rem; letter-spacing: 5px; opacity: 0.7; animation: breath 2s infinite alternate; pointer-events: none; }
+        .hint-text { margin-top: 15px; color: var(--gold); font-size: 0.85rem; letter-spacing: 5px; opacity: 0.7; animation: breath 2s infinite alternate; pointer-events: none; }
 
         /* ================= 儀軌閱讀彈框 (經卷) ================= */
         #rules-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 9999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.4s; }
@@ -102,6 +106,7 @@
 
     <canvas id="starCanvas"></canvas>
     <canvas id="waterCanvas"></canvas>
+    <canvas id="rainCanvas"></canvas>
     <div id="flash-overlay"></div>
 
     <!-- 頁面 1: 啟程 -->
@@ -147,15 +152,6 @@
                             <stop offset="100%" stop-color="#5c4300" />
                         </linearGradient>
 
-                        <!-- 發光濾鏡 -->
-                        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                            <feGaussianBlur stdDeviation="3" result="blur" />
-                            <feMerge>
-                                <feMergeNode in="blur" />
-                                <feMergeNode in="SourceGraphic" />
-                            </feMerge>
-                        </filter>
-
                         <!-- 精準重構：縮小且帶雙重框線的蓮花瓣 -->
                         <g id="petal">
                             <!-- 外圈花瓣 -->
@@ -172,7 +168,7 @@
                     </defs>
 
                     <!-- 1. 蓮花底座：後方 4 瓣 -->
-                    <g filter="url(#glow)">
+                    <g>
                         <use href="#petal-back" transform="translate(60, 138) scale(0.9) rotate(-35)" />
                         <use href="#petal-back" transform="translate(140, 138) scale(0.9) rotate(35)" />
                         <use href="#petal-back" transform="translate(80, 132) scale(0.95) rotate(-15)" />
@@ -180,7 +176,7 @@
                     </g>
 
                     <!-- 2. 行者剪影 (人完全不動，與上版本一致) -->
-                    <g fill="url(#goldGrad)" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#glow)">
+                    <g fill="url(#goldGrad)" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
                         <path d="
                             M 100 24
                             C 114 24, 114 52, 105 56
@@ -195,10 +191,10 @@
                         " />
                     </g>
                     <!-- 袈裟白色弧線 (人完全不動) -->
-                    <path d="M 122 75 C 105 95, 105 120, 80 134" stroke="#ffffff" stroke-width="2.5" fill="none" opacity="0.9" filter="url(#glow)"/>
+                    <path d="M 122 75 C 105 95, 105 120, 80 134" stroke="#ffffff" stroke-width="2.5" fill="none" opacity="0.9" />
 
                     <!-- 3. 蓮花底座：前方 5 瓣 -->
-                    <g filter="url(#glow)">
+                    <g>
                         <!-- 最外側兩瓣，完全縮入 viewBox 以防破格 -->
                         <use href="#petal" transform="translate(42, 148) scale(0.9) rotate(-55)" />
                         <use href="#petal" transform="translate(158, 148) scale(0.9) rotate(55)" />
@@ -260,19 +256,36 @@
     </div>
 
 <script>
-    // --- 星空與推進引擎 ---
+    // --- 星空與推進引擎 (星空不覆蓋水面，增加多色彩與大小) ---
     const canvas = document.getElementById('starCanvas'); const ctx = canvas.getContext('2d');
     let width, height, stars = [], warpSpeed = 0.5, starScale = 1; 
     function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
     window.addEventListener('resize', resize); resize();
-    const STAR_COLORS = ['#8ba89c', '#ffffff', '#e0f7fa', '#b2dfdb'];
-    for (let i = 0; i < 200; i++) { stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)], s: Math.random() * 2 + 1 }); }
+    
+    // 多變法界色彩
+    const STAR_COLORS = ['#8ba89c', '#ffffff', '#f3e5ab', '#ff9a9e', '#b2dfdb', '#C9A0DC', '#ffeb3b'];
+    for (let i = 0; i < 250; i++) { 
+        stars.push({ 
+            x: (Math.random() - 0.5) * 2000, 
+            y: (Math.random() - 0.5) * 2000, 
+            z: Math.random() * 2000, 
+            color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)], 
+            s: Math.random() * 2.5 + 0.5 // 大小不一
+        }); 
+    }
+    
     function renderStars() {
         ctx.fillStyle = 'rgba(2, 2, 4, 0.4)'; ctx.fillRect(0, 0, width, height); ctx.globalCompositeOperation = 'screen';
         stars.forEach(s => {
             s.z -= warpSpeed; if (s.z <= 0) { s.z = 2000; s.x = (Math.random() - 0.5) * 2000; s.y = (Math.random() - 0.5) * 2000; } 
-            let sc = 400 / (400 + s.z); ctx.beginPath(); 
-            ctx.arc((width / 2) + s.x * sc, (height / 2) + s.y * sc, s.s * sc * starScale, 0, Math.PI * 2);
+            let sc = 400 / (400 + s.z); 
+            
+            // 計算 Y 軸位置，限制星星只在「天空」出現，不畫在水面上 (大約高度 55% 以下不畫)
+            let drawY = (height / 2) + s.y * sc;
+            if (drawY > height * 0.55) return; 
+
+            ctx.beginPath(); 
+            ctx.arc((width / 2) + s.x * sc, drawY, s.s * sc * starScale, 0, Math.PI * 2);
             ctx.fillStyle = s.color; ctx.globalAlpha = Math.min(1, sc * 2.5); ctx.fill(); ctx.globalAlpha = 1;
         });
         ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(renderStars);
@@ -305,6 +318,40 @@
         requestAnimationFrame(drawW);
     } drawW();
 
+    // --- 洗滌大雨特效 ---
+    const rCvs = document.getElementById('rainCanvas'), rCtx = rCvs.getContext('2d');
+    let rw, rh, drops = [], raining = false;
+    function initRain() {
+        rw = rCvs.width = window.innerWidth; rh = rCvs.height = window.innerHeight;
+        drops = [];
+        for(let i=0; i<300; i++) drops.push({x: Math.random()*rw, y: Math.random()*rh, v: Math.random()*15+15, l: Math.random()*25+15});
+    }
+    window.addEventListener('resize', () => { if(raining) initRain(); });
+    
+    function drawRain() {
+        if(!raining) return;
+        rCtx.clearRect(0,0,rw,rh);
+        rCtx.strokeStyle = 'rgba(255,255,255,0.35)';
+        rCtx.lineWidth = 1.5;
+        rCtx.beginPath();
+        drops.forEach(d => {
+            rCtx.moveTo(d.x, d.y);
+            rCtx.lineTo(d.x - d.v*0.1, d.y + d.v); 
+            d.y += d.v; d.x -= d.v*0.1;
+            if(d.y > rh) { d.y = -d.l; d.x = Math.random()*rw; }
+        });
+        rCtx.stroke();
+        requestAnimationFrame(drawRain);
+    }
+
+    function startRain() {
+        if(!raining) { raining = true; initRain(); drawRain(); document.getElementById('rainCanvas').style.opacity = '1'; }
+    }
+    function stopRain() {
+        document.getElementById('rainCanvas').style.opacity = '0';
+        setTimeout(() => { raining = false; }, 1000);
+    }
+
     // --- 漣漪與極速下沉爆發過場 ---
     let hasEntered = false;
     function executeEntryWarp(e) {
@@ -335,19 +382,30 @@
     const TOTAL_MS = 24 * 60 * 60 * 1000; 
     let timerInterval;
 
-    function openRules() { document.getElementById('rules-modal').classList.add('show'); }
-    function closeRules() { document.getElementById('rules-modal').classList.remove('show'); }
+    function openRules() { 
+        document.getElementById('rules-modal').classList.add('show'); 
+        startRain(); // 點擊行者，降下洗滌大雨
+    }
+    
+    function closeRules() { 
+        document.getElementById('rules-modal').classList.remove('show'); 
+        stopRain(); // 關閉時雨歇
+    }
 
     function startPrecepts() {
         closeRules();
+        stopRain();
         localStorage.setItem('pureland_8precepts_start', Date.now());
         
         document.getElementById('meditator-hint').style.display = 'none';
         document.querySelector('.meditator-container').style.transform = 'scale(0.5) translateY(-200px)'; 
         document.querySelector('.meditator-container').style.opacity = '0.3';
-        document.querySelector('.meditator-container').style.pointerEvents = 'none'; // 鎖定點擊
-        document.getElementById('timer-layer').style.display = 'flex';
+        document.querySelector('.meditator-container').style.pointerEvents = 'none';
         
+        // 停止呼吸動畫，保持縮小狀態
+        document.querySelector('.meditator-container').style.animation = 'none';
+        
+        document.getElementById('timer-layer').style.display = 'flex';
         runTimer();
     }
 
@@ -358,6 +416,7 @@
             document.querySelector('.meditator-container').style.transform = 'scale(0.5) translateY(-200px)';
             document.querySelector('.meditator-container').style.opacity = '0.3';
             document.querySelector('.meditator-container').style.pointerEvents = 'none';
+            document.querySelector('.meditator-container').style.animation = 'none';
             document.getElementById('timer-layer').style.display = 'flex';
             runTimer();
         }

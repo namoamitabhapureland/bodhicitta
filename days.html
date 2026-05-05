@@ -7,17 +7,17 @@
     <style>
         :root { --bg: #000; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c; }
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; outline: none; }
-        body { background: var(--bg); font-family: "PingFang TC", serif; overflow: hidden; touch-action: none; width: 100vw; height: 100dvh; color: #fff; }
+        body { background: var(--bg); font-family: "PingFang TC", serif; overflow: hidden; touch-action: none; width: 100vw; height: 100dvh; color: #fff; overscroll-behavior: none; }
 
-        /* 畫布層 (星空與彩色波浪) */
+        /* 畫布層 (星空與彩色水波) */
         canvas { position: absolute; inset: 0; }
         #starCanvas { z-index: 1; }
         #waterCanvas { z-index: 2; mix-blend-mode: screen; opacity: 0.9; pointer-events: none; }
 
-        /* 1. 大光球爆發過場 */
+        /* 1. 大光球吞噬過場 */
         #burst-light { 
             position: fixed; top: 50%; left: 50%; width: 5px; height: 5px; border-radius: 50%; 
-            background: #fff; box-shadow: 0 0 100px 50px #fff, 0 0 250px 150px var(--gold); 
+            background: #fff; box-shadow: 0 0 100px 80px #fff, 0 0 250px 150px var(--gold); 
             transform: translate(-50%, -50%) scale(0); opacity: 0; z-index: 9999; pointer-events: none; 
             transition: transform 1.2s cubic-bezier(0.8, 0, 0.2, 1), opacity 0.8s; 
         }
@@ -31,45 +31,48 @@
         /* PAGE 2: 四眼與洗心 */
         #page-2 { position: absolute; inset: 0; z-index: 20; display: none; }
         
-        /* 返回鍵與狀態 (移至第二頁) */
+        /* 返回鍵與狀態 (僅在第二頁) */
         .back-btn { position: absolute; top: 20px; left: 20px; z-index: 1000; color: var(--gold); display: flex; align-items: center; gap: 8px; cursor: pointer; background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3); backdrop-filter: blur(5px); font-size: 0.9rem; }
         .back-btn:active { transform: scale(0.95); }
         #status-panel { position: absolute; top: 75px; left: 5%; width: 90%; max-width: 320px; border-left: 2px solid var(--cyan); padding: 10px 20px; z-index: 100; pointer-events: none; }
         .s-title { font-size: 1.1rem; font-weight: bold; color: var(--cyan); letter-spacing: 2px; margin-bottom: 8px; text-shadow: 0 2px 6px #000; }
         .s-desc { font-size: 0.85rem; color: #bbb; line-height: 1.8; letter-spacing: 1px; text-shadow: 0 2px 4px #000; }
 
-        /* ================= 核心：四個會呼吸旋轉放光的眼睛 ================= */
-        #eyes-layer { position: absolute; inset: 0; z-index: 30; }
+        /* ================= 核心：四個會呼吸旋轉放光的覺照之眼 ================= */
+        #eyes-layer { position: absolute; inset: 0; z-index: 30; pointer-events: none; }
         .eye-container {
-            position: absolute; width: 65px; height: 65px; cursor: pointer; pointer-events: auto;
-            animation: float-y 4s ease-in-out infinite alternate; /* 上下浮動 */
+            position: absolute; cursor: pointer; pointer-events: auto;
             transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; justify-content: center; align-items: center;
         }
+        /* 眼睛的縮放與旋轉呼吸特效 */
         .eye-svg {
-            width: 100%; height: 100%;
-            animation: spin-breathe 8s linear infinite; /* 旋轉與光芒呼吸 */
+            width: 100%; height: 100%; color: inherit;
+            animation: spin-breathe 6s infinite alternate ease-in-out;
         }
-        .eye-container:active { transform: scale(0.8); }
+        .eye-container:active { transform: scale(0.85); }
         .eye-container.hidden { opacity: 0; transform: scale(0) rotate(180deg); pointer-events: none; }
         
-        /* 賦予四個眼睛不同的動畫延遲與特徵 */
-        #eye-0 { top: 30%; left: 25%; animation-delay: 0s; color: #89CFF0; filter: drop-shadow(0 0 15px #89CFF0); }
-        #eye-0 .eye-svg { animation-duration: 10s; }
-        #eye-1 { top: 45%; right: 20%; animation-delay: -1s; color: #f3e5ab; filter: drop-shadow(0 0 15px #f3e5ab); }
-        #eye-1 .eye-svg { animation-duration: 12s; animation-direction: reverse; }
-        #eye-2 { bottom: 25%; left: 28%; animation-delay: -2s; color: #ff9a9e; filter: drop-shadow(0 0 15px #ff9a9e); }
-        #eye-2 .eye-svg { animation-duration: 14s; }
-        #eye-3 { bottom: 40%; right: 35%; animation-delay: -3s; color: #ffffff; filter: drop-shadow(0 0 15px #ffffff); }
-        #eye-3 .eye-svg { animation-duration: 9s; animation-direction: reverse; }
+        /* 四眼獨立特徵 (樣式相同、大小/顏色/位置/浮動不同) */
+        #eye-0 { width: 55px; height: 55px; top: 25%; left: 25%; color: #8ba89c; animation: float-y 4s ease-in-out infinite alternate; filter: drop-shadow(0 0 15px #8ba89c); }
+        #eye-0 .eye-svg { animation-duration: 7s; }
+        
+        #eye-1 { width: 85px; height: 85px; top: 40%; right: 18%; color: #f3e5ab; animation: float-y 5s ease-in-out infinite alternate-reverse; filter: drop-shadow(0 0 20px #f3e5ab); }
+        #eye-1 .eye-svg { animation-duration: 9s; animation-direction: alternate-reverse; }
+        
+        #eye-2 { width: 65px; height: 65px; bottom: 25%; left: 30%; color: #ff9a9e; animation: float-y 6s ease-in-out infinite alternate; filter: drop-shadow(0 0 15px #ff9a9e); }
+        #eye-2 .eye-svg { animation-duration: 8s; }
+        
+        #eye-3 { width: 100px; height: 100px; bottom: 35%; right: 35%; color: #ffffff; animation: float-y 4.5s ease-in-out infinite alternate-reverse; filter: drop-shadow(0 0 25px #ffffff); }
+        #eye-3 .eye-svg { animation-duration: 10s; animation-direction: alternate-reverse; }
 
-        @keyframes float-y { 0% { margin-top: 0px; } 100% { margin-top: -25px; } }
+        @keyframes float-y { 0% { margin-top: 0px; } 100% { margin-top: -30px; } }
         @keyframes spin-breathe {
-            0% { transform: rotate(0deg) scale(1); filter: brightness(1); }
-            50% { transform: rotate(180deg) scale(1.15); filter: brightness(1.5); }
-            100% { transform: rotate(360deg) scale(1); filter: brightness(1); }
+            0% { transform: rotate(-15deg) scale(0.85); filter: brightness(0.8); }
+            100% { transform: rotate(15deg) scale(1.15); filter: brightness(1.5); }
         }
 
-        /* ================= 洗心卡片 (一開始隱藏) ================= */
+        /* ================= 洗心卡片 ================= */
         #card-wrap { position: absolute; inset: 0; z-index: 100; display: flex; justify-content: center; align-items: center; pointer-events: none; }
         .g-card { 
             position: absolute; width: 280px; height: 420px; 
@@ -78,16 +81,17 @@
             backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
             box-shadow: 0 40px 80px rgba(0,0,0,1), inset 0 0 30px rgba(255,255,255,0.05);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; transform: scale(0.2) translateY(200px); /* 隱藏狀態 */
+            opacity: 0; transform: scale(0.3) translateY(200px); /* 隱藏於深處 */
             transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
+        /* 卡片飛出 */
         .g-card.active { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
         
-        /* ✨ 整張卡片昇華消融特效 ✨ */
+        /* ✨ 核心：整張卡片昇華消融特效 ✨ */
         .g-card.sublimate { 
-            filter: blur(20px) brightness(2); opacity: 0; 
-            transform: translateY(-150px) scale(1.2); 
-            transition: all 1.8s cubic-bezier(0.25, 0.1, 0.25, 1); 
+            filter: blur(25px) brightness(2.5); opacity: 0; 
+            transform: translateY(-200px) scale(1.3); 
+            transition: all 1.5s cubic-bezier(0.25, 0.1, 0.25, 1); 
             pointer-events: none; 
         }
 
@@ -102,27 +106,26 @@
         .c-title { color: #fff; font-size: 1.5rem; font-weight: bold; letter-spacing: 4px; margin-bottom: 30px; }
         .c-desc { color: #ccc; font-size: 1rem; line-height: 2.2; text-align: justify; text-align-last: center; }
 
-        /* 洗滌控制按鈕 */
+        /* ================= 洗滌控制按鈕 ================= */
         #wash-zone { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; opacity: 0; pointer-events: none; transition: 0.8s; z-index: 200; }
         #wash-zone.show { opacity: 1; pointer-events: auto; }
         .w-btn { width: 85px; height: 85px; border-radius: 50%; position: relative; cursor: pointer; display: flex; justify-content: center; align-items: center; }
         .w-core { width: 32px; height: 32px; border-radius: 50%; background: #fff; box-shadow: 0 0 25px #fff, 0 0 50px var(--cyan); transition: 0.4s; }
-        .w-btn:active .w-core { transform: scale(0.85); filter: brightness(1.3); }
+        .w-btn:active .w-core { transform: scale(0.85); filter: brightness(1.5); }
         .w-prog { position: absolute; inset: -5px; transform: rotate(-90deg); pointer-events: none; }
         .w-txt { margin-top: 15px; font-size: 0.85rem; color: var(--cyan); letter-spacing: 3px; font-weight: bold; }
 
-        /* 昇華光塵與圓滿訊息 */
+        /* 光塵與圓滿訊息 */
         .dust { position: fixed; border-radius: 50%; pointer-events: none; mix-blend-mode: screen; z-index: 9999; }
         #final-msg { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 2s; text-align: center; }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-    <!-- 視覺引擎層 -->
     <canvas id="starCanvas"></canvas>
     <canvas id="waterCanvas"></canvas>
     
-    <!-- 大光球過場 -->
+    <!-- 大光球吞噬過場 -->
     <div id="burst-light"></div>
 
     <!-- 頁面 1: 啟程 (無返回鍵) -->
@@ -131,7 +134,7 @@
         <div class="p1-sub">輕觸水面 ． 覺照入陣</div>
     </div>
 
-    <!-- 頁面 2: 水波、四眼、字卡 -->
+    <!-- 頁面 2: 四眼浮水、飛出卡片 -->
     <div id="page-2">
         <div class="back-btn" onclick="location.href='index.html?screen=3'">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
@@ -143,23 +146,39 @@
             <div class="s-desc">點擊水波上漂浮之覺眼，引導心垢顯現；長按法水明點，令其碎裂消融。</div>
         </div>
 
-        <!-- 水面上的四顆眼睛 -->
+        <!-- 水面上的四枚覺眼 (統一樣式 SVG) -->
         <div id="eyes-layer">
+            <!-- 眼 0 -->
             <div class="eye-container" id="eye-0" onclick="popCard(0)">
-                <svg class="eye-svg" viewBox="0 0 100 100"><path d="M10,50 Q50,10 90,50 Q50,90 10,50 Z" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="50" r="15" fill="currentColor"/></svg>
+                <svg class="eye-svg" viewBox="0 0 100 100">
+                    <path d="M10,50 Q50,10 90,50 Q50,90 10,50 Z" fill="none" stroke="currentColor" stroke-width="4"/>
+                    <circle cx="50" cy="50" r="18" fill="currentColor"/>
+                </svg>
             </div>
+            <!-- 眼 1 -->
             <div class="eye-container" id="eye-1" onclick="popCard(1)">
-                <svg class="eye-svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="2"/><path d="M30,50 C40,30 60,30 70,50 C60,70 40,70 30,50 Z" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="50" r="6" fill="currentColor"/></svg>
+                <svg class="eye-svg" viewBox="0 0 100 100">
+                    <path d="M10,50 Q50,10 90,50 Q50,90 10,50 Z" fill="none" stroke="currentColor" stroke-width="4"/>
+                    <circle cx="50" cy="50" r="18" fill="currentColor"/>
+                </svg>
             </div>
+            <!-- 眼 2 -->
             <div class="eye-container" id="eye-2" onclick="popCard(2)">
-                <svg class="eye-svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="8 4"/><circle cx="50" cy="50" r="12" fill="currentColor"/><path d="M50,5 L50,20 M50,80 L50,95 M5,50 L20,50 M80,50 L95,50" stroke="currentColor" stroke-width="3"/></svg>
+                <svg class="eye-svg" viewBox="0 0 100 100">
+                    <path d="M10,50 Q50,10 90,50 Q50,90 10,50 Z" fill="none" stroke="currentColor" stroke-width="4"/>
+                    <circle cx="50" cy="50" r="18" fill="currentColor"/>
+                </svg>
             </div>
+            <!-- 眼 3 -->
             <div class="eye-container" id="eye-3" onclick="popCard(3)">
-                <svg class="eye-svg" viewBox="0 0 100 100"><path d="M20,50 L80,50 M50,20 L50,80" stroke="currentColor" stroke-width="2"/><path d="M30,30 L70,70 M30,70 L70,30" stroke="currentColor" stroke-width="2"/><circle cx="50" cy="50" r="22" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="50" r="5" fill="#fff"/></svg>
+                <svg class="eye-svg" viewBox="0 0 100 100">
+                    <path d="M10,50 Q50,10 90,50 Q50,90 10,50 Z" fill="none" stroke="currentColor" stroke-width="4"/>
+                    <circle cx="50" cy="50" r="18" fill="currentColor"/>
+                </svg>
             </div>
         </div>
 
-        <!-- 隱藏的字卡層 -->
+        <!-- 字卡共用容器 -->
         <div id="card-wrap">
             <div class="g-card" id="main-card">
                 <div class="neon-box" id="ui-neon"></div>
@@ -186,7 +205,7 @@
     </div>
 
 <script>
-    // --- 1. 星空引擎 ---
+    // --- 1. 彩色星空 ---
     const sCvs = document.getElementById('starCanvas'), sCtx = sCvs.getContext('2d');
     let sw, sh, stars = [];
     const CLRS = ['#f3e5ab', '#ffffff', '#89CFF0', '#C9A0DC', '#ff9a9e'];
@@ -202,7 +221,7 @@
         }); requestAnimationFrame(drawS);
     } drawS();
 
-    // --- 2. 功德波浪水面 ---
+    // --- 2. 彩色波浪八功德水 ---
     const wCvs = document.getElementById('waterCanvas'), wCtx = wCvs.getContext('2d');
     let ww, wh, wTime=0;
     function resW() { ww=wCvs.width=window.innerWidth; wh=wCvs.height=window.innerHeight; }
@@ -224,7 +243,7 @@
         } requestAnimationFrame(drawW);
     } drawW();
 
-    // --- 3. 邏輯控制 ---
+    // --- 3. 邏輯庫 ---
     const DB = [
         { t: "語業之垢", h: "妄語惡言", d: "今日是否曾因情緒或利益，以言語傷人、抱怨、誇大其詞，或於背後說人是非？", c: "--c1:#89CFF0;--c2:#48CAE4;--c3:#00B4D8" }, // 青藍
         { t: "意業之垢", h: "瞋恚結怨", d: "今日是否曾因外境不順或他人冒犯，於心中生起怒火，甚至懷忿不捨，遲遲不願放下？", c: "--c1:#f3e5ab;--c2:#d4af37;--c3:#ffb703" }, // 金
@@ -236,7 +255,7 @@
     function handleBurst() {
         const b = document.getElementById('burst-light');
         b.style.opacity = '1';
-        b.style.transform = 'translate(-50%, -50%) scale(1)'; // 觸發極速膨脹
+        b.style.transform = 'translate(-50%, -50%) scale(150)'; // 極速膨脹吞噬
         
         setTimeout(() => {
             document.getElementById('page-1').style.display = 'none';
@@ -246,11 +265,13 @@
     }
 
     function popCard(idx) {
-        if(activeIdx !== -1) return;
+        if(activeIdx !== -1) return; // 鎖定操作
         activeIdx = idx;
         const card = document.getElementById('main-card');
         const eye = document.getElementById(`eye-${idx}`);
-        eye.classList.add('hidden'); // 隱藏被點擊的眼睛
+        
+        // 點擊後眼睛消失
+        eye.classList.add('hidden'); 
         
         // 載入資料
         document.getElementById('ui-type').innerText = DB[idx].t;
@@ -258,8 +279,9 @@
         document.getElementById('ui-desc').innerText = DB[idx].d;
         document.getElementById('ui-neon').style.cssText = DB[idx].c;
         
+        // 卡片飛出
         card.classList.remove('sublimate');
-        card.classList.add('active'); // 卡片飛出
+        card.classList.add('active'); 
         
         setTimeout(() => document.getElementById('wash-zone').classList.add('show'), 1000);
     }
@@ -291,15 +313,18 @@
         document.getElementById('wash-zone').classList.remove('show');
         
         setTimeout(() => {
-            activeIdx = -1; cardsLeft--;
+            activeIdx = -1; 
+            cardsLeft--;
             prog.style.strokeDashoffset = 277;
+            
+            // 檢查是否圓滿
             if(cardsLeft === 0) {
                 setTimeout(() => {
                     document.getElementById('final-msg').style.opacity = '1';
                     setTimeout(() => location.href='index.html?screen=3', 4000);
-                }, 500);
+                }, 800);
             }
-        }, 1800);
+        }, 1500);
     }
 
     function genDust() {
@@ -319,7 +344,7 @@
         }
     }
 
-    wBtn.addEventListener('mousedown', onDwn); wBtn.addEventListener('touchstart', onDwn, {passive:false});
+    wBtn.addEventListener('mousedown', onDown); wBtn.addEventListener('touchstart', onDown, {passive:false});
     window.addEventListener('mouseup', onUp); window.addEventListener('touchend', onUp);
 </script>
 </body>

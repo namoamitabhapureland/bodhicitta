@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>無相懺 ． 琉璃洗心</title>
     <style>
-        :root { --bg: #000; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c; }
+        :root { --bg: #000; --gold: #f3e5ab; --cyan: #8ba89c; }
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; outline: none; }
         body { background: var(--bg); font-family: "PingFang TC", serif; overflow: hidden; touch-action: none; width: 100vw; height: 100dvh; color: #fff; overscroll-behavior: none; }
 
-        /* 畫布層 (星空與彩色水波) */
+        /* 畫布層 */
         canvas { position: absolute; inset: 0; }
         #starCanvas { z-index: 1; }
-        #waterCanvas { z-index: 2; mix-blend-mode: screen; opacity: 0.9; pointer-events: none; }
+        #waterCanvas { z-index: 2; pointer-events: none; } /* 恢復原始水的層級與透明度 */
 
         /* 1. 大光球吞噬過場 */
         #burst-light { 
@@ -35,8 +35,7 @@
         .back-btn { position: absolute; top: 20px; left: 20px; z-index: 1000; color: var(--gold); display: flex; align-items: center; gap: 8px; cursor: pointer; background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3); backdrop-filter: blur(5px); font-size: 0.9rem; }
         .back-btn:active { transform: scale(0.95); }
         #status-panel { position: absolute; top: 75px; left: 5%; width: 90%; max-width: 320px; border-left: 2px solid var(--cyan); padding: 10px 20px; z-index: 100; pointer-events: none; }
-        .s-title { font-size: 1.1rem; font-weight: bold; color: var(--cyan); letter-spacing: 2px; margin-bottom: 8px; text-shadow: 0 2px 6px #000; }
-        .s-desc { font-size: 0.85rem; color: #bbb; line-height: 1.8; letter-spacing: 1px; text-shadow: 0 2px 4px #000; }
+        .s-title { font-size: 1.1rem; font-weight: bold; color: var(--cyan); letter-spacing: 2px; text-shadow: 0 2px 6px #000; }
 
         /* ================= 核心：四個會呼吸旋轉放光的覺照之眼 ================= */
         #eyes-layer { position: absolute; inset: 0; z-index: 30; pointer-events: none; }
@@ -45,7 +44,6 @@
             transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex; justify-content: center; align-items: center;
         }
-        /* 眼睛的縮放與旋轉呼吸特效 */
         .eye-svg {
             width: 100%; height: 100%; color: inherit;
             animation: spin-breathe 6s infinite alternate ease-in-out;
@@ -53,7 +51,6 @@
         .eye-container:active { transform: scale(0.85); }
         .eye-container.hidden { opacity: 0; transform: scale(0) rotate(180deg); pointer-events: none; }
         
-        /* 四眼獨立特徵 (樣式相同、大小/顏色/位置/浮動不同) */
         #eye-0 { width: 55px; height: 55px; top: 25%; left: 25%; color: #8ba89c; animation: float-y 4s ease-in-out infinite alternate; filter: drop-shadow(0 0 15px #8ba89c); }
         #eye-0 .eye-svg { animation-duration: 7s; }
         
@@ -81,13 +78,12 @@
             backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
             box-shadow: 0 40px 80px rgba(0,0,0,1), inset 0 0 30px rgba(255,255,255,0.05);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; transform: scale(0.3) translateY(200px); /* 隱藏於深處 */
+            opacity: 0; transform: scale(0.3) translateY(200px); 
             transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        /* 卡片飛出 */
         .g-card.active { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
         
-        /* ✨ 核心：整張卡片昇華消融特效 ✨ */
+        /* 整張卡片昇華消融特效 */
         .g-card.sublimate { 
             filter: blur(25px) brightness(2.5); opacity: 0; 
             transform: translateY(-200px) scale(1.3); 
@@ -95,11 +91,9 @@
             pointer-events: none; 
         }
 
-        /* 霓虹邊框 */
         .neon-box { position: absolute; inset: 0; border-radius: 30px; padding: 2.5px; background: linear-gradient(135deg, var(--c1), var(--c2), var(--c3), var(--c1)); background-size: 200% 200%; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: n-flow 4s linear infinite; }
         @keyframes n-flow { 0% { background-position: 0% 0%; } 100% { background-position: 200% 200%; } }
 
-        /* 文字內容 */
         .c-inner { text-align: center; width: 100%; opacity: 0; transition: opacity 0.6s 0.4s; }
         .active .c-inner { opacity: 1; }
         .c-type { color: rgba(255,255,255,0.4); font-size: 0.75rem; letter-spacing: 6px; margin-bottom: 25px; font-weight: bold; }
@@ -115,7 +109,6 @@
         .w-prog { position: absolute; inset: -5px; transform: rotate(-90deg); pointer-events: none; }
         .w-txt { margin-top: 15px; font-size: 0.85rem; color: var(--cyan); letter-spacing: 3px; font-weight: bold; }
 
-        /* 光塵與圓滿訊息 */
         .dust { position: fixed; border-radius: 50%; pointer-events: none; mix-blend-mode: screen; z-index: 9999; }
         #final-msg { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 2s; text-align: center; }
     </style>
@@ -143,38 +136,22 @@
         
         <div id="status-panel">
             <div class="s-title">四眼覺照 ． 塵垢昇華</div>
-            <div class="s-desc">點擊水波上漂浮之覺眼，引導心垢顯現；長按法水明點，令其碎裂消融。</div>
+            <!-- 說明文字已移除 -->
         </div>
 
         <!-- 水面上的四枚覺眼 (統一樣式 SVG) -->
         <div id="eyes-layer">
-            <!-- 眼 0 -->
             <div class="eye-container" id="eye-0" onclick="popCard(0)">
-                <svg class="eye-svg" viewBox="0 0 100 100">
-                    <path d="M10,50 Q50,10 90,50 Q50,90 10,50 Z" fill="none" stroke="currentColor" stroke-width="4"/>
-                    <circle cx="50" cy="50" r="18" fill="currentColor"/>
-                </svg>
+                <svg class="eye-svg" viewBox="0 0 100 100"><path d="M10,50 Q50,10 90,50 Q50,90 10,50 Z" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="50" r="18" fill="currentColor"/></svg>
             </div>
-            <!-- 眼 1 -->
             <div class="eye-container" id="eye-1" onclick="popCard(1)">
-                <svg class="eye-svg" viewBox="0 0 100 100">
-                    <path d="M10,50 Q50,10 90,50 Q50,90 10,50 Z" fill="none" stroke="currentColor" stroke-width="4"/>
-                    <circle cx="50" cy="50" r="18" fill="currentColor"/>
-                </svg>
+                <svg class="eye-svg" viewBox="0 0 100 100"><path d="M10,50 Q50,10 90,50 Q50,90 10,50 Z" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="50" r="18" fill="currentColor"/></svg>
             </div>
-            <!-- 眼 2 -->
             <div class="eye-container" id="eye-2" onclick="popCard(2)">
-                <svg class="eye-svg" viewBox="0 0 100 100">
-                    <path d="M10,50 Q50,10 90,50 Q50,90 10,50 Z" fill="none" stroke="currentColor" stroke-width="4"/>
-                    <circle cx="50" cy="50" r="18" fill="currentColor"/>
-                </svg>
+                <svg class="eye-svg" viewBox="0 0 100 100"><path d="M10,50 Q50,10 90,50 Q50,90 10,50 Z" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="50" r="18" fill="currentColor"/></svg>
             </div>
-            <!-- 眼 3 -->
             <div class="eye-container" id="eye-3" onclick="popCard(3)">
-                <svg class="eye-svg" viewBox="0 0 100 100">
-                    <path d="M10,50 Q50,10 90,50 Q50,90 10,50 Z" fill="none" stroke="currentColor" stroke-width="4"/>
-                    <circle cx="50" cy="50" r="18" fill="currentColor"/>
-                </svg>
+                <svg class="eye-svg" viewBox="0 0 100 100"><path d="M10,50 Q50,10 90,50 Q50,90 10,50 Z" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="50" r="18" fill="currentColor"/></svg>
             </div>
         </div>
 
@@ -221,34 +198,56 @@
         }); requestAnimationFrame(drawS);
     } drawS();
 
-    // --- 2. 彩色波浪八功德水 ---
+    // --- 2. 恢復您稱讚的彩色波浪八功德水 ---
     const wCvs = document.getElementById('waterCanvas'), wCtx = wCvs.getContext('2d');
     let ww, wh, wTime=0;
     function resW() { ww=wCvs.width=window.innerWidth; wh=wCvs.height=window.innerHeight; }
     window.addEventListener('resize', resW); resW();
     function drawW() {
-        wTime += 0.005; wCtx.clearRect(0,0,ww,wh);
-        for(let i=0; i<3; i++) {
-            let grad = wCtx.createRadialGradient(ww/2, wh*0.6, 0, ww/2, wh*0.6, ww*0.8);
-            grad.addColorStop(0, `hsla(${190 + i*25}, 70%, 30%, 0.2)`);
-            grad.addColorStop(0.6, `hsla(${45 + i*20}, 60%, 20%, 0.1)`);
-            grad.addColorStop(1, 'transparent');
-            wCtx.fillStyle = grad;
+        wCtx.clearRect(0,0,ww,wh);
+        wTime += 0.005;
+
+        for (let i = 0; i < 3; i++) {
             wCtx.beginPath();
-            for(let x=0; x<=ww; x+=10) {
-                let y = Math.sin(x*0.005 + wTime + i)*50 + Math.cos(x*0.01 - wTime*1.5)*30 + (wh*0.6) + Math.cos(wTime+i)*40;
-                if(x===0) wCtx.moveTo(x,y); else wCtx.lineTo(x,y);
+            let shift = i * 2;
+            let grad = wCtx.createLinearGradient(0, 0, ww, wh);
+            // 隨時間變化的彩色漸層 (青色系與金色系交織)
+            let hue1 = Math.sin(wTime) * 30 + 190; 
+            let hue2 = Math.cos(wTime) * 30 + 45;  
+            grad.addColorStop(0, `hsla(${hue1}, 70%, 20%, 0.4)`);
+            grad.addColorStop(0.5, `hsla(${hue2}, 60%, 30%, 0.3)`);
+            grad.addColorStop(1, `hsla(${hue1 + 40}, 80%, 15%, 0.5)`);
+            
+            wCtx.fillStyle = grad;
+
+            // 繪製立體晃動感
+            for (let x = 0; x <= ww; x += 5) {
+                let y = Math.sin(x * 0.005 + wTime + shift) * 40 
+                      + Math.sin(x * 0.01 - wTime * 2) * 20 
+                      + (wh * 0.6) 
+                      + Math.cos(wTime + i) * 30;
+                if (x === 0) wCtx.moveTo(x, y); else wCtx.lineTo(x, y);
             }
-            wCtx.lineTo(ww,wh); wCtx.lineTo(0,wh); wCtx.fill();
-        } requestAnimationFrame(drawW);
+            wCtx.lineTo(ww, wh); wCtx.lineTo(0, wh); wCtx.fill();
+        }
+        
+        // 頂部琉璃反光
+        wCtx.globalCompositeOperation = 'screen';
+        wCtx.fillStyle = 'rgba(255,255,255,0.05)';
+        wCtx.beginPath();
+        wCtx.ellipse(ww/2, wh*0.5, ww*0.8, wh*0.2, 0, 0, Math.PI*2);
+        wCtx.fill();
+        wCtx.globalCompositeOperation = 'source-over';
+
+        requestAnimationFrame(drawW);
     } drawW();
 
     // --- 3. 邏輯庫 ---
     const DB = [
-        { t: "語業之垢", h: "妄語惡言", d: "今日是否曾因情緒或利益，以言語傷人、抱怨、誇大其詞，或於背後說人是非？", c: "--c1:#89CFF0;--c2:#48CAE4;--c3:#00B4D8" }, // 青藍
-        { t: "意業之垢", h: "瞋恚結怨", d: "今日是否曾因外境不順或他人冒犯，於心中生起怒火，甚至懷忿不捨，遲遲不願放下？", c: "--c1:#f3e5ab;--c2:#d4af37;--c3:#ffb703" }, // 金
-        { t: "意業之垢", h: "傲慢自讚", d: "今日是否曾於心中暗自比較，覺得他人不如自己，甚至為了面子而自讚毀他？", c: "--c1:#ff9a9e;--c2:#fbc2eb;--c3:#a18cd1" }, // 粉紫
-        { t: "身業之垢", h: "貪吝不捨", d: "今日是否在應當付出資源或幫助他人時，生起慳吝之心，不願給予方便？", c: "--c1:#e0e0e0;--c2:#ffffff;--c3:#cfd9df" }  // 銀白
+        { t: "語業之垢", h: "妄語惡言", d: "今日是否曾因情緒或利益，以言語傷人、抱怨、誇大其詞，或於背後說人是非？", c: "--c1:#89CFF0;--c2:#48CAE4;--c3:#00B4D8" },
+        { t: "意業之垢", h: "瞋恚結怨", d: "今日是否曾因外境不順或他人冒犯，於心中生起怒火，甚至懷忿不捨，遲遲不願放下？", c: "--c1:#f3e5ab;--c2:#d4af37;--c3:#ffb703" },
+        { t: "意業之垢", h: "傲慢自讚", d: "今日是否曾於心中暗自比較，覺得他人不如自己，甚至為了面子而自讚毀他？", c: "--c1:#ff9a9e;--c2:#fbc2eb;--c3:#a18cd1" },
+        { t: "身業之垢", h: "貪吝不捨", d: "今日是否在應當付出資源或幫助他人時，生起慳吝之心，不願給予方便？", c: "--c1:#e0e0e0;--c2:#ffffff;--c3:#cfd9df" }
     ];
     let activeIdx = -1, cardsLeft = DB.length;
 
@@ -344,7 +343,7 @@
         }
     }
 
-    wBtn.addEventListener('mousedown', onDown); wBtn.addEventListener('touchstart', onDown, {passive:false});
+    wBtn.addEventListener('mousedown', onDwn); wBtn.addEventListener('touchstart', onDwn, {passive:false});
     window.addEventListener('mouseup', onUp); window.addEventListener('touchend', onUp);
 </script>
 </body>

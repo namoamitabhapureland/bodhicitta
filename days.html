@@ -126,7 +126,21 @@
 <body oncontextmenu="return false;">
 
     <div id="page-transition-curtain"></div>
-    
+        <!-- 🌟 捨戒專屬確認彈框 (取代系統醜框) 🌟 -->
+    <div id="drop-confirm-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 10000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s;">
+        <div id="drop-confirm-box" style="background: linear-gradient(135deg, rgba(20,20,20,0.95), rgba(5,5,5,0.98)); border: 1px solid rgba(212,175,55,0.4); border-radius: 20px; padding: 35px 25px; width: 85%; max-width: 340px; text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.9), inset 0 0 15px rgba(212,175,55,0.1); transform: scale(0.95); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; align-items: center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#e5989b" stroke-width="1.2" style="width: 36px; height: 36px; margin-bottom: 15px; filter: drop-shadow(0 0 8px rgba(229,152,155,0.5));">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <div style="color: #e5989b; font-size: 1.15rem; letter-spacing: 4px; margin-bottom: 15px; font-weight: bold; text-shadow: 0 0 10px rgba(229,152,155,0.3);">確認捨戒</div>
+            <div style="color: #bbb; font-size: 0.9rem; line-height: 1.8; letter-spacing: 1px; margin-bottom: 25px;">確定中斷今日修持？<br>請以自身健康與因緣為重。</div>
+            <div style="display: flex; gap: 12px; width: 100%;">
+                <button onclick="closeDropConfirm()" style="flex: 1; background: transparent; color: var(--gold); border: 1px solid rgba(212,175,55,0.5); padding: 12px 0; border-radius: 30px; letter-spacing: 2px; font-size: 0.85rem; cursor: pointer; transition: 0.3s; font-family: inherit;">繼續護持</button>
+                <button onclick="executeDropPrecepts()" style="flex: 1; background: rgba(229,152,155,0.1); color: #e5989b; border: 1px solid rgba(229,152,155,0.4); padding: 12px 0; border-radius: 30px; letter-spacing: 2px; font-size: 0.85rem; cursor: pointer; transition: 0.3s; font-family: inherit;">確認捨戒</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 滿額顯化框 -->
     <div id="vow-alert-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 10000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s;">
         <div id="vow-alert-box" style="background: linear-gradient(135deg, rgba(20,20,20,0.95), rgba(5,5,5,0.98)); border: 1px solid rgba(212,175,55,0.4); border-radius: 20px; padding: 35px 25px; width: 85%; max-width: 340px; text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.9), inset 0 0 15px rgba(212,175,55,0.1); transform: scale(0.95); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; align-items: center;">
@@ -561,12 +575,30 @@
         setTimeout(() => { document.getElementById('action-zone').style.pointerEvents = 'auto'; }, 100);
     }
 
+        // ================= 捨戒專屬 UI 控制 =================
     function dropPrecepts() {
-        if(confirm("確定捨戒？請以健康為重。")) {
-            mainDb.preceptsData.active = false; mainDb.preceptsData.startTime = null;
-            localStorage.setItem(DB_KEY, JSON.stringify(mainDb)); location.reload();
-        }
+        // 呼叫我們自己寫的精美彈框，不再使用系統醜框
+        const overlay = document.getElementById('drop-confirm-overlay');
+        overlay.style.display = 'flex';
+        void overlay.offsetWidth; 
+        overlay.style.opacity = '1';
+        document.getElementById('drop-confirm-box').style.transform = 'scale(1)';
     }
+
+    function closeDropConfirm() {
+        const overlay = document.getElementById('drop-confirm-overlay');
+        overlay.style.opacity = '0';
+        document.getElementById('drop-confirm-box').style.transform = 'scale(0.95)';
+        setTimeout(() => overlay.style.display = 'none', 400);
+    }
+
+    function executeDropPrecepts() {
+        // 真正執行中斷的邏輯
+        mainDb.preceptsData.active = false; mainDb.preceptsData.startTime = null;
+        localStorage.setItem(DB_KEY, JSON.stringify(mainDb)); 
+        location.reload();
+    }
+
 
     function showSuccess() {
         document.getElementById('action-zone').style.display = 'none';

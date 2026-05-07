@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>360° 全息立體點雲 ‧ 無相金身</title>
+    <style>
+        :root {
+            --bg-deep: #010103; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+        }
+        body { 
+            margin: 0; background: var(--bg-deep); color: #fff; 
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+            overflow: hidden; touch-action: none; user-select: none;
+        }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        #ui-layer {
+            position: absolute; bottom: 8%; width: 100%; text-align: center; z-index: 10; pointer-events: none;
+        }
+        .hint-text {
+            color: var(--gold); font-size: 0.85rem; letter-spacing: 3px; 
+            text-shadow: 0 0 10px rgba(212,175,55,0.8); margin-bottom: 15px;
+        }
+        .title-text {
+            color: var(--cyan); font-size: 1.1rem; font-weight: bold; letter-spacing: 5px;
+            text-shadow: 0 0 15px rgba(139,168,156,0.8);
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <canvas id="buddhaCanvas"></canvas>
+    
+    <div id="ui-layer">
+        <div class="hint-text">360° 全息滑動 ． 觀想無相金身</div>
+        <div class="title-text">常寂光 ‧ 點雲法身</div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('buddhaCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    // 3D 視角控制
+    let angleX = 0.2; // 初始俯角
+    let angleY = 0;   // 初始水平角
+    let isDragging = false, lastX = 0, lastY = 0;
+    const FOV = 450;
+    let time = 0;
+
+    let particles = []; // 金身微塵矩陣
+
+    function resize() { 
+        width = window.innerWidth; height = window.innerHeight; 
+        canvas.width = width; canvas.height = height; 
+    }
+    window.addEventListener('resize', resize); resize();
+
+    // 您原始碼中核心的 3D 投影矩陣
+    function project3D(x, y, z) {
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX);
+        let cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        
+        // 繞 X 軸旋轉 (俯仰)
+        let y1 = y * cosX - z * sinX;
+        let z1 = y * sinX + z * cosX;
+        
+        // 繞 Y 軸旋轉 (水平)
+        let x2 = x * cosY - z1 * sinY;
+        let z2 = x * sinY + z1 * cosY;
+        
+        if (z2 < -FOV + 50) return null; // 在相機後方則不渲染
+        
+        let scale = FOV / (FOV + z2); 
+        // 稍微將整體畫面往下移 (+80)，讓金身置中
+        return { 
+            px: (width / 2) + x2 * scale, 
+            py: (height / 2) - y1 * scale + 80, 
+            scale: scale, 
+            pz: z2 
+        };
+    }
+
+    // 核心演算：構築 3D 立體金身點雲
+    function initBuddhaMatrix() {
+        particles = [];
+        
+        function addParticle(x, y, z, color, size, glow, type) {
+            particles.push({ x, y, z, base_y: y, c: color, s: size, glow: glow, type: type });
+        }
+
+        const colorGold = '#d4af37';
+        const colorLightGold = '#f3e5ab';
+        const colorCyan = '#8ba89c';
+
+        // 1. 肉髻 (Ushnisha) - 頂部小球體
+        let r_ush = 12;
+        let y_ush = 165;
+        for(let i=0; i<150; i++) {
+            let p = Math.acos(1 - 2 * Math.random());
+            let t = Math.random() * Math.PI * 2;
+            addParticle(r_ush*Math.sin(p)*Math.cos(t), y_ush + r_ush*Math.cos(p), r_ush*Math.sin(p)*Math.sin(t), colorLightGold, 1.2, true, 'body');
+        }
+
+        // 2. 頭顱 (Head) - 球體
+        let r_head = 35;
+        let y_head = 125;
+        for(let i=0; i<400; i++) {
+            let p = Math.acos(1 - 2 * Math.random());
+            let t = Math.random() * Math.PI * 2;
+            addParticle(r_head*Math.sin(p)*Math.cos(t), y_head + r_head*Math.cos(p), r_head*Math.sin(p)*Math.sin(t), colorGold, 1.5, true, 'body');
+        }
+
+        // 3. 身軀 (Torso) - 圓滑的鐘形/拋物線迴轉體
+        for(let i=0; i<1200; i++) {
+            let h = Math.random(); // 0 到 1
+            let y = 90 - h * 130;  // 從脖子(90) 到 底座(-40)
+            // 曲線方程：越往下越寬，形成肩膀與身軀的莊嚴感
+            let r = 25 + Math.pow(h, 1.5) * 65; 
+            let t = Math.random() * Math.PI * 2;
+            addParticle(r*Math.cos(t), y, r*Math.sin(t), colorGold, 1.5, false, 'body');
+        }
+
+        // 4. 結跏趺坐雙腿 (Crossed Legs) - 扁平的橢球環
+        for(let i=0; i<800; i++) {
+            let p = Math.acos(1 - 2 * Math.random());
+            let t = Math.random() * Math.PI * 2;
+            let rx = 100 + Math.random()*20; // 寬度
+            let ry = 15 + Math.random()*10;  // 厚度
+            let rz = 70 + Math.random()*20;  // 深度
+            // 放置在身軀最下方
+            addParticle(rx*Math.sin(p)*Math.cos(t), -40 + ry*Math.cos(p), (rz*Math.sin(p)*Math.sin(t)) + 10, colorGold, 1.8, true, 'body');
+        }
+
+        // 5. 禪定印 (Dhyana Mudra) - 身前的小光球聚落
+        for(let i=0; i<100; i++) {
+            let p = Math.acos(1 - 2 * Math.random());
+            let t = Math.random() * Math.PI * 2;
+            let r = 8;
+            addParticle(r*Math.sin(p)*Math.cos(t), -10 + r*Math.cos(p), 60 + r*Math.sin(p)*Math.sin(t), colorLightGold, 2.0, true, 'mudra');
+        }
+
+        // 6. 華嚴蓮花底座 (Lotus Base) - 幾何同心圓環
+        for(let ring = 1; ring <= 4; ring++) {
+            let r_lotus = 100 + ring * 15;
+            let count = ring * 60;
+            for(let i=0; i<count; i++) {
+                let t = (i / count) * Math.PI * 2;
+                // 蓮花瓣邊緣的高低起伏
+                let wave = Math.sin(t * 16) * 5; 
+                addParticle(r_lotus*Math.cos(t), -60 + wave, r_lotus*Math.sin(t), colorCyan, 1.5, true, 'lotus');
+            }
+        }
+
+        // 7. 常寂光背光 (Mandala Halo) - 身後的立體光盤
+        for(let i=0; i<600; i++) {
+            let r = 60 + Math.random() * 80;
+            let t = Math.random() * Math.PI * 2;
+            // 放置在 Z 軸後方
+            addParticle(r*Math.cos(t), 70 + r*Math.sin(t), -40, colorLightGold, 1.2, false, 'halo');
+        }
+    }
+
+    function render() {
+        ctx.fillStyle = 'rgba(1, 1, 3, 0.6)'; // 拖影效果，維持您的深邃背景
+        ctx.fillRect(0, 0, width, height);
+
+        time += 0.015;
+        if (!isDragging) {
+            angleY -= 0.005; // 緩慢自轉
+        }
+
+        let projected = [];
+
+        // 物理計算與投影
+        particles.forEach(p => {
+            let wx = p.x, wy = p.y, wz = p.z;
+
+            // 賦予不同部位生命力 (法身呼吸)
+            if (p.type === 'halo') {
+                // 背光緩慢旋轉與呼吸
+                let rot = time * 0.5;
+                let nx = p.x * Math.cos(rot) - p.y * Math.sin(rot);
+                let ny = p.x * Math.sin(rot) + p.y * Math.cos(rot);
+                wx = nx; wy = ny + 70; wz = p.z;
+            } else if (p.type === 'mudra') {
+                // 手印光芒微微跳動
+                wy = p.base_y + Math.sin(time * 3 + p.x) * 2;
+            } else if (p.type === 'lotus') {
+                // 蓮花底座水波紋
+                wy = p.base_y + Math.sin(time * 2 + p.x * 0.05) * 3;
+            } else if (p.type === 'body') {
+                // 金身本體極微弱的能量脈動
+                let breath = 1 + Math.sin(time + p.y * 0.02) * 0.015;
+                wx *= breath; wz *= breath;
+            }
+
+            let proj = project3D(wx, wy, wz);
+            if (proj) {
+                projected.push({ 
+                    x: proj.px, y: proj.py, z: proj.pz, 
+                    sc: proj.scale, c: p.c, s: p.s, glow: p.glow 
+                });
+            }
+        });
+
+        // 依照 Z 軸深度排序 (由遠到近渲染，符合真實 3D 遮擋關係)
+        projected.sort((a, b) => b.z - a.z);
+
+        // 渲染至 Canvas
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, Math.max(0.1, p.s * p.sc), 0, Math.PI * 2);
+            ctx.fillStyle = p.c;
+            
+            if (p.glow) {
+                ctx.shadowBlur = 10 * p.sc;
+                ctx.shadowColor = p.c;
+            } else {
+                ctx.shadowBlur = 0;
+            }
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0;
+        ctx.globalCompositeOperation = 'source-over';
+
+        requestAnimationFrame(render);
+    }
+
+    // 觸控與滑鼠互動 (與您的矩陣互動完全一致)
+    function onDown(e) { isDragging = true; lastX = e.touches ? e.touches[0].clientX : e.clientX; lastY = e.touches ? e.touches[0].clientY : e.clientY; }
+    function onMove(e) { 
+        if (!isDragging) return; 
+        let curX = e.touches ? e.touches[0].clientX : e.clientX; 
+        let curY = e.touches ? e.touches[0].clientY : e.clientY; 
+        angleY += (curX - lastX) * 0.01; 
+        angleX += (curY - lastY) * 0.01; 
+        angleX = Math.max(-Math.PI/2, Math.min(Math.PI/2, angleX)); // 限制俯仰角
+        lastX = curX; lastY = curY; 
+    }
+    function onUp() { isDragging = false; }
+    
+    canvas.addEventListener('pointerdown', onDown); 
+    canvas.addEventListener('pointermove', onMove); 
+    window.addEventListener('pointerup', onUp); 
+    canvas.addEventListener('pointercancel', onUp);
+
+    // 啟動系統
+    initBuddhaMatrix();
+    render();
+
+</script>
+</body>
+</html>

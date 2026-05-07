@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>360° 全息立體 ‧ 結跏趺坐無相金身</title>
+    <title>華藏法界 ‧ 360° 立體音波金身</title>
     <style>
         :root {
             --bg-deep: #010103; 
@@ -36,8 +36,8 @@
     <canvas id="buddhaCanvas"></canvas>
     
     <div id="ui-layer">
-        <div class="hint-text">360° 全息滑動 ． 幾何結跏趺坐</div>
-        <div class="title-text">常寂光 ‧ 無相金身</div>
+        <div class="hint-text">360° 全息滑動 ． 沿用第九重矩陣延伸</div>
+        <div class="title-text">法界音波 ‧ 莊嚴金身</div>
     </div>
 
 <script>
@@ -45,13 +45,14 @@
     const ctx = canvas.getContext('2d');
     let width, height;
     
-    let angleX = 0.15; // 稍微俯視，更能看清盤腿的寬闊度
+    // 3D 視角控制
+    let angleX = 0.1; 
     let angleY = 0;   
     let isDragging = false, lastX = 0, lastY = 0;
-    const FOV = 500;
+    const FOV = 450;
     let time = 0;
 
-    let particles = []; 
+    let realmParticles = []; 
 
     function resize() { 
         width = window.innerWidth; height = window.innerHeight; 
@@ -69,167 +70,141 @@
         let z2 = x * sinY + z1 * cosY;
         
         if (z2 < -FOV + 50) return null; 
-        
         let scale = FOV / (FOV + z2); 
-        return { 
-            px: (width / 2) + x2 * scale, 
-            py: (height / 2) - y1 * scale + 50, // 畫面整體重心微調
-            scale: scale, 
-            pz: z2 
-        };
+        return { px: (width / 2) + x2 * scale, py: (height / 2) - y1 * scale + 30, scale: scale, pz: z2 };
     }
 
-    // 核心演算：構築真正的「結跏趺坐大三角」結構
-    function initBuddhaMatrix() {
-        particles = [];
+    // ==========================================
+    // 核心亮點：定義佛像的「輪廓方程式」
+    // 代入您的 Y 軸，計算出該層圓環的半徑 R
+    // ==========================================
+    function getBuddhaRadius(y) {
+        // y 範圍從頂部 -120 到 底部 +80
         
-        function addParticle(x, y, z, color, size, glow, type) {
-            particles.push({ x, y, z, base_y: y, c: color, s: size, glow: glow, type: type });
-        }
-
-        const colorGold = '#d4af37';
-        const colorLightGold = '#f3e5ab';
-        const colorCyan = '#8ba89c';
-
         // 1. 肉髻 (Ushnisha)
-        for(let l=0; l<6; l++) {
-            let y = -110 + l*3;
-            let r = Math.sin((l/5)*Math.PI) * 10;
-            for(let a=0; a<Math.PI*2; a+=0.5) addParticle(r*Math.cos(a), y, r*Math.sin(a), colorLightGold, 1.2, true, 'body');
-        }
-
+        if (y < -100) { 
+            let t = (y + 120) / 20; // 0~1
+            if (t < 0 || t > 1) return 0;
+            return 12 * 2 * Math.sqrt(t * (1 - t)); // 完美的半圓方程式
+        } 
         // 2. 頭顱 (Head)
-        for(let l=0; l<=15; l++) {
-            let h = l/15;
-            let y = -95 + h * 35;
-            let r = Math.sin(h*Math.PI) * 26; // 半徑 26
-            for(let a=0; a<Math.PI*2; a+=0.3) addParticle(r*Math.cos(a), y, r*Math.sin(a), colorGold, 1.5, true, 'body');
-        }
-
-        // 3. 身軀 (Torso - 肩膀到腰部)
-        // 肩膀寬度大約 50，腰部稍微收窄
-        for(let l=0; l<=20; l++) {
-            let h = l/20;
-            let y = -50 + h * 80; // 從脖子(-50) 到 腰部(30)
-            let wX = 45 - h * 10; // 肩寬45，腰寬35
-            let wZ = 30; // 胸腔厚度
-            for(let a=0; a<Math.PI*2; a+=0.3) {
-                // 將背面稍微壓平
-                let curZ = wZ * Math.sin(a);
-                if(curZ < 0) curZ *= 0.5; 
-                addParticle(wX*Math.cos(a), y, curZ, colorGold, 1.2, false, 'body');
+        else if (y < -60) { 
+            let t = (y + 100) / 40;
+            if (t < 0 || t > 1) return 0;
+            return 28 * 2 * Math.sqrt(t * (1 - t));
+        } 
+        // 3. 頸部 (Neck)
+        else if (y < -45) { 
+            return 16;
+        } 
+        // 4. 身軀與寬肩 (Torso & Shoulders)
+        else if (y < 40) { 
+            let t = (y + 45) / 85; 
+            if (t < 0.2) {
+                // 從脖子迅速往外擴展成寬肩
+                let st = t / 0.2;
+                return 16 + (40 - 16) * Math.sin(st * Math.PI / 2);
+            } else {
+                // 從肩膀往下收斂至腰部
+                let st = (t - 0.2) / 0.8;
+                return 40 - 8 * st; // 腰部寬度約 32
             }
+        } 
+        // 5. 結跏趺坐底座 (Crossed Legs)
+        else if (y <= 80) { 
+            let t = (y - 40) / 40; 
+            // 雙腿向外極大延伸，形成穩定的三角形基底
+            return 32 + 85 * Math.pow(t, 0.6); // 底部最大半徑達 117
         }
+        return 0;
+    }
 
-        // 4. 手臂與袈裟垂墜 (Arms & Robes - 構成穩定的大三角形側邊)
-        for(let l=0; l<=30; l++) {
-            let h = l/30;
-            let y = -50 + h * 90; // 從肩膀(-50) 垂到 膝蓋(40)
+    // ==========================================
+    // 繼承您的第九重矩陣：層層堆疊圓環
+    // ==========================================
+    function initBuddhaMatrix() {
+        realmParticles = [];
+        let layers = 90; // 提高層數，讓佛身更細緻
+        let segments = 120; // 每一層圓環的粒子數
+        
+        for(let l = 0; l < layers; l++) {
+            // Y 軸從頂部 -120 到 底部 80
+            let yBase = -120 + (l / layers) * 200; 
             
-            // 左手：往外擴張到左膝
-            let ax_l = -45 - Math.pow(h, 1.2) * 85; // 從 -45 延伸到 -130 (極寬)
-            let az_l = Math.sin(h*Math.PI) * 15; // 手臂微微向前的弧度
-            addParticle(ax_l, y, az_l, colorLightGold, 1.8, true, 'body');
-            addParticle(ax_l+4, y, az_l+4, colorGold, 1.2, false, 'body'); // 增加厚度
+            // 呼叫輪廓方程式取得該層半徑
+            let radiusBase = getBuddhaRadius(yBase);
             
-            // 右手：往外擴張到右膝
-            let ax_r = 45 + Math.pow(h, 1.2) * 85;  // 從 45 延伸到 130
-            let az_r = Math.sin(h*Math.PI) * 15;
-            addParticle(ax_r, y, az_r, colorLightGold, 1.8, true, 'body');
-            addParticle(ax_r-4, y, az_r+4, colorGold, 1.2, false, 'body');
-        }
-
-        // 5. 結跏趺坐雙腿底座 (Crossed Legs - 極端寬闊扁平)
-        // 這是與之前「圓錐體」最大的差異，這是一個水平延伸的扁平橢圓結構
-        for(let l=0; l<=12; l++) {
-            let h = l/12;
-            let y = 40 + h * 20; // 雙腿厚度，高度從 40 到 60
-            let rx = 135 - h * 10; // 寬度達 135 (總寬270)，遠大於肩寬
-            let rz = 45 - h * 5;   // 深度 45
-            for(let a=0; a<Math.PI*2; a+=0.15) {
-                let curZ = rz * Math.sin(a);
-                if(curZ < 0) curZ *= 0.4; // 坐姿背面是平的
-                addParticle(rx*Math.cos(a), y, curZ + 10, colorGold, 1.5, false, 'legs');
-            }
-        }
-
-        // 6. 禪定印手部 (Dhyana Mudra)
-        for(let i=0; i<60; i++) {
-            let t = Math.random() * Math.PI * 2;
-            let p = Math.acos(1 - 2 * Math.random());
-            let r = 6;
-            // 放置於腹部前方
-            addParticle(r*Math.sin(p)*Math.cos(t), 25 + r*Math.cos(p), 35 + r*Math.sin(p)*Math.sin(t), colorLightGold, 2.0, true, 'mudra');
-        }
-
-        // 7. 華嚴幾何蓮花座 (Geometric Lotus Base)
-        for(let ring=1; ring<=3; ring++) {
-            let r_lotus = 140 + ring * 25; // 必須包住 135 寬的膝蓋
-            let count = 16; 
-            for(let i=0; i<count; i++) {
-                let aCenter = (Math.PI*2/count) * i;
-                for(let t=0; t<=1; t+=0.15) {
-                    for(let w=-1; w<=1; w+=0.5) {
-                        let pW = Math.sin(t*Math.PI) * 15;
-                        let cR = r_lotus + t*35;
-                        let cY = 75 - t*25 + Math.abs(w)*5;
-                        let x = cR*Math.cos(aCenter) - (w*pW)*Math.sin(aCenter);
-                        let z = cR*Math.sin(aCenter) + (w*pW)*Math.cos(aCenter);
-                        addParticle(x, cY, z, colorCyan, 1.2, true, 'lotus');
-                    }
+            // 如果該層有半徑，才產生粒子 (跳過空隙)
+            if (radiusBase > 2) {
+                for(let i = 0; i < segments; i++) {
+                    let theta = (i / segments) * Math.PI * 2;
+                    // 顏色交錯：一層亮金，一層暗金，產生法衣的層次感
+                    let isHighlight = (l % 3 === 0); 
+                    
+                    realmParticles.push({ 
+                        y: yBase, 
+                        bR: radiusBase, 
+                        th: theta, 
+                        l: l,
+                        hl: isHighlight
+                    });
                 }
             }
         }
-
-        // 8. 常寂光背光 (Mandala Halo)
-        for(let r=50; r<=130; r+=15) {
-            let count = r * 0.8;
-            for(let i=0; i<count; i++) {
-                let a = (i/count) * Math.PI * 2;
-                addParticle(r*Math.cos(a), 0 + r*Math.sin(a), -30, colorLightGold, 1.0, false, 'halo');
+        
+        // 底部加上蓮花座點綴 (沿用矩陣邏輯)
+        for(let l = 0; l < 5; l++) {
+            let rBase = 125 + l * 12;
+            for(let i=0; i<150; i++){
+                realmParticles.push({ y: 85 + l*3, bR: rBase, th: (i/150)*Math.PI*2, l: l+100, hl: false, type: 'lotus' });
             }
         }
     }
 
     function render() {
-        ctx.fillStyle = 'rgba(1, 1, 3, 0.7)'; 
+        ctx.fillStyle = 'rgba(1, 1, 3, 0.65)'; 
         ctx.fillRect(0, 0, width, height);
-
         time += 0.015;
-        if (!isDragging) {
-            angleY -= 0.005; 
-        }
+
+        if (!isDragging) angleY += 0.005; // 如法界般緩慢旋轉
 
         let projected = [];
 
-        particles.forEach(p => {
-            let wx = p.x, wy = p.y, wz = p.z;
-
-            if (p.type === 'halo') {
-                let rot = time * 0.3;
-                let nx = p.x * Math.cos(rot) - p.y * Math.sin(rot);
-                let ny = p.x * Math.sin(rot) + p.y * Math.cos(rot);
-                wx = nx; wy = ny; wz = p.z;
-            } else if (p.type === 'mudra') {
-                wy = p.base_y + Math.sin(time * 3 + p.x) * 1.5;
-            } else if (p.type === 'lotus') {
-                wy = p.base_y + Math.sin(time * 2 + p.x * 0.03) * 3;
+        realmParticles.forEach(p => {
+            // ==========================================
+            // 完美套用您的第九重波浪公式
+            // 讓立體金身「活」起來，擁有空間聲波的震動感
+            // ==========================================
+            let wave = 0;
+            if (p.type === 'lotus') {
+                wave = Math.sin(p.th * 12 + time * 2) * 5; // 蓮花波浪
             } else {
-                // 身軀微弱的法身呼吸
-                let breath = 1 + Math.sin(time + wy * 0.05) * 0.01;
-                wx *= breath; wz *= breath;
+                // 為了不讓佛像變形太嚴重，波浪幅度與該層半徑成正比
+                let amp = p.bR * 0.04; 
+                let f1 = 8; 
+                // 律動結合了時間、角度與層數
+                wave = amp * Math.sin(f1 * p.th + time * 2 + p.l * 0.1); 
             }
+            
+            let r = p.bR + wave; // 基礎輪廓半徑 + 聲波律動
+
+            // 圓柱座標轉 3D 直角座標
+            let wx = r * Math.cos(p.th + time * 0.1); 
+            let wz = r * Math.sin(p.th + time * 0.1); 
+            let wy = p.y + Math.sin(time + p.l * 0.05) * 1.5; // Y軸微弱呼吸
 
             let proj = project3D(wx, wy, wz);
             if (proj) {
-                projected.push({ 
-                    x: proj.px, y: proj.py, z: proj.pz, 
-                    sc: proj.scale, c: p.c, s: p.s, glow: p.glow 
-                });
+                // 根據是否為 Highlight 決定顏色亮度
+                let col = p.type === 'lotus' ? 'rgba(139,168,156,0.8)' : 
+                          (p.hl ? 'rgba(243,229,171,0.9)' : 'rgba(212,175,55,0.4)');
+                let size = p.hl ? 1.5 : 1.0;
+
+                projected.push({ x: proj.px, y: proj.py, z: proj.pz, sc: proj.scale, c: col, s: size, hl: p.hl });
             }
         });
 
-        // 3D 深度排序 (Z-buffer)，確保正面遮擋背面
+        // 依照深度排序 (Z-buffer)，呈現真正的立體前後遮擋
         projected.sort((a, b) => b.z - a.z);
 
         ctx.globalCompositeOperation = 'screen';
@@ -238,9 +213,9 @@
             ctx.arc(p.x, p.y, Math.max(0.1, p.s * p.sc), 0, Math.PI * 2);
             ctx.fillStyle = p.c;
             
-            if (p.glow) {
-                ctx.shadowBlur = 12 * p.sc;
-                ctx.shadowColor = p.c;
+            if (p.hl) {
+                ctx.shadowBlur = 8 * p.sc;
+                ctx.shadowColor = '#d4af37';
             } else {
                 ctx.shadowBlur = 0;
             }
@@ -259,7 +234,6 @@
         let curY = e.touches ? e.touches[0].clientY : e.clientY; 
         angleY += (curX - lastX) * 0.01; 
         angleX += (curY - lastY) * 0.01; 
-        // 限制視角，避免翻轉到地底下
         angleX = Math.max(-Math.PI/2.5, Math.min(Math.PI/2.5, angleX)); 
         lastX = curX; lastY = curY; 
     }

@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+      <link rel="manifest" href="manifest.json">
+    <title>彌陀淨土系統 ‧ 琉璃定課</title>
+    <style>
+        :root {
+            --bg-deep: #010204; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
+            /* 14 種高辨識度琉璃漸層色 */
+            --color-red: #ff4d4d; --color-cyan: #00e5ff; --color-gold: #ffe066; --color-purple: #d8b4fe; 
+            --color-green: #80ed99; --color-orange: #ffb703; --color-pink: #ffb7c5; --color-white: #ffffff; 
+            --color-black: #555555; --color-gray: #a0a0a0; --color-blue: #4da6ff; --color-yellow: #ffff66; 
+            --color-brown: #cfa076; --color-magenta: #ff66cc;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            margin: 0; background: var(--bg-deep); color: #d0d0d0; 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; height: 100dvh; display: flex; flex-direction: column;
+            -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: none; 
+        }
+
+        #bgCanvas { position: fixed; inset: 0; z-index: 0; }
+        
+        #vision-overlay {
+            position: fixed; inset: 0; z-index: 100; pointer-events: none; opacity: 0;
+            transition: opacity 0.8s, background 1s;
+        }
+        .vibrate { animation: shake 0.2s infinite; }
+        @keyframes shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -2px); } 100% { transform: translate(1px, -1px); } }
+
+        /* 華藏世界星球特效 */
+        .huayan-planet {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.1);
+            width: 50vh; height: 50vh; border-radius: 50%; filter: blur(20px); opacity: 0; z-index: 50; pointer-events: none; 
+            transition: transform 2.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 2.5s ease, filter 2.5s ease;
+        }
+        .huayan-planet.active { transform: translate(-50%, -50%) scale(1.5); opacity: 0.85; filter: blur(4px); }
+
+        #center-point {
+            position: absolute; top: 50%; left: 50%; width: 12px; height: 12px; background: #fff; border-radius: 50%;
+            transform: translate(-50%, -50%); z-index: 5; pointer-events: none;
+            filter: drop-shadow(0 0 15px #fff) drop-shadow(0 0 35px var(--solid-gold));
+            animation: breathe 3s infinite alternate ease-in-out; transition: all 0.8s;
+        }
+        @keyframes breathe { 
+            0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.5; filter: drop-shadow(0 0 10px #fff); } 
+            100% { transform: translate(-50%, -50%) scale(1.4); opacity: 1; filter: drop-shadow(0 0 25px #fff) drop-shadow(0 0 50px var(--solid-gold)); } 
+        }
+
+        #header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid rgba(212,175,55,0.15); z-index: 10; position: relative; background: rgba(1,2,4,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        .lv-tag { letter-spacing: 4px; color: var(--gold); font-size: 1.05rem; font-weight: bold; }
+        .info-tag { font-size: 0.72rem; color: var(--cyan); letter-spacing: 2px; margin-top: 6px; }
+
+        /* 第 1 關引導文案 */
+        #tutorial-ui { position: absolute; top: 18%; left: 0; width: 100%; text-align: center; color: var(--gold); font-size: 0.85rem; letter-spacing: 3px; opacity: 0; transition: opacity 0.8s; z-index: 20; pointer-events: none; text-shadow: 0 0 10px rgba(212,175,55,0.5); }
+
+        #scene { flex: 1; display: flex; justify-content: center; align-items: center; perspective: 1200px; overflow: hidden; position: relative; z-index: 10; }
+        #carousel { width: 80px; height: 180px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); }
+
+        .vessel { position: absolute; top: 0; left: -10px; width: 100px; height: 150px; cursor: pointer; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .vessel.selected { transform: translateY(-18px); }
+        .bottle-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; transition: filter 0.3s; }
+        .vessel.selected .bottle-svg { filter: drop-shadow(0 0 20px rgba(243, 229, 171, 0.6)); }
+
+        .drop-jump { position: fixed; width: 22px; height: 22px; border-radius: 50%; box-shadow: inset -3px -3px 8px rgba(0,0,0,0.5), inset 3px 3px 8px rgba(255,255,255,0.9); z-index: 1000; pointer-events: none; }
+
+        #footer { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10; position: relative; background: rgba(1,2,4,0.3); border-top: 1px solid rgba(139,168,156,0.1); }
+        .tool-btn { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(139,168,156,0.4); color: var(--cyan); padding: 8px 14px; border-radius: 20px; font-size: 0.8rem; letter-spacing: 2px; cursor: pointer; backdrop-filter: blur(5px); transition: all 0.3s; }
+        .tool-btn:active { transform: scale(0.95); background: rgba(139, 168, 156, 0.15); }
+
+        /* 頂級琉璃對話框 */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.5s; }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-box { width: 88%; max-width: 340px; background: linear-gradient(135deg, rgba(20,25,35,0.85), rgba(5,10,15,0.95)); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 24px; padding: 35px 25px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(212,175,55,0.05); position: relative; transform: translateY(20px); transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); max-height: 85vh; overflow-y: auto; }
+        .modal-overlay.show .modal-box { transform: translateY(0); }
+        
+        .m-title { color: var(--gold); font-size: 1.1rem; letter-spacing: 5px; margin-bottom: 15px; text-shadow: 0 0 15px rgba(212,175,55,0.5); }
+        .m-divider { width: 40px; height: 1px; background: var(--solid-gold); margin: 0 auto 20px; opacity: 0.5; }
+        .m-text { font-size: 0.95rem; line-height: 1.8; margin-bottom: 30px; letter-spacing: 2px; color: #e0e0e0; text-align: justify; text-align-last: center; }
+        
+        .rpg-btn-wrap { position: relative; width: 100%; height: 52px; border-radius: 26px; border: 1px solid rgba(212,175,55,0.6); background: rgba(0,0,0,0.3); cursor: pointer; overflow: hidden; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); }
+        .rpg-btn-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0%; transition: width 0.05s linear; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.5)); }
+        .rpg-btn-text { position: relative; z-index: 5; color: #fff; font-size: 0.9rem; letter-spacing: 4px; text-shadow: 0 0 10px rgba(0,0,0,0.8); pointer-events: none; }
+        
+        .m-action-group { display: flex; flex-direction: column; gap: 12px; }
+        .m-btn { background: transparent; border: 1px solid rgba(139,168,156,0.4); color: var(--cyan); padding: 12px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; letter-spacing: 3px; width: 100%; }
+        .m-btn:active { transform: scale(0.96); background: rgba(139,168,156,0.1); }
+        .m-btn-prime { background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); border-color: var(--solid-gold); color: var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.1); }
+        .m-btn-prime:active { background: rgba(212,175,55,0.3); }
+
+        /* 自定義捲軸 */
+        .modal-box::-webkit-scrollbar { width: 4px; }
+        .modal-box::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.3); border-radius: 2px; }
+    </style>
+</head>
+<body id="main-body">
+
+<svg style="width:0; height:0; position:absolute;">
+    <defs>
+        <linearGradient id="grad-red" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ff4d4d"/><stop offset="100%" stop-color="#800000"/></linearGradient>
+        <linearGradient id="grad-cyan" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#00e5ff"/><stop offset="100%" stop-color="#004d40"/></linearGradient>
+        <linearGradient id="grad-gold" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffe066"/><stop offset="100%" stop-color="#8b6508"/></linearGradient>
+        <linearGradient id="grad-purple" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#d8b4fe"/><stop offset="100%" stop-color="#4a148c"/></linearGradient>
+        <linearGradient id="grad-green" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#80ed99"/><stop offset="100%" stop-color="#1b5e20"/></linearGradient>
+        <linearGradient id="grad-orange" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffb703"/><stop offset="100%" stop-color="#e65100"/></linearGradient>
+        <linearGradient id="grad-pink" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffb7c5"/><stop offset="100%" stop-color="#880e4f"/></linearGradient>
+        
+        <linearGradient id="grad-white" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#b0b0b0"/></linearGradient>
+        <linearGradient id="grad-black" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#606060"/><stop offset="100%" stop-color="#050505"/></linearGradient>
+        <linearGradient id="grad-gray" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#b0b0b0"/><stop offset="100%" stop-color="#404040"/></linearGradient>
+        <linearGradient id="grad-blue" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#4da6ff"/><stop offset="100%" stop-color="#000080"/></linearGradient>
+        <linearGradient id="grad-yellow" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffff80"/><stop offset="100%" stop-color="#b3b300"/></linearGradient>
+        <linearGradient id="grad-brown" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e6b89c"/><stop offset="100%" stop-color="#5c3a21"/></linearGradient>
+        <linearGradient id="grad-magenta" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ff80df"/><stop offset="100%" stop-color="#800060"/></linearGradient>
+        
+        <linearGradient id="glass-glare" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.3)"/><stop offset="40%" stop-color="transparent"/><stop offset="100%" stop-color="rgba(0,0,0,0.4)"/>
+        </linearGradient>
+    </defs>
+</svg>
+
+<canvas id="bgCanvas"></canvas>
+<div id="vision-overlay"></div>
+<div id="center-point"></div>
+
+<div id="header">
+    <div>
+        <div class="lv-tag" id="lv-display">結界讀取中</div>
+        <div id="timer-ui" style="font-size:0.7rem; color:var(--gold); margin-top:4px; opacity:0.8; letter-spacing:1px;">...</div>
+    </div>
+    <div style="text-align:right;">
+        <div class="info-tag" id="bag-ui">資糧：0/100</div>
+    </div>
+</div>
+<div id="tutorial-ui">輕觸提舉淨瓶，滑動轉動法輪<br>將同色法水歸一</div>
+
+<div id="scene"><div id="carousel"></div></div>
+
+<div id="footer">
+    <div class="tool-btn" onclick="showInfo()">指南</div>
+    <div class="tool-btn" onclick="initLevel()">重整</div>
+<div class="tool-btn" onclick="window.location.href='vision.html'">觀相</div>
+    <div class="tool-btn" style="border-color:var(--solid-gold); color:var(--gold);" onclick="triggerExit()">退場</div>
+</div>
+
+<div class="modal-overlay" id="modal">
+    <div class="modal-box" id="modal-box">
+        <div class="m-title" id="m-title"></div>
+        <div class="m-divider"></div>
+        <div class="m-text" id="m-text"></div>
+        <div class="m-action-group" id="m-actions"></div>
+    </div>
+</div>
+
+<script>
+    // --------------------------------------------------
+    // 資料庫防護初始化
+    // --------------------------------------------------
+    let db = {};
+    try { db = JSON.parse(localStorage.getItem('PX_V15.0')) || {}; } catch(e) { db = {}; }
+    
+    db.waterLevel = db.waterLevel || 1;
+    
+    // 同步觀相悟陣變數 (中文資料庫 PX_V15.0)
+db.visionLevel = db.visionLevel || 1;
+db.visionLastFailed = db.visionLastFailed || "";
+
+    db.tempBag = db.tempBag || 0;
+    db.points = db.points || 0;
+    if (!db.treasures) db.treasures = { sword: 0, vase: 0, jewel: 0 };
+    if (typeof db.treasures.sword === 'undefined') db.treasures.sword = 0;
+    if (typeof db.treasures.vase === 'undefined') db.treasures.vase = 0;
+    if (typeof db.treasures.jewel === 'undefined') db.treasures.jewel = 0;
+
+    function saveDB() { localStorage.setItem('PX_V15.0', JSON.stringify(db)); }
+
+    const COLORS = ['red', 'cyan', 'gold', 'purple', 'green', 'orange', 'pink', 'white', 'black', 'gray', 'blue', 'yellow', 'brown', 'magenta'];
+    let game = { vessels: [], selectedIdx: null, isAnimating: false, rotY: 0, startTime: Date.now(), starSpeed: 1, currentEncounter: null, isHuayan: false };
+    let timerInterval = null;
+    let synth = window.speechSynthesis; // 語音引擎
+
+    // 音效引擎
+    let audioCtx = null;
+    function initAudio() { try { if (!audioCtx) { const AC = window.AudioContext || window.webkitAudioContext; if(AC) audioCtx = new AC(); } if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); } catch(e) {} }
+    function playTone(freq, type, dur, vol) { try { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + dur); } catch(e) {} }
+    function playSelect() { playTone(1200, 'sine', 0.1, 0.2); } 
+    function playJump() { playTone(800, 'triangle', 0.25, 0.15); } 
+    function playErr() { playTone(200, 'sawtooth', 0.2, 0.2); } 
+    function playWin() { playTone(432, 'sine', 2.0, 0.5); } 
+
+    // --------------------------------------------------
+    // 視覺引擎：完美 SVG 白框淨瓶
+    // --------------------------------------------------
+    function getBottleSVG(idx) {
+        return `
+        <svg viewBox="0 0 100 150" class="bottle-svg">
+            <defs><clipPath id="m-${idx}"><path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" /></clipPath></defs>
+            <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="rgba(255,255,255,0.03)" />
+            <g id="w-${idx}" clip-path="url(#m-${idx})"></g>
+            <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="url(#glass-glare)" pointer-events="none"/>
+            <ellipse cx="50" cy="95" rx="22" ry="6" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" pointer-events="none"/>
+            <ellipse cx="50" cy="95" rx="22" ry="6" fill="rgba(255,255,255,0.1)" pointer-events="none"/>
+            <path d="M45,25 L55,25 L58,50 L72,95 L60,125 L40,125 L28,95 L42,50 Z" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round" pointer-events="none"/>
+            <path d="M40,125 Q50,135 60,125" fill="none" stroke="#d4af37" stroke-width="3" stroke-linecap="round" pointer-events="none"/>
+        </svg>`;
+    }
+
+     // 修正一：導入「反向推演法」，杜絕數學死局，保證 100% 有解
+    function generateVessels(total, colorCount) {
+        // 1. 初始化完美理順狀態 (完成態)
+        let v = [];
+        for (let i = 0; i < total; i++) {
+            v.push(i < colorCount ? [COLORS[i], COLORS[i], COLORS[i]] : []);
+        }
+
+        // 2. 反向亂序引擎：模擬「合法倒水」的逆動作
+        const scrambleSteps = colorCount * 40; // 依顏色數量決定打亂深度
+
+        for (let step = 0; step < scrambleSteps; step++) {
+            // A. 尋找合法的「反向來源」(T)
+            // 規則：正向只能倒入空瓶或同色瓶，故反向抽離時，頂部必須是單層，或是兩層以上同色。
+            let validSources = [];
+            v.forEach((bottle, idx) => {
+                if (bottle.length === 1) {
+                    validSources.push(idx);
+                } else if (bottle.length > 1 && bottle[bottle.length - 1] === bottle[bottle.length - 2]) {
+                    validSources.push(idx);
+                }
+            });
+
+            if (validSources.length === 0) break; // 防護機制
+            
+            let sourceIdx = validSources[Math.floor(Math.random() * validSources.length)];
+            let colorToMove = v[sourceIdx][v[sourceIdx].length - 1];
+
+            // B. 尋找合法的「反向目標」(S)
+            // 規則：不能是滿瓶，且不能是來源瓶本身
+            let validTargets = [];
+            v.forEach((bottle, idx) => {
+                if (bottle.length < 3 && idx !== sourceIdx) {
+                    validTargets.push(idx);
+                }
+            });
+
+            if (validTargets.length === 0) continue;
+            let targetIdx = validTargets[Math.floor(Math.random() * validTargets.length)];
+
+            // C. 執行反向倒水
+            v[sourceIdx].pop();
+            v[targetIdx].push(colorToMove);
+        }
+
+        return v;
+    }
+
+
+
+ // ✨ 莊嚴入口選擇器 (防卡死優化版)
+ function showEntrance() {
+     const entranceHtml = `
+         <div style="margin-bottom:20px; font-size:0.9rem; color:#aaa; line-height:1.8; letter-spacing:2px;">
+             殊途同歸，皆向淨土。<br>先觀相後淨水，調伏心念。
+         </div>
+         <div class="m-action-group">
+             <button class="m-btn m-btn-prime" style="border-color:var(--gold); color:var(--gold);" 
+                 onclick="initAudio(); closeModal(); window.location.href='vision.html'">
+                 觀相悟陣（基礎）
+             </button>
+             <button class="m-btn m-btn-prime" 
+                 onclick="initAudio(); closeModal(); setTimeout(() => initLevel(), 100);">
+                 琉璃淨水（進階）
+             </button>
+             <div style="height:10px;"></div>
+             <button class="m-btn" onclick="window.location.href='index.html?screen=3'">歸返主道場</button>
+         </div>
+     `;
+     // 微小延遲讓星空背景先渲染
+     setTimeout(() => {
+         showModal("假借修真 ‧ 雙極分支", "", null, null, entranceHtml);
+         document.getElementById('m-text').style.display = 'none';
+     }, 150);
+ }
+
+    function initLevel() {
+        const carousel = document.getElementById('carousel'); carousel.innerHTML = '';
+        game.selectedIdx = null; game.isAnimating = false; game.startTime = Date.now(); game.starSpeed = 1;
+        game.rotY = 0; carousel.style.transform = `rotateY(0deg)`;
+        
+        const lv = db.waterLevel;
+        let totalVessels, colorCount;
+
+        // 第一關：絕對簡單引導模式 (3瓶，2色，1空)
+        if (lv === 1) {
+            totalVessels = 3; colorCount = 2;
+            document.getElementById('tutorial-ui').style.opacity = '1';
+        } else {
+            // 動態難度：緩步升至 16 瓶、14 色
+            totalVessels = Math.min(16, 4 + Math.floor((lv - 1) / 10)); 
+            colorCount = totalVessels - 2; 
+            document.getElementById('tutorial-ui').style.opacity = '0';
+        }
+        
+        game.vessels = generateVessels(totalVessels, colorCount);
+
+        const rows = totalVessels > 8 ? 2 : 1; 
+        const perRow = Math.ceil(totalVessels / rows);
+        const radius = Math.round((100 / 2) / Math.tan(Math.PI / perRow)) + 65;
+
+        for (let i = 0; i < totalVessels; i++) {
+            const v = document.createElement('div'); v.className = 'vessel'; v.id = `v-${i}`;
+            let rowIdx = Math.floor(i / perRow); let colIdx = i % perRow;
+            let theta = (360 / perRow) * colIdx;
+            let yOffset = rows === 2 ? (rowIdx === 0 ? -100 : 100) : 0;
+            v.style.transform = `rotateY(${theta}deg) translateY(${yOffset}px) translateZ(${radius}px)`;
+            v.dataset.theta = theta;
+            v.innerHTML = getBottleSVG(i);
+            
+            v.onclick = () => handleTap(i, theta);
+            carousel.appendChild(v);
+            renderWater(i);
+        }
+
+        updateShading();
+        document.getElementById('lv-display').innerText = `第 ${lv} 重結界`;
+        document.getElementById('bag-ui').innerText = `資糧：${db.tempBag}/100`;
+        startTimer();
+    }
+
+    function renderWater(idx) {
+        const g = document.getElementById(`w-${idx}`);
+        if (!g) return;
+        g.innerHTML = '';
+        const slots = [{y:103.75, h:27}, {y:77.5, h:26.5}, {y:51.25, h:26.5}];
+        game.vessels[idx].forEach((c, i) => {
+            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute("x", "0"); rect.setAttribute("y", slots[i].y); rect.setAttribute("width", "100"); rect.setAttribute("height", slots[i].h);
+            rect.setAttribute("fill", `url(#grad-${c})`); g.appendChild(rect);
+            
+            if(i === game.vessels[idx].length - 1) {
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", "10"); line.setAttribute("y1", slots[i].y); line.setAttribute("x2", "90"); line.setAttribute("y2", slots[i].y);
+                line.setAttribute("stroke", "rgba(255,255,255,0.85)"); line.setAttribute("stroke-width", "1.5"); g.appendChild(line);
+            }
+        });
+    }
+
+    // 最短路徑旋轉邏輯
+    async function handleTap(idx, theta) {
+        if (game.isAnimating || game.currentEncounter || game.isHuayan) return;
+        const targetEl = document.getElementById(`v-${idx}`);
+        
+        if (game.selectedIdx === null) {
+            if (game.vessels[idx].length === 0) return;
+            game.selectedIdx = idx; targetEl.classList.add('selected');
+            updateShading(); playSelect();
+        } else {
+            const fromIdx = game.selectedIdx; const toIdx = idx;
+            const fromEl = document.getElementById(`v-${fromIdx}`);
+            if (fromIdx === toIdx) { fromEl.classList.remove('selected'); game.selectedIdx = null; updateShading(); return; }
+
+            const fromArr = game.vessels[fromIdx]; const toArr = game.vessels[toIdx];
+            const moveColor = fromArr[fromArr.length - 1];
+
+            if (toArr.length < 3 && (toArr.length === 0 || toArr[toArr.length-1] === moveColor)) {
+                try {
+                    game.isAnimating = true; fromEl.classList.remove('selected'); playJump();
+                    
+                    let diff = ((-theta) - game.rotY + 540) % 360 - 180;
+                    game.rotY += diff;
+                    document.getElementById('carousel').style.transform = `rotateY(${game.rotY}deg)`;
+                    updateShading();
+                    
+                    await new Promise(r => setTimeout(r, 450));
+                    
+                    const poppedColor = fromArr.pop(); renderWater(fromIdx);
+                    
+                    const fromRect = fromEl.getBoundingClientRect();
+                    const targetRect = targetEl.getBoundingClientRect();
+                    const destX = targetRect.left + (targetRect.width - 22) / 2;
+                    const slots = [103.75, 77.5, 51.25, 25];
+                    const destY = targetRect.top + (slots[toArr.length] / 150) * targetRect.height;
+                    
+                    await animateJump(fromRect.left + 40, fromRect.top + 40, destX, destY, poppedColor);
+                    
+                    toArr.push(poppedColor); renderWater(toIdx);
+                    checkWin();
+                } catch(e) { console.warn(e); } 
+                finally { game.selectedIdx = null; game.isAnimating = false; }
+            } else { fromEl.classList.remove('selected'); game.selectedIdx = null; updateShading(); playErr(); }
+        }
+    }
+
+    function animateJump(sx, sy, ex, ey, cid) {
+        return new Promise(resolve => {
+            const j = document.createElement('div'); 
+            j.className = 'drop-jump'; 
+            j.style.background = `var(--color-${cid})`;
+            document.body.appendChild(j);
+            
+            const anim = j.animate([
+                { transform: `translate(${sx}px, ${sy}px) scale(1)`, opacity: 1 },
+                { transform: `translate(${(sx+ex)/2}px, ${Math.min(sy,ey)-150}px) scale(1.3)`, opacity: 1 },
+                { transform: `translate(${ex}px, ${ey}px) scale(0.6)`, opacity: 0 }
+            ], { duration: 380, easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)', fill: 'forwards' });
+            
+            // 設立狀態鎖，防止設備休眠導致的 Promise 永遠不解析
+            let isResolved = false;
+            const finishAnim = () => {
+                if(isResolved) return;
+                isResolved = true;
+                if(j.parentNode) j.remove(); 
+                resolve();
+            };
+            
+            anim.onfinish = finishAnim;
+            // 450毫秒後若動畫未正常結束，強制釋放狀態
+            setTimeout(finishAnim, 450); 
+        });
+    }
+
+
+    // --------------------------------------------------
+    // 結算與法界異象庫
+    // --------------------------------------------------
+    const SCRIPTURES = [
+        { t: "釋迦如來 ‧ 演說大經", c: "【發菩提心，一向專念】。<br>此三輩往生之根本，行者當攝心入定。", b: "南無本師釋迦牟尼佛", color: "rgba(243,229,171,0.25)" },
+        { t: "法藏比丘 ‧ 弘願顯現", c: "【設我得佛，十方眾生，至心信樂】。<br>四十八願，願願皆為導歸極樂。", b: "南無阿彌陀佛", color: "rgba(255,255,255,0.3)" },
+        { t: "地藏菩薩 ‧ 業海震盪", c: "【眾生度盡，方證菩提】。<br>無明業海翻湧，請至誠長按稱唸大願名號，鎮伏波濤。", b: "南無地藏王菩薩", color: "rgba(180,30,30,0.5)", type: "earth" },
+        { t: "大勢至 ‧ 念佛三昧", c: "【都攝六根，淨念相繼】。<br>如子憶母，法界白光恆常護念。", b: "南無大勢至菩薩", color: "rgba(255,255,255,0.4)" },
+        { t: "觀音如來 ‧ 般若照見", c: "【照見五蘊皆空，度一切苦厄】。<br>色即是空，空即是色。", b: "南無觀世音菩薩", color: "rgba(0,200,255,0.2)" },
+        { t: "彌勒菩薩 ‧ 慈心三昧", c: "【慈眼視眾生，福聚海無量】。<br>識得唯心所現，方能轉識成智。", b: "南無彌勒尊佛", color: "rgba(255,183,3,0.25)" },
+        { t: "普賢菩薩 ‧ 願王引導", c: "【虛空有盡，我願無窮】。<br>一塵中有塵數剎，一一剎有難思佛。", b: "南無普賢菩薩", color: "rgba(216,180,254,0.25)" },
+        { t: "無常顯現 ‧ 幻象叢生", c: "【世間無常，國土危脆】。<br>六根攀緣，心識散亂。請攝心安住，稱唸佛號以破除幻網。", b: "南無阿彌陀佛", color: "rgba(50,55,60,0.6)" }
+    ];
+
+    async function checkWin() {
+        if (game.vessels.every(v => v.length === 0 || (v.length === 3 && v.every(c => c === v[0])))) {
+            
+            const today = new Date().toDateString();
+            let isFirstWinToday = (db.waterLastDate !== today);
+            db.waterLastDate = today; 
+            db.waterLevel++; 
+            
+            let earnedPoints = 1;
+            let clearMsg = "一念清淨，資糧 +1。<br>";
+            if (isFirstWinToday) {
+                earnedPoints += 10;
+                clearMsg = "今日首度理順，獲【每日定課】 +10，過關 +1，共得 +11 點。<br>";
+            }
+            db.tempBag += earnedPoints;
+            
+            // ✨ 滿百自動提領邏輯 (精準找零版)
+            let syncMsg = "";
+            if (db.tempBag >= 100) {
+                let transferAmount = Math.floor(db.tempBag / 100) * 100; 
+                db.points += transferAmount; 
+                db.tempBag -= transferAmount; 
+                syncMsg = `<br><span style="color:#00e5ff; font-weight:bold;">資糧圓滿！已將 ${transferAmount} 點自動匯入主系統。</span><br>`;
+            }
+            
+            // 每 20 關固定化現淨瓶
+            let dropMsg = "";
+            let levelPassed = db.waterLevel - 1;
+            if (levelPassed % 20 === 0 && levelPassed > 0) { 
+                db.treasures.vase++; 
+                dropMsg = `
+                <div style="display:flex; justify-content:center; align-items:center; gap:15px; margin: 20px 0; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 16px; border: 1px solid rgba(212,175,55,0.3);">
+                    <div style="width: 30px; height: 45px; position:relative;">
+                        ${getBottleSVG('drop-icon')}
+                    </div>
+                    <div style="text-align:left;">
+                        <div style="color:var(--solid-gold); font-size:0.9rem; letter-spacing:2px; font-weight:bold;">化現【琉璃淨瓶】</div>
+                        <div style="color:#aaa; font-size:0.75rem; letter-spacing:1px; margin-top:3px;">已收入多寶閣</div>
+                    </div>
+                </div>`;
+            }
+            saveDB();
+            
+            // 過關白霧特效
+            game.starSpeed = 25; playWin();
+            const overlay = document.getElementById('vision-overlay');
+            overlay.style.background = 'radial-gradient(circle, #fff 0%, transparent 80%)';
+            overlay.style.opacity = '1';
+            document.getElementById('center-point').style.transform = 'translate(-50%, -50%) scale(50)';
+            
+            setTimeout(() => {
+                game.starSpeed = 1; overlay.style.opacity = '0';
+                document.getElementById('center-point').style.transform = 'translate(-50%, -50%) scale(1)';
+                
+                // ✨ 把 syncMsg 加入到所有彈窗裡
+                if (levelPassed % 5 === 0 && levelPassed > 0) {
+                    const s = SCRIPTURES[Math.floor(Math.random()*SCRIPTURES.length)];
+                    triggerRPG(s, clearMsg + syncMsg + dropMsg);
+                } else if (levelPassed % 3 === 0 && levelPassed > 0) {
+                    triggerHuayanWorld(levelPassed, clearMsg + syncMsg + dropMsg);
+                } else {
+                    showLevelClear(clearMsg + syncMsg + dropMsg);
+                }
+            }, 1800);
+
+        }
+    }
+
+    // ✨ 華藏二十重世界 (每 3 關觸發)
+   function triggerHuayanWorld(lvl, extraMsg) {
+        game.isHuayan = true;
+        game.starSpeed = 60; 
+        let layer = Math.floor(lvl / 3) % 20 + 1;
+        
+        const planet = document.createElement('div');
+        planet.className = 'huayan-planet';
+        
+        // ✨ 改用絕對色碼，防止在部分裝置或變數丟失時變成隱形透明！
+        const cols = ['rgba(0,229,255,0.4)', 'rgba(216,180,254,0.4)', 'rgba(255,224,102,0.4)', 'rgba(255,102,204,0.4)'];
+        
+        planet.style.background = `radial-gradient(circle, ${cols[layer % 4]} 0%, transparent 70%)`;
+        document.body.appendChild(planet);
+        
+        setTimeout(() => planet.classList.add('active'), 100);
+        
+        setTimeout(() => {
+            planet.classList.remove('active'); planet.style.opacity = '0';
+            setTimeout(() => planet.remove(), 1500);
+            game.starSpeed = 1; game.isHuayan = false;
+            
+            showLevelClear(`<span style="color:var(--solid-gold); font-size:1.05rem; font-weight:bold;">神遊華藏大千 ‧ 第 ${layer} 重天</span><br><br>` + extraMsg);
+        }, 3000);
+    }
+
+    function showLevelClear(msg) {
+        showModal("理順色相 ‧ 境界提昇", msg, null, null, `
+            <button class="m-btn m-btn-prime" onclick="closeModalAndNext()">繼續精進</button>
+            <button class="m-btn" onclick="triggerExit()">圓滿退場</button>
+        `);
+        document.getElementById('m-text').style.display = 'block';
+    }
+
+    function closeModalAndNext() { closeModal(); initLevel(); }
+
+    function triggerRPG(s, extraMsg) {
+        game.currentEncounter = s;
+        const overlay = document.getElementById('vision-overlay');
+        overlay.style.opacity = '1'; overlay.style.background = s.color;
+        if(s.type === 'earth') document.getElementById('main-body').classList.add('vibrate');
+
+        showModal(s.t, s.c + "<br><br><span style='font-size:0.8rem; color:var(--gold);'>" + extraMsg + "</span>", null, null, `
+            <div class="rpg-btn-wrap" onmousedown="startRPG()" onmouseup="stopRPG()" ontouchstart="startRPG()" ontouchend="stopRPG()">
+                <div class="rpg-btn-fill" id="fill" style="background:linear-gradient(90deg, transparent, ${s.color.replace(/[\d\.]+\)$/g, '0.8)')})"></div>
+                <div class="rpg-btn-text">${s.b}</div>
+            </div>
+            <div style="font-size:0.7rem; color:#888; letter-spacing:2px; margin-top:5px;">(長按聚光解厄)</div>
+        `);
+        document.getElementById('m-text').style.display = 'block';
+    }
+
+    let rpgTimer = null, rpgProg = 0;
+    function startRPG() {
+        clearInterval(rpgTimer); rpgProg = 0;
+        rpgTimer = setInterval(() => {
+            rpgProg += 2; document.getElementById('fill').style.width = rpgProg + '%';
+            if(rpgProg >= 100) { clearInterval(rpgTimer); finishRPG(); }
+        }, 30);
+    }
+    function stopRPG() { clearInterval(rpgTimer); rpgProg = 0; document.getElementById('fill').style.width = '0%'; }
+    function finishRPG() {
+        const overlay = document.getElementById('vision-overlay');
+        overlay.style.background = '#fff'; setTimeout(() => { overlay.style.opacity = '0'; }, 300);
+        document.getElementById('main-body').classList.remove('vibrate');
+        closeModal(); showLevelClear(""); 
+    }
+
+    // ✨ 說明與語音導讀
+    function showInfo() {
+        let infoHtml = `
+            <div style="font-size: 0.85rem; line-height: 1.8; text-align: left; color: #d0d0d0; letter-spacing: 1px; margin-bottom: 20px;">
+                「心如工畫師，能畫諸世間。」<br><br>
+                此琉璃法水，非為神通異境，乃是供行者「調伏心念」之微觀道場。瓶中色相紛雜，猶如娑婆日常之煩惱流轉；藉由色相的凝神觀察與推演歸一，希望能為行者在喧囂的塵勞中，尋得一絲平靜的契機。願於這推演法水的片刻專注裡，淺嘗「戒、定、慧」之微意，漸次理順心緒。<br><br>
+                <span style="color:var(--solid-gold); font-weight:bold;">【 觀心與定力法則 】</span><br>
+                1. 每日定課：娑婆一日，陣法一開。今日色相理順後，法水即止，唯餘靜觀。<br>
+                2. 時劫考驗：每重結界皆有時劫。若心生焦躁、六根攀緣而超時，結界自閉，請安住呼吸，明日再來。<br>
+                3. 資糧匯聚：理順一重結界，聚一分資糧，滿百則可匯入主系統。<br>
+                4. 華藏遊歷：每突破三重結界，神遊華藏大千世界一重天；每二十重，化現【琉璃淨瓶】，以助行者於多寶閣中交織萬德。
+            </div>
+            <button class="m-btn m-btn-prime" onclick="readInfo()" style="margin-bottom:10px;">語音導讀</button>
+            <button class="m-btn" onclick="closeModal()">知悉</button>
+        `;
+        showModal("琉璃法水 ． 持戒定慧", "", null, null, infoHtml);
+        document.getElementById('m-text').style.display = 'none';
+    }
+
+    function readInfo() {
+        if(synth.speaking) { synth.cancel(); return; }
+        const text = "琉璃法水，持戒定慧。心如工畫師，能畫諸世間。此琉璃法水，非為神通異境，乃是供行者「調伏心念」之微觀道場。瓶中色相紛雜，猶如娑婆日常之煩惱流轉；藉由色相的凝神觀察與推演歸一，希望能為行者在喧囂的塵勞中，尋得一絲平靜的契機。願於這推演法水的片刻專注裡，淺嘗「戒、定、慧」之微意，漸次理順心緒。觀心與定力法則：第一，每日定課：娑婆一日，陣法一開。今日色相理順後，法水即止，唯餘靜觀。第二，時劫考驗：每重結界皆有時劫。若心生焦躁、六根攀緣而超時，結界自閉，請安住呼吸，明日再來。第三，資糧匯聚：理順一重結界，聚一分資糧，滿百則可匯入主系統。第四，華藏遊歷：每突破三重結界，神遊華藏大千世界一重天；每二十重，化現琉璃淨瓶，以助行者於多寶閣中交織萬德。";
+        const utterThis = new SpeechSynthesisUtterance(text);
+        utterThis.lang = 'zh-TW'; utterThis.rate = 0.85; 
+        synth.speak(utterThis);
+    }
+
+             function triggerExit() {
+        let html = `<button class="m-btn" onclick="window.location.href='vision.html'">觀相悟陣</button>`;
+        if (db.tempBag >= 100) { 
+            // ✨ 只顯示 100 的倍數讓長輩提領
+            let tAmt = Math.floor(db.tempBag / 100) * 100;
+            html += `<button class="m-btn m-btn-prime" onclick="syncPoints()">${tAmt} 點入庫道場</button>`; 
+        } else { 
+            html += `<button class="m-btn" onclick="window.location.href='index.html?screen=3'">歸返道場</button>`; 
+        }
+        html += `<button class="m-btn" onclick="closeModal()">繼續觀心</button>`;
+        showModal("法水觀心 ‧ 暫歇", "放下手機，請給身邊的人一個微笑，或在心中默默感恩。<br><br>清淨，即在當下。", null, null, html);
+        document.getElementById('m-text').style.display = 'block';
+    }
+
+    
+
+
+    function showModal(title, text, btnText, callback, customHtml) {
+        document.getElementById('m-title').innerHTML = title;
+        document.getElementById('m-text').innerHTML = text;
+        document.getElementById('m-actions').innerHTML = customHtml || `<button class="m-btn m-btn-prime" onclick="closeModal()">${btnText}</button>`;
+        if(callback) window.currentCallback = callback;
+        document.getElementById('modal').classList.add('show');
+    }
+
+    function closeModal() { 
+        document.getElementById('modal').classList.remove('show'); 
+        game.currentEncounter = null; 
+        if(synth.speaking) synth.cancel(); // 關閉時停止語音
+        if(window.currentCallback) { window.currentCallback(); window.currentCallback = null; } 
+    }
+
+       // ✨ 精準找零的手動提領
+    function syncPoints() { 
+        let transferAmount = Math.floor(db.tempBag / 100) * 100;
+        if (transferAmount > 0) {
+            db.points += transferAmount; 
+            db.tempBag -= transferAmount; 
+        }
+        saveDB(); 
+        window.location.href = 'index.html'; 
+    }
+
+
+          // 修正二：時劫封頂機制，避免無限膨脹
+    function startTimer() {
+        clearInterval(timerInterval);
+        // 加入上限封頂：無論幾百關，時劫最高鎖定為 90 分鐘
+        const limit = Math.min(90, 30 + db.waterLevel) * 60 * 1000;
+        
+        timerInterval = setInterval(() => {
+            const elapsed = Date.now() - game.startTime;
+            if (elapsed > limit) { 
+                clearInterval(timerInterval); 
+                
+                let finalLvl = db.waterLevel;
+                let finalBag = db.tempBag;
+                saveDB(); 
+                
+                let endMsg = `本次止步於：<span style="color:var(--solid-gold)">第 ${finalLvl} 重結界</span><br>`;
+                endMsg += `目前累積資糧：<span style="color:var(--solid-gold)">${finalBag} 點</span><br><br>`;
+                endMsg += `一念執著，心神已疲。<br>請暫且放下，明日再來理順。`;
+                
+                showModal("時劫已滿", endMsg, null, null, `<button class="m-btn m-btn-prime" onclick="window.location.href='index.html?screen=3'">安住呼吸</button>`); 
+                document.getElementById('m-text').style.display = 'block';
+            }
+            const min = Math.floor((limit - elapsed) / 60000);
+            document.getElementById('timer-ui').innerText = `觀心餘時：${min} 分鐘`;
+        }, 10000); 
+    }
+
+
+
+
+            
+
+
+
+    // --------------------------------------------------
+    // 背景引擎：星空前進穿梭與滑動防干擾
+    // --------------------------------------------------
+    const canvas = document.getElementById('bgCanvas'); const ctx = canvas.getContext('2d');
+    let cw, ch, stars = [], orbs = [];
+    function res() { cw=canvas.width=window.innerWidth; ch=canvas.height=window.innerHeight; }
+    window.addEventListener('resize', res); res();
+    for(let i=0; i<150; i++) stars.push({x:(Math.random()-0.5)*2000, y:(Math.random()-0.5)*2000, z:Math.random()*2000, s:Math.random()*2+1});
+    const oCols = ['rgba(230,57,70,0.3)', 'rgba(0,180,216,0.3)', 'rgba(212,175,55,0.3)', 'rgba(155,93,229,0.3)'];
+    for(let i=0; i<5; i++) orbs.push({x:Math.random()*cw, y:Math.random()*ch, r:Math.random()*120+60, c:oCols[i%4], vx:(Math.random()-0.5)*1.5, vy:(Math.random()-0.5)*1.5});
+
+    function draw() {
+        ctx.fillStyle = '#010204'; ctx.fillRect(0,0,cw,ch); ctx.globalCompositeOperation = 'screen';
+        
+        // 華藏世界金色星軌特效
+        if(game.isHuayan) {
+            ctx.fillStyle = 'rgba(212,175,55,0.05)';
+            ctx.fillRect(0,0,cw,ch);
+        }
+
+        if(!game.currentEncounter && !game.isHuayan) {
+            orbs.forEach(o => { o.x+=o.vx; o.y+=o.vy; if(o.x<0||o.x>cw)o.vx*=-1; if(o.y<0||o.y>ch)o.vy*=-1; let g=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r); g.addColorStop(0,o.c); g.addColorStop(1,'transparent'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2); ctx.fill(); });
+        }
+        stars.forEach(s => {
+            s.z -= (6 * game.starSpeed); if(s.z<=0){s.z=2000; s.x=(Math.random()-0.5)*2000; s.y=(Math.random()-0.5)*2000;}
+            let sc=800/(800+s.z), px=cw/2+s.x*sc, py=ch/2+s.y*sc;
+            if(px>0&&px<cw&&py>0&&py<ch){ 
+                ctx.fillStyle = game.isHuayan ? `rgba(212,175,55,${sc})` : `rgba(255,255,255,${sc})`; 
+                ctx.beginPath(); ctx.arc(px,py,s.s*sc*(game.starSpeed>1?8:1),0,Math.PI*2); ctx.fill(); 
+            }
+        });
+        ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(draw);
+    }
+    draw();
+
+    let isD = false, sx = 0, dragDelta = 0;
+    document.addEventListener('pointerdown', e => { if(game.isAnimating||game.currentEncounter||game.isHuayan||e.target.closest('.tool-btn')||e.target.closest('.modal-box')) return; isD=true; sx=e.clientX; dragDelta=0; document.getElementById('carousel').style.transition='none'; initAudio(); });
+    document.addEventListener('pointermove', e => { if(!isD) return; let dx=e.clientX-sx; dragDelta+=Math.abs(dx); game.rotY+=dx*0.4; sx=e.clientX; document.getElementById('carousel').style.transform=`rotateY(${game.rotY}deg)`; updateShading(); });
+    const endDrag = () => { if(isD) { isD=false; document.getElementById('carousel').style.transition='transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)'; } };
+    document.addEventListener('pointerup', endDrag); document.addEventListener('pointercancel', endDrag); document.addEventListener('pointerleave', endDrag);
+
+    function updateShading() {
+        document.querySelectorAll('.vessel').forEach(c => {
+            let currentAngle = (parseFloat(c.dataset.theta) + game.rotY) % 360; if(currentAngle < 0) currentAngle += 360;
+            let dist = Math.min(currentAngle, 360 - currentAngle);
+            if(dist > 85) { c.style.filter = 'brightness(0.3) opacity(0.6)'; } 
+            else { c.style.filter = c.classList.contains('selected') ? 'brightness(1.4)' : 'brightness(1) opacity(1)'; }
+        });
+    }
+
+    // ✨ 智慧開局攔截：檢查是否從觀相直接跳轉過來
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('play') === '1') {
+        initLevel(); // 有帶密語參數，直接啟動淨水陣法
+    } else {
+        showEntrance(); // 沒有參數，顯示雙極分支選單
+    }
+
+</script>
+</body>
+</html>

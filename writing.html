@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="manifest" href="manifest.json">
+    <title>彌陀淨土系統 ． 七日法界觀想</title>
+    <style>
+        :root {
+            --bg-deep: #020203; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c; 
+            --gold-light: #f3e5ab; 
+            --text-gold: #f3e5ab;
+            --gold-glow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.3);
+            --mandala-red: rgba(70, 15, 15, 0.45);
+        }
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; }
+        body { 
+            background: radial-gradient(circle at 50% 50%, #0a0e14 0%, var(--bg-deep) 100%); 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; width: 100vw; height: 100dvh;
+            display: flex; justify-content: center; align-items: center; color: #fff;
+        }
+
+        #starCanvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+        #vignette { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(circle at 50% 30%, transparent 10%, rgba(1, 1, 3, 0.95) 100%); }
+
+        #mist-layer { position: absolute; bottom: -10%; left: -10%; width: 120%; height: 60%; z-index: 5; pointer-events: none; mix-blend-mode: screen; overflow: hidden; }
+        .mist-cloud { 
+            position: absolute; border-radius: 50%; 
+            animation: drift-mist 15s infinite alternate ease-in-out; 
+            will-change: transform, opacity; 
+            transform: translateZ(0); 
+        }
+
+        .mist-1 { width: 1000px; height: 500px; left: -10%; bottom: -50px; background: radial-gradient(ellipse, rgba(212,175,55,0.25) 0%, transparent 70%); animation-duration: 18s; }
+        .mist-2 { width: 1200px; height: 600px; right: -15%; bottom: -100px; background: radial-gradient(ellipse, rgba(196,113,237,0.2) 0%, transparent 70%); animation-duration: 22s; animation-delay: -5s; }
+        .mist-3 { width: 900px; height: 450px; left: 15%; bottom: 0px; background: radial-gradient(ellipse, rgba(0,242,254,0.2) 0%, transparent 70%); animation-duration: 16s; animation-delay: -2s; }
+        .mist-4 { width: 1100px; height: 550px; right: 10%; bottom: -80px; background: radial-gradient(ellipse, rgba(255,126,179,0.2) 0%, transparent 70%); animation-duration: 20s; animation-delay: -8s; }
+        .mist-5 { width: 800px; height: 400px; left: 35%; bottom: -40px; background: radial-gradient(ellipse, rgba(255,255,255,0.25) 0%, transparent 70%); animation-duration: 14s; animation-delay: -10s; }
+        @keyframes drift-mist { 0% { transform: translateX(-40px) translateY(10px) scale(1); opacity: 0.6; } 100% { transform: translateX(40px) translateY(-10px) scale(1.1); opacity: 1; } }
+
+        /* 行願主頁面 */
+        #page-main { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%; }
+        .neon-flow { background: linear-gradient(90deg, #FDF5D3, #D4AF37, #E5989B, #89CFF0, #C9A0DC, #D4AF37, #FDF5D3); background-size: 200% 100%; animation: energyFlow 4s linear infinite; }
+        @keyframes energyFlow { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+        
+        .nav-top { width: 90%; max-width: 480px; z-index: 20; display: flex; justify-content: space-between; align-items: center; margin-top: max(15px, env(safe-area-inset-top)); padding: 12px 20px; background: rgba(5, 5, 8, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(212,175,55,0.2); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .nav-btn { display: flex; align-items: center; gap: 8px; color: var(--gold-light); font-size: 0.85rem; letter-spacing: 2px; cursor: pointer; transition: 0.3s; }
+        .nav-btn svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.5; fill: none; }
+        .nav-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.1); }
+
+        .tracker-container { z-index: 20; margin-top: 15px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .tracker-title { color: var(--gold-light); font-size: 0.85rem; letter-spacing: 4px; text-shadow: 0 0 10px var(--solid-gold); font-weight: bold; }
+        
+        .tracker-circles { display: flex; gap: 8px; align-items: center; }
+        .track-circle { width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(212,175,55,0.3); display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.6); font-size: 0.95rem; color: #555; font-weight: bold; transition: all 0.4s ease; cursor: pointer; }
+        .track-circle.lit { border-color: #fff; color: rgba(255, 255, 255, 0.4); background: rgba(212,175,55,0.1); }
+        .track-circle.active-day { border-color: var(--gold); color: var(--gold); background: rgba(212,175,55,0.25); box-shadow: var(--gold-glow); text-shadow: var(--gold-glow); }
+
+        .zen-action-btn {
+            background: linear-gradient(180deg, rgba(30, 25, 15, 0.8) 0%, rgba(10, 8, 5, 0.95) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            box-shadow: inset 0 0 12px rgba(212, 175, 55, 0.2), 0 4px 15px rgba(0,0,0,0.6);
+            color: var(--gold-light);
+            padding: 10px 24px;
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 0 6px rgba(243, 229, 171, 0.4);
+        }
+        .zen-action-btn:active {
+            background: linear-gradient(180deg, rgba(50, 40, 20, 0.9) 0%, rgba(20, 15, 10, 0.98) 100%);
+            border-color: var(--gold);
+            box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.2), 0 2px 8px rgba(0,0,0,0.8);
+            transform: scale(0.98);
+            color: #fff;
+        }
+
+        /* 透明玻璃面圓形向量按鈕 - 略微放大版本 */
+        .glass-vector-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            color: var(--gold-light);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            padding: 0;
+            flex-shrink: 0;
+        }
+        .glass-vector-btn svg {
+            width: 22px;
+            height: 22px;
+        }
+        .glass-vector-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.35);
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.15);
+        }
+        .glass-vector-btn:active {
+            transform: scale(0.94);
+            background: rgba(255, 255, 255, 0.22);
+        }
+
+        /* 曼荼羅圓形手寫區域與上方對齊 */
+        .hrih-container {
+            z-index: 20;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        .hrih-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 25px;
+            width: 100%;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+        .hrih-title {
+            color: var(--gold);
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin-bottom: 2px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(243, 229, 171, 0.7);
+            font-family: serif;
+        }
+        .hrih-subtitle {
+            color: #888;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            margin-bottom: 0;
+        }
+        
+        .mandala-wrap {
+            position: relative;
+            width: 86vw;
+            max-width: 340px;
+            height: 86vw;
+            max-height: 340px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 15px 0;
+        }
+        .mandala-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 20;
+        }
+        
+        /* 線框與同心圓非同步旋轉設定 */
+        .circle-layer-1 { animation: rotateClockwise 50s linear infinite; transform-origin: 200px 200px; }
+        .circle-layer-2 { animation: rotateCounterClockwise 70s linear infinite; transform-origin: 200px 200px; }
+        .circle-layer-3 { animation: rotateClockwise 95s linear infinite; transform-origin: 200px 200px; }
+
+        @keyframes rotateClockwise {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes rotateCounterClockwise {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        .write-box-circular {
+            width: 56%;
+            height: 56%;
+            border-radius: 50%;
+            background: rgba(10, 8, 8, 0.85);
+            border: 2px solid rgba(212, 175, 55, 0.85);
+            box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.9), 0 0 20px rgba(212, 175, 55, 0.3);
+            position: relative;
+            z-index: 25;
+            overflow: hidden;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        #writeCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+
+        .action-zone { z-index: 20; margin-top: 10px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+                /* 全新圓形大迴向按鈕（縮小至 90px，自帶 4 秒法界呼吸律動） */
+        .seal-btn-circle {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            border: 1.5px solid rgba(212, 175, 55, 0.4);
+            background: radial-gradient(circle, rgba(25, 22, 15, 0.85) 0%, rgba(5, 5, 5, 0.95) 100%);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.7), inset 0 0 15px rgba(212, 175, 55, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+            flex-shrink: 0;
+            margin: 0 auto;
+            
+            /* 啟動純淨呼吸動畫 */
+            animation: bodhiBreath 4s infinite ease-in-out;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* 按鈕內部的核心明點（象徵法界本初清淨） */
+        .seal-btn-core-light {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #f3e5ab;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #f3e5ab, 0 0 25px var(--gold-solid);
+            pointer-events: none;
+            z-index: 2;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+
+        /* 能量注入進度條（液態金光浮現動態） */
+        .seal-btn-progress-bg {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background: linear-gradient(0deg, rgba(214, 175, 53, 0.35), rgba(243, 229, 171, 0.55));
+            pointer-events: none;
+            z-index: 1;
+            transition: height 0.1s linear;
+        }
+
+        /* 觀想模式：無法跨日或非當天時的按鈕沉寂狀態 */
+        .seal-btn-circle.view-only-mode {
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            animation: none !important;
+            box-shadow: none !important;
+            background: rgba(255, 255, 255, 0.02) !important;
+        }
+        .seal-btn-circle.view-only-mode .seal-btn-core-light {
+            background: #444444 !important;
+            box-shadow: none !important;
+        }
+
+        /* 移至按鈕下方的獨立說明文字樣式（改為單行典雅字體） */
+        .seal-btn-text {
+            color: var(--cyan);
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            font-weight: bold;
+            text-shadow: 0 0 8px rgba(0, 242, 254, 0.5);
+            transition: color 0.3s, text-shadow 0.3s;
+            text-align: center;
+            margin-top: 12px;
+            margin-bottom: 5px;
+        }
+
+        .pool-wrap { width: 70%; max-width: 300px; text-align: center; margin: 0 auto; }
+        .pool-label { font-size: 0.7rem; color: var(--gold-light); letter-spacing: 2px; margin-bottom: 6px; opacity: 0.8; }
+        .pool-bar-bg { width: 100%; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5); }
+        .pool-bar-fill { height: 100%; width: 0%; transition: width 1s cubic-bezier(0.2,0.8,0.2,1); }
+
+        /* 菩提心慢速呼吸影格 */
+        @keyframes bodhiBreath {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 6px 20px rgba(0,0,0,0.7), inset 0 0 15px rgba(212, 175, 55, 0.15);
+                border-color: rgba(212, 175, 55, 0.4);
+            }
+            50% {
+                transform: scale(1.04);
+                box-shadow: 0 6px 25px rgba(212, 175, 55, 0.5), inset 0 0 22px rgba(212, 175, 55, 0.4);
+                border-color: rgba(255, 255, 255, 0.7);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 6px 20px rgba(0,0,0,0.7), inset 0 0 15px rgba(212, 175, 55, 0.15);
+                border-color: rgba(212, 175, 55, 0.4);
+            }
+        }
+
+     
+        /* Modal 彈窗樣式 */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 9999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.4s; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .data-card { width: 92%; max-width: 420px; border: 1px solid rgba(212,175,55,0.42); border-radius: 20px; padding: 30px 25px; box-shadow: 0 10px 55px rgba(0,0,0,0.9), inset 0 0 20px rgba(212,175,55,0.1); background: linear-gradient(180deg, rgba(20,20,20,0.95) 0%, rgba(5,5,5,0.98) 100%); }
+        .data-title { color: var(--solid-gold); font-size: 1.05rem; letter-spacing: 4px; text-align: center; margin-bottom: 5px; font-weight: bold; text-shadow: 0 0 10px rgba(212,175,55,0.4); }
+        .data-sub { text-align: center; font-size: 11px; color: var(--text-gold); margin-bottom: 25px; letter-spacing: 2px; opacity: 0.6; }
+
+        .trophy-shelf { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 35px; padding-bottom: 15px; border-bottom: 1px dashed rgba(212,175,55,0.3); }
+        .trophy-item { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 20%; }
+        .trophy-label { font-size: 0.65rem; color: rgba(243,229,171,0.6); letter-spacing: 1px; white-space: nowrap; }
+
+        .banner-jewel { width: 42px; height: 42px; cursor: pointer; transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); transform-origin: center; }
+        .banner-unlit { opacity: 0.15; filter: grayscale(100%); }
+        .banner-lit { opacity: 0.95; animation: star-breathe 3s infinite alternate ease-in-out; }
+        @keyframes star-breathe { 0% { transform: scale(1); } 100% { transform: scale(1.08); filter: brightness(1.2); } }
+
+        #banner-7 { --f1: #FFB703; --f2: #FB8500; --f3: #E85D04; --bd: #9D0208; --bs: #370617; --rb: #FFF; }
+        #banner-7.banner-lit { filter: drop-shadow(0 0 8px rgba(251,133,0,0.8)); }
+        #banner-70 { --f1: #FFF8DC; --f2: #F3E5AB; --f3: #D4AF37; --bd: #AA7900; --bs: #5C4000; --rb: #FFF; }
+        #banner-70.banner-lit { filter: drop-shadow(0 0 8px rgba(212,175,55,0.8)); }
+        #banner-700 { --f1: #E0FBFC; --f2: #98C1D9; --f3: #48CAE4; --bd: #2A9D8F; --bs: #1D3557; --rb: #FFF; }
+        #banner-700.banner-lit { filter: drop-shadow(0 0 8px rgba(42,157,143,0.8)); }
+        #banner-7000 { --f1: #FFFFFF; --f2: #F4A261; --f3: #2A9D8F; --bd: #C1121F; --bs: #3A86FF; --rb: #FDFCDC; }
+        #banner-7000.banner-lit { filter: drop-shadow(0 0 12px rgba(131,56,236,0.6)); }
+        #banner-9999999 { --f1: #FFFFFF; --f2: #FDFCDC; --f3: #E0E1DD; --bd: #F3E5AB; --bs: #D4AF37; --rb: #FFFFFF; }
+        #banner-9999999.banner-lit { filter: drop-shadow(0 0 10px rgba(255,255,255,0.9)); }
+
+        .glass-energy-bar { width: 100%; margin: 8px 0 35px 0; position: relative; }
+        .bar-track { width: 100%; height: 10px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.55); }
+        .bar-fill { height: 100%; width: 0%; opacity: 0.95; transition: width 1.2s cubic-bezier(0.2,0.8,0.2,1); border-radius: 10px;}
+        .bar-labels { position: absolute; width: 100%; height: 20px; top: 16px; }
+        .bar-labels span { position: absolute; font-size: 9px; color: var(--text-gold); letter-spacing: 1px; transform: translateX(-50%); white-space: nowrap; opacity: 0.7; }
+        .bar-labels span::before { content: ''; position: absolute; top: -11px; left: 50%; transform: translateX(-50%); width: 3px; height: 3px; background: rgba(255,255,255,0.8); border-radius: 50%; box-shadow: 0 0 4px #fff; }
+        
+        /* 證書彈窗 */
+        .cert-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 10000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.4s; }
+        .cert-overlay.show { opacity: 1; pointer-events: auto; }
+        .cert-box { background: linear-gradient(180deg, rgba(20,20,20,0.95) 0%, rgba(5,5,5,0.98) 100%); border: 1px solid rgba(212,175,55,0.4); border-radius: 20px; width: 85%; max-width: 360px; padding: 40px 25px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.9); transform: translateY(20px) scale(0.95); transition: 0.4s; }
+        .cert-overlay.show .cert-box { transform: translateY(0) scale(1); }
+        .cert-header { color: var(--gold-light); font-size: 0.9rem; letter-spacing: 6px; margin-bottom: 25px; }
+        .cert-svg-wrap { 
+            width: 55px; 
+            height: 120px; 
+            margin: 0 auto 25px auto; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            animation: cert-float 3s infinite alternate; 
+        }
+        
+        .cert-svg-wrap .modal-banner {
+            animation: bannerGlow 3s ease-in-out infinite alternate; 
+        }
+        @keyframes cert-float { 0% { transform: translateY(0); } 100% { transform: translateY(-8px); } }
+        .cert-name { color: var(--solid-gold); font-size: 1.3rem; font-weight: bold; letter-spacing: 5px; margin: 10px 0 25px 0; }
+        .cert-divider { width: 60%; height: 1px; background: radial-gradient(circle, rgba(212,175,55,0.6) 0%, transparent 100%); margin: 0 auto 20px auto; }
+        .cert-desc { color: #ddd; font-size: 0.85rem; line-height: 2; letter-spacing: 1.5px; margin-bottom: 35px; }
+
+        .dharma-light {
+            position: fixed; width: 20px; height: 20px; background: #fff; border-radius: 50%;
+            box-shadow: 0 0 20px 10px rgba(212,175,55,0.9), 0 0 40px 20px rgba(255,255,255,0.7);
+            z-index: 10001; pointer-events: none; opacity: 0;
+            transition: all 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        /* ════ 微塵迴向特效 CSS ════ */
+        .dust-particle {
+            position: absolute;
+            width: 3px; height: 3px;
+            background: #8ba89c; 
+            border-radius: 50%;
+            pointer-events: none;
+            animation: drift 2s ease-out forwards;
+            z-index: 20;
+        }
+
+        @keyframes drift {
+            0% { transform: translate(0, 0); opacity: 1; }
+            100% { transform: translate(var(--dx), var(--dy)); opacity: 0; }
+        }
+
+        /* ════ 黑金彈框樣式 ════ */
+        #anim-overlay { z-index: 10001; }
+        .t-box { 
+            background: radial-gradient(circle at 50% 50%, rgba(212,175,55,0.12) 0%, rgba(1,2,4,0.95) 100%); 
+            border: 1px solid rgba(212,175,55,0.4); border-radius: 25px; padding: 40px 25px; 
+            display: flex; flex-direction: column; align-items: center; max-width: 85%; width: 340px; text-align: center; 
+            box-shadow: 0 0 30px rgba(0,0,0,0.8); position: relative; overflow: hidden;
+        }
+        /* 彈出視窗寶幡基礎設定 */
+.modal-banner {
+    width: 55px;
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transform-origin: top center;
+    transition: filter 0.5s ease, transform 0.3s ease, box-shadow 0.5s ease;
+    animation: modalSway 5s ease-in-out infinite;
+}
+
+/* 懸停時微幅放大 */
+.modal-banner:hover {
+    transform: scale(1.05);
+}
+
+/* 【關鍵：未點亮/未解鎖狀態】 呈現暗淡、灰階、低飽和度 */
+.modal-banner.banner-unlit {
+    filter: grayscale(85%) brightness(40%) contrast(90%);
+    opacity: 0.5;
+    animation: none; /* 未解鎖時不搖擺 */
+}
+
+/* 【關鍵：已點亮/已解鎖狀態】 觸發發光與呼吸動畫 */
+.modal-banner:not(.banner-unlit) {
+    filter: drop-shadow(0 0 12px var(--gold-light, #ffd700));
+    animation: modalSway 5s ease-in-out infinite, bannerGlow 3s ease-in-out infinite alternate;
+}
+
+/* 幡身尺寸與框線 */
+.m-banner-body {
+    width: 100%;
+    height: 85px;
+    background: #fff;
+    border: 1.5px solid #333;
+    border-bottom: none;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+}
+.m-banner-body::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    opacity: 0.85;
+}
+
+/* 10條細尖流蘇（適應縮小後的尺寸） */
+.m-tassels {
+    width: 100%;
+    height: 20px;
+    background: currentColor;
+    position: relative;
+    clip-path: polygon(
+        0% 0%, 100% 0%,
+        100% 0%, 95% 100%, 90% 0%,
+        90% 0%, 85% 100%, 80% 0%,
+        80% 0%, 75% 100%, 70% 0%,
+        70% 0%, 65% 100%, 60% 0%,
+        60% 0%, 55% 100%, 50% 0%,
+        50% 0%, 45% 100%, 40% 0%,
+        40% 0%, 35% 100%, 30% 0%,
+        30% 0%, 25% 100%, 20% 0%,
+        20% 0%, 15% 100%, 10% 0%,
+        10% 0%, 5% 100%, 0% 0%
+    );
+}
+
+/* 幡掛環 */
+.m-hanger {
+    width: 30%;
+    height: 8px;
+    background: #fff;
+    border: 1.5px solid #333;
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    position: relative;
+}
+
+/* --- 複製前面五個幡的幾何紋路配置 --- */
+/* 幡 1 */
+.modal-banner-1 { color: #FF1493; animation-delay: -0.5s; }
+.modal-banner-1 .m-banner-body {
+    background-color: #FF1493;
+    background-image:
+        linear-gradient(to bottom, transparent 15px, #1E90FF 15px, #1E90FF 30px, transparent 30px),
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.1) 5px, transparent 5px, transparent 10px);
+}
+.modal-banner-1 .m-banner-body::before {
+    background: conic-gradient(from 45deg at 50% 50%, #FF1493 0% 25%, #1E90FF 25% 50%, #FF1493 50% 75%, #1E90FF 75% 100%);
+    background-size: 12px 12px;
+}
+
+/* 幡 2 */
+.modal-banner-2 { color: #FFD700; animation-delay: -1.2s; }
+.modal-banner-2 .m-banner-body {
+    background-color: #FFD700;
+    background-image:
+        repeating-linear-gradient(0deg, rgba(0,128,0,0.25), rgba(0,128,0,0.25) 5px, transparent 5px, transparent 10px),
+        repeating-linear-gradient(90deg, rgba(0,128,0,0.25), rgba(0,128,0,0.25) 5px, transparent 5px, transparent 10px);
+}
+.modal-banner-2 .m-banner-body::before {
+    background: conic-gradient(at 50% 50%, transparent 0% 12.5%, rgba(0,0,0,0.15) 12.5% 37.5%, transparent 37.5% 62.5%, rgba(0,0,0,0.15) 62.5% 87.5%, transparent 87.5% 100%);
+    background-size: 10px 10px;
+}
+
+/* 幡 3 */
+.modal-banner-3 { color: #1E90FF; animation-delay: -2s; }
+.modal-banner-3 .m-banner-body { background-color: #1E90FF; }
+.modal-banner-3 .m-banner-body::before {
+    background: conic-gradient(at 50% 50%, #FF1493 0% 12.5%, #FFD700 12.5% 37.5%, #32CD32 37.5% 62.5%, #8A2BE2 62.5% 87.5%, #FF1493 87.5% 100%);
+    background-size: 15px 15px;
+    mask-image: repeating-linear-gradient(transparent, transparent 1px, #000 1px, #000 2px);
+}
+
+/* 幡 4 */
+.modal-banner-4 { color: #333333; animation-delay: -0.8s; }
+.modal-banner-4 .m-banner-body {
+    background-color: #333333;
+    background-image: repeating-linear-gradient(0deg, #555, #555 1px, transparent 1px, transparent 6px);
+}
+.modal-banner-4 .m-banner-body::before {
+    background: conic-gradient(at 50% 50%, #fff 0% 12.5%, #333 12.5% 25%, #fff 25% 37.5%, #333 37.5% 50%, #fff 50% 62.5%, #333 62.5% 75%, #fff 75% 87.5%, #333 87.5% 100%);
+    background-size: 16px 16px;
+    opacity: 0.85;
+}
+
+/* 幡 5 */
+.modal-banner-5 { color: #8A2BE2; animation-delay: -1.5s; }
+.modal-banner-5 .m-banner-body {
+    background-color: #8A2BE2;
+    background-image:
+        linear-gradient(45deg, #32CD32 25%, transparent 25%, transparent 75%, #32CD32 75%, #32CD32 100%),
+        linear-gradient(135deg, #32CD32 25%, transparent 25%, transparent 75%, #32CD32 75%, #32CD32 100%);
+    background-size: 12px 12px;
+}
+.modal-banner-5 .m-banner-body::before {
+    background: conic-gradient(from 45deg at 50% 50%, #8A2BE2 0% 25%, #fff 25% 50%, #8A2BE2 50% 75%, #fff 75% 100%);
+    background-size: 8px 8px;
+    mask-image: radial-gradient(circle, transparent 20%, #000 80%);
+}
+
+/* 搖擺與解鎖發光動畫定義 */
+@keyframes modalSway {
+    0%, 100% { transform: rotate(1.5deg); }
+    50% { transform: rotate(-1.5deg); }
+}
+
+@keyframes bannerGlow {
+    0% { filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.5)); }
+    100% { filter: drop-shadow(0 0 16px rgba(255, 242, 168, 1)); }
+}
+#flash-overlay {
+    position: fixed;
+    inset: 0;
+    /* 使用放射狀漸層，中心爆發白光，向外擴散成純金與深色，模擬法界顯化 */
+    background: radial-gradient(circle at 50% 50%, #ffffff 0%, var(--solid-gold) 60%, #0a0e14 100%);
+    opacity: 0;
+    pointer-events: none;
+    /* z-index 必須設定為 10002，才能完美覆蓋在原本的彈窗（10001）之上 */
+    z-index: 10002;
+}
+
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div id="page-transition-curtain" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 999999; opacity: 0; pointer-events: none; transition: opacity 0.8s ease-in-out;"></div>
+
+    <div id="vow-alert-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 10000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s;">
+        <div id="vow-alert-box" style="background: linear-gradient(135deg, rgba(20,20,20,0.95), rgba(5,5,5,0.98)); border: 1px solid rgba(212,175,55,0.4); border-radius: 20px; padding: 35px 25px; width: 85%; max-width: 340px; text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.9), inset 0 0 15px rgba(212,175,55,0.1); transform: scale(0.95); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.2" style="width: 36px; height: 36px; margin-bottom: 15px; filter: drop-shadow(0 0 8px rgba(212,175,55,0.6));">
+                <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+            </svg>
+            <div style="color: var(--gold); font-size: 1.15rem; letter-spacing: 4px; margin-bottom: 15px; font-weight: bold; text-shadow: 0 0 10px rgba(212,175,55,0.3);">法界顯化</div>
+            <div id="vow-alert-msg" style="color: #bbb; font-size: 0.95rem; line-height: 1.8; letter-spacing: 1px; margin-bottom: 25px;"></div>
+            <button class="zen-action-btn" onclick="closeVowAlert()">合十收攝</button>
+        </div>
+    </div>
+
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
+        <defs>
+            <linearGradient id="f-light" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.8"/><stop offset="100%" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
+            <linearGradient id="f-dark" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#000" stop-opacity="0.05"/><stop offset="100%" stop-color="#000" stop-opacity="0.4"/></linearGradient>
+            <linearGradient id="g-gold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff8dc"/><stop offset="50%" stop-color="#f3e5ab"/><stop offset="100%" stop-color="#d4af37"/></linearGradient>
+            
+            <g id="dynamic-banner">
+                <circle cx="60" cy="100" r="45" fill="none" stroke="var(--f2, #d4af37)" stroke-width="2.5" />
+                <circle cx="60" cy="100" r="39" fill="rgba(255,255,255,0.03)" stroke="var(--f1, #fff)" stroke-width="0.8" stroke-dasharray="2 3" opacity="0.6"/>
+                <text x="60" y="113" font-family="'Siddham', 'Noto Sans Siddham', serif" font-size="32" fill="var(--f2, #f3e5ab)" text-anchor="middle" font-weight="bold">𑖮𑖿𑖨𑖱𑖾</text>
+            </g>
+        </defs>
+    </svg>
+
+    <canvas id="starCanvas"></canvas>
+    <div id="vignette"></div>
+    <div id="mist-layer">
+        <div class="mist-cloud mist-1"></div><div class="mist-cloud mist-2"></div>
+        <div class="mist-cloud mist-3"></div><div class="mist-cloud mist-4"></div><div class="mist-cloud mist-5"></div>
+    </div>
+    <div id="flash-overlay"></div>
+
+    <div id="page-main">
+        <div class="nav-top">
+            <div class="nav-btn" onclick="returnToMainHall()"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> 返回道場</div>
+            <div class="nav-divider"></div>
+            <div class="nav-btn" id="dharma-desc-btn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> 法門說明</div>
+            <div class="nav-divider"></div>
+            <div class="nav-btn" id="nav-history-btn" onclick="openDataModal()"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20V14"></path></svg> 歷史大數據</div>
+        </div>
+
+        <div class="tracker-container">
+            <div class="tracker-title" id="ui-week-title">【 七日觀摹 ． 字輪心契 】</div>
+            <div class="tracker-circles" id="ui-trackers"></div>
+        </div>
+
+        <div class="hrih-container">
+            <div class="hrih-header-row">
+                <button class="glass-vector-btn" onclick="clearCanvas()" aria-label="恢復">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                    </svg>
+                </button>
+
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <div class="hrih-title" id="dharma-seed-title">भः</div>
+                    <div class="hrih-subtitle" id="dharma-deity-subtitle">釋迦本師 (bhaḥ)</div>
+                </div>
+
+                <button class="glass-vector-btn" onclick="playTTS()" aria-label="發音">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 18V5l12-2v13" />
+                        <circle cx="6" cy="18" r="3" />
+                        <circle cx="18" cy="16" r="3" />
+                    </svg>
+                </button>
+            </div>
+
+        <div class="mandala-wrap">
+    <svg class="mandala-svg" viewBox="0 0 400 400">
+        <defs>
+            <path id="ring-outer" d="M 200 15 A 185 185 0 1 1 199.9 15" />
+            <path id="ring-mid" d="M 200 40 A 160 160 0 1 1 199.9 40" />
+            <path id="ring-inner" d="M 200 65 A 135 135 0 1 1 199.9 65" />
+            <filter id="gold-glow-svg"><feGaussianBlur stdDeviation="2" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        
+        <!-- 背景紅底（已移除最外實心金邊，保持視覺純淨） -->
+        <circle cx="200" cy="200" r="192" fill="var(--mandala-red)" stroke="none" opacity="0.6"/>
+
+
+        <g class="circle-layer-1">
+            <text fill="var(--gold)" font-size="18" font-family="serif" opacity="0.85">
+                <textPath href="#ring-outer" startOffset="0%" textLength="1162.3" lengthAdjust="spacing">भः ह यु अं ॐ 卍 ॐ ॐ भः ह यु अं ॐ 卍 अ ॐ भः ह यु अं ॐ 卍 अ ॐ अं ह यु अं ॐ 卍 अ ॐ भः ह यु अ ॐ 卍 अ ॐ भः ह यु अं ॐ 卍 अ ॐ भः ह यु ॐ अ 卍 अ ॐ भः ह यु अं भै अ अ ॐ ॐ ह यु अं ॐ अ अ ॐ </textPath>
+            </text>
+        </g>
+        
+
+        <g class="circle-layer-2">
+            <circle cx="200" cy="200" r="160" fill="none" stroke="rgba(255, 255, 255, 0.12)" stroke-width="0.8" />
+            <text fill="var(--cyan)" font-size="16" font-family="serif" opacity="0.8">
+                <textPath href="#ring-mid" startOffset="0%" textLength="1005.3" lengthAdjust="spacing">ॐ अ 卍 ॐ अं यु सः भः ॐ अ 卍 ॐ अं यु सः भः ॐ अ 卍 ॐ अं यु सः ॐ ॐ अ 卍 ॐ अं यु सः भः ॐ अ 卍 अ अं यु सः भः ॐ अ 卍 ॐ अं यु सः भः ॐ अ अ सः अं यु सः भः ॐ अ अ सः अं यु सः भः </textPath>
+            </text>
+        </g>
+        
+
+        <g class="circle-layer-3">
+            <circle cx="200" cy="200" r="135" fill="none" stroke="rgba(255, 255, 255, 0.12)" stroke-width="0.8" />
+            <text fill="#E5989B" font-size="14" font-family="serif" opacity="0.85">
+                <textPath href="#ring-inner" startOffset="0%" textLength="848.2" lengthAdjust="spacing">भः सः यु अं ॐ 卍 अ ॐ भः सः यु अं ॐ 卍 अ ॐ भः सः यु अं ॐ 卍 अ ॐ भः सः यु अं ॐ 卍 अ ॐ भः सः यु अं ॐ 卍 अ ॐ भः सः यु अं अ 卍 अ ॐ भः सः यु अं ॐ 卍 अ ॐ </textPath>
+            </text>
+        </g>
+
+        <!-- 內襯核心圈 -->
+        <circle cx="200" cy="200" r="116" fill="none" stroke="var(--solid-gold)" stroke-width="2" filter="url(#gold-glow-svg)" opacity="0.8"/>
+        <circle cx="200" cy="200" r="112" fill="none" stroke="var(--gold)" stroke-width="1" stroke-dasharray="2 3"/>
+    </svg>
+
+    <div class="write-box-circular" id="writeContainer">
+        <canvas id="writeCanvas"></canvas>
+    </div>
+</div>
+
+        <!-- 行動與資糧專區 -->
+        <div class="action-zone" id="action-zone">
+            
+            <!-- 菩提心按鈕：內部完全純淨，僅保留明點與進度層 -->
+            <div class="seal-btn-circle" id="seal-btn">
+                <div class="seal-btn-progress-bg" id="btn-progress"></div>
+                <div class="seal-btn-core-light"></div>
+            </div>
+
+            <!-- 說明文字獨立於下方，單行端嚴呈現 -->
+            <div class="seal-btn-text" id="seal-text">長按 ． 大迴向</div>
+
+            <!-- 資糧大數據進度條 -->
+            <div class="pool-wrap">
+                <div class="pool-label" id="ui-pool-text">法界暫存資糧 : 0 / 100</div>
+                <div class="pool-bar-bg">
+                    <div class="pool-bar-fill neon-flow" id="ui-pool-bar"></div>
+                </div>
+            </div>
+
+        </div>
+
+<div class="modal-overlay" id="dataModal">
+    <div class="data-card" onclick="event.stopPropagation()">
+        <div class="data-title">十方結緣 ． 行願蓮蹤</div>
+        <div class="data-sub">(合本願與諸佛之歷劫功德海)</div>
+        
+        <div class="trophy-shelf">
+            <div class="trophy-item">
+                <div class="modal-banner modal-banner-1 banner-unlit" id="banner-7" onclick="openCert(7)">
+                    <div class="m-hanger"></div>
+                    <div class="m-banner-body"></div>
+                    <div class="m-tassels"></div>
+                </div>
+                <div class="trophy-label">7 日</div>
+            </div>
+
+            <div class="trophy-item">
+                <div class="modal-banner modal-banner-2 banner-unlit" id="banner-70" onclick="openCert(70)">
+                    <div class="m-hanger"></div>
+                    <div class="m-banner-body"></div>
+                    <div class="m-tassels"></div>
+                </div>
+                <div class="trophy-label">70 日</div>
+            </div>
+
+            <div class="trophy-item">
+                <div class="modal-banner modal-banner-3 banner-unlit" id="banner-700" onclick="openCert(700)">
+                    <div class="m-hanger"></div>
+                    <div class="m-banner-body"></div>
+                    <div class="m-tassels"></div>
+                </div>
+                <div class="trophy-label">700 日</div>
+            </div>
+
+            <div class="trophy-item">
+                <div class="modal-banner modal-banner-4 banner-unlit" id="banner-7000" onclick="openCert(7000)">
+                    <div class="m-hanger"></div>
+                    <div class="m-banner-body"></div>
+                    <div class="m-tassels"></div>
+                </div>
+                <div class="trophy-label">7千日</div>
+            </div>
+
+            <div class="trophy-item">
+                <div class="modal-banner modal-banner-5 banner-unlit" id="banner-9999999" onclick="openCert(9999999)">
+                    <div class="m-hanger"></div>
+                    <div class="m-banner-body"></div>
+                    <div class="m-tassels"></div>
+                </div>
+                <div class="trophy-label">無量劫</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 25px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span style="font-size:13px; color:var(--gold-light); letter-spacing:2px;">歲星軌跡 (日)</span><span style="font-size:14px; color:#fff; font-weight:bold;" id="ui-txt-365">0</span></div>
+            <div class="glass-energy-bar"><div class="bar-track"><div class="bar-fill neon-flow" id="ui-bar-365"></div></div><div class="bar-labels"><span style="left:0%">0</span><span style="left:27%">100</span><span style="left:54%">200</span><span style="left:82%">300</span><span style="left:100%">365</span></div></div>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span style="font-size:13px; color:var(--gold-light); letter-spacing:2px;">劫波蓮花 (年)</span><span style="font-size:14px; color:#fff; font-weight:bold;" id="ui-txt-108">0</span></div>
+            <div class="glass-energy-bar"><div class="bar-track"><div class="bar-fill neon-flow" id="ui-bar-108"></div></div><div class="bar-labels"><span style="left:0%">0</span><span style="left:33%">36</span><span style="left:66%">72</span><span style="left:100%">108</span></div></div>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="zen-action-btn" onclick="closeDataModal()">合十收攝</button>
+        </div>
+    </div>
+</div>
+
+
+    <div class="cert-overlay" id="cert-modal">
+        <div class="cert-box">
+            <div class="cert-header" id="cert-title">✦ 菩提契印 ✦</div>
+<div class="cert-svg-wrap" id="cert-glow">
+    <div id="cert-svg" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;"></div>
+</div>
+            <div style="color: #aaa; font-size: 0.8rem; letter-spacing: 3px;">行 者</div>
+            <div class="cert-name" id="cert-name-display">行 者</div>
+            <div class="cert-divider"></div>
+            <div class="cert-desc" id="cert-text">...</div>
+            <button class="zen-action-btn" onclick="closeCert()">歡喜功德 ． 締結契印</button>
+        </div>
+    </div>
+
+    <div id="anim-overlay" class="modal-overlay">
+        <div class="t-box" id="anim-box">
+
+            <div id="anim-svg-cont" style="font-size: 3.5rem; color: var(--gold); text-shadow: 0 0 25px rgba(212,175,55,0.8); margin-bottom: 15px; position: relative; z-index: 5;"></div>
+            <div id="anim-txt" style="position: relative; z-index: 5; margin-bottom: 25px; min-height: 80px;"></div>
+            <button id="anim-btn" class="zen-action-btn" onclick="closeAnim()" style="position: relative; z-index: 5;">功德圓滿</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="custom-alert-modal">
+        <div class="t-box" onclick="event.stopPropagation()">
+            <div style="color: var(--gold); font-size: 1.15rem; letter-spacing: 4px; margin-bottom: 15px; font-weight: bold; text-shadow: 0 0 10px rgba(212,175,55,0.3);" id="custom-alert-title">法界告示</div>
+            <div id="custom-alert-desc" style="color: #bbb; font-size: 0.95rem; line-height: 1.8; letter-spacing: 1px; margin-bottom: 25px;"></div>
+            <button class="zen-action-btn" onclick="closeCustomAlert()">合十收攝</button>
+        </div>
+    </div>
+
+<script>
+    const purelandData = [
+        { day: 1, seed: "भः", audioText: "bhaḥ", name: "釋迦本師", vowTitle: "【娑婆教主 ． 寂靜涅槃】", vowDesc: "「भः」字代表釋迦如來於娑婆世界示現成佛、破除一切魔軍與無明的威德。書寫此字能生起無上出離心與大菩提心，身心歸於寂靜。" },
+        { day: 2, seed: "ह", audioText: "ha", name: "地藏菩薩", vowTitle: "【地藏本願 ． 拔苦與樂】", vowDesc: "「ह」字具備一切法因不可得、大悲拔苦之義。行者書寫此字，當觀想自身與地藏菩薩「地獄不空，誓不成佛」的無邊願力相應，化解一切怨結，大地安穩。" },
+        { day: 3, seed: "यु", audioText: "yu", name: "彌勒菩薩", vowTitle: "【慈氏當來 ． 慈心三昧】", vowDesc: "「यु」字代表彌勒如來的慈心三昧，象徵「大慈予樂」與當來下生的希望。書寫此字當與慈悲心相應，願一切有情皆得解脫歡喜，皆受記作佛。" },
+        { day: 4, seed: "अं", audioText: "aṃ", name: "普賢文殊", vowTitle: "【大行大智 ． 智行合一】", vowDesc: "「अं」字代表智行圓滿、空性與菩提心的極致結合。文殊之大智導引普賢之大行，行者書寫此字，即能開啟內在無上妙智，行願無礙。" },
+        { day: 5, seed: "भै", audioText: "bhai", name: "藥師佛", vowTitle: "【藥師消災 ． 身心琉璃】", vowDesc: "「भै」字乃藥師如來之核心密碼，象徵醫治一切眾生身心疾苦與無明痼疾。書寫時觀想琉璃光芒照徹法界，消除內外障礙，福慧增長。" },
+        { day: 6, seed: "ह्रीः", audioText: "hrīḥ", name: "阿彌陀佛", vowTitle: "【彌陀淨土 ． 萬德洪名】", vowDesc: "「ह्रीः」字（紇哩字）是阿彌陀佛的根本心字，具足「清淨、慚愧、因緣圓滿」之萬德。作為圓滿極樂之報身示現，書寫此字直通西方淨土，九品蓮開。" },
+        { day: 7, seed: "अ", audioText: "a", name: "大日如來", vowTitle: "【毗盧遮那 ． 本初清淨】", vowDesc: "「अ」字是一切梵音之母，象徵「諸法本不生」，是一切智慧與法界的根本。作為萬德總歸之清淨法身，書寫此字即是回歸無量光明的本來面目。" }
+    ];
+
+    const CERT_DATA = {
+        7: { 
+            title: "✦ 初心 ． 書寫契印 ✦", 
+            glow: "drop-shadow(0 0 25px rgba(251,133,0,0.8))", 
+            text: "初發菩提心，抄寫種子字已達七日。<br>橘紅墨痕破除無明黑闇。<br>願此法筆一落，淨念相續不斷。", 
+            cssVars: "--f1: #FFB703; --f2: #FB8500; --f3: #E85D04; --bd: #9D0208; --bs: #370617; --rb: #FFF;" 
+        },
+        70: { 
+            title: "✦ 歡喜 ． 墨光契印 ✦", 
+            glow: "drop-shadow(0 0 25px rgba(233,196,106,0.8))", 
+            text: "已圓滿七十日梵音字形抄寫。<br>真金法身字輪於意根初現。<br>願筆筆生蓮，與諸佛本願永不退轉。", 
+            cssVars: "--f1: #FFF8DC; --f2: #F3E5AB; --f3: #D4AF37; --bd: #AA7900; --bs: #5C4000; --rb: #FFF;" 
+        },
+        700: { 
+            title: "✦ 遠行 ． 琉璃契印 ✦", 
+            glow: "drop-shadow(0 0 35px rgba(42,157,143,0.8))", 
+            text: "歷經七百日妙筆觀想抄寫。<br>煩惱漸除，清淨字輪高懸意顯。<br>願法筆所至，身心如琉璃內外明徹。", 
+            cssVars: "--f1: #E0FBFC; --f2: #98C1D9; --f3: #48CAE4; --bd: #2A9D8F; --bs: #1D3557; --rb: #FFF;" 
+        },
+        7000: { 
+            title: "✦ 善慧 ． 妙法契印 ✦", 
+            glow: "drop-shadow(0 0 45px rgba(193,18,31,0.8))", 
+            text: "七千日一筆一畫，解諸法本不生。<br>赤紅墨跡燃起三昧真火，燒盡無明。<br>願以此抄寫功德，普度一切有情歸於寂靜。", 
+            cssVars: "--f1: #F4A261; --f2: #E76F51; --f3: #C1121F; --bd: #780000; --bs: #370617; --rb: #FDFCDC;" 
+        },
+        9999999: { 
+            title: "✦ 無量 ． 字輪法身 ✦", 
+            glow: "drop-shadow(0 0 60px #fff) drop-shadow(0 0 15px #E9C46A)", 
+            text: "盡未來際，一筆一劃回歸本初清淨。<br>累劫抄寫功德化為無上白金字輪佛光。<br>法身契合，十方如來同聲讚歎。", 
+            cssVars: "--f1: #FFFFFF; --f2: #FDFCDC; --f3: #E0E1DD; --bd: #F3E5AB; --bs: #D4AF37; --rb: #FFFFFF;" 
+        }
+    };
+
+    const MAIN_DB_KEY = 'PX_V15.0'; 
+    let mainDb = localStorage.getItem(MAIN_DB_KEY) ? JSON.parse(localStorage.getItem(MAIN_DB_KEY)) : { points: 0, mituoWritingData: null };
+    let todayStr = new Date().toDateString();
+
+    if (!mainDb.mituoWritingData) {
+        mainDb.mituoWritingData = {
+            startDate: new Date().setHours(0,0,0,0), 
+            lastLogin: todayStr,
+            weekRecord: [false, false, false, false, false, false, false],
+            poolPoints: 0, 
+            totalDays365: 0, 
+            totalYears108: 0,
+            totalPracticedDays: 0
+        };
+        localStorage.setItem(MAIN_DB_KEY, JSON.stringify(mainDb));
+    }
+
+    let db = mainDb.mituoWritingData; 
+    let trueDays = (db.totalYears108 * 365) + db.totalDays365;
+    if (typeof db.totalPracticedDays === 'undefined' || db.totalPracticedDays < trueDays) {
+        db.totalPracticedDays = trueDays;
+        localStorage.setItem(MAIN_DB_KEY, JSON.stringify(mainDb));
+    }
+
+    let nowMidnight = new Date().setHours(0,0,0,0);
+    let startMidnight = new Date(db.startDate).setHours(0,0,0,0);
+    let daysPassed = Math.max(0, Math.round((nowMidnight - startMidnight) / 86400000));
+    
+    let currentDayOfWeek = daysPassed % 7; 
+    let activeViewIndex = currentDayOfWeek; 
+
+    if (db.lastLogin !== todayStr) {
+        let lastLoginMidnight = db.lastLogin ? new Date(db.lastLogin).setHours(0,0,0,0) : startMidnight;
+        let lastLoginWeek = Math.floor(Math.round((lastLoginMidnight - startMidnight) / 86400000) / 7);
+        let currentWeek = Math.floor(daysPassed / 7);
+
+    if (currentWeek > lastLoginWeek) {
+    let successCount = db.weekRecord.filter(Boolean).length;
+    db.poolPoints += (successCount === 7) ? 100 : (successCount * 10); // 7日改100，單日改10
+    if (db.poolPoints >= 100) { // 門檻由改為 100
+        showVowAlert(`行願資糧已滿百，<br>自動匯入彌陀淨土主系統。`); // 改滿百
+        mainDb.points = (mainDb.points || 0) + db.poolPoints; 
+        db.poolPoints = 0; 
+    }
+    db.weekRecord = [false, false, false, false, false, false, false];
+}
+
+        db.lastLogin = todayStr; saveDB();
+    }
+    function saveDB() { localStorage.setItem(MAIN_DB_KEY, JSON.stringify(mainDb)); }
+
+    function returnToMainHall() {
+        document.getElementById('page-transition-curtain').style.opacity = '1';
+        setTimeout(() => { window.location.href = 'index.html?screen=3'; }, 800);
+    }
+
+    function showVowAlert(msg) {
+        const alertMsg = document.getElementById('vow-alert-msg');
+        const overlay = document.getElementById('vow-alert-overlay');
+        if(alertMsg && overlay) {
+            alertMsg.innerHTML = msg;
+            overlay.style.display = 'flex';
+            void overlay.offsetWidth; 
+            overlay.style.opacity = '1';
+            document.getElementById('vow-alert-box').style.transform = 'scale(1)';
+        }
+    }
+
+    function closeVowAlert() {
+        const overlay = document.getElementById('vow-alert-overlay');
+        const box = document.getElementById('vow-alert-box');
+        if(overlay && box) {
+            overlay.style.opacity = '0';
+            box.style.transform = 'scale(0.95)';
+            setTimeout(() => { overlay.style.display = 'none'; }, 400); 
+        }
+    }
+
+    function showCustomAlert(msg, title = "法界告示") {
+        document.getElementById('custom-alert-title').innerText = title;
+        document.getElementById('custom-alert-desc').innerHTML = msg;
+        const m = document.getElementById('custom-alert-modal');
+        m.style.display = 'flex';
+        setTimeout(() => m.style.opacity = 1, 50);
+    }
+    
+    function closeCustomAlert() {
+        const m = document.getElementById('custom-alert-modal');
+        m.style.opacity = 0;
+        setTimeout(() => m.style.display = 'none', 500);
+    }
+
+    function selectDay(idx) {
+        activeViewIndex = idx;
+        clearCanvas();
+        updatePageUI();
+    }
+
+        function updatePageUI() {
+        let trackersHTML = '';
+        for (let i = 0; i < 7; i++) {
+            let isLit = db.weekRecord[i] ? 'lit' : '';
+            let isActive = (i === activeViewIndex) ? 'active-day' : '';
+            trackersHTML += `<div class="track-circle ${isLit} ${isActive}" onclick="selectDay(${i})">${purelandData[i].seed}</div>`;
+        }
+        document.getElementById('ui-trackers').innerHTML = trackersHTML;
+
+        const currentData = purelandData[activeViewIndex];
+        document.getElementById('dharma-seed-title').innerText = currentData.seed;
+        document.getElementById('dharma-deity-subtitle').innerText = `${currentData.name} (${currentData.audioText})`;
+
+        // 精確降級至百點制 UI 結算
+        document.getElementById('ui-pool-text').innerText = `法界暫存資糧 : ${db.poolPoints} / 100`;
+        document.getElementById('ui-pool-bar').style.width = `${(db.poolPoints / 100) * 100}%`;
+
+        let btnText = document.getElementById('seal-text');
+        let progressFill = document.getElementById('btn-progress');
+        let sealBtn = document.getElementById('seal-btn');
+
+        if (db.weekRecord[activeViewIndex]) {
+            // 當日或選定日已圓滿
+            btnText.innerText = "迴向圓滿"; 
+            btnText.style.color = "var(--solid-gold)";
+            btnText.style.textShadow = "0 0 8px rgba(212,175,55,0.6)";
+            progressFill.style.height = '100%';
+            if(sealBtn) sealBtn.classList.remove('view-only-mode');
+        } else {
+            if (activeViewIndex === currentDayOfWeek) {
+                // 當日待修持狀態
+                btnText.innerText = "長按 ． 大迴向"; 
+                btnText.style.color = "var(--cyan)";
+                btnText.style.textShadow = "0 0 8px rgba(0,242,254,0.5)";
+                if(sealBtn) sealBtn.classList.remove('view-only-mode');
+            } else {
+                // 非當日（僅供切換觀想）狀態：啟動沉寂灰階，文字轉暗
+                btnText.innerText = "觀想模式 ． 無法跨日"; 
+                btnText.style.color = "#555";
+                btnText.style.textShadow = "none";
+                if(sealBtn) sealBtn.classList.add('view-only-mode');
+            }
+            progressFill.style.height = '0%';
+        }
+    }
+
+    let hwCanvas, hwCtx, isDrawing = false;
+    function initHandwritingCanvas() {
+        hwCanvas = document.getElementById('writeCanvas');
+        hwCtx = hwCanvas.getContext('2d');
+        resizeHandwritingCanvas();
+
+        const preventAndExecute = (e, func) => { e.preventDefault(); func(e); };
+
+        hwCanvas.addEventListener('mousedown', (e) => { isDrawing = true; drawStroke(e); });
+        hwCanvas.addEventListener('mousemove', (e) => { if(isDrawing) drawStroke(e); });
+        window.addEventListener('mouseup', () => isDrawing = false);
+
+        hwCanvas.addEventListener('touchstart', (e) => preventAndExecute(e, (ev) => { isDrawing = true; drawStroke(ev.touches[0]); }), {passive: false});
+        hwCanvas.addEventListener('touchmove', (e) => preventAndExecute(e, (ev) => { if(isDrawing) drawStroke(ev.touches[0]); }), {passive: false});
+        hwCanvas.addEventListener('touchend', (e) => preventAndExecute(e, () => isDrawing = false), {passive: false});
+    }
+
+    function resizeHandwritingCanvas() {
+        const container = document.getElementById('writeContainer');
+        if (!container) return;
+        const rect = container.getBoundingClientRect();
+        hwCanvas.width = rect.width;
+        hwCanvas.height = rect.height;
+        clearCanvas();
+    }
+
+    function drawStroke(e) {
+        const rect = hwCanvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        hwCtx.lineWidth = 8;
+        hwCtx.lineCap = 'round';
+        hwCtx.lineJoin = 'round';
+        hwCtx.strokeStyle = '#f3e5ab';
+        hwCtx.shadowBlur = 8;
+        hwCtx.shadowColor = '#d4af37';
+
+        if (e.type === 'mousedown' || (isDrawing && hwCtx.pathBegun === false)) {
+            hwCtx.beginPath();
+            hwCtx.moveTo(x, y);
+            hwCtx.lineTo(x + 0.1, y);
+            hwCtx.stroke();
+            hwCtx.pathBegun = true;
+        } else {
+            hwCtx.lineTo(x, y);
+            hwCtx.stroke();
+        }
+    }
+    window.addEventListener('mouseup', () => { if(hwCtx) hwCtx.pathBegun = false; });
+    window.addEventListener('touchend', () => { if(hwCtx) hwCtx.pathBegun = false; });
+
+    function clearCanvas() {
+        if(!hwCtx) return;
+        hwCtx.clearRect(0, 0, hwCanvas.width, hwCanvas.height);
+        hwCtx.pathBegun = false;
+    }
+
+    function playTTS() {
+        if (!('speechSynthesis' in window)) return showVowAlert("法界回饋：您的設備暫不支援語音朗讀。");
+        
+        // 1. 清除先前可能卡住的語音佇列
+        window.speechSynthesis.cancel(); 
+        
+        const currentData = purelandData[activeViewIndex];
+        if (!currentData || !currentData.seed) return;
+
+        let utterance = new SpeechSynthesisUtterance(currentData.seed);
+        utterance.rate = 0.75; 
+        utterance.pitch = 0.9;
+        
+        // 2. 【核心相容防呆】動態偵測平板是否具備印地語/梵音引擎
+        const voices = window.speechSynthesis.getVoices();
+        const hasHindiVoice = voices.some(v => v.lang.toLowerCase().startsWith('hi'));
+        
+        if (hasHindiVoice) {
+            utterance.lang = 'hi-IN'; // 若平板有安裝印地語，優先以梵音聲調誦讀
+        } else {
+            // 若平板無印地語，則自動降級採用本地系統預設語音（如 zh-TW 或 en-US），防止完全靜音
+            utterance.lang = navigator.language || 'zh-TW'; 
+        }
+
+        // 3. 【防範垃圾回收 Bug】將物件掛載至全域 window，防止平板瀏覽器過早將其從記憶體釋放
+        window.dharmaCurrentUtterance = utterance; 
+
+        // 4. 【解決佇列卡死 Bug】微幅延遲 60 毫秒執行，確保 cancel 動作完全釋放後才讓平板發聲
+        setTimeout(() => {
+            window.speechSynthesis.speak(utterance);
+        }, 60);
+    }
+
+    // 5. 【額外保障機制】部分瀏覽器首次載入時 voices 陣列為空，此監聽可確保語音包動態載入成功
+    if ('speechSynthesis' in window && window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = () => {
+            window.speechSynthesis.getVoices();
+        };
+    }
+    function updateDataModal() {
+        document.getElementById('ui-txt-365').innerText = db.totalDays365; 
+        document.getElementById('ui-txt-108').innerText = db.totalYears108;
+        setTimeout(() => { 
+            document.getElementById('ui-bar-365').style.width = (Math.min(db.totalDays365 / 365, 1) * 100) + '%'; 
+            document.getElementById('ui-bar-108').style.width = (Math.min(db.totalYears108 / 108, 1) * 100) + '%'; 
+        }, 100);
+
+        let days = db.totalPracticedDays;
+        toggleJewel('banner-7', days >= 7);
+        toggleJewel('banner-70', days >= 70);
+        toggleJewel('banner-700', days >= 700);
+        toggleJewel('banner-7000', days >= 7000);
+        toggleJewel('banner-9999999', days >= 9999999);
+    }
+
+    function toggleJewel(id, isLit) {
+        const el = document.getElementById(id);
+        if (isLit) { el.classList.add('banner-lit'); el.classList.remove('banner-unlit'); } 
+        else { el.classList.remove('banner-lit'); el.classList.add('banner-unlit'); }
+    }
+
+    let isAutoTriggered = false; 
+
+function openCert(tier, auto = false) {
+    if (db.totalPracticedDays < tier) return; 
+    isAutoTriggered = auto; // 根據來源決定是 true 還是 false
+
+    let currentName = "行 者";
+    if (mainDb && mainDb.name && mainDb.name.trim() !== "") { currentName = mainDb.name; }
+    document.getElementById('cert-name-display').innerText = currentName;
+    document.getElementById('cert-title').innerText = CERT_DATA[tier].title;
+    document.getElementById('cert-text').innerHTML = CERT_DATA[tier].text;
+    document.getElementById('cert-glow').style.filter = CERT_DATA[tier].glow;
+    
+    // 1. 先賦予您原有的 cssVars 設定
+    const certSvgEl = document.getElementById('cert-svg');
+    certSvgEl.style.cssText = CERT_DATA[tier].cssVars;
+    
+    // 2. 【防呆保護】強制補回置中排版樣式，避免被上面的 cssVars 沖掉
+    certSvgEl.style.display = "flex";
+    certSvgEl.style.justifyContent = "center";
+    certSvgEl.style.alignItems = "center";
+    certSvgEl.style.width = "100%";
+    certSvgEl.style.height = "100%";
+
+    // 3. 對照天數階層，動態生成大數據對應的功德寶幡結構 (7日->幡1, 70日->幡2...)
+    const tierMap = { 7: 1, 70: 2, 700: 3, 7000: 4, 9999999: 5 };
+    let bannerNum = tierMap[tier] || 1;
+
+    certSvgEl.innerHTML = `
+        <div class="modal-banner modal-banner-${bannerNum}">
+            <div class="m-hanger"></div>
+            <div class="m-banner-body"></div>
+            <div class="m-tassels"></div>
+        </div>
+    `;
+
+    document.getElementById('cert-modal').classList.add('show');
+}
+
+function closeCert() { 
+    document.getElementById('cert-modal').classList.remove('show'); 
+    if (isAutoTriggered) { setTimeout(flyLightToHistory, 300); }
+}
+
+    function flyLightToHistory() {
+        const targetBtn = document.getElementById('nav-history-btn'); 
+        if (!targetBtn) return;
+        const rect = targetBtn.getBoundingClientRect();
+        const targetX = rect.left + rect.width / 2;
+        const targetY = rect.top + rect.height / 2;
+
+        const light = document.createElement('div');
+        light.className = 'dharma-light';
+        light.style.left = '50vw'; light.style.top = '50vh'; light.style.opacity = '1';
+        light.style.transform = 'translate(-50%, -50%) scale(1)';
+        document.body.appendChild(light);
+        void light.offsetWidth; 
+        
+        light.style.left = targetX + 'px'; light.style.top = targetY + 'px';
+        light.style.transform = 'translate(-50%, -50%) scale(0.1)'; light.style.opacity = '0';
+
+        setTimeout(() => {
+            light.remove();
+            targetBtn.style.transform = 'scale(1.1)'; targetBtn.style.textShadow = '0 0 15px #fff';
+            setTimeout(() => { targetBtn.style.transform = 'none'; targetBtn.style.textShadow = 'none'; }, 300);
+        }, 1200);
+    }
+
+    const sealBtn = document.getElementById('seal-btn'); 
+    const progressFill = document.getElementById('btn-progress'); 
+    const hintText = document.getElementById('seal-text');
+    let reqAnimId, startTime, DURATION = 2000;
+
+    function drawProgress(timestamp) {
+        if (!startTime) startTime = timestamp; 
+        let pct = Math.min((timestamp - startTime) / DURATION, 1);
+        progressFill.style.height = (pct * 100) + '%';
+        if (pct < 1) reqAnimId = requestAnimationFrame(drawProgress); else completeTodayTask();
+    }
+
+    function startPress(e) { 
+        if (activeViewIndex !== currentDayOfWeek) return; 
+        if (db.weekRecord[currentDayOfWeek]) return; 
+        e.preventDefault(); 
+        hintText.innerHTML = "能量注入"; 
+        hintText.style.color = "#fff"; 
+        if (reqAnimId) { cancelAnimationFrame(reqAnimId); }
+        startTime = null; 
+        reqAnimId = requestAnimationFrame(drawProgress); 
+    }
+
+    function cancelPress() { 
+        if (activeViewIndex !== currentDayOfWeek) return;
+        if (db.weekRecord[currentDayOfWeek]) return; 
+        cancelAnimationFrame(reqAnimId); 
+        progressFill.style.height = '0%'; 
+        hintText.innerHTML = "長按 ． 大迴向"; 
+        hintText.style.color = "var(--cyan)"; 
+    }
+    
+    function completeTodayTask() {
+        if (db.weekRecord[currentDayOfWeek]) return;
+        db.weekRecord[currentDayOfWeek] = true; 
+        db.totalDays365++;
+        db.totalPracticedDays++; 
+
+        if (db.totalDays365 >= 365) { 
+            db.totalDays365 = 0; 
+            db.totalYears108++; 
+        }
+        
+        saveDB(); 
+
+        const currentData = purelandData[currentDayOfWeek];
+        showDedicationAnim(currentData);
+    }
+
+    function showDedicationAnim(currentData) {
+        const ov = document.getElementById('anim-overlay');
+        const globalFlash = document.getElementById('flash-overlay'); 
+        const svgCont = document.getElementById('anim-svg-cont');
+        const txt = document.getElementById('anim-txt');
+        const btn = document.getElementById('anim-btn');
+
+        ov.style.display = 'flex';
+        globalFlash.style.opacity = 0;
+        globalFlash.style.transition = 'none';
+
+        svgCont.innerHTML = currentData.seed;
+        txt.innerHTML = `
+            <div style="color:var(--gold); font-size:1.05rem; letter-spacing:2px; font-weight:bold; margin-bottom:10px;">${currentData.vowTitle}</div>
+            <div style="font-size:0.85rem; color:#ccc; text-align:justify; text-align-last:center; line-height: 1.8;">${currentData.vowDesc}</div>`;
+        
+        txt.style.opacity = 1;
+        btn.style.opacity = 0;
+        btn.style.pointerEvents = 'none';
+
+        setTimeout(() => ov.style.opacity = 1, 50);
+
+        setTimeout(() => {
+            globalFlash.style.transition = 'none';
+            globalFlash.style.opacity = 1; 
+            svgCont.innerHTML = ''; 
+            
+            for (let k = 0; k < 250; k++) {
+                let d = document.createElement('div');
+                d.className = 'dust-particle';
+                d.style.background = Math.random() > 0.5 ? '#f3e5ab' : '#FCF6D8'; 
+                d.style.width = Math.random() * 4 + 2 + 'px'; 
+                d.style.height = d.style.width;
+                d.style.position = 'absolute';
+                d.style.left = '50%'; d.style.top = '50%';
+                let a = Math.random() * Math.PI * 2, dist = 100 + Math.random() * 600;
+                d.style.setProperty('--dx', Math.cos(a) * dist + 'px');
+                d.style.setProperty('--dy', Math.sin(a) * dist + 'px');
+                d.style.animationDuration = (0.7 + Math.random() * 1.5) + 's';
+                ov.appendChild(d);
+            }
+            
+            setTimeout(() => { 
+                globalFlash.style.transition = 'opacity 1.8s ease-in-out'; 
+                globalFlash.style.opacity = 0; 
+            }, 300); 
+
+            txt.innerHTML = `
+                <div style="color:var(--gold); font-size:1.05rem; letter-spacing:2px; font-weight:bold; margin-bottom:8px;">${currentData.vowTitle}</div>
+                <div style="font-size:0.85rem; color:#aaa; text-align:justify; text-align-last:center; margin-bottom:15px;">${currentData.vowDesc}</div>
+                <div style="width:80%; height:1px; background:rgba(212,175,55,0.3); margin:0 auto 15px auto;"></div>
+                <div style="color:var(--gold); font-size:1.1rem; letter-spacing:3px; margin-bottom:5px;">【 因緣圓滿 ‧ 悉皆迴向 】</div>
+                <span style='font-size:0.85rem; color:var(--cyan); letter-spacing:1px;'>功功德已化作無漏金剛光束<br>迴向虛空法界。</span>`;
+            
+            setTimeout(() => { btn.style.opacity = 1; btn.style.pointerEvents = 'auto'; }, 2500);
+        }, 3000); 
+    }
+
+    function closeAnim() {
+        const ov = document.getElementById('anim-overlay');
+        ov.style.opacity = 0;
+        setTimeout(() => {
+            ov.style.display = 'none';
+            document.querySelectorAll('#anim-overlay .dust-particle').forEach(d => d.remove());
+            
+            updatePageUI(); 
+            updateDataModal();
+
+            if (db.totalDays365 === 0 && db.totalPracticedDays > 0) {
+                showVowAlert("歲星圓滿，365日行願已成，<br>劫波蓮花歲數 + 1。");
+            }
+
+            const triggers = [7, 70, 700, 7000, 9999999];
+           
+if (triggers.includes(db.totalPracticedDays)) {
+    setTimeout(() => { openCert(db.totalPracticedDays, true); }, 1200);
+}
+
+        }, 500);
+    }
+
+    sealBtn.addEventListener('mousedown', startPress); 
+    sealBtn.addEventListener('touchstart', startPress, {passive: false});
+    window.addEventListener('mouseup', cancelPress); 
+    window.addEventListener('touchend', cancelPress); 
+    window.addEventListener('mouseleave', cancelPress);
+
+    function openDataModal() { updateDataModal(); document.getElementById('dataModal').classList.add('active'); }
+    function closeDataModal() { document.getElementById('dataModal').classList.remove('active'); }
+
+    const canvas = document.getElementById('starCanvas'); const ctx = canvas.getContext('2d');
+    let width, height, stars = [], warpSpeed = 1, starScale = 0.6; 
+    function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+    window.addEventListener('resize', resize); resize();
+    const STAR_COLORS = ['#f3e5ab', '#ffffff', '#00f2fe', '#ff7eb3', '#c471ed', '#43e97b', '#d4af37'];
+    for (let i = 0; i < 350; i++) { stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)], s: Math.random() * 2 + 1 }); }
+    
+    function renderStars() {
+        ctx.fillStyle = 'rgba(2, 2, 4, 0.4)'; ctx.fillRect(0, 0, width, height); ctx.globalCompositeOperation = 'screen';
+        stars.forEach(s => {
+            s.z -= warpSpeed; if (s.z <= 0) { s.z = 2000; s.x = (Math.random() - 0.5) * 2000; s.y = (Math.random() - 0.5) * 2000; } 
+            let sc = 400 / (400 + s.z); ctx.beginPath(); 
+            ctx.arc((width / 2) + s.x * sc, (height / 2) + s.y * sc, s.s * sc * starScale, 0, Math.PI * 2);
+            ctx.fillStyle = s.color; ctx.globalAlpha = Math.min(1, sc * 2.5); ctx.fill(); ctx.globalAlpha = 1;
+        });
+        ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(renderStars);
+    }
+
+    window.addEventListener('load', () => { 
+        renderStars(); 
+        initHandwritingCanvas(); 
+        updatePageUI(); 
+        updateDataModal(); 
+
+        document.getElementById('dharma-desc-btn').addEventListener('click', () => {
+            showVowAlert(`
+                <div style='text-align:left; font-size:0.9rem; line-height:1.8; color:#ddd;'>
+                    於 <span style='color:var(--gold);'>七日觀摹</span> 之中，至誠領受諸佛菩薩大願。<br><br>
+                    此處為行者隨學修持之清淨空間。每日依循諸佛菩薩之誓願聖字，<span style='color:var(--gold);'>恭敬摹寫、字輪隨照</span>。於壇城內端嚴書寫梵音種子字，淨念相續，並長按契印隨學迴向，將此功德資糧暫存法界。<br><br>
+                    每圓滿七日淨觀，系統將自動結算 <span style='color:var(--gold);'>100 點菩提資糧</span>，匯入您的彌陀主系統。
+                </div>
+            `);
+        });
+    });
+</script>
+</body>
+</html>

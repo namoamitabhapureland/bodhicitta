@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <title>彌陀淨土 ‧ 觀相悟陣</title>
+    <style>
+        :root {
+            --bg-deep: #010204; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            margin: 0; background: var(--bg-deep); color: #d0d0d0; 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; height: 100dvh; display: flex; flex-direction: column;
+            -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: none; 
+        }
+
+        #bgCanvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+        
+        /* 法界異象特效 */
+        #vision-overlay { position: fixed; inset: 0; z-index: 100; pointer-events: none; opacity: 0; transition: opacity 0.8s, background 1s; }
+        .vibrate { animation: shake 0.2s infinite; }
+        @keyframes shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -2px); } 100% { transform: translate(1px, -1px); } }
+
+        .huayan-planet { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.1); width: 50vh; height: 50vh; border-radius: 50%; filter: blur(20px); opacity: 0; z-index: 50; pointer-events: none; transition: transform 2.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 2.5s ease, filter 2.5s ease; }
+        .huayan-planet.active { transform: translate(-50%, -50%) scale(1.5); opacity: 0.85; filter: blur(4px); }
+
+        /* 頂部 UI 區塊 */
+        #header { padding: 12px 15px; z-index: 10; position: relative; background: linear-gradient(180deg, rgba(1,2,4,0.98) 0%, rgba(1,2,4,0) 100%); display: flex; flex-direction: column; gap: 10px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        
+        .btn-return { color: var(--cyan); font-size: 0.95rem; letter-spacing: 2px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 15px; border: 1px solid rgba(139,168,156,0.3); transition: 0.2s;}
+        .btn-return:active { background: rgba(255,255,255,0.2); }
+        .title-area { display: flex; flex-direction: column; align-items: center; }
+        .honor-tag { font-size: 0.7rem; color: var(--solid-gold); letter-spacing: 3px; margin-bottom: 2px; }
+        .lv-tag { letter-spacing: 4px; color: var(--gold); font-size: 1.05rem; font-weight: bold; text-shadow: 0 0 10px rgba(212,175,55,0.4); }
+        .bag-tag { font-size: 0.85rem; color: var(--cyan); letter-spacing: 1px; cursor: pointer; }
+        .bag-tag.full { color: var(--solid-gold); font-weight: bold; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { filter: drop-shadow(0 0 2px var(--solid-gold)); } 50% { filter: drop-shadow(0 0 8px var(--solid-gold)); } 100% { filter: drop-shadow(0 0 2px var(--solid-gold)); } }
+
+        .question-row { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 5px; }
+        .question-box { background: rgba(20,25,30,0.85); border: 1px solid var(--solid-gold); border-radius: 30px; padding: 4px 20px; font-size: 1rem; color: #fff; letter-spacing: 2px; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.8); }
+        .q-icon { width: 35px; height: 35px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.4)); transform: translateY(-10px); }
+        .q-icon svg { overflow: visible !important; }
+        .q-text { font-weight: bold; color: var(--gold); }
+        
+        /* 琉璃時間進度條 */
+        .timer-wrap { flex: 1; margin-left: 15px; display: flex; flex-direction: column; align-items: flex-end; }
+        .timer-text { font-size: 0.8rem; color: #00e5ff; font-weight: bold; letter-spacing: 1px; margin-bottom: 4px; transition: color 0.3s; }
+
+        /* 核心觀相區 */
+        #board { flex: 1; position: relative; width: 100%; overflow: hidden; z-index: 5; margin: 10px 0; }
+        
+        /* ✨ 效能優化：拔除預設陰影，加入硬體加速 */
+        .item { position: absolute; display: flex; justify-content: center; align-items: center; transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); will-change: transform, filter; }
+        
+        /* ✨ 呼吸動畫改用亮度，不跟JS的旋轉打架 */
+        @keyframes light-breathe { 0% { filter: brightness(1); } 100% { filter: brightness(1.3); } }
+        .item.distractor-breathe { animation: light-breathe 4s infinite ease-in-out alternate; }
+        
+        .item svg { width: 100%; height: 100%; pointer-events: none; }
+        /* 只有選中時才套用高效能陰影 */
+        .item.highlight { filter: drop-shadow(0 0 25px var(--solid-gold)) brightness(1.4) !important; z-index: 4000 !important; animation: none; transform: scale(1.3) !important; }
+
+        /* 底部作答區 */
+        #footer { padding: 15px 15px 25px 15px; width: 100%; background: linear-gradient(0deg, rgba(1,2,4,1) 0%, rgba(1,2,4,0.8) 70%, transparent 100%); z-index: 20; position: relative; display: flex; justify-content: center; align-items: center; gap: 15px;}
+        .ans-btn { flex: 1; height: 70px; border-radius: 16px; border: 1px solid rgba(212,175,55,0.5); background: linear-gradient(135deg, rgba(30,35,45,0.95) 0%, rgba(10,15,20,0.95) 100%); color: var(--gold); font-size: 1.8rem; font-weight: bold; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; box-shadow: 0 10px 20px rgba(0,0,0,0.8), inset 0 2px 5px rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.2;}
+        .ans-btn span { font-size: 0.75rem; color: var(--cyan); font-weight: normal; letter-spacing: 4px; }
+        .ans-btn:active { transform: scale(0.92); background: rgba(212,175,55,0.2); box-shadow: 0 2px 5px rgba(0,0,0,0.8); }
+        
+        /* 模態框 */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 5000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s; }
+        .modal-overlay.show { display: flex; opacity: 1; pointer-events: auto; }
+        .modal-box { width: 85%; max-width: 340px; background: linear-gradient(135deg, #151515, #050505); border: 1px solid var(--solid-gold); border-radius: 20px; padding: 35px 25px; text-align: center; box-shadow: 0 0 50px rgba(212,175,55,0.3); transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .modal-overlay.show .modal-box { transform: scale(1); }
+        
+        .m-title { color: var(--gold); font-size: 1.2rem; letter-spacing: 5px; margin-bottom: 15px; text-shadow: 0 0 15px rgba(212,175,55,0.5); font-weight: bold;}
+        .m-divider { width: 40px; height: 1px; background: var(--solid-gold); margin: 0 auto 20px; opacity: 0.5; }
+        .m-text { font-size: 0.95rem; line-height: 1.8; margin-bottom: 30px; letter-spacing: 2px; color: #e0e0e0; text-align: center; }
+        
+        .rpg-btn-wrap { position: relative; width: 100%; height: 52px; border-radius: 26px; border: 1px solid rgba(212,175,55,0.6); background: rgba(0,0,0,0.5); cursor: pointer; overflow: hidden; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; }
+        .rpg-btn-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0%; transition: width 0.05s linear; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.6)); }
+        .rpg-btn-text { position: relative; z-index: 5; color: #fff; font-size: 0.95rem; letter-spacing: 4px; font-weight:bold;}
+        
+        .m-btn { background: transparent; border: 1px solid rgba(139,168,156,0.4); color: var(--cyan); padding: 12px; border-radius: 20px; font-size: 0.95rem; cursor: pointer; transition: all 0.3s; letter-spacing: 3px; width: 100%; margin-bottom: 10px; display: block;}
+        .m-btn-prime { background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); border-color: var(--solid-gold); color: var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.1); }
+        
+        .time-plus { position: absolute; color: #80ed99; font-weight: bold; font-size: 1.4rem; text-shadow: 0 0 10px #80ed99; z-index: 200; pointer-events: none; animation: floatUp 1s forwards; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
+    </style>
+</head>
+<body id="main-body">
+
+<svg style="width:0; height:0; position:absolute;">
+    <defs id="svg-defs">
+        <linearGradient id="g-red" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ff4d4d"/><stop offset="100%" stop-color="#800000"/></linearGradient>
+        <linearGradient id="g-blue" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#4da6ff"/><stop offset="100%" stop-color="#000080"/></linearGradient>
+        <linearGradient id="g-gold" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffd700"/><stop offset="100%" stop-color="#b8860b"/></linearGradient>
+        <linearGradient id="g-green" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#80ed99"/><stop offset="100%" stop-color="#1b5e20"/></linearGradient>
+        <linearGradient id="g-purple" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ea80fc"/><stop offset="100%" stop-color="#4a148c"/></linearGradient>
+        <linearGradient id="g-rose" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffb7c5"/><stop offset="100%" stop-color="#c2185b"/></linearGradient>
+        <linearGradient id="l-white" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#cccccc"/></linearGradient>
+    </defs>
+</svg>
+
+<canvas id="bgCanvas"></canvas>
+<div id="vision-overlay"></div>
+
+
+<div id="header" style="padding: 15px; z-index: 10; position: relative; background: linear-gradient(180deg, rgba(1,2,4,0.98) 0%, rgba(1,2,4,0) 100%); min-height: 120px;">
+    <div style="position: absolute; left: 15px; top: 15px; z-index: 5;">
+        <div class="btn-return" onclick="triggerExit()">退出</div>
+    </div>
+    <div style="position: absolute; right: 15px; top: 15px; z-index: 5; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+        <div class="bag-tag" id="bag-ui" onclick="checkSync()" style="color: var(--gold); border: 1px solid rgba(212,175,55,0.3); background: rgba(10,15,20,0.6); padding: 3px 10px; border-radius: 10px;">資糧：0/100</div>
+        
+        <div style="position: relative; width: 56px; height: 56px;">
+            <svg viewBox="0 0 60 60" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="4"/>
+                <g opacity="0.15" transform="translate(30,30)">
+                    <path d="M0-16 C5-10 5 10 0 16 C-5 10 -5-10 0-16" fill="#d4af37" transform="rotate(0)"/>
+                    <path d="M0-16 C5-10 5 10 0 16 C-5 10 -5-10 0-16" fill="#d4af37" transform="rotate(45)"/>
+                    <path d="M0-16 C5-10 5 10 0 16 C-5 10 -5-10 0-16" fill="#d4af37" transform="rotate(90)"/>
+                    <path d="M0-16 C5-10 5 10 0 16 C-5 10 -5-10 0-16" fill="#d4af37" transform="rotate(135)"/>
+                </g>
+                <circle id="timer-arc" cx="30" cy="30" r="26" fill="none" stroke="#f3e5ab" stroke-width="4" stroke-linecap="round" stroke-dasharray="163.36" stroke-dashoffset="0" style="transition: stroke-dashoffset 0.1s linear, stroke 0.3s; filter: drop-shadow(0 0 4px rgba(212,175,55,0.5));"/>
+            </svg>
+            <div id="timer-text" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold; color: #f3e5ab; font-family: monospace; transition: color 0.3s; padding-left: 2px;">60.0</div>
+        </div>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; width: 100%; position: relative; z-index: 1;">
+        <div class="title-area" style="display: flex; flex-direction: column; align-items: center;">
+            <div class="honor-tag" id="honor-display">琉璃行者</div>
+            <div class="lv-tag" id="lv-display">結界起建中</div>
+        </div>
+        <div class="question-row" style="justify-content: center; margin-top: 10px;">
+            <div class="question-box">
+                <span style="font-size: 0.95rem;">尋出</span>
+                <div class="q-icon" id="q-icon-display"></div>
+                <span class="q-text" id="q-name-display">法相</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="board"></div>
+
+<div id="footer">
+    <button class="ans-btn" id="btn-0" onclick="submitAnswer(0)"></button>
+    <button class="ans-btn" id="btn-1" onclick="submitAnswer(1)"></button>
+    <button class="ans-btn" id="btn-2" onclick="submitAnswer(2)"></button>
+</div>
+
+<div class="modal-overlay" id="modal">
+    <div class="modal-box" id="modal-box">
+        <div class="m-title" id="m-title"></div>
+        <div class="m-divider" id="m-div"></div>
+        <div class="m-text" id="m-text"></div>
+        <div class="m-action-group" id="m-actions"></div>
+    </div>
+</div>
+
+<script>
+    // --------------------------------------------------
+    // 0. 資料庫防護與初始化 (對齊主系統)
+    // --------------------------------------------------
+    let db = {};
+    const STORAGE_KEY = 'PX_V15.0'; 
+    try { db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e) { db = {}; }
+
+    db.tempBag = db.tempBag || 0;
+    db.points = db.points || 0;
+    if (!db.treasures) db.treasures = { sword: 0, vase: 0, jewel: 0 };
+    
+    db.visionLevel = db.visionLevel || 1; 
+    db.visionLastFailed = db.visionLastFailed || "";
+    db.visionLastDate = db.visionLastDate || ""; 
+
+    function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
+    
+    const SCRIPTURES = [
+        { t: "觀音如來 ‧ 般若照見", c: "【照見五蘊皆空，度一切苦厄】。<br>色即是空，空即是色。", b: "南無觀世音菩薩", color: "rgba(0,200,255,0.2)" },
+        { t: "地藏菩薩 ‧ 業海震盪", c: "【眾生度盡，方證菩提】。<br>請長按稱唸名號，鎮伏波濤。", b: "南無地藏王菩薩", color: "rgba(180,30,30,0.5)", type: "earth" },
+        { t: "普賢菩薩 ‧ 願王引導", c: "【虛空有盡，我願無窮】。<br>一塵中有塵數剎。", b: "南無普賢菩薩", color: "rgba(216,180,254,0.25)" },
+        { t: "釋迦如來 ‧ 演說大經", c: "【發菩提心，一向專念】。<br>此三輩往生之根本，行者當攝心入定。", b: "南無本師釋迦牟尼佛", color: "rgba(243,229,171,0.25)" }
+    ];
+
+    let game = { starSpeed: 1, currentEncounter: null, isHuayan: false, isProcessing: false, timeLeft: 60, maxTime: 180, timerInterval: null, wrongCount: 0 };
+
+    // --------------------------------------------------
+    // 1. ✨ 法寶庫 ✨
+    // --------------------------------------------------
+    const TARGET_LIB = {
+        sword_red: { name: "赤焰慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-red)"/><polygon points="25,100 75,100 55,110 45,110" fill="#d4af37" stroke="#d4af37" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-red)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
+        sword_gold: { name: "大日慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-gold)"/><polygon points="25,100 75,100 55,110 45,110" fill="#f3e5ab" stroke="#f3e5ab" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-gold)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
+        sword_blue: { name: "青玉慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-blue)"/><polygon points="25,100 75,100 55,110 45,110" fill="#8ba89c" stroke="#8ba89c" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-blue)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
+        sword_green: { name: "翡翠慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-green)"/><polygon points="25,100 75,100 55,110 45,110" fill="#8ba89c" stroke="#8ba89c" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-green)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
+        sword_purple: { name: "紫霞慧劍", drop: "sword", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.4) translate(-14, -20)"><polygon points="50,10 65,40 50,105 35,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="50,10 65,40 50,105" fill="url(#g-purple)"/><polygon points="25,100 75,100 55,110 45,110" fill="#8ba89c" stroke="#8ba89c" stroke-width="2"/><polygon points="46,110 54,110 52,135 48,135" fill="#b8860b"/><circle cx="50" cy="105" r="6" fill="url(#g-purple)" stroke="#fff" stroke-width="1.5"/></g></svg>` },
+
+        vase_blue: { name: "琉璃淨瓶", drop: "vase", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-blue)" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="#f3e5ab" stroke="#f3e5ab" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="#b8860b"/></g></svg>` },
+        vase_purple: { name: "紫霞淨瓶", drop: "vase", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-purple)" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="#ce93d8" stroke="#ce93d8" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="#b8860b"/></g></svg>` },
+        vase_green: { name: "翡翠淨瓶", drop: "vase", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-green)" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="#80ed99" stroke="#80ed99" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="#b8860b"/></g></svg>` },
+        vase_gold: { name: "大日淨瓶", drop: "vase", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-gold)" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="#f3e5ab" stroke="#f3e5ab" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="#b8860b"/></g></svg>` },
+        vase_red: { name: "赤焰淨瓶", drop: "vase", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.1) translate(-5, -15)"><polygon points="45,20 55,20 60,40 40,40" fill="#fff" stroke="#fff" stroke-width="1"/><polygon points="40,40 60,40 75,90 25,90" fill="url(#g-red)" stroke="#fff" stroke-width="1"/><polygon points="25,90 75,90 60,120 40,120" fill="#f3e5ab" stroke="#f3e5ab" stroke-width="1"/><polygon points="50,90 75,90 60,120 50,120" fill="#b8860b"/></g></svg>` },
+
+        jewel_gold: { name: "大日寶珠", drop: "jewel", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.3) translate(-8, 5)"><polygon points="50,10 80,40 50,55 20,40" fill="#fff" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#g-gold)" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="#b8860b" stroke="#fff" stroke-width="0.5"/></g></svg>` },
+        jewel_rose: { name: "粉晶寶珠", drop: "jewel", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.3) translate(-8, 5)"><polygon points="50,10 80,40 50,55 20,40" fill="#fff" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#g-rose)" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="#c2185b" stroke="#fff" stroke-width="0.5"/></g></svg>` },
+        jewel_blue: { name: "琉璃寶珠", drop: "jewel", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.3) translate(-8, 5)"><polygon points="50,10 80,40 50,55 20,40" fill="#fff" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#g-blue)" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="#000080" stroke="#fff" stroke-width="0.5"/></g></svg>` },
+        jewel_green: { name: "翡翠寶珠", drop: "jewel", svg: `<svg viewBox="0 0 100 150"><g transform="scale(1.3) translate(-8, 5)"><polygon points="50,10 80,40 50,55 20,40" fill="#fff" stroke="#fff" stroke-width="0.5"/><polygon points="20,40 50,55 50,100" fill="url(#g-green)" stroke="#fff" stroke-width="0.5"/><polygon points="80,40 50,55 50,100" fill="#1b5e20" stroke="#fff" stroke-width="0.5"/></g></svg>` }
+    };
+
+    // ✨ 效能優化：精簡為 6 片花瓣，完全不透明
+    function getLotusNoiseSVG(colorID) {
+        let svg = `<svg viewBox="-100 -100 200 200">`;
+        for(let i=0; i<6; i++) {
+            let rot = i * 60;
+            svg += `<path d="M 0 0 C 35 -10 45 -65 0 -95 C -45 -65 -35 -10 0 0" fill="url(#${colorID})" transform="rotate(${rot})" stroke="#fff" stroke-width="1.5" opacity="1"/>`;
+        }
+        svg += `<circle cx="0" cy="0" r="14" fill="#d4af37" stroke="#fff" stroke-width="1.5"/><circle cx="0" cy="0" r="10" fill="url(#l-white)" stroke="none"/></svg>`;
+        return svg;
+    }
+
+    const NOISE_LIB = {
+        lotus_gold: getLotusNoiseSVG('g-gold'), lotus_red: getLotusNoiseSVG('g-red'),
+        lotus_cyan: getLotusNoiseSVG('g-blue'), lotus_purple: getLotusNoiseSVG('g-purple'),
+        lotus_green: getLotusNoiseSVG('g-green')
+    };
+
+    let targetType = ''; let correctCount = 0; let options = [];
+
+    // --------------------------------------------------
+    // 2. 主系統同步、退出選單與稱號
+    // --------------------------------------------------
+    function getTitle(lvl) {
+        if(lvl >= 1000) return "萬法一如";
+        if(lvl >= 500) return "金剛定力";
+        if(lvl >= 300) return "清明照見";
+        if(lvl >= 100) return "不動行者";
+        return "琉璃行者";
+    }
+
+    function checkSync() {
+        if(db.tempBag >= 100) {
+            let tAmt = Math.floor(db.tempBag / 100) * 100;
+            showModal("資糧結集", `已匯聚 ${db.tempBag} 點資糧。<br>即將把 ${tAmt} 點存入主系統。`, "確認結集", () => {
+                db.points += tAmt; db.tempBag -= tAmt; saveDB();
+                window.location.href = 'index.html';
+            }, `<button class="m-btn" onclick="closeModal()">繼續觀相</button>`);
+        }
+    }
+
+    function triggerExit() {
+        showModal("暫歇觀相", "放下手機，讓眼睛與心神休息。<br>您欲前往何處？", null, null, `
+            <button class="m-btn m-btn-prime" onclick="closeModal()">繼續觀相</button>
+            <button class="m-btn" onclick="window.location.href='water.html?play=1'">前往琉璃淨水</button>
+            <button class="m-btn" onclick="window.location.href='index.html?screen=3'">歸返主道場</button>
+        `);
+    }
+
+    // --------------------------------------------------
+    // 3. 生存計時器 (一命通關鎖)
+    // --------------------------------------------------
+    function startTimer() {
+        clearInterval(game.timerInterval);
+        updateWaterUI();
+        
+        game.timerInterval = setInterval(() => {
+            if(game.isProcessing || game.isHuayan || game.currentEncounter) return;
+            game.timeLeft -= 0.1;
+            updateWaterUI(); 
+            
+            if (game.timeLeft <= 0) {
+                clearInterval(game.timerInterval);
+                game.isProcessing = true;
+                
+                let finalLvl = db.visionLevel;
+                let finalBag = db.tempBag;
+                
+                db.visionLevel = Math.max(1, db.visionLevel - 1); 
+                db.visionLastFailed = new Date().toDateString();
+                saveDB();
+                
+                showModal("今日定力已盡", `本次止步於：<span style="color:var(--solid-gold)">第 ${finalLvl} 重結界</span><br>目前累積資糧：<span style="color:var(--solid-gold)">${finalBag} 點</span><br><br>時劫已滿，心神已疲，請安住呼吸明日再來。`, "歸返道場", () => window.location.href = 'index.html?screen=3');
+            }
+        }, 100);
+    }
+
+    function updateWaterUI() {
+        let pct = Math.max(0, (game.timeLeft / game.maxTime));
+        const arc = document.getElementById('timer-arc');
+        const txt = document.getElementById('timer-text');
+        
+        if (arc) arc.style.strokeDashoffset = 163.36 * (1 - pct);
+        if (txt) txt.innerText = Math.max(0, game.timeLeft).toFixed(1);
+
+        if (game.timeLeft <= 10) {
+            if (arc) { arc.style.stroke = '#ff4d4d'; arc.style.filter = 'drop-shadow(0 0 5px rgba(255,77,77,0.8))'; }
+            if (txt) txt.style.color = '#ff4d4d';
+        } else {
+            if (arc) { arc.style.stroke = '#f3e5ab'; arc.style.filter = 'drop-shadow(0 0 4px rgba(212,175,55,0.5))'; }
+            if (txt) txt.style.color = '#f3e5ab';
+        }
+    }
+
+    // --------------------------------------------------
+    // 4. 陣法生成 (漸進式心理旋轉)
+    // --------------------------------------------------
+    function initLevel() {
+        const currentToday = new Date().toDateString(); 
+        
+        if (db.visionLastFailed === currentToday) {
+            showModal("今日定力已盡", "時劫已滿，心神已疲。<br>觀相結界今日關閉，請安住呼吸，明日再來。", "歸返道場", () => window.location.href = 'index.html?screen=3');
+            return;
+        }
+
+        game.isProcessing = false;
+        game.wrongCount = 0; 
+        
+        const board = document.getElementById('board');
+        board.innerHTML = '';
+        
+        let lvl = db.visionLevel;
+        document.getElementById('lv-display').innerText = `第 ${lvl} 重結界`;
+        document.getElementById('honor-display').innerText = getTitle(lvl);
+        
+        let bagUI = document.getElementById('bag-ui');
+        bagUI.innerText = `資糧：${db.tempBag}/100`;
+        if(db.tempBag >= 100) bagUI.classList.add('full'); else bagUI.classList.remove('full');
+
+        // ✨ 效能大升級：限制最大 55 個圖案，最多 6 朵蓮花
+        let totalItems = Math.min(55, 20 + Math.floor(lvl * 1.0)); 
+        let lotusLimit = Math.min(6, Math.floor(lvl / 10)); 
+        correctCount = Math.min(15, 4 + Math.floor(Math.random() * 4) + Math.floor(lvl / 5)); 
+        
+        let targetPool = Object.keys(TARGET_LIB); targetPool.sort(() => Math.random() - 0.5);
+        targetType = targetPool[0];
+
+        let itemPool = [];
+        for(let i=0; i<correctCount; i++) itemPool.push({ type: targetType, cat: 'target' });
+        
+        let availableTargets = targetPool.filter(t => t !== targetType);
+        let availableNoise = Object.keys(NOISE_LIB);
+        let lotusAdded = 0;
+        
+        while(itemPool.length < totalItems) {
+            if(lotusAdded < lotusLimit && Math.random() > 0.4) {
+                itemPool.push({ type: availableNoise[Math.floor(Math.random() * availableNoise.length)], cat: 'noise' });
+                lotusAdded++;
+            } else {
+                itemPool.push({ type: availableTargets[Math.floor(Math.random() * availableTargets.length)], cat: 'distractor' });
+            }
+        }
+        itemPool.sort(() => Math.random() - 0.5);
+
+        document.getElementById('q-icon-display').innerHTML = TARGET_LIB[targetType].svg;
+        document.getElementById('q-name-display').innerText = TARGET_LIB[targetType].name;
+
+             let optSet = new Set([correctCount]);
+        let pattern = Math.random(); 
+        
+        while(optSet.size < 3) {
+            let offset = Math.floor(Math.random() * 4) + 1; 
+            let sign;
+            
+            if (pattern < 0.33) {
+                sign = 1; 
+            } else if (pattern < 0.66 && correctCount > 4) {
+                sign = -1; 
+            } else {
+                sign = Math.random() > 0.5 ? 1 : -1; 
+            }
+            
+            let val = correctCount + (offset * sign);
+            if(val > 0) optSet.add(val);
+        }
+        options = Array.from(optSet);
+
+        for (let i = options.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [options[i], options[j]] = [options[j], options[i]];
+        }
+
+        
+        // ✨ 按鈕數字重置，並清除上一關的亮光顏色
+        for(let i=0; i<3; i++) { 
+            let b = document.getElementById(`btn-${i}`);
+            b.innerHTML = `${options[i]}<br><span>數量</span>`; 
+            b.style.background = '';
+            b.style.borderColor = '';
+            b.style.boxShadow = '';
+        }
+
+        const boardRect = board.getBoundingClientRect();
+
+        itemPool.forEach((itemDef, idx) => {
+            let el = document.createElement('div');
+            el.className = `item ${itemDef.cat === 'target' ? 'target-item' : ''}`;
+            
+            let baseSize;
+            if (itemDef.cat === 'noise') {
+                el.innerHTML = NOISE_LIB[itemDef.type]; 
+                baseSize = 110 + Math.random() * 70; 
+                el.style.zIndex = 5; 
+                el.style.opacity = "1"; // 蓮花保持不透明
+            } else {
+                el.innerHTML = TARGET_LIB[itemDef.type].svg; 
+                baseSize = 45 + Math.random() * 35; 
+                el.style.zIndex = 100 + Math.floor(Math.random() * 100); 
+                // ✨ 動畫優化：只有少部分物品用亮度呼吸
+                if (Math.random() > 0.6) el.classList.add('distractor-breathe'); 
+            }
+
+            el.style.width = `${baseSize}px`; el.style.height = `${baseSize}px`;
+            
+            let maxLeft = boardRect.width - baseSize - 10;
+            let maxTop = boardRect.height - baseSize - 20; 
+            let finalX = Math.max(10, Math.random() * maxLeft); 
+            let finalY = Math.max(10, Math.random() * maxTop);
+            
+            el.style.left = `${finalX}px`; el.style.top = `${finalY}px`;
+            
+            let flip = Math.random() > 0.5 ? 'scaleX(-1)' : 'scaleX(1)';
+            let rot = 0;
+            if (lvl > 50) rot = Math.floor(Math.random() * 360); 
+            else if (lvl > 20) rot = Math.floor(Math.random() * 90) - 45; 
+            
+            el.style.transform = `${flip} rotate(${rot}deg)`;
+            board.appendChild(el);
+        });
+
+        game.maxTime = 180; 
+        let baseTime = lvl >= 50 ? 180 : (lvl >= 20 ? 120 : 60);
+        game.timeLeft = Math.min(game.maxTime, Math.max(baseTime, game.timeLeft)); 
+        updateWaterUI();
+        startTimer();
+    }
+
+    // --------------------------------------------------
+    // 5. 答題驗證與回血
+    // --------------------------------------------------
+    function submitAnswer(btnIdx) {
+        if(game.isProcessing) return;
+        
+        let guess = options[btnIdx];
+        let clickedBtn = document.getElementById(`btn-${btnIdx}`); 
+        
+        if (guess === correctCount) {
+            game.isProcessing = true;
+            
+            // ✨ 答對發出綠光
+            clickedBtn.style.background = 'linear-gradient(135deg, rgba(128,237,153,0.4) 0%, rgba(30,80,40,0.8) 100%)';
+            clickedBtn.style.borderColor = '#80ed99';
+            clickedBtn.style.boxShadow = '0 0 20px rgba(128,237,153,0.5)';
+            
+            if (game.wrongCount === 0) {
+                let bonus = Math.min(game.maxTime - game.timeLeft, 15); 
+                game.timeLeft += bonus; 
+                updateWaterUI();
+                
+                let flyText = document.createElement('div'); flyText.className = 'time-plus'; 
+                flyText.innerText = `+${Math.floor(bonus)}s`;
+                let r = document.getElementById('timer-text').getBoundingClientRect();
+                flyText.style.position = 'fixed';
+                flyText.style.left = (r.left + 10) + 'px'; 
+                flyText.style.top = (r.top + 10) + 'px';
+                document.body.appendChild(flyText); setTimeout(() => flyText.remove(), 1000);
+            }
+
+            let targets = document.querySelectorAll('.target-item');
+            targets.forEach(t => t.classList.add('highlight'));
+            setTimeout(() => checkWinEvents(), 1200); 
+
+        } else {
+            game.wrongCount++; 
+            
+            // ✨ 答錯發出紅光
+            clickedBtn.style.background = 'linear-gradient(135deg, rgba(255,77,77,0.4) 0%, rgba(80,20,20,0.8) 100%)';
+            clickedBtn.style.borderColor = '#ff4d4d';
+            
+            if (game.wrongCount >= 1) {
+                game.timeLeft = 0; 
+                updateWaterUI(); 
+                clearInterval(game.timerInterval);
+                game.isProcessing = true;
+                
+                let finalLvl = db.visionLevel;
+                let finalBag = db.tempBag;
+                
+                db.visionLevel = Math.max(1, db.visionLevel - 1); 
+                db.visionLastFailed = new Date().toDateString();
+                saveDB();
+                
+                showModal("定力渙散 ‧ 結界關閉", `心念散亂，盲目攀緣。<br><br>本次止步於：<span style="color:var(--solid-gold)">第 ${finalLvl} 重結界</span><br>目前累積資糧：<span style="color:var(--solid-gold)">${finalBag} 點</span><br><br>今日時劫已滿，請安住呼吸明日再來。`, "歸返道場", () => window.location.href = 'index.html?screen=3');
+                return; 
+            }
+
+            game.timeLeft = Math.max(0, game.timeLeft - 10); 
+            updateWaterUI();
+            
+            if (game.timeLeft <= 0) {
+                clearInterval(game.timerInterval);
+                game.isProcessing = true;
+                
+                let finalLvl = db.visionLevel;
+                let finalBag = db.tempBag;
+                
+                db.visionLevel = Math.max(1, db.visionLevel - 1); 
+                db.visionLastFailed = new Date().toDateString();
+                saveDB();
+                
+                showModal("今日定力已盡", `本次止步於：<span style="color:var(--solid-gold)">第 ${finalLvl} 重結界</span><br>目前累積資糧：<span style="color:var(--solid-gold)">${finalBag} 點</span><br><br>時劫已滿，心神已疲，請安住呼吸明日再來。`, "歸返道場", () => window.location.href = 'index.html?screen=3');
+                return; 
+            }
+
+            game.isProcessing = true;
+            document.getElementById('board').classList.add('vibrate');
+            
+            setTimeout(() => { 
+                document.getElementById('board').classList.remove('vibrate'); 
+                clickedBtn.style.background = '';
+                clickedBtn.style.borderColor = '';
+                game.isProcessing = false; 
+            }, 1000);
+        }
+    }
+
+    function checkWinEvents() {
+        const currentToday = new Date().toDateString();
+        let isFirstWinToday = (db.visionLastDate !== currentToday);
+        db.visionLastDate = currentToday;
+        db.visionLevel++; 
+        
+        let earnedPoints = 1;
+        let clearMsg = "";
+        if (isFirstWinToday) {
+            earnedPoints += 10;
+            clearMsg = "今日首度理順，獲【每日定課】 +10，過關 +1，共得 +11 點。<br>";
+        }
+        db.tempBag += earnedPoints;
+
+        // ✨ 滿百精準找零
+        let syncMsg = "";
+        if (db.tempBag >= 100) {
+            let transferAmount = Math.floor(db.tempBag / 100) * 100;
+            db.points += transferAmount; 
+            db.tempBag -= transferAmount;
+            syncMsg = `<br><span style="color:#00e5ff; font-weight:bold;">資糧圓滿！已將 ${transferAmount} 點自動匯入主系統。</span>`;
+        }
+
+        let dropMsg = "";
+        let levelPassed = db.visionLevel - 1;
+        
+        if (levelPassed % 20 === 0 && levelPassed > 0) { 
+            let dropType = TARGET_LIB[targetType].drop; 
+            db.treasures[dropType]++; 
+            dropMsg = `<div style="color:var(--solid-gold); font-size:0.85rem; margin-top:15px; border-top:1px dashed var(--solid-gold); padding-top:10px;">結界共鳴，化現【${TARGET_LIB[targetType].name}】<br>已收入多寶閣</div>`;
+        }
+        saveDB();
+
+        game.starSpeed = 25; 
+        const overlay = document.getElementById('vision-overlay');
+        overlay.style.background = 'radial-gradient(circle, #fff 0%, transparent 80%)';
+        overlay.style.opacity = '1';
+        
+        setTimeout(() => {
+            game.starSpeed = 1; overlay.style.opacity = '0';
+            
+            if (levelPassed % 5 === 0 && levelPassed > 0) {
+                const s = SCRIPTURES[Math.floor(Math.random()*SCRIPTURES.length)];
+                triggerRPG(s, clearMsg + syncMsg + dropMsg);
+            } else if (levelPassed % 3 === 0 && levelPassed > 0) {
+                triggerHuayanWorld(levelPassed, clearMsg + syncMsg + dropMsg);
+            } else if (clearMsg !== "" || syncMsg !== "" || dropMsg !== "") {
+                showModal("境界提昇", clearMsg + syncMsg + dropMsg, "繼續精進", () => initLevel());
+            } else {
+                initLevel(); 
+            }
+        }, 1500);
+    }
+
+    function triggerHuayanWorld(lvl, dropMsg) {
+        game.isHuayan = true; game.starSpeed = 60; 
+        let layer = Math.floor(lvl / 3) % 20 + 1;
+        const planet = document.createElement('div'); planet.className = 'huayan-planet';
+        
+        const cols = ['rgba(0,229,255,0.4)', 'rgba(206,147,216,0.4)', 'rgba(243,229,171,0.4)', 'rgba(128,237,153,0.4)'];
+        planet.style.background = `radial-gradient(circle, ${cols[layer % 4]} 0%, transparent 70%)`;
+        document.body.appendChild(planet);
+        
+        setTimeout(() => planet.classList.add('active'), 100);
+        setTimeout(() => {
+            planet.classList.remove('active'); planet.style.opacity = '0'; setTimeout(() => planet.remove(), 1500);
+            game.starSpeed = 1; game.isHuayan = false;
+            showModal("法喜充滿", `<span style="color:var(--solid-gold); font-size:1.1rem; font-weight:bold;">神遊華藏大千 ‧ 第 ${layer} 重天</span><br>${dropMsg}`, "繼續精進", () => initLevel());
+        }, 3000);
+    }
+
+    function triggerRPG(s, dropMsg) {
+        game.currentEncounter = s;
+        const overlay = document.getElementById('vision-overlay');
+        overlay.style.opacity = '1'; overlay.style.background = s.color;
+        if(s.type === 'earth') document.getElementById('main-body').classList.add('vibrate');
+
+        document.getElementById('m-title').innerText = s.t;
+        document.getElementById('m-text').innerHTML = s.c + dropMsg;
+        document.getElementById('m-actions').innerHTML = `
+            <div class="rpg-btn-wrap" onmousedown="startRPG()" onmouseup="stopRPG()" ontouchstart="startRPG()" ontouchend="stopRPG()">
+                <div class="rpg-btn-fill" id="fill" style="background:linear-gradient(90deg, transparent, ${s.color.replace(/[\d\.]+\)$/g, '0.8)')})"></div>
+                <div class="rpg-btn-text">${s.b}</div>
+            </div><div style="font-size:0.7rem; color:#888; letter-spacing:2px; margin-top:5px;">(長按聚光解厄)</div>
+        `;
+        document.getElementById('modal').classList.add('show');
+    }
+
+    let rpgTimer = null, rpgProg = 0;
+    function startRPG() {
+        clearInterval(rpgTimer); rpgProg = 0;
+        rpgTimer = setInterval(() => {
+            rpgProg += 2; document.getElementById('fill').style.width = rpgProg + '%';
+            if(rpgProg >= 100) { clearInterval(rpgTimer); finishRPG(); }
+        }, 30);
+    }
+    function stopRPG() { clearInterval(rpgTimer); rpgProg = 0; document.getElementById('fill').style.width = '0%'; }
+    
+    function finishRPG() {
+        const overlay = document.getElementById('vision-overlay');
+        overlay.style.background = '#fff'; setTimeout(() => { overlay.style.opacity = '0'; }, 300);
+        document.getElementById('main-body').classList.remove('vibrate'); document.getElementById('modal').classList.remove('show');
+        game.currentEncounter = null; game.isProcessing = false;
+        updateWaterUI(); initLevel(); 
+    }
+
+    function showModal(title, text, btnText, callback, customHtml) {
+        document.getElementById('m-title').innerHTML = title; document.getElementById('m-text').innerHTML = text;
+        document.getElementById('m-actions').innerHTML = customHtml || `<button class="m-btn m-btn-prime" onclick="closeModal()">${btnText}</button>`;
+        if(callback) window.currentCallback = callback; document.getElementById('modal').classList.add('show');
+    }
+    function closeModal() { document.getElementById('modal').classList.remove('show'); game.currentEncounter = null; game.isProcessing = false; if(window.currentCallback) { window.currentCallback(); window.currentCallback = null; } }
+
+    const canvas = document.getElementById('bgCanvas'); const ctx = canvas.getContext('2d');
+    let cw, ch; function res() { cw=canvas.width=window.innerWidth; ch=canvas.height=window.innerHeight; } window.addEventListener('resize', res); res();
+    const starColors = ['#ffffff', '#f3e5ab', '#00e5ff', '#ffb7c5', '#ce93d8']; let stars = [];
+    for(let i=0; i<200; i++) stars.push({x: Math.random() * 2000 - 1000, y: Math.random() * 2000 - 1000, z: Math.random() * 2000, s: Math.random() * 3.5 + 0.5, c: starColors[Math.floor(Math.random() * starColors.length)], alphaOffset: Math.random() * Math.PI * 2, twinkleSpeed: 0.02 + Math.random() * 0.04});
+
+    let time = 0;
+    function animateBg() {
+        time += 0.05; ctx.fillStyle = '#010204'; ctx.fillRect(0,0,cw,ch); ctx.globalCompositeOperation = 'screen';
+        stars.forEach(s => {
+            s.z -= (2 * game.starSpeed); if(s.z<=0){ s.z=2000; s.x=(Math.random()-0.5)*2000; s.y=(Math.random()-0.5)*2000; }
+            let sc = 800 / (800 + s.z); let px = cw / 2 + s.x * sc; let py = ch / 2 + s.y * sc;
+            if(px > 0 && px < cw && py > 0 && py < ch) { let alpha = (Math.sin(time * s.twinkleSpeed * 10 + s.alphaOffset) * 0.5 + 0.5) * sc; ctx.fillStyle = s.c; ctx.globalAlpha = alpha; ctx.beginPath(); ctx.arc(px, py, s.s * sc * (game.starSpeed > 1 ? 5 : 1), 0, Math.PI*2); ctx.fill(); }
+        });
+        ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(animateBg);
+    }
+    animateBg();
+    
+    // 啟動
+    initLevel();
+</script>
+</body>
+</html>

@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest_jp.json">
+    <meta name="theme-color" content="#010103">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>弥陀浄土 ‧ 荘厳なる瑠璃の金身と星空の法界</title>
+    <style>
+        :root {
+            --bg-deep: #010103; 
+            --gold-light: #f3e5ab; 
+            --gold-solid: #d4af37; 
+            --cyan: #8ba89c; 
+        }
+        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; outline: none; }
+
+        html { 
+            background-color: var(--bg-deep); 
+            width: 100%; 
+            height: 100%; 
+        }
+
+        body { 
+            background: radial-gradient(circle at 50% 50%, #16110a 0%, var(--bg-deep) 100%); 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; width: 100vw; height: 100dvh;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; color: #fff;
+            transition: background 2s ease;
+        }
+
+        canvas { position: absolute; inset: 0; }
+        #starCanvas { z-index: 1; pointer-events: none; transition: filter 2s ease; }
+        #waterCanvas { z-index: 2; mix-blend-mode: screen; opacity: 0.6; pointer-events: none; transition: opacity 2s ease; }
+        
+        .nav-top { position: absolute; top: max(20px, env(safe-area-inset-top)); left: 15px; z-index: 1000; display: flex; flex-wrap: nowrap; gap: 6px; }
+        
+        .nav-btn { 
+            color: var(--gold-light); display: flex; align-items: center; gap: 6px; 
+            cursor: pointer; background: rgba(0,0,0,0.3); padding: 6px 12px; 
+            border-radius: 20px; border: 1px solid rgba(212,175,55,0.2); 
+            backdrop-filter: blur(5px); font-size: 0.75rem; letter-spacing: 1px; 
+            transition: 0.4s; opacity: 0.7; white-space: nowrap; flex-shrink: 0; 
+        }
+        .nav-btn:hover { opacity: 1; border-color: var(--gold-solid); }
+
+        .lunar-icon { width: 26px; height: 26px; min-width: 26px; flex-shrink: 0; animation: slowSpin 20s linear infinite; filter: drop-shadow(0 0 6px rgba(243,229,171,0.6)); display: block; }
+        @keyframes slowSpin { 100% { transform: rotate(360deg); } }
+
+        .lunar-sweep-btn { position: relative; overflow: hidden; isolation: isolate; }
+        .lunar-sweep-btn::after {
+            content: ''; position: absolute; top: -50%; left: -150%; width: 50%; height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(243,229,171,0.4) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg); animation: sweep-light 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            z-index: -1; pointer-events: none;
+        }
+        @keyframes sweep-light { 0% { left: -100%; } 15% { left: 200%; } 100% { left: 200%; } }
+
+        .info-top { position: absolute; top: max(20px, env(safe-area-inset-top)); right: 15px; z-index: 1000; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+        .info-row { display: flex; gap: 8px; align-items: center; }
+        
+        .streak-text { font-size: clamp(0.65rem, 2vw, 0.75rem); color: var(--gold-light); letter-spacing: 1px; opacity: 0.9; text-shadow: 0 0 5px rgba(212,175,55,0.5); white-space: nowrap; font-family: "PingFang TC", "Helvetica Neue", monospace; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+        .info-icon { cursor: pointer; opacity: 0.8; display: flex; align-items: center; transition: 0.3s; filter: drop-shadow(0 0 5px rgba(212,175,55,0.5)); flex-shrink: 0; }
+        .info-icon:hover { opacity: 1; filter: drop-shadow(0 0 10px var(--gold-solid)); }
+
+        #buddha-scene {
+            position: absolute; inset: 0; z-index: 10;
+            margin: 0 auto; 
+            display: flex; justify-content: center; align-items: center;
+            transform-origin: 50% 80%; 
+            transition: transform 4s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none;
+            width: 100%; max-width: 650px; 
+        }
+        #buddha-scene.bowing {
+            transform: scale(1.35) translateY(5%);
+        }
+
+        #burst-container {
+            position: absolute; inset: 0; 
+            display: flex; justify-content: center; align-items: center;
+            z-index: 5; pointer-events: none;
+        }
+
+        .screen-flash {
+            position: absolute; inset: 0; 
+            background: radial-gradient(circle at 50% 50%, #fff 0%, #ffdf00 40%, transparent 80%);
+            opacity: 1; pointer-events: none; z-index: 100; mix-blend-mode: screen;
+            animation: flash-fade 2.5s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+        }
+        @keyframes flash-fade { 0% { opacity: 1; transform: scale(0.8); } 100% { opacity: 0; transform: scale(1.5); } }
+        
+        .gold-ray {
+            position: absolute; width: 3px; height: 100vh;
+            background: linear-gradient(to top, transparent, #FFD700, #FFFFFF, #FFD700, transparent);
+            box-shadow: 0 0 20px #FFD700, 0 0 10px #FFFFFF;
+            opacity: 0; transform-origin: center;
+        }
+        @keyframes ray-burst { 0% { transform: scaleY(0.1) rotate(var(--rot)) translateY(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: scaleY(2) rotate(var(--rot)) translateY(-100vh); opacity: 0; } }
+
+        .buddha-breathe {
+            width: 100%; height: auto;
+            animation: floating 8s ease-in-out infinite alternate;
+            position: relative; 
+        }
+        @keyframes floating {
+            0% { transform: translateY(0px); filter: drop-shadow(0 5px 15px rgba(243,229,171,0.2)); }
+            100% { transform: translateY(-30px); filter: drop-shadow(0 35px 50px rgba(243,229,171,0.6)); }
+        }
+
+        .halo-pulse { transform-origin: 500px 245px; animation: halo-anim 4s infinite alternate ease-in-out; }
+        @keyframes halo-anim { 0% { transform: scale(0.95); opacity: 0.6; stroke-width: 1.5; filter: drop-shadow(0 0 15px rgba(255,215,0,0.4)); } 100% { transform: scale(1.02); opacity: 1; stroke-width: 3.0; filter: drop-shadow(0 0 35px rgba(255,215,0,0.8)); } }
+        
+        .aura-pulse { transform-origin: 500px 245px; animation: aura-breathe 6s infinite alternate ease-in-out; }
+        @keyframes aura-breathe { 
+            0% { transform: scale(0.96); opacity: 0.6; } 
+            100% { transform: scale(1.02); opacity: 1; } 
+        }
+
+        body.incense-on #starCanvas { filter: brightness(2) drop-shadow(0 0 5px #fff); }
+        body.incense-on #waterCanvas { opacity: 0.9; }
+        body.incense-on #censer-group { opacity: 1; transform: translateY(0); }
+
+        #censer-group { opacity: 0; transform: translateY(20px); transition: all 1.5s cubic-bezier(0.25, 1, 0.5, 1); }
+        .incense-glow { animation: glow-pulse 1.5s infinite alternate ease-in-out; }
+        @keyframes glow-pulse { 0% { r: 3.5px; opacity: 0.8; filter: drop-shadow(0 0 6px #ff4500); } 100% { r: 5px; opacity: 1; filter: drop-shadow(0 0 15px #ffaa00); } }
+
+        #smoke-container { position: absolute; inset: 0; pointer-events: none; z-index: 15; overflow: hidden; }
+        .smoke-fine { position: absolute; width: 8px; height: 60px; background: linear-gradient(to top, rgba(200, 220, 240, 0.4), transparent); border-radius: 4px; filter: blur(4px); opacity: 0; animation: smoke-rise-fine 4s cubic-bezier(0.4, 0.1, 0.4, 1) forwards; }
+        @keyframes smoke-rise-fine { 0% { transform: translateY(0) scaleX(1); opacity: 0; } 20% { opacity: 0.7; } 100% { transform: translateY(-40vh) scaleX(2) translateX(var(--drift)); opacity: 0; } }
+        .smoke-diffused { position: absolute; width: 40px; height: 40px; background: radial-gradient(circle, rgba(180, 200, 220, 0.15) 0%, transparent 70%); border-radius: 50%; filter: blur(12px); opacity: 0; animation: smoke-rise-diffused 7s cubic-bezier(0.2, 0.1, 0.8, 1) forwards; }
+        @keyframes smoke-rise-diffused { 0% { transform: translateY(0) scale(1) translateX(0); opacity: 0; } 30% { opacity: 0.6; } 100% { transform: translateY(-60vh) scale(6) translateX(var(--drift)); opacity: 0; } }
+
+        .ritual-container { position: absolute; bottom: max(30px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; width: 100%; z-index: 100; }
+        
+        #blessing-text { height: 25px; margin-bottom: 20px; color: var(--gold-light); font-size: 1.1rem; letter-spacing: 8px; text-shadow: 0 0 20px rgba(243,229,171,0.9), 0 0 10px #fff; opacity: 0; pointer-events: none; white-space: nowrap; }
+        @keyframes float-blessing { 0% { opacity: 0; transform: translateY(15px); filter: brightness(1.5); } 20% { opacity: 1; transform: translateY(0); filter: brightness(1.5); } 80% { opacity: 1; transform: translateY(-5px); filter: brightness(1); } 100% { opacity: 0; transform: translateY(-15px); filter: brightness(1); } }
+
+        .ritual-panel { display: flex; gap: 40px; }
+        
+        .ritual-btn { color: var(--gold-light); font-size: 1rem; letter-spacing: 6px; cursor: pointer; transition: all 0.4s; padding: 12px 24px; background: rgba(255,255,255,0.05); border: 1px solid rgba(212,175,55,0.5); border-radius: 25px; backdrop-filter: blur(8px); box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-weight: bold; text-shadow: 0 0 8px rgba(243,229,171,0.6); }
+        .ritual-btn:hover, .ritual-btn.active { color: #fff; text-shadow: 0 0 15px var(--gold-light); border-color: rgba(212,175,55,0.9); background: rgba(212,175,55,0.2); box-shadow: 0 0 20px rgba(212,175,55,0.4); }
+
+        .chant-hint { margin-top: 18px; font-size: 0.8rem; color: rgba(255,255,255,0.8); letter-spacing: 4px; pointer-events: none; text-shadow: 0 0 5px rgba(255,255,255,0.3); }
+
+        .modal-overlay { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,0.88); 
+            backdrop-filter: blur(12px); 
+            z-index: 10000; 
+            display: none; 
+            justify-content: center; 
+            align-items: center; 
+            opacity: 0; 
+            transition: opacity 0.5s ease; 
+            pointer-events: none; 
+        }
+
+        .modal-overlay.show { 
+            display: flex !important; 
+            opacity: 1 !important; 
+            pointer-events: auto !important; 
+        }
+
+      .modal-box { 
+    width: 85%; 
+    max-width: 340px; 
+    max-height: 80vh; /* 🛑 限制最大高度為螢幕的 80%，防止超出 */
+    overflow-y: auto; /* 🛑 開啟垂直滾動 */
+    background: linear-gradient(135deg, #151515, #050505); 
+    border: 1px solid var(--gold-solid); 
+    border-radius: 20px; 
+    padding: 35px 25px; 
+    text-align: center; 
+    box-shadow: 0 0 50px rgba(212,175,55,0.3); 
+    transform: scale(0.9); 
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); 
+    
+    /* 自定義隱藏式極細金色滾動條 */
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold-solid) transparent;
+}
+
+
+        .modal-box::-webkit-scrollbar { width: 3px; }
+        .modal-box::-webkit-scrollbar-thumb { background: var(--gold-solid); border-radius: 10px; }
+        .modal-box::-webkit-scrollbar-track { background: transparent; }
+
+        .modal-overlay.show .modal-box { 
+            transform: scale(1); 
+        }
+
+        .m-title { 
+            color: var(--gold-light); 
+            font-size: 1.2rem; 
+            letter-spacing: 5px; 
+            margin-bottom: 15px; 
+            text-shadow: 0 0 15px rgba(212,175,55,0.5); 
+            font-weight: bold;
+        }
+
+        .m-divider { 
+            width: 40px; 
+            height: 1px; 
+            background: var(--gold-solid); 
+            margin: 0 auto 20px; 
+            opacity: 0.5; 
+        }
+
+        .m-text { 
+            font-size: 0.95rem; 
+            line-height: 1.8; 
+            margin-bottom: 30px; 
+            letter-spacing: 2px; 
+            color: #e0e0e0; 
+            text-align: center; 
+        }
+
+        .m-btn-prime { 
+            background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); 
+            border: 1px solid var(--gold-solid); 
+            color: var(--gold-light); 
+            padding: 12px; 
+            border-radius: 20px; 
+            font-size: 0.95rem; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            letter-spacing: 3px; 
+            width: 100%; 
+            box-shadow: 0 0 15px rgba(212,175,55,0.1); 
+        }
+
+        .m-btn-prime:hover { 
+            background: rgba(212,175,55,0.2); 
+        }
+
+        .candle-flicker {
+            transform-origin: center bottom;
+            animation: flicker-anim 3s ease-in-out infinite alternate;
+        }
+        @keyframes flicker-anim {
+            0% { transform: scale(0.95) rotate(-1.5deg); opacity: 0.85; }
+            50% { transform: scale(1.02) rotate(1deg); opacity: 1; }
+            100% { transform: scale(0.98) rotate(0deg); opacity: 0.9; }
+        }
+
+        @keyframes mandala-divine-glow {
+            0% { opacity: 0.4; filter: drop-shadow(0 0 10px rgba(255,215,0,0.4)); }
+            100% { opacity: 0.9; filter: drop-shadow(0 0 35px rgba(255,215,0,0.8)); }
+        }
+
+        .mandala-static-container {
+            transform-origin: 500px 460px;
+        }
+
+        .mandala-glow-effect {
+            animation: mandala-divine-glow 8s ease-in-out infinite alternate;
+        }
+
+        .altar {
+            position: absolute; bottom: 140px; left: 0; width: 100%; z-index: 25; 
+            display: none; opacity: 0; transition: opacity 3s ease-in-out; 
+            align-items: flex-end; justify-content: center; gap: 15px; padding: 0 20px; pointer-events: none; 
+        }
+        .altar .vessel-container { position: relative; display: flex; justify-content: center; align-items: flex-end; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.15)); }
+        .altar .water-cup { width: 75px; height: 110px; z-index: 5; }
+        .altar .fruit-plate { width: 110px; height: 160px; z-index: 10; }
+        .altar .center-vase { 
+            width: 280px; height: 420px; z-index: 20; margin: 0 -10px -120px -10px; 
+            transform: scale(1.2); transform-origin: center bottom; filter: drop-shadow(0 0 45px rgba(212, 175, 55, 0.35)); 
+        }
+
+        #offerings-modal .modal-box {
+            width: 95%; max-width: 500px; max-height: 90vh;
+            background: linear-gradient(135deg, #0a0a0f, #020205); 
+            border: 1px solid var(--gold-solid); box-shadow: 0 0 60px rgba(212,175,55,0.25);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px 30px 20px;
+        }
+        .modal-altar-table {
+            display: flex; align-items: flex-end; justify-content: center; gap: 15px; width: 100%; height: 380px; margin-bottom: 25px; pointer-events: none;
+        }
+        .modal-altar-table .vessel-container { position: relative; display: flex; justify-content: center; align-items: flex-end; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.15)); }
+        .modal-altar-table .water-cup { width: 75px; height: 110px; z-index: 5; }
+        .modal-altar-table .fruit-plate { width: 110px; height: 160px; z-index: 10; }
+        .modal-altar-table .center-vase { 
+            width: 280px; height: 420px; z-index: 20; margin: 0 -10px -120px -10px; 
+            transform: scale(1.2); transform-origin: center bottom; filter: drop-shadow(0 0 45px rgba(212, 175, 55, 0.35)); 
+        }
+
+        @keyframes powder-fall {
+            0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+            10% { opacity: 1; }
+            80% { opacity: 0.9; }
+            100% { transform: translateY(100vh) translateX(var(--drift)) scale(0.4); opacity: 0; }
+        }
+        .svg-content { width: 100%; height: 100%; overflow: visible; }
+        
+        .banner-breath { animation: b-pulse 6s ease-in-out infinite alternate; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.3)); }
+        @keyframes b-pulse { 0% { filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.3)); } 100% { filter: drop-shadow(0 0 35px rgba(255, 215, 0, 0.7)); } }
+        .sway-base { transform-origin: 150px 20px; animation: gentle-sway 8s ease-in-out infinite alternate; }
+        @keyframes gentle-sway { 0% { transform: rotate(-2.5deg); } 100% { transform: rotate(2.5deg); } }
+        .ribbon-left { transform-origin: top center; animation: flutter 5s ease-in-out infinite alternate; }
+        .ribbon-right { transform-origin: top center; animation: flutter 6s ease-in-out infinite alternate-reverse; }
+        .ribbon-inner { transform-origin: top center; animation: flutter-y 7s ease-in-out infinite alternate; }
+        @keyframes flutter { 0% { transform: skewX(-2deg) scaleY(0.98); } 100% { transform: skewX(2deg) scaleY(1.02); } }
+        @keyframes flutter-y { 0% { transform: scaleY(0.97); } 100% { transform: scaleY(1.03); } }
+        .glow-core { animation: core-pulse 4s ease-in-out infinite alternate; }
+        @keyframes core-pulse { 0% { opacity: 0.7; filter: drop-shadow(0 0 8px #d4af37); } 100% { opacity: 1; filter: drop-shadow(0 0 18px #FFF); } }
+        .glow-glass { animation: glass-pulse 5s ease-in-out infinite alternate; }
+        @keyframes glass-pulse { 0% { opacity: 0.6; } 100% { opacity: 1; } }
+        .glow-chakra { animation: chakra-pulse 5s ease-in-out infinite alternate; }
+        @keyframes chakra-pulse { 0% { opacity: 0.6; stroke-width: 0.8; filter: drop-shadow(0 0 5px #fff); } 100% { opacity: 1; stroke-width: 1.5; filter: drop-shadow(0 0 12px #f3e5ab); } }
+
+    </style>
+</head>
+<body>
+        <div class="nav-top">
+        <div class="nav-btn" onclick="returnToMainHall()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> 道場へ戻る
+        </div>
+        
+        <div class="nav-btn lunar-sweep-btn" onclick="location.href='lunar_jp.html'">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" class="lunar-icon">
+                <defs>
+                    <radialGradient id="iconGlowBeauty" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+                        <stop offset="30%" stop-color="#f3e5ab" stop-opacity="0.9"/>
+                        <stop offset="100%" stop-color="#d4af37" stop-opacity="0"/>
+                    </radialGradient>
+                </defs>
+                
+                <circle cx="32" cy="32" r="30" stroke="rgba(212,175,55,0.6)" stroke-width="2.5" fill="rgba(212,175,55,0.03)"/>
+                <circle cx="32" cy="32" r="26.5" stroke="rgba(212,175,55,0.3)" stroke-width="1.5" stroke-dasharray="2 2.5" fill="none"/>
+
+                <g stroke="#f3e5ab" stroke-width="2" fill="none" opacity="0.95">
+                    <polygon points="32,8 39,25 56,32 39,39 32,56 25,39 8,32 25,25" transform="rotate(0 32 32)" stroke-width="1.5"/>
+                    <polygon points="32,8 39,25 56,32 39,39 32,56 25,39 8,32 25,25" transform="rotate(45 32 32)" stroke-width="1.5"/>
+
+                    <path d="M 32 18 C 34 22, 38 22, 40 18 M 24 18 C 26 22, 30 22, 32 18" transform="rotate(0 32 32)"/>
+                    <path d="M 32 18 C 34 22, 38 22, 40 18 M 24 18 C 26 22, 30 22, 32 18" transform="rotate(90 32 32)"/>
+                    <path d="M 32 18 C 34 22, 38 22, 40 18 M 24 18 C 26 22, 30 22, 32 18" transform="rotate(180 32 32)"/>
+                    <path d="M 32 18 C 34 22, 38 22, 40 18 M 24 18 C 26 22, 30 22, 32 18" transform="rotate(270 32 32)"/>
+
+                    <circle cx="32" cy="18" r="1.5" fill="#fff" transform="rotate(0 32 32)" stroke="none"/>
+                    <circle cx="32" cy="18" r="1.5" fill="#fff" transform="rotate(60 32 32)" stroke="none"/>
+                    <circle cx="32" cy="18" r="1.5" fill="#fff" transform="rotate(120 32 32)" stroke="none"/>
+                    <circle cx="32" cy="18" r="1.5" fill="#fff" transform="rotate(180 32 32)" stroke="none"/>
+                    <circle cx="32" cy="18" r="1.5" fill="#fff" transform="rotate(240 32 32)" stroke="none"/>
+                    <circle cx="32" cy="18" r="1.5" fill="#fff" transform="rotate(300 32 32)" stroke="none"/>
+                </g>
+                
+                <circle cx="32" cy="32" r="12" fill="url(#iconGlowBeauty)"/>
+                <circle cx="32" cy="32" r="3.5" fill="#fff" stroke="#f3e5ab" stroke-width="1" style="filter: drop-shadow(0 0 4px #fff);"/>
+            </svg>
+            華蔵月相
+        </div>
+
+    </div>
+
+       <div class="info-top">
+        <div class="info-row">
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+                <div id="streak-text" style="font-size: 0.75rem; color: var(--gold-light); letter-spacing: 2px; text-shadow: 0 0 5px rgba(212,175,55,0.5);">修持：第 1 日</div>
+                <div style="width: 80px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);">
+                    <div id="streak-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #d4af37, #f3e5ab); transition: width 1s cubic-bezier(0.2,0.8,0.2,1);"></div>
+                </div>
+            </div>
+            <div class="info-icon" onclick="showLawInfo()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--gold-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </div>
+        </div>
+    </div>
+
+
+    <canvas id="starCanvas"></canvas>
+    <canvas id="waterCanvas"></canvas>
+    <div id="burst-container"></div>
+    <div id="smoke-container"></div>
+
+
+    <svg style="width:0; height:0; position:absolute; pointer-events:none;">
+        <defs>
+            <linearGradient id="glass-glare" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(255,255,255,0.6)"/><stop offset="30%" stop-color="transparent"/><stop offset="100%" stop-color="rgba(0,0,0,0.4)"/></linearGradient>
+            <linearGradient id="water-grad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(0, 229, 255, 0.7)"/><stop offset="100%" stop-color="rgba(0, 77, 64, 0.9)"/></linearGradient>
+            <linearGradient id="water-light" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(224, 247, 250, 0.8)"/><stop offset="100%" stop-color="rgba(0, 131, 143, 0.4)"/></linearGradient>
+            <radialGradient id="fruit-yellow" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#fff9c4"/><stop offset="60%" stop-color="#fbc02d"/><stop offset="100%" stop-color="#f57f17"/></radialGradient>
+            <radialGradient id="fruit-pink" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#fce4ec"/><stop offset="60%" stop-color="#f06292"/><stop offset="100%" stop-color="#c2185b"/></radialGradient>
+            <radialGradient id="fruit-green" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#e8f5e9"/><stop offset="60%" stop-color="#81c784"/><stop offset="100%" stop-color="#388e3c"/></radialGradient>
+            <g id="water-cup-model">
+                <clipPath id="cup-clip"><path d="M15,40 C15,95 85,95 85,40 Z"/></clipPath>
+                <path d="M40,140 Q50,110 50,90 Q50,110 60,140 Z" fill="#d4af37" opacity="0.8"/>
+                <ellipse cx="50" cy="140" rx="25" ry="5" fill="#d4af37" /><ellipse cx="50" cy="90" rx="15" ry="3" fill="#d4af37" />
+                <g clip-path="url(#cup-clip)">
+                    <rect x="0" y="55" width="100" height="50" fill="url(#water-grad)" />
+                    <path fill="url(#water-light)" opacity="0.5"><animate attributeName="d" dur="3s" repeatCount="indefinite" values="M0,65 Q25,55 50,65 T100,65 L100,100 L0,100 Z; M0,65 Q25,75 50,65 T100,65 L100,100 L0,100 Z; M0,65 Q25,55 50,65 T100,65 L100,100 L0,100 Z" /></path>
+                    <path fill="url(#water-light)" opacity="0.7"><animate attributeName="d" dur="2.4s" repeatCount="indefinite" values="M0,70 Q25,80 50,70 T100,70 L100,100 L0,100 Z; M0,70 Q25,60 50,70 T100,70 L100,100 L0,100 Z; M0,70 Q25,80 50,70 T100,70 L100,100 L0,100 Z" /></path>
+                </g>
+                <path d="M15,40 C15,95 85,95 85,40 Z" fill="rgba(255,255,255,0.05)"/><path d="M15,40 C15,95 85,95 85,40 Z" fill="url(#glass-glare)"/>
+                <ellipse cx="50" cy="40" rx="35" ry="6" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><path d="M15,40 C15,95 85,95 85,40" fill="none" stroke="#d4af37" stroke-width="1.5"/>
+            </g>
+            <g id="fruit-plate-model">
+                <path d="M40,140 Q50,110 50,90 Q50,110 60,140 Z" fill="#d4af37" opacity="0.8"/><ellipse cx="50" cy="140" rx="30" ry="6" fill="#d4af37" />
+                <ellipse cx="50" cy="90" rx="45" ry="12" fill="rgba(255,255,255,0.1)" stroke="#d4af37" stroke-width="2"/><ellipse cx="50" cy="90" rx="45" ry="12" fill="url(#glass-glare)"/><ellipse cx="50" cy="90" rx="20" ry="4" fill="#d4af37" />
+                <circle cx="50" cy="65" r="22" fill="url(#fruit-green)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/><path d="M50,43 Q55,35 60,38" fill="none" stroke="#5a7a6c" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="32" cy="80" r="22" fill="url(#fruit-yellow)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/><circle cx="68" cy="80" r="22" fill="url(#fruit-pink)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+            </g>
+            <linearGradient id="petal-main" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="60%" stop-color="#fce4ec"/><stop offset="100%" stop-color="#c2185b"><animate attributeName="stop-color" values="#c2185b; #9c27b0; #f3e5ab; #d81b60; #c2185b" dur="15s" repeatCount="indefinite" /></stop></linearGradient>
+            <linearGradient id="petal-light" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#f3e5ab"><animate attributeName="stop-color" values="#f3e5ab; #ce93d8; #ffe082; #f48fb1; #f3e5ab" dur="15s" repeatCount="indefinite" /></stop></linearGradient>
+            <linearGradient id="leaf-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(212,175,55,0.8)"/><stop offset="100%" stop-color="rgba(139,168,156,0.3)"/></linearGradient>
+            <path id="petal" d="M 0,0 C 12,-15 12,-40 0,-60 C -12,-40 -12,-15 0,0 Z" stroke="rgba(255,255,255,0.5)" stroke-width="0.5"/><path id="petal-s" d="M 0,0 C 8,-10 8,-30 0,-45 C -8,-30 -8,-10 0,0 Z" stroke="rgba(255,255,255,0.5)" stroke-width="0.5"/>
+            <g id="lotus-bloom">
+                <use href="#petal" transform="rotate(-45) scale(0.9)" fill="url(#petal-main)" opacity="0.8"/><use href="#petal" transform="rotate(45) scale(0.9)" fill="url(#petal-main)" opacity="0.8"/>
+                <use href="#petal" transform="rotate(-25) scale(0.95)" fill="url(#petal-main)"/><use href="#petal" transform="rotate(25) scale(0.95)" fill="url(#petal-main)"/>
+                <use href="#petal" transform="rotate(-12)" fill="url(#petal-light)"/><use href="#petal" transform="rotate(12)" fill="url(#petal-light)"/><use href="#petal" transform="rotate(0) scale(1.05)" fill="#ffffff"/>
+                <path d="M0,0 L-5,-25 M0,0 L0,-28 M0,0 L5,-25" stroke="#d4af37" stroke-width="1.5" fill="none"/>
+                <circle cx="-5" cy="-25" r="2" fill="#f3e5ab"/><circle cx="0" cy="-28" r="2" fill="#f3e5ab"/><circle cx="5" cy="-25" r="2" fill="#f3e5ab"/>
+            </g>
+            <g id="lotus-bud"><use href="#petal-s" transform="rotate(-15)" fill="url(#petal-main)"/><use href="#petal-s" transform="rotate(15)" fill="url(#petal-main)"/><use href="#petal-s" transform="rotate(0) scale(1.1)" fill="url(#petal-light)"/></g>
+        </defs>
+    </svg>
+    <div id="buddha-scene">
+    <div class="buddha-breathe">
+        <svg viewBox="0 0 1000 1100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <radialGradient id="haloGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="80%" stop-color="#010103" stop-opacity="0"/>
+                    <stop offset="100%" stop-color="#FFD700" stop-opacity="1"/>
+                </radialGradient>
+                
+                <linearGradient id="goldBody" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+                    <stop offset="50%" style="stop-color:#B8860B;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#8B6508;stop-opacity:1" />
+                </linearGradient>
+                                  
+                                  <linearGradient id="lotusFill" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#FFDF00" stop-opacity="0.95"/> 
+        <stop offset="50%" stop-color="#D4AF37" stop-opacity="0.95"/> 
+        <stop offset="100%" stop-color="#995000" stop-opacity="1"/> 
+    </linearGradient>
+
+    <linearGradient id="lotusFillBottom" x1="0%" y1="100%" x2="0%" y2="0%">
+        <stop offset="0%" stop-color="#FFDF00" stop-opacity="0.95"/> 
+        <stop offset="50%" stop-color="#D4AF37" stop-opacity="0.95"/> 
+        <stop offset="100%" stop-color="#995000" stop-opacity="1"/> 
+    </linearGradient>
+
+    <linearGradient id="goldLotus" x1="50%" y1="0%" x2="50%" y2="100%">
+        <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+        <stop offset="50%" style="stop-color:#FFD700;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#D4AF37;stop-opacity:1" />
+    </linearGradient>
+
+    <radialGradient id="junctionGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#f3e5ab" stop-opacity="0.5"/>
+        <stop offset="100%" stop-color="#f3e5ab" stop-opacity="0"/>
+    </radialGradient>
+
+
+                <radialGradient id="haloFillDef" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#FFDF00" stop-opacity="0"/> 
+                    <stop offset="68%" stop-color="#FFDF00" stop-opacity="0"/> 
+                    <stop offset="74%" stop-color="#FFD700" stop-opacity="0.9"/> 
+                    <stop offset="90%" stop-color="#D4AF37" stop-opacity="0.8"/> 
+                    <stop offset="100%" stop-color="#D4AF37" stop-opacity="0"/> 
+                </radialGradient>
+                
+                                <radialGradient id="ringFadeMask" cx="50%" cy="50%" r="50%">
+                    <stop offset="60%" stop-color="black" /> <stop offset="75%" stop-color="white" />
+                    <stop offset="90%" stop-color="white" />
+                    <stop offset="100%" stop-color="black" />
+                </radialGradient>
+                <mask id="color-ring-mask">
+                    <circle cx="500" cy="245" r="225" fill="url(#ringFadeMask)" />
+                </mask>
+
+                <linearGradient id="colorMix1" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#f3e5ab" /> 
+                    <stop offset="50%" stop-color="#ffffff" /> 
+                    <stop offset="100%" stop-color="#8ba89c" /> 
+                </linearGradient>
+                <linearGradient id="colorMix2" x1="100%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#ffffff" /> 
+                    <stop offset="50%" stop-color="transparent" /> 
+                    <stop offset="100%" stop-color="#d4af37" /> 
+                </linearGradient>
+                <linearGradient id="colorMix3" x1="50%" y1="0%" x2="50%" y2="100%">
+                    <stop offset="0%" stop-color="#ffb6c1" /> 
+                    <stop offset="50%" stop-color="transparent" /> 
+                    <stop offset="100%" stop-color="#f3e5ab" /> 
+                </linearGradient>
+
+                
+                <linearGradient id="bodyFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#f3e5ab" stop-opacity="0.25"/>
+                    <stop offset="40%" stop-color="#f3e5ab" stop-opacity="0.12"/>
+                    <stop offset="90%" stop-color="#010103" stop-opacity="0"/> 
+                </linearGradient>
+                                  
+                <linearGradient id="bodyFillPink" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#f3c2c4" stop-opacity="0"/> 
+                    <stop offset="45%" stop-color="#f3c2c4" stop-opacity="0"/> 
+                    <stop offset="100%" stop-color="#f3c2c4" stop-opacity="0.35"/> 
+                </linearGradient>
+               
+                
+                <linearGradient id="glass-base-mini" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="rgba(243, 229, 171, 0.5)"/>
+                    <stop offset="50%" stop-color="rgba(212, 175, 55, 0.3)"/>
+                    <stop offset="100%" stop-color="rgba(212, 175, 55, 0.1)"/>
+                </linearGradient>
+                <radialGradient id="flame-glow" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+    <stop offset="25%" stop-color="#FFD700" stop-opacity="0.8"/>
+    <stop offset="70%" stop-color="#FF8C00" stop-opacity="0.2"/>
+    <stop offset="100%" stop-color="#FF8C00" stop-opacity="0"/>
+</radialGradient>
+
+                <radialGradient id="pureGoldGradient" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#FFFFFF" />
+                    <stop offset="40%" stop-color="#FFDF00" />
+                    <stop offset="100%" stop-color="#FFD700" />
+                </radialGradient>
+                <radialGradient id="deepGoldGradient" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#FFDF00" />
+                    <stop offset="60%" stop-color="#D4AF37" />
+                    <stop offset="100%" stop-color="#B8860B" />
+                </radialGradient>
+                <radialGradient id="whiteGoldGradient" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#FFFFFF" />
+                    <stop offset="60%" stop-color="#FFFAF0" />
+                    <stop offset="100%" stop-color="#FFD700" stop-opacity="0.95"/>
+                </radialGradient>
+                <radialGradient id="mandalaInnerFill" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8" />
+    <stop offset="35%" stop-color="#FFD700" stop-opacity="0.5" />
+    <stop offset="70%" stop-color="#FFB6C1" stop-opacity="0.2" />
+    <stop offset="100%" stop-color="#B8860B" stop-opacity="0" />
+</radialGradient>
+                
+
+
+                
+                <mask id="halo-mask">
+                    <rect x="0" y="0" width="1000" height="1100" fill="white" />
+                    <path d="M 500 108 C 506 108, 508 114, 508 118 C 522 118, 524 145, 510 155 C 550 155, 565 170, 565 220 C 565 250, 565 280, 560 310 C 555 320, 550 325, 550 330 C 540 330, 540 350, 550 370 C 610 370, 650 400, 670 480 C 690 560, 680 660, 650 700 C 720 680, 800 700, 830 750 C 860 800, 830 840, 770 840 L 230 840 C 170 840, 140 800, 170 750 C 200 700, 280 680, 350 700 C 320 660, 310 560, 330 480 C 350 400, 390 370, 450 370 C 460 350, 460 330, 450 330 C 450 325, 445 320, 440 310 C 435 280, 435 250, 435 220 C 435 170, 450 155, 490 155 C 476 145, 478 118, 492 118 C 492 114, 494 108, 500 108 Z" fill="black" />
+                </mask>
+                <mask id="mandala-total-mask">
+    <rect x="-500" y="-500" width="2000" height="2000" fill="white" />
+    <path d="M 500 108 C 506 108, 508 114, 508 118 C 522 118, 524 145, 510 155 C 550 155, 565 170, 565 220 C 565 250, 565 280, 560 310 C 555 320, 550 325, 550 330 C 540 330, 540 350, 550 370 C 610 370, 650 400, 670 480 C 690 560, 680 660, 650 700 C 720 680, 800 700, 830 750 C 860 800, 830 840, 770 840 L 230 840 C 170 840, 140 800, 170 750 C 200 700, 280 680, 350 700 C 320 660, 310 560, 330 480 C 350 400, 390 370, 450 370 C 460 350, 460 330, 450 330 C 450 325, 445 320, 440 310 C 435 280, 435 250, 435 220 C 435 170, 450 155, 490 155 C 476 145, 478 118, 492 118 C 492 114, 494 108, 500 108 Z" fill="black" />
+    <circle cx="500" cy="245" r="215" fill="black" />
+</mask>
+                
+                
+                <g id="pure-petal">
+                    <path d="M 500 840 Q 460 830, 440 780 C 440 710, 500 690, 500 690 C 500 690, 560 710, 560 780 Q 540 830, 500 840 Z" />
+                    <path d="M 500 815 Q 475 805, 465 780 C 465 730, 500 715, 500 715 C 500 715, 535 730, 535 780 Q 525 805, 500 815 Z" fill="none" />
+                </g>
+            </defs>
+               <g class="mandala-static-container" mask="url(#mandala-total-mask)" style="mix-blend-mode: screen;">
+    <g class="mandala-glow-effect">
+        
+        <g stroke="#FFD700" stroke-width="2" fill="url(#mandalaInnerFill)">
+            <path d="M500 10 L764.5 95.9 L928 320.9 L928 599.1 L764.5 824.1 L500 910 L235.5 824.1 L72 599.1 L72 320.9 L235.5 95.9 Z" opacity="0.6" />
+            <path d="M500 10 L928 320.9 L764.5 824.1 L235.5 824.1 L72 320.9 L500 10" opacity="0.6" />
+            <path d="M764.5 95.9 L928 599.1 L500 910 L72 599.1 L235.5 95.9" fill="none" opacity="0.6" />
+            <path d="M500 10 L928 599.1 L235.5 824.1 M235.5 95.9 L928 320.9 L500 910 L72 320.9 L764.5 95.9" fill="none" opacity="0.4" stroke-width="1" />
+            <path d="M764.5 824.1 L72 599.1 L500 10 M928 599.1 L72 320.9 M928 320.9 L72 599.1" fill="none" opacity="0.4" stroke-width="1" />
+            
+            <animateTransform 
+                attributeName="transform" 
+                type="rotate" 
+                from="0 500 460" 
+                to="360 500 460" 
+                dur="120s" 
+                repeatCount="indefinite" />
+        </g>
+
+        <circle cx="500" cy="460" r="450" fill="none" stroke="#FFD700" stroke-width="2" opacity="0.8" />
+        <circle cx="500" cy="460" r="462" fill="none" stroke="#FFD700" stroke-width="1" opacity="0.3" />
+        
+    </g>
+</g>
+
+            <g class="aura-pulse" mask="url(#halo-mask)">
+                <g mask="url(#color-ring-mask)">
+                    <circle cx="500" cy="245" r="225" fill="url(#colorMix1)" />
+                    <circle cx="500" cy="245" r="225" fill="url(#colorMix2)" opacity="0.8" />
+                    <circle cx="500" cy="245" r="225" fill="url(#colorMix3)" opacity="0.7" />
+                </g>
+            </g>
+            
+            <circle class="halo-pulse" cx="500" cy="245" r="215" fill="url(#haloFillDef)" stroke="url(#haloGlow)" stroke-width="2" opacity="0.8" mask="url(#halo-mask)" />
+            <circle class="halo-pulse" cx="500" cy="245" r="160" fill="none" stroke="url(#haloGlow)" stroke-width="2" mask="url(#halo-mask)" />
+
+                     <g>
+                <path d="M 500 108 C 506 108, 508 114, 508 118 C 522 118, 524 145, 510 155 C 550 155, 565 170, 565 220 C 565 250, 564 280, 561 300 C 558 315, 552 325, 548 330 C 540 332, 540 350, 550 370 C 610 370, 650 400, 670 480 C 690 560, 680 660, 650 700 C 720 680, 800 700, 830 750 C 860 800, 830 840, 770 840 L 230 840 C 170 840, 140 800, 170 750 C 200 700, 280 680, 350 700 C 320 660, 310 560, 330 480 C 350 400, 390 370, 450 370 C 460 350, 460 332, 452 330 C 448 325, 442 315, 439 300 C 436 280, 435 250, 435 220 C 435 170, 450 155, 490 155 C 476 145, 478 118, 492 118 C 492 114, 494 108, 500 108 Z" fill="rgba(1, 1, 3, 0.15)" />
+                <path d="M 500 108 C 506 108, 508 114, 508 118 C 522 118, 524 145, 510 155 C 550 155, 565 170, 565 220 C 565 250, 564 280, 561 300 C 558 315, 552 325, 548 330 C 540 332, 540 350, 550 370 C 610 370, 650 400, 670 480 C 690 560, 680 660, 650 700 C 720 680, 800 700, 830 750 C 860 800, 830 840, 770 840 L 230 840 C 170 840, 140 800, 170 750 C 200 700, 280 680, 350 700 C 320 660, 310 560, 330 480 C 350 400, 390 370, 450 370 C 460 350, 460 332, 452 330 C 448 325, 442 315, 439 300 C 436 280, 435 250, 435 220 C 435 170, 450 155, 490 155 C 476 145, 478 118, 492 118 C 492 114, 494 108, 500 108 Z" fill="url(#bodyFill)" />
+                <path d="M 500 108 C 506 108, 508 114, 508 118 C 522 118, 524 145, 510 155 C 550 155, 565 170, 565 220 C 565 250, 564 280, 561 300 C 558 315, 552 325, 548 330 C 540 332, 540 350, 550 370 C 610 370, 650 400, 670 480 C 690 560, 680 660, 650 700 C 720 680, 800 700, 830 750 C 860 800, 830 840, 770 840 L 230 840 C 170 840, 140 800, 170 750 C 200 700, 280 680, 350 700 C 320 660, 310 560, 330 480 C 350 400, 390 370, 450 370 C 460 350, 460 332, 452 330 C 448 325, 442 315, 439 300 C 436 280, 435 250, 435 220 C 435 170, 450 155, 490 155 C 476 145, 478 118, 492 118 C 492 114, 494 108, 500 108 Z" fill="url(#bodyFillPink)" style="mix-blend-mode: screen;" />
+                
+                <g fill="none" stroke="url(#goldBody)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke-miterlimit="1">
+                    <path d="M 500 108 C 506 108, 508 114, 508 118 C 522 118, 524 145, 510 155 C 550 155, 565 170, 565 220 C 565 250, 564 280, 561 300 C 558 315, 552 325, 548 330 C 540 332, 540 350, 550 370 C 610 370, 650 400, 670 480 C 690 560, 680 660, 650 700 C 720 680, 800 700, 830 750 C 860 800, 830 840, 770 840 L 230 840 C 170 840, 140 800, 170 750 C 200 700, 280 680, 350 700 C 320 660, 310 560, 330 480 C 350 400, 390 370, 450 370 C 460 350, 460 332, 452 330 C 448 325, 442 315, 439 300 C 436 280, 435 250, 435 220 C 435 170, 450 155, 490 155 C 476 145, 478 118, 492 118 C 492 114, 494 108, 500 108 Z" stroke-width="2.1" />
+
+                    <g stroke="#8B6508" stroke-width="1.5" fill="url(#goldBody)">
+                        <circle cx="570" cy="200" r="6" />
+                        <circle cx="568" cy="187" r="6" />
+                        <circle cx="563" cy="174" r="6" />
+                        <circle cx="554" cy="162" r="7" />     
+                        <circle cx="543" cy="151" r="8.5" />   
+                        <circle cx="526" cy="144" r="10" />    
+                        <circle cx="430" cy="200" r="6" />
+                        <circle cx="432" cy="187" r="6" />
+                        <circle cx="437" cy="174" r="6" />
+                        <circle cx="446" cy="162" r="7" />     
+                        <circle cx="457" cy="151" r="8.5" />   
+                        <circle cx="474" cy="144" r="10" />    
+                        <circle cx="500" cy="175" r="6" />
+                        <circle cx="514" cy="177" r="6" />
+                        <circle cx="528" cy="182" r="6" />
+                        <circle cx="541" cy="189" r="6" />
+                        <circle cx="554" cy="196" r="6" />
+                        <circle cx="486" cy="177" r="6" />
+                        <circle cx="472" cy="182" r="6" />
+                        <circle cx="459" cy="189" r="6" />
+                        <circle cx="446" cy="196" r="6" />
+                        <circle cx="500" cy="162" r="6" />
+                        <circle cx="513" cy="164" r="6" />
+                        <circle cx="526" cy="168" r="6" />
+                        <circle cx="538" cy="174" r="6" />
+                        <circle cx="549" cy="182" r="6" />
+                        <circle cx="487" cy="164" r="6" />
+                        <circle cx="474" cy="168" r="6" />
+                        <circle cx="462" cy="174" r="6" />
+                        <circle cx="451" r="6" cy="182" />
+                        <circle cx="511" cy="151" r="6" />
+                        <circle cx="523" cy="155" r="6" />
+                        <circle cx="534" cy="161" r="6" />
+                        <circle cx="544" cy="169" r="6" />
+                        <circle cx="489" cy="151" r="6" />
+                        <circle cx="477" cy="155" r="6" />
+                        <circle cx="466" cy="161" r="6" />
+                        <circle cx="456" cy="169" r="6" />
+                        <circle cx="558" cy="185" r="6" /> 
+                        <circle cx="553" cy="172" r="6" /> 
+                        <circle cx="442" cy="185" r="6" /> 
+                        <circle cx="447" cy="172" r="6" /> 
+                        <circle cx="500" cy="135" r="15" fill="url(#deepGoldGradient)" stroke="#8B6508" stroke-width="1.5" />
+                         <circle cx="500" cy="184" r="4.5" />
+                        <circle cx="436" cy="199" r="5.5" />
+                        <circle cx="560" cy="199" r="5.5" />
+                        <circle cx="433" cy="207" r="4" />
+                        <circle cx="565" cy="207" r="4" />
+                         <circle cx="433" cy="212" r="3.5" />
+                        <circle cx="565" cy="212" r="3.5" />
+
+                    </g>
+
+                    <path d="M 640 710 Q 480 810 320 780" />
+                    <path d="M 360 710 Q 420 745 460 780" />
+                    <path d="M 435 220 Q 427 205 420 220 Q 410 270 425 320 Q 418 380 446 330 Z" fill="rgba(243, 229, 171, 0.12)" stroke="none" />
+                        <path d="M 565 220 Q 573 205 580 220 Q 590 270 575 320 Q 582 380 554 330 Z" fill="rgba(243, 229, 171, 0.12)" stroke="none" />
+
+                        <path d="M 435 220 Q 427 205 420 220 Q 410 270 425 320 Q 418 380 446 330" fill="none" />
+                        <path d="M 565 220 Q 573 205 580 220 Q 590 270 575 320 Q 582 380 554 330" fill="none" />
+
+                        <path d="M 435 240 Q 423 275 432 305" stroke-width="1.5" fill="none" />
+                        <path d="M 565 240 Q 577 275 568 305" stroke-width="1.5" fill="none" />
+
+                        
+                      <path d="M 410 410 C 410 600, 590 600, 590 410" />
+                       <path d="M 410 400 C 410 590, 590 590, 590 400" />
+                       <path d="M 410 390 C 410 580, 590 580, 590 390" />
+                       <path d="M 410 380 C 410 570, 590 570, 590 380" />
+
+                
+    <g opacity="0.85">
+                        <path d="M 354 575 Q 368 620 415 660" stroke-width="2" />
+                        <path d="M 354 600 Q 368 630 415 660" stroke-width="2" />
+                        <path d="M 354 625 Q 368 630 415 660" stroke-width="2" />
+
+                        <path d="M 646 575 Q 632 620 585 660" stroke-width="2" />
+                        <path d="M 646 600 Q 632 630 585 660" stroke-width="2" />
+        
+                        <path d="M 646 625 Q 632 630 585 660" stroke-width="2" />
+                        <path d="M 415 660 Q 430 710 465 715" stroke-width="2.2" />
+                         <path d="M 415 660 Q 430 710 465 720" stroke-width="2.2" />
+                        <path d="M 585 660 Q 570 710 535 715" stroke-width="2.2" />
+                         <path d="M 585 660 Q 570 710 535 720" stroke-width="2.2" />
+                    </g>
+
+                    <g transform="translate(500, 610) scale(0.7) translate(-100, -155)" style="filter: drop-shadow(0 0 20px rgba(212,175,55,0.6));">
+                        <path d="M 100 25 C 97 18, 93 20, 92 30 L 62 165 C 55 190, 40 230, 10 245 L 30 275 C 65 265, 85 245, 100 225 C 115 245, 135 265, 170 275 L 190 245 C 160 230, 145 190, 138 165 L 108 30 C 107 20, 103 18, 100 25 Z" fill="url(#glass-base-mini)" />
+                        <path d="M 138 165 L 108 30 C 107 20, 103 18, 100 25 C 97 18, 93 20, 92 30 L 62 165 M 30 275 C 65 265, 85 245, 100 225 C 115 245, 135 265, 170 275" fill="none" stroke="var(--gold-solid)" stroke-width="2.5" stroke-linejoin="round"/>
+                        <path d="M 62 165 C 55 190, 40 230, 10 245" fill="none" stroke="var(--gold-solid)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 138 165 C 145 190, 160 230, 190 245" fill="none" stroke="var(--gold-solid)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 0 240 Q 37.5 265, 75 240" fill="none" stroke="var(--gold-solid)" stroke-width="3" stroke-linecap="round" transform="rotate(40, 37.5, 240)"/>
+                        <path d="M 5 232 Q 41.5 257, 78 232" fill="none" stroke="var(--gold-solid)" stroke-width="3" stroke-linecap="round" transform="rotate(40, 37.5, 240)"/>
+                        <path d="M 200 240 Q 162.5 265, 125 240" fill="none" stroke="var(--gold-solid)" stroke-width="3" stroke-linecap="round" transform="rotate(-40, 162.5, 240)"/>
+                        <path d="M 195 232 Q 158.5 257, 122 232" fill="none" stroke="var(--gold-solid)" stroke-width="3" stroke-linecap="round" transform="rotate(-40, 162.5, 240)"/>
+                        <path d="M 96 23 C 98 25, 98 32, 94 34" stroke="var(--gold-solid)" stroke-width="1" fill="none" />
+                        <path d="M 104 23 C 102 25, 102 32, 106 34" stroke="var(--gold-solid)" stroke-width="1" fill="none" />
+                        <path d="M 100 25 L 100 225" stroke="var(--gold-solid)" stroke-width="1.5" stroke-linecap="round" fill="none" />
+                    </g>
+
+<path d="M 500 460 L 500 440 L 480 440 
+         M 500 460 L 520 460 L 520 440 
+         M 500 460 L 500 480 L 520 480 
+         M 500 460 L 480 460 L 480 480" 
+      fill="none" 
+      stroke="url(#goldBody)" 
+      stroke-width="3" 
+      stroke-linejoin="miter" 
+      stroke-linecap="square" />
+
+
+                            <circle cx="500" cy="195" r="3" fill="url(#pureGoldGradient)" stroke="none" class="glow-core" />
+                            <path d="M 446 236 Q 462 239 478 236" />
+                            <path d="M 522 236 Q 538 239 554 236" />
+
+                            <path d="M 446 236 Q 462 245 478 236" fill="none" stroke="url(#goldBody)" stroke-width="1.8" stroke-opacity="1.3" />
+                            <path d="M 522 236 Q 538 245 554 236" fill="none" stroke="url(#goldBody)" stroke-width="1.8" stroke-opacity="1.3" />
+
+
+                    
+                      <path d="M 440 210 Q 462 195 484 210 C 490 225, 496 240, 490 255" />
+                     <path d="M 560 210 Q 538 195 516 210 C 510 225, 504 240, 510 255" />
+                     <path d="M 445 215 Q 464 203 486 214" fill="none" stroke-width="1.3" />
+                    <path d="M 555 215 Q 536 203 514 214" fill="none" stroke-width="1.3" />
+
+                   
+                    
+                     <path d="M 492 265 Q 500 258 508 265" stroke-width="1.5" />
+                    <path d="M 486 252 Q 481 259 486 264" stroke-width="1" fill="none" />
+                   <path d="M 514 252 Q 519 259 514 264" stroke-width="1" fill="none" />
+                    
+                  <path d="M 484 285 Q 492 281 500 286 Q 508 281 516 285" stroke-width="1.6" fill="none" />
+                  <path d="M 482 285 Q 500 289 518 285" stroke-width="1.2" fill="none" stroke-opacity="0.8" />
+                  <path d="M 486 289 Q 500 293 514 289" stroke-width="1.5" fill="none" />
+
+
+
+ <path d="M 486 312 Q 500 306 514 312" stroke-width="1.2" />
+                   
+                    <path d="M 460 325 Q 500 360 540 325" fill="none" stroke-width="0.8" />
+                    <path d="M 465 345 Q 500 360 535 345" fill="none" />
+                    <path d="M 475 358 Q 500 370 525 358" fill="none" />
+
+                </g>
+            </g>
+  <ellipse cx="500" cy="780" rx="150" ry="40" fill="url(#junctionGlow)" style="mix-blend-mode: screen;" />
+
+                <g stroke="url(#goldLotus)" stroke-width="1.5" stroke-linejoin="round">
+
+                                    <g transform="scale(0.85, -0.75)" transform-origin="500 840" fill="url(#lotusFillBottom)">
+                        
+                        <use href="#pure-petal" transform="translate(-205, -10) rotate(-30, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(205, -10) rotate(30, 500, 840)" />
+                        
+                        <use href="#pure-petal" transform="translate(-145, -20) rotate(-18, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(145, -20) rotate(18, 500, 840)" />
+                        
+                        <use href="#pure-petal" transform="translate(-75, -30) rotate(-7, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(75, -30) rotate(7, 500, 840)" />
+                        
+                        <use href="#pure-petal" transform="translate(0, -45) rotate(0, 500, 840)" />
+                        
+                    </g>
+
+
+                    <g transform="translate(0, 115)" fill="url(#lotusFill)">
+                        
+                        <use href="#pure-petal" transform="translate(-250, -110) rotate(-40, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(250, -110) rotate(40, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(-205, -65) rotate(-35, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(205, -65) rotate(35, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(-145, -30) rotate(-20, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(145, -30) rotate(20, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(-75, -23) rotate(-8, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(75, -23) rotate(8, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(0, -20)" />
+
+                    </g>
+                    
+                </g>
+
+
+
+                <g id="orb-layer" style="opacity: 0; pointer-events: none;">
+                    <path id="beam-left-glow" fill="none" stroke="#FFD700" stroke-width="15" stroke-linecap="round" style="filter: blur(8px); opacity: 0.3;" />
+                    <path id="beam-left-core" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" style="filter: drop-shadow(0 0 10px #FFD700); opacity: 0.9;" />
+                    
+                    <path id="beam-center-glow" fill="none" stroke="#FFD700" stroke-width="15" stroke-linecap="round" style="filter: blur(8px); opacity: 0.3;" />
+                    <path id="beam-center-core" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" style="filter: drop-shadow(0 0 10px #FFD700); opacity: 0.9;" />
+                    
+                    <path id="beam-right-glow" fill="none" stroke="#FFD700" stroke-width="15" stroke-linecap="round" style="filter: blur(8px); opacity: 0.3;" />
+                    <path id="beam-right-core" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" style="filter: drop-shadow(0 0 10px #FFD700); opacity: 0.9;" />
+                </g>
+                               <g id="censer-group">
+                    <line id="stick-left" x1="475" y1="890" x2="480" y2="1020" stroke="#4a2e1b" stroke-width="6" stroke-linecap="round"/>
+                    <line id="stick-center" x1="500" y1="875" x2="500" y2="1020" stroke="#4a2e1b" stroke-width="6" stroke-linecap="round"/>
+                    <line id="stick-right" x1="525" y1="890" x2="520" y2="1020" stroke="#4a2e1b" stroke-width="6" stroke-linecap="round"/>
+                    <circle id="glow-left" cx="475" cy="890" r="4" fill="#ff4500" class="incense-glow" />
+                    <circle id="glow-center" cx="500" cy="875" r="4" fill="#ff4500" class="incense-glow" />
+                    <circle id="glow-right" cx="525" cy="890" r="4" fill="#ff4500" class="incense-glow" />
+                    <path d="M 455 1025 C 430 1000, 435 1050, 460 1045" fill="none" stroke="url(#goldBody)" stroke-width="4" stroke-linecap="round" />
+                    <path d="M 545 1025 C 570 1000, 565 1050, 540 1045" fill="none" stroke="url(#goldBody)" stroke-width="4" stroke-linecap="round" />
+                    <path d="M 455 1020 C 455 1070, 545 1070, 545 1020 Z" fill="url(#bodyFillPink)" stroke="url(#goldBody)" stroke-width="2" />
+                    <ellipse cx="500" cy="1020" rx="45" ry="12" fill="#0b080a" stroke="url(#goldBody)" stroke-width="2" />
+                    <g id="ash-layer">
+                        <ellipse cx="500" cy="1020" rx="35" ry="7" fill="#333" />
+                    </g>
+                    <path d="M 475 1055 L 470 1075" stroke="url(#goldBody)" stroke-width="5" stroke-linecap="round" />
+                    <path d="M 525 1055 L 530 1075" stroke="url(#goldBody)" stroke-width="5" stroke-linecap="round" />
+                    <path d="M 500 1060 L 500 1080" stroke="url(#goldBody)" stroke-width="5" stroke-linecap="round" />
+                    
+                    <g id="candle-left-group">
+                        <path d="M 416 1030 C 416 1045, 408 1052, 408 1055 L 432 1055 C 432 1052, 424 1045, 424 1030 Z" fill="url(#goldBody)" stroke="rgba(212,175,55,0.5)" stroke-width="1"/>
+                        <ellipse cx="420" cy="1030" rx="6" ry="1.5" fill="url(#goldBody)"/>
+                        <ellipse cx="420" cy="1055" rx="12" ry="3" fill="#0b080a" stroke="rgba(212,175,55,0.8)" stroke-width="1.5"/>
+                        <rect id="candle-body-left" x="415" y="970" width="10" height="60" rx="3" fill="url(#goldBody)" stroke="rgba(212,175,55,0.5)" stroke-width="1.5" opacity="0.85"/>
+                        <line id="candle-wick-left" x1="420" y1="965" x2="420" y2="975" stroke="#4a2e1b" stroke-width="2"/>
+                        
+                        <g id="flame-move-left">
+                            <g id="flame-group-left" class="candle-flicker" style="transform-origin: 420px 965px;">
+                                <circle cx="420" cy="955" r="18" fill="url(#flame-glow)" style="mix-blend-mode: screen;"/>
+                                <path d="M 420 942 Q 425 960 420 965 Q 415 960 420 942 Z" fill="#FFFFFF" style="filter: drop-shadow(0 0 4px #FFD700);"/>
+                            </g>
+                        </g>
+                    </g>
+
+                    <g id="candle-right-group">
+                        <path d="M 576 1030 C 576 1045, 568 1052, 568 1055 L 592 1055 C 592 1052, 584 1045, 584 1030 Z" fill="url(#goldBody)" stroke="rgba(212,175,55,0.5)" stroke-width="1"/>
+                        <ellipse cx="580" cy="1030" rx="6" ry="1.5" fill="url(#goldBody)"/>
+                        <ellipse cx="580" cy="1055" rx="12" ry="3" fill="#0b080a" stroke="rgba(212,175,55,0.8)" stroke-width="1.5"/>
+                        <rect id="candle-body-right" x="575" y="970" width="10" height="60" rx="3" fill="url(#goldBody)" stroke="rgba(212,175,55,0.5)" stroke-width="1.5" opacity="0.85"/>
+                        <line id="candle-wick-right" x1="580" y1="965" x2="580" y2="975" stroke="#4a2e1b" stroke-width="2"/>
+                        
+                        <g id="flame-move-right">
+                            <g id="flame-group-right" class="candle-flicker" style="transform-origin: 580px 965px;">
+                                <circle cx="580" cy="955" r="18" fill="url(#flame-glow)" style="mix-blend-mode: screen;"/>
+                                <path d="M 580 942 Q 585 960 580 965 Q 575 960 580 942 Z" fill="#FFFFFF" style="filter: drop-shadow(0 0 4px #FFD700);"/>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+
+
+            </svg>
+        </div>
+    </div>
+<div class="altar" id="altar-offerings">
+        <div class="vessel-container water-cup"><svg class="svg-content" viewBox="0 0 100 150"><use href="#water-cup-model" /></svg></div>
+        <div class="vessel-container fruit-plate"><svg class="svg-content" viewBox="0 0 100 150"><use href="#fruit-plate-model" /></svg></div>
+        
+        <div class="vessel-container center-vase">
+            <svg class="svg-content" viewBox="0 -80 200 380" style="overflow: visible;">
+                <defs><clipPath id="vase-clip"><path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" /></clipPath></defs>
+                <g transform="translate(50, 100)"><g clip-path="url(#vase-clip)">
+                    <rect x="0" y="70" width="100" height="90" fill="url(#water-grad)" />
+                    <path fill="url(#water-light)" opacity="0.4"><animate attributeName="d" dur="3.5s" repeatCount="indefinite" values="M-20,85 C10,75 40,95 70,85 C100,75 130,95 160,85 L160,150 L-20,150 Z; M-50,85 C-20,95 10,75 40,85 C70,95 100,75 130,85 L130,150 L-50,150 Z; M-20,85 C10,75 40,95 70,85 C100,75 130,95 160,85 L160,150 L-20,150 Z" /></path>
+                    <path fill="url(#water-light)" opacity="0.6"><animate attributeName="d" dur="2.8s" repeatCount="indefinite" values="M-50,92 C-20,102 10,82 40,92 C70,102 100,82 130,92 L130,150 L-50,150 Z; M-20,92 C10,82 40,102 70,92 C100,82 130,102 160,92 L160,150 L-20,150 Z; M-50,92 C-20,102 10,82 40,92 C70,102 100,82 130,92 L130,150 L-50,150 Z" /></path>
+                    <g stroke="#5a7a6c" stroke-width="2" fill="none" opacity="0.6"><path d="M50,25 Q45,70 50,110" /><path d="M50,25 Q55,60 45,105" stroke-width="1.5" /><path d="M50,25 Q40,50 55,100" stroke-width="1.5" /><path d="M50,25 Q60,40 50,85" stroke-width="1.5" /></g>
+                </g></g>
+                <g transform="translate(50, 100)">
+                    <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="rgba(255,255,255,0.02)" /><path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="url(#glass-glare)" pointer-events="none"/>
+                    <ellipse cx="50" cy="95" rx="22" ry="6" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8" pointer-events="none"/><path d="M45,25 L55,25 L58,50 L72,95 L60,125 L40,125 L28,95 L42,50 Z" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.2" stroke-linejoin="round" pointer-events="none"/><path d="M40,125 Q50,135 60,125" fill="none" stroke="#d4af37" stroke-width="2.5" stroke-linecap="round" pointer-events="none"/>
+                </g>
+                <g opacity="0"><animate attributeName="opacity" values="0; 1" dur="0.5s" begin="5s" fill="freeze" />
+                    <path d="M100,125 Q80,70 65,35" stroke="#8ba89c" stroke-width="1.5" fill="none" stroke-dasharray="120" stroke-dashoffset="120"><animate attributeName="stroke-dashoffset" values="120; 0" dur="2s" begin="5s" fill="freeze" /></path>
+                    <g transform="translate(65, 35) rotate(-35)"><g transform="scale(0)"><animateTransform attributeName="transform" type="scale" values="0; 1" dur="1.5s" begin="6.5s" fill="freeze" /><g><animateTransform attributeName="transform" type="rotate" values="0; 4; 0; -4; 0" dur="5s" begin="8s" repeatCount="indefinite" /><use href="#lotus-bud"/></g></g></g>
+                </g>
+                <g opacity="0"><animate attributeName="opacity" values="0; 1" dur="0.5s" begin="6s" fill="freeze" />
+                    <path d="M100,125 Q125,95 135,75" stroke="#8ba89c" stroke-width="1.5" fill="none" stroke-dasharray="100" stroke-dashoffset="100"><animate attributeName="stroke-dashoffset" values="100; 0" dur="2s" begin="6s" fill="freeze" /></path>
+                    <g transform="translate(135, 75) rotate(45)"><g transform="scale(0)"><animateTransform attributeName="transform" type="scale" values="0; 0.8" dur="1.5s" begin="7.5s" fill="freeze" /><g><animateTransform attributeName="transform" type="rotate" values="0; -3; 0; 3; 0" dur="4s" begin="9s" repeatCount="indefinite" /><use href="#lotus-bud"/></g></g></g>
+                </g>
+                <g stroke="#8ba89c" stroke-width="2" fill="none"><path d="M100,125 Q90,90 100,50"/> <path d="M100,125 Q130,90 145,60"/> <path d="M100,125 Q70,95 55,75"/> <path d="M100,125 Q95,100 115,85" stroke-width="1.5"/> </g>
+                <g fill="url(#leaf-grad)" stroke="rgba(212,175,55,0.5)" stroke-width="0.5"><path d="M100,110 Q140,115 160,80 Q130,85 100,110 Z"/><path d="M98,115 Q60,120 40,90 Q70,95 98,115 Z"/><path d="M102,90 Q135,70 140,30 Q120,55 102,90 Z" opacity="0.7"/><path d="M95,85 Q65,65 55,35 Q75,55 95,85 Z" opacity="0.7"/></g>
+                <g transform="translate(55, 75) scale(0.8)"><g><animateTransform attributeName="transform" type="rotate" values="-20; -15; -20; -25; -20" dur="5s" repeatCount="indefinite" /><use href="#lotus-bud"/></g></g>
+                <g transform="translate(145, 60) scale(0.85)"><g><animateTransform attributeName="transform" type="rotate" values="15; 18; 15; 12; 15" dur="7s" repeatCount="indefinite" /><use href="#lotus-bloom"/></g></g>
+                <g transform="translate(115, 85) scale(0.65)"><g><animateTransform attributeName="transform" type="rotate" values="35; 38; 35; 32; 35" dur="4.5s" repeatCount="indefinite" /><use href="#lotus-bud"/></g></g>
+                <g transform="translate(100, 50) scale(1.1)"><g><animateTransform attributeName="transform" type="rotate" values="0; 3; 0; -3; 0" dur="6s" repeatCount="indefinite" /><use href="#lotus-bloom"/></g></g>
+            </svg>
+        </div>
+        
+        <div class="vessel-container fruit-plate"><svg class="svg-content" viewBox="0 0 100 150"><use href="#fruit-plate-model" /></svg></div>
+        <div class="vessel-container water-cup"><svg class="svg-content" viewBox="0 0 100 150"><use href="#water-cup-model" /></svg></div>
+    </div>
+    <div class="ritual-container">
+        <div id="blessing-text"></div>
+        
+        <div class="ritual-panel">
+            <div class="ritual-btn" id="btn-bow" onclick="toggleAction('bow')">弥陀に頂礼す</div>
+            <div class="ritual-btn" id="btn-incense" onclick="toggleIncense()">燃灯焼香</div>
+        </div>
+        
+        <div class="chant-hint">仏号を黙念してください</div>
+    </div>
+       <div class="modal-overlay" id="milestone-modal">
+        <div class="modal-box" id="milestone-box" style="padding: 30px 25px;">
+            <div id="milestone-title" style="color: var(--gold-light); font-size: 1.2rem; letter-spacing: 5px; margin-bottom: 15px; font-weight: bold; text-shadow: 0 0 15px rgba(212,175,55,0.8);"></div>
+            
+                       <div style="display: flex; justify-content: center; margin-bottom: 15px; height: 220px;">
+                <svg class="banner-breath" viewBox="0 0 300 600" style="height: 100%;" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ffffff" />
+                            <stop offset="40%" stop-color="#f3e5ab" />
+                            <stop offset="100%" stop-color="#d4af37" />
+                        </linearGradient>
+                        <linearGradient id="banner-fill" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="rgba(212, 175, 55, 0.15)" />
+                            <stop offset="100%" stop-color="rgba(212, 175, 55, 0.05)" />
+                        </linearGradient>
+                        
+                        <linearGradient id="glass-red-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="rgba(255, 70, 80, 0.1)" />
+                            <stop offset="100%" stop-color="rgba(255, 70, 80, 0.6)" />
+                        </linearGradient>
+                        <linearGradient id="glass-blue-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="rgba(60, 150, 255, 0.1)" />
+                            <stop offset="100%" stop-color="rgba(60, 150, 255, 0.6)" />
+                        </linearGradient>
+                        <linearGradient id="glass-gold-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="rgba(243, 229, 171, 0.1)" />
+                            <stop offset="100%" stop-color="rgba(243, 229, 171, 0.6)" />
+                        </linearGradient>
+
+                        <pattern id="mandala-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                            <path d="M10,0 L20,10 L10,20 L0,10 Z" fill="none" stroke="rgba(212, 175, 55, 0.2)" stroke-width="0.5"/>
+                            <circle cx="10" cy="10" r="1.5" fill="rgba(212, 175, 55, 0.3)"/>
+                        </pattern>
+                    </defs>
+
+                    <g class="sway-base">
+                        <line x1="150" y1="0" x2="150" y2="35" stroke="url(#gold-grad)" stroke-width="1.2" />
+                        <circle cx="150" cy="35" r="10" fill="none" stroke="url(#gold-grad)" stroke-width="1.5" class="glow-core"/>
+                        <circle cx="150" cy="35" r="6" fill="url(#gold-grad)" opacity="0.8"/>
+                        <circle cx="150" cy="35" r="2" fill="#fff" class="glow-core"/>
+
+                        <g>
+                            <path d="M 150,45 Q 185,55 220,75 Q 185,100 150,110 Q 115,100 80,75 Q 115,55 150,45 Z" fill="rgba(212, 175, 55, 0.05)" stroke="url(#gold-grad)" stroke-width="1.2" stroke-linejoin="round"/>
+                            
+                            <g class="glow-glass">
+                                <path d="M 150,45 L 125,78 L 150,78 Z" fill="rgba(255, 70, 80, 0.55)" />
+                                <path d="M 150,45 L 175,78 L 150,78 Z" fill="rgba(60, 150, 255, 0.55)" />
+                                <path d="M 150,78 L 100,91 L 150,110 Z" fill="rgba(60, 150, 255, 0.5)" />
+                                <path d="M 150,78 L 200,91 L 150,110 Z" fill="rgba(255, 70, 80, 0.55)" />
+                                <path d="M 125,78 L 80,75 L 100,91 Z" fill="rgba(243, 229, 171, 0.5)" />
+                                <path d="M 175,78 L 220,75 L 200,91 Z" fill="rgba(243, 229, 171, 0.5)" />
+                            </g>
+
+                            <g stroke="#d4af37" stroke-width="0.8" opacity="0.9">
+                                <line x1="150" y1="45" x2="150" y2="65" /><line x1="150" y1="65" x2="150" y2="78" /><line x1="150" y1="78" x2="150" y2="91" />
+                                <line x1="80" y1="75" x2="125" y2="78" /><line x1="125" y1="78" x2="150" y2="78" /><line x1="150" y1="78" x2="175" y2="78" /><line x1="175" y1="78" x2="220" y2="75" />
+                                <line x1="100" y1="91" x2="125" y2="91" /><line x1="125" y1="91" x2="150" y2="91" /><line x1="150" y1="91" x2="175" y2="91" /><line x1="175" y1="91" x2="200" y2="91" />
+                            </g>
+                            <g stroke="#d4af37" stroke-width="1.2" class="glow-core">
+                                <circle cx="150" cy="65" r="3" fill="#c1272d" /><circle cx="150" cy="78" r="3" fill="#c1272d" /><circle cx="150" cy="91" r="3" fill="#c1272d" />
+                                <circle cx="125" cy="78" r="3" fill="#1d3557" /><circle cx="175" cy="78" r="3" fill="#1d3557" />
+                                <circle cx="100" cy="91" r="3" fill="#c1272d" /><circle cx="125" cy="91" r="3" fill="#1d3557" /><circle cx="175" cy="91" r="3" fill="#1d3557" /><circle cx="200" cy="91" r="3" fill="#c1272d" />
+                            </g>
+                            <g fill="#d4af37">
+                                <circle cx="150" cy="45" r="2" /> <circle cx="80" cy="75" r="2" />
+                                <circle cx="115" cy="100" r="2" opacity="0.7"/><circle cx="150" cy="110" r="2.5" fill="#fff" class="glow-core"/><circle cx="185" cy="100" r="2" opacity="0.7"/>
+                                <circle cx="220" cy="75" r="2" />
+                            </g>
+                        </g>
+
+                        <g class="ribbon-left">
+                            <path d="M 85,77 L 75,190 L 80,190 L 92,80 Z" fill="url(#glass-red-grad)" stroke="rgba(255, 70, 80, 0.4)" stroke-width="0.5" />
+                            <polygon points="75,190 80,190 80,210" fill="rgba(255, 70, 80, 0.8)" opacity="0.9"/>
+                            <path d="M 95,85 L 85,260 L 90,260 L 102,88 Z" fill="url(#glass-blue-grad)" stroke="rgba(60, 150, 255, 0.4)" stroke-width="0.5" />
+                            <polygon points="85,260 90,260 90,280" fill="rgba(60, 150, 255, 0.8)" opacity="0.9"/>
+                        </g>
+
+                        <g class="ribbon-right">
+                            <path d="M 215,77 L 225,190 L 220,190 L 208,80 Z" fill="url(#glass-red-grad)" stroke="rgba(255, 70, 80, 0.4)" stroke-width="0.5" />
+                            <polygon points="225,190 220,190 220,210" fill="rgba(255, 70, 80, 0.8)" opacity="0.9"/>
+                            <path d="M 205,85 L 215,260 L 210,260 L 198,88 Z" fill="url(#glass-blue-grad)" stroke="rgba(60, 150, 255, 0.4)" stroke-width="0.5" />
+                            <polygon points="215,260 210,260 210,280" fill="rgba(60, 150, 255, 0.8)" opacity="0.9"/>
+                        </g>
+
+                        <g class="ribbon-inner">
+                            <path d="M 103,94 L 90,330 L 102,330 L 115,98 Z" fill="url(#glass-gold-grad)" stroke="rgba(243, 229, 171, 0.4)" stroke-width="0.6" />
+                            <polygon points="90,330 102,330 102,378" fill="rgba(243, 229, 171, 0.9)" opacity="0.9"/>
+
+                            <path d="M 197,94 L 210,330 L 198,330 L 185,98 Z" fill="url(#glass-gold-grad)" stroke="rgba(243, 229, 171, 0.4)" stroke-width="0.6" />
+                            <polygon points="210,330 198,330 198,378" fill="rgba(243, 229, 171, 0.9)" opacity="0.9"/>
+                        </g>
+
+                        <g transform="translate(0, 110)">
+                            <polygon points="120,0 180,0 180,260 150,300 120,260" fill="url(#banner-fill)" stroke="url(#gold-grad)" stroke-width="1.5" stroke-linejoin="round"/>
+                            <polygon points="120,0 180,0 180,260 150,300 120,260" fill="url(#mandala-pattern)" />
+                            
+                            <line x1="125" y1="5" x2="175" y2="5" stroke="#d4af37" stroke-width="0.8"/>
+                            <line x1="125" y1="255" x2="175" y2="255" stroke="#d4af37" stroke-width="0.8"/>
+                            
+                            <path d="M 150,30 L 165,50 L 150,70 L 135,50 Z" fill="none" stroke="#f3e5ab" stroke-width="1"/>
+                            <path d="M 150,35 L 160,50 L 150,65 L 140,50 Z" fill="rgba(243,229,171,0.2)" stroke="#f3e5ab" stroke-width="0.5"/>
+                            
+                            <circle cx="150" cy="130" r="22" fill="none" stroke="#d4af37" stroke-width="1.2"/>
+                            <circle cx="150" cy="130" r="18" fill="rgba(212,175,55,0.1)" stroke="#d4af37" stroke-dasharray="2 2"/>
+                            <g stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="glow-chakra">
+                                <path d="M 140,120 L 150,120 L 150,140 L 160,140" />
+                                <path d="M 160,120 L 160,130 L 140,130 L 140,140" />
+                            </g>
+
+                            <path d="M 150,190 L 165,210 L 150,230 L 135,210 Z" fill="none" stroke="#f3e5ab" stroke-width="1"/>
+                            <path d="M 150,195 L 160,210 L 150,225 L 140,210 Z" fill="rgba(243,229,171,0.2)" stroke="#f3e5ab" stroke-width="0.5"/>
+                        </g>
+                        
+                    </g>
+                </svg>
+            </div>
+
+            <div id="milestone-name-display" style="color: var(--gold-solid); font-size: 1.1rem; letter-spacing: 4px; margin-bottom: 15px;">行者</div>
+            <div id="milestone-text" style="color: #ccc; font-size: 0.85rem; line-height: 1.8; letter-spacing: 2px; margin-bottom: 25px;"></div>
+            <button class="m-btn-prime" onclick="closeMilestone()">合掌収摂</button>
+        </div>
+    </div>
+
+
+    <div class="modal-overlay" id="offerings-modal">
+        <div class="modal-box">
+            <div style="color: var(--gold-light); font-size: 1.1rem; letter-spacing: 4px; margin-bottom: 25px; text-shadow: 0 0 15px rgba(212,175,55,0.6); font-weight: bold;">
+                【 十日円満 ‧ 広修供養 】
+            </div>
+            <div class="modal-altar-table">
+                <div class="vessel-container water-cup"><svg class="svg-content" viewBox="0 0 100 150"><use href="#water-cup-model" /></svg></div>
+                <div class="vessel-container fruit-plate"><svg class="svg-content" viewBox="0 0 100 150"><use href="#fruit-plate-model" /></svg></div>
+                <div class="vessel-container center-vase">
+                    <svg class="svg-content" viewBox="0 -80 200 380" style="overflow: visible;">
+                        <defs><clipPath id="vase-clip-modal"><path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" /></clipPath></defs>
+                        <g transform="translate(50, 100)"><g clip-path="url(#vase-clip-modal)">
+                            <rect x="0" y="70" width="100" height="90" fill="url(#water-grad)" />
+                            <path fill="url(#water-light)" opacity="0.4"><animate attributeName="d" dur="3.5s" repeatCount="indefinite" values="M-20,85 C10,75 40,95 70,85 C100,75 130,95 160,85 L160,150 L-20,150 Z; M-50,85 C-20,95 10,75 40,85 C70,95 100,75 130,85 L130,150 L-50,150 Z; M-20,85 C10,75 40,95 70,85 C100,75 130,95 160,85 L160,150 L-20,150 Z" /></path>
+                            <path fill="url(#water-light)" opacity="0.6"><animate attributeName="d" dur="2.8s" repeatCount="indefinite" values="M-50,92 C-20,102 10,82 40,92 C70,102 100,82 130,92 L130,150 L-50,150 Z; M-20,92 C10,82 40,102 70,92 C100,82 130,102 160,92 L160,150 L-20,150 Z; M-50,92 C-20,102 10,82 40,92 C70,102 100,82 130,92 L130,150 L-50,150 Z" /></path>
+                            <g stroke="#5a7a6c" stroke-width="2" fill="none" opacity="0.6"><path d="M50,25 Q45,70 50,110" /><path d="M50,25 Q55,60 45,105" stroke-width="1.5" /></g>
+                        </g></g>
+                        <g transform="translate(50, 100)">
+                            <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="rgba(255,255,255,0.02)" /><path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="url(#glass-glare)" pointer-events="none"/>
+                            <ellipse cx="50" cy="95" rx="22" ry="6" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/><path d="M45,25 L55,25 L58,50 L72,95 L60,125 L40,125 L28,95 L42,50 Z" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.2" stroke-linejoin="round"/><path d="M40,125 Q50,135 60,125" fill="none" stroke="#d4af37" stroke-width="2.5" stroke-linecap="round"/>
+                        </g>
+                        <g opacity="1">
+                            <path d="M100,125 Q80,70 65,35" stroke="#8ba89c" stroke-width="1.5" fill="none"/>
+                            <g transform="translate(65, 35) rotate(-35)"><g transform="scale(1)"><g><animateTransform attributeName="transform" type="rotate" values="0; 4; 0; -4; 0" dur="5s" repeatCount="indefinite" /><use href="#lotus-bud"/></g></g></g>
+                        </g>
+                        <g opacity="1">
+                            <path d="M100,125 Q125,95 135,75" stroke="#8ba89c" stroke-width="1.5" fill="none"/>
+                            <g transform="translate(135, 75) rotate(45)"><g transform="scale(0.8)"><g><animateTransform attributeName="transform" type="rotate" values="0; -3; 0; 3; 0" dur="4s" repeatCount="indefinite" /><use href="#lotus-bud"/></g></g></g>
+                        </g>
+                        <g stroke="#8ba89c" stroke-width="2" fill="none"><path d="M100,125 Q90,90 100,50"/> <path d="M100,125 Q130,90 145,60"/> <path d="M100,125 Q70,95 55,75"/> <path d="M100,125 Q95,100 115,85" stroke-width="1.5"/> </g>
+                        <g fill="url(#leaf-grad)" stroke="rgba(212,175,55,0.5)" stroke-width="0.5"><path d="M100,110 Q140,115 160,80 Q130,85 100,110 Z"/><path d="M98,115 Q60,120 40,90 Q70,95 98,115 Z"/><path d="M102,90 Q135,70 140,30 Q120,55 102,90 Z" opacity="0.7"/><path d="M95,85 Q65,65 55,35 Q75,55 95,85 Z" opacity="0.7"/></g>
+                        <g transform="translate(55, 75) scale(0.8)"><g><animateTransform attributeName="transform" type="rotate" values="-20; -15; -20; -25; -20" dur="5s" repeatCount="indefinite" /><use href="#lotus-bud"/></g></g>
+                        <g transform="translate(145, 60) scale(0.85)"><g><animateTransform attributeName="transform" type="rotate" values="15; 18; 15; 12; 15" dur="7s" repeatCount="indefinite" /><use href="#lotus-bloom"/></g></g>
+                        <g transform="translate(115, 85) scale(0.65)"><g><animateTransform attributeName="transform" type="rotate" values="35; 38; 35; 32; 35" dur="4.5s" repeatCount="indefinite" /><use href="#lotus-bud"/></g></g>
+                        <g transform="translate(100, 50) scale(1.1)"><g><animateTransform attributeName="transform" type="rotate" values="0; 3; 0; -3; 0" dur="6s" repeatCount="indefinite" /><use href="#lotus-bloom"/></g></g>
+                    </svg>
+                </div>
+                <div class="vessel-container fruit-plate"><svg class="svg-content" viewBox="0 0 100 150"><use href="#fruit-plate-model" /></svg></div>
+                <div class="vessel-container water-cup"><svg class="svg-content" viewBox="0 0 100 150"><use href="#water-cup-model" /></svg></div>
+            </div>
+            <div style="color: #a0a0a0; font-size: 0.85rem; line-height: 1.6; letter-spacing: 1px; margin-bottom: 25px; text-align: center;">願わくはこの清浄なる供養の資糧を以て、法界の衆生に回向し、<br>同じく安楽国に生まれ、不退転を得んことを。</div>
+            <button class="m-btn-prime" onclick="closeOfferingsModal()">合掌収摂</button>
+        </div>
+    </div>
+    <div class="modal-overlay" id="modal">
+        <div class="modal-box" id="modal-box">
+            <div class="m-title" id="m-title"></div>
+            <div class="m-divider" id="m-div"></div>
+            <div class="m-text" id="m-text"></div>
+            <button class="m-btn-prime" id="m-btn" onclick="closeModal()">合掌収摂</button>
+        </div>
+    </div>
+<script>
+    let db = null;
+    try {
+        db = JSON.parse(localStorage.getItem('PX_JP_V15.0'));
+        if (!db || typeof db !== 'object') db = null;
+        
+        if (db && !db.dailyTasks) db.dailyTasks = [];
+        if (db && !db.visitedRealms) db.visitedRealms = [];
+        if (db && !db.treasures) db.treasures = { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 };
+        if (db && !db.bodhiRecords) db.bodhiRecords = [];
+        if (db && !db.bowData) db.bowData = { streakCount: 0, lastLoginDate: "", lastRewardStreak: 0 }; 
+    } catch(e) { 
+        db = null; 
+    }
+
+    if (!db) {
+        db = { 
+            name: "", totalNian: 0, points: 0, dailyTasks: [], todayCount: 0, lastDate: new Date().toLocaleDateString(), 
+            currentRank: "", streakDays: 0, lastNianDate: "",
+            treasures: { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 },
+            bodhiRecords: [], visitedRealms: [],
+            bowData: { streakCount: 0, lastLoginDate: "", lastRewardStreak: 0 }
+        };
+    }     
+        
+    function saveDB() { localStorage.setItem('PX_JP_V15.0', JSON.stringify(db)); }
+
+    function closeMilestone() {
+        const modal = document.getElementById('milestone-modal');
+        if (!modal) return;
+        modal.classList.remove('show');
+        
+        setTimeout(() => { 
+            modal.style.display = 'none'; 
+            const bar = document.getElementById('streak-bar');
+            if (bar) bar.style.width = '0%';
+            
+            triggerOfferingsModal(); 
+        }, 500);
+    }
+
+    function triggerOfferingsModal() {
+        const offeringsModal = document.getElementById('offerings-modal');
+        if (!offeringsModal) return;
+        offeringsModal.style.display = 'flex';
+        void offeringsModal.offsetWidth; 
+        offeringsModal.classList.add('show');
+    }
+
+    function closeOfferingsModal() {
+        const offeringsModal = document.getElementById('offerings-modal');
+        if (!offeringsModal) return;
+        offeringsModal.classList.remove('show');
+        
+        setTimeout(() => { 
+            offeringsModal.style.display = 'none'; 
+            startMainAltarOffering();
+        }, 500);
+    }
+
+    function startMainAltarOffering() {
+        if (typeof spawnFlowerRain === 'function') spawnFlowerRain(250); 
+        
+        const altar = document.getElementById('altar-offerings');
+        if (altar) {
+            altar.style.display = 'flex'; 
+            
+            setTimeout(() => { 
+                altar.style.opacity = '1'; 
+                const altarSvg = document.querySelector('#altar-offerings .center-vase svg');
+                if(altarSvg && typeof altarSvg.setCurrentTime === 'function') {
+                    altarSvg.setCurrentTime(5); 
+                }
+            }, 50);
+            
+            setTimeout(() => {
+                altar.style.opacity = '0';
+                setTimeout(() => { altar.style.display = 'none'; }, 3000); 
+            }, 60000); 
+        }
+    }
+
+
+    function spawnFlowerRain(totalFlowers = 250) {
+        let container = document.getElementById('gold-powder-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'gold-powder-container';
+            container.style.cssText = 'position:fixed; inset:0; pointer-events:none; z-index:50; overflow:hidden;';
+            document.body.appendChild(container);
+        }
+
+        for (let i = 0; i < totalFlowers; i++) {
+            const powder = document.createElement('div');
+            const size = Math.random() * 3 + 1.5; 
+            const startX = Math.random() * window.innerWidth;
+            const drift = (Math.random() - 0.5) * 250; 
+            const dur = Math.random() * 5 + 4; 
+            const delay = Math.random() * 2.5; 
+
+            powder.style.cssText = `
+                position: absolute; top: -10px; width: ${size}px; height: ${size}px; left: ${startX}px;
+                background: radial-gradient(circle, #fff 0%, #d4af37 50%, transparent 100%);
+                border-radius: 50%; box-shadow: 0 0 10px #d4af37, 0 0 3px #fff; opacity: 0;
+                animation: powder-fall ${dur}s linear ${delay}s forwards;
+            `;
+            powder.style.setProperty('--drift', drift + 'px');
+
+            container.appendChild(powder);
+
+            setTimeout(() => {
+                if (powder.parentNode) powder.remove();
+            }, (dur + delay) * 1000);
+        }
+    }
+
+
+    function handleStreak() {
+        const now = new Date();
+        const todayStr = now.toDateString(); 
+        
+        if (!db.bowData) db.bowData = { streakCount: 0, lastLoginDate: "", lastRewardStreak: 0 };
+
+        if (db.bowData.lastLoginDate !== todayStr) {
+            db.bowData.streakCount++; 
+            db.bowData.lastLoginDate = todayStr;
+            
+            if (db.bowData.streakCount % 10 === 0 && db.bowData.lastRewardStreak !== db.bowData.streakCount) {
+                db.points += 100;
+                db.bowData.lastRewardStreak = db.bowData.streakCount; 
+                
+                let title = "十日 ‧ 初発心";
+                if (db.bowData.streakCount >= 100000) title = "無量 ‧ 尽未来際";
+                else if (db.bowData.streakCount >= 10000) title = "万日 ‧ 不退転";
+                else if (db.bowData.streakCount >= 1000) title = "千日 ‧ 三昧を得る";
+                else if (db.bowData.streakCount >= 100) title = "百日 ‧ 恒常念";
+                
+                let currentName = "行 者";
+                if (db.name && db.name.trim() !== "") {
+                    currentName = db.name;
+                }
+                document.getElementById('milestone-name-display').innerText = currentName;
+                
+                setTimeout(() => {
+                    const bar = document.getElementById('streak-bar');
+                    if (bar) bar.style.width = '100%';
+                    
+                    setTimeout(() => {
+                        document.getElementById('milestone-title').innerText = `【 ${title} 】`;
+                        document.getElementById('milestone-text').innerHTML = `<span style="color:var(--gold-light); font-size: 0.95rem;">「懸繒然灯、散華焼香」</span><br>円満なる ${db.bowData.streakCount} 日の清浄なる観相、荘厳なる宝幡を懸く。<br><b style='color:var(--gold-solid)'>+100</b> の資糧を獲得し、主システムに振り込まれました。`;
+
+                        
+                        const modal = document.getElementById('milestone-modal');
+                        modal.style.display = 'flex';
+                        void modal.offsetWidth; 
+                        modal.classList.add('show');
+                    }, 800);
+                }, 500);
+                
+                saveDB();
+                document.getElementById('streak-text').innerText = `修持：第 ${db.bowData.streakCount} 日`;
+                return; 
+            }
+            saveDB();
+        }
+        document.getElementById('streak-text').innerText = `修持：第 ${db.bowData.streakCount || 1} 日`;
+        const bar = document.getElementById('streak-bar');
+        if (bar) {
+            if (db.bowData.streakCount % 10 === 0 && db.bowData.streakCount > 0) {
+                bar.style.width = '100%';
+                
+                setTimeout(() => {
+                    triggerOfferingsModal();
+                }, 600);
+                
+            } else {
+                bar.style.width = ((db.bowData.streakCount % 10) * 10) + '%';
+            }
+        }
+    }
+
+
+    function showModal(title, text, btnText, callback) {
+        document.getElementById('m-title').innerHTML = title; 
+        document.getElementById('m-text').innerHTML = text;
+        const btn = document.getElementById('m-btn');
+        btn.innerHTML = btnText;
+        btn.onclick = callback || closeModal;
+        document.getElementById('modal').classList.add('show');
+    }
+    
+    function closeModal() { document.getElementById('modal').classList.remove('show'); }
+    
+    function showLawInfo() {
+        const infoHtml = `
+            <div style="text-align: left; font-size: 0.85rem; line-height: 1.7; color: #ccc;">
+                <b style="color:var(--gold-light)">【三身如来 ‧ 体相用】</b><br>
+                《華厳経》の枠組みにおいて：<br>
+                ‧ <span style="color:var(--gold-light)">毘盧遮那如来 (法身)</span>：諸法の実相であり、虚空のように遍在し、万物の本体である。<br>
+                ‧ <span style="color:var(--gold-light)">阿弥陀如来 (報身)</span>：功徳が円満であり、極楽世界にて荘厳なる金身を現し、衆生を度すための勝相である。<br>
+                ‧ <span style="color:var(--gold-light)">釈迦牟尼如来 (応化身)</span>：大悲の化現であり、娑婆世界にて衆生を導く、修行の導師である。<br><br>
+                
+                <b style="color:var(--gold-light)">【常寂光 ‧ 究極の帰着点】</b><br>
+                「常」にして遷らず、「寂」にして垢なく、「光」にして世を照らす。これこそが心性が徹底的に清浄となった後の、不生不滅の究竟なる境界である。<br><br>
+                
+                <b style="color:var(--gold-light)">【弥陀に頂礼す ‧ 燃灯焼香】</b><br>
+                ‧ <span style="color:#fff">弥陀に頂礼す</span>：<br>
+                《無量寿経》に云く：三輩往生する者は「当に無上菩提の心を発し、一向に無量寿仏を専念すべし。」頂礼の時、身心を弥陀に帰命し、これを以て極楽への往生を願うよう回向する。<br><br>
+                ‧ <span style="color:#fff">燃灯焼香</span>：<br>
+                《無量寿経》に云く：三輩往生する者は「懸繒然灯、散華焼香す。」これを以て至誠に供養し、自性の光明を点し、これを以て極楽への往生を願うよう回向する。<br><br>
+
+                <b style="color:var(--gold-light)">【無相の相 ‧ 純浄なる金身】</b><br>
+                弥陀の荘厳なる瑠璃の金身と蓮座は、世俗によくあるいかなる画像ファイルでもなく、完全に「純粋な数学的座標」によって交織されたものである（SVGベクトルグラフィック）。<br>
+                安易な描画を捨てることは、このデジタル道場の「絶対的な純浄と無量」を達成するためである。外部の画像ファイルへの依存をゼロにし、著作権の論争を完全に絶ち、無限に拡大しても瑠璃の金身は完璧で瑕疵がなく、決して劣化しない。<br><br>
+
+                しかし、これは容易な開創の道ではない。仏身の金色のグラデーションの一筋、蓮の花びらの一枚の広がり、印を結ぶ手の一つ一つの悲智のカーブは、筆で描くことはできず、荘厳なる法相を一行の、しかし絶対に正確な数字とベジェ曲線（Bézier curve）へと化さなければならない。一つの座標の微小なずれ、一つの数値の増減が、全体の荘厳さに影響を与えるのである。<br><br>
+
+                弥陀の瑠璃の金身と浄土全体は、無数の試行錯誤を経て、座標を推算し、光と影をテストし続けることによって鍛え上げられたものである。これは単なる美学の彫琢ではない。この反復する試行錯誤、純粋さに対する過酷なまでのこだわりこそが、法界に対する最も至誠なる供養なのである。
+            </div>
+        `;
+        showModal("法界観想の導き", infoHtml, "合掌収摂");
+    }
+
+
+
+
+    const canvas = document.getElementById('starCanvas'); 
+    const ctx = canvas.getContext('2d'); 
+    let width, height, stars = [], warpSpeed = 0.5, starScale = 1; 
+
+    function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; } 
+    window.addEventListener('resize', resize); resize(); 
+
+    const STAR_COLORS = ['#8ba89c', '#ffffff', '#f3e5ab', '#ff9a9e', '#b2dfdb', '#C9A0DC', '#ffeb3b']; 
+    for (let i = 0; i < 250; i++) { 
+        stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)], s: Math.random() * 2.5 + 0.5 }); 
+    } 
+
+    function renderStars() { 
+        ctx.fillStyle = 'rgba(1, 1, 3, 0.4)'; 
+        ctx.fillRect(0, 0, width, height); 
+        ctx.globalCompositeOperation = 'screen'; 
+        stars.forEach(s => { 
+            s.z -= warpSpeed; 
+            if (s.z <= 0) { s.z = 2000; s.x = (Math.random() - 0.5) * 2000; s.y = (Math.random() - 0.5) * 2000; } 
+            let sc = 400 / (400 + s.z); 
+            let drawY = (height / 2) + s.y * sc; 
+            if (drawY > height * 0.75) return; 
+            ctx.beginPath(); 
+            ctx.arc((width / 2) + s.x * sc, drawY, s.s * sc * starScale, 0, Math.PI * 2); 
+            ctx.fillStyle = s.color; 
+            ctx.globalAlpha = Math.min(1, sc * 2.5); 
+            ctx.fill(); 
+            ctx.globalAlpha = 1; 
+        }); 
+        ctx.globalCompositeOperation = 'source-over'; 
+        requestAnimationFrame(renderStars); 
+    } 
+    renderStars();
+
+    const wCvs = document.getElementById('waterCanvas'), wCtx = wCvs.getContext('2d'); 
+    let ww, wh, wTime=0; 
+    function resW() { ww=wCvs.width=window.innerWidth; wh=wCvs.height=window.innerHeight; } 
+    window.addEventListener('resize', resW); resW(); 
+    const waterThemes = [ { h: 195, s: 80, l: 65 }, { h: 340, s: 80, l: 70 }, { h: 45,  s: 90, l: 65 } ]; 
+    
+    function drawW() { 
+        wCtx.clearRect(0,0,ww,wh); wTime += 0.005; 
+        for (let i = 0; i < 3; i++) { 
+            wCtx.beginPath(); let shift = i * 2; 
+            let grad = wCtx.createLinearGradient(0, wh*0.5, 0, wh); 
+            let t = waterThemes[i]; 
+            grad.addColorStop(0, `hsla(${t.h}, ${t.s}%, ${t.l}%, 0.1)`); 
+            grad.addColorStop(0.5, `hsla(${t.h}, ${t.s}%, ${t.l}%, 0.3)`); 
+            grad.addColorStop(1, `hsla(${t.h}, ${t.s}%, ${t.l}%, 0.6)`); 
+            wCtx.fillStyle = grad; 
+            for (let x = 0; x <= ww; x += 5) { 
+                let y = Math.sin(x * 0.005 + wTime + shift) * 40 + Math.sin(x * 0.01 - wTime * 2) * 20 + (wh * 0.7) + Math.cos(wTime + i) * 30; 
+                if (x === 0) wCtx.moveTo(x, y); else wCtx.lineTo(x, y); 
+            } 
+            wCtx.lineTo(ww, wh); wCtx.lineTo(0, wh); wCtx.fill(); 
+        } 
+        requestAnimationFrame(drawW); 
+    } 
+    drawW();
+
+    function triggerGoldenBurst() {
+        const container = document.getElementById('burst-container');
+        if(!container) return;
+        container.innerHTML = '';
+        const flash = document.createElement('div');
+        flash.className = 'screen-flash';
+        container.appendChild(flash);
+        for(let i=0; i<54; i++) {
+            const ray = document.createElement('div');
+            ray.className = 'gold-ray';
+            ray.style.setProperty('--rot', `${i * 6.66}deg`);
+            ray.style.animation = `ray-burst 2.5s cubic-bezier(0.1, 0.9, 0.2, 1) forwards`;
+            ray.style.animationDelay = `${Math.random() * 0.5}s`;
+            container.appendChild(ray);
+        }
+    }
+
+    function speakWords(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        let isAndroid = /Android/i.test(navigator.userAgent);
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'ja-JP'; msg.rate = 0.8; msg.pitch = 0.9;
+        
+        if (isAndroid) {
+            let voices = window.speechSynthesis.getVoices();
+            let jaVoice = voices.find(v => v.lang === 'ja-JP' && v.name.includes('Google')) || voices.find(v => v.lang.includes('ja'));
+            if (jaVoice) msg.voice = jaVoice;
+            setTimeout(() => { window.speechSynthesis.speak(msg); }, 150);
+        } else {
+            let voices = window.speechSynthesis.getVoices();
+            let jaVoice = voices.find(v => v.lang === 'ja-JP');
+            if (jaVoice) msg.voice = jaVoice;
+            window.speechSynthesis.speak(msg);
+        }
+    }
+
+    function showBlessing(text) {
+        const el = document.getElementById('blessing-text');
+        if(!el) return;
+        el.innerText = text;
+        el.style.animation = 'none'; 
+        void el.offsetWidth; 
+        el.style.animation = 'float-blessing 3.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards'; 
+    }
+
+    function toggleAction(action) {
+        const btn = document.getElementById(`btn-${action}`);
+        if(!btn) return;
+
+        if (action === 'bow') {
+            if (btn.classList.contains('active')) return; 
+            btn.classList.add('active');
+            
+            document.getElementById('buddha-scene').classList.add('bowing');
+            warpSpeed = 15; starScale = 2;
+            triggerGoldenBurst();
+            
+            speakWords("無量光の護佑、安康ならんことを");
+            showBlessing("無量光 ‧ 護佑安康");
+            
+            setTimeout(() => { 
+                warpSpeed = 0.5; starScale = 1; 
+                document.getElementById('buddha-scene').classList.remove('bowing');
+                btn.classList.remove('active'); 
+            }, 3000);
+        } 
+    }
+
+    let incenseTimer, smokeTimer, ashTimer;
+    let incenseProgress = 0;
+
+    function toggleIncense() {
+        const btn = document.getElementById('btn-incense');
+        const isActive = document.body.classList.contains('incense-on');
+        
+        if (!isActive) {
+            document.body.classList.add('incense-on');
+            btn.classList.add('active');
+            
+            speakWords("無量寿、極楽に生まれんことを願う");
+            showBlessing("無量寿 ‧ 願生極楽");
+            
+            incenseProgress = 0;
+            createDualSmoke();
+            createAshDrop();
+            
+            let startTime = Date.now();
+            
+            function burn() {
+                let elapsed = (Date.now() - startTime) / 1000;
+                incenseProgress = Math.min(elapsed / 60, 1); 
+                
+                let cyCenter = 875 + (135 * incenseProgress);
+                document.getElementById('stick-center').setAttribute('y1', cyCenter);
+                document.getElementById('glow-center').setAttribute('cy', cyCenter);
+                
+                let cxLeft = 475 + (5 * incenseProgress);
+                let cyLeft = 890 + (120 * incenseProgress);
+                document.getElementById('stick-left').setAttribute('x1', cxLeft);
+                document.getElementById('stick-left').setAttribute('y1', cyLeft);
+                document.getElementById('glow-left').setAttribute('cx', cxLeft);
+                document.getElementById('glow-left').setAttribute('cy', cyLeft);
+                
+                let cxRight = 525 - (5 * incenseProgress);
+                let cyRight = 890 + (120 * incenseProgress);
+                document.getElementById('stick-right').setAttribute('x1', cxRight);
+                document.getElementById('stick-right').setAttribute('y1', cyRight);
+                document.getElementById('glow-right').setAttribute('cx', cxRight);
+                document.getElementById('glow-right').setAttribute('cy', cyRight);
+                
+                let meltAmount = 50 * incenseProgress;
+
+                ['left', 'right'].forEach(side => {
+                    document.getElementById(`candle-body-${side}`).setAttribute('y', 970 + meltAmount);
+                    document.getElementById(`candle-body-${side}`).setAttribute('height', 60 - meltAmount);
+                    document.getElementById(`candle-wick-${side}`).setAttribute('y1', 965 + meltAmount);
+                    document.getElementById(`candle-wick-${side}`).setAttribute('y2', 975 + meltAmount);
+                    
+                    document.getElementById(`flame-move-${side}`).style.transform = `translateY(${meltAmount}px)`;
+                });
+                
+                if (incenseProgress < 1 && document.body.classList.contains('incense-on')) {
+                    incenseTimer = requestAnimationFrame(burn);
+                } else if (incenseProgress >= 1 && document.body.classList.contains('incense-on')) {
+                    finishIncenseRitual();
+                }
+            }
+            incenseTimer = requestAnimationFrame(burn);
+        } else {
+            resetIncense();
+        }
+    }
+            
+    function finishIncenseRitual() {
+        cancelAnimationFrame(incenseTimer);
+        clearTimeout(smokeTimer);
+        clearTimeout(ashTimer);
+        
+        document.getElementById('stick-left').setAttribute('y1', '1020');
+        document.getElementById('stick-center').setAttribute('y1', '1020');
+        document.getElementById('stick-right').setAttribute('y1', '1020');
+        document.getElementById('glow-left').setAttribute('r', '0');
+        document.getElementById('glow-center').setAttribute('r', '0');
+        document.getElementById('glow-right').setAttribute('r', '0');
+
+        const beamGroup = document.getElementById('orb-layer');
+        if(!beamGroup) return;
+        beamGroup.style.opacity = '1';
+
+        const targetX = 500, targetY = 460;
+        const curves = [
+            { x: 475, y: 1010, cpX: 300, cpY: 600, id: 'left' },  
+            { x: 500, y: 1010, cpX: 500, cpY: 650, id: 'center' }, 
+            { x: 525, y: 1010, cpX: 700, cpY: 600, id: 'right' }  
+        ];
+
+        function getQBezier(t, p0, p1, p2) { return (1-t)*(1-t)*p0 + 2*(1-t)*t*p1 + t*t*p2; }
+
+        let animStart = Date.now();
+        const duration = 1200; 
+
+        function animateBeams() {
+            let elapsed = Date.now() - animStart;
+            let progress = Math.min(elapsed / duration, 1); 
+            
+            curves.forEach((p) => {
+                let headT = progress;
+                let tailT = Math.max(0, progress - 0.2); 
+                
+                let headX = getQBezier(headT, p.x, p.cpX, targetX);
+                let headY = getQBezier(headT, p.y, p.cpY, targetY);
+                let tailX = getQBezier(tailT, p.x, p.cpX, targetX);
+                let tailY = getQBezier(tailT, p.y, p.cpY, targetY);
+                
+                let d = `M ${tailX} ${tailY}`;
+                for(let t = tailT; t <= headT; t += 0.05) {
+                    d += ` L ${getQBezier(t, p.x, p.cpX, targetX)} ${getQBezier(t, p.y, p.cpY, targetY)}`;
+                }
+                d += ` L ${headX} ${headY}`;
+                
+                let glowEl = document.getElementById(`beam-${p.id}-glow`);
+                let coreEl = document.getElementById(`beam-${p.id}-core`);
+                
+                if (glowEl && coreEl) {
+                    glowEl.setAttribute('d', d);
+                    coreEl.setAttribute('d', d);
+                    
+                    glowEl.setAttribute('stroke-width', 15 * (1 - progress * 0.4));
+                    coreEl.setAttribute('stroke-width', 6 * (1 - progress * 0.4));
+                    
+                    let opacityGlow = (1 - Math.pow(progress, 3)) * 0.3; 
+                    let opacityCore = (1 - Math.pow(progress, 2.5)) * 0.9; 
+                    
+                    glowEl.style.opacity = opacityGlow;
+                    coreEl.style.opacity = opacityCore;
+                }
+            });
+
+            if (progress < 1) {
+                requestAnimationFrame(animateBeams);
+            } else {
+                beamGroup.style.opacity = '0';
+                curves.forEach((p) => {
+                    document.getElementById(`beam-${p.id}-glow`).setAttribute('d', '');
+                    document.getElementById(`beam-${p.id}-core`).setAttribute('d', '');
+                });
+
+                document.body.classList.remove('incense-on');
+                const btn = document.getElementById('btn-incense');
+                btn.classList.remove('active');
+                
+                setTimeout(restoreIncensePosition, 1500);
+            }
+        }
+        animateBeams();
+    }
+
+    function resetIncense() {
+        cancelAnimationFrame(incenseTimer);
+        clearTimeout(smokeTimer);
+        clearTimeout(ashTimer);
+        document.body.classList.remove('incense-on');
+        const btn = document.getElementById('btn-incense');
+        btn.classList.remove('active');
+        setTimeout(restoreIncensePosition, 1500);
+    }
+
+    function restoreIncensePosition() {
+        if(!document.body.classList.contains('incense-on')) {
+            document.getElementById('stick-center').setAttribute('y1', '875');
+            document.getElementById('glow-center').setAttribute('cy', '875');
+            document.getElementById('glow-center').setAttribute('r', '4');
+            document.getElementById('stick-left').setAttribute('x1', '475');
+            document.getElementById('stick-left').setAttribute('y1', '890');
+            document.getElementById('glow-left').setAttribute('cx', '475');
+            document.getElementById('glow-left').setAttribute('cy', '890');
+            document.getElementById('glow-left').setAttribute('r', '4');
+            document.getElementById('stick-right').setAttribute('x1', '525');
+            document.getElementById('stick-right').setAttribute('y1', '890');
+            document.getElementById('glow-right').setAttribute('cx', '525');
+            document.getElementById('glow-right').setAttribute('cy', '890');
+            document.getElementById('glow-right').setAttribute('r', '4');
+            ['left', 'right'].forEach(side => {
+                document.getElementById(`candle-body-${side}`).setAttribute('y', '970');
+                document.getElementById(`candle-body-${side}`).setAttribute('height', '60');
+                document.getElementById(`candle-wick-${side}`).setAttribute('y1', '965');
+                document.getElementById(`candle-wick-${side}`).setAttribute('y2', '975');
+                
+                document.getElementById(`flame-move-${side}`).style.transform = `translateY(0px)`;
+            });
+        }
+    }
+
+    function createDualSmoke() {
+        if (!document.body.classList.contains('incense-on') || incenseProgress >= 1) return;
+        const container = document.getElementById('smoke-container');
+        
+        const glows = [
+            document.getElementById('glow-left'),
+            document.getElementById('glow-center'),
+            document.getElementById('glow-right')
+        ];
+
+        glows.forEach(glow => {
+            if (Math.random() > 0.4) return; 
+            const rect = glow.getBoundingClientRect(); 
+            
+            const puff = document.createElement('div');
+            puff.className = 'smoke-fine';
+            puff.style.setProperty('--drift', `${(Math.random() - 0.5) * 40}px`);
+            puff.style.left = `${rect.left + rect.width / 2 - 4}px`; 
+            puff.style.top = `${rect.top - 60}px`; 
+            container.appendChild(puff);
+            setTimeout(() => { if(puff.parentNode) puff.remove() }, 4000);
+        });
+
+        if (Math.random() > 0.6) {
+            const centerRect = glows[1].getBoundingClientRect();
+            const fog = document.createElement('div');
+            fog.className = 'smoke-diffused';
+            fog.style.setProperty('--drift', `${(Math.random() - 0.5) * 150}px`);
+            fog.style.left = `${centerRect.left + (Math.random() - 0.5) * 30 - 15}px`;
+            fog.style.top = `${centerRect.top - 40}px`;
+            container.appendChild(fog);
+            setTimeout(() => { if(fog.parentNode) fog.remove() }, 7000);
+        }
+        
+        smokeTimer = setTimeout(createDualSmoke, 300 + Math.random() * 200);
+    }
+
+    function createAshDrop() {
+        if (!document.body.classList.contains('incense-on') || incenseProgress >= 1) return;
+        
+        const layer = document.getElementById('ash-layer');
+        const glows = ['glow-left', 'glow-center', 'glow-right'];
+        const activeGlow = document.getElementById(glows[Math.floor(Math.random() * glows.length)]);
+        
+        const cx = parseFloat(activeGlow.getAttribute('cx'));
+        const cy = parseFloat(activeGlow.getAttribute('cy'));
+        
+        const ash = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        ash.setAttribute('cx', cx);
+        ash.setAttribute('cy', cy);
+        ash.setAttribute('r', '1.5');
+        ash.setAttribute('fill', '#e0e0e0');
+        ash.style.transition = 'all 1.5s cubic-bezier(0.5, 0, 1, 1)';
+        layer.appendChild(ash);
+        
+        setTimeout(() => {
+            ash.setAttribute('cy', cy + 30 + Math.random() * 20); 
+            ash.setAttribute('cx', cx + (Math.random() - 0.5) * 10); 
+            ash.style.opacity = '0';
+        }, 50);
+
+        setTimeout(() => { if(ash.parentNode) ash.remove() }, 1600);
+        
+        ashTimer = setTimeout(createAshDrop, 500 + Math.random() * 1000);
+    }
+
+    function returnToMainHall() {
+        window.location.href = 'index_jp.html?screen=3';
+    }
+
+    handleStreak();
+
+</script>
+
+</body>
+</html>

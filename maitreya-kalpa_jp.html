@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest_jp.json">
+    <title>龍華菩提 ． 賢劫千仏</title>
+    <style>
+        :root {
+            --bg-deep: #010102; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; user-select: none;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px;
+            background: transparent; border-left: 2px solid rgba(212,175,55,0.8); 
+            padding: 10px 20px; z-index: 100; transition: 1s; pointer-events: none;
+        }
+        .status-title { font-size: 1.15rem; font-weight: bold; color: var(--gold); letter-spacing: 2px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 15px rgba(0,0,0,1); }
+        .status-desc { font-size: 0.85rem; color: #ddd; line-height: 1.8; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,1); }
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; transition: background 0.8s; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+        #buddha-name-display {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            color: var(--gold); font-size: 2.2rem; font-weight: bold; letter-spacing: 8px;
+            text-shadow: 0 0 20px var(--solid-gold); z-index: 50;
+            opacity: 0; transition: opacity 1.5s ease-in-out, color 0.5s, text-shadow 0.5s;
+            white-space: nowrap; text-align: center; pointer-events: none;
+        }
+        .buddha-rank { font-size: 1rem; color: var(--cyan); letter-spacing: 4px; margin-bottom: 12px; text-shadow: none; display: block;}
+        
+        #universe-flash {
+            position: absolute; inset: 0; background: #fff; z-index: 99999; pointer-events: none;
+            opacity: 0; transition: opacity 1.5s ease-out;
+        }
+        .flash-active { opacity: 1 !important; transition: opacity 0.1s ease-in !important; }
+
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 12px; transition: opacity 1s;}
+        
+        .switch-btn {
+            width: 85%; max-width: 320px; justify-content: center;
+            background: linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(212,175,55,0.5); color: var(--gold);
+            padding: 14px 20px; border-radius: 30px; font-size: 1rem; font-weight: bold; letter-spacing: 2px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1);
+        }
+        .switch-btn:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(212,175,55,0.6); }
+        #theory-btn { border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,15,10,0.8); }
+
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(212,175,55,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        .close-btn { color: var(--cyan); font-size: 0.85rem; letter-spacing: 2px; font-weight: bold; cursor: pointer; }
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        
+        .humble-statement { font-size: 0.85rem; color: #b0b0b0; line-height: 1.8; text-align: justify; padding: 20px; border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; background: rgba(20,15,5,0.3); margin-bottom: 50px; font-style: normal; }
+        
+        .main-title { color: var(--gold); font-size: 1.5rem; letter-spacing: 3px; text-align: center; margin-bottom: 50px; text-shadow: 0 0 15px rgba(212,175,55,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--solid-gold), transparent); margin: 15px auto 0; }
+        
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 24px; height: 24px; stroke: var(--gold); fill: none; stroke-width: 1.5; filter: drop-shadow(0 0 5px rgba(212,175,55,0.4)); flex-shrink: 0;}
+        .c-title { color: var(--gold); font-size: 1.2rem; letter-spacing: 1.5px; font-weight: bold; }
+        .c-text { color: var(--text-main); font-size: 0.95rem; line-height: 1.9; text-align: justify; padding-left: 39px; letter-spacing: 0.8px;}
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="back-btn" onclick="window.location.href='index_jp.html?screen=3'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        道場へ戻る
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title" id="s-title">龍華菩提 ． 弥勒下生</div>
+        <div class="status-desc" id="s-desc">「乃至一たび南無仏と称すれば、皆な龍華において度脱を得ん。」<br>誓願に乗りて再び来たり、法界の約束に赴く。</div>
+    </div>
+
+    <section class="matrix-section" id="bg-section">
+        <div id="universe-flash"></div> 
+        <canvas id="realmCanvas"></canvas>
+        
+        <div id="buddha-name-display">
+            <span class="buddha-rank" id="buddha-rank"></span>
+            <span id="buddha-name"></span>
+        </div>
+
+        <div class="ui-layer" id="ui-layer">
+            <button class="switch-btn" id="btn-longhua" onclick="toggleRealm(0)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="10" r="9" stroke-dasharray="2 4" opacity="0.6"/>
+                    <path d="M12 2 C 17 6, 19 11, 12 16 C 5 11, 7 6, 12 2 Z"/>
+                    <path d="M5 19 C 8 16, 16 16, 19 19 C 15 22, 9 22, 5 19 Z"/>
+                    <path d="M9 17 C 10 15, 14 15, 15 17"/>
+                </svg>
+                <span id="text-longhua">菩提を仰ぐ ． 龍華の約に赴く</span>
+            </button>
+            <button class="switch-btn" id="btn-xianjie" onclick="toggleRealm(1)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <ellipse cx="12" cy="12" rx="11" ry="4" transform="rotate(30 12 12)" opacity="0.6"/>
+                    <ellipse cx="12" cy="12" rx="11" ry="4" transform="rotate(-30 12 12)" opacity="0.6"/>
+                    <path d="M12 7 C 15 10, 17 14, 12 17 C 7 14, 9 10, 12 7 Z"/>
+                    <circle cx="12" cy="3" r="1.5" fill="currentColor"/><circle cx="12" cy="21" r="1.5" fill="currentColor"/>
+                    <circle cx="3" cy="12" r="1.5" fill="currentColor"/><circle cx="21" cy="12" r="1.5" fill="currentColor"/>
+                </svg>
+                <span id="text-xianjie">千仏を観想す ． 無尽の遞嬗</span>
+            </button>
+            
+            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                弥勒と賢劫千仏の約を探求する
+            </button>
+            
+            <div style="color:rgba(212,175,55,0.6); font-size:0.75rem; letter-spacing:2px; margin-top:5px;" id="drag-hint">360° スワイプ観想 ． 弥勒の法界</div>
+        </div>
+    </section>
+
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()">
+            <div class="close-bar"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+                <div class="close-btn" onclick="closeTheoryDrawer()">古巻をしまう</div>
+                <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                    <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                    <span id="tts-text">法音を聴く</span>
+                </div>
+            </div>
+        </div>
+               
+          
+                  <div class="theory-container" id="theory-content-box">
+            <div class="humble-statement">法海（ほうかい）は浩瀚（こうかん）にして、ただ仏と仏のみが究尽（きゅうじん）し得ます。本文は一介の在家居士に過ぎない者が、経教の論理と祖師大徳の註疏（ちゅうそ）に依拠し、如来の真実義の修学の面影を探求しようと試みたものです。未尽（みじん）や遺漏（いろう）、錯誤があれば、すべて個人の智識の限界に属するものであり、三宝の加被（かひ）を祈り、同修の皆様のご批判を仰ぎます。</div>
+            <h1 class="main-title">弥勒下生と千仏の継承</h1>
+            
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                    <div class="c-title">一、釈尊の授記と龍華三会</div>
+                </div>
+                <div class="c-text">『菩薩処胎経』などの大乗教典の記載によれば、昔日、釈尊は法会の中で、無上正等正覚（むじょうしょうとうしょうがく）の宏誓（こうせい）を、深く弥勒大士に付嘱されました。弥勒菩薩は現在、兜率天内院（とそつてんないいん）に居られ、一生補処（いっしょうふしょ）の菩薩であります。因縁が成熟する時、娑婆世界に下生（げしょう）し、空に蟠（わだかま）る龍のように高大な龍華菩提樹の下で成仏し、三つの大法会を開いて有縁の衆生を済度（さいど）されます：<br><br>
+                <span style="color:var(--cyan); font-weight:bold;">第一会</span>：釈尊の法運に五戒を受けた九十六億人を済度する。<br>
+                <span style="color:var(--cyan); font-weight:bold;">第二会</span>：釈尊の法運に三帰を受けた九十四億人を済度する。<br>
+                <span style="color:var(--cyan); font-weight:bold;">第三会</span>：九十二億の、乃至一たび南無仏と称した者を済度する。<br><br>
+                この授記は、単なる法脈の交替にとどまらず、諸仏が衆生を見捨てず、生生流転（しょうしょうるてん）に続く慈悲の誓約であるのかもしれません。
+                    <svg style="width:14px;height:14px;vertical-align:middle;margin-left:6px;opacity:0.8;" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    <div class="c-title">二、弥勒接引の繋念と懺悔</div>
+                </div>
+                <div class="c-text">『観弥勒菩薩上生兜率天経』には次のように説かれています。「もし善男子、善女人が諸々の禁戒を犯し、数多くの悪業を造ったとしても、この菩薩の大悲の御名を聞き、五体投地して誠心から懺悔すれば、それらの悪業は速やかに清浄となる。未来世の諸々の衆生などが、この菩薩の大悲の名称を聞き、形像を造立し、香華、衣服、繒蓋（そうがい）、幢幡（どうばん）をもって礼拝し、心を繋ぎ念ずれば、この人が命終えようとする時、弥勒菩薩は眉間の白毫（びゃくごう）から大人相（だいにんそう）の光を放ち、諸々の天子と共に曼陀羅華（まんだらけ）を降らせてこの人を迎えに来る。この人は須臾（しゅゆ）にして往生を得る。弥勒に値遇（ちぐ）し、頭面を地にすりつけて礼敬し、頭を上げるか上げないかのうちに法を聞くことができ、直ちに無上道において不退転を得、未来世においてガンジス河の砂の数ほどの諸仏如来に値遇するであろう。」<br><br>経文は慈悲深く開示しています。もし過去に過ちを犯したとしても、五体投地して誠心から懺悔し、造像、供養、そして礼拝・繋念（けいねん）を通して、白毫の光による接引（しょういん）を感得できる希望があるのかもしれません。これらは私たちに、内院に親近しようと欲するならば、単なる空想に頼るべきではなく、具体的な行持を通じて心身を収摂（しゅうしょう）する必要があることを示唆しているのかもしれません。
+                    <svg style="width:14px;height:14px;vertical-align:middle;margin-left:6px;opacity:0.8;" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <div class="c-title">三、内外院の試練と祖師の警世</div>
+                </div>
+                <div class="c-text">唐の玄奘大師は『大唐西域記』巻五において、「師子覚耽著外院記」という深く考えさせられる公案を記しています：<br><br>
+                無著菩薩、世親菩薩、そして弟子の師子覚の三人は、皆、兜率天内院に往生して慈氏（弥勒）に覲見（きんけん）することを誓願し、先に命を終えた者がその様子を知らせに来ることを約束しました。その後、師子覚が先に命を終えましたが、三年間知らせがありませんでした。世親菩薩もまた命を終えましたが、六ヶ月間知らせがありませんでした。当時、諸々の異学の徒は皆これを嘲笑し、彼らは悪趣（悪道）に流転したのだと考えました。<br><br>
+                その後、無著菩薩が夜の初分に定法（じょうほう）を授けていた時、世親菩薩が虚空に乗って下降し、このように報告しました。「ここから命を終え、兜率多天（とそつたてん）の慈氏の内なる衆の中の蓮華の中に生まれました。蓮華がちょうど開いた時、慈氏は『よく来た、広慧よ！』と讃えられました。周囲を巡り終わるとすぐに、報告に参りました。」無著が師子覚について尋ねると、世親は答えました。「私が周囲を巡っていた時、師子覚が外なる衆の中にいて、欲楽に耽溺（たんじゃく）し、顧みる暇もないのを見ました。どうして報告に来ることができましょうか？」
+                    <svg style="width:14px;height:14px;vertical-align:middle;margin-left:6px;opacity:0.8;" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"/><circle cx="12" cy="14" r="3"/></svg>
+                    <div class="c-title">四、両土の殊勝さと大乗の契機</div>
+                </div>
+                <div class="c-text">諸仏の法界を探究すると、一般的な浄土の多くは報土（ほうど）に属し、皆、大菩薩が因地（いんじ）において無上の大願を発し、長い劫（こう）を経て修持を積んで成就した荘厳な法界です。しかし、兜率天内院の特殊な点は、それが娑婆の欲界の中に立脚していながら、弥勒大士の「一生補処」の真実の功徳によって清浄無漏（むろ）の境界と化している点にあるのかもしれません。これは、行者が娑婆を離れない因縁の中で、直接未来仏に親近できることを意味しているのかもしれません。<br><br>『観弥勒菩薩上生兜率天経』に「生死を厭わず、天に生ずることを楽しみ、無上の菩提心を愛敬する者は、まさにこのように観をなすべし」とあるように、この経文は、弥勒法門の一つの特質を示しているのかもしれません。すなわち、三界を出離することを第一とせず、欲界の中で生死に直面し、菩提心を長養（ちょうよう）するということです。一方、極楽浄土の阿鞞跋致（あびばっち：不退転）のメカニズムは、衆生にもう一つの安穏な支えを提供しているのかもしれません。両土とも、諸仏が有情を護念する勝処であり、行者の心性がどこに合致するかにかかっています。教理が説くところによれば、阿弥陀仏の願力に摂取されて極楽に往生した者も、等しく究竟して安穏であり、一生補処に至ることができます。
+                    <svg style="width:14px;height:14px;vertical-align:middle;margin-left:6px;opacity:0.8;" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+            
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <div class="c-title">五、賢劫千仏と無尽の遞嬗</div>
+                </div>
+                <div class="c-text">『賢劫経』の記載によれば、私たちが今いる時空は賢劫（けんごう）と呼ばれます。この漫長な劫において、一千尊の仏が順次娑婆に降生することになっており、それはおそらく有情を間断なく済度するためなのでしょう。<br><br>仏法は、法界において永遠に消えることのない明かりのようです。第九小劫には四仏が出世し、第十小劫には弥勒が下生し、そして第十五小劫には九百九十四尊の仏が相次いで示現し、第二十小劫の楼至仏（るしぶつ）に至るまで、千仏の数を円満に満たすようです。<br><br>行者が今日、浄土の願力に摂取され、不退転の身に変わることを期するならば、その中には、普賢の大願を発し、弘誓の鎧を被り、願に乗じて帰る大悲の行者もいるかもしれません。そして、未来の菩提道の上で、私たちの自性に属する清浄な蓮華を次々と咲かせていくことでしょう。
+                    <svg style="width:14px;height:14px;vertical-align:middle;margin-left:6px;opacity:0.8;" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+            </div>
+        </div>
+
+
+<script>
+    const canvas = document.getElementById('realmCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    let currentRealm = 0; 
+    let time = 0;
+
+    let lhParticles = [];
+    let lhRipples = [];
+    let angleX = 0.1, angleY = 0;
+    let isDragging = false;
+    let lastMouseX = 0, lastMouseY = 0;
+
+    let xjStars = [];
+    const FOV = 400; 
+    const timeline = [
+        { rank: "第九小劫 ． 第一尊", name: "拘留孫仏", highlight: false },
+        { rank: "第九小劫 ． 第二尊", name: "拘那含牟尼仏", highlight: false },
+        { rank: "第九小劫 ． 第三尊", name: "迦葉仏", highlight: false },
+        { rank: "第九小劫 ． 第四尊", name: "釈迦牟尼仏", highlight: true },
+        { rank: "第十小劫 ． 第五尊", name: "弥勒尊仏", highlight: true },
+        { isFastMode: true, rank: "第十五小劫", name: "994 尊の仏が相次いで出世", lotusCount: 15 }, 
+        { rank: "第二十小劫 ． 第一千尊", name: "楼至仏 (盧至如来)", highlight: true, isLast: true }
+    ];
+    let xjStep = 0;
+    let xjFastCounter = 0;
+    let lotusState = { phase: 'waiting', timer: 0, z: 2000, scale: 0, opacity: 0, petals: [] };
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+    }
+    window.addEventListener('resize', resize); resize();
+
+    function initEngines() {
+        lhParticles = []; lhRipples = [];
+        for (let i = 0; i < 600; i++) {
+            let t = i / 600; let radius = 35 * (1 - t) + 5; let spiral = t * Math.PI * 12;
+            let y = t * 250 - 100; 
+            lhParticles.push({
+                x: Math.cos(spiral)*radius + (Math.random()-0.5)*10, y: y, z: Math.sin(spiral)*radius + (Math.random()-0.5)*10,
+                baseY: y, color: Math.random()>0.4 ? '#8b5a2b' : '#d4af37', size: Math.random()*2+1, type: 'trunk', pulseOffset: Math.random()*Math.PI*2 
+            });
+        }
+        for (let i = 0; i < 2000; i++) {
+            let theta = Math.random() * Math.PI * 2; let phi = Math.acos(Math.random()*2 - 1) / 1.4; 
+            let radius = Math.random() * 220 + 60; 
+            let colors = ['#097969', '#2e8b57', '#008b8b', '#f3e5ab'];
+            lhParticles.push({
+                x: radius*Math.sin(phi)*Math.cos(theta), y: radius*Math.cos(phi)+120, z: radius*Math.sin(phi)*Math.sin(theta), 
+                baseY: radius*Math.cos(phi)+120, baseRadius: radius, basePhi: phi, baseTheta: theta,
+                color: colors[Math.floor(Math.random()*colors.length)], size: Math.random()*3+1, type: 'canopy', pulseOffset: Math.random()*Math.PI*2 
+            });
+        }
+        lhRipples.push({ radius: 0, maxRadius: 600, speed: 1.2 });
+        lhRipples.push({ radius: 200, maxRadius: 600, speed: 1.2 });
+        lhRipples.push({ radius: 400, maxRadius: 600, speed: 1.2 });
+
+        xjStars = []; lotusState.petals = [];
+        for (let i = 0; i < 800; i++) {
+            xjStars.push({
+                x: (Math.random()-0.5)*3000, y: (Math.random()-0.5)*3000, z: Math.random()*2000, 
+                speed: Math.random()*5+2, color: Math.random()>0.5 ? '#9fdfc8' : '#f3e5ab'
+            });
+        }
+        for(let i=0; i<12; i++) lotusState.petals.push(i * (Math.PI * 2 / 12));
+    }
+
+    function project3D(x, y, z) {
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+        let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
+        let scale = FOV / (FOV + z2 + 250); 
+        return { x: (width/2) + x2*scale, y: (height/2) - y1*scale - 80, scale: scale, z: z2 };
+    }
+
+    function renderLonghua() {
+        if(!isDragging) angleY += 0.0015; 
+        
+        ctx.globalCompositeOperation = 'screen';
+        for (let r of lhRipples) {
+            r.radius += r.speed; if (r.radius > r.maxRadius) r.radius = 0;
+            let opacity = Math.max(0, 1 - Math.pow(r.radius / r.maxRadius, 1.5));
+            ctx.beginPath();
+            for (let i = 0; i <= 60; i++) {
+                let theta = (i/60)*Math.PI*2;
+                let proj = project3D(Math.cos(theta)*r.radius, -100, Math.sin(theta)*r.radius);
+                if (i===0) ctx.moveTo(proj.x, proj.y); else ctx.lineTo(proj.x, proj.y);
+            }
+            ctx.lineWidth = 12; ctx.strokeStyle = `rgba(212, 175, 55, ${opacity * 0.25})`; ctx.stroke();
+            ctx.lineWidth = 2.5; ctx.shadowBlur = 20; ctx.shadowColor = `rgba(243, 229, 171, ${opacity})`;
+            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.7})`; ctx.stroke(); ctx.shadowBlur = 0;
+        }
+        ctx.globalCompositeOperation = 'source-over';
+
+        let projected = [];
+        lhParticles.forEach(p => {
+            let px=p.x, py=p.y, pz=p.z, sFac=1;
+            if (p.type === 'trunk') { py = p.baseY + Math.sin(time+p.pulseOffset)*2; } 
+            else if (p.type === 'canopy') {
+                sFac = 1 + Math.sin(time+p.pulseOffset)*0.03; let rad = p.baseRadius*sFac;
+                py = rad*Math.cos(p.basePhi) + 120 + Math.sin(time+p.pulseOffset)*1.5;
+                px = rad*Math.sin(p.basePhi)*Math.cos(p.baseTheta); pz = rad*Math.sin(p.basePhi)*Math.sin(p.baseTheta);
+            }
+            let proj = project3D(px, py, pz);
+            if (proj.z > -400) projected.push({ sx: proj.x, sy: proj.y, scale: proj.scale, z: proj.z, c: p.color, s: p.size*sFac, type: p.type });
+        });
+        projected.sort((a,b) => b.z - a.z);
+
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.scale; if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.sx, p.sy, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if (p.type === 'canopy') { ctx.shadowBlur=8; ctx.shadowColor=p.c; } else ctx.shadowBlur=0;
+            ctx.fill();
+        });
+        ctx.globalCompositeOperation = 'source-over'; ctx.shadowBlur=0;
+
+        let pulse = Math.sin(time)*1.5; 
+        let proj = project3D(0, -100+pulse, 0); 
+        if (proj.z > -400) {
+            let sc = proj.scale; ctx.shadowBlur = 30+pulse*2; ctx.shadowColor = 'rgba(243,229,171,0.8)'; ctx.fillStyle = 'rgba(212,175,55,0.9)'; 
+            ctx.beginPath(); ctx.ellipse(proj.x, proj.y+15*sc, (35+pulse*0.5)*sc, (10+pulse*0.2)*sc, 0,0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(proj.x, proj.y, (22+pulse*0.8)*sc, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(proj.x, proj.y-30*sc, (12+pulse*0.3)*sc, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0; 
+        }
+    }
+
+    function drawPetal(ctx, size) {
+        ctx.beginPath(); ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(size*0.4, size*0.2, size*0.8, size*0.5, size, 0);
+        ctx.bezierCurveTo(size*0.8, -size*0.5, size*0.4, -size*0.2, 0, 0);
+        ctx.fill(); ctx.stroke();
+    }
+
+    function renderXianjie() {
+        ctx.globalCompositeOperation = 'screen'; 
+        let curData = timeline[xjStep];
+        let speedMult = curData.isFastMode ? 6 : 1;
+
+        xjStars.forEach(star => {
+            let sSpeed = curData.isFastMode ? star.speed*4 : star.speed;
+            star.z -= sSpeed;
+            if (star.z <= 0) { star.z = 2000; star.x = (Math.random()-0.5)*3000; star.y = (Math.random()-0.5)*3000; }
+            let sc = FOV / (FOV + star.z); let sx = (width/2) + star.x*sc; let sy = (height/2) + star.y*sc - 50;
+            let alpha = Math.min(1, sc*1.5);
+            ctx.beginPath(); ctx.arc(sx, sy, Math.max(0.1, 3*sc), 0, Math.PI*2);
+            ctx.fillStyle = `rgba(${star.color==='#f3e5ab'?'243,229,171':'159,223,200'}, ${alpha})`; ctx.fill();
+        });
+
+        const textDisplay = document.getElementById('buddha-name-display');
+        const rankEl = document.getElementById('buddha-rank'); const nameEl = document.getElementById('buddha-name');
+        
+        switch(lotusState.phase) {
+            case 'waiting':
+                lotusState.timer += speedMult;
+                if(lotusState.timer > 80) { 
+                    lotusState.phase = 'approaching'; lotusState.timer = 0; lotusState.z = 2500;
+                    if (xjFastCounter === 0) { 
+                        rankEl.innerText = curData.rank; nameEl.innerText = curData.name;
+                        if (curData.highlight) { nameEl.style.color = "#ffffff"; nameEl.style.textShadow = "0 0 20px #fff, 0 0 40px var(--cyan)"; } 
+                        else { nameEl.style.color = "var(--gold)"; nameEl.style.textShadow = "0 0 20px var(--solid-gold)"; }
+                    }
+                    if (!curData.isFastMode || xjFastCounter === 0) textDisplay.style.opacity = 0; 
+                } break;
+            case 'approaching':
+                lotusState.z -= (25*speedMult);
+                if(lotusState.z <= 200) { lotusState.phase = 'blooming'; lotusState.timer = 0; textDisplay.style.opacity = 1; } break;
+            case 'blooming':
+                lotusState.timer += speedMult; lotusState.scale = Math.min(1, lotusState.timer/60); lotusState.opacity = Math.min(1, lotusState.timer/30);
+                if(lotusState.timer > (curData.isLast ? 300 : 150)) {
+                    if (curData.isLast) { document.getElementById('universe-flash').classList.add('flash-active'); setTimeout(() => document.getElementById('universe-flash').classList.remove('flash-active'), 150); }
+                    lotusState.phase = 'dissolving'; lotusState.timer = 0;
+                    if (!curData.isFastMode || xjFastCounter >= curData.lotusCount-1) textDisplay.style.opacity = 0; 
+                } break;
+            case 'dissolving':
+                lotusState.timer += speedMult; lotusState.opacity = Math.max(0, 1-(lotusState.timer/60)); lotusState.scale += 0.01*speedMult;
+                if(lotusState.timer > 60) {
+                    lotusState.phase = 'waiting'; lotusState.timer = 0;
+                    if (curData.isFastMode) { xjFastCounter++; if (xjFastCounter >= curData.lotusCount) { xjFastCounter=0; xjStep=(xjStep+1)%timeline.length; } } 
+                    else { xjStep=(xjStep+1)%timeline.length; }
+                } break;
+        }
+
+        let cx = width/2, cy = height/2 - 80;
+        if (lotusState.phase === 'approaching') {
+            let sc = FOV/(FOV+lotusState.z); ctx.shadowBlur = 20; ctx.shadowColor = '#fff';
+            ctx.beginPath(); ctx.arc(cx, cy, 15*sc, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowBlur = 0;
+        } else if (lotusState.phase === 'blooming' || lotusState.phase === 'dissolving') {
+            ctx.save(); ctx.translate(cx, cy);
+            let rotSpeed = curData.isFastMode ? 0.015 : 0.005;
+            ctx.rotate((lotusState.timer*rotSpeed) * (lotusState.phase==='dissolving'?2:1));
+            let sMult = curData.isLast ? 1.3 : 1; let bSize = 120 * lotusState.scale * sMult;
+            
+            ctx.shadowBlur = 30; ctx.shadowColor = `rgba(212,175,55,${lotusState.opacity})`;
+            ctx.fillStyle = `rgba(243,229,171,${lotusState.opacity*0.2})`; ctx.strokeStyle = `rgba(255,255,255,${lotusState.opacity*0.8})`; ctx.lineWidth = 1.5;
+            for (let i=0; i<12; i++) {
+                ctx.save(); ctx.rotate(lotusState.petals[i]); drawPetal(ctx, bSize); ctx.restore();
+                ctx.save(); ctx.rotate(lotusState.petals[i]+Math.PI/12); drawPetal(ctx, bSize*0.6); ctx.restore();
+            }
+            ctx.beginPath(); ctx.arc(0, 0, 15*lotusState.scale*sMult, 0, Math.PI*2); ctx.fillStyle = `rgba(255,255,255,${lotusState.opacity})`; ctx.fill();
+            ctx.restore();
+        }
+        ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function animate() {
+        ctx.fillStyle = currentRealm === 0 ? 'rgba(2, 5, 2, 0.5)' : 'rgba(0, 0, 0, 0.4)';
+        ctx.fillRect(0, 0, width, height);
+        time += 0.03;
+
+        if (currentRealm === 0) renderLonghua();
+        else renderXianjie();
+
+        requestAnimationFrame(animate);
+    }
+
+    function toggleRealm(type) {
+        if(currentRealm === type) return;
+        currentRealm = type;
+        
+        let panel = document.getElementById('status-panel');
+        let title = document.getElementById('s-title'); let desc = document.getElementById('s-desc');
+        let btnL = document.getElementById('btn-longhua'); let btnX = document.getElementById('btn-xianjie');
+        let hint = document.getElementById('drag-hint');
+        let nameDisp = document.getElementById('buddha-name-display');
+
+        if (type === 0) {
+            title.innerText = "龍華菩提 ． 弥勒下生"; desc.innerHTML = "「乃至一たび南無仏と称すれば、皆な龍華において度脱を得ん。」<br>誓願に乗りて再び来たり、法界の約束に赴く。";
+            btnL.style.background = 'rgba(10,30,20,0.9)'; btnL.style.color = 'var(--cyan)'; btnL.style.borderColor = 'var(--cyan)';
+            btnX.style.background = 'linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95))'; btnX.style.color = 'var(--gold)'; btnX.style.borderColor = 'rgba(212,175,55,0.5)';
+            hint.style.opacity = 1; nameDisp.style.opacity = 0;
+            lotusState.phase = 'waiting'; lotusState.timer = 0; xjStep = 0; xjFastCounter = 0;
+        } else {
+            title.innerText = "賢劫千仏 ． 時空の長河"; desc.innerHTML = "「第十五小劫、九百九十四仏が出世す。」<br>仏法の松明、伝承は無尽なり。";
+            btnX.style.background = 'rgba(10,30,20,0.9)'; btnX.style.color = 'var(--cyan)'; btnX.style.borderColor = 'var(--cyan)';
+            btnL.style.background = 'linear-gradient(135deg, rgba(20,20,20,0.9), rgba(5,5,5,0.95))'; btnL.style.color = 'var(--gold)'; btnL.style.borderColor = 'rgba(212,175,55,0.5)';
+            hint.style.opacity = 0; 
+            angleX = 0.1; angleY = 0;
+        }
+    }
+
+    function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+    function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+
+    function onDown(e) { if(currentRealm!==0 || e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; isDragging = true; lastMouseX = e.touches?e.touches[0].clientX:e.clientX; lastMouseY = e.touches?e.touches[0].clientY:e.clientY; }
+    function onMove(e) { if (!isDragging || currentRealm!==0) return; let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; angleY += (curX-lastMouseX)*0.01; angleX += (curY-lastMouseY)*0.01; angleX = Math.max(-Math.PI/4, Math.min(Math.PI/4, angleX)); lastMouseX=curX; lastMouseY=curY; }
+    function onUp() { isDragging = false; }
+
+    canvas.addEventListener('mousedown', onDown); canvas.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
+
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+    let sysUtterances = []; 
+
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("お使いのデバイスは音声機能に対応していません");
+        
+        const btnText = document.getElementById('tts-text');
+        const btnIcon = document.getElementById('tts-icon');
+        
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel();
+            isPlayingTheory = false;
+            btnText.innerText = "法音を聴く";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text');
+            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('。');
+            
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead);
+            theoryUtterance.lang = 'ja-JP';
+            theoryUtterance.rate = 0.8; 
+
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            if (isAndroid) {
+                sysUtterances.push(theoryUtterance);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let jaVoice = voices.find(v => v.lang === 'ja-JP' && v.name.includes('Google')) || voices.find(v => v.lang.includes('ja'));
+                    if (jaVoice) theoryUtterance.voice = jaVoice;
+                }
+            } else {
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let jaVoice = voices.find(v => v.lang === 'ja-JP');
+                    if (jaVoice) theoryUtterance.voice = jaVoice;
+                }
+            }
+
+            theoryUtterance.onend = () => {
+                isPlayingTheory = false;
+                btnText.innerText = "法音を聴く";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                if(isAndroid) sysUtterances = sysUtterances.filter(u => u !== theoryUtterance);
+            };
+            
+            if (isAndroid) {
+                setTimeout(() => { window.speechSynthesis.speak(theoryUtterance); }, 150);
+            } else {
+                window.speechSynthesis.speak(theoryUtterance);
+            }
+            isPlayingTheory = true;
+            btnText.innerText = "聴くのをやめる";
+            btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    const originalCloseTheoryDrawer = closeTheoryDrawer;
+    closeTheoryDrawer = function() {
+        if (isPlayingTheory) toggleTheoryAudio(); 
+        originalCloseTheoryDrawer();
+    }
+
+    let iosAudioUnlocked = false;
+    document.body.addEventListener('touchstart', function() {
+        if (!iosAudioUnlocked && window.speechSynthesis) {
+            let silentUtterance = new SpeechSynthesisUtterance('');
+            silentUtterance.lang = 'ja-JP';
+            window.speechSynthesis.speak(silentUtterance);
+            iosAudioUnlocked = true;
+        }
+    }, { once: true });
+    
+    document.body.addEventListener('mousedown', function() {
+        if (!iosAudioUnlocked && window.speechSynthesis) {
+            let silentUtterance = new SpeechSynthesisUtterance('');
+            silentUtterance.lang = 'ja-JP';
+            window.speechSynthesis.speak(silentUtterance);
+            iosAudioUnlocked = true;
+        }
+    }, { once: true });
+
+    initEngines(); toggleRealm(0); animate();
+</script>
+</body>
+</html>

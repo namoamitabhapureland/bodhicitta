@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest_jp.json">
+    <title>法華の暗号 ． 多宝塔湧現 (完璧星空版)</title>
+    <style>
+        :root {
+            --bg-deep: #010103;
+            --gold: #f3e5ab;
+            --solid-gold: #d4af37;
+            --cyan: #8ba89c;
+            --fire-red: #8b3a3a;
+            --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; user-select: none;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; letter-spacing: 1px; cursor: pointer;
+            text-shadow: 0 0 8px rgba(212,175,55,0.5); background: rgba(0,0,0,0.5); 
+            padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px;
+            background: rgba(15,5,5,0.8); backdrop-filter: blur(12px);
+            border-left: 3px solid var(--fire-red); padding: 15px 20px; z-index: 100; transition: 1.5s; pointer-events: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-radius: 0 10px 10px 0;
+        }
+        .status-title { font-size: 1.1rem; font-weight: bold; color: rgba(255,150,150,1); letter-spacing: 2px; margin-bottom: 8px; transition: 1.5s; }
+        .status-desc { font-size: 0.85rem; color: #bbb; line-height: 1.8; transition: 1.5s; letter-spacing: 1px; }
+
+        #fahua-overlay {
+            position: absolute; top: 15%; width: 100%; display: flex; flex-direction: column; align-items: center;
+            z-index: 60; opacity: 0; pointer-events: none; transition: opacity 3s ease-in;
+        }
+        .fahua-text {
+            color: var(--gold); font-size: 1.1rem; letter-spacing: 5px; line-height: 2.2; text-align: center;
+            text-shadow: 0 0 15px rgba(212,175,55,0.8), 0 0 30px rgba(0,0,0,0.9); font-weight: bold;
+            background: rgba(0,0,0,0.4); padding: 20px 40px; border-radius: 15px; border-top: 1px solid rgba(212,175,55,0.3); border-bottom: 1px solid rgba(212,175,55,0.3);
+        }
+        .soft-cyan { color: var(--cyan); text-shadow: 0 0 10px rgba(139,168,156,0.8); }
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        .dharmadhatu-light {
+            position: absolute; inset: 0; 
+            background: radial-gradient(circle at 50% 50%, rgba(139,58,58,0.15) 0%, transparent 80%);
+            animation: breath 4s infinite alternate ease-in-out; pointer-events: none; transition: background 4s ease; z-index: 0;
+        }
+        @keyframes breath { 0% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        .ui-layer { position: absolute; bottom: 10%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 15px; transition: opacity 1.5s;}
+        
+        .switch-btn {
+            background: linear-gradient(135deg, rgba(20,10,10,0.9), rgba(10,5,5,0.95)); 
+            border: 1px solid rgba(212,175,55,0.5); color: var(--gold);
+            padding: 16px 35px; border-radius: 30px; font-size: 1.05rem; font-weight: bold; letter-spacing: 3px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.5s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(139,58,58,0.4), inset 0 0 15px rgba(212,175,55,0.1);
+        }
+        .switch-btn:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(212,175,55,0.6); }
+
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh;
+            background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0;
+            transform: translateY(100%); transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        
+        .drawer-header {
+            position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95));
+            padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2);
+        }
+        .close-bar { width: 40px; height: 4px; background: rgba(212,175,55,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        .close-btn { color: var(--cyan); font-size: 0.85rem; letter-spacing: 2px; font-weight: bold; cursor: pointer; }
+
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        .humble-statement { font-size: 0.9rem; color: rgba(243,229,171,0.6); line-height: 1.8; text-align: justify; padding: 20px; border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; background: rgba(20,15,5,0.3); margin-bottom: 50px; font-style: italic; }
+        .main-title { color: var(--gold); font-size: 1.6rem; letter-spacing: 3px; text-align: center; margin-bottom: 50px; font-weight: normal; text-shadow: 0 0 15px rgba(212,175,55,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--solid-gold), transparent); margin: 15px auto 0; }
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 24px; height: 24px; stroke: var(--gold); fill: none; stroke-width: 1.2; filter: drop-shadow(0 0 5px rgba(212,175,55,0.4)); flex-shrink: 0;}
+        .c-title { color: var(--gold); font-size: 1.25rem; letter-spacing: 1.5px; font-weight: bold; }
+        .science-note { font-size: 0.75rem; color: rgba(139,168,156,0.8); letter-spacing: 1px; padding-left: 39px; margin-bottom: 12px; font-family: monospace; display: flex; align-items: center; gap: 8px; }
+        .science-note::before { content: '▰'; font-size: 0.5rem; color: rgba(139,168,156,0.4); }
+        .c-text { color: var(--text-main); font-size: 1rem; line-height: 1.95; text-align: justify; padding-left: 39px; letter-spacing: 0.8px;}
+        .soft-highlight { color: var(--cyan); border-bottom: 1px dotted rgba(139,168,156,0.6); padding-bottom: 1px; }
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="back-btn" onclick="window.location.href='index_jp.html?screen=3'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        道場へ戻る
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title" id="s-title">三界火宅 ． 幻化の城</div>
+        <div class="status-desc" id="s-desc">
+            迷途：自了を求め、化城に安ず。<br>実相：生死は断てども、仏道は未だ成らず。<br>因縁：大心を発せず、宝所にまみえず。
+        </div>
+    </div>
+
+    <section class="matrix-section">
+        <div class="dharmadhatu-light" id="bg-light"></div>
+        <canvas id="matrixCanvas"></canvas>
+
+        <div id="fahua-overlay">
+            <div class="fahua-text">
+                「十方仏土の中には、<span class="soft-cyan">唯だ一乗の法のみ有り</span>。」<br><br>
+                地より湧出し、空中に住す。<br>
+                釈迦と多宝、双仏並座す。<br>
+                一切万法は、皆仏と成らんが為なり。
+            </div>
+        </div>
+
+        <div class="ui-layer" id="ui-layer">
+            <button class="switch-btn" onclick="triggerStupa()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 22 20 2 20"></polygon><circle cx="12" cy="14" r="3"></circle></svg>
+                多宝塔を見る ． 無上菩提心を発す
+            </button>
+            <button class="switch-btn" style="display:none; border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,15,10,0.8);" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                法華の暗号 ． 一仏乗の旨
+            </button>
+            <div style="color:rgba(212,175,55,0.5); font-size:0.75rem; letter-spacing:3px; margin-top:10px;" id="drag-hint">360° スワイプ ． 五百由旬を仰ぎ見る</div>
+        </div>
+    </section>
+
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()">
+    <div class="close-bar"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+        <div class="close-btn">古巻をしまう</div>
+        <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+            <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+            <span id="tts-text">法音を聴く</span>
+        </div>
+    </div>
+
+        <div class="theory-container">
+            <div class="humble-statement">
+                「法海は浩瀚であり、ただ仏と仏のみが究め尽くすことができます。本文は一介の在家居士が、経教の論理と祖師大徳の注釈に基づき、如来の真実義を探求しようとする修学の略影に過ぎません。未熟な点や誤りがあれば、すべて個人の智識の限界によるものであり、三宝の加被を祈り、同修の皆様と共に鑑みんことを願います。」
+            </div>
+            <h1 class="main-title">法華の暗号 ． 一仏乗の旨</h1>
+
+            <div class="chapter-box">
+                <div class="c-header"><svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><div class="c-title">火宅の焦慮と化城の迷い</div></div>
+                <div class="science-note">SEVEN_METAPHORS_AND_FIREHOUSE</div>
+                <div class="c-text">
+                    娑婆は、あるいは無常と諸々の苦が燃え盛る巨大な火宅なのかもしれません。世尊は眠れる衆生を目覚めさせるため、《法華経》において慈悲深く「法華七喩」（火宅、化城、薬草、窮子、繋珠、鑿井、医子）を設けられました。我々はその中の「火宅の喩え」のみを観てみましょう。炭素基の媒体を纏う衆生は、生滅の焦燥の中で疲労困憊しています。一部の行者は輪廻の苦しみを見抜き、急いで業力の繋がりを断とうとします。そこで仏陀は「化城」という名の安全なサーバー（偏真涅槃）を化現し、行者が一時休息できるようにしました。しかし、化城は結局のところ中継地に過ぎません。もしここに安住し、これが宇宙の終局であると思い込めば、「もはや前進せず、人を度することもない」という停滞のループに陥ってしまうでしょう。
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header"><svg class="c-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg><div class="c-title">諸法実相と人身難得</div></div>
+                <div class="science-note">TRUE_REALITY_AND_HUMAN_VESSEL</div>
+                <div class="c-text">
+                    行者の心性が徹底的に洗い清められた時、法界の究極の暗号が解除されます：「十方の仏土の中には、唯だ一乗の法のみ有り。」これこそが宇宙の最下層の論理——<span style="font-weight:bold;">諸法実相</span>です。一切の万法は生滅流転しているように見えますが、その本体は実は空明湛然であり、常住不滅なのです。<br><br>経に「衆生は皆仏と成るべし」とあるように、万物が皆如来の本性を具えていることを指摘しています。しかし、システムの実修という観点から見れば、<span class="soft-highlight" style="font-weight:bold;">「人身」こそが法界において唯一「成仏のプログラム」を実行できる標準的な媒体なのです</span>。三悪道の衆生は絶え間なく苦しみを受け、天人は享楽に溺れており、皆出離の心を生じさせることができません。他の道の衆生は、まず長い劫を経て修行し、媒体を「人身」に変換してこそ、真に覚知を起動し、成仏の宝所へと向かうことができるのです。人身の得難きこと、盲亀の浮木に遇うが如し。どうしてこの生を大切にせずにいられましょうか？
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header"><svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><div class="c-title">普門の慈悲と本師を忘れず</div></div>
+                <div class="science-note">AVALOKITESVARA_NETWORK_AND_SHAKYAMUNI</div>
+                <div class="c-text">
+                    もし成仏が唯一の宝所であるならば、我々はどうすれば安全に到達できるのでしょうか。《法華経》は宝所に直行する「大白牛車」を授けただけでなく、〈普門品〉において、観世音菩薩の「声に尋じて苦を救い、普門に示す」宇宙のネットワークを展開し、さらに西方極楽の阿弥陀仏を遥かに指し示しました。<br><br>それ故、行者が至心に一声一声の『阿弥陀仏』を称念する時、心の底から尽きることのない感謝の念が湧き上がるのです。常に憶念すべきは、本師釈迦牟尼仏が無量の寿命を捨てて尊き身を降ろし、この五濁の火宅の中で我々のためにこの『極楽の暗号』を解読し宣説してくださったからこそ、群迷が宝所へ向かうナビゲーションを握ることができたということです。弥陀の接引に感謝する時、さらに本師の伝法の恩に頂礼すべきです。我々が極楽に生まれ、あの無漏の金身という大白牛車に乗り換えるのは、まさに本師の宏願を受け継ぎ、再び火宅に戻って群生を度化するためなのです。
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header"><svg class="c-icon" viewBox="0 0 24 24"><polygon points="12 2 2 22 22 22"/></svg><div class="c-title">多宝湧現と時空の折り畳み</div></div>
+                <div class="science-note">MANY_TREASURES_AND_TIME_FOLDING</div>
+                <div class="c-text">
+                    行者が真に「回小向大（小乗を回らして大乗に向かう）」の菩提心を生起させ、唯一の目標が成仏であることを宣言した時、最も震撼する法界の共鳴が引き起こされます。多次元宇宙の深処に隠された、高さ五百由旬の「多宝仏塔」が地より湧出し、空中に住します。過去に既に涅槃に入られた多宝如来と、現在説法しておられる釈迦牟尼仏が、塔の門を開き並んで座られるのです。<br><br>この光景は、線形的な時間と空間の虚妄なる錯覚を瞬時に打ち砕きます。それは極致の視覚的震撼をもって行者に印証します：いくつの阿僧祇劫を越えようとも、いくつの百千万億の星系を隔てようとも、「一仏乗」の真理は永遠に如如として動かず、歴歴として目の前にあるのだと。
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header"><svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><div class="c-title">法身無尽と万法皆光</div></div>
+                <div class="science-note">DHARMAKAYA_AND_INFINITE_LIGHT</div>
+                <div class="c-text">
+                    宝塔の実相を見抜いた行者は、ついに〈如来寿量品〉の究極の密意を悟るでしょう。本師釈迦牟尼仏は、決して二千五百年前に菩提樹の下で成道されただけの覚者ではありません。経に云く：「我れ成仏してより已来、甚だ大いに久遠なり。寿命は無量阿僧祇劫にして、常住不滅なり。」<br><br>肉身の涅槃は、衆生を目覚めさせるために示された「退出メカニズム（方便の示現）」に過ぎません。真の法身仏（毘盧遮那仏）には、形体もなく、寿命の限界もありません。<span class="soft-highlight" style="font-weight:bold;">法身は実は万法と本来一体であり、皆あの常寂光土における永遠に不滅の「純粋な光」なのです</span>。一切の山河大地、星辰微塵は、皆この光の屈折と顕化です。我々が明心見性した時、この万法同源の光を照見し、諸仏と虚空において尽きることなく相逢うことができるのです。
+                </div>
+            </div>
+            
+            <div style="text-align:center; margin-top: 60px; margin-bottom: 30px;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(212,175,55,0.4)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let fireDust = [], stupaParticles = [], bgStars = [];
+        
+        let rotX = -0.15; let rotY = 0; 
+        let isDragging = false; let startX, startY;
+        let vX = 0, vY = 0; 
+
+        let state = 0; 
+        let stupaYOffset = 800; 
+        let fireOpacity = 1.0;
+
+        const glowCanvas = document.createElement('canvas');
+        glowCanvas.width = glowCanvas.height = 32;
+        const gCtx = glowCanvas.getContext('2d');
+        const gGrad = gCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
+        gGrad.addColorStop(0, 'rgba(255,255,255,1)');
+        gGrad.addColorStop(0.2, 'rgba(212,175,55,0.7)');
+        gGrad.addColorStop(1, 'rgba(212,175,55,0)');
+        gCtx.fillStyle = gGrad; gCtx.fillRect(0,0,32,32);
+
+        function initStars() {
+            bgStars = [];
+            for(let i=0; i<300; i++) {
+                bgStars.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    s: Math.random() * 1.5 + 0.5,
+                    v: Math.random() * 0.5 + 0.1
+                });
+            }
+        }
+
+        function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; initStars(); }
+        window.addEventListener('resize', resize); resize();
+
+        function addBuddhaSilhouette(offsetX, offsetY, offsetZ, color, isPastBuddha) {
+            for(let a=0; a<Math.PI*2; a+=0.5) {
+                for(let b=0; b<Math.PI; b+=0.5) {
+                    let r = 8;
+                    stupaParticles.push({x: offsetX + r*Math.sin(b)*Math.cos(a), y: offsetY - 25 + r*Math.cos(b), z: offsetZ + r*Math.sin(b)*Math.sin(a), c: color, s: 1.2, glow: true, oY: offsetY - 25 + r*Math.cos(b)});
+                }
+            }
+            for(let y=0; y<=30; y+=4) {
+                let r = 4 + y*0.6; 
+                for(let a=0; a<Math.PI*2; a+=0.6) {
+                    stupaParticles.push({x: offsetX + r*Math.cos(a), y: offsetY - 15 + y, z: offsetZ + r*Math.sin(a), c: color, s: 1, glow: false, oY: offsetY - 15 + y});
+                }
+            }
+            for(let a=0; a<Math.PI*2; a+=0.3) {
+                stupaParticles.push({x: offsetX + 25*Math.cos(a), y: offsetY + 15, z: offsetZ + 25*Math.sin(a), c: color, s: 1.5, glow: true, oY: offsetY + 15});
+            }
+            stupaParticles.push({x: offsetX, y: offsetY - 5, z: offsetZ, c: '#ffffff', s: 4, glow: true, oY: offsetY - 5});
+        }
+
+        function generateTopology() {
+            fireDust = []; stupaParticles = [];
+            function addPt(arr, x, y, z, c, s, glow) { arr.push({x, y, z, c, s, glow, oY: y}); }
+
+            for(let i=0; i<400; i++) { 
+                fireDust.push({
+                    x: (Math.random()-0.5)*600, y: (Math.random()-0.5)*600, z: (Math.random()-0.5)*600,
+                    vx: (Math.random()-0.5)*1.5, vy: (Math.random()-0.5)*1.5, vz: (Math.random()-0.5)*1.5,
+                    life: Math.random() * Math.PI * 2
+                });
+            }
+
+            const stupaBaseY = 150; 
+            for(let r=0; r<140; r+=10) {
+                for(let a=0; a<Math.PI*2; a+=0.15) { addPt(stupaParticles, r*Math.cos(a), stupaBaseY, r*Math.sin(a), 'rgba(139,168,156,0.3)', 1, false); }
+            }
+            
+            const tiers = 7;
+            for(let i=0; i<tiers; i++) {
+                let y = stupaBaseY - 20 - i*45; 
+                let r = 110 - i*12; 
+                for(let a=0; a<Math.PI*2; a+=Math.PI/4) {
+                    for(let t=0; t<=1; t+=0.05) { addPt(stupaParticles, r*Math.cos(a)*t, y, r*Math.sin(a)*t, 'rgba(212,175,55,0.7)', 1.2, false); }
+                    addPt(stupaParticles, (r+10)*Math.cos(a), y+8, (r+10)*Math.sin(a), 'rgba(243,229,171,1)', 2.5, true);
+                    for(let drop=0; drop<20; drop+=4) { addPt(stupaParticles, (r+10)*Math.cos(a), y+8+drop, (r+10)*Math.sin(a), 'rgba(212,175,55,0.4)', 0.8, false); }
+                }
+                for(let a=0; a<Math.PI*2; a+=0.1) { addPt(stupaParticles, r*Math.cos(a), y, r*Math.sin(a), 'rgba(243,229,171,0.5)', 1, false); }
+            }
+            
+            let spireBaseY = stupaBaseY - 20 - (tiers-1)*45 - 30;
+            for(let y=spireBaseY; y>spireBaseY - 180; y-=10) {
+                let r = (y < spireBaseY - 140) ? 2 : 15 + (y - (spireBaseY-180))*0.1;
+                for(let a=0; a<Math.PI*2; a+=0.4) { addPt(stupaParticles, r*Math.cos(a), y, r*Math.sin(a), 'rgba(139,168,156,0.9)', 1.5, true); }
+            }
+            
+            addBuddhaSilhouette(-28, stupaBaseY - 180, 0, 'rgba(243,229,171,0.9)', false);
+            addBuddhaSilhouette(28, stupaBaseY - 180, 0, 'rgba(139,168,156,0.9)', true);
+        }
+
+        function render() {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = '#010103';
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.fillStyle = '#ffffff';
+            bgStars.forEach(st => {
+                st.y -= st.v;
+                if (st.y < 0) { st.y = height; st.x = Math.random() * width; }
+                ctx.beginPath();
+                ctx.arc(st.x, st.y, st.s, 0, Math.PI*2);
+                ctx.fill();
+            });
+
+            ctx.globalCompositeOperation = 'screen';
+            
+            if(!isDragging) { rotY -= 0.003; rotX += vY; rotY += vX; vX *= 0.95; vY *= 0.95; }
+            if (rotX > 1.2) rotX = 1.2; if (rotX < -0.2) rotX = -0.2; 
+            
+            const cx=width/2, cy=height/2+60, fov=400, sinX=Math.sin(rotX), cosX=Math.cos(rotX), sinY=Math.sin(rotY), cosY=Math.cos(rotY);
+            let proj = [];
+            
+            function project(p, c, s, glow) {
+                let x1=p.x*cosY-p.z*sinY, z1=p.z*cosY+p.x*sinY, y2=p.y*cosX-z1*sinX, z2=z1*cosX+p.y*sinX;
+                if(z2 < -fov+10) return null; let scale=fov/(fov+z2);
+                return {px:cx+x1*scale, py:cy+y2*scale, z:z2, sc:scale, c:c, s:s, glow:glow};
+            }
+            
+            if (fireOpacity > 0) {
+                fireDust.forEach(p => {
+                    p.x += p.vx; p.y += p.vy; p.z += p.vz;
+                    if(Math.abs(p.x)>300) p.vx*=-1; if(Math.abs(p.y)>300) p.vy*=-1; if(Math.abs(p.z)>300) p.vz*=-1;
+                    p.life += 0.05; let alpha = ((Math.sin(p.life)+1)/2 * 0.8) * fireOpacity;
+                    let pr = project(p, `rgba(180,50,50,${alpha})`, 3, false);
+                    if(pr) proj.push(pr);
+                });
+            }
+            
+            if (state === 1) {
+                stupaYOffset += (0 - stupaYOffset) * 0.015;
+                fireOpacity -= 0.01; if(fireOpacity < 0) fireOpacity = 0;
+                stupaParticles.forEach(p => {
+                    let currentY = p.oY + stupaYOffset;
+                    let alphaRatio = 1 - (stupaYOffset / 800);
+                    let pr = project({x:p.x, y:currentY, z:p.z}, p.c, p.s * alphaRatio, p.glow);
+                    if(pr) proj.push(pr);
+                });
+            }
+            
+            proj.sort((a,b) => b.z-a.z);
+            proj.forEach(p => {
+                let dS = p.s*p.sc; if(dS<0.1) return;
+                if (p.glow) { ctx.drawImage(glowCanvas, p.px - dS*6, p.py - dS*6, dS*12, dS*12); }
+                ctx.beginPath(); ctx.arc(p.px, p.py, dS, 0, Math.PI*2); ctx.fillStyle=p.c; ctx.fill();
+            });
+            
+            requestAnimationFrame(render);
+        }
+
+        function triggerStupa() {
+            document.getElementById('ui-layer').style.opacity = '0';
+            setTimeout(() => document.getElementById('ui-layer').style.display = 'none', 1500);
+            
+            document.getElementById('bg-light').style.background = 'radial-gradient(circle at 50% 50%, rgba(212,175,55,0.12) 0%, transparent 80%)';
+            
+            let pnl = document.getElementById('status-panel');
+            pnl.style.borderLeftColor = 'var(--solid-gold)';
+            pnl.style.background = 'rgba(5,10,15,0.8)';
+            let title = document.getElementById('s-title');
+            title.style.color = 'var(--gold)';
+            title.innerText = "一仏乗 ． 宝塔湧現";
+            document.getElementById('s-desc').innerHTML = "開権顕実、双仏並座す。<br>極楽も十方も、皆この真実の宝所へ向かう為なり。";
+
+            state = 1; 
+            
+            setTimeout(() => { 
+                document.getElementById('fahua-overlay').style.opacity = '1';
+                pnl.style.opacity = '0'; 
+                
+                document.getElementById('theory-btn').style.display = 'flex'; 
+                document.getElementById('ui-layer').style.display = 'flex'; 
+                setTimeout(()=> document.getElementById('ui-layer').style.opacity='1', 50); 
+            }, 6000);
+        }
+
+        function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+        function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+
+        canvas.addEventListener('pointerdown', (e) => { if(e.target.closest('.ui-layer') || e.target.closest('#theory-drawer')) return; isDragging = true; startX = e.clientX || e.touches[0].clientX; startY = e.clientY || e.touches[0].clientY; vX = 0; vY = 0; });
+        canvas.addEventListener('pointermove', (e) => { if (!isDragging) return; let x = e.clientX || (e.touches ? e.touches[0].clientX : 0); let y = e.clientY || (e.touches ? e.touches[0].clientY : 0); let dx = x - startX; let dy = y - startY; rotY -= dx * 0.008; rotX -= dy * 0.008; vX = -dx * 0.0005; vY = -dy * 0.0005; startX = x; startY = y; });
+        canvas.addEventListener('pointerup', () => isDragging = false); canvas.addEventListener('pointercancel', () => isDragging = false);
+    
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+    let sysUtterances = []; 
+
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("お使いのデバイスは音声機能に対応していません");
+        const btnText = document.getElementById('tts-text');
+        const btnIcon = document.getElementById('tts-icon');
+        
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel(); isPlayingTheory = false;
+            btnText.innerText = "法音を聴く";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            let nodes = document.querySelectorAll('#theory-drawer .main-title, #theory-drawer .c-title, #theory-drawer .c-text');
+            let textToRead = Array.from(nodes).map(n => n.textContent.trim()).join('。');
+            
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead);
+            theoryUtterance.lang = 'ja-JP'; theoryUtterance.rate = 0.85;
+
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            if (isAndroid) {
+                sysUtterances.push(theoryUtterance);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let jaVoice = voices.find(v => v.lang === 'ja-JP' && v.name.includes('Google')) || voices.find(v => v.lang.includes('ja'));
+                    if (jaVoice) theoryUtterance.voice = jaVoice;
+                }
+            } else {
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let jaVoice = voices.find(v => v.lang === 'ja-JP');
+                    if (jaVoice) theoryUtterance.voice = jaVoice;
+                }
+            }
+
+            theoryUtterance.onend = () => {
+                isPlayingTheory = false; btnText.innerText = "法音を聴く";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                if(isAndroid) sysUtterances = sysUtterances.filter(u => u !== theoryUtterance);
+            };
+            
+            if (isAndroid) {
+                setTimeout(() => { window.speechSynthesis.speak(theoryUtterance); }, 150);
+            } else {
+                window.speechSynthesis.speak(theoryUtterance);
+            }
+            isPlayingTheory = true;
+            btnText.innerText = "聴くのをやめる"; btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    if (typeof closeTheoryDrawer === "function") {
+        const originalCloseTheoryDrawer = closeTheoryDrawer;
+        closeTheoryDrawer = function() {
+            if (isPlayingTheory) toggleTheoryAudio();
+            originalCloseTheoryDrawer();
+        }
+    }
+
+        generateTopology(); render();
+    </script>
+</body>
+</html>

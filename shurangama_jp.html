@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest_jp.json">
+    <title>悟りを開く楞厳 ． 常住一真心</title>
+    <style>
+        :root {
+            --bg-deep: #020205; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --silver: #e0e0e0;
+            --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; overscroll-behavior: none;
+            -webkit-touch-callout: none; 
+            -webkit-user-select: none;   
+            -khtml-user-select: none;    
+            -moz-user-select: none;      
+            -ms-user-select: none;       
+            user-select: none;           
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px;
+            background: transparent; border-left: 2px solid rgba(139,168,156,0.6); 
+            padding: 10px 20px; z-index: 100; transition: 1s; pointer-events: none;
+        }
+        .status-title { font-size: 1.15rem; font-weight: bold; color: var(--cyan); letter-spacing: 2px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); transition: 1s;}
+        .status-desc { font-size: 0.85rem; color: #bbb; line-height: 1.8; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); transition: 1s;}
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; transition: background 0.8s; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+        #lengyan-flash {
+            position: absolute; inset: 0; background: #ffffff; z-index: 50; opacity: 0;
+            pointer-events: none; transition: opacity 0.1s ease-out;
+        }
+
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 12px; transition: opacity 1s;}
+        
+        .switch-btn {
+            width: 85%; max-width: 320px; justify-content: center;
+            background: linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(139,168,156,0.4); color: var(--cyan);
+            padding: 14px 20px; border-radius: 30px; font-size: 1rem; font-weight: bold; letter-spacing: 2px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(139,168,156,0.1);
+        }
+        .switch-btn:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(139,168,156,0.5); }
+        .switch-btn.gold-mode { border-color: rgba(212,175,55,0.5); color: var(--gold); box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1); }
+        
+        #theory-btn { border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,10,15,0.8); }
+
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(139,168,156,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(139,168,156,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        
+        .humble-statement { font-size: 0.85rem; color: #b0b0b0; line-height: 1.8; text-align: justify; padding: 20px; border: 1px solid rgba(139,168,156,0.2); border-radius: 12px; background: rgba(10,15,20,0.3); margin-bottom: 50px; }
+        
+        .main-title { color: var(--cyan); font-size: 1.5rem; letter-spacing: 3px; text-align: center; margin-bottom: 50px; text-shadow: 0 0 15px rgba(139,168,156,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); margin: 15px auto 0; }
+        
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 24px; height: 24px; stroke: var(--cyan); fill: none; stroke-width: 1.5; filter: drop-shadow(0 0 5px rgba(139,168,156,0.4)); flex-shrink: 0;}
+        .c-title { color: var(--cyan); font-size: 1.15rem; letter-spacing: 1.5px; font-weight: bold; }
+        .c-text { color: var(--text-main); font-size: 0.95rem; line-height: 1.9; text-align: justify; padding-left: 39px; letter-spacing: 0.8px;}
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="back-btn" onclick="window.location.href='index_jp.html?screen=3'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        道場へ戻る
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title" id="s-title">反聞自性 ． 耳根円通</div>
+        <div class="status-desc" id="s-desc">「入流亡所、動静二相了然として生ぜず。」<br>長押ししてスワイプし、自性の力で喧騒の音波を鎮める。</div>
+    </div>
+
+    <section class="matrix-section" id="bg-section">
+        <canvas id="realmCanvas"></canvas>
+        <div id="lengyan-flash"></div> 
+        
+        <div class="ui-layer" id="ui-layer">
+            <button class="switch-btn" id="btn-ergen" onclick="toggleRealm(0)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke-dasharray="2 4"/>
+                    <circle cx="12" cy="12" r="4" fill="currentColor"/>
+                </svg>
+                <span id="text-ergen">反聞自性 ． 観音法門</span>
+            </button>
+            <button class="switch-btn gold-mode" id="btn-nianfo" onclick="toggleRealm(1)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="8" stroke="currentColor"/>
+                    <circle cx="12" cy="12" r="3" fill="var(--gold)"/>
+                </svg>
+                <span id="text-nianfo">都摂六根 ． 勢至法門</span>
+            </button>
+            
+            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                楞厳の常住真心を探求する
+            </button>
+            
+            <div style="color:rgba(139,168,156,0.6); font-size:0.75rem; letter-spacing:2px; margin-top:5px;" id="drag-hint">長押し ． 見道の境地を起動する</div>
+        </div>
+    </section>
+
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()">
+            <div class="close-bar"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+                <div style="color:var(--cyan); font-size:0.85rem; letter-spacing:2px; font-weight:bold; cursor:pointer;" onclick="closeTheoryDrawer()">法巻をしまう</div>
+                <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                    <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                    <span id="tts-text">法音を聴く</span>
+                </div>
+            </div>
+        </div>
+        <div class="theory-container" id="theory-content-box">
+            <div class="humble-statement">法海は浩瀚であり、ただ仏と仏のみが究め尽くすことができます。本文は一介の在家居士が、経教の論理と祖師大徳の注釈に基づき、如来の真実義を探求しようとする修学の略影に過ぎません。未熟な点や誤りがあれば、すべて個人の智識の限界によるものであり、三宝の加被を祈り、同修の皆様と共に鑑みんことを願います。</div>
+            
+            <h1 class="main-title">悟りを開く楞厳 ． 常住真心</h1>
+            
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg>
+                    <div class="c-title">第一章：楞厳大定 ． 三位次第</div>
+                </div>
+                <div class="c-text">古徳曰く、「開悟は楞厳に在り。」この経は法界の解剖の如く、誰もが本来具える不生不滅の「常住真心」を詳述しています。経には修持の厳格な次第が詳列されています：初期の開悟である「見道位」から清浄な本性を認識し、「修道位」を経て生活の様々な塵労の習気を修正し、最終的に「証道位」に至り仏果の究竟涅槃に契入します。これらの次第は、凡夫から円満な覚悟へと向かう具体的な道筋を行者に指し示しています。</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><circle cx="12" cy="12" r="4"/></svg>
+                    <div class="c-title">第二章：観音普門 ． 耳根入流</div>
+                </div>
+                <div class="c-text">観世音菩薩の「耳根円通」は、おそらく娑婆の衆生が最も契入しやすい無門の門でしょう。大士は外に向かって生滅の音の塵を追わず、自性を反聞し、その「聞く能力」の本体を聴きます。「入流亡所」の際、動静の二相は了然として生じません。六根の攀縁が止み、意識の境界が消え去った時、そこにあるのは無尽の清浄な空性と普遍なる法界の慈悲だけです。</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/></svg>
+                    <div class="c-title">第三章：双聖の脇侍 ． 極楽への導帰</div>
+                </div>
+                <div class="c-text">この経には二十五聖が自ら円通法門を述べる様子が詳列され、仏陀は機根に応じて教えを説き、道は異なれど終局は同じに帰します。観音の「耳根円通」と大勢至の「念仏円通」、これら二大士はちょうど阿弥陀仏の左右の脇侍でもあります。これらの隠喩は次のようなことを予示しているようです：法門は異なっても、大乗経典は最終的に皆極楽蓮邦へと導帰するのではないかと。善財童子の五十三参のように、毎回の参訪で必ず先に「無上菩提心」を説くように、この弥陀の悲願と「波長を合わせる」大菩提心こそが、成仏への唯一の金鍵なのかもしれません。</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <div class="c-title">第四章：陰魔の幻相 ． 殊途同帰</div>
+                </div>
+                <div class="c-text">行者が修道位において定力を次第に深めると、あるいは「五十陰魔」と呼ばれる色・受・想・行・識の五陰の魔境を経験するかもしれません。これらは皆真心の顕化する幻相であり、幻に執着すれば魔道に陥りやすく、これに乗じて六根の攀縁を滅し空性に契入できれば、魔境は自ずと退きます。仏陀がこれらを詳述したのは、衆生を脅かすためではなく、行者が煩悩障と所知障を打ち破り、万法が帰一するあの常住真心を体悟するのを助けるためです。</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/></svg>
+                    <div class="c-title">第五章：大勢至尊 ． 大千を震動す</div>
+                </div>
+                <div class="c-text">その法身を究めれば、菩薩には本来男女の性別という幻相はありません。教法が東伝し、衆生の機感に応じるため、多くの大士の姿は女性の姿として現れるようになりました。古徳の微言によれば、大勢至菩薩が片足を地につければ、大千世界は皆震動するかのようです。この菩薩は智慧と光明の能力を代表し衆生をあまねく照らし、大乗仏法の剛健で勇猛な、無明を打ち破る磅礴たる大勢を隠喩しています。</div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="var(--gold)"/></svg>
+                    <div class="c-title">第六章：念仏円通 ． 都摂六根</div>
+                </div>
+                <div class="c-text">二十五円通の中で、「念仏円通」はおそらく自力修持の極致の方便でしょう。大士は「六根を都摂し、浄念相継ぐ」ことを主張し、一句の仏号で眼・耳・鼻・舌・身・意の妄想を収め、妄識を清浄な仏性へと転化させます。一見方便を仮らないように見えますが、実は自ら心開を得るのです。いわゆる念仏して一心不乱に至るは、たとえ声声相継ぐ「十念」であっても、もし心の波長が弥陀の悲願と「同調」できれば、願に随って往生を得て、あの不生不滅の無量寿光に契入できるのです。</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('realmCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    let currentRealm = 0; 
+    let time = 0;
+
+    let ergenParticles = [];
+    let nianfoParticles = [];
+    
+    let angleX = 0.6, angleY = 0;
+    let isDragging = false;
+    
+    let silenceRadius = 0; 
+    let gravityForce = 0;  
+    let flashIntensity = 0; 
+
+    const FOV = 400; 
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+    }
+    window.addEventListener('resize', resize); resize();
+
+    function initEngines() {
+        ergenParticles = [];
+        for(let r = 20; r <= 800; r += 15) {
+            let count = Math.floor(r * 0.4);
+            for(let i=0; i<count; i++) {
+                let theta = (i / count) * Math.PI * 2;
+                ergenParticles.push({ baseX: r * Math.cos(theta), baseY: r * Math.sin(theta), dist: r, theta: theta, s: Math.random() * 1.5 + 0.5 });
+            }
+        }
+
+        nianfoParticles = [];
+        for(let i=0; i<1500; i++) {
+            nianfoParticles.push({
+                x: (Math.random() - 0.5) * 1200, y: (Math.random() - 0.5) * 1200, z: (Math.random() - 0.5) * 1200,
+                vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, vz: (Math.random() - 0.5) * 2,
+                hue: Math.random() * 360, isPurified: false, s: Math.random() * 2 + 1
+            });
+        }
+    }
+
+    function project3D(x, y, z) {
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+        let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
+        if(z2 < -FOV+10) return null;
+        let scale = FOV / (FOV + z2); 
+        return { x: (width/2) + x2*scale, y: (height/2) - y1*scale - 50, scale: scale, z: z2 };
+    }
+
+    function renderErgen() {
+        if(isDragging) silenceRadius += (600 - silenceRadius) * 0.05;
+        else silenceRadius *= 0.95;
+
+        if(!isDragging) angleY += 0.001; 
+
+        let projected = [];
+        ergenParticles.forEach(p => {
+            let waveZ = Math.sin(p.dist * 0.05 - time * 2) * 40;
+            let influence = Math.max(0, 1 - (p.dist / (silenceRadius + 1)));
+            waveZ *= (1 - influence); 
+            
+            let proj = project3D(p.baseX, p.baseY, waveZ);
+            if(proj) {
+                let r = Math.floor(139 + (255 - 139) * influence);
+                let g = Math.floor(168 + (255 - 168) * influence);
+                let b = Math.floor(156 + (255 - 156) * influence);
+                let a = 0.3 + influence * 0.7;
+
+                projected.push({ 
+                    x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, 
+                    c: `rgba(${r},${g},${b},${a})`, s: p.s * (1 + influence * 0.5), glow: influence > 0.5
+                });
+            }
+        });
+
+        projected.sort((a,b) => b.z - a.z);
+
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.sc; if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.x, p.y, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if(p.glow) { ctx.shadowBlur = 10 * p.sc; ctx.shadowColor = '#ffffff'; } else { ctx.shadowBlur = 0; }
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function renderNianfo() {
+        if(isDragging) gravityForce += (1 - gravityForce) * 0.05;
+        else gravityForce *= 0.95;
+
+        flashIntensity *= 0.92;
+        document.getElementById('lengyan-flash').style.opacity = flashIntensity;
+
+        if(!isDragging) angleY += 0.002;
+
+        let projected = [];
+        nianfoParticles.forEach(p => {
+            p.x += p.vx; p.y += p.vy; p.z += p.vz;
+            let distToCenter = Math.sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+            
+            if(gravityForce > 0.1) {
+                let pull = (gravityForce * 1500) / (distToCenter + 10);
+                p.vx -= (p.x / distToCenter) * pull; p.vy -= (p.y / distToCenter) * pull; p.vz -= (p.z / distToCenter) * pull;
+                p.vx *= 0.9; p.vy *= 0.9; p.vz *= 0.9;
+            } else {
+                p.vx += (Math.random()-0.5)*0.5; p.vy += (Math.random()-0.5)*0.5; p.vz += (Math.random()-0.5)*0.5;
+                if(p.vx > 3) p.vx = 3; if(p.vy > 3) p.vy = 3; if(p.vz > 3) p.vz = 3;
+            }
+
+            if(p.x > 600) p.x = -600; if(p.x < -600) p.x = 600;
+            if(p.y > 600) p.y = -600; if(p.y < -600) p.y = 600;
+            if(p.z > 600) p.z = -600; if(p.z < -600) p.z = 600;
+
+            if(distToCenter < 120 * gravityForce + 30) { p.isPurified = true; } 
+            else if (gravityForce < 0.2 && Math.random() > 0.98) { p.isPurified = false; }
+
+            let proj = project3D(p.x, p.y, p.z);
+            if(proj) {
+                let color = p.isPurified ? `rgba(243,229,171,${0.6 + gravityForce*0.4})` : `hsla(${p.hue}, 80%, 60%, 0.5)`;
+                projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: color, s: p.s, isGold: p.isPurified });
+            }
+        });
+
+        projected.sort((a,b) => b.z - a.z);
+
+        if(gravityForce > 0.05) {
+            let coreProj = project3D(0,0,0);
+            if(coreProj) {
+                ctx.globalCompositeOperation = 'screen';
+                let coreR = 50 * coreProj.scale * gravityForce * (1 + Math.sin(time*10)*0.1);
+                let grad = ctx.createRadialGradient(coreProj.x, coreProj.y, 0, coreProj.x, coreProj.y, coreR * 3);
+                grad.addColorStop(0, `rgba(255, 255, 255, ${gravityForce})`);
+                grad.addColorStop(0.2, `rgba(243, 229, 171, ${gravityForce * 0.8})`);
+                grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+                ctx.beginPath(); ctx.arc(coreProj.x, coreProj.y, coreR * 3, 0, Math.PI*2);
+                ctx.fillStyle = grad; ctx.fill();
+            }
+        }
+
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.sc * (1 + (p.isGold ? gravityForce : 0)); 
+            if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.x, p.y, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if(p.isGold && gravityForce > 0.5) { ctx.shadowBlur = 15 * p.sc; ctx.shadowColor = '#f3e5ab'; } 
+            else { ctx.shadowBlur = 0; }
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function animate() {
+        ctx.fillStyle = 'rgba(2, 2, 5, 0.5)';
+        ctx.fillRect(0, 0, width, height);
+        time += 0.02;
+        if (currentRealm === 0) renderErgen(); else renderNianfo();
+        requestAnimationFrame(animate);
+    }
+
+    function toggleRealm(type) {
+        if(currentRealm === type) return;
+        currentRealm = type;
+        stopAllSounds();
+
+        let title = document.getElementById('s-title'); let desc = document.getElementById('s-desc');
+        let btnE = document.getElementById('btn-ergen'); let btnN = document.getElementById('btn-nianfo');
+        let hint = document.getElementById('drag-hint');
+
+        if (type === 0) {
+            title.innerText = "反聞自性 ． 耳根円通"; desc.innerHTML = "「入流亡所、動静二相了然として生ぜず。」<br>長押ししてスワイプし、自性の力で喧騒の音波を鎮める。";
+            title.style.color = 'var(--cyan)';
+            btnE.style.background = 'rgba(10,20,15,0.9)'; btnE.style.color = 'var(--cyan)'; btnE.style.borderColor = 'var(--cyan)';
+            btnE.classList.remove('gold-mode');
+            btnN.style.background = 'linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95))'; btnN.style.color = 'var(--gold)'; btnN.style.borderColor = 'rgba(212,175,55,0.5)';
+            btnN.classList.add('gold-mode');
+            hint.innerText = "長押し ． 喧騒を破る空性を現す";
+            angleX = 0.6; angleY = 0; 
+        } else {
+            title.innerText = "都摂六根 ． 念仏円通"; desc.innerHTML = "「方便を仮らず、自ら心開を得る。」<br>長押しして仏号を凝集し、五彩の陰魔を純金の法身へと化す。";
+            title.style.color = 'var(--gold)';
+            btnN.style.background = 'rgba(20,15,5,0.9)'; btnN.style.color = 'var(--solid-gold)'; btnN.style.borderColor = 'var(--solid-gold)';
+            btnN.classList.remove('gold-mode');
+            btnE.style.background = 'linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95))'; btnE.style.color = 'var(--cyan)'; btnE.style.borderColor = 'rgba(139,168,156,0.4)';
+            hint.innerText = "長押し ． 一句の仏号で五十陰魔を飲み込む";
+            angleX = 0.2; angleY = 0; 
+        }
+    }
+
+    function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+    function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+    document.getElementById('theory-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
+    document.getElementById('ui-layer').addEventListener('pointerdown', (e) => e.stopPropagation());
+
+    function onDown(e) { 
+        if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; 
+        if(e.cancelable && e.type.startsWith('touch')) { e.preventDefault(); }
+        isDragging = true; 
+        if(currentRealm === 0) startErgenSound(); else startNianfoSound();
+    }
+    
+    function onUp() { 
+        if(!isDragging) return;
+        isDragging = false; 
+        if(currentRealm === 0) fadeErgenSound();
+        else {
+            fadeNianfoSound();
+            if(gravityForce > 0.8) {
+                flashIntensity = 1; 
+                document.getElementById('lengyan-flash').style.opacity = flashIntensity;
+            }
+        }
+    }
+
+    canvas.addEventListener('mousedown', onDown); window.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchstart', onDown, {passive: false}); window.addEventListener('touchend', onUp);
+
+    let audioCtx = null;
+    let ergenOsc = null; let ergenGain = null; 
+    let nianfoBuffer = null; let nianfoSource = null; let nianfoGain = null; 
+
+    function initAudioContext() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            createSyntheticNianfoBuffer(); 
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function startErgenSound() {
+        initAudioContext();
+        if(ergenOsc) return;
+        ergenOsc = audioCtx.createOscillator(); ergenOsc.type = 'sine'; ergenOsc.frequency.setValueAtTime(55, audioCtx.currentTime); 
+        ergenGain = audioCtx.createGain(); ergenGain.gain.setValueAtTime(0, audioCtx.currentTime); 
+        ergenGain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 2); 
+        ergenOsc.connect(ergenGain); ergenGain.connect(audioCtx.destination); ergenOsc.start();
+    }
+
+    function fadeErgenSound() {
+        if(!ergenGain || !ergenOsc) return;
+        ergenGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1); 
+        let oscToStop = ergenOsc; setTimeout(() => { oscToStop.stop(); }, 1100);
+        ergenOsc = null; ergenGain = null;
+    }
+
+    function startNianfoSound() {
+        initAudioContext();
+        if(!nianfoBuffer) return; 
+        if(nianfoSource) { nianfoSource.stop(); nianfoSource = null; }
+        nianfoSource = audioCtx.createBufferSource(); nianfoSource.buffer = nianfoBuffer; nianfoSource.loop = true; 
+        nianfoGain = audioCtx.createGain(); nianfoGain.gain.setValueAtTime(0, audioCtx.currentTime); 
+        nianfoGain.gain.linearRampToValueAtTime(0.7, audioCtx.currentTime + 1); 
+        nianfoSource.connect(nianfoGain); nianfoGain.connect(audioCtx.destination); nianfoSource.start();
+    }
+
+    function fadeNianfoSound() {
+        if(!nianfoGain || !nianfoSource) return;
+        nianfoGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.8); 
+        let sourceToStop = nianfoSource; setTimeout(() => { try { sourceToStop.stop(); } catch(e){} }, 900);
+        nianfoSource = null; nianfoGain = null;
+    }
+
+    function stopAllSounds() { if(ergenOsc) fadeErgenSound(); if(nianfoSource) fadeNianfoSound(); }
+
+    function createSyntheticNianfoBuffer() {
+        const length = audioCtx.sampleRate * 3; 
+        const buffer = audioCtx.createBuffer(1, length, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < length; i++) { data[i] = Math.sin(i * 0.015) * Math.exp(-i * 0.0001) * (1 + Math.sin(i * 0.00001)) * 0.2; }
+        nianfoBuffer = buffer;
+    }
+
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+    window.sysUtterances = []; 
+
+    if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = function() { speechSynthesis.getVoices(); };
+    }
+
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("お使いのデバイスは音声機能に対応していません");
+        const btnText = document.getElementById('tts-text'); const btnIcon = document.getElementById('tts-icon');
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel(); isPlayingTheory = false; btnText.innerText = "法音を聴く";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            initAudioContext(); 
+            let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text, #theory-content-box .humble-statement');
+            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('。');
+            textToRead = textToRead.replace(/第一章：/g, '第一章：').replace(/第二章：/g, '第二章：').replace(/第三章：/g, '第三章：').replace(/第四章：/g, '第四章：').replace(/第五章：/g, '第五章：').replace(/第六章：/g, '第六章：');
+            
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead); theoryUtterance.lang = 'ja-JP'; theoryUtterance.rate = 0.85; 
+            if (isAndroid) {
+                window.sysUtterances.push(theoryUtterance);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let jaVoice = voices.find(v => v.lang === 'ja-JP' && v.name.includes('Google')) || voices.find(v => v.lang.includes('ja'));
+                    if (jaVoice) theoryUtterance.voice = jaVoice;
+                }
+            } else {
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let jaVoice = voices.find(v => v.lang === 'ja-JP');
+                    if (jaVoice) theoryUtterance.voice = jaVoice;
+                }
+            }
+            theoryUtterance.onend = () => {
+                isPlayingTheory = false; btnText.innerText = "法音を聴く";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                if(isAndroid) window.sysUtterances = window.sysUtterances.filter(u => u !== theoryUtterance);
+            };
+            setTimeout(() => { window.speechSynthesis.speak(theoryUtterance); }, isAndroid ? 150 : 50);
+            isPlayingTheory = true; btnText.innerText = "聴くのをやめる";
+            btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    const originalCloseTheoryDrawer = closeTheoryDrawer;
+    closeTheoryDrawer = function() { if (isPlayingTheory) toggleTheoryAudio(); originalCloseTheoryDrawer(); }
+
+    initEngines(); toggleRealm(0); animate();
+</script>
+</body>
+</html>

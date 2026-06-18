@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="ja-JP">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest_jp.json">
+    <title>覚知儀式</title>
+    <style>
+        body {
+            margin: 0; padding: 0; background-color: #020202; color: #f3e5ab;
+            font-family: "Hiragino Mincho ProN", "Yu Mincho", "PingFang TC", "Microsoft JhengHei", serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; overflow: hidden; 
+            user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+        .stars {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
+            background-image: radial-gradient(2px 2px at 20px 30px, #ffd700, rgba(0,0,0,0)),
+                              radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+                              radial-gradient(2px 2px at 60px 150px, #d4af37, rgba(0,0,0,0)),
+                              radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
+                              radial-gradient(2px 2px at 130px 100px, #ffd700, rgba(0,0,0,0));
+            background-repeat: repeat; background-size: 200px 200px; opacity: 0.35;
+            animation: twinkle 3s infinite alternate ease-in-out;
+        }
+        @keyframes twinkle { 0% {opacity: 0.2;} 100% {opacity: 0.6;} }
+
+        .realm-bg {
+            position: absolute; top: 50%; left: 50%; width: 150vw; height: 150vw;
+            transform: translate(-50%, -50%); z-index: 0; opacity: 0.12; pointer-events: none;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .realm-bg svg { width: 100%; height: 100%; max-width: 900px; max-height: 900px; animation: slowSpin 120s linear infinite; }
+        .realm-inner { animation: slowSpinReverse 80s linear infinite; transform-origin: center; }
+        @keyframes slowSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes slowSpinReverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+
+        .back-link { 
+            position: absolute; top: 25px; left: 25px; color: #FFD700; text-decoration: none; 
+            z-index: 100; font-size: 0.95rem; letter-spacing: 2px; transition: 0.3s; text-shadow: 0 0 10px rgba(212,175,55,0.8);
+        }
+        .back-link:hover { color: #fff; text-shadow: 0 0 15px #FFD700; transform: scale(1.05); }
+
+        #btn-info {
+            position: absolute; top: 25px; right: 25px; z-index: 100;
+            color: #d4af37; font-size: 0.85rem; letter-spacing: 2px; cursor: pointer; 
+            display: flex; align-items: center; gap: 6px; opacity: 0.7; transition: all 0.4s ease;
+            background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 20px;
+            backdrop-filter: blur(5px); border: 1px solid rgba(212,175,55,0.15);
+        }
+        #btn-info:hover, #btn-info:active { opacity: 1; transform: scale(0.95); filter: drop-shadow(0 0 8px #d4af37); background: rgba(212,175,55,0.05); }
+        #btn-info svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+        .phase-container {
+            position: absolute; z-index: 10; width: 90%; max-width: 500px;
+            max-height: 90vh; overflow-y: auto; scrollbar-width: none; 
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            opacity: 0; pointer-events: none; transition: all 0.8s ease-in-out;
+            transform: translateY(20px) scale(0.95); padding: 20px 0; 
+        }
+        .phase-container::-webkit-scrollbar { display: none; }
+        .phase-container.active { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+        
+        .glass-panel {
+            background: rgba(10, 10, 10, 0.85); border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 20px; padding: 30px 25px; width: 100%; box-sizing: border-box;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9), 0 0 20px rgba(212,175,55,0.05) inset;
+            text-align: center; backdrop-filter: blur(12px); margin: auto; 
+        }
+
+        h2 { font-size: 1.35rem; color: #FFD700; letter-spacing: 5px; font-weight: normal; margin-top: 0; text-shadow: 0 0 15px rgba(212,175,55,0.5); border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 20px; margin-bottom: 25px; }
+        
+        :root { --gold-grad: linear-gradient(145deg, #FFD700 0%, #D4AF37 40%, #B8860B 60%, #D4AF37 80%); }
+        .gold-stamping-btn {
+            width: 100%; min-height: 60px; border: none; border-radius: 12px; margin-top: 15px; padding: 15px 10px;
+            background: var(--gold-grad); color: rgba(0,0,0,0.85); font-size: 1.05rem; letter-spacing: 3px; 
+            font-family: "Hiragino Mincho ProN", "Yu Mincho", "PingFang TC", serif; box-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 1px 1px rgba(255,255,255,0.3) inset;
+            cursor: pointer; transition: 0.3s ease; position: relative; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .gold-stamping-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212,175,55,0.4); }
+        .gold-stamping-btn:disabled { background: linear-gradient(180deg, #333, #111); color: #666; box-shadow: none; cursor: not-allowed;}
+
+        .lotus-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.5s ease; margin: 20px 0; }
+        
+        .lotus-wrapper::before {
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80%; height: 80%; border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,215,0,0.25) 0%, rgba(212,175,55,0) 70%);
+            animation: breatheGlow 3s infinite alternate ease-in-out; z-index: -1;
+        }
+        @keyframes breatheGlow { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; } 100% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; } }
+        
+        .lotus-svg { animation: slowSpin 40s linear infinite; filter: drop-shadow(0 0 15px rgba(212,175,55,0.5)); transition: transform 0.5s; }
+        
+        .roulette-petal { transition: all 0.1s ease; opacity: 0.4; filter: brightness(0.6); }
+        .petal-highlight { filter: brightness(3.5) contrast(1.5) drop-shadow(0 0 20px #FFD700) !important; opacity: 1 !important; }
+        .petal-winner { filter: brightness(4) contrast(1.5) drop-shadow(0 0 40px #FFF) !important; opacity: 1 !important; transform: scale(1.05); transform-origin: center;}
+        
+        .lotus-heart-pulse { animation: heartPulse 1.5s infinite alternate; }
+        @keyframes heartPulse { 0% { r: 18; opacity: 0.8; filter: drop-shadow(0 0 5px #FFD700); } 100% { r: 24; opacity: 1; filter: drop-shadow(0 0 25px #FFF); } }
+
+        .quest-box { border-top: 1px dashed rgba(212,175,55,0.3); padding-top: 25px; margin: 15px 0 25px 0; text-align: left; }
+        .checkbox-label { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; color: #d4af37; font-size: 0.95rem; line-height: 1.6;}
+        input[type="checkbox"] { accent-color: #D4AF37; width: 18px; height: 18px; margin-top: 2px; cursor: pointer;}
+        
+        #smoke-container { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: 100px; height: 250px; pointer-events: none; z-index: 5; display: none; }
+        .smoke-particle { position: absolute; bottom: 0; left: 50%; background: #fff; border-radius: 50%; opacity: 0; filter: blur(6px); }
+        @keyframes smokeRise { 0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; } 20% { opacity: 0.3; } 60% { transform: translate(-80%, -150px) scale(2); opacity: 0.15; } 100% { transform: translate(-30%, -250px) scale(3); opacity: 0; } }
+        .progress-bar { position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: rgba(255,255,255,0.4); z-index: 1; transition: width 0.1s linear; }
+
+        .oracle-box { background: linear-gradient(180deg, rgba(20,20,20,0.9), rgba(5,5,5,1)); border: 1px solid #d4af37; padding: 25px 20px; border-radius: 12px; margin: 0 0 20px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.9), 0 0 20px rgba(212,175,55,0.15) inset;}
+        .chosen-petal-showcase { display: flex; justify-content: center; margin-bottom: 20px; animation: floatPetal 3s infinite alternate ease-in-out; }
+        @keyframes floatPetal { 0% { transform: translateY(0); filter: drop-shadow(0 0 15px #FFD700) brightness(1.5); } 100% { transform: translateY(-10px); filter: drop-shadow(0 0 35px #FFF) brightness(2); } }
+        
+        #alert-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 1px solid #FFD700; color: #FFF; padding: 15px 30px; border-radius: 8px; z-index: 999; box-shadow: 0 0 20px rgba(212,175,55,0.5); display: none; width: 80%; max-width: 400px; text-align: center; letter-spacing: 1px; line-height: 1.6;}
+        
+        .light-orb { width: 60px; height: 60px; background: radial-gradient(circle, #fff 10%, #FFD700 50%, transparent 80%); border-radius: 50%; margin: 25px auto; filter: blur(2px); animation: pulse 2s infinite alternate; }
+        @keyframes pulse { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.4); opacity: 1; box-shadow: 0 0 40px #FFD700; } }
+        .orb-expand { animation: expandUniverse 1s forwards ease-in; }
+        @keyframes expandUniverse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(100); opacity: 0; } }
+        
+        #full-screen-flash { position: fixed; inset: 0; background: #fff; z-index: 999999; opacity: 0; pointer-events: none; transition: opacity 2s ease-out; }
+        
+        #info-overlay {
+            position: fixed; inset: 0; z-index: 9999999; background: rgba(2, 2, 4, 0.85); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.6s ease;
+        }
+        #info-overlay.show { display: flex; opacity: 1; }
+        #info-content {
+            position: relative; 
+            width: 88%; max-width: 480px; max-height: 80vh; overflow-y: auto;
+            background: linear-gradient(145deg, rgba(15, 20, 25, 0.95), rgba(5, 8, 10, 0.98));
+            border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 16px; 
+            padding: 40px 30px; text-align: justify; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9), inset 0 0 30px rgba(212,175,55,0.05);
+            scrollbar-width: none; 
+        }
+        #info-content::-webkit-scrollbar { display: none; }
+        
+        .close-info-btn {
+            position: absolute; top: 15px; right: 20px; 
+            color: #8ba89c; font-size: 1.6rem; cursor: pointer; 
+            font-weight: bold; transition: 0.3s; z-index: 10;
+        }
+        .close-info-btn:active { color: #f3e5ab; transform: scale(0.9); }
+
+        .info-title { color: #f3e5ab; font-size: 1.25rem; margin-bottom: 25px; letter-spacing: 4px; text-shadow: 0 0 15px rgba(212,175,55,0.5); font-weight: 300; text-align: center; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 15px;}
+        .info-text { color: #b0c4de; font-size: 0.95rem; line-height: 2.2; letter-spacing: 1.5px; font-weight: 300; }
+    </style>
+</head>
+<body>
+
+    <div id="alert-box"></div>
+    <a href="index_jp.html?screen=3" class="back-link">← 道場へ戻る</a>
+    
+    <div id="btn-info" onclick="toggleInfo(true)">
+        <svg viewBox="0 0 24 24">
+            <path d="M4 6h16M4 12h16M4 18h10" stroke-linecap="round"/>
+            <circle cx="18" cy="18" r="2" fill="currentColor" stroke="none" />
+        </svg>
+        法界縁起
+    </div>
+
+    <div class="stars"></div>
+
+    <div class="realm-bg">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <g fill="none" stroke="rgba(212,175,55,0.8)" stroke-width="0.5">
+                <circle cx="100" cy="100" r="90" stroke-dasharray="4 8"/> <circle cx="100" cy="100" r="70"/>
+                <g class="realm-inner"> <rect x="50" y="50" width="100" height="100" transform="rotate(45 100 100)"/> <circle cx="100" cy="100" r="40" stroke-dasharray="2 4"/> </g>
+            </g>
+        </svg>
+    </div>
+
+    <div id="smoke-container"></div>
+    <div id="full-screen-flash"></div>
+
+    <div id="phase-0" class="phase-container active">
+        <div class="lotus-wrapper" onclick="checkAndGoToPhase1()">
+            <svg class="lotus-svg" width="280" height="280" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="goldGrad0" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#FFF8D6"/><stop offset="25%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#996B11"/><stop offset="75%" stop-color="#D4AF37"/><stop offset="100%" stop-color="#5C400A"/>
+                    </linearGradient>
+                    <filter id="glow0" x="-50%" y="-50%" width="200%" height="200%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#000" flood-opacity="0.9"/>
+                        <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#FFD700" flood-opacity="0.4"/>
+                    </filter>
+                    <radialGradient id="centerGlow0" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#FFFFFF"/><stop offset="40%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/>
+                    </radialGradient>
+                    <g id="pWide0"><path d="M 200 200 C 160 100, 160 30, 200 0 C 240 30, 240 100, 200 200 Z" fill="url(#goldGrad0)" filter="url(#glow0)" stroke="rgba(255,255,255,0.4)" stroke-width="1"/></g>
+                    <g id="pNarr0"><path d="M 200 200 C 175 120, 180 50, 200 15 C 220 50, 225 120, 200 200 Z" fill="url(#goldGrad0)" filter="url(#glow0)" stroke="rgba(255,255,255,0.6)" stroke-width="0.8"/></g>
+                </defs>
+                <circle cx="200" cy="200" r="160" fill="none" stroke="rgba(212,175,55,0.2)" stroke-width="2" stroke-dasharray="2 6"/>
+                <g opacity="0.6">
+                    <use href="#pWide0" transform="rotate(0 200 200) scale(0.9) translate(20 20)"/><use href="#pWide0" transform="rotate(22.5 200 200) scale(0.9) translate(20 20)"/><use href="#pWide0" transform="rotate(45 200 200) scale(0.9) translate(20 20)"/><use href="#pWide0" transform="rotate(67.5 200 200) scale(0.9) translate(20 20)"/><use href="#pWide0" transform="rotate(90 200 200) scale(0.9) translate(20 20)"/><use href="#pWide0" transform="rotate(112.5 200 200) scale(0.9) translate(20 20)"/><use href="#pWide0" transform="rotate(135 200 200) scale(0.9) translate(20 20)"/><use href="#pWide0" transform="rotate(157.5 200 200) scale(0.9) translate(20 20)"/><use href="#pWide0" transform="rotate(180 200 200) scale(0.9) translate(20 20)"/><use href="#pWide0" transform="rotate(202.5 200 200) scale(0.9) translate(20 20)"/><use href="#pWide0" transform="rotate(225 200 200) scale(0.9) translate(20 20)"/><use href="#pWide0" transform="rotate(247.5 200 200) scale(0.9) translate(20 20)"/><use href="#pWide0" transform="rotate(270 200 200) scale(0.9) translate(20 20)"/><use href="#pWide0" transform="rotate(292.5 200 200) scale(0.9) translate(20 20)"/><use href="#pWide0" transform="rotate(315 200 200) scale(0.9) translate(20 20)"/><use href="#pWide0" transform="rotate(337.5 200 200) scale(0.9) translate(20 20)"/>
+                </g>
+                <g>
+                    <use href="#pNarr0" transform="rotate(0 200 200) scale(0.65) translate(110 110)"/><use href="#pNarr0" transform="rotate(45 200 200) scale(0.65) translate(110 110)"/><use href="#pNarr0" transform="rotate(90 200 200) scale(0.65) translate(110 110)"/><use href="#pNarr0" transform="rotate(135 200 200) scale(0.65) translate(110 110)"/><use href="#pNarr0" transform="rotate(180 200 200) scale(0.65) translate(110 110)"/><use href="#pNarr0" transform="rotate(225 200 200) scale(0.65) translate(110 110)"/><use href="#pNarr0" transform="rotate(270 200 200) scale(0.65) translate(110 110)"/><use href="#pNarr0" transform="rotate(315 200 200) scale(0.65) translate(110 110)"/>
+                </g>
+                <circle cx="200" cy="200" r="22" fill="url(#centerGlow0)" filter="url(#glow0)"/>
+            </svg>
+
+            <h1 style="color:#FFD700; letter-spacing:8px; font-weight:normal; margin-top:25px; text-shadow:0 0 15px rgba(212,175,55,0.8); font-size:1.6rem;">金蓮解惑</h1>
+            <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; letter-spacing: 2px;">※ 蓮心に触れて結界を開く</p>
+        </div>
+    </div>
+
+    <div id="phase-1" class="phase-container">
+        <div class="glass-panel">
+            <h2>覚知の希求 · 法界への問い</h2>
+            <div style="font-size: 0.95rem; color: rgba(255,255,255,0.85); line-height: 1.8; letter-spacing: 1px; margin-bottom: 15px;">
+                困惑、焦燥、あるいは願いがあれば、<br><span style="color:#FFD700; font-size: 1.05rem; text-shadow: 0 0 5px rgba(255,215,0,0.5);">至誠をもって心に念じてください。</span><br><br>
+                深呼吸し、気を集めてください
+            </div>
+            
+            <div class="quest-box">
+                <p style="font-size: 0.95rem; color: #fff; margin-top:0; margin-bottom: 15px; text-align:center; letter-spacing: 2px; text-shadow: 0 0 5px rgba(212,175,55,0.5);">【 前置の願行を完了し、チェックを入れてください 】</p>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="questCheck" onchange="checkQuest()">
+                    <span>以下の願行の一つ、または全てを如実に修めました：<br>1. 一時間の静心禁語<br>2. ささやかなる布施の実行<br>3. 念仏三百遍による平心</span>
+                </label>
+            </div>
+            <button id="holdBtn" class="gold-stamping-btn" disabled>
+                <div id="progressBar" class="progress-bar"></div>
+                <span style="position:relative; z-index:2;">黙想し願行を完了した ． 長押しで気を集める</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="phase-2" class="phase-container" style="width: 100%;">
+        <h2 style="border:none; margin-bottom: 0; text-align:center; text-shadow:0 0 15px #FFD700;">波長同調完了</h2>
+        <p style="font-size:0.9rem; color:#fff; text-align:center; margin-top:10px; margin-bottom: 30px; letter-spacing: 2px;">直感で <span style="color:#FFD700;">金蓮の心</span> に触れ、覚知を抽出してください</p>
+        
+        <div class="lotus-wrapper" onclick="startRoulette()" style="width: 300px; height: 300px;">
+            <svg id="roulette-lotus" class="lotus-svg" width="100%" height="100%" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="goldGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#FFF8D6"/><stop offset="25%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#996B11"/><stop offset="75%" stop-color="#D4AF37"/><stop offset="100%" stop-color="#5C400A"/>
+                    </linearGradient>
+                    <filter id="glow2" x="-50%" y="-50%" width="200%" height="200%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#000" flood-opacity="0.9"/>
+                        <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#FFD700" flood-opacity="0.4"/>
+                    </filter>
+                    <radialGradient id="centerGlow2" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#FFFFFF"/><stop offset="40%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/>
+                    </radialGradient>
+                    <g id="pWide2"><path class="petal-path" d="M 200 200 C 160 100, 160 30, 200 0 C 240 30, 240 100, 200 200 Z" fill="url(#goldGrad2)" filter="url(#glow2)" stroke="rgba(255,255,255,0.4)" stroke-width="1"/></g>
+                    <g id="pNarr2"><path class="petal-path" d="M 200 200 C 175 120, 180 50, 200 15 C 220 50, 225 120, 200 200 Z" fill="url(#goldGrad2)" filter="url(#glow2)" stroke="rgba(255,255,255,0.6)" stroke-width="0.8"/></g>
+                </defs>
+                <circle cx="200" cy="200" r="160" fill="none" stroke="rgba(212,175,55,0.2)" stroke-width="2" stroke-dasharray="2 6"/>
+                
+                <g class="roulette-petal"><use href="#pWide2" transform="rotate(0 200 200) scale(0.9) translate(20 20)"/></g>
+                <g class="roulette-petal"><use href="#pWide2" transform="rotate(22.5 200 200) scale(0.9) translate(20 20)"/></g>
+                <g class="roulette-petal"><use href="#pWide2" transform="rotate(45 200 200) scale(0.9) translate(20 20)"/></g>
+                <g class="roulette-petal"><use href="#pWide2" transform="rotate(67.5 200 200) scale(0.9) translate(20 20)"/></g>
+                <g class="roulette-petal"><use href="#pWide2" transform="rotate(90 200 200) scale(0.9) translate(20 20)"/></g>
+                <g class="roulette-petal"><use href="#pWide2" transform="rotate(112.5 200 200) scale(0.9) translate(20 20)"/></g>
+                <g class="roulette-petal"><use href="#pWide2" transform="rotate(135 200 200) scale(0.9) translate(20 20)"/></g>
+                <g class="roulette-petal"><use href="#pWide2" transform="rotate(157.5 200 200) scale(0.9) translate(20 20)"/></g>
+                <g class="roulette-petal"><use href="#pWide2" transform="rotate(180 200 200) scale(0.9) translate(20 20)"/></g>
+                <g class="roulette-petal"><use href="#pWide2" transform="rotate(202.5 200 200) scale(0.9) translate(20 20)"/></g>
+                <g class="roulette-petal"><use href="#pWide2" transform="rotate(225 200 200) scale(0.9) translate(20 20)"/></g>
+                <g class="roulette-petal"><use href="#pWide2" transform="rotate(247.5 200 200) scale(0.9) translate(20 20)"/></g>
+                <g class="roulette-petal"><use href="#pWide2" transform="rotate(270 200 200) scale(0.9) translate(20 20)"/></g>
+                <g class="roulette-petal"><use href="#pWide2" transform="rotate(292.5 200 200) scale(0.9) translate(20 20)"/></g>
+                <g class="roulette-petal"><use href="#pWide2" transform="rotate(315 200 200) scale(0.9) translate(20 20)"/></g>
+                <g class="roulette-petal"><use href="#pWide2" transform="rotate(337.5 200 200) scale(0.9) translate(20 20)"/></g>
+                
+                <g class="roulette-petal"><use href="#pNarr2" transform="rotate(0 200 200) scale(0.65) translate(110 110)"/></g>
+                <g class="roulette-petal"><use href="#pNarr2" transform="rotate(45 200 200) scale(0.65) translate(110 110)"/></g>
+                <g class="roulette-petal"><use href="#pNarr2" transform="rotate(90 200 200) scale(0.65) translate(110 110)"/></g>
+                <g class="roulette-petal"><use href="#pNarr2" transform="rotate(135 200 200) scale(0.65) translate(110 110)"/></g>
+                <g class="roulette-petal"><use href="#pNarr2" transform="rotate(180 200 200) scale(0.65) translate(110 110)"/></g>
+                <g class="roulette-petal"><use href="#pNarr2" transform="rotate(225 200 200) scale(0.65) translate(110 110)"/></g>
+                <g class="roulette-petal"><use href="#pNarr2" transform="rotate(270 200 200) scale(0.65) translate(110 110)"/></g>
+                <g class="roulette-petal"><use href="#pNarr2" transform="rotate(315 200 200) scale(0.65) translate(110 110)"/></g>
+                
+                <circle id="pulse-heart" cx="200" cy="200" r="22" fill="url(#centerGlow2)" filter="url(#glow2)" class="lotus-heart-pulse"/>
+            </svg>
+        </div>
+    </div>
+
+    <div id="phase-3" class="phase-container">
+        <div class="glass-panel">
+            <h2 style="border:none; margin-bottom: 10px;">法界よりの応答</h2>
+            
+            <div class="chosen-petal-showcase">
+                <svg width="60" height="100" viewBox="150 0 100 200" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="gGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#FFF8D6"/><stop offset="25%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#996B11"/><stop offset="75%" stop-color="#D4AF37"/><stop offset="100%" stop-color="#5C400A"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M 200 200 C 160 100, 160 30, 200 0 C 240 30, 240 100, 200 200 Z" fill="url(#gGrad3)" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+                </svg>
+            </div>
+
+            <div class="oracle-box">
+                <div id="oracleTitle" style="font-size: 1.15rem; color: #FFD700; margin-bottom: 15px; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,215,0,0.5);"></div>
+                
+                <div id="oracleVerse" style="color: #d4af37; font-size: 1.05rem; font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif; line-height: 1.6; margin-bottom: 15px; border-left: 2px solid rgba(212,175,55,0.5); padding-left: 15px; text-align: left; white-space: pre-wrap;"></div>
+                
+                <div id="oracleText" style="color: rgba(255,255,255,0.9); line-height: 1.8; text-align: justify; font-size: 0.95rem; letter-spacing: 1px;"></div>
+            </div>
+            
+            <button class="gold-stamping-btn" onclick="triggerDedicationEffect()">この覚知を大回向する</button>
+        </div>
+    </div>
+
+    <div id="phase-4" class="phase-container">
+        <div class="glass-panel">
+            <h2 style="border:none;">法界への拡散</h2>
+            <p style="color:rgba(255,255,255,0.85); line-height:1.8; letter-spacing:1px; margin-top:0;">一滴の水が乾かぬためには、海に投じるほかありません。<br>あなたの祈願と覚知は、万丈の光となり法界に共有されました。</p>
+            
+            <div class="light-orb" id="finalOrb" style="margin-bottom: 40px;"></div>
+            
+            <p style="margin-top: 30px; font-size: 0.85rem; color:#d4af37;">任務円満、防護網は再起動されました。</p>
+        </div>
+    </div>
+
+    <div id="info-overlay" onclick="toggleInfo(false)">
+        <div id="info-content" onclick="event.stopPropagation()">
+            <div class="close-info-btn" onclick="toggleInfo(false)">✕</div>
+            <div class="info-title">【金蓮解惑 ． 縁起と破妄】</div>
+            <div class="info-text">
+                「凡そ所有る相は、皆是れ虚妄なり。」<br><br>
+                娑婆世界の苦しみは、すべて攀縁と執着から生じます。世の人は境遇に遭えば、多くは順境を求め逆縁を避けます。しかし諸仏の真実の教えは、「生死を了り、究竟解脱する」ことにあります。人生で遭遇する八苦の交煎は、実際には法界が心性を鍛え上げる修羅場であり、神明に災厄を避けるよう祈る場所ではありません。<br><br>
+                この【金蓮解惑】の設えは、実にやむを得ない「慈悲の方便」であります。陣中に現れる字句は、すべて大乗経典や歴代祖師の禅宗公案から引いたものであり、<span style="color:#FFD700;">凡夫の予言でも、法界の断語でもありません。</span>その目的は世俗の吉凶禍福を断定することではなく、祖師の慧剣を借りて、あなたの今の無明と焦燥を断ち切ることにあります。<br><br>
+                <span style="color:#FFD700;">【 結界の起動と共振の法則 】</span><br>
+                この陣に入るには、まず「静心・布施・念仏」の三つの願行のいずれかを実践しなければなりません。これは法界との取引ではなく、自らの狂乱する心緒を降伏して初めて、祖師大徳の清浄なる波長と共振し、無字の真言に契入できるからです。<br><br>
+                禍福に門なし、唯だ人の自ら招くのみ。もし究竟の実相を知らんと欲せば、外に向かって求めることなく、まさに自心に向かって尋ねるべきです。
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const oracles = [
+     { 
+            title: "【 趙州喫茶 ． 直指人心 】", 
+            verse: "曽て到るや未だ曽て到らざるや、喫茶し去れ一遭。\n院主疑怪を生ずるも、同声に喫茶すこれ高し。",
+            text: "【公案：趙州従諗禅師】\nシステムフィードバック：大道は至簡なり、当下に安住せよ\n覚知の共鳴：もしかすると、現在の迷いは思慮が複雑すぎるためかもしれません。祖師の「喫茶去」の公案は、静かにこう提示しています：過去がどうであれ、未来がどうであれ、焦りを解く鍵は目の前の最も平凡な日常の中にあるのかもしれない、と。お茶を淹れ、静かに食事をとってみてください。答えはリラックスした瞬間に自然と浮かび上がるかもしれません。" 
+        },
+        { 
+            title: "【 磨甎作鏡 ． 盲動を停止す 】", 
+            verse: "甎を磨いて豈に鏡面と成す能わんや？坐禅して豈に成仏と作す能わんや？\n車もし行かずんば、車を打つが即ち是か？牛を打つが即ち是か？",
+            text: "【公案：南岳懐譲と馬祖道一】\nシステムフィードバック：歩みを緩め、自心を反観せよ\n覚知の共鳴：我々が問題の解決を極度に渇望する時、時として盲目的な努力に陥ることがあります。この覚知は優しく思い出させてくれます：もし努力すればするほど疲弊を感じるなら、一旦立ち止まってみてはいかがでしょうか。内面に目を向けてみてください。心念の執着が解けた時、外的な行き詰まりもまたそれに伴って流れ始めるでしょう。" 
+        },
+        { 
+            title: "【 慧可安心 ． 探せども心は了として得べからず 】", 
+            verse: "我が心未だ寧からず、乞う師、与（ため）に安んぜよ。\n心を将（も）ち来たれ、汝と与に安んぜん。\n心を探せども了として得べからず。\n我れ汝と与に安心し終わんぬ。",
+            text: "【公案：達磨大師と二祖慧可】\nシステムフィードバック：感情を覚察し、源を探る\n覚知の共鳴：強烈な不安や焦りに直面した時、我々は常に実質的な「慰め」を掴もうとします。二祖の安心を求める公案は、我々をこう導いているかのようです：その苦痛を感じている「心」は一体どこにあるのか？と。心を静めてそれを探そうとした時、それらの恐怖は心念の起伏に過ぎないことに気づくかもしれません。それを見た時、心は安らぐのかもしれません。" 
+        },
+        { 
+            title: "【 騎驢覓驢 ． 本自具足 】", 
+            verse: "驢に騎って驢を覓（もと）めて休むを知らず、外に向かって馳求するは徒らに心を用う。\n踏破す鉄鞋、覓むるに処無し、得来れば全く工夫を費やさず。",
+            text: "【公案：黄龍慧南禅師】\nシステムフィードバック：外に求めるのをやめ、本源に回帰す\n覚知の共鳴：我々は往々にして外に向かって安心感や承認、あるいは何かの答えを探し求めますが、自分がすでに「ロバ」の背に乗っていることを忘れています。この提示は、外に向かっての比較や追求を一時的に手放すことを提案しています。あなたが今すでに持っているものを点検してみてください。必要な条件は、すでにあなたの身の回りにあることに気づくかもしれません。" 
+        },
+        { 
+            title: "【 盲亀浮木 ． 媒体を大切にす 】", 
+            verse: "大海に一の盲亀有り、寿は無量劫、百年に一たび其の頭を出す。\n海中に浮木有り、只だ一孔のみ有り、海浪に漂流し、風に随って東西す。",
+            text: "【経典：雑阿含経】\nシステムフィードバック：平穏に守護し、当下を大切にす\n覚知の共鳴：生活の中では、平凡さや進展の遅さに直面する時が避けられません。経典の中の盲亀と浮木の比喩は、この生、この身の尊さを静かに思い出させてくれます。もしかすると、今は沈潜し、感謝するのに適した時期なのかもしれません。「まだ得ていない」ものから「すでに持っている」ものへと意識を向けることで、平穏な力がもたらされるでしょう。" 
+        },
+        { 
+            title: "【 雲門好日 ． 当下に生きる 】", 
+            verse: "十五日已前は汝に問わず、十五日已後、一句を道（い）い将（も）ち来たれ。\n日日是好日。",
+            text: "【公案：雲門文偃禅師】\nシステムフィードバック：時間軸をリセットし、今日にロックオンす\n覚知の共鳴：思考は時として、過去への後悔や未来への不安へと無意識に漂ってしまいます。雲門禅師の「日日是好日」の一句は、あなたのエネルギーを今この瞬間に引き戻すよう誘っています。今日の天気や境遇がどうであれ、覚知を持って経験すれば、どの日にも独自の意味と美しさがあるのかもしれません。" 
+        },
+        { 
+            title: "【 百尺竿頭 ． 視点のアップグレード 】", 
+            verse: "百尺の竿頭、動かざる人、入るを得たりと雖も未だ真と為さず。\n百尺の竿頭、須らく進歩すべし、十方世界是れ全身。",
+            text: "【公案：景徳伝灯録】\nシステムフィードバック：心量を拡張し、視野を開展す\n覚知の共鳴：物事が順調に進み、ある種の安定した状態に達した時、この覚知は、まだ探求を待っているより広い風景があるかもしれないと提示しています。現状への執着を手放し、関心を自分自身から周囲へと広げ、利他の心を抱いてもう一歩前へ踏み出してみてください。思いがけない体悟が得られるかもしれません。" 
+        },
+        { 
+            title: "【 竜女成仏 ． 瞬時のデコード 】", 
+            verse: "深智は菩提に透り、刹那に女身を転ず。\n南方の無垢界、等正覚の天人なり。",
+            text: "【経典：法華経．提婆達多品】\nシステムフィードバック：枠組みを突破し、核心を直指す\n覚知の共鳴：時として我々は、世俗の条件（背景、リソース、外見など）に制限され、困難が多いと感じることがあります。竜女成仏の物語は、一つの可能性をもたらします：発心が純粋で真誠でありさえすれば、乗り越えがたいと思われる障害の多くは、単なる思い込みに過ぎないかもしれないということです。自己疑念を手放し、純粋にその清浄な願力を信じてみてください。" 
+        },
+        { 
+            title: "【 拈花微笑 ． 周波数の共鳴 】", 
+            verse: "世尊、霊山の会上に於いて、花を拈って衆に示す。\n百万の人天、悉く皆罔措たるに、唯だ迦葉のみ破顔微笑す。",
+            text: "【公案：五灯会元】\nシステムフィードバック：高次元のコネクション、以心伝心\n覚知の共鳴：ある選択や人間関係において、過度な言葉や論理的分析は時としてかえってノイズになります。この覚知は、内面の清明さと微笑みを保つことを提案しています。本当に契合する因縁は、言葉のない暗黙の了解の中で自然と共鳴するものです。あなたの直感を信じ、その平穏に従って進んでみてください。" 
+        },
+        { 
+            title: "【 香厳撃竹 ． 無明を震い砕く 】", 
+            verse: "一撃、所知を忘れ、更に修持を仮らず。\n動容、古路を揚げ、悄然の機に堕ちず。",
+            text: "【公案：香厳智閑禅師】\nシステムフィードバック：思考をリラックスさせ、契機を静かに待つ\n覚知の共鳴：我々が何かについて苦思冥想しても出口が見つからない時、それは論理的思考がすでにオーバーロードしているからかもしれません。この提示は、一時的に張り詰めた感情を下ろし、単純な日常の瑣事を行うようあなたを誘います。時には、何気ない瞬間や微小な音の中に、インスピレーションや答えが自然と湧き上がってくることがあるのです。" 
+        },
+        { 
+            title: "【 霊雲見桃花 ． 疑根頓に断つ 】", 
+            verse: "三十年来の尋剣客、幾回か葉落ちて又た枝を抽（ひ）く。\n桃花を一見してより、今に至るまで更に疑わず。",
+            text: "【公案：霊雲志勤禅師】\nシステムフィードバック：蓄積は十分にあり、開放を保つ\n覚知の共鳴：もしあなたがある状態の中で長く忍耐し、迷い続けているなら、この覚知は温かい励ましをもたらします。すべての蓄積は無駄にはなりません。近い将来、一見ありふれた小さな事柄によって、あなたは全体を瞬時に見通すことになるかもしれません。開放的でリラックスした心を保ち、花開く時を静かに待っていてください。" 
+        },
+        { 
+            title: "【 倶胝一指 ． 万法帰一 】", 
+            verse: "倶胝和尚、凡そ詰問有れば、唯だ一指を挙ぐ。\n一指頭の禅、一生受用して尽きず。",
+            text: "【公案：倶胝和尚】\nシステムフィードバック：雑念を収摂し、初心に回帰す\n覚知の共鳴：直面する選択肢が多すぎたり、情報が複雑すぎたりすると、心はどうしていいかわからなくなりがちです。この提示は、千変万化する表象に振り回されないよう提案しています。すべての問題を、最も核心的な出発点——あなたの初心は何であったか？——に収摂させてみてください。焦点をあの単純な原点に戻した時、複雑な難題も鮮明になるかもしれません。" 
+        },
+        { 
+            title: "【 捨身飼虎 ． 我執をリセットす 】", 
+            verse: "巌下に身を投じて於菟（とら）に飼う、須らく是れ還（ま）た大丈夫なるべし。\n己を捨てるも亦た応（まさ）に再び得難く、天下を通行するも此の人無し。",
+            text: "【経典：金光明経】\nシステムフィードバック：無常を直視し、手放す練習をす\n覚知の共鳴：もしあなたが喪失や深い挫折感に直面しているなら、それは生命が我々に手放す練習を導いているのかもしれません。この覚知は優しく気づかせてくれます：時として、苦痛は我々の失うことへの恐怖から生じます。よりマクロな視点で無常を受け入れ、握りしめるのをやめた時、この逆境の中から再生の契機を見出すことができるかもしれません。" 
+        },
+        { 
+            title: "【 婆子焼庵 ． 停滞を打破す 】", 
+            verse: "枯木、寒巌に倚る、三冬、暖気無し。\n若し仏法に作（な）して会（え）せば、便ち是れ瞎漢の智なり。",
+            text: "【公案：五灯会元】\nシステムフィードバック：硬直を打破し、再び流動す\n覚知の共鳴：時として、安全に見えるコンフォートゾーンが、かえって生命力を徐々に枯渇させることがあります。この覚知は温和な破壊の如く、現在停滞状態にないか点検するよう我々に促します。生活の中の突発的な変故や思い通りにならないことは、おそらく心智を再構築し、生命のエネルギーを再び活性化させるためのリマインダーなのです。" 
+        },
+        { 
+            title: "【 野狐禅 ． 因果を引き受ける 】", 
+            verse: "因果を昧（くら）まさず、因果に落ちず。\n五百生、野狐の身に堕つ、一転語にて本源を悟り透る。",
+            text: "【公案：百丈懐海禅師】\nシステムフィードバック：ありのままに向き合い、責任を引き受ける\n覚知の共鳴：複雑なもつれや迷いの中に深く陥った時、我々は時として無意識のうちに近道を探したり、責任を回避したりしようとします。この公案は「因果を昧まさず」と我々に示唆しています。平静かつ勇敢に、目の前の負うべき責任に向き合い、引き受けてみてください。ありのままに向き合うことを受け入れた刹那、滞っていたエネルギーは転化し始めるかもしれません。" 
+        },
+        { 
+            title: "【 南泉斬猫 ． 攀縁を断ち切る 】", 
+            verse: "両堂、猫児を争う。南泉、猫を提起して曰く：道（い）い得ば即ち猫児を救い取らん、道い得ずんば即ち斬却せん、と。\n衆、対え無し。泉、之を斬る。",
+            text: "【公案：南泉普願禅師】\nシステムフィードバック：攀縁を断ち切り、清浄に回帰す\n覚知の共鳴：我々がジレンマの選択や外界の紛争に深く陥った時、過度な分析や論争は往々にして更なる消耗をもたらします。この公案は温和に提案します：もしかすると「快刀乱麻を断つ」ように、正誤や是非への執着を手放すことができるかもしれません。身を引き、無意味なもつれに深入りしないことこそが、内面の平穏を保つ知恵なのです。" 
+        },
+        { 
+            title: "【 徳山の棒、臨済の喝 ． 妄想を撃ち砕く 】", 
+            verse: "道（い）い得るも也た三十棒、道い得ざるも也た三十棒。\n有る時は一喝、金剛王の宝剣の如く、有る時は一喝、踞地の獅子の如し。",
+            text: "【公案：徳山宣鑑と臨済義玄】\nシステムフィードバック：波折を受け入れ、当下に安住す\n覚知の共鳴：生活の中では時として、頭ごなしの棒喝のような突発的な波折や障害が現れることがあります。これは罰ではなく、我々の内面が過度な雑念や先入観を抱え込んでいないかを点検するためのリマインダーです。目の前の境遇を受け入れ、反復する推演をやめ、集中力を今この瞬間になすべき第一歩に戻してみてはいかがでしょうか。" 
+        },
+        { 
+            title: "【 演若達多 ． 迷頭認影 】", 
+            verse: "演若達多、忽然として晨朝に鏡を以て面を照らすに、鏡の中の頭、眉目見る可きを愛す。\n大瞋恨を生じ、無状に狂走す。",
+            text: "【経典：楞厳経】\nシステムフィードバック：幻象を打ち破り、本体を確認す\n覚知の共鳴：時として我々は、外的な変化によって強烈な焦りや恐怖を生じ、何か重要な支えを失ったかのように感じることがあります。演若達多の物語は優しく提示しています：我々の真に貴重な自性と力は、一度も離れたことがないのだと。それらの恐怖は、錯覚の上に築かれた迷霧に過ぎないかもしれません。心を静めれば、自分が依然として完全であることに気づくでしょう。" 
+        },
+        { 
+            title: "【 衣裏明珠 ． 乞討を停止す 】", 
+            verse: "家内に自ら真金の蔵有り、何ぞ労して外に向かって苦しく求索せん。\n衣珠を識らざるは猶ほ是れ客、空しく破鉢を将（も）って長安に走る。",
+            text: "【経典：法華経．五百弟子受記品】\nシステムフィードバック：外に求めるのをやめ、内在を発掘す\n覚知の共鳴：欠乏や低迷を感じた時、我々は外に向かって慰めや承認を求めがちですが、自分が元々無価の宝蔵を持っていることを忘れています。この覚知は、外に向かってそれらの儚い支えを探し求めるより、内面に目を向け、本来備わっている輝きを取り戻すことを提案しています。あなたが必要とするすべての豊かさは、すでにあなたの心田に蘊蔵されているのです。" 
+        },
+        { 
+            title: "【 窮子喻 ． 家業を承継す 】", 
+            verse: "父、子の狭劣なるを知り、方便の力を以て、其の心を柔伏す。\n二十年の中、常に糞を除かしむ。乃至、其の心相体信なるを知って、乃ち命じて家業を賜与す。",
+            text: "【経典：法華経．信解品】\nシステムフィードバック：安心して引き受け、着実に前進す\n覚知の共鳴：長く、一見目立たないプロセスに直面した時、時には疲労感や自己疑念を感じるのも無理はありません。経典の中の比喩は、これらの試練がまさに心量を広げ、担う力を培うための必経の道かもしれないと提示しています。焦らず卑屈にならず、目の前の本分を全うすることをお勧めします。心境が次第に広く成熟すれば、豊かな果実は自然と形になるでしょう。" 
+        },
+        { 
+            title: "【 火宅三車 ． 執念から逃れる 】", 
+            verse: "三界は安きこと無し、猶ほ火宅の如し。\n衆苦充満し、甚だ怖畏すべし。",
+            text: "【経典：法華経．譬喩品】\nシステムフィードバック：執念を察知し、身軽に引き下がる\n覚知の共鳴：我々がある事柄に固執している時、往々にしてその執着自体が苦痛の源となっていることに気づかず、まるで火宅にいるのに自覚していないかのようです。この覚知は温和なアドバイスを与えます：今あなたを焦らせている追求を再評価してみてください。適時に手放し、身を引くことができれば、門の外にはより広い世界が広がっていることに気づくかもしれません。" 
+        },
+        { 
+            title: "【 良医病子 ． 毒発し覚醒す 】", 
+            verse: "是れ好の良医なり、病子毒を服し、心乱れ倒見す。\n此の子を救わんが為に、権に方便を設け、薬を留めて退く。",
+            text: "【経典：法華経．如来寿量品】\nシステムフィードバック：自癒を喚起し、内に薬を求む\n覚知の共鳴：迷いに深く陥り、助けを求めても道がない時、深い孤独と無力感を感じることがあります。良医が薬を残すという比喩は、この一見「応答がない」状況が、実は我々の内なる覚醒と自癒力を引き出すためかもしれないと思い出させてくれます。外的な拠り所には限界があります。真の解毒剤と智慧は、自らの沈殿と領悟を通してのみ現前するのです。" 
+        },
+        { 
+            title: "【 善財童子 ． 虚心南参 】", 
+            verse: "百城の煙水、渺として涯（かぎり）無し、艱辛を歴尽して志差（たが）わず。\n重重の玄妙の理を参透し、方に知る、歩歩是れ蓮華なるを。",
+            text: "【経典：華厳経．入法界品】\nシステムフィードバック：虚心に参学し、処々皆師とす\n覚知の共鳴：前方の未知に直面し、孤立無援に感じるのは無理もありません。この覚知は、「初学者」の謙虚さと開放性を持って、沿道の風景を体験するよう我々を励まします。人生で出会うすべての境遇、すべての通りすがりの人は、我々の成長を助けてくれる善知識かもしれません。虚心と善意を保ちさえすれば、至る所が学びの道場となります。" 
+        },
+        { 
+            title: "【 達摩廓然 ． 功徳無相 】", 
+            verse: "朕、一生寺を造り僧を度し、布施し斎を設く、何の功徳か有る？\n達摩言う：実に功徳無し。\n如何なるか是れ聖諦第一義？達摩言う：廓然無聖。",
+            text: "【公案：達摩大師と梁武帝】\nシステムフィードバック：無心にして為し、廓然清浄\n覚知の共鳴：我々の尽力が期待した反応を得られなかった時、心には委屈や喪失感が生じやすくなります。これは「期待を手放す」ことに関するアドバイスです：結果や見返りを気にせず、ただ純粋な心意気に焦点を当てるよう心がければ、内心は太虚のように広大になれるでしょう。無心にして為す自在さこそが、生命における最も純粋な喜びなのです。" 
+        },
+        { 
+            title: "【 丹霞焼仏 ． 相を作（な）して求めず 】", 
+            verse: "木仏は無心にして火内に燃ゆ、院主驚惶して急ぎ煙を撲（う）つ。\n若し是れ真金ならば焼けども壊れず、何ぞ泥塑と木彫とを労せん。",
+            text: "【公案：丹霞天然禅師】\nシステムフィードバック：枠組みを破り、直ちに真金を見る\n覚知の共鳴：時として我々は、既成の観念、形式、あるいは外的な基準に縛られ、歩みを進めるのが困難に感じることがあります。この公案は一つの打開策を提示します：思い切って心の中の予め設定された枠組みを下ろしてみてはいかがでしょうか。発心が真誠で純粋でありさえすれば、表面的な常規を破ったとしても、試練の中から不変の真理と価値を抽出することができるのです。" 
+        },
+        { 
+            title: "【 一切有為法 ． 夢幻泡影の如し 】", 
+            verse: "一切の有為法は、夢幻泡影の如し。\n露の如く亦た電の如し、応に如是の観を作（な）すべし。",
+            text: "【経典：金剛経】\nシステムフィードバック：無常を観想し、身心自在\n覚知の共鳴：世間の万象の繁華も、波折や得失も、長い時空の長河の中では、皆夢幻泡影のように生滅し無常なものです。この覚知は優しく思い出させてくれます：当下の煩悩や執念に対して、一歩退いて、その変化して止まない本質を見透かしてみてください。我々がそれらの流転する定めの事物を強く握りしめようとすることをやめた時、心霊は真の自由を獲得できるのです。" 
+        },
+        { 
+            title: "【 水火二河 ． 白道得生 】", 
+            verse: "群賊悪獣、水火二河、逼迫交煎す。\n忽ち人の喚ぶを聞く：仁者よ、但だ決定して此の道を尋ねて行け、必ず死難無けん！",
+            text: "【浄土譬喩：善導大師水火二河の喩え】\nシステムフィードバック：前進に集中し、信願堅定\n覚知の共鳴：生活が様々な挑戦に満ち、進退谷まったと感じる時、この譬喩はあなたに一本の安穏な白道を示しています。両側の喧騒、恐怖、あるいは貪念に干渉されないようお勧めします。何度も振り返る必要はありません。ただ内なる最も純粋な信念を守り、躊躇することなく集中して前へ歩み続ければ、いかなる風雨もあなたの歩みを揺るがすことはできません。" 
+        },
+        { 
+            title: "【 天女散花 ． 相に著（じゃく）せず 】", 
+            verse: "天女花を散ず、花、菩薩に至れば皆堕落し、大弟子に至れば便ち身に著く。\n結習未だ尽きず、花身に著くのみ。",
+            text: "【経典：維摩詰経】\nシステムフィードバック：相に著せず、縁に随って過化す\n覚知の共鳴：特定の人や事物に直面した時、自分はすでに釈然としていると思っていても、境遇が再現されるとやはり波紋が広がることがあります。これは温和なリマインダーです：これらの感情を意図的に拒絶したり抑圧したりする必要はありません。空霊で、批判的でない態度でそれらを観照してみてください。心が事物にレッテルを貼ることに執着しなくなった時、一切の境遇は花びらのように自然と滑り落ち、痕跡を残さなくなるでしょう。" 
+        },
+        { 
+            title: "【 本来無一物 ． システム純浄 】", 
+            verse: "菩提本と樹無し、明鏡も亦た台に非ず。\n本来無一物、何れの処にか塵埃を惹かん。",
+            text: "【公案：六祖恵能】\nシステムフィードバック：清浄に安住し、塵埃を払う\n覚知の共鳴：我々は往々にして、過度な自己点検や外界の評価によって、心の中に煩悩の塵埃を舞い上がらせてしまいます。六祖の偈の言葉は、最も深い慰めをもたらします：あなたの自性は本来清浄で無染なのです。それらの葛藤や懸念は、往々にして虚幻な投影に過ぎません。すべての自己批判をそっと下ろし、その本来の面目へ安然と回帰することをお勧めします。" 
+        },
+        { 
+            title: "【 洞山過水 ． 影を覩（み）て道を悟る 】", 
+            verse: "切に忌む他より覓（もと）むるを、迢迢として我と疏（うと）し。\n我今独り往く、処処に渠（かれ）に逢うを得たり。",
+            text: "【公案：洞山良价禅師】\nシステムフィードバック：反観自照、外に求むるを仮らず\n覚知の共鳴：迷っている時、我々は希望を外的な指針や依存に託しがちです。この公案は、澄んだ水面の反射を下を向いて見てみるよう提案しています：ずっとあなたに寄り添い、無限の智慧と力を秘めているのは、他ならぬあなた自身なのです。あなたが完全に自分を受け入れ、信じる意志を持った時、内なる円満は自然と顕れ、至る所が平坦な道となるでしょう。" 
+        },
+        { 
+            title: "【 十牛図 ． 尋牛 】", 
+            verse: "茫茫として草を撥（はら）って去って追尋す、水闊（ひろ）く山遥かにして路更に深し。\n力尽き神疲れて覓むるに処無し、但だ聞く楓樹の晩蝉の吟ずるを。",
+            text: "【公案：廓庵禅師十牛図】\n禅機微語：迷いの中に跡を尋ね、内面に回帰す\n覚知の共鳴：迷い、疲れ、さらには人生の方向性を失ったと感じる時、その無力感こそが覚醒の契機なのかもしれません。この公案は優しくあなたを慰めます：内なる純粋な自性は決して本当に迷子になったわけではなく、一時的に外界の喧騒に遮られているだけです。外に向かって攀縁する歩みを止め、内なる声に静かに耳を傾けてみてはいかがでしょうか。" 
+        },
+        { 
+            title: "【 十牛図 ． 見跡 】", 
+            verse: "水辺林下、跡偏（ひとえ）に多し、芳草離披して見（あらわ）るや也（ま）た麼（いな）や。\n縦（たと）い是れ深山更に深き処なるも、遼天の鼻孔争（いか）でか他（かれ）を蔵（かく）さん。",
+            text: "【公案：廓庵禅師十牛図】\n禅機微語：初めて微光を見、跡に循（したが）って行く\n覚知の共鳴：混乱した思緒の中で、あなたはすでにあるインスピレーションや一時的な平穏を捉えたのかもしれません。これは貴重な曙光です！この覚知は、その直感と善念に従って前進し続けることを奨励し、自分を疑う必要はないと伝えています。心念が純粋でありさえすれば、目の前の道は自然と徐々に明るくなっていくでしょう。" 
+        },
+        { 
+            title: "【 十牛図 ． 見牛 】", 
+            verse: "黄鸝（こうり）、枝上に一声明、日暖かく風和らいで岸柳青し。\n只だ此れ更に回避する処無し、森森たる頭角画けども成り難し。",
+            text: "【公案：廓庵禅師十牛図】\n禅機微語：雲を払い日を見、清明を守護す\n覚知の共鳴：もしかするとある瞬間、あなたはついに問題の本質を見極め、豁然と開けた平穏を体得したのかもしれません。この覚知はあなたに念を押します：見えたのなら、それを守護するよう努めてください。この清明さはあなたが本来具備している智慧です。優しく護持し、それが再び日常の煩雑さに覆われないようにしてください。" 
+        },
+        { 
+            title: "【 十牛図 ． 得牛 】", 
+            verse: "精神を竭尽（つく）して渠（かれ）を獲得す、心強く力壮んにして卒（にわか）には除き難し。\n有る時は纔（わずか）に高原の上に至るも、又た煙雲深き処に入って居す。",
+            text: "【公案：廓庵禅師十牛図】\n禅機微語：習気に向き合い、温和に牽引す\n覚知の共鳴：道理を理解したとしても、古い習慣や感情は時として強烈に反発することがあります。この覚知は提示します：今こそ心性を磨く決定的な時です。断固たる、しかし温和な覚察力をもって、起伏する心念を牽引し、自分が再び執着や焦りの煙雲の中に迷い込まないように努めてください。" 
+        },
+        { 
+            title: "【 十牛図 ． 牧牛 】", 
+            verse: "鞭索時時身を離れず、伊（かれ）が歩を縦（ほしいまま）にして埃塵に入るを恐る。\n相将（ひきい）て牧し得て純和するや、羈鎖（きさ）拘無く自ら人を逐う。",
+            text: "【公案：廓庵禅師十牛図】\n禅機微語：常に覚察し、純和自如\n覚知の共鳴：心緒が徐々に安定してきても、やはり日常の中で微細な覚察を保つ必要があります。これは心を修めることに関するアドバイスです：行住坐臥において、優しく自分の念を見守ってください。心境が調伏されて柔らかく純和になれば、自然と意図的に抑圧する必要はなくなり、智慧は影のように形に寄り添うようになるでしょう。" 
+        },
+        { 
+            title: "【 十牛図 ． 騎牛帰家 】", 
+            verse: "牛に騎って迤邐（いり）として家（いえ）に還らんと欲す、羌笛（きょうてき）声声晩霞を送る。\n一拍一歌無限の意、知音何ぞ必しも唇牙を鼓せん。",
+            text: "【公案：廓庵禅師十牛図】\n禅機微語：対抗を下ろし、従容として帰途につく\n覚知の共鳴：これは美しい祝願です。もしかするとあなたは、外界と対抗することも、自分自身と内耗することもしないように学び始めたのかもしれません。因縁に順応し、平穏な心を抱き、真実の自我へと回帰する道を安然と歩んでください。この従容と自在を楽しんでください。すべては言わずもがなです。" 
+        },
+        { 
+            title: "【 十牛図 ． 忘牛存人 】", 
+            verse: "牛に騎って已に家山に到るを得、牛も也（ま）た空しく人（ひと）も也（ま）た閑（のどか）なり。\n紅日三竿猶ほ夢を作（な）す、鞭索頓（とみ）に作（な）す截竹（せつちく）の竿。",
+            text: "【公案：廓庵禅師十牛図】\n禅機微語：安穏無求、物我両忘\n覚知の共鳴：あなたをかつて焦燥させていた問題、さらには「私は解決しようと努力している」という念すらもが薄れていった時こそ、真の安穏です。この覚知は提示します：意図的に防備したり探し求めたりする必要はありません。食事すべき時に食事をし、休むべき時に休むのです。天下本無事。心を最も純粋な安寧へと回帰させてください。" 
+        },
+        { 
+            title: "【 十牛図 ． 人牛倶忘 】", 
+            verse: "鞭索人牛尽く空に属す、碧天遼闊として信（たより）通じ難し。\n紅炉の焰上争（いか）でか雪を容（い）れん、此に到って方（まさ）に能く祖宗に合す。",
+            text: "【公案：廓庵禅師十牛図】\n禅機微語：対立を下ろし、碧空万里\n覚知の共鳴：この公案は一種の極致の清浄な境界を描いています。あなたが葛藤している損得、正誤は、浩瀚な法界の中ではまるで雪の結晶が紅炉に落ちるように、瞬時に消え去ります。すべての二元対立を下ろしてみてください。心境が万里雲一つない碧空のように澄み切った時、すべての障害もまた存在しなくなるでしょう。" 
+        },
+        { 
+            title: "【 十牛図 ． 返本還源 】", 
+            verse: "返本還源已に功を費やす、争（いか）でか直下盲聾の若（ごと）くなるに如（し）かん。\n庵中不見庵前物、水は自ら茫茫花は自ら紅なり。",
+            text: "【公案：廓庵禅師十牛図】\n禅機微語：如実に観照し、自然に順応す\n覚知の共鳴：大きく回り道をしても、世界はおそらく元の姿のままかもしれませんが、あなたの心境はすでに異なっています。この覚知は優しくアドバイスします：他人の因果に過度に干渉したり、無理に外境を変えようとしたりする必要はありません。水は自ずから流れ、花は自ずから紅です。万物を本来の姿のままに存在させ、あなたはただ静かに観賞し、心に波を立てないでください。" 
+        },
+        { 
+            title: "【 十牛図 ． 入鄽垂手 】", 
+            verse: "胸を露わにし足を跣（はだし）にして鄽（てん）に入り来る、土を抹し灰を塗って笑い腮（あご）に満つ。\n神仙の真の秘訣を用いず、直ちに枯木をして花を開き放たしむ。",
+            text: "【公案：廓庵禅師十牛図】\n禅機微語：煩を化して簡となし、慈悲利他\n覚知の共鳴：あなたが迷いの泥沼から歩み出た時、この覚知は一つの温かい期待をもたらします：あなたの平穏と笑顔を持って、煙火の気（活気）に満ちた人ごみの中へ入っていってください。あなたの智慧と包容力で身近な人に寄り添い、たとえ微小な善意であっても、周囲を生命力で満たし、無数の命に利益をもたらすことができるでしょう。" 
+        },
+        { 
+            title: "【 指月の指 ． レッテルを破除す 】", 
+            verse: "人の手指を以て月を人に示すが如し、彼の人指に因って当に応（まさ）に月を看るべし。\n若し復た指を観て以て月体と為さば、此の人豈に唯だ月輪を亡失するのみならんや、亦た其の指を亡す。",
+            text: "【経典：楞厳経】\n禅機微語：本質を直視し、言葉に囚われず\n覚知の共鳴：我々は時として他人の評価、外在的な形式、あるいは特定のレッテル（指）を気にしすぎて、事物の真の核心（月）を無視してしまいます。これは善意の提醒です：文字や表面的な現象への執着を下ろし、問題の真相を直視してみてください。そうして初めて、入り乱れた意見の中で方向を見失うことはなくなるでしょう。" 
+        },
+        { 
+            title: "【 坦山女人を背負う ． キャッシュのクリア 】", 
+            verse: "彼（あ）の女子、我れ早く已に放下す。\n汝、僧と為（な）って、何の為に今に至るも依然として背負えるや？",
+            text: "【公案：坦山禅師】\n禅機微語：過去を許し、重荷を下ろす\n覚知の共鳴：出来事はとっくに過ぎ去り、周囲の人々もすでに前へと進んでいるのに、もし我々がまだ心の中でその委屈や過ちを繰り返し咀嚼しているなら、それは疑いなく重い消耗です。この公案は軽く我々を叩いて目覚めさせます：心にこの重荷を背負っていて、疲れませんか？過去を許し、自分自身を解放し、生命を再び身軽に歩み出させてください。" 
+        },
+        { 
+            title: "【 画餅充飢 ． 実機実行に切り替える 】", 
+            verse: "食を説くも飽かず、画餅（がへい）飢えを充たす。\n終日他（ひと）の宝を数うれども、自ら半銭の分無し。",
+            text: "【経典：楞厳経 / 禅宗語録】\n禅機微語：思を化して行となし、着実に実践す\n覚知の共鳴：未来に対する多くの美しい計画を立てたり、多くの深い道理を理解したりしても、それを遅遅として行動に移さなければ、結局のところ真の変化をもたらすことはできません。この覚知は誠懇にアドバイスします：いくら多く考えても、今この瞬間の最も微小な一歩から実践し始めることには及びません。真の領悟と転変は、常に着実な行動からやって来るのです。" 
+        },
+        { 
+            title: "【 洗鉢盂去 ． シングルスレッドの集中 】", 
+            verse: "学人迷昧なり、乞う師、指示せよ。\n師云く：粥を喫せるや未だや？曰く：粥を喫せり。\n師云く：鉢盂を洗い去れ。",
+            text: "【公案：趙州従諗禅師】\n禅機微語：当下に集中し、鉢を洗い去る\n覚知の共鳴：我々は往々にして、この事をしている時に心の中では次の事を気にかけており、その結果焦りが絶えず蓄積されていきます。この素朴な公案は、最も直接的な解毒剤を与えてくれます：当下に生きること。ご飯は食べ終わりましたか？それなら茶碗を洗いに行きましょう。心を今この瞬間に行っている一つ一つの小さな事に完全に収摂させれば、焦りは逃げ場を失います。" 
+        },
+        { 
+            title: "【 瓶中養鵝 ． 虚妄のジレンマを打破す 】", 
+            verse: "昔人、鵞を瓶の中に養う、鵞漸く大にして、出づることを得ず。\n瓶を毀（こわ）さず、鵞を損なわずして、何の法あってか出づべき？\n師大叫して曰く：大夫！鵞出でたり！",
+            text: "【公案：南泉普願禅師】\n禅機微語：枠組みから飛び出し、本自自由\n覚知の共鳴：あなたがあるジレンマに完全に挟まれ、進退窮まったと感じている時、この覚知は大きな声であなたを呼び覚まします：あなたを閉じ込めているその「瓶」は、思考の慣性が編み出した幻象に過ぎないかもしれない！と。古い論理や懸念を下ろしてみてください。あなたがこの束縛に同意しなくなった時、自分が実は最初からずっと自由であったことに気づくでしょう。" 
+        },
+        { 
+            title: "【 雲在青天水在瓶 ． 本分を安守す 】", 
+            verse: "千山、翠色を添え、万樹、清風を鎖（とざ）す。\n道を問うに余話無し、雲は青天に在り水は瓶に在り。",
+            text: "【公案：薬山惟儼禅師】\n禅機微語：各々其の位に安んじ、自在円満\n覚知の共鳴：もしかするとあなたは現状に対して少し不安を感じていたり、他所の風景に憧れたりしているかもしれません。この覚知は静かに提示します：万物には皆それぞれの安立する場所があり、雲は天に、水は瓶にあり、それぞれにそれぞれの荘厳さがあります。今の役割と位置を受け入れ、現在の因縁の中で最善を尽くしてみてください。その自在さこそが最も深い修行なのです。" 
+        },
+        { 
+            title: "【 春来草自青 ． 比較を終止す 】", 
+            verse: "如何なるか是れ仏法の大意？\n師曰く：春来たりて草自ずから青し。",
+            text: "【公案：禅宗語録】\n禅機微語：時節に順応し、攀比（ひかく）を須（もち）いず\n覚知の共鳴：我々が急いで一つの意味を見つけようとしたり、他人の成就と自分を比較したりする時、心は容易に散乱します。この提示はアドバイスします：春になれば、草は自然と青くなります。万事万物には皆それが成熟するタイミングがあり、過度な人為的な焦りは必要ありません。生命のリズムに従って歩み、芽吹くべき時に芽吹く、これこそが最も自然な成就なのです。" 
+        },
+        { 
+            title: "【 庭前柏樹子 ． 概念を截断す 】", 
+            verse: "学僧問う：如何なるか是れ祖師西来意？\n趙州曰く：庭前の柏樹子。",
+            text: "【公案：趙州従諗禅師】\n禅機微語：妄想を収摂し、当下を直視す\n覚知の共鳴：もしあなたの内面が「無解の問い」や「過去のわだかまり」に悩まされているなら、この公案がもたらすアドバイスは：窓の外のあの木を見てみてください、というものです。これは話題を変えているのではなく、その反復して空回りする思緒を断ち切り、心を再び現実の世界に戻すのを助けるためです。たとえたった一本の木であっても、虚幻な焦りよりは真実なのです。" 
+        },
+        { 
+            title: "【 麻三斤 ． レッテルを拒絶す 】", 
+            verse: "学僧問う：如何なるか是れ仏？\n洞山曰く：麻三斤。",
+            text: "【公案：洞山守初禅師】\n禅機微語：平凡に回帰し、執相を破除す\n覚知の共鳴：時として我々は、いわゆる「完璧」な状態や「神聖」な目標を追求しすぎます。この公案は容赦なくそれらの後光を打ち砕きます：仏といえども日常の尋常の物に過ぎない、と。これは平穏に関するアドバイスです：高尚なレッテルに縛られず、平常心をもって周囲のすべてを見てください。平凡な当下であればあるほど、往々にして真理が隠されているものなのです。" 
+        },
+        { 
+            title: "【 狗子無仏性 ． 二元を突破す 】", 
+            verse: "僧、趙州に問う：狗子に還（ま）た仏性有りや也（ま）た無しや？\n州云く：無！",
+            text: "【公案：趙州従諗禅師】\n禅機微語：対立を超越す、無字真言\n覚知の共鳴：もしあなたが「正と誤、有と無、愛と恨」の困難な選択に直面し、心緒が紛乱しているなら。この覚知は大きな「無」の字を与えます。これは否定ではなく、二元対立を斬り断つ利剣です。良し悪しの分別を一時的に停止し、心をその純粋な空白の中に留まらせ、最も真実な答えが見えるまで待つことをお勧めします。" 
+        },
+        { 
+            title: "【 乾屎橛 ． 権威を破除す 】", 
+            verse: "僧問う：如何なるか是れ仏？\n雲門曰く：乾屎橛（かんしけつ）。",
+            text: "【公案：雲門文偃禅師】\n禅機微語：内観自省、外に求むるを仮らず\n覚知の共鳴：もしかするとあなたは、ある外的な権威、あるいは根深く信じ込まされた基準に対して、迷信と依存を生じているのかもしれません。この公案は猛薬です：外的な力への過度な期待を打ち砕くことを旨としています。あなたの内なる力を取り戻してください。真の智慧と導師はあなたの自心の中にあり、誰の顔色をうかがう必要もないのです。" 
+        },
+        { 
+            title: "【 万法帰一 ． 源頭を尋ねる 】", 
+            verse: "万法は一に帰す、一は何（いず）れの処にか帰する？\n青州にて一領の布衫を作得せり、重さ七斤。",
+            text: "【公案：趙州従諗禅師】\n禅機微語：繁を化して簡となし、生活に回帰す\n覚知の共鳴：無数の細部と責任があなたを息詰まらせ、さらには「究極の解答」を求めようとさえ思う時、この提示は優しくあなたを現実に引き戻します：そんなに多くを考えず、目の前の最も簡単な事を行ってください。すべての真理は最終的に、服を着てご飯を食べるという平凡な生活の中に落とし込まれなければなりません。今を着実に生きること、それが最も核心となる修行なのです。" 
+        },
+        { 
+            title: "【 羚羊掛角 ． 痕跡を留めず 】", 
+            verse: "羚羊角を掛けて尋ぬる処無し、一任す東風の大千に満つるを。\n行雲流水了として跡無し、方に是れ人間の大自在。",
+            text: "【公案：禅宗語録】\n禅機微語：功成りて居らず、了として掛礙無し\n覚知の共鳴：もしあなたが他人の評価を気にしたり、何か証明となる痕跡を残そうと焦ったりしているなら、心は容易に疲弊します。この公案は高尚な行動様式を描写しています：羚羊が角を木に掛けるように、痕跡を残さない。なすべき事を終えたら、静かに下ろし、拍手を未練に思わず、見返りを気にも掛けない。この痕跡を残さない自在さこそが、真の広大さなのです。" 
+        },
+        { 
+            title: "【 唖子吃蜜 ． 人の水を飲むが如し 】", 
+            verse: "唖子黄連を喫す、苦しみ有れども説き出ださず。\n唖子甜蜜を喫す、甘きこと有れども亦た言（い）いがたし。\n人の水を飲んで、冷暖自ら知るが如し。",
+            text: "【公案：禅宗語録】\n禅機微語：冷暖自知、清明を安守す\n覚知の共鳴：もしかするとあなたは、自分の苦衷を他人に説明しようとしたり、他人の承認を渇望したりしているのかもしれません。この提示は穏やかに言います：力を節約しましょう。一部の感情や体悟は、本来唯一無二であり、言葉で言い表しがたいものです。あなたは誰の頷きも必要としません。あなたが内面で確信し、平安でありさえすれば、外界の目はもはや重要ではないのです。" 
+        },
+        { 
+            title: "【 担水砍柴 ． 神通妙用 】", 
+            verse: "神通並びに妙用、水を運び及（また）柴を搬（はこ）ぶ。\n道は日用の中に在り、何ぞ外に向かって求むるを須（もち）いん。",
+            text: "【公案：龐蘊居士】\n禅機微語：平常心是れ道\n覚知の共鳴：もしかするとあなたは生活が少し平凡だと感じ、何か天地を揺るがすような変化や奇跡を期待しているのかもしれません。この覚知はあなたに提示します：あなたが渇望している奇跡は、実は毎日の呼吸、歩行、そして労働の中に隠されています。全くの集中と感謝をもって一つ一つの取るに足らない小さな事に向き合うこと、その定力自体が、最も不可思議な神通なのです。" 
+        },
+        { 
+            title: "【 歩歩生蓮 ． 歩歩清浄 】", 
+            verse: "一歩一蓮花、歩歩皆清浄。\n心は明鏡の台の如く、半点の塵をも惹かず。",
+            text: "【浄土譬喩】\n禅機微語：念頭を守護し、歩歩心安し\n覚知の共鳴：もしあなたが紛乱した、あるいはネガティブなエネルギーに満ちた環境に身を置いており、清明さを保つのが難しいと感じているなら。この覚知はあなたにアドバイスします：我々は環境を左右することはできませんが、自分の歩みを観照することはできます。当下の一歩一歩をしっかりと歩み、各々の念頭が善意と正直さを持っていることを確かめてください。あなたの心が清浄でありさえすれば、行く先々すべてが蓮華となります。" 
+        },
+        { 
+            title: "【 吹滅紙燭 ． 頓悟無明 】", 
+            verse: "夜深く黒し、紙燭明らかなり。一たび吹き滅せば、天地闊（ひろ）し。\n此より天下の老和尚の舌頭を疑わず。",
+            text: "【公案：徳山宣鑑禅師】\n禅機微語：依存を熄滅（そくめつ）し、自性を点亮す\n覚知の共鳴：我々が常に他人の助言や、ある種の外的な安全感に依存している時、心は脆くなりがちです。この覚知は少し残酷かもしれませんが、慈悲に満ちています：唯一の「頼みの綱」が消えた時、暗闇を恐れないでください。外的な依存を失ったからこそ、あなたは内に消えることのない智慧の光を灯す機会を得るのです。" 
+        },
+        { 
+            title: "【 虚空粉砕 ． 徹底的に下ろす 】", 
+            verse: "虚空粉砕す、狂心頓（とみ）に歇（や）む。\n大地平沈す、真性前（ごぜん）に現る。",
+            text: "【公案：虚雲老和尚】\n禅機微語：破れて後立ち、真性現前す\n覚知の共鳴：もしあなたが重大な衝撃に遭遇したり、ある深く信じていた観念が徹底的に崩壊したりしているなら。この覚知はあなたに優しい抱擁を送ります：これは破滅ではなく、再生の契機です。それらの虚偽の外殻が砕け散り、すべての執着の土台が沈んだ時、あなたの本来無染で、堅く壊すことのできない本心が、ついに姿を現す機会を得るのです。" 
+        },
+        { 
+            title: "【 泥牛入海 ． 一去不返 】", 
+            verse: "泥牛海に入って消息無し、木馬風を迎えて嘶（いなな）きを鳴らさず。\n大千世界皆是の如し、何ぞ更に去来の人を問うを須（もち）いん。",
+            text: "【公案：禅宗語録】\n禅機微語：消失を受け入れ、追求を下ろす\n覚知の共鳴：もしかするとあなたはまだ、すでに去ってしまった因縁や、ある挽回できない過去を待っているのかもしれません。この提示は内面を直指します：それはまるで泥で作られた牛が海に入っていくように、とっくに自然に融け込み、一度去って二度と戻らないのです。無意味な待ち望みと遺憾を停止し、この消失を受け入れてみてください。そうして初めて、あなたの生命に新たな流れを迎える空間ができるのです。" 
+        },
+        { 
+            title: "【 鉄樹開花 ． 絶境逢生 】", 
+            verse: "鉄樹花開いて春意濃く、枯木龍吟して夜夜の風。\n絶して後に再び甦る真の活漢、方に知る死裏に生機有るを。",
+            text: "【公案：禅宗語録】\n禅機微語：寒きこと極まれば必ず暖かく、生機微（かす）かに露（あらわ）る\n覚知の共鳴：あなたが山窮水尽に至り、いかなる希望もないと感じた時、どうかもう少し辛抱強く待ってください。この覚知はあなたに一つの秘密を伝えようとしています：絶体絶命の窮地に往々にして生機が隠されている、と。あなたが徹底的にもがきと打算を下ろし、結果への執着をやめた時、あの枯れ果てたように見える木が、もしかすると不可思議な因縁の下で、燦爛たる花を咲かせるかもしれないのです。" 
+        },
+        { 
+            title: "【 啐啄同時 ． 機縁成熟 】", 
+            verse: "小鶏呼喚し、母鶏軽く啄む。\n内外相応し、殻を破って出づ。\n早く一分なれば則ち死し、遅く一分なれば則ち窒す。",
+            text: "【公案：鏡清道怤禅師】\n禅機微語：内外相応し、時至るを静待す\n覚知の共鳴：もしかするとあなたは、自分はすでに準備ができていると感じているのに、それでもなお最後の契機を待っているのかもしれません。この公案は提示します：生命における多くの美しい転変は、内なる勇気と外なる因縁の完璧な交会を必要とします。忍耐を保ち、あなたの願心を優しく護持し続けてください。因縁が成熟した刹那、障害は自ずと卵の殻のように消け去るでしょう。" 
+        },
+        { 
+            title: "【 懸崖撒手 ． 絶地重生 】", 
+            verse: "懸崖に手を撒（はな）ち、自ら肯（あえ）て承当す。\n絶して後に再び甦る、君を欺くこと得ず。",
+            text: "【公案：禅宗語録】\n禅機微語：勇敢に下ろし、新生を獲得す\n覚知の共鳴：もしあなたが、あなたを苦しめる執着をしっかりと握りしめ、手を離せば深淵に落ちてしまうと恐れているなら、この覚知はあなたに勇気を与えます：時として「手を離す」ことは終わりではなく、新たな始まりなのです。未知への恐怖を下ろしてみてください。あなたを疲弊させるその蔓を握りしめるのをやめた時、あなたは、虚空の中で安然と舞い踊る力を、自分が本来持っていたことに気づくかもしれません。" 
+        },
+        { 
+            title: "【 鑿井求水 ． 堅持不懈 】", 
+            verse: "人の渇して水を需（もと）め、彼の高原に於いて鑿（うが）つが如し。\n土を見るに皆乾燥せり、水の尚ほ遥遠なるを知る。\n退怯の心を生ぜず、湿泥の出づるを見るに及びて、決定して水の近きを知る。",
+            text: "【経典：法華経．法師品】\n禅機微語：深耕して綴（や）まず、近きこと咫尺（しせき）に在り\n覚知の共鳴：もしあなたが長い間努力してきたのに、依然として著しい成果が見えず、少し落胆しているなら。この譬喩は優しくあなたを励まします：掘り出された泥が次第に湿り気を帯びてきたことは、清泉がすでに遠くないことを表しています。すべての艱辛は最後の突破のためのものです。最も成功に近い時に踵を返さないでください。もう少し堅持すれば、清涼の源はすぐ前にあります。" 
+        },
+        { 
+            title: "【 狂心頓歇 ． 歇むが即ち菩提 】", 
+            verse: "狂心頓（とみ）に歇（や）めば、歇むが即ち菩提なり。\n勝浄の明心、本（もと）法界に周（あまね）し。\n人に従（よ）って得ず、何ぞ劬労（くろう）を藉（か）らん。",
+            text: "【経典：楞厳経】\n禅機微語：紛乱を平息し、当下即ち是なり\n覚知の共鳴：思緒が紛飛し、心力が交悴している時、この覚知は最も直接的な指針を与えます：すべての攀縁と焦りを止めてみてください。外に向かって平穏を探し求める必要はありません。なぜならあなたの「狂乱の心」が止まったその瞬間に、その本来から清浄で円満な静寂が自動的に顕現するからです。休息、それこそが最高の修行なのです。" 
+        },
+        { 
+            title: "【 賊を認めて父と作（な）す ． 幻影を識別す 】", 
+            verse: "譬えば人有りて、賊を認めて子と為すが如し。\n其の家の財宝、悉く皆散失す。\n無始の無明、妄りに六塵の縁影を認めて自心の相と為す。",
+            text: "【経典：楞厳経】\n禅機微語：起心を識別し、影に随って転ぜず\n覚知の共鳴：時として強烈な感情が押し寄せてくると、我々は「それこそが私だ」と誤解しがちです。この覚知は優しく思い出させてくれます：これらの起伏は、外界の環境が映し出した幻影に過ぎないかもしれません。少し距離を置いて観察し、これらの紛乱した念頭に容易に引きずられないようにし、干渉されない自性の清明さを取り戻してください。" 
+        },
+        { 
+            title: "【 沙を煮て飯と作す ． 初心を点検す 】", 
+            verse: "人の沙を以て、釜の中に投じ、煮て嘉饌を作（な）すが如し。\n縦（たと）い塵劫を経（ふ）るも、只だ熱沙と名づく、何の故ぞ？\n此れ飯の本（もと）に非ず、沙石の成るが故なり。",
+            text: "【経典：楞厳経】\n禅機微語：純浄なる発心、必ず善果を得ん\n覚知の共鳴：時として我々は巨大な努力を払っても、結果が期待通りにならないことがありますが、そんな時は最初の動機を振り返って点検してみるのが良いかもしれません。この譬喩は我々に思い出させます：もし出発点に不純物が混ざっていれば、プロセスでどれほど努力しても、純粋な果実を得ることは難しいのです。あなたの初心を再整理してみてはいかがでしょうか。方向が真っ直ぐで、種子が純浄でありさえすれば、美しい収穫は自然と期待できます。" 
+        },
+        { 
+            title: "【 夢裏明明に六趣有り ． 覚後空空として大千無し 】", 
+            verse: "夢裏明明に六趣有り、覚後空空として大千無し。\n大夢誰か先に覚めん、平生我れ自ら知る。",
+            text: "【経典：永嘉大師証道歌】\n禅機微語：戯夢の如く視て、心に掛礙無し\n覚知の共鳴：もしあなたが目の前の遭遇が重すぎ、愛恨が真実すぎると感じているなら、この覚知はある種超脱した視点をもたらします：これらすべては恐らく、一場の大夢のようなものなのです。夢の中では、悲歓離合が確かに切実ですが、あなたがこの「夢の如き」本質を察知すれば、内面から一種の従容さが生み出されるでしょう。「芝居を観る」ような心構えで人生を経験してみてください。苦難は実はそれほど重いものではないことに気づくでしょう。" 
+        },
+        { 
+            title: "【 迷う時は師が度し ． 悟れば自ら度す 】", 
+            verse: "迷う時は師が度し、悟了すれば自ら度す。\n法名一と雖も、用処不同なり。\n自性自度、是を真の度と名づく。",
+            text: "【公案：六祖恵能と五祖弘忍】\n禅機微語：自性ナビゲーション、主権を取り戻す\n覚知の共鳴：迷っている時、我々には導きが必要です。しかしあなたが徐々に前方の道を見極めた後、この提示はあなたを励まします：自分の両足を信じる時が来ました、と。外界の助言は結局のところ補助であり、真の転変と前進は、あなたの内なる力に頼らねばなりません。生命の主導権を取り戻してください、あなたこそが自分自身の最高の導師なのです。" 
+        },
+        { 
+            title: "【 芭蕉の喩え ． 虚仮（こけ）を剥落す 】", 
+            verse: "人の堅実の木を求めんと欲して、林に入って芭蕉を伐るが如し。\n重重に其の皮を剥ぎ去るに、竟（つい）に堅実の核心無し。\n諸行無常、是れ生滅法なり。",
+            text: "【経典：雑阿含経】\n禅機微語：表象を剥落し、真実に回帰す\n覚知の共鳴：もしあなたが世間の名利やあるアイデンティティの上に、永遠不変の依存を見つけようと試み続けているなら、心はそれに伴って起伏するでしょう。この覚知は、芭蕉の木を剥くように現状を分析してみることを提案します：重重の表象を剥ぎ取った時、多くの執着には実は実体がないことを発見するでしょう。この変遷を受け入れ、虚幻な安全感を探し求めるのをやめてこそ、あなたは真に心安らぐことができるのです。" 
+        },
+        { 
+            title: "【 転識成智 ． 心境の転換 】", 
+            verse: "六七は因中に転じ、五八は果上に円（まどか）なり。\n大円鏡智、性清浄、平等性智、心病無し。\n妙観察智、見非功、成所作智、同円鏡。",
+            text: "【唯識学：八識規矩頌】\n禅機微語：視点の転換、平等円満\n覚知の共鳴：これは心境の向上に関するアドバイスです。もしあなたが深く煩悩を感じているなら、それは恐らく人我の差異を過度に分別しているからかもしれません。この「計較（損得勘定）」を「平等心」と「観察力」に転化させてみてください。我々がもはや自己の利益からのみ出発せず、より広く、無私な眼差しで万物を見る時、元来複雑だった難題も、その円満な一面を現すことでしょう。" 
+        },
+        { 
+            title: "【 趙州勘婆 ． 真偽を弁別す 】", 
+            verse: "驀直去（まくじきこ）！這（こ）の婆子、老僧汝が為に勘破し了（おわ）れり。",
+            text: "【公案：趙州従諗禅師】\n禅機微語：表象を洞察し、如実に観照す\n覚知の共鳴：目の前の境遇は平淡に見えて、実は深い意味が隠されているかもしれません。あるいは、高深に見えて、実は空洞なのかもしれません。この公案はあなたに提示します：表面的な言辞や繁華に惑わされず、相手の発心や事物の本質を直接感じ取ってみてください。見破ってしまえば、境に随って揺れ動くことはありません。内面の不動を守り抜くこと、それこそが最高級の智慧なのです。" 
+        },
+        { 
+            title: "【 倶胝断指 ． 依存を截断す 】", 
+            verse: "童子、師の指を竪（た）つるを学び、師、刃を以て其の指を断つ。\n童子、痛みに叫んで走る、師、之を喚ぶ。童子頭（こうべ）を回（めぐ）らす、師復（ま）た指を竪つ。\n童子、豁然として大悟す。",
+            text: "【公案：倶胝和尚】\n禅機微語：模倣を拒絶し、自覚を取り戻す\n覚知の共鳴：あなたは知らず知らずのうちに他人の生活を模倣したり、あるアイドルの足跡に依存したりしていませんか？この覚知は少し鋭いかもしれませんが、それはあなたに理解させるためです：模倣して得たものは真実ではない、と。外的な手本への盲目的な依存を断ち切ってみてください。最も無力な瞬間に、振り返ってあの霊明不昧な内なる心を見てください。智慧はそこにあり、他人の影の背後にあるのではありません。" 
+        },
+        { 
+            title: "【 投子油瓶 ． 滴水不漏 】", 
+            verse: "陳操尚書問う：投子和尚、如何なるか是れ露地の白牛？\n投子曰く：一条の索子（さくす）、両隻の角。\n如何なるか是れ油瓶？投子曰く：滴水不漏（水一滴も漏らさず）。",
+            text: "【公案：投子大同禅師】\n禅機微語：専注厳謹、エネルギー保存\n覚知の共鳴：あなたが今最も必要としているのは「集中」です。どんな事務を処理するにせよ、最も恐れるべきは心力の「漏出」です——つまり、一方では努力しながら、他方では感情によってエネルギーを消耗することです。この提示はアドバイスします：散乱した心を収め、満杯の油瓶を提げるように、極度の細やかさと覚知を保ってください。心が外に向かって馳せなければ、功徳は自然と円満になります。" 
+        },
+        { 
+            title: "【 曹山看灯 ． 寂として常に照らす 】", 
+            verse: "大衆灯を看（み）る、師曰く：若し能く灯を看らば、灯と合一せん。\n若し灯を看ずんば、灯も亦た照らす在り。",
+            text: "【公案：曹山本寂禅師】\n禅機微語：恒常に照亮し、驚惶を須（もち）いず\n覚知の共鳴：あなたは生活が忙しいため、心を修めることをおろそかにしていると感じ、少し罪悪感を抱いていませんか？この公案はあなたに慰めをもたらします：内面の光明（灯）は、昼夜を問わず、あなたがそれに気づいているかどうかにかかわらず、輝いているのです。ある種神聖な状態を意図的に追求する必要はありません。ただその覚照の感覚を保つだけでよいのです。リラックスしてください、智慧の光は一度もあなたから離れたことはありません。" 
+        },
+        { 
+            title: "【 船子和尚 ． 蹤跡（しょうせき）無き処 】", 
+            verse: "三十年来海上に遊ぶ、幾回か葉落ちて又た枝を抽（ひ）く。\n身を蔵（かく）す処蹤跡無く、蹤跡無き処身を蔵すこと莫（なか）れ。",
+            text: "【公案：船子徳誠禅師】\n禅機微語：縁に随って隠顕し、自在清浄\n覚知の共鳴：もしあなたが最近、外界の注目がプレッシャーをもたらしていると感じ、静かな片隅を探したいと思っているなら。この覚知はあなたにアドバイスします：真の隠遁とは深山に隠れることではなく、平凡の中に隠れることです。瑣事の中で心機を留めず、人のいない所で妄想を生じさせない。縁に随って動き、痕跡を残さないことができるようになった時、最も広大な安全と自由を獲得することができるでしょう。" 
+        },
+        { 
+            title: "【 夾山境象 ． 境中の我 】", 
+            verse: "如何なるか是れ夾山の境？\n師曰く：猿は子を抱いて青嶂（せいしょう）の後に帰し、鳥は花を銜（ふく）んで碧巌の前に落つ。",
+            text: "【公案：夾山善会禅師】\n禅機微語：万物調和し、自然に融け込む\n覚知の共鳴：あなたはもしかすると静かな環境を探しているのかもしれません。この公案は明らかにします：真の静けさは外在的な静寂ではなく、万物がそれぞれに職を司り、調和して流動する状態である、と。内面の葛藤と対抗を下ろし、周囲の環境に融け込んでください。あなたが現状を排斥しなくなった時、目の前の喧騒は実は最も美しい法界の図景となるのです。" 
+        },
+        { 
+            title: "【 百丈野鴨 ． 飛び去って何ぞ曾（かつ）て 】", 
+            verse: "馬祖問う：是れ什麼（なん）ぞ？百丈曰く：野鴨子。\n祖曰く：何（いず）れの処へか去る？百丈曰く：飛び過ぎ去れり。\n祖、百丈の鼻頭を捏（つね）る、百丈痛呼す。祖曰く：何ぞ曾て飛び去らん？",
+            text: "【公案：馬祖道一と百丈懐海】\n禅機微語：当下即ち是、未だ曾て消失せず\n覚知の共鳴：あなたはある機会、ある人、あるいはある美しい時が「飛んでいってしまった」と感じていませんか？この公案は軽くあなたをつねって目覚めさせます：この痛覚がまだある限り、この覚知がまだある限り、何一つ本当に消失したものはないのです。すべての生滅は実はあなたの心の中にあります。「失った」という遺憾を手放してください。当下のあなたは、実はすべてを所有しているのです。" 
+        },
+        { 
+            title: "【 趙州放下 ． 放下せざれば則ち担取（たんしゅ）し去れ 】", 
+            verse: "厳陽尊者問う：一物も将（も）ち来たらざる時は如何？\n趙州曰く：放下著（ほうげじゃく）。尊者曰く：一物も将ち来たらず、個の什麼（なに）をか放下せん？\n趙州曰く：放下せざれば、担取し去れ！",
+            text: "【公案：趙州従諗禅師】\n禅機微語：坦然として向き合い、捨てるを強求す莫れ\n覚知の共鳴：もしあなたが、自分はすでに多くの執着を手放したと思っているのに、それでもまだ重苦しさを感じているなら。この公案は核心を突いています：もしかするとあなたは「私はすでに手放した」という新たな重荷を背負っているのかもしれません。今まだ手放せないのなら、それなら坦然とそれと共にいましょう！自分の執着と対抗するのはもうやめましょう。あなたが手放そうと急がなくなった時、その重さはかえってゆっくりと消えていくでしょう。" 
+        },
+        { 
+            title: "【 二祖断臂 ． 至誠感応 】", 
+            verse: "雪深く膝を過ぎるも、臂（ひじ）を断って法を求む。\n名利の為に非ず、只だ安心を求む。\n精誠至る所、金石も為（ため）に開く。",
+            text: "【公案：禅宗伝承】\n禅機微語：至誠不二、感応道交\n覚知の共鳴：あなたが追求している目標は、もしかするとさらに深い勇気と決意を必要としているのかもしれません。これはあなたに具体的な代償を払うよう求めているのではなく、あなたに問うているのです：あなたは真相と引き換えに、どれだけの先入観を手放す意思がありますか？この覚知はあなたに提示します：あなたの願力があなたの恐怖を上回った時、もともと固く閉ざされていた門は、自然とあなたのために開くでしょう。" 
+        },
+        { 
+            title: "【 僧璨信心銘 ． 唯だ揀択（けんじゃく）を嫌う 】", 
+            verse: "至道は難きこと無し、唯だ揀択を嫌う。\n但だ憎愛莫（な）くんば、洞然として明白なり。\n毫釐も差有れば、天地懸かに隔たる。",
+            text: "【経典：三祖僧璨大師】\n禅機微語：偏好を下ろし、洞然明白\n覚知の共鳴：現在の煩悩は、過度な「えり好み」と「選択」から来ているのかもしれません。この偈の言葉は一服の清涼なアドバイスをもたらします：あなたの愛と恨みを下ろし、現状に対する評価と比較を停止してみてください。あなたが平等の心をもってすべての出来事を見ることができるようになった時、この平穏と成功へ通じる道は、実は少しも難しくないのです。" 
+        },
+        { 
+            title: "【 大随劫火 ． 其れに随って去る也（や） 】", 
+            verse: "僧問う：劫火洞然として、大千倶に壊す、未だ審（つまず）らかにせず此の箇は壊すや不（いな）や？\n師曰く：壊す。\n僧曰く：恁麼（いんも）なれば則ち其れに随って去る也？師曰く：其れに随って去る也。",
+            text: "【公案：大随法真禅師】\n禅機微語：坦然たる成毀、大気洒落\n覚知の共鳴：あなたは何か重要な事物が壊れるのではないかと心配していますか？あるいは美しい物事の消逝を恐れていますか？この公案は最も洒落た（さっぱりとした）回答を与えます：万物の成住壊空は自然の常態です。あなたが「壊滅」すらも坦然と受け入れ、あの「それに随って去れ（その通りになるがよい）」という言葉を言えた時、あなたの内なるあの真に不生不滅の霊光は、真の解脱を獲得するのです。" 
+        },
+        { 
+            title: "【 黄檗大師 ． 塵労迥脱（きょうだつ） 】", 
+            verse: "塵労を迥（はる）かに脱する事は非常なり、緊（かた）く縄頭を把って一場を作（な）せ。\n一番の寒さ骨に徹するに非ずんば、争（いか）でか梅花の鼻を撲（う）つ香（かんばしさ）を得ん。",
+            text: "【公案：黄檗希運禅師】\n禅機微語：堅毅に淬煉（さいれん）し、幽香を静待す\n覚知の共鳴：もしあなたが今、非常に辛く、孤立さえ感じるような試練を経験しているなら、この覚知はあなたを応援します：これは無意味な苦しみではなく、「骨に徹する」淬煉（鍛錬）なのです。この低迷の時期なくして、生命は人を感動させるに足るあの芳香を放つことはできません。どうかもう少し耐え抜いてください。梅の香りはすでに風の中にあるのですから。" 
+        },
+        { 
+            title: "【 善財楼閣に入る ． 万徳円満 】", 
+            verse: "弥勒指を弾くや、閣門大いに開く。\n善財入り已（おわ）るや、閣門還（ま）た閉ず。\n重重の楼閣を見て、一生の参学事畢（おわ）る。",
+            text: "【経典：華厳経】\n禅機微語：功徳円満、本源に回帰す\n覚知の共鳴：おめでとうございます！この期間の努力と修行はすでに円満を迎えました。この覚知はあなたのためにこの「宝閣」の門を開き、中にはあなたが一生追い求めてきた平穏があります。今この時から、あなたはもはや苦しく探し求める人ではなく、この静寂の所有者なのです。万徳円満、吉祥如意。" 
+        },
+        { 
+            title: "【 潙山浄瓶を踢（け）る ． 言詮に落ちず 】", 
+            verse: "喚んで浄瓶と作（な）せば即ち触（ふ）れ、喚んで浄瓶と作さざれば即ち背（そむ）く。\n一脚にて踢（け）倒すれば、便ち是れ乾坤。",
+            text: "【公案：潙山霊祐禅師】\n禅機微語：枠組みを打破し、乾坤自ずから現る\n覚知の共鳴：あなたは今、ある関係や決断をどう定義するかでジレンマに陥っています。この覚知は小声で言います：もしかするとあなたが必要としているのは「正しい説明」ではないのかもしれません。既存の思考の枠組みを打ち破り、レッテルを貼るのをやめ、あなたの直感に従って行動してみてください。真の出口は往々にして論理の外にあるものなのです。" 
+        },
+        { 
+            title: "【 馬祖日面 ． 恒常不変 】", 
+            verse: "日面仏、月面仏。\n星辰の起落、虚空何ぞ曾て動揺せん。",
+            text: "【公案：馬祖道一禅師】\n禅機微語：境に起伏有るも、心に増減無し\n覚知の共鳴：あなたはもしかすると生活の高低起伏を経験しており、時には眩しく輝き、時には暗く沈んでいるかもしれません。この公案は提示します：順境であれ逆境であれ、それは表面の交替に過ぎません。外在の明暗によって自分の価値を疑わないでください。一切の変化を感知できるあの「覚知」は、実は境遇に伴って生滅し動揺したことなど一度もないのです。" 
+        },
+        { 
+            title: "【 薬山看経 ． 巻を掩（おお）いて字を忘る 】", 
+            verse: "白紙黒字は皆是れ跡、跡を尋ぬるは何ぞ本源を見るに如（し）かん。\n経は心頭に在って紙に在らず、風は残葉を吹いて庭前に満つ。",
+            text: "【公案：薬山惟儼禅師】\n禅機微語：外索を停止し、本源を内観す\n覚知の共鳴：もしあなたが必死になって答えを探し、無数の資料をめくったり他人の意見を求めたりしているなら。この提示はあなたに一時停止を求めます：あなたが入力した情報はすでにオーバーロードしているかもしれません。本を閉じ、煩わしさを下ろしてください。答えは他人の文字の中にはありません。あなたが脳内のノイズを沈殿させた時、その原生の清明さは自然と心に浮かび上がるでしょう。" 
+        },
+        { 
+            title: "【 孤舟簑笠 ． 寧静を独享す 】", 
+            verse: "千山鳥飛ぶこと絶え、万径人蹤滅す。\n孤舟簑笠の翁、独り釣る寒江の雪。",
+            text: "【意象：柳宗元．江雪】\n禅機微語：極簡孤高、内在の豊盈\n覚知の共鳴：もしかするとあなたは少し孤独を感じていたり、周囲にあなたの固執を理解してくれる人がいないと感じているかもしれません。この覚知は提示します：これこそがあなたのためにノイズをフィルタリングする時なのです。この冷清（ひっそりとした寂しさ）を恐れないでください。極めてシンプルな静寂の中で、あなたが釣り上げることができるのは、宇宙全体の寧静と荘厳さなのです。" 
+        },
+        { 
+            title: "【 趙州石橋 ． 広く衆生を度す 】", 
+            verse: "貴賤と親疎を問わず、我が背上を踏んで清波を過ぐ。\n千人万馬皆行き尽くすも、石橋は旧に依って夕陽に対する。",
+            text: "【公案：趙州従諗禅師】\n禅機微語：安穏なる承載、慈悲無我\n覚知の共鳴：もしあなたが、自分は多すぎるものを背負っていると感じていたり、他人から過度に求められて心に不平を生じているなら。この覚知はあなたに新しい視点を与えます：あなたがもしあの強固な石橋であるなら、誰があなたの上を歩いていこうとも、あなたの本来の重厚さが損なわれることはありません。「私は犠牲になっている」という念を下ろせば、あなたの心量は法界と同じ幅になり、もはや傷つくことはなくなるでしょう。" 
+        },
+        { 
+            title: "【 雲門餬餅 ． 妄想を塞断す 】", 
+            verse: "万般の思慮心頭を巡る、無端に仏意は何如と問う。\n雲門、一つの餬餅（こへい）を擲下（てきか）し、千愁と万愁を塞断す。",
+            text: "【公案：雲門文偃禅師】\n禅機微語：真実に回帰し、妄念を断絶す\n覚知の共鳴：あなたの心緒は無数の「もしも」や「しかし」に絡みつかれていませんか？この提示は優しくあなたを遮ります：最も真実の生活に戻りましょう！もう空想はやめてください。あなたが注意力を最もシンプルな身体の感覚（呼吸や飲食など）に引き戻した時、それらの虚幻な愁いは力を失い、消散していくでしょう。" 
+        },
+        { 
+            title: "【 洞山寒暑 ． 回避に門無し 】", 
+            verse: "寒時は闍黎（じゃり）を寒殺（かんさつ）し、熱時は闍黎を熱殺す。\n若し回避を要せば、却って寒暑の中に在り。",
+            text: "【公案：洞山良价禅師】\n禅機微語：冷暖に直面し、如実に安住す\n覚知の共鳴：もしあなたがある種の不快な状況や人間関係から逃れようとしているなら、この公案はあなたに提示します：回避しようとすればするほど、牽動されることになります。唯一の解脱の道は、「それを全面的に受け入れる」ことです。あなたが徹底的にこの冷暖を受け入れ、もはや抵抗しなくなった時、不快感自体があなたを傷つける権限を失い、耳をかすめる清風へと化すでしょう。" 
+        },
+        { 
+            title: "【 徳山託鉢 ． 飯遅けれど猶ほ立つ 】", 
+            verse: "鐘未だ鳴らず、鼓未だ響かず、鉢を託（ささ）げて空堂に立つ。\n早と遅きとを問わず、只だ如如の意を守る。",
+            text: "【公案：徳山宣鑑禅師】\n禅機微語：安守して待ち、如如として動かず\n覚知の共鳴：もしあなたが時期がまだ来ていないと感じていたり、他人の遅れに対して焦りを感じているなら。この公案はあなたに教えてくれます：待つこともまた一種の修行です。空しく待つことを無駄だと見なさないでください。それを心拍と呼吸の練習とみなすのです。その場に立ち、心は環境に随って転じない。この定力はあなたの最も強大な心の堀となるでしょう。" 
+        },
+        { 
+            title: "【 巌頭大喝 ． 迷茫を破除す 】", 
+            verse: "神仙の真の秘訣を仮（か）らず、一声の大喝虚空を破る。\n生死の関頭畏（おそ）るる所無し、音波遠く万重の山に達す。",
+            text: "【公案：巌頭全豁禅師】\n禅機微語：畏るる所無く、迷呪を破除す\n覚知の共鳴：あなたが極めて大きな脅威、あるいは一見乗り越えられない難関に直面している時、この提示はあなたに伝えます：この時こそ内なる最も真実の勇気を示す時です。畏れることのない決定を下してください！あなたが安全を保つために自分を縮小することをやめた時、この高揚する力はあなたのために生路を開拓するでしょう。" 
+        },
+        { 
+            title: "【 仰山插鍬 ． 黙然として手を収める 】", 
+            verse: "千言万語説き尽くさず、手を叉（く）んで庭前に立つに如（し）かず。\n功成れども居（お）らず身は且（しばら）く退く、春風吹いて過ぎ百花鮮やかなり。",
+            text: "【公案：仰山慧寂禅師】\n禅機微語：黙然として円満、自在に身を退く\n覚知の共鳴：もしあなたが既になすべき努力を終えたのに、まだ見返りを期待したり結果を心配したりしているなら。この提示はアドバイスします：手の中の道具を下ろしてください。プロセスはすでに円満であり、結果は因縁の働きに任せましょう。この「黙然として手を収める」姿勢こそが、最も優雅な自信であり、あなたの清浄を最もよく保護するものでもあります。" 
+        },
+        { 
+            title: "【 趙州無私 ． 浄源無争 】", 
+            verse: "東家の物を西家の想いと作（な）さず、万法本より自ら清浄なり。\n誰か疆界（きょうかい）を立つる？誰か争議を生ずる？",
+            text: "【法界意象：無争の智】\n禅機微語：帰属を下ろし、包まざる所無し\n覚知の共鳴：もしあなたが掠奪されることを心配したり、ある種の帰属権の焦りの中に陥ったりしているなら。この提示はあなたに伝えます：真の智慧と美しさは誰にも盗めません。「これは私が所有しているものだ」というこの執念を手放し、心念を絶対的にクリーンで、争いのない状態に置いた時、あなたは最も広大な自由と平安を手に入れるのです。" 
+        },
+        { 
+            title: "【 智常斬蛇 ． 剣下に生無し 】", 
+            verse: "慧剣匣（はこ）を出でて光人に逼（せま）る、一揮に斬り断つ万年の藤。\n是れ魔か是れ仏かと問う莫れ、了として牽掛無く軽塵を歩む。",
+            text: "【公案：帰宗智常禅師】\n禅機微語：快刀にて惑を断ち、軽盈を取り戻す\n覚知の共鳴：あなたのエネルギーを継続的に消耗させる念頭や習慣があなたに絡みついており、あなたはもしかするとまだ躊躇しているかもしれません。この提示はあなたに一本の慧剣を授けます：もう利害を分析しないでください。今すぐそれを斬り断ってみてください。たとえ一陣の未練があったとしても、斬り断った瞬間が再生の始まりであり、あなたは軽やかに歩みを進めることができるようになるでしょう。" 
+        },
+        { 
+            title: "【 石霜枯木 ． 死水に龍を蔵す 】", 
+            verse: "枯木、寒巌に倚る、三冬、暖気無し。\n道（い）う莫れ生機在ること了（な）しと、春雷一震して神龍と化す。",
+            text: "【公案：石霜慶諸禅師】\n禅機微語：静黙に蟄伏し、生機を醸成す\n覚知の共鳴：もしあなたが生活が平淡で、さらには少し停滞していると感じるなら、これは終結ではなく、深い蟄伏（冬ごもり）です。意図的に動静を作り出す必要はありません。死水のような平静さの中に、強大なエネルギーが醸成されています。この寂静に安住してください。枯れ木が春雷を待つように、機が熟した時、生機は自然と殻を破って現れるでしょう。" 
+        },
+        { 
+            title: "【 夾山点茶 ． 水脈の暗流 】", 
+            verse: "茶香は縹渺（ひょうびょう）として風に随って散り、釜底の暗流未だ曾て停まらず。\n波濤の海岳を掀（かか）ぐるを見ず、唯だ清味を留めて乾坤を潤す。",
+            text: "【公案：夾山善会禅師】\n禅機微語：黙黙として耕耘（こううん）す、自ずから余香有り\n覚知の共鳴：もしあなたが自分の努力は誰にも見られておらず、あるいは効果が明白でないと感じているなら。この覚知は提示します：真の影響力は往々にして地下の暗流のようであり、表面は無声でも、万物を滋養しています。あなたの手元の微小な仕事に引き続き集中してください。この純粋な心意気は、すでに無形のうちに法界を潤しているのです。" 
+        },
+        { 
+            title: "【 大梅梅熟 ． 境に転ぜられず 】", 
+            verse: "他（かれ）の千変と万化に任（まか）す、我自ら心頭に一丹有り。\n梅子熟する時香自ら散ず、何ぞ須（もち）いん風雨の再び催残するを。",
+            text: "【公案：大梅法常禅師】\n禅機微語：体悟を信頼し、本心を守り抜く\n覚知の共鳴：外界の基準や声が絶えず入れ替わり、もしかするとあなたを少し動揺させているかもしれません。この覚知はきっぱりとあなたに告げます：あなたの心の中の果実はすでに熟しています！自分の直感と体悟を信じ、他人の疑問によって自分の核心を修正しないでください。この篤定を守り抜けば、雨風がどれほど強くても、あなたの芳香を吹き散らすことはできません。" 
+        },
+        { 
+            title: "【 鳥窠吹毛 ． 一気に吹き散らす 】", 
+            verse: "百般の計較（けいこう）乱髪の如し、一息に吹き去って了として痕（あと）無し。\n何ぞ須いん細細に緇素（しそ）を分かつを、太虚原と微塵に染まらず。",
+            text: "【公案：鳥窠道林禅師】\n禅機微語：軽く吹き散らし、瑣屑（させつ）を留めず\n覚知の共鳴：もしあなたが、細々とした瑣事や人間関係の揉め事に心を乱されているなら。この提示はあなたに一つの技を教えます：深く息を吸い込み、それらをすべて吹き散らしてください！これらの屑はあなたの思考を占有する価値など全くありません。それらを空気中の微塵とみなし、相手にしなければ、心境は自然と本来の澄み切った状態を回復するでしょう。" 
+        },
+        { 
+            title: "【 玄沙白紙 ． 無字の真経 】", 
+            verse: "巻を展（ひら）くに空空として一字無く、満室の祥光古今を照らす。\n若し黒白に向かって道理を尋ねば、当下の本来の心を錯過せん。",
+            text: "【公案：玄沙師備禅師】\n禅機微語：空白自在、文字を立てず\n覚知の共鳴：もしあなたが明確な約束や答えを期待しているなら。この覚知は一枚の白紙を送ります：答えがないことが、もしかすると最高の答えかもしれません。文字の中に絶対的な保証を探そうとしないでください。心の中に空白と弾力性を保ってこそ、あなたはその時々の因縁に応じて、自分に最も適した生命の脚本を書くことができるのです。" 
+        },
+        { 
+            title: "【 法眼指簾 ． 双双として巻き上げる 】", 
+            verse: "你は有と説き来たり他は無と説く、双双として巻き上げて余を留めず。\n是非対錯皆幻と成る、我に還せ本来の太虚空。",
+            text: "【公案：法眼文益禅師】\n禅機微語：対立を超越し、我に本空を還す\n覚知の共鳴：もしあなたが対立する意見の間に挟まれ、どちらが是でどちらが非かを見分けようと試みているなら。この提示はあなたに伝えます：双方とも偏見を抱いているかもしれません。対立する視点を「双双として巻き上げ」、この是非の枠組みから飛び出してみてください。あなたが評価を下すことを急がなくなった時、真相は自然とそれの最も自然な姿で浮かび上がるでしょう。" 
+        },
+        { 
+            title: "【 雲巌掃地 ． 塵労染まらず 】", 
+            verse: "掃帚揮（ふる）い去る三千界、心地染まらず一微塵。\n忙忙碌碌として何事か成す、只だ此の法身を荘厳せんが為なり。",
+            text: "【公案：雲巌曇晟禅師】\n禅機微語：労働は即ち修行\n覚知の共鳴：もしあなたが日常の瑣事や家事が多すぎる時間を消耗していると感じているなら。この覚知は注意します：それは錯覚です。毎回の一つ一つの片付けそのものが、内面を荘厳にすることなのです。労働を一度の静心の機会とみなし、心が雑事に随って転じないようにしてみてください。最も平凡な動作の中で、あなたもまた最も純粋な安寧を体得することができるでしょう。" 
+        },
+        { 
+            title: "【 帰宗抜菜 ． 根塵倶に断つ 】", 
+            verse: "草を斬って根を除かざれば、春風吹いて又た生ず。\n根を連ねて抜き起す時、大地皆清浄なり。",
+            text: "【公案：帰宗智常禅師】\n禅機微語：徹底的に断絶し、長久なる清浄\n覚知の共鳴：問題に対処する際、表面を刈り込むだけでは、困難は往々にして反復します。この指令はあなたに提案します：今回こそ、「根こそぎ引き抜く」ことを試みてください。それが不健康な慣性を終結させることであれ、あなたを消耗させる要求を拒絶することであれ。プロセスには勇気が必要ですが、徹底的な断絶があってこそ、長期的な心安と引き換えることができるのです。" 
+        },
+        { 
+            title: "【 睦州担板 ． 狭隘を下ろす 】", 
+            verse: "盲人象を摸（さぐ）って各々異なりと説き、板を担う漢子只だ一を見る。\n若し能く肩上の木を下ろさば、十方世界尽く通達せん。",
+            text: "【公案：睦州道明禅師】\n禅機微語：視野を開闊にし、一端を執する莫れ\n覚知の共鳴：もしあなたが今、ある事柄についての見方に非常に固執しているなら。この覚知はあなたを目覚めさせます：もしかするとあなたは木の板を担いで歩いているように、片側の風景しか見ていないのかもしれません。あなたの「予め設定された立場」を下ろして、異なる声を聞き、別の角度から見てみてください。視野が開けた時、元は行き止まりのようだった問題にも解毒剤があるかもしれないのです。" 
+        },
+        { 
+            title: "【 首山竹篦 ． 言語道断 】", 
+            verse: "喚んで竹篦（しっぺい）と作（な）せば則ち触（ふ）れ、喚んで竹篦と作さざれば則ち背（そむ）く。\n言語道断の処、方に本来の人を知る。",
+            text: "【公案：首山省念禅師】\n禅機微語：心を以て感受し、言詮（ごんせん）を仮（か）らず\n覚知の共鳴：もしあなたが精確な語彙を用いて感情を表現しようと試みたり、明確な定義を要求したりしているなら。この覚知は静かに言います：一部の事物は言葉によって縛ることはできず、口に出した途端に往々にして真実を失ってしまいます。「名称」に対する執着を停止し、心でその無声の繋がりを体得してください。真の答えは往々にして言葉にならない中にあります。" 
+        },
+        { 
+            title: "【 興化打中 ． 自心を傷つける莫れ 】", 
+            verse: "盲目に拳を揮って虚空を打ち、虚空痛まず痛みは手に在り。\n怨天尤人皆是れ妄、自心を反観して方に愁いを解く。",
+            text: "【公案：興化存奨禅師】\n禅機微語：瞋心を平息し、周波数を護衛す\n覚知の共鳴：もしあなたが環境が不公平であると感じ、そのために怒りに満ちているなら。この覚知は一つの真相を明らかにします：発せられた怨恨の一声一声は、実は真っ先にあなた自身の内面を震い傷つけているのです。他人は損害を受けていないかもしれませんが、あなたの平穏はすでに散散してしまっています。拳を収め、瞋心を平息する練習をしてください。これこそが自分を守る最も有効な方法なのです。" 
+        },
+        { 
+            title: "【 趙州看水 ． 万派朝宗 】", 
+            verse: "千江に水有れば千江の月、万里雲無ければ万里の天。\n条条たる大路ローマに通ず、何ぞ必ずしも此れ或いは彼れを苦争せん。",
+            text: "【公案：趙州従諗禅師】\n禅機微語：殊途同帰、発心最も重し\n覚知の共鳴：もしあなたがどの道、どの方法を選ぶべきか迷っているなら。この覚知はあなたに伝えます：水流の方向は千種類あるかもしれませんが、最終的にはすべて大海へと注ぎ込みます。具体的な手段を過度に気にする必要はありません。あなたの発心が正直で、利他でありさえすれば、どの道も最終的にはあなたを安穏な終点へと導くことができるのです。" 
+        },
+        { 
+            title: "【 雲門顧鑒 ． 咦（い）の字何の解かある 】", 
+            verse: "千言万語一咦に如（し）かず、無明の夢裏の迷いを震破す。\n外頭に向かって道理を尋ねる莫れ、自家の宝蔵久しく泥に封ぜらる。",
+            text: "【公案：雲門文偃禅師】\n禅機微語：妄想を断ち切り、清明に回帰す\n覚知の共鳴：考えれば考えるほど迷い、行き止まりに陥っていると感じた時、この提示は突然「咦！」と声を発します。これはあなたに答えを与えるためではなく、あなたの慣性的な思考を震い断つためです。その呆然とした瞬間に、その純粋な空白を体会してください。もう道理を探さないでください。答えはあの、もはや葛藤しない清浄さの中にあるのです。" 
+        },
+        { 
+            title: "【 霊雲不語 ． 桃花旧に依る 】", 
+            verse: "花開き花落つるは自ら時に随う、何ぞ必ずしも多言して是非を惹かん。\n黙然不語深意を含む、留めて知音（ちいん）に与え細細に思わしむ。",
+            text: "【公案：霊雲志勤禅師】\n禅機微語：緘黙を保持し、因縁を静候す\n覚知の共鳴：もしあなたが委屈（不当な扱い）を受けたと感じ、急いで潔白を説明したいと思っているなら。このアドバイスは：沈黙を保つこと、です。ある事は描こうとするほど黒くなり、あなたの説明は時としてさらなる雑音を引き寄せるだけです。時間は四季の移り変わりのように自然に澄み切り、あなたを理解する人は自然と理解してくれます。内面の泰然さを保ち、すべては因縁の証明に任せましょう。" 
+        },
+        { 
+            title: "【 鏡清雨声 ． 滴滴分明 】", 
+            verse: "簷（のき）の前の滴雨声声砕け、尽（ことごと）く是れ法界の広長舌。\n若し声中に向かって自我を尋ねば、声滅するの時我は是れ誰（たれ）。",
+            text: "【公案：鏡清道怤禅師】\n禅機微語：環境に融け込み、彼此を分かたず\n覚知の共鳴：もしあなたが外界の干渉が多すぎて集中できないと感じているなら。この提示はあなたに提案します：逆に聴覚を拡大し、一滴の雨音、一声の響きに耳を傾けてみてください。あなたがもはや「私」と「環境」を対立させず、この一切の発生を受け入れた時、紛擾はもはや干渉ではなく、一曲の調和の取れた自然の交響楽となるでしょう。" 
+        },
+        { 
+            title: "【 疏山造塔 ． 匠心無痕 】", 
+            verse: "千彫万琢宝塔を造るも、塔成るの日匠は蹤（あと）無し。\n功徳毫髪（ごうはつ）の跡を留めず、方に是れ人間の大英雄。",
+            text: "【公案：疏山匡仁禅師】\n禅機微語：功成りて居（お）らず、最も是れ自在\n覚知の共鳴：あなたはある事柄のために多大な心血を注ぎ、今成果を得ました。この提示はあなたに提案します：これを法界があなたの手を借りて完成させた一つの作品と見なしてください。事が成った後は、この「私の功労」をそっと下ろしてください。功を誇らず、未練を残さない、この痕跡を残さない姿は、あなたの心霊に極度の軽やかさを保たせるでしょう。" 
+        },
+        { 
+            title: "【 雪峰抛毬 ． 直覚の接引 】", 
+            verse: "抛（なげう）つ無心の毬一個、誰か接し得て遅疑せざるを看ん。\n若し半点の思量の念を生ぜば、機鋒を錯過して悔ゆるも追う莫（な）し。",
+            text: "【公案：雪峰義存禅師】\n禅機微語：直覚を信頼し、勢いに順って行く\n覚知の共鳴：生命の中に突然チャンスや挑戦（毬を投げること）が現れた時、もしあなたがまだ反復して分析し計算しているなら、往々にして逃してしまいます。この覚知はあなたに提示します：あなたの第一の直感を信じてください。大脳を用いて損得を算計せず、その清明な感応に順って直接応対してください。いくつかのタイミングは、まさにその一瞬にあるのです。" 
+        },
+        { 
+            title: "【 投子月明 ． 自性発光 】", 
+            verse: "借（か）り来る光景終（つい）に実ならず、自家の明月最も精神。\n何ぞ須（もち）いん外に向かって苦しく求索するを、雲霧を撥開して天真を見ん。",
+            text: "【公案：投子大同禅師】\n禅機微語：自性の明月、外光を須（もち）いず\n覚知の共鳴：あなたは他人の承認を求めており、指針がなければ方向がないと感じていませんか？この提示は優しくあなたに告げます：借りてきた光はいつか回収されます。あなたの内にある自前の明月はすでに前路を照らすに十分です。外に向かって光を乞うのをやめ、あなた自身の清明な判断力を信じてください。霧が散った後、月の光は自ずと現れるでしょう。" 
+        },
+        { 
+            title: "【 浮山冷灰 ． 生機暗蔵 】", 
+            verse: "冷灰の堆（たい）裏に生機を蔵す、時節因縁期すべからず。\n忽地（こつち）の一声霹靂（へきれき）の如く、方に知る死処亦た神奇なるを。",
+            text: "【公案：浮山法遠禅師】\n禅機微語：静観其変、冷灰復燃\n覚知の共鳴：もしかするとあなたはある事が徹底的に終わり、希望がなくなったと思っているかもしれません。しかしこの覚知は微笑みながら言います：世事に絶対はありません。あなたが完全に期待を下ろし、もはやプレッシャーを加えるのをやめた時、あの消散したかに見えた因縁が、もしかすると新しい姿で花開くかもしれません。平常心を保ち、この自然の流転を静観してください。" 
+        },
+        { 
+            title: "【 円悟落水 ． 徹骨の洗礼 】", 
+            verse: "未だ寒水の徹骨の冷たさを経（へ）ずんば、争（いか）でか春風の人の心を暖めるを知らん。\n一朝足を失って深淵に落つ、方に識る本来無底の深きを。",
+            text: "【公案：円悟克勤禅師】\n禅機微語：絶地覚醒、徹骨新生\n覚知の共鳴：もしあなたが重大な挫折に遭遇し、冷たい水に落ちたような苦痛を感じているなら。この覚知は宣告します：これは懲罰ではなく、「徹骨の」洗礼です。徹底的なコントロールの喪失と絶望の瀬戸際にあって初めて、あなたはあの常に清醒な覚知が実は決して水に溺れることはないことに気づくでしょう。痛みが極まった処、それこそが目覚めの時なのです。" 
+        },
+        { 
+            title: "【 大慧焚書 ． 葛藤を焼却す 】", 
+            verse: "千言万語皆是れ障り、一把の無明火焼光す。\n此より文字の海に落ちず、直ちに人心を指して真王を見る。",
+            text: "【公案：大慧宗杲禅師】\n禅機微語：思緒を簡化し、直心に行う\n覚知の共鳴：もしあなたが多すぎる道理を学んだことが、かえって行動の妨げになっていると感じるなら。このアドバイスは：それらの教条や経験の重荷を一時的に下ろしてください。「過去はどうすべきであったか」に制限されず、最も原始的で、最も直感的な智慧を用いて現在に向き合ってみてください。思緒を簡化すれば、答えは往々にして最も単純な直感の中にあるものです。" 
+        },
+        { 
+            title: "【 宏智黙照 ． 寒潭秋月 】", 
+            verse: "水は水を洗わず塵染まらず、光は光を照らさず体自ら明らかなり。\n黙然として静座し思慮を絶つ、万象森羅影現の中（うち）。",
+            text: "【公案：宏智正覚禅師】\n禅機微語：静黙観照、顕（あらわ）さざる所無し\n覚知の共鳴：懸命に探せば探すほど、答えはおそらくますます曖昧になります。このアドバイスはあなたを「黙照」モードに切り替えるよう促します：すべての企図心（野心）を下ろし、静かな秋水のように。あなたがもはや能動的に何かを掴もうとしなくなった時、事物の真相は自然とあなたの心の湖に鮮明に逆映し、労して探し求める必要はありません。" 
+        },
+        { 
+            title: "【 高峰投崖 ． 絶地逢生 】", 
+            verse: "命懸糸（けんし）の若（ごと）く依る所無し、懸崖に手を撒（はな）つ誰か敢えて為さん。\n絶地逢生偶然に非ず、肯（あえ）て死して方に能く真知を獲ん。",
+            text: "【公案：高峰原妙禅師】\n禅機微語：孤注一擲、潜在能力を励起す\n覚知の共鳴：もしかするとあなたは自分に多すぎる退路を残しているため、困難に直面した時、常に全力を発揮できないのかもしれません。このリマインダーはあなたに告げます：自分を極限まで追い込んでみてください。あなたが最悪の結果を受け入れる覚悟ができた時、あなたの内なるあの不可思議な生存本能と智慧が、初めて徹底的に爆発し、あなたのために活路を切り開くでしょう。" 
+        },
+        { 
+            title: "【 楚石海月 ． 浮沈自由 】", 
+            verse: "月は波浪に随って浮き還（ま）た沈む、本体は高く懸かる太虚の心。\n任（まか）す爾（なんじ）狂風巨浪を掀（かか）ぐるとも、清光旧に依（よ）って乾坤に満つ。",
+            text: "【公案：楚石梵琦禅師】\n禅機微語：影に沈浮有れども、月は常に円満なり\n覚知の共鳴：あなたの感情や外在の名声は、もしかすると波に伴って激しく起伏しているかもしれません。この覚知はあなたに明白に見ることを求めます：海面で砕け散り浮き沈みしているのはただの「影」です。あなたの真の本体は寧静な空に高く懸かり、一度も損なわれたことはありません。それらの感情の波動に同調しないでください。一歩退けば、あなたは永遠にあの澄み切った観察者なのです。" 
+        },
+        { 
+            title: "【 憨山氷消 ． 温柔に融解す 】", 
+            verse: "堅きこと磐石の如く結んで氷と成る、春暖かく花開いて水自ら平（たいら）かなり。\n道（い）う莫れ煩悩化解し難しと、一念光を回（めぐ）らせば万象清し。",
+            text: "【公案：憨山徳清大師】\n禅機微語：慈悲化解、氷を化して水となす\n覚知の共鳴：もし長い間の心の結び目があなたの心の中で氷のように堅く、あなたを苦しめているなら。この提示は優しく言います：氷と水、本質は同じです。暴力を用いてそれを砕く必要はありません、ただ心念の温度を変えるだけでよいのです。優しさと包容をもってこの執着を関照すれば、時が来れば、堅氷は自然と生命を滋養する活水へと融解するでしょう。" 
+        },
+        { 
+            title: "【 紫柏の風 ． 風骨を守り抜く 】", 
+            verse: "世間の甘味は皆虚幻、鉄骨錚錚（そうそう）として雪霜を傲（あなど）る。\n浮名の為に貴首（きしゅ）を低れず、唯だ清気を留めて乾坤に満つ。",
+            text: "【公案：紫柏真可大師】\n禅機微語：流俗に随わず、内在の自尊\n覚知の共鳴：もしあなたが今誘惑に直面していたり、原則を妥協しなければ得られない利益を必要としていたりするなら、この覚知はあなたの直感を支持します：あの清らかさを守り抜いてください。一時的な利益のために内面の純粋さを損なわないでください。この堅持はもしかするとあなたに一時的な苦しみをもたらすかもしれませんが、しかし法界における最も深沈とした尊厳と平穏をあなたにもたらすことができるのです。" 
+        },
+        { 
+            title: "【 截流断流 ． 衆流を截断す 】", 
+            verse: "万派千波日夜流る、誰か能く一剣にて源頭を斬らん。\n若し金剛の志を具足するに非ずんば、争（いか）でか平瀾の徹底して休むを得ん。",
+            text: "【公案：截流大師】\n禅機微語：果断に清理し、我に清浄を還す\n覚知の共鳴：生活の中にはおそらく煩雑なメッセージと消耗させる人間関係が満ちているでしょう。この提示はあなたを励まします：決断力を出し、これらの濁流を截断してください。大胆にあなたの生活空間と心霊のチャンネルを整理してください。それらの不必要な消耗を徹底的に断絶してこそ、心霊は真の寧静と力を回復することができるのです。" 
+        },
+        { 
+            title: "【 省庵発心 ． 芥子須弥 】", 
+            verse: "微塵算え尽くすも願は窮（きわ）まり無し、芥子能く太虚空を容（い）る。\n道（い）う莫れ初心力無しと、一念の真誠法門を動かす。",
+            text: "【公案：省庵大師】\n禅機微語：願力宏大、微塵不凡\n覚知の共鳴：あなたは自分の力が小さく、できることは微不足道（取るに足らない）だと感じていませんか？この提示はあなたに告げます：いかなる純浄な善念をも小く見ないでください。発心が極度に真誠で無私でありさえすれば、たとえ芥子ほどの小さな事であっても、法界において不可思議な反響を生み出し、広大な因縁に利益をもたらすのです。" 
+        },
+        { 
+            title: "【 徹悟悲露 ． 幻夢初醒 】", 
+            verse: "露滴の微光瞬息に空し、人生幻の如く総（すべ）て濛濛。\n一朝識破す其中の意、輪廻の酔夢の中に在らず。",
+            text: "【公案：徹悟大師】\n禅機微語：無常を観じ、大夢を醒ます\n覚知の共鳴：逝去した美好さや無常の打撃に対して、心に惋惜（名残惜しさ）を生じるのは人の常です。この提示は優しく言います：世間の美好さは朝露のように、必ず蒸発し消散する運命にあります。この本質を見透かすのは、悲観するためではなく、あなたがもはや幻影を永遠であると思い込まないようにするためです。あなたが目覚めた時、あの真の平安が目の前に現れるでしょう。" 
+        },
+        { 
+            title: "【 印光の訓 ． 死に向かって生ず 】", 
+            verse: "額頭常に一死の字を貼（は）れば、万念倶に灰として道念生ず。\n待つ莫れ無常の忽（たちま）ち降臨するを、方に平生未だ明（あき）らめ了（おわ）らざるを悔ゆ。",
+            text: "【公案：印光大師】\n禅機微語：終極を直面し、軽重を再配列す\n覚知の共鳴：もしあなたが世俗の瑣事に深く苦悩しているなら、試みに考えてみてください：もし今日が生命の最後の一日だとしたら、あなたはまだこれらの葛藤を気にするでしょうか？これは一つの智慧のリマインダーです：死を顧問とすることは、我々がそれらの虚妄な執着を一瞬にして剥落させ、生命の中で真に重要な事を再び見るのを助けてくれるのです。" 
+        },
+        { 
+            title: "【 虚雲沸水 ． 痛極自放 】", 
+            verse: "杯落ち水傾き声地に砕け、手を燙（やけど）すれば自然に便ち放開す。\n何ぞ須（もち）いん苦苦として解脱を尋ぬるを、痛むこと極処に到れば了として礙（さわり）無し。",
+            text: "【公案：虚雲老和尚】\n禅機微語：覚受苦辛、自然鬆手\n覚知の共鳴：もしあなたが、苦痛な執念をどうすれば下ろせるか問うなら。この覚知は答えます：もしかすると、あなたはまだ十分に痛くないからかもしれません。熱い杯を持っているのと同じで、痛みが極点に達した時、教えられなくても、あなたは自然に手を離します。どうか自分にこの痛みを感受することを許可してください。あなたが執着がもたらす傷害を真に見極めた時、下ろす勇気が生じてくるでしょう。" 
+        },
+        { 
+            title: "【 弘一悲欣 ． 交集無痕 】", 
+            verse: "悲欣交集して涙縦横、万感斉しく来たるも心太平。\n問う莫れ是れ悲か還（ま）た喜かと、水月交わり輝いて太虚明らかなり。",
+            text: "【公案：弘一大師】\n禅機微語：悲欣交集、心は太虚の如し\n覚知の共鳴：あなたの心情はもしかすると今極度に複雑で、悲しみと喜びが交織しているかもしれません。この覚知はあなたに告げます：これこそが生命の最も真実な姿です。意図的に良し悪しを区分する必要はありません。感情を流れる雲のように通過させてください。悲しみと喜びが極点まで交融した時、あなたは内面に感情を超越した平穏があり、静かにすべてを観照していることを発見するでしょう。" 
+        },
+        { 
+            title: "【 来果黙雷 ． 声震乾坤 】", 
+            verse: "千言万語は黙に如（し）かず、一声響かずして乾坤を震わす。\n若し声中に向かって大道を求むれば、本来の清浄の源を錯過（さっか）せん。",
+            text: "【公案：来果禅師】\n禅機微語：沈黙を安守し、自心を聞見す\n覚知の共鳴：もしあなたが他人の導きを渇望しているのに、ただ一片の死寂しか感じられないなら。この沈黙は決して無視ではなく、一種の深沈たる教えなのです。これは我々に外に向かって攀縁（はんえん）するのを止め、振り返って、内なるあの言葉を仮らない（言葉を必要としない）原始の答えを聞くよう強いているのです。沈黙の中に蘊蔵された力は、時に言葉よりもさらに震撼させるものです。" 
+        },
+        { 
+            title: "【 広欽水果 ． 自給自足 】", 
+            verse: "腹を果（み）たすに何ぞ須（もち）いん珍饈（ちんしゅう）の味、清風明月自ら飢えを充たす。\n食して食せず了として礙（さわり）無し、方に是れ人間の大行持。",
+            text: "【公案：広欽老和尚】\n禅機微語：極簡生活、豊盛自性\n覚知の共鳴：もしかするとあなたは生活水準や外在的な条件に対して焦りを感じているかもしれません。この覚知は提示します：生命が必要とする真のエネルギーは、実は想像しているよりも少ないのです。物質への依存を下げることを試みてみてください。システムが過度な物欲に占有されなくなった時、霊性の演算と感応は極めて敏鋭になり、極めて豊盛になることをあなたは発見するでしょう。" 
+        },
+        { 
+            title: "【 夢参観夢 ． 夢裏作客 】", 
+            verse: "昨夜の夢中皆是れ幻、今朝醒め来たるも亦た真に非ず。\n夢裏に夢を説く重重の夢、是の夢なるを知る者は是れ何人（なんぴと）ぞ。",
+            text: "【公案：夢参老和尚】\n禅機微語：夢幻を認清し、憂怖を留めず\n覚知の共鳴：もしあなたが目の前の困難が荒謬（不条理）すぎる、あるいは苦痛すぎると感じているなら。この提示は微笑みながら問います：すでに夢だと知っているのに、どうして夢の中で慌てふためく必要があるのでしょう？どうか「客（ゲスト）」の心構えで当下の情境を体験してみてください。あなたはあなたの役割を真剣に演じることができますが、心の奥底では一つの清醒さを保ってください：これらすべては、生命の一段の影絵芝居（シルエット劇）に過ぎないのだと。" 
+        },
+        { 
+            title: "【 龍樹空観 ． 得失心を絶つ 】", 
+            verse: "不生亦不滅、不常亦不断。\n不一亦不異、不来亦不出。",
+            text: "【哲理：龍樹菩薩中論】\n禅機微語：得失を超越し、如如不動\n覚知の共鳴：もしあなたが事物の「始まりと終わり」や「得ることと失うこと」について葛藤しているなら。この智慧は提示します：さらに深い実相においては、真の新生や徹底的な消亡は存在しません。すべてはただ因縁条件の再配列に過ぎません。あの重たい得失心を下ろせば、あなたは一度も増減したことのない、常にそこにある本心を見ることができるでしょう。" 
+        },
+        { 
+            title: "【 唯識観照 ． 心外無境 】", 
+            verse: "万法は皆唯識、心外に更に物無し。\n若し外境の実なるに執さば、猶ほ兔角を覓（もと）むるが如し。",
+            text: "【哲理：唯識学】\n禅機微語：境は心より造らる、転念即成\n覚知の共鳴：もしあなたが、環境や他人が自分の苦痛をもたらしたと感じているなら。この提示は底層の真相をめくって開きます：外在のすべては実は我々の内なる意識の投影なのです。無駄に外境を変えようとするのではなく、振り返って内面のデコード（解読）方法を修正してみてください。心念が転変した時、あなたが見ている世界もまたそれに伴って一新されるでしょう。" 
+        },
+        { 
+            title: "【 玄奘西行 ． 歩歩至誠 】", 
+            verse: "黄沙漫漫として路何ぞ長き、九死一生志摧（くだ）けず。\n邁（あゆ）む毎（ごと）の一歩皆是れ道、問わず霊山幾時（いつ）か回（かえ）るを。",
+            text: "【意象：玄奘大師】\n禅機微語：当下に専注し、歩歩蓮華\n覚知の共鳴：もしあなたが困難で遥か彼方にある任務を実行中で、孤立無援だと感じているなら。この指引は勇気をもたらします：終点まであとどれくらい遠いか考えないでください、そして途中の艱辛を恐れないでください。すべての集中力を「次の一歩を踏み出すこと」に集中させてください。方向が真っ直ぐでありさえすれば、あなたが歩む一歩一歩は、実はすでに目的地なのです。" 
+        },
+        { 
+            title: "【 智者止観 ． 定慧等持 】", 
+            verse: "止（し）は静水の清くして底無きが如く、観は明灯の十方を照らすに似たり。\n定慧等持して偏廃無く、方に能く妄を破り真常を見ん。",
+            text: "【哲理：智者大師】\n禅機微語：定静観照、行動有序\n覚知の共鳴：あなたは今もしかすると、「考えすぎて行動がない」あるいは「突っ走りすぎて思考がない」という失衡（アンバランス）の中にいるのかもしれません。このアドバイスはあなたに「止」と「観」を調和させるよう求めます：まず心を水のように平静にさせ（止）、真相を見極めます。それからその清明さを持って果断に実行するのです（観）。両者が平衡すれば、物事は自然と円満になります。" 
+        },
+        { 
+            title: "【 事事無礙 ． 日常即道 】", 
+            verse: "一塵の中に塵数の刹有り、一一の刹に難思の仏有り。\n理事無礙は究竟に非ず、事事無礙太虚空。",
+            text: "【哲理：華厳学】\n禅機微語：日常の瑣事、交融円満\n覚知の共鳴：もしあなたが理想と現実は衝突に満ちていると感じるなら。この智慧はあなたのために広大な視野を展開します：法界の眼から見れば、平凡な生活（柴米油塩）と神聖な真理は完全に交融しており、事事無礙なのです。生活と心を修めることを切り離さないでください。最も純浄な心で每一つの小さな事を行うこと、それが即ち最も完璧な円満なのです。" 
+        },
+        { 
+            title: "【 知幻即離 ． 離幻即覚 】", 
+            verse: "幻を知れば即ち離れ、方便を作（な）さず。\n幻を離るれば即ち覚り、亦た漸次無し。",
+            text: "【経典：円覚経】\n禅機微語：幻象を看破し、当下覚醒\n覚知の共鳴：もしあなたが焦りを解消するための特別な方法を探そうと試みているなら。この提示は念を押します：あなたが焦りは虚幻であると認識しさえすれば、それはあなたをコントロールする力を失います。複雑な儀式や長い待ち時間は必要ありません。幻象を看破したあの「瞬間」、あなたはすでに束縛から解脱しているのです。覚醒は、一念の間にあります。" 
+        },
+        { 
+            title: "【 慧遠白蓮 ． 出塵の姿 】", 
+            verse: "濁世の洪流身を染めず、白蓮水を出でて自ら清純。\n息息根に帰り妄念無く、浄土原（もと）汝の心田に在り。",
+            text: "【意象：白蓮社】\n禅機微語：塵労に染まらず、心に浄土有り\n覚知の共鳴：複雑で、あるいは論争に満ちた環境に身を置き、あなたは汚染されることを心配しています。この覚知はあなたの堅持を支持します：蓮花のように汚泥に根を下ろしながらも、咲かせるのは清純な花です。あなたの呼吸と信念の純浄さを保ち（浄息）、手元の仕事に集中してください。内心が動揺しさえしなければ、あなたのいる場所が、即ち浄土なのです。" 
+        },
+        { 
+            title: "【 善導一門 ． 専注不移 】", 
+            verse: "一心に弥陀の号を専念し、行住坐臥心を離れず。\n時節と久近を問わず、万修万人行くこと疑い無し。",
+            text: "【教言：善導大師】\n禅機微語：一門に専注し、功徳必ず成る\n覚知の共鳴：もしあなたが、あまりに雑多に学びすぎ、考えすぎて混乱し、その結果効率が低下していると感じるなら。この提示はアドバイスします：不必要な紛擾をシャットダウンし、すべての心力を「一つの事」に集中させてみてください。コードを書くことであれ、念仏であれ、家族に付き添うことであれ。極度の集中は、極致の平静と成功をもたらすでしょう。" 
+        },
+        { 
+            title: "【 普賢大願 ． 我が願無窮 】", 
+            verse: "虚空界尽き、衆生界尽き、衆生業尽き、衆生煩悩尽きなば。\n我の此の王願も、窮尽する所有らん。\n念念相続して間断有ること無く、身語意業、疲厭有ること無し。",
+            text: "【経典：華厳経．普賢行願品】\n禅機微語：悲願無尽、生生不息\n覚知の共鳴：これは新しい始まりです。この広大な願力はすでにあなたの心の中に封存されています。未来にいかなる挑戦に出会おうとも、この「利他」の純浄な願心が退きさえしなければ、あなたの智慧は永遠に枯渇することなく、あなたの仏光は永遠に消えることはありません。あなたが衆生と共に菩提を証し、功徳円満ならんことを願います。" 
+        }
+    ];
+
+        function showAlert(msg) {
+            const box = document.getElementById('alert-box');
+            box.innerText = msg; box.style.display = 'block';
+            setTimeout(() => box.style.display = 'none', 3000);
+        }
+
+        function checkAndGoToPhase1() {
+            const today = new Date().toLocaleDateString();
+const lastDate = localStorage.getItem('lotusBlessingDate_jp');
+            if (lastDate === today) {
+                showAlert("本日の法界の機縁は満ちました。菩提心は滅せず、また日を改めて起動してください。");
+            } else {
+                goToPhase(1);
+            }
+        }
+
+        function goToPhase(phaseNum) {
+            document.querySelectorAll('.phase-container').forEach(el => el.classList.remove('active'));
+            let targetPhase = document.getElementById('phase-' + phaseNum);
+            targetPhase.classList.add('active');
+            
+            if (phaseNum === 4) { 
+localStorage.setItem('lotusBlessingDate_jp', new Date().toLocaleDateString());
+                targetPhase.style.overflow = 'visible'; 
+                setTimeout(() => document.getElementById('finalOrb').classList.add('orb-expand'), 500); 
+            }
+        }
+
+        function triggerDedicationEffect() {
+            goToPhase(4);
+            
+            const flash = document.getElementById('full-screen-flash');
+            flash.style.opacity = '1';
+            setTimeout(() => { flash.style.opacity = '0'; }, 300);
+
+            for(let i=0; i<80; i++) {
+                let dust = document.createElement('div');
+                dust.style.position = 'fixed';
+                dust.style.background = '#FFD700'; 
+                dust.style.borderRadius = '50%';
+                dust.style.pointerEvents = 'none';
+                dust.style.filter = 'drop-shadow(0 0 10px #FFD700) drop-shadow(0 0 20px #FFF)';
+                dust.style.zIndex = '9999';
+                
+                dust.style.left = '50%'; 
+                dust.style.top = '50%';
+                
+                let size = Math.random() * 6 + 3; 
+                dust.style.width = size + 'px'; 
+                dust.style.height = size + 'px';
+                document.body.appendChild(dust); 
+                
+                let endX = (Math.random() - 0.5) * window.innerWidth * 2;
+                let endY = (Math.random() - 0.5) * window.innerHeight * 2; 
+                
+                dust.animate([
+                    { opacity: 1, transform: `translate(0, 0) scale(1)` },
+                    { opacity: 0, transform: `translate(${endX}px, ${endY}px) scale(0)` }
+                ], { duration: 2500 + Math.random() * 2000, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', fill: 'forwards' });
+
+                setTimeout(() => dust.remove(), 5000);
+            }
+            
+            setTimeout(() => {
+                window.location.href = 'index_jp.html?screen=3';
+            }, 4000);
+        }
+
+        const holdBtn = document.getElementById('holdBtn');
+        const progressBar = document.getElementById('progressBar');
+        const smokeContainer = document.getElementById('smoke-container');
+        let progress = 0; let progressInterval; let smokeInterval;
+
+        function checkQuest() { holdBtn.disabled = !document.getElementById('questCheck').checked; }
+
+        function createSmoke() {
+            const p = document.createElement('div'); p.className = 'smoke-particle';
+            const size = Math.random() * 20 + 10; p.style.width = size+'px'; p.style.height = size+'px';
+            p.style.left = (Math.random() * 40 + 30) + '%';
+            p.style.animation = `smokeRise ${Math.random()*2+3}s ease-out forwards`;
+            smokeContainer.appendChild(p); setTimeout(() => p.remove(), 5000);
+        }
+
+        function startPress(e) {
+            if(holdBtn.disabled) return;
+            e.preventDefault(); progress = 0; progressBar.style.width = '0%';
+            smokeContainer.style.display = 'block'; smokeInterval = setInterval(createSmoke, 150);
+            document.querySelector('.realm-bg svg').style.animationDuration = '15s'; 
+
+            progressInterval = setInterval(() => {
+                progress += 3.33; progressBar.style.width = progress + '%';
+                if(progress >= 100) { finishPress(); }
+            }, 100);
+        }
+
+        function cancelPress() {
+            if(progress < 100) {
+                clearInterval(progressInterval); clearInterval(smokeInterval);
+                progress = 0; progressBar.style.width = '0%';
+                setTimeout(() => smokeContainer.style.display = 'none', 1000);
+                document.querySelector('.realm-bg svg').style.animationDuration = '120s';
+            }
+        }
+
+        function finishPress() {
+            clearInterval(progressInterval); clearInterval(smokeInterval);
+            goToPhase(2); 
+        }
+
+        holdBtn.addEventListener('mousedown', startPress); holdBtn.addEventListener('mouseup', cancelPress); holdBtn.addEventListener('mouseleave', cancelPress); holdBtn.addEventListener('touchstart', startPress, {passive: false}); holdBtn.addEventListener('touchend', cancelPress);
+
+        let isSpinning = false;
+        function startRoulette() {
+            if (isSpinning) return;
+            isSpinning = true;
+            try {
+                let AudioContext = window.AudioContext || window.webkitAudioContext;
+                let ctx = new AudioContext();
+                if (ctx.state === 'suspended') ctx.resume();
+                let osc = ctx.createOscillator();
+                let gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1046.50, ctx.currentTime); 
+                osc.frequency.exponentialRampToValueAtTime(523.25, ctx.currentTime + 1.5);
+                gain.gain.setValueAtTime(0.5, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 2);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 2);
+            } catch(e) {}
+            const heart = document.getElementById('pulse-heart');
+            heart.style.animation = 'none'; heart.style.fill = '#FFF';
+            document.getElementById('roulette-lotus').style.animation = 'none';
+
+            const petals = Array.from(document.querySelectorAll('.roulette-petal'));
+            let currentIndex = 0; let steps = 0;
+            const totalSteps = 30 + Math.floor(Math.random() * 20); 
+            let speed = 50; 
+
+            function spin() {
+                petals.forEach(p => p.classList.remove('petal-highlight'));
+                petals[currentIndex].classList.add('petal-highlight');
+                steps++;
+
+                if (steps < totalSteps) {
+                    if (steps > totalSteps - 15) speed += 20;
+                    if (steps > totalSteps - 5) speed += 40;
+                    currentIndex = (currentIndex + 1) % petals.length;
+                    setTimeout(spin, speed);
+                } else {
+                    let winner = petals[currentIndex];
+                    winner.classList.remove('petal-highlight');
+                    winner.classList.add('petal-winner'); 
+
+                    let randomOracle = oracles[Math.floor(Math.random() * oracles.length)];
+                    document.getElementById('oracleTitle').innerText = randomOracle.title;
+                    document.getElementById('oracleVerse').innerText = randomOracle.verse; 
+                    document.getElementById('oracleText').innerText = randomOracle.text;
+                    let txt = randomOracle.text;
+                    let borderColor = "var(--solid-gold)"; 
+                    let shadowColor = "rgba(212,175,55,0.15)";
+                    
+                    if(txt.includes('警告') || txt.includes('波折') || txt.includes('誤り') || txt.includes('粉砕') || txt.includes('リセット') || txt.includes('欠乏') || txt.includes('障害')) {
+    borderColor = "#ff8b94"; 
+    shadowColor = "rgba(255, 139, 148, 0.3)";
+} else if(txt.includes('平穏') || txt.includes('正常') || txt.includes('安住') || txt.includes('休眠') || txt.includes('無解') || txt.includes('待つ')) {
+    borderColor = "#9fdfc8"; 
+    shadowColor = "rgba(159, 223, 200, 0.3)";
+} else {
+    borderColor = "#a8e6cf"; 
+    shadowColor = "rgba(168, 230, 207, 0.3)";
+}
+
+                    
+                    let obox = document.querySelector('.oracle-box');
+                    obox.style.borderColor = borderColor;
+                    obox.style.boxShadow = `0 10px 30px rgba(0,0,0,0.9), 0 0 25px ${shadowColor} inset, 0 0 15px ${borderColor}`;
+
+                    setTimeout(() => {
+                        document.querySelector('.realm-bg svg').style.animationDuration = '120s'; 
+                        goToPhase(3);
+                        isSpinning = false;
+                    }, 1800);
+                }
+            }
+            spin();
+        }
+
+        function toggleInfo(show) {
+            const el = document.getElementById('info-overlay');
+            if (show) {
+                el.style.display = 'flex';
+                setTimeout(() => el.classList.add('show'), 10);
+            } else {
+                el.classList.remove('show');
+                setTimeout(() => el.style.display = 'none', 600);
+            }
+        }
+    </script>
+</body>
+</html>

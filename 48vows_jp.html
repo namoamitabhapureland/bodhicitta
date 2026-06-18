@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ja-JP">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="manifest" href="manifest_jp.json">
+    <title>阿弥陀仏の四十八願 ． 極楽蓮邦</title>
+    <style>
+        :root {
+            --bg-deep: #020205; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --silver: #e0e0e0;
+            --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "Hiragino Mincho ProN", "Yu Mincho", "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; overscroll-behavior: none;
+            -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none;
+            -moz-user-select: none; -ms-user-select: none; user-select: none;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px;
+            background: transparent; border-left: 2px solid rgba(212,175,55,0.6); 
+            padding: 10px 20px; z-index: 100; transition: 1s; pointer-events: none;
+        }
+        .status-title { font-size: 1.15rem; font-weight: bold; color: var(--gold); letter-spacing: 2px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); transition: 1s;}
+        .status-desc { font-size: 0.85rem; color: #bbb; line-height: 1.8; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); transition: 1s;}
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; transition: background 0.8s; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+        #lengyan-flash {
+            position: absolute; inset: 0; background: #ffffff; z-index: 50; opacity: 0;
+            pointer-events: none; transition: opacity 0.1s ease-out;
+        }
+
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 12px; transition: opacity 1s;}
+        
+        .switch-btn {
+            width: 85%; max-width: 320px; justify-content: center;
+            background: linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(212,175,55,0.5); color: var(--gold);
+            padding: 14px 20px; border-radius: 30px; font-size: 1rem; font-weight: bold; letter-spacing: 2px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1);
+        }
+        .switch-btn:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(212,175,55,0.5); }
+        
+        #theory-btn { border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,10,15,0.9); display: none; }
+        
+        #hold-hint {
+            color: rgba(212,175,55,0.8); font-size: 1rem; letter-spacing: 3px; font-weight: bold;
+            text-shadow: 0 0 10px rgba(212,175,55,0.5); padding: 15px; text-align: center;
+        }
+
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(139,168,156,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(139,168,156,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        
+        .humble-statement { font-size: 0.85rem; color: #b0b0b0; line-height: 1.8; text-align: justify; padding: 20px; border: 1px solid rgba(139,168,156,0.2); border-radius: 12px; background: rgba(10,15,20,0.3); margin-bottom: 50px; }
+        
+        .main-title { color: var(--cyan); font-size: 1.5rem; letter-spacing: 3px; text-align: center; margin-bottom: 50px; text-shadow: 0 0 15px rgba(139,168,156,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); margin: 15px auto 0; }
+        
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 24px; height: 24px; stroke: var(--cyan); fill: none; stroke-width: 1.5; filter: drop-shadow(0 0 5px rgba(139,168,156,0.4)); flex-shrink: 0;}
+        .c-title { color: var(--cyan); font-size: 1.15rem; letter-spacing: 1.5px; font-weight: bold; }
+        .c-text { color: var(--text-main); font-size: 0.95rem; line-height: 1.9; text-align: justify; padding-left: 39px; letter-spacing: 0.8px;}
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
+                /* 增加玉簡專屬按鈕與抽屜樣式 */
+        #vows-btn { border-color:rgba(139,168,156,0.6); color:#e0f2ec; background:rgba(5,15,10,0.9); display: none; }
+        
+        #vows-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 8, 5, 0.96); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(139,168,156,0.5); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #vows-drawer.open { transform: translateY(0); }
+        
+        .vow-box { margin-bottom: 25px; padding: 20px; border-left: 2px solid rgba(139,168,156,0.5); background: linear-gradient(90deg, rgba(139,168,156,0.08), transparent); border-radius: 0 12px 12px 0; }
+        .vow-num { color: var(--gold); font-size: 0.9rem; margin-bottom: 8px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 5px rgba(212,175,55,0.3); }
+        .vow-text { color: var(--text-main); font-size: 1.05rem; line-height: 1.9; text-align: justify; letter-spacing: 1px; }
+
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="back-btn" onclick="window.location.href='index_jp.html'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        道場へ戻る
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title" id="s-title">阿弥陀仏の願力による接引</div>
+        <div class="status-desc" id="s-desc">「万念帰一、光芒四射。」<br>画面を長押しして金光を集め、願生極楽。</div>
+    </div>
+
+    <section class="matrix-section" id="bg-section">
+        <canvas id="realmCanvas"></canvas>
+        <div id="lengyan-flash"></div> 
+        
+        <div class="ui-layer" id="ui-layer">
+            <div id="hold-hint">画面を十秒間長押しし、離して接引を起動する</div>
+                        <button class="switch-btn" id="vows-btn" onclick="openVowsDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="2" ry="2"></rect><line x1="8" y1="3" x2="8" y2="21"></line><line x1="12" y1="3" x2="12" y2="21"></line><line x1="16" y1="3" x2="16" y2="21"></line></svg>
+                四十八願の玉簡を恭閲する
+            </button>
+
+            
+            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                弥陀の無量なる願海を探究する
+            </button>
+        </div>
+   </section>
+
+<div id="theory-drawer">
+    <div class="drawer-header" onclick="closeTheoryDrawer()">
+        <div class="close-bar"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+            <div style="color:var(--cyan); font-size:0.85rem; letter-spacing:2px; font-weight:bold; cursor:pointer;" onclick="closeTheoryDrawer()">法巻を閉じる</div>
+            <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                <span id="tts-text">法音を聴く</span>
+            </div>
+        </div>
+    </div>
+    <div class="theory-container" id="theory-content-box">
+        <div class="humble-statement">法海は浩瀚にして、唯だ仏と仏のみ能く究尽す。本文は一介の在家居士が、経教の論理と祖師大徳の註疏に依り、如来の真実義を探求せんとする修学の略影に過ぎず。若し未尽や錯漏の処あらば、皆な個人の智識の局限に属す。三宝の加被を祈願し、同修の共鑑を乞う。</div>
+        
+        <h1 class="main-title">覚海澄観 ． 弥陀浄土の実相と菩提の心要</h1>
+        
+        <div style="color:rgba(255,255,255,0.8); font-size:0.95rem; line-height:1.8; margin-bottom: 2rem; text-align: justify; text-justify: inter-ideograph;">
+            『無量寿経』の梵文原典は幾度も訳伝され、異本に載る法蔵比丘の因地における発願の数は、二十四から四十九の違いがある。歴代祖師大徳の判釈と文献の考覈を経て、今は魏訳の四十八願を「上求仏道、下化衆生」の主流たる圭臬とする。四十八願は実に極楽浄土を締造する枢機であり、阿弥陀仏の悲智双運を尽く摂している。
+        </div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <div class="c-title">第一篇　清浄なる法界と色身の円融</div>
+            </div>
+            <div class="c-text">「国無悪道」と「不堕悪趣」の願により、極楽の境涯は本源から三塗の業感を蠲除（けんじょ）す。此れ乃ち無尽の護念にして、修行者の霊命の根基をして永く退堕せざらしむ。而して身は悉く金色、形に好醜無きは、実に形相の妄別を泯除し、攀縁と高下の心が其の所依を失うとき、方に一真法界と冥契交感する能うなり。無量光と無量寿に至っては、其の真義は断じて世俗の貪恋たる長生にあらず。無量光は、宛も法身遍照の円融の如く、一即一切なり。而して無量寿は、実に一処の無退転の勝妙なる境地を開演し、往生者をして無尽の歳月の中に菩提を円満せしめんと護持す。阿弥陀仏の化縁が既に畢（おわ）り、涅槃に入るを待ちて、観音大士が仏位を紹継（しょうけい）す。此の無量寿の宏旨は、即ち願力の永恒なる伝続を護持するに在り。而して寿命は願いに随って修短すとは、此の土が実に菩薩道の棲神の化駅（かえき）なるを微かに顕す。行者もし資糧具足せば、随時に皆な慈航を倒駕し、十方無量世界へと重返するを得ん。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <div class="c-title">第二篇　悪道に更らずの真機</div>
+            </div>
+            <div class="c-text">第二願「不更三悪道」は第一願の「国無悪道」と「無量寿」の後に緊密に摂せられ、実に法界の最も深密なる対比と呼応なり。此の願は特（こと）に極楽の「人、天」を授記の標的となす。是れ乃ち「小を以て大を示す」勝妙の権巧なり。第一層の真機は、即ち十方大千世界へ回入して群迷を度化せんとする大士の為に、不壊の防護網を預（あらかじ）め設く。縦い縁に随って受生すとも、亦た絶対に重濁なる業境に流転せじ。更なる深層の奥秘は、凡そ曽て極楽に生ぜし者は、阿頼耶識の深処に已に阿弥陀仏の本願たる無漏の種子を凝結せり。無尽の回入受生の中において、生生世世に自然と三悪趣の牽引から絶縁され、退転すること無きに在り。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <circle cx="12" cy="12" r="4"/>
+                    <path d="M12 2v6"/><path d="M12 16v6"/><path d="M2 12h6"/><path d="M16 12h6"/>
+                </svg>
+                <div class="c-title">第三篇　声聞の回心と一仏乗の帰宿</div>
+            </div>
+            <div class="c-text">国中に声聞無数なるは、原始仏教が実に覚悟の初基なるを印証す。然れども独り其の身を善くするは終（つい）に究竟の涅槃に契入し難し。声聞衆が極楽の法性に沐浴し、心が境に随って転ずる時、便ち『法華』に云う如く、小を回（めぐ）らして大に向かい、菩提心を発し、一仏乗の浩瀚に匯入（かいにゅう）す。而して辺地疑城の設えは、猶ほ法界で最も慈悲なる韜光（とうこう）の所の如し。世俗の微細なる惑障を挟帯する衆生をして、無苦の境涯にて緩やかに洗滌・蛻変（ぜいへん）せしむ。一旦契入せば、便ち定聚に住して必ず滅度に至るの加被を蒙り、彷彿（さながら）一大阿僧祇劫を頓超して、直ちに初地の不退転を証するが如し。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                </svg>
+                <div class="c-title">第四篇　純善無漏と転染成浄の妙用</div>
+            </div>
+            <div class="c-text">極楽国土は不善の名を聞かず、受くる所の快楽は漏尽の比丘の如し。此の楽は感覚器官の短暫なる生滅にあらず、乃ち常寂光中の大寂静なり。国土の清浄は十方を照見し、行者をして空性を諦観しつつも明了を失わざらしむ。衣服は念に随って至り、此の清浄法界中において、念起これば物現前するは乃ち法爾如是の理なり。諸天の敬礼は、猶ほ一つの転染成浄の法界常軌を立つるが如く、菩提心をして無限に賡続（こうぞく）せしむ。宝樹の中に能く十方仏国を見るは、宛も帝網重重の如く、累世の宿命と十方の苦難を皆な無礙に洞鑑す可く、行者をして常に悲智を興さしめ、度生の宏願を失わざらしむ。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <div class="c-title">第五篇　相執の破除と転身授記</div>
+            </div>
+            <div class="c-text">転女成男の深旨は、実に僅かに極楽本国の化現に局するにあらず。極楽には本より性別の相無く、皆な純粋無礙の金剛の法躯なり。此の願の真機は乃ち十方世界の女性が、若し深く女身の業縛を厭い、此の願力の加被を蒙らば、此の一報身を尽くしたる後、来世には即ち永く女身を受けず。若し菩薩道の進程を以て之を観れば、南伝の厳格なる男身授記を定めるも、或いは北伝の仏の授記を蒙りたる後に須く男身を示現して以て仏道を円満すべきとするも、阿弥陀仏の此の願は実に十方発心の大士の為に預め宿業の藩籬（はんり）を抜除す。国中の菩薩の智慧と弁才は限量すべからず、更に万行者が華厳大世界の無量衆生の心性の流転に応対する軟実力を充実せしむ。乃ち普賢大願を践行する最も堅実なる渡世の津梁（しんりょう）なり。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                <div class="c-title">第六篇　神足徹視と法界蔵識の交融</div>
+            </div>
+            <div class="c-text">此の五神通の願は、極楽の聖衆が「身」は「我」の幻相なるに非ずと了達し、我執を貪計すること無く、自ら貪瞋痴の妄念を絶つを印証するに趣旨あり。阿弥陀仏の深智は往生者をして慧命を相続せしめんが為、必ず蓮胎化生の浄妙なる色身を仮りて依托となす。臨命終の時、阿弥陀仏の願力の牽引に憑（よ）りて、娑婆の幻なる我を転識得智す。彼の境中において、行者の神識は法界の蔵識（阿頼耶）と無礙に交融し、宿命の因縁は互摂互照す。極楽聖衆は皆な三世の因果を洞鑑するを得、彼此の心念は交参し、浄妙法身は更に飛挙の神足を具え、天眼の徹視、天耳の遥聞、皆な円満無漏に至る。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-8m0 0V4m0 8h8m-8 0H4"/></svg>
+                <div class="c-title">第七篇　平等法相と普賢の妙供</div>
+            </div>
+            <div class="c-text">身に三十二大丈夫相と那羅延（ならえん）金剛不壊の躯（むくろ）を具うるは、実に「形無好醜」の深密なる義理を承継す。国中の所謂「人、天、声聞、菩薩」は、皆な他方世界に随順する方便の仮名に属し、其の実は無二無別にして、正しく娑婆衆生の分別妄見を徹底して泯除（みんじょ）せんが為なり。而して一食の頓（ころ）に十方諸仏を供養し、供具が心に随って如意なるは、此れ皆な普賢大願に契入する自然の流露なり。彼の土には既に造作無く、亦た世俗の営求や交易無し。万物は皆な清浄心識の化現にして、供養の行を以て、任運に福慧の資糧を円満す。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 22h20L12 2z"/></svg>
+                <div class="c-title">第八篇　実有の報土と香光の勝縁</div>
+            </div>
+            <div class="c-text">極楽国土の万物は厳浄光麗にして、宝香は普く十方に薫じ、菩提樹を見れば即ち無生法忍を獲る。此の殊勝の境界は、阿弥陀仏の浄土が「実有の報土」にして、断じて偏空の唯心所現にあらざるを印証す。行者が娑婆の粗重なる病苦を褪（ぬ）ぎ捨て、金剛の躯を得て至美の境に処（お）るは、実に阿弥陀仏の深智なり。衆生の残存する微細なる「我執」と感覚的覚受を借りて、之を向道の勝縁へと転化す。宝樹の無量光は、華厳の常寂光と交摂し、光影が交錯する間において、修行と光の甚深なる密意を昭示し、行者をして無垢の相の中において、直ちに清浄なる本心を悟らしむ。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.36-6.36l-1.41 1.41M6.05 17.95l-1.41 1.41m14.14 0l-1.41-1.41M6.05 6.05L4.64 4.64"/></svg>
+                <div class="c-title">第九篇　光の波長による化育と演説無礙</div>
+            </div>
+            <div class="c-text">仏光の照触を蒙りて身心柔軟となり、万物は皆な願いに随って妙法を演説する能う。此の法界の光は、其の波長が心霊を抜済するに足り、実に無量光と常寂光の同体にして、亦た即ち「菩提心不滅」の永恒たる法身なり。菩薩は何れの法を修めんと欲するも、皆な願いに随って聞くを得る。国中の菩薩が法要を演説するは必ず一切智に契（かな）う。其の具備する所の智慧と神通は、生死の洪流を断除し、普賢の度生大願を践行する為のものにして、断じて世俗の有漏の業通にあらず。此の智弁無礙は、実に群迷を広く度する無上の利器なり。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                <div class="c-title">第十篇　法界の印可と中継摂受</div>
+            </div>
+            <div class="c-text">諸仏の称歎は、猶ほ十方如来が此の化駅に対する同声の印可の如し。最末の聞名得益、生尊貴家、三法忍の獲得は、乃ち阿弥陀仏が彼の乗願再来の大権菩薩の為に設けたる遥相摂受の誓願なり。他方の高僧大徳は阿弥陀仏の名号を聞けば即ち諸根具足を特る。極楽は実に法界の「中継大站」なり。彼の生死を懼れざる行者は、焉（いずく）んぞ昔日に早く極楽にて薫修を経て、他方世界へ回入せし大士にあらざるを知らんや。其の娑婆において聖号を聴聞せば、便ち能く阿頼耶識中の印記を喚醒し、縦え五濁悪世に処すとも、亦た転識得智の刹那において、再び不退転の深慧定力を獲る能う。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                <div class="c-title">第十一篇　本願海会と菩提心宗</div>
+            </div>
+            <div class="c-text">第十八、十九、二十願は、実に衆生を接引する核心の枢機なり。極楽は僅かに個人の抜苦のみにあらず、実に度生菩薩を孕育（よういく）する法界の揺籃（ようらん）なり。第十八願は「至心信楽」を以て宗となす。此れ乃ち首要の基なり。深く極楽と娑婆の法則の迥異（けいい）なるを信じ、唯だ仏力に依り、造作を仮らず。早く善根を植えて、方に能く臨命終の時に慮を絶ち疑いを断ち、無礙に往生す。第十九願「発菩提心」は、実に法界に契入する究竟の大乗正因なり。『無量寿経』三輩往生の枢機を考ずるに、品位の高下を論ぜず、咸（ことごと）く「無上菩提心を発す」を以て首要の津梁となす。復た『華厳』の奥旨を観るに、善財童子南して五十三参し、其の発軔の初めにも、亦た必ず先ず此の無上大覚の心を発す。蓋し菩提心は乃ち諸仏の本源にして、成仏の真種なればなり。行者は唯だ此の宏大なる誓願を立てて、方に能く阿弥陀仏の悲願の海と同頻（どうひん）交感し、心識をして昧（くら）まざらしめ、仏の摂受を蒙りて、直ちに阿惟越致（あゆいっち：不退転）の寂滅の尊位に登る。第二十願「至心回向」は普く群機を摂し、世と出世間の諸々の善根を、悉く阿弥陀仏の願海へと匯入（かいにゅう）す。善導大師云く「仏の願力を以て、五逆十悪も、罪滅して生ずるを得る」と。道（い）い尽くす、阿弥陀仏の無条件なる究竟の慈悲を。学仏の終極は乃ち是れ成仏なり。而して奥義は尽く『金剛経』に在り「応に無量衆生を滅度すべし。実には滅度を得る衆生無き者なり」と。此の大空性見こそ、正に極楽菩薩が乗願再来する真実の底気（ていき）なり。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15l-2 5-9-5 9-5 2 5zM12 15l2-5 9 5-9 5-2-5zM12 10V2"/></svg>
+                <div class="c-title">第十二篇　一生補処と普賢大行</div>
+            </div>
+            <div class="c-text">第二十二願は実に四十八願の巓頂（てんちょう）と化育の標的（ひょうてき）なり。彼の国に生ずる者は究竟して必ず一生補処に至る。此れ乃ち必ず正覚を成ずるの絶対たる授記なり。然れども其の甚深の奥義は、更に「常倫の諸地を超える行にして、現前に普賢の徳を修習す」るに在り。極楽の菩薩が此の位次を証するは、断じて浄土の安楽に耽溺するにあらず。是れ弘誓（ぐぜい）の大鎧を披（き）て、十方濁悪の世に回入し、八相成道を示現して、広く群迷を済度（さいど）するなり。普賢の願いを行じ、弥陀の土に帰するは、隠然と世尊が出世度生せし究竟の本懐に相合う。是れ更に菩薩が生死に住せず、涅槃に住せず、法身を十方無量世界へと遍入せしむる大悲の極致なり。四十八願は、此に至って方に法界に周遍する円満無礙を顕す。</div>
+        </div>
+    </div>
+</div>
+<div id="vows-drawer">
+    <div class="drawer-header" onclick="closeVowsDrawer()">
+        <div class="close-bar"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+            <div style="color:var(--cyan); font-size:0.85rem; letter-spacing:2px; font-weight:bold; cursor:pointer;" onclick="closeVowsDrawer()">玉簡を閉じる</div>
+            <div id="tts-vows-btn" onclick="event.stopPropagation(); toggleVowsAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                <svg id="tts-vows-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                <span id="tts-vows-text">願文を恭聴する</span>
+            </div>
+        </div>
+    </div>
+    <div class="theory-container" id="vows-content-box">
+        <h1 class="main-title" style="color:#e0f2ec; text-shadow: 0 0 15px rgba(139,168,156,0.4);">仏説無量寿経 ． 四十八大願</h1>
+        <div class="humble-statement">曹魏の康僧鎧訳本。法蔵比丘、世自在王仏の御前にて弘誓の願を発し、極楽浄土を建立す。行者、当に至誠心を以て願文を恭閲し、阿弥陀仏の本願海に契入すべし。</div>
+        
+        <div class="vow-box"><div class="vow-num">第一願</div><div class="vow-text">たとい我、仏を得んに、国に地獄・餓鬼・畜生あらば、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第二願</div><div class="vow-text">たとい我、仏を得んに、国中の人・天、寿終ののち、また三悪道に更らば、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第三願</div><div class="vow-text">たとい我、仏を得んに、国中の人・天、ことごとく真金色ならずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第四願</div><div class="vow-text">たとい我、仏を得んに、国中の人・天、形色不同にして、好醜あらば、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第五願</div><div class="vow-text">たとい我、仏を得んに、国中の人・天、宿命を知らず、下、百千億那由他諸劫の事を知るに至らずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第六願</div><div class="vow-text">たとい我、仏を得んに、国中の人・天、天眼を得ず、下、百千億那由他の諸仏の国を見るに至らずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第七願</div><div class="vow-text">たとい我、仏を得んに、国中の人・天、天耳を得ず、下、百千億那由他の諸仏の所説を聞きて、ことごとく受持せずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第八願</div><div class="vow-text">たとい我、仏を得んに、国中の人・天、他心智を得ず、下、百千億那由他の諸仏の国中の衆生の心念を知るに至らずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第九願</div><div class="vow-text">たとい我、仏を得んに、国中の人・天、神足を得ず、一念の頃に、下、百千億那由他の諸仏の国を過ぎ越ゆること能わずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第十願</div><div class="vow-text">たとい我、仏を得んに、国中の人・天、想念を起こして身を貪計せば、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第十一願</div><div class="vow-text">たとい我、仏を得んに、国中の人・天、定聚に住し、必ず滅度に至らずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第十二願</div><div class="vow-text">たとい我、仏を得んに、光明有限量にして、下、百千億那由他の諸仏の国を照らさざるに至らば、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第十三願</div><div class="vow-text">たとい我、仏を得んに、寿命有限量にして、下、百千億那由他劫に至らば、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第十四願</div><div class="vow-text">たとい我、仏を得んに、国中の声聞、よく計量あることあらん。ないし三千大千世界の衆生、ことごとく縁覚と成りて、百千劫において、ことごとくともに計校してその数を知らば、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第十五願</div><div class="vow-text">たとい我、仏を得んに、国中の人・天、寿命よく限量あることなけん。その本願の修短自在なるを除く。もししからずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第十六願</div><div class="vow-text">たとい我、仏を得んに、国中の人・天、ないし不善の名を聞かば、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第十七願</div><div class="vow-text">たとい我、仏を得んに、十方世界の無量の諸仏、ことごとく咨嗟（ししゃ）して我が名を称せずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第十八願</div><div class="vow-text">たとい我、仏を得んに、十方の衆生、至心信楽して我が国に生ぜんと欲し、乃至十念せん。もし生ぜずは、正覚を取らじ。唯五逆と誹謗正法とを除く。</div></div>
+        <div class="vow-box"><div class="vow-num">第十九願</div><div class="vow-text">たとい我、仏を得んに、十方の衆生、菩提心を発し、諸々の功徳を修し、至心発願して我が国に生ぜんと欲せん。寿終の時に臨んで、たとい大衆と囲繞してその人の前に現ぜずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十願</div><div class="vow-text">たとい我、仏を得んに、十方の衆生、我が名号を聞きて、念を我が国に係け、もろもろの徳本を植え、至心回向して我が国に生ぜんと欲せん。果遂せずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十一願</div><div class="vow-text">たとい我、仏を得んに、国中の人・天、ことごとく三十二大人相を成満せずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十二願</div><div class="vow-text">たとい我、仏を得んに、他方仏土の諸菩薩衆、我が国に来生せば、究竟して必ず一生補処に至らん。その本願の自在の所化をば除く。衆生のために、弘誓の鎧を被（き）て、徳本を積累し、一切を度脱す。諸仏の国に遊びて、菩薩の行を修し、十方諸仏如来を供養す。恒沙無量の衆生を開化して、無上正真の道を立たしめんこと、常倫の諸地を超える行にして、現前に普賢の徳を修習せん。もししからずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十三願</div><div class="vow-text">たとい我、仏を得んに、国中の菩薩、仏の神力を承け、諸仏を供養するに、一食の頃に無数無量億那由他の諸仏の国に遍く至ること能わずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十四願</div><div class="vow-text">たとい我、仏を得んに、国中の菩薩、諸仏の前に在って、その徳本を現し、もろもろの求むる所の供養の具、もし如意ならずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十五願</div><div class="vow-text">たとい我、仏を得んに、国中の菩薩、一切智を演説すること能わずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十六願</div><div class="vow-text">たとい我、仏を得んに、国中の菩薩、金剛那羅延身を得ずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十七願</div><div class="vow-text">たとい我、仏を得んに、国中の人・天、一切万物、厳浄光麗にして、形色殊特なり。窮微極妙にして、よく称量あることなけん。そのもろもろの衆生、ないし天眼を逮得して、よく明了にその名数を弁ずるあらば、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十八願</div><div class="vow-text">たとい我、仏を得んに、国中の菩薩、ないし少功徳の者も、その道場樹の無量光色にして高さ四百万里なるを知見すること能わずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十九願</div><div class="vow-text">たとい我、仏を得んに、国中の菩薩、もし読経法を受し、諷誦・持説して、弁才智慧を得ずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十願</div><div class="vow-text">たとい我、仏を得んに、国中の菩薩の智慧弁才、もし限量あるべくんば、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十一願</div><div class="vow-text">たとい我、仏を得んに、国土清浄にして、ことごとく十方一切無量無数不可思議の諸仏世界を照見せんこと、明鏡にその面像を覩るがごとくならん。もししからずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十二願</div><div class="vow-text">たとい我、仏を得んに、自地以上、虚空に至るまで、宮殿・楼観・池流・華樹、国土にあるところの一切万物、皆な無量の雑宝・百千種の香を以て共に合成せん。厳飾奇妙にして諸の天人に超えん。その香、普く十方世界に薫じ、菩薩、聞く者は皆な仏行を修せん。もしかくのごとくならずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十三願</div><div class="vow-text">たとい我、仏を得んに、十方無量不可思議の諸仏世界の衆生の類、我が光明を蒙りてその身に触れん者、身心柔軟にして人・天に超過せん。もししからずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十四願</div><div class="vow-text">たとい我、仏を得んに、十方無量不可思議の諸仏世界の衆生の類、我が名字を聞きて、菩薩の無生法忍・深総持を得ずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十五願</div><div class="vow-text">たとい我、仏を得んに、十方無量不可思議の諸仏世界に、それ女人ありて、我が名字を聞き、歓喜信楽して菩提心を発し、女身を厭悪せん。寿終の後、また女像とならば、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十六願</div><div class="vow-text">たとい我、仏を得んに、十方無量不可思議の諸仏世界の諸菩薩衆、我が名字を聞き、寿終ののち、常に梵行を修して仏道成るに至らん。もししからずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十七願</div><div class="vow-text">たとい我、仏を得んに、十方無量不可思議の諸仏世界の諸天人民、我が名字を聞きて五体投地し、稽首作礼して歓喜信楽して、菩薩の行を修せん。諸天・世人、敬を致さざるはなけん。もししからずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十八願</div><div class="vow-text">たとい我、仏を得んに、国中の人・天、衣服を得んと欲せば、念に随って即ち至らん。仏の讃ずる所の応法の妙服の、自然に身に在るがごとくならん。裁縫・擣染（とうぜん）・浣濯（かんたく）を求むることあらば、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十九願</div><div class="vow-text">たとい我、仏を得んに、国中の人・天の受くる所の快楽、漏尽の比丘に如かずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十願</div><div class="vow-text">たとい我、仏を得んに、国中の菩薩、十方無量の厳浄の仏土を見んと欲することに随意せば、応時に願のごとく、宝樹の中において皆なことごとく照見すること、明鏡にその面像を覩るがごとくならん。もししからずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十一願</div><div class="vow-text">たとい我、仏を得んに、他方国土の諸菩薩衆、我が名字を聞きて仏を得るに至るまで、諸根欠陋にして具足せずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十二願</div><div class="vow-text">たとい我、仏を得んに、他方国土の諸菩薩衆、我が名字を聞きて、皆なことごとく清浄解脱三昧を逮得せん。この三昧に住して、一発意の頃に、無量不可思議の諸仏世尊を供養して定意を失わず。もししからずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十三願</div><div class="vow-text">たとい我、仏を得んに、他方国土の諸菩薩衆、我が名字を聞き、寿終ののち、尊貴の家に生ぜん。もししからずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十四願</div><div class="vow-text">たとい我、仏を得んに、他方国土の諸菩薩衆、我が名字を聞き、歓喜踊躍して菩薩の行を修し徳本を具足せん。もししからずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十五願</div><div class="vow-text">たとい我、仏を得んに、他方国土の諸菩薩衆、我が名字を聞きて、皆なことごとく普等三昧を逮得せん。この三昧に住して仏と成るに至るまで、常に無量不可思議の一切如来を見ん。もししからずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十六願</div><div class="vow-text">たとい我、仏を得んに、国中の菩薩、その志願に随いて法を聞かんと欲する所、自然に聞くことを得ん。もししからずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十七願</div><div class="vow-text">たとい我、仏を得んに、他方国土の諸菩薩衆、我が名字を聞き、即ち不退転に至ることを得ずは、正覚を取らじ。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十八願</div><div class="vow-text">たとい我、仏を得んに、他方国土の諸菩薩衆、我が名字を聞き、即ち第一・第二・第三法忍に至ることを得ず、諸仏の法において即ち不退転を得ること能わずは、正覚を取らじ。</div></div>
+    </div>
+</div>
+
+
+<script>
+    const canvas = document.getElementById('realmCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    let currentRealm = 0; 
+    let time = 0;
+
+    let jieyinParticles = [];
+    let yuanhaiParticles = [];
+    let lotusMatrix = []; 
+    
+    let angleX = 0.6, angleY = 0;
+    let isDragging = false;
+    let lastMouseX = 0, lastMouseY = 0;
+    
+    let charge = 0;         
+    let gravityForce = 0;   
+    let flashIntensity = 0; 
+    let waveColorBlend = 0; 
+    let transitioning = false;
+
+    const FOV = 400; 
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+    }
+    window.addEventListener('resize', resize); resize();
+
+    function initEngines() {
+        jieyinParticles = [];
+        for(let i=0; i<1500; i++) {
+            jieyinParticles.push({
+                x: (Math.random() - 0.5) * 1200, y: (Math.random() - 0.5) * 1200, z: (Math.random() - 0.5) * 1200,
+                vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, vz: (Math.random() - 0.5) * 2,
+                c: Math.random() > 0.5 ? '#f3e5ab' : '#d4af37', 
+                s: Math.random() * 2 + 1
+            });
+        }
+
+        yuanhaiParticles = [];
+        for(let r = 20; r <= 800; r += 15) {
+            let count = Math.floor(r * 0.4);
+            for(let i=0; i<count; i++) {
+                let theta = (i / count) * Math.PI * 2;
+                yuanhaiParticles.push({ 
+                    baseX: r * Math.cos(theta), baseY: r * Math.sin(theta), dist: r, theta: theta, 
+                    s: Math.random() * 1.5 + 0.5 
+                });
+            }
+        }
+
+        lotusMatrix = [];
+        lotusMatrix.push({
+            r: 0, theta: 0, orbitSpeed: 0, rotateSpeed: 0.2, scale: 1.0, phase: 0
+        });
+        for(let i=1; i<48; i++) {
+            lotusMatrix.push({
+                r: 60 + Math.random() * 350,               
+                theta: Math.random() * Math.PI * 2,        
+                orbitSpeed: (Math.random() - 0.5) * 0.015, 
+                rotateSpeed: (Math.random() - 0.5) * 0.8,  
+                scale: 0.15 + Math.random() * 0.35,        
+                phase: Math.random() * Math.PI * 2         
+            });
+        }
+    }
+
+    function project3D(x, y, z) {
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+        let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
+        if(z2 < -FOV+10) return null;
+        let scale = FOV / (FOV + z2); 
+        return { x: (width/2) + x2*scale, y: (height/2) - y1*scale - 50, scale: scale, z: z2 };
+    }
+
+    function drawGiantLotus(proj, beat, blend, rotation, scaleMult) {
+        if(!proj) return;
+        ctx.save();
+        ctx.translate(proj.x, proj.y);
+        
+        let s = proj.scale * (3.5 * scaleMult + beat * 0.15 * scaleMult + blend * 0.5 * scaleMult); 
+        ctx.scale(s, s);
+        ctx.rotate(rotation); 
+        
+        ctx.shadowBlur = (15 + blend * 20) * scaleMult; 
+        ctx.shadowColor = '#d4af37';
+        
+        let petalCount = 12; 
+        for(let i=0; i<petalCount; i++) {
+            ctx.rotate((Math.PI * 2) / petalCount);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(15, -30, 0, -60);
+            ctx.quadraticCurveTo(-15, -30, 0, 0);
+            
+            let grad = ctx.createLinearGradient(0, 0, 0, -60);
+            grad.addColorStop(0, '#d4af37');
+            let tipR = Math.floor(243 + (255 - 243) * blend);
+            let tipG = Math.floor(229 + (255 - 229) * blend);
+            let tipB = Math.floor(171 + (255 - 171) * blend);
+            grad.addColorStop(1, `rgba(${tipR}, ${tipG}, ${tipB}, 1)`); 
+            
+            ctx.fillStyle = grad;
+            ctx.fill();
+            
+            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.stroke();
+        }
+        
+        for(let i=0; i<petalCount; i++) {
+            ctx.rotate(((Math.PI * 2) / petalCount) + 0.1);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(8, -15, 0, -35);
+            ctx.quadraticCurveTo(-8, -15, 0, 0);
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = 0.6 + blend * 0.4;
+            ctx.fill();
+        }
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, 6, 0, Math.PI*2);
+        ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = 1;
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        
+        ctx.restore();
+    }
+
+    function renderJieyin() {
+        if(isDragging && !transitioning) {
+            charge += 0.35; 
+            if(charge > 100) charge = 100;
+            gravityForce = charge / 100; 
+        } else if (!transitioning) {
+            charge = 0; 
+            gravityForce *= 0.90; 
+        }
+
+        flashIntensity *= 0.92;
+        if(flashIntensity > 0.01) {
+            document.getElementById('lengyan-flash').style.opacity = flashIntensity;
+        }
+
+        if(!isDragging) angleY += 0.002;
+
+        let projected = [];
+        jieyinParticles.forEach(p => {
+            p.x += p.vx; p.y += p.vy; p.z += p.vz;
+            let distToCenter = Math.sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+            
+            if(gravityForce > 0.1) {
+                let pull = (gravityForce * 1500) / (distToCenter + 10);
+                p.vx -= (p.x / distToCenter) * pull; p.vy -= (p.y / distToCenter) * pull; p.vz -= (p.z / distToCenter) * pull;
+                p.vx *= 0.9; p.vy *= 0.9; p.vz *= 0.9;
+            } else {
+                p.vx += (Math.random()-0.5)*0.5; p.vy += (Math.random()-0.5)*0.5; p.vz += (Math.random()-0.5)*0.5;
+                if(p.vx > 3) p.vx = 3; if(p.vy > 3) p.vy = 3; if(p.vz > 3) p.vz = 3;
+            }
+
+            if(p.x > 600) p.x = -600; if(p.x < -600) p.x = 600;
+            if(p.y > 600) p.y = -600; if(p.y < -600) p.y = 600;
+            if(p.z > 600) p.z = -600; if(p.z < -600) p.z = 600;
+
+            let proj = project3D(p.x, p.y, p.z);
+            if(proj) {
+                let isBright = distToCenter < 120 * gravityForce + 30;
+                let color = isBright ? `rgba(255,255,255,${0.6 + gravityForce*0.4})` : p.c;
+                projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: color, s: p.s, isBright: isBright });
+            }
+        });
+
+        projected.sort((a,b) => b.z - a.z);
+
+        let coreProj = project3D(0,0,0);
+        if(coreProj) {
+            ctx.globalCompositeOperation = 'screen';
+            let coreR = (5 + 45 * gravityForce) * coreProj.scale * (1 + Math.sin(time*10)*0.1);
+            let grad = ctx.createRadialGradient(coreProj.x, coreProj.y, 0, coreProj.x, coreProj.y, coreR * 3);
+            grad.addColorStop(0, `rgba(255, 255, 255, ${Math.max(0.5, gravityForce)})`);
+            grad.addColorStop(0.3, `rgba(243, 229, 171, ${Math.max(0.4, gravityForce * 0.8)})`);
+            grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+            ctx.beginPath(); ctx.arc(coreProj.x, coreProj.y, coreR * 3, 0, Math.PI*2);
+            ctx.fillStyle = grad; ctx.fill();
+        }
+
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.sc * (1 + (p.isBright ? gravityForce : 0)); 
+            if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.x, p.y, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if(p.isBright && gravityForce > 0.5) { ctx.shadowBlur = 15 * p.sc; ctx.shadowColor = '#ffffff'; } 
+            else { ctx.shadowBlur = 0; }
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function renderYuanhai() {
+        waveColorBlend += ((isDragging ? 1 : 0) - waveColorBlend) * 0.05;
+
+        if(!isDragging) {
+            angleY += 0.001; 
+            angleX += (0.6 - angleX) * 0.02;
+        }
+
+        let projected = [];
+        yuanhaiParticles.forEach(p => {
+            let waveZ = Math.sin(p.dist * 0.05 - time * 2) * 40;
+            let proj = project3D(p.baseX, p.baseY, waveZ);
+            if(proj) {
+                let r = Math.floor(139 + (243 - 139) * waveColorBlend);
+                let g = Math.floor(168 + (229 - 168) * waveColorBlend);
+                let b = Math.floor(156 + (171 - 156) * waveColorBlend);
+                let a = 0.3 + waveColorBlend * 0.5; 
+
+                projected.push({ 
+                    x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, 
+                    c: `rgba(${r},${g},${b},${a})`, s: p.s * (1 + waveColorBlend * 0.5)
+                });
+            }
+        });
+
+        projected.sort((a,b) => b.z - a.z);
+
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.sc; if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.x, p.y, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if(waveColorBlend > 0.5) { ctx.shadowBlur = 5 * p.sc; ctx.shadowColor = '#d4af37'; } else { ctx.shadowBlur = 0; }
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+
+        let projectedLotuses = [];
+        lotusMatrix.forEach(lotus => {
+            lotus.theta += lotus.orbitSpeed; 
+            let waveOffset = Math.sin(lotus.r * 0.05 - time * 2) * 40;
+            let lx = Math.cos(lotus.theta) * lotus.r;
+            let lz = Math.sin(lotus.theta) * lotus.r + waveOffset + 10; 
+            
+            let proj = project3D(lx, 0, lz);
+            if(proj) projectedLotuses.push({ proj: proj, lotus: lotus });
+        });
+
+        projectedLotuses.sort((a,b) => b.proj.z - a.proj.z);
+
+        projectedLotuses.forEach(item => {
+            let beat = Math.sin(time * 2 + item.lotus.phase); 
+            let rotation = time * item.lotus.rotateSpeed;     
+            drawGiantLotus(item.proj, beat, waveColorBlend, rotation, item.lotus.scale);
+        });
+    }
+
+    function animate() {
+        ctx.fillStyle = 'rgba(2, 2, 5, 0.5)';
+        ctx.fillRect(0, 0, width, height);
+        time += 0.02;
+
+        if (currentRealm === 0) renderJieyin(); 
+        else renderYuanhai();
+        
+        requestAnimationFrame(animate);
+    }
+
+    function toggleRealm(type) {
+        if(currentRealm === type) return;
+        currentRealm = type;
+        
+        let title = document.getElementById('s-title'); let desc = document.getElementById('s-desc');
+        let hintContainer = document.getElementById('hold-hint');
+        let theoryBtn = document.getElementById('theory-btn');
+        let vowsBtn = document.getElementById('vows-btn'); 
+
+        if (type === 0) {
+            title.innerText = "阿弥陀仏の導きの光"; 
+            desc.innerHTML = "「万念帰一、光芒四射。」<br>画面を長押しして金光を集め、願生極楽。";
+            title.style.color = 'var(--gold)';
+            hintContainer.style.display = 'block';
+            theoryBtn.style.display = 'none';
+            vowsBtn.style.display = 'none'; 
+            angleX = 0.2; angleY = 0; 
+            charge = 0; gravityForce = 0;
+        } else {
+            title.innerText = "阿弥陀の無量願海を探求"; 
+            desc.innerHTML = "「清浄海浪、大願金蓮。」<br>360度画面をスワイプして、無量の大願海を照らす。";
+            title.style.color = 'var(--cyan)';
+            hintContainer.style.display = 'none';
+
+            theoryBtn.style.display = 'flex';
+            vowsBtn.style.display = 'flex'; 
+            angleX = 0.6; angleY = 0; 
+        }
+    }
+
+    function openVowsDrawer() { document.getElementById('vows-drawer').classList.add('open'); }
+    function closeVowsDrawer() { document.getElementById('vows-drawer').classList.remove('open'); }
+    document.getElementById('vows-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
+
+    // ================= ✨ 四十八願玉簡 TTS システム ✨ =================
+    let isPlayingVows = false;
+    let vowsUtterance = null;
+
+    function toggleVowsAudio() {
+        if (!window.speechSynthesis) return alert("お使いの端末は音声合成に対応していません。");
+        const btnText = document.getElementById('tts-vows-text'); const btnIcon = document.getElementById('tts-vows-icon');
+        
+        if (isPlayingVows) {
+            window.speechSynthesis.cancel(); isPlayingVows = false; btnText.innerText = "願文を聴く";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            if (isPlayingTheory) toggleTheoryAudio();
+            
+            let contentNodes = document.querySelectorAll('#vows-content-box .vow-num, #vows-content-box .vow-text');
+            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('。');
+            
+            vowsUtterance = new SpeechSynthesisUtterance(textToRead); vowsUtterance.lang = 'ja-JP'; vowsUtterance.rate = 0.85; 
+            
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            if (isAndroid) {
+                window.sysUtterances.push(vowsUtterance);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let jaVoice = voices.find(v => v.lang === 'ja-JP' && v.name.includes('Google')) || voices.find(v => v.lang.includes('ja'));
+                    if (jaVoice) vowsUtterance.voice = jaVoice;
+                }
+            }
+            vowsUtterance.onend = () => {
+                isPlayingVows = false; btnText.innerText = "願文を聴く";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                if(isAndroid) window.sysUtterances = window.sysUtterances.filter(u => u !== vowsUtterance);
+            };
+            setTimeout(() => { window.speechSynthesis.speak(vowsUtterance); }, isAndroid ? 150 : 50);
+            isPlayingVows = true; btnText.innerText = "停止する";
+            btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    const originalCloseVowsDrawer = closeVowsDrawer;
+    closeVowsDrawer = function() { if (isPlayingVows) toggleVowsAudio(); originalCloseVowsDrawer(); }
+
+
+    function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+    function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+
+    document.getElementById('theory-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
+    document.getElementById('ui-layer').addEventListener('pointerdown', (e) => e.stopPropagation());
+
+    function onDown(e) { 
+        if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; 
+        isDragging = true; 
+        lastMouseX = e.touches?e.touches[0].clientX:e.clientX; 
+        lastMouseY = e.touches?e.touches[0].clientY:e.clientY; 
+    }
+    
+    function onMove(e) { 
+        if (!isDragging) return; 
+        let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; 
+        
+        if(currentRealm === 1) {
+            angleY += (curX-lastMouseX)*0.01; 
+            angleX += (curY-lastMouseY)*0.01; 
+            angleX = Math.max(-Math.PI/2, Math.min(Math.PI/2, angleX)); 
+        }
+        lastMouseX=curX; lastMouseY=curY; 
+    }
+    
+    function onUp() { 
+        if(!isDragging) return;
+        isDragging = false; 
+        
+        if(currentRealm === 0 && charge > 90 && !transitioning) {
+            flashIntensity = 1; 
+            document.getElementById('lengyan-flash').style.opacity = flashIntensity;
+            transitioning = true;
+            
+            setTimeout(() => {
+                if(currentRealm === 0) toggleRealm(1);
+                transitioning = false;
+                charge = 0; 
+                gravityForce = 0;
+            }, 3500);
+        }
+    }
+
+    canvas.addEventListener('mousedown', onDown); window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
+
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+    window.sysUtterances = []; 
+
+    if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = function() { speechSynthesis.getVoices(); };
+    }
+
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("お使いのデバイスは音声機能に対応していません");
+        const btnText = document.getElementById('tts-text'); const btnIcon = document.getElementById('tts-icon');
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel(); isPlayingTheory = false; btnText.innerText = "法音を聴く";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text, #theory-content-box .humble-statement');
+            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('。');
+            
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead); 
+            theoryUtterance.lang = 'ja-JP'; 
+            theoryUtterance.rate = 0.85; 
+            
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            if (isAndroid) {
+                window.sysUtterances.push(theoryUtterance);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let jaVoice = voices.find(v => v.lang === 'ja-JP' && v.name.includes('Google')) || voices.find(v => v.lang.includes('ja'));
+                    if (jaVoice) theoryUtterance.voice = jaVoice;
+                }
+            }
+            theoryUtterance.onend = () => {
+                isPlayingTheory = false; btnText.innerText = "法音を聴く";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                if(isAndroid) window.sysUtterances = window.sysUtterances.filter(u => u !== theoryUtterance);
+            };
+            setTimeout(() => { window.speechSynthesis.speak(theoryUtterance); }, isAndroid ? 150 : 50);
+            isPlayingTheory = true; btnText.innerText = "聴聞を停止する";
+            btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    const originalCloseTheoryDrawer = closeTheoryDrawer;
+    closeTheoryDrawer = function() { if (isPlayingTheory) toggleTheoryAudio(); originalCloseTheoryDrawer(); }
+
+    initEngines(); toggleRealm(0); animate();
+</script>
+</body>
+</html>

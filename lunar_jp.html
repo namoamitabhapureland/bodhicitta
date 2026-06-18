@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="ja-JP">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest_jp.json">
+    <meta name="theme-color" content="#010103">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>華蔵月相 ‧ 照見菩提</title>
+    <style>
+        :root { --bg: #010204; --gold: #d4af37; --cyan: #8ba89c; --gold-light: #f3e5ab; }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        html { 
+            background-color: #010103;
+            width: 100%; 
+            height: 100%; 
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 50%, #15111a 0%, var(--bg) 100%);
+            color: #fff; 
+            font-family: "Hiragino Mincho ProN", "Yu Mincho", "Songti TC", "PMingLiU", "Noto Serif TC", serif; 
+            height: 100vh; 
+            overflow: hidden;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+        }
+
+        .top-nav { position: absolute; top: 25px; left: 0; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; z-index: 100; pointer-events: none; }
+        .nav-group { display: flex; gap: 12px; pointer-events: auto; }
+        .nav-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(212,175,55,0.3); color: var(--gold-light); padding: 8px 18px; border-radius: 20px; font-size: 0.9rem; letter-spacing: 2px; cursor: pointer; backdrop-filter: blur(8px); transition: 0.3s; font-family: inherit; }
+        .nav-btn:active { background: rgba(212,175,55,0.2); transform: scale(0.95); }
+        .nav-btn.circle { width: 38px; height: 38px; padding: 0; border-radius: 50%; display: flex; justify-content: center; align-items: center; pointer-events: auto; }
+
+        #intro-layer { position: absolute; inset: 0; z-index: 80; display: flex; flex-direction: column; justify-content: center; align-items: center; background: transparent; cursor: pointer; transition: opacity 1.2s; -webkit-touch-callout: none; }
+        .intro-title { font-size: 1.3rem; color: var(--gold-light); letter-spacing: 12px; margin-top: 60px; text-shadow: 0 0 15px rgba(212,175,55,0.6); opacity: 0.9; }
+        
+        #intro-hands-wrap { 
+            position: relative; width: 280px; height: 280px; display: flex; justify-content: center; align-items: center; pointer-events: none; 
+            animation: floatBreathe 4s ease-in-out infinite; 
+        }
+
+        #intro-hands-wrap::before {
+            content: '';
+            position: absolute;
+            width: 160px; height: 160px;
+            background: radial-gradient(circle, rgba(212,175,55,0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 1;
+            animation: breatheGlow 4s ease-in-out infinite;
+        }
+        
+        @keyframes floatBreathe {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes breatheGlow {
+            0%, 100% { transform: scale(1); opacity: 0.1; }
+            50% { transform: scale(1.6); opacity: 1; }
+        }
+
+        #mandala-bg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; height: 280px; z-index: 5; 
+            opacity: 0.25; 
+            filter: drop-shadow(0 0 5px rgba(243,229,171,0.1)); pointer-events: none; transition: opacity 0.5s; 
+        }
+        #hands-svg { position: relative; z-index: 10; width: 175px; height: 280px; 
+            opacity: 0.35; 
+            filter: drop-shadow(0 0 5px rgba(212,175,55,0.1)); transition: opacity 0.5s; 
+        }
+        .neural-glow #mandala-bg { animation: neuralConnectMandala 1.5s ease-out forwards; }
+        .neural-glow #hands-svg { animation: neuralConnectHands 1.5s ease-out forwards; }
+
+        @keyframes neuralConnectMandala {
+            0% { 
+                opacity: 0.25; 
+                filter: drop-shadow(0 0 5px rgba(243,229,171,0.1)); 
+                transform: translate(-50%, -50%) scale(1); 
+            }
+            100% { 
+                opacity: 1; 
+                filter: drop-shadow(0 0 80px #fff) drop-shadow(0 0 120px rgba(243,229,171,0.8)); 
+                transform: translate(-50%, -50%) scale(1.05); 
+            }
+        }
+        
+        @keyframes neuralConnectHands {
+            0% { 
+                opacity: 0.35; 
+                filter: drop-shadow(0 0 5px rgba(212,175,55,0.1)); 
+                transform: scale(1); 
+            }
+            100% { 
+                opacity: 1; 
+                filter: drop-shadow(0 0 80px #fff) drop-shadow(0 0 120px rgba(243,229,171,0.8)); 
+                transform: scale(1.05); 
+            }
+        }
+
+        #vow-layer { position: absolute; inset: 0; z-index: 50; display: none; flex-direction: column; justify-content: center; align-items: center; background: rgba(1, 2, 4, 0.4); backdrop-filter: blur(4px); opacity: 0; transition: opacity 1s; }
+        
+        #bodhi-light { 
+            width: 45px; height: 45px; border-radius: 50%; 
+            background: radial-gradient(circle at center, #FCF6D8 0%, rgba(243,229,171,0.6) 40%, rgba(243,229,171,0) 70%);
+            animation: bodhiBreathe 3.5s ease-in-out infinite; margin-bottom: 40px; 
+        }
+        @keyframes bodhiBreathe { 
+            0%, 100% { transform: scale(1); opacity: 0.6; } 
+            50% { transform: scale(1.4); opacity: 1; filter: drop-shadow(0 0 15px rgba(243,229,171,0.5)); } 
+        }
+
+        #core-layer { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; height: 85vh; z-index: 10; display: flex; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 1.5s ease; }
+
+        .track { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 4px; height: 100%; background: rgba(255,255,255,0.05); border-radius: 2px; }
+        
+        .fill { 
+            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 8px; height: 0%; border-radius: 3px;
+            background: linear-gradient(180deg, rgba(255,215,0,0.5), rgba(255,150,50,0.4), rgba(200,100,255,0.4), rgba(50,255,120,0.4), rgba(0,180,255,0.3));
+            box-shadow: 0 0 15px rgba(212,175,55,0.8), 0 0 30px rgba(255,255,255,0.3);
+            transition: height 4s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 5;
+        }
+
+        .node { position: absolute; left: 50%; transform: translate(-50%, 50%) scale(0.6); display: flex; justify-content: center; align-items: center; opacity: 0.35; transition: all 1s cubic-bezier(0.3, 1, 0.3, 1); }
+        .node.active { opacity: 1; transform: translate(-50%, 50%) scale(0.9); z-index: 10; filter: brightness(1.3) drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
+        .node.ultimate { opacity: 1; transform: translate(-50%, 50%) scale(1.4); z-index: 20; filter: brightness(1.6) drop-shadow(0 0 20px rgba(255,255,255,0.4)); }
+
+        .node svg { width: 140px; height: 140px; }
+        .node-label { position: absolute; left: 90px; white-space: nowrap; font-size: 0.8rem; color: var(--cyan); letter-spacing: 4px; opacity: 0; transition: opacity 0.5s; text-shadow: 0 0 10px rgba(139,168,156,0.6); }
+        .node.active .node-label { opacity: 1; color: var(--gold); }
+        .node.ultimate .node-label { font-size: 1rem; text-shadow: 0 0 15px var(--gold); left: 110px; }
+
+        #score-tracker { position: absolute; left: 50%; bottom: 0%; transform: translate(-50%, 50%); font-size: 1.2rem; color: #fff; text-shadow: 0 0 15px var(--gold); z-index: 30; transition: opacity 0.8s, bottom 4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+        #anim-overlay { position: fixed; inset: 0; z-index: 200; display: none; background: rgba(1,1,3,0.9); opacity: 0; transition: opacity 0.5s; }
+        #full-screen-flash { position: absolute; inset: 0; z-index: 10; background: #f3e5ab; opacity: 0; transition: opacity 0.1s ease-out; box-shadow: inset 0 0 100px 50px rgba(255, 255, 255, 0.3); }
+        #anim-svg-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); width: 250px; height: 250px; transition: transform 1.5s ease-in, filter 1s; z-index: 20; }
+        #anim-svg-container svg { width: 100%; height: 100%; }
+        #anim-text { position: absolute; top: 60%; left: 50%; transform: translateX(-50%); width: 90%; font-size: 1.1rem; color: #fffce0; letter-spacing: 4px; text-align: center; line-height: 2.2; opacity: 0; transition: 1.5s; z-index: 30; }
+
+        #close-anim-btn { position: absolute; top: 85%; left: 50%; transform: translateX(-50%); z-index: 40; }
+
+        .dust-particle { position: absolute; top: 50%; left: 50%; border-radius: 50%; opacity: 0; z-index: 15; animation: floatDustExplosion ease-out forwards; }
+        @keyframes floatDustExplosion { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0; } 5% { opacity: 1; } 100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0); opacity: 0; } }
+
+        .modal-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(1,2,4,0.85); backdrop-filter: blur(15px); display: none; flex-direction: column; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.8s; }
+        .t-box { background: radial-gradient(circle at 50% 50%, rgba(212,175,55,0.12) 0%, rgba(1,2,4,0.95) 100%); border: 1px solid rgba(212,175,55,0.4); border-radius: 25px; padding: 40px; display: flex; flex-direction: column; align-items: center; max-width: 92%; text-align: center; }
+        
+        #merit-container { 
+            width: 90%; 
+            max-width: 420px; 
+            position: relative; 
+            margin-bottom: 10px; 
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: inset 0 0 15px rgba(212, 175, 55, 0.03);
+        }
+        
+        .vault-line {
+            width: 85%;
+            max-width: 650px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.25), transparent);
+            margin: 25px 0 15px 0;
+        }
+
+        #merit-track { width: 100%; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; position: relative; border: 0.5px solid rgba(212,175,55,0.2); }
+        #merit-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #8ba89c 0%, #C9A0DC 40%, #d4af37 100%); transition: width 2.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--gold); }
+        .merit-axis { position: absolute; width: 100%; top: 15px; display: flex; font-size: 0.65rem; color: rgba(139,168,156,0.6); font-family: monospace; }
+
+        canvas { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+        #indra-bg { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; transition: 1.5s; background-image: repeating-radial-gradient(circle at 50% 50%, transparent 0, rgba(156,39,176,0.06) 2px, transparent 6px); }
+        
+        #vault-layer { display:none; position:absolute; inset:0; z-index:60; flex-direction:column; align-items:center; padding-top:90px; opacity:0; transition:0.8s; overflow-y:auto; background:radial-gradient(circle, rgba(21,17,26,0.9) 0%, #010204 100%); }
+        
+        #help-panel { position: fixed; inset: 0; z-index: 300; background: rgba(1,2,4,0.85); backdrop-filter: blur(10px); display: none; flex-direction: column; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.5s; }
+        .help-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(212,175,55,0.3); padding: 30px; border-radius: 15px; max-width: 85%; }
+    </style>
+</head>
+<body>
+    <canvas id="starCanvas"></canvas>
+    <div id="indra-bg"></div>
+
+    <div class="top-nav" id="top-nav">
+        <div class="nav-group">
+            <button class="nav-btn" onclick="window.location.href='index_jp.html?screen=3'">道場へ戻る</button>
+            <button class="nav-btn" onclick="openVault()">印記庫</button>
+        </div>
+        <button class="nav-btn circle" onclick="toggleHelp(true)">?</button>
+    </div>
+
+    <div id="intro-layer" onclick="startIntroCharge()">
+        <div id="intro-hands-wrap">
+            <svg id="mandala-bg" viewBox="0 0 1000 1000">
+                <defs>
+                    <radialGradient id="mandalaInnerFill" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#f3e5ab" stop-opacity="0.12" />
+                        <stop offset="100%" stop-color="#f3e5ab" stop-opacity="0" />
+                    </radialGradient>
+                </defs>
+                <g class="mandala-static-container" style="mix-blend-mode: screen;">
+                    <g class="mandala-glow-effect">
+                        <g stroke="#f3e5ab" stroke-width="2.2" fill="url(#mandalaInnerFill)">
+                            <path d="M500 10 L764.5 95.9 L928 320.9 L928 599.1 L764.5 824.1 L500 910 L235.5 824.1 L72 599.1 L72 320.9 L235.5 95.9 Z" opacity="0.8" />
+                            <path d="M500 10 L928 320.9 L764.5 824.1 L235.5 824.1 L72 320.9 L500 10" opacity="0.6" />
+                            <path d="M764.5 95.9 L928 599.1 L500 910 L72 599.1 L235.5 95.9" fill="none" opacity="0.6" />
+                            <path d="M500 10 L928 599.1 L235.5 824.1 M235.5 95.9 L928 320.9 L500 910 L72 320.9 L764.5 95.9" fill="none" opacity="0.4" stroke-width="1.2" />
+                            <path d="M764.5 824.1 L72 599.1 L500 10 M928 599.1 L72 320.9 M928 320.9 L72 599.1" fill="none" opacity="0.4" stroke-width="1.2" />
+                        </g>
+                        <circle cx="500" cy="460" r="450" fill="none" stroke="#f3e5ab" stroke-width="3.5" opacity="0.8" />
+                        <circle cx="500" cy="460" r="462" fill="none" stroke="#f3e5ab" stroke-width="1" opacity="0.3" />
+                    </g>
+                </g>
+            </svg>
+            <svg id="hands-svg" viewBox="0 0 200 320"></svg>
+        </div>
+        <div class="intro-title">華蔵月相 ‧ 照見菩提</div>
+        <div style="font-size: 0.85rem; color: var(--cyan); margin-top: 15px; letter-spacing: 6px; opacity: 0.8;">黙念弥陀 ‧ 破月結界</div>
+    </div> 
+    
+    <div id="vow-layer">
+        <div id="bodhi-light"></div>
+        <div id="vow-text" style="font-size:1.3rem; color:#f3e5ab; font-weight:300; letter-spacing:8px; text-align:center; text-shadow:0 0 15px rgba(243,229,171,0.5);"></div>
+    </div>
+
+    <div id="core-layer">
+        <div class="track"></div><div class="fill" id="energy-fill"></div>
+        <div id="score-tracker">0%</div>
+        <div class="node" id="n1" style="bottom: 15%;"><div id="svg-n1"></div><div class="node-label">0-20 ‧ 初発心</div></div>
+        <div class="node" id="n2" style="bottom: 35%;"><div id="svg-n2"></div><div class="node-label">21-40 ‧ 安立境</div></div>
+        <div class="node" id="n3" style="bottom: 55%;"><div id="svg-n3"></div><div class="nodelabel">41-60 ‧ 万行起</div></div>
+        <div class="node" id="n4" style="bottom: 75%;"><div id="svg-n4"></div><div class="node-label">61-80 ‧ 普回向</div></div>
+        <div class="node" id="n5" style="bottom: 95%;"><div id="svg-n5"></div><div class="node-label">81-100 ‧ 円満相</div></div>
+    </div>
+
+    <div id="treasure-modal" class="modal-overlay">
+        <div class="t-box">
+            <div id="t-title-name" style="color:var(--gold-light); font-size:1.3rem; margin-bottom:20px; letter-spacing:4px;"></div>
+            <div id="t-svg-display" style="width:180px; height:180px; filter: drop-shadow(0 0 20px rgba(255,255,255,0.2));"></div>
+
+            <div id="t-name-display" style="font-size:1.8rem; color:var(--gold-light); margin:15px 0; letter-spacing:3px;"></div>
+            <div id="t-desc-display" style="color:#eee; font-size:0.9rem; line-height:2; text-align:justify; margin-bottom:10px;"></div>
+            <button class="nav-btn" style="margin-top:20px; width:180px; position:relative; z-index:1000;" onclick="openVault()">印記庫へ入る</button>
+        </div>
+    </div>
+    
+    <div id="vault-layer">
+        <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:25px;">
+            <div style="color:var(--gold-light); font-size:1.4rem; letter-spacing:14px; text-indent:14px; text-shadow:0 0 15px rgba(212,175,55,0.4); margin-bottom:12px;">法界印記庫</div>
+            <div id="vault-user-info" style="color:var(--cyan); font-size:0.85rem; letter-spacing:4px; opacity:0.75;"></div>
+        </div>
+        
+        <div id="merit-container">
+            <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--cyan); margin-bottom:12px;">
+                <span>精進資糧総結</span>
+                <span id="merit-num-display" style="color:var(--gold-light); font-family:monospace;">0</span>
+            </div>
+            <div id="merit-track"><div id="merit-fill"></div></div>
+            <div class="merit-axis" style="position:relative; margin-top:8px; height:15px; font-size:0.65rem; color:rgba(139,168,156,0.6); font-family:monospace;">
+                <span style="position:absolute; left:0%;">0</span>
+                <span style="position:absolute; left:48%;">1k</span>
+                <span style="position:absolute; left:73%;">10k</span>
+                <span style="position:absolute; left:90%;">100k</span>
+                <span style="position:absolute; right:0%; color:var(--gold-light); font-weight:bold; letter-spacing:1px;">無量功徳</span>
+            </div>
+        </div>
+
+        <div class="vault-line"></div>
+
+        <div id="vault-grid" style="display:flex; flex-wrap:wrap; justify-content:center; gap:25px; max-width:900px; padding:20px; padding-bottom:60px;"></div>
+    </div>
+
+    <div id="anim-overlay">
+        <div id="full-screen-flash"></div>
+        <div id="anim-svg-container"></div>
+        <div id="anim-text"></div>
+        <button class="nav-btn" id="close-anim-btn" onclick="closeAnim()">功徳円満</button>
+    </div>
+    <div id="confirm-layer" class="modal-overlay">
+        <div class="t-box">
+            <div style="color:var(--cyan); font-size:1.1rem; margin-bottom:20px; letter-spacing:4px;">法界へ回向せん</div>
+            <div id="confirm-svg" style="width:160px; height:160px; filter: drop-shadow(0 0 15px rgba(255,255,255,0.2));"></div>
+
+            <div id="confirm-name" style="font-size:1.5rem; color:var(--gold-light); margin:20px 0; letter-spacing:3px;"></div>
+            <div style="display:flex; gap:15px; margin-top:15px;">
+                <button class="nav-btn" onclick="cancelDedicate()">保留</button>
+                <button class="nav-btn" style="border-color:var(--gold); color:var(--gold);" onclick="executeDedicate()">回向を確認</button>
+            </div>
+        </div>
+    </div>
+    <div id="help-panel" onclick="toggleHelp(false)">
+        <div class="help-box" onclick="event.stopPropagation()" style="background: radial-gradient(circle at 50% 50%, rgba(212,175,55,0.08) 0%, rgba(1,2,4,0.98) 100%); border: 1px solid rgba(212,175,55,0.35); padding: 35px; border-radius: 20px; max-width: 420px; width: 92%; box-shadow: 0 0 30px rgba(0,0,0,0.8);">
+            <h3 style="color:var(--gold-light); text-align:center; margin-bottom:20px; letter-spacing:4px; font-weight:400; font-size:1.2rem;">華蔵月相 ‧ 精進指南</h3>
+            
+            <p style="color:#ddd; font-size:0.85rem; line-height:1.8; text-align:justify; letter-spacing:1px; margin-bottom:0;">
+                これは修持の状態を反映する明鏡です。毎月一日、システムはあなたが「発心、行願、頂礼」の中で道場と行った毎回の交流を凝縮し、相応の月間フィードバックとして提示します。
+            </p>
+            
+            <div style="width:100%; height:1px; background:linear-gradient(90deg, transparent, rgba(212,175,55,0.25), transparent); margin:20px 0;"></div>
+            
+            <h4 style="color:var(--gold-light); font-size:0.95rem; margin-bottom:12px; letter-spacing:2px; font-weight:400;">三業と信願行</h4>
+            <p style="color:#aaa; font-size:0.8rem; line-height:1.6; text-align:justify; letter-spacing:1px; margin-bottom:12px;">
+                日常の定課は、信願行と戒定慧の具体的な内省です：
+            </p>
+            <div style="display:flex; flex-direction:column; gap:8px; color:#ddd; font-size:0.85rem; line-height:1.6; padding-left:4px;">
+                <div style="letter-spacing:1px;"><span style="color:var(--gold);">発心</span>：菩提心を灯し、戒学を安立し、「信」の根基を深化させる。</div>
+                <div style="letter-spacing:1px;"><span style="color:var(--gold);">行願</span>：普賢の願いを実践し、定学に安住し、「願」の方向を指し示す。</div>
+                <div style="letter-spacing:1px;"><span style="color:var(--gold);">頂礼</span>：至誠をもって弥陀を礼拝し、慧学に深く入り、「行」の実践を着実にする。</div>
+            </div>
+            
+            <div style="width:100%; height:1px; background:linear-gradient(90deg, transparent, rgba(212,175,55,0.25), transparent); margin:20px 0;"></div>
+            
+            <h4 style="color:var(--gold-light); font-size:0.95rem; margin-bottom:12px; letter-spacing:2px; font-weight:400;">六度万行に融け込む</h4>
+            <p style="color:#ddd; font-size:0.85rem; line-height:1.8; text-align:justify; letter-spacing:1px; margin-bottom:0;">
+                この三業を起点として、私たちは生活の中で境界に直面する時、内には四聖諦を明弁し、外には八正道を履行します。日々の相応の中で、縁に随って布施、持戒、忍辱、精進、禅定、般若を修持し、六度万行を自然に毎日の営みへと融け込ませます。
+            </p>
+
+            <div style="display:flex; justify-content:center; margin-top:25px;">
+                <button class="nav-btn" style="width:120px; font-size:0.85rem;" onclick="toggleHelp(false)">閉 じる</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function speak(t) {
+        if (!window.speechSynthesis) return; window.speechSynthesis.cancel();
+        let textToSpeak = t;
+        const m = new SpeechSynthesisUtterance(textToSpeak); m.lang = 'ja-JP'; m.rate = 0.85;
+        window.speechSynthesis.speak(m);
+    }
+
+    const HANDS_SVG_CONTENT = `
+        <path d="M 100 25 C 97 18, 93 20, 92 30 L 62 165 C 55 190, 40 230, 10 245 L 30 275 C 65 265, 85 245, 100 225 C 115 245, 135 265, 170 275 L 190 245 C 160 230, 145 190, 138 165 L 108 30 C 107 20, 103 18, 100 25 Z" fill="rgba(212, 175, 55, 0.05)"/>
+        <path d="M 138 165 L 108 30 C 107 20, 103 18, 100 25 C 97 18, 93 20, 92 30 L 62 165 M 30 275 C 65 265, 85 245, 100 225 C 115 245, 135 265, 170 275" fill="none" stroke="#d4af37" stroke-width="1.2" stroke-linejoin="round"/>
+        <path d="M 62 165 C 55 190, 40 230, 10 245" fill="none" stroke="#d4af37" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 138 165 C 145 190, 160 230, 190 245" fill="none" stroke="#d4af37" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 0 240 Q 37.5 265, 75 240" fill="none" stroke="#d4af37" stroke-width="1.2" stroke-linecap="round" transform="rotate(40, 37.5, 240)"/>
+        <path d="M 5 232 Q 41.5 257, 78 232" fill="none" stroke="#d4af37" stroke-width="1.2" stroke-linecap="round" transform="rotate(40, 37.5, 240)"/>
+        <path d="M 200 240 Q 162.5 265, 125 240" fill="none" stroke="#d4af37" stroke-width="1.2" stroke-linecap="round" transform="rotate(-40, 162.5, 240)"/>
+        <path d="M 195 232 Q 158.5 257, 122 232" fill="none" stroke="#d4af37" stroke-width="1.2" stroke-linecap="round" transform="rotate(-40, 162.5, 240)"/>
+        <path d="M 96 23 C 98 25, 98 32, 94 34" stroke="#d4af37" stroke-width="0.8" fill="none"/>
+        <path d="M 104 23 C 102 25, 102 32, 106 34" stroke="#d4af37" stroke-width="0.8" fill="none"/>
+        <path d="M 100 25 L 100 160" stroke="#d4af37" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+        <path d="M 100 195 L 100 225" stroke="#d4af37" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+        <path d="M 136 175 C 125 155, 110 152, 102 155" stroke="#d4af37" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M 63 170 C 80 155, 95 152, 112 158 C 118 160, 120 170, 115 175 C 95 188, 75 198, 63 215" stroke="#d4af37" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+        <path d="M 103 162 C 109 159, 113 161, 113 166 C 109 169, 103 167, 103 162 Z" stroke="#d4af37" stroke-width="0.8" fill="none"/>
+        <path d="M 105 182 Q 125 218 138 210" stroke="#d4af37" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+    `;
+    document.getElementById('hands-svg').innerHTML = HANDS_SVG_CONTENT;
+
+    function poly(n, r, rotDeg=0) { 
+        const pts=[], off = -Math.PI/2 + rotDeg*Math.PI/180; 
+        for(let k=0;k<n;k++){ pts.push([r*Math.cos(2*Math.PI*k/n + off), r*Math.sin(2*Math.PI*k/n + off)]); } 
+        return pts; 
+    }
+    function ptStr(pts){ return pts.map(p=>p[0].toFixed(3)+','+p[1].toFixed(3)).join(' '); }
+    function getFullWeb(pts, stroke, width, opacity) { 
+        let html = ''; 
+        for(let i=0; i<pts.length; i++) { 
+            for(let j=i+1; j<pts.length; j++) { 
+                html += `<line x1="${pts[i][0]}" y1="${pts[i][1]}" x2="${pts[j][0]}" y2="${pts[j][1]}" stroke="${stroke}" stroke-width="${width}" opacity="${opacity}"/>`; 
+            } 
+        } 
+        return html; 
+    }
+
+    const totemNames = ["青琉璃種子", "緑翡翠陣盤", "紫星晶双輪", "橙琥珀金網", "大千金剛相"];
+    let generatedSVGs = [];
+
+    function generateDynamicSVG(tier) {
+        const themes = [ ['rgba(0,180,255,0.1)','#80dfff'], ['rgba(50,255,120,0.1)','#80ffc0'], ['rgba(200,100,255,0.1)','#e0c0ff'], ['rgba(255,150,50,0.15)','#ffcc80'], ['rgba(255,215,0,0.2)','#fffce0'] ];
+        let fill = themes[tier-1][0], stroke = themes[tier-1][1];
+        let svg = `<svg viewBox="-120 -120 240 240" style="overflow:visible; width:100%; height:100%;">`;
+
+        if (tier === 1) { 
+            let pOut = poly(9, 100); let pIn = poly(9, 40, 20);
+            svg += `<g><animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="40s" repeatCount="indefinite"/><polygon points="${ptStr(pOut)}" fill="${fill}"/>${getFullWeb(pOut, stroke, 0.6, 0.6)}${getFullWeb(pIn, '#fff', 0.5, 0.5)}</g>`;
+        } else if (tier === 2) { 
+            let pOut = poly(11, 100); let pIn = poly(11, 70, 180/11);
+            svg += `<g><animate attributeName="opacity" values="0.6; 1; 0.6" dur="3s" repeatCount="indefinite"/><polygon points="${ptStr(pOut)}" fill="${fill}"/>${getFullWeb(pOut, stroke, 0.5, 0.7)}${getFullWeb(pIn, '#fff', 0.4, 0.6)}</g>`;
+        } else if (tier === 3) { 
+            let p1 = poly(8, 100, 0); let p2 = poly(8, 100, 22.5);
+            svg += `<g><animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="30s" repeatCount="indefinite"/><polygon points="${ptStr(p1)}" fill="${fill}"/>${getFullWeb(p1, stroke, 0.4, 0.6)}</g><g><animateTransform attributeName="transform" type="rotate" from="360 0 0" to="0 0 0" dur="25s" repeatCount="indefinite"/><polygon points="${ptStr(p2)}" fill="${fill}"/>${getFullWeb(p2, '#fff', 0.4, 0.6)}</g>`;
+        } else if (tier === 4) { 
+            let pOut = poly(10, 100); let pIn = poly(5, 50, 18);
+            svg += `<g><animateTransform attributeName="transform" type="scale" values="0.95; 1.05; 0.95" dur="4s" repeatCount="indefinite"/><polygon points="${ptStr(pOut)}" fill="${fill}"/>${getFullWeb(pOut, stroke, 0.5, 0.6)}${getFullWeb(pIn, '#fff', 0.6, 0.8)}</g>`;
+        } else if (tier === 5) { 
+            let pOut = poly(12, 100); const star = [];
+            for(let i=0; i<12; i++) { star.push(pOut[i]); star.push([35*Math.cos((i*30-75)*Math.PI/180), 35*Math.sin((i*30-75)*Math.PI/180)]); }
+            svg += `<g><animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="60s" repeatCount="indefinite"/>`;
+            for(let i=0; i<12; i++) {
+                let next = (i+1)%12; let hue = i * 30;
+                svg += `<polygon points="0,0 ${pOut[i][0]},${pOut[i][1]} ${pOut[next][0]},${pOut[next][1]}" fill="hsla(${hue}, 80%, 55%, 0.2)" />`;
+                svg += `<polygon points="0,0 ${star[i*2][0]},${star[i*2][1]} ${star[i*2+1][0]},${star[i*2+1][1]}" fill="hsla(${hue+40}, 90%, 65%, 0.4)" />`;
+                svg += `<polygon points="0,0 ${star[next*2][0]},${star[next*2][1]} ${star[i*2+1][0]},${star[i*2+1][1]}" fill="hsla(${hue+80}, 90%, 65%, 0.4)" />`;
+            }
+            svg += `${getFullWeb(pOut, stroke, 0.6, 0.7)}<polygon points="${ptStr(star)}" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.9"/></g>`;
+        }
+        return svg + `</svg>`;
+    }
+    for(let i=1; i<=5; i++) {
+        let s = generateDynamicSVG(i);
+        generatedSVGs.push(s);
+        let n = document.getElementById(`svg-n${i}`);
+        if(n) n.innerHTML = s;
+    }
+
+    const cvs = document.getElementById('starCanvas'); const ctx = cvs.getContext('2d');
+    let cw, ch, stars = [], warpSpeed = 0.5, targetWarpSpeed = 0.5, starScale = 1, targetStarScale = 1;
+    function initStars() {
+        cw = cvs.width = window.innerWidth; ch = cvs.height = window.innerHeight; stars = [];
+        const STAR_COLORS = ['#f3e5ab', '#ffffff', '#89CFF0', '#ff9a9e', '#C9A0DC'];
+        for (let i = 0; i < 350; i++) {
+            stars.push({ x: (Math.random()-0.5)*2000, y: (Math.random()-0.5)*2000, z: Math.random()*2000, c: STAR_COLORS[Math.floor(Math.random()*STAR_COLORS.length)], s: Math.random()*2.5+0.5 });
+        }
+    }
+    function drawStars() {
+        ctx.fillStyle = 'rgba(2, 2, 4, 0.4)'; ctx.fillRect(0, 0, cw, ch); ctx.globalCompositeOperation = 'screen';
+        warpSpeed += (targetWarpSpeed - warpSpeed) * 0.05; starScale += (targetStarScale - starScale) * 0.05;
+        stars.forEach(s => {
+            s.z -= warpSpeed; if(s.z <= 0) { s.z = 2000; s.x = (Math.random()-0.5)*cw*2; s.y = (Math.random()-0.5)*ch*2; }
+            let sc = 400 / (400 + s.z); ctx.beginPath();
+            ctx.arc((cw/2)+s.x*sc, (ch/2)+s.y*sc, s.s*sc*starScale, 0, Math.PI * 2);
+            ctx.fillStyle = s.c; ctx.globalAlpha = Math.min(1, sc*2.5); ctx.fill(); ctx.globalAlpha = 1;
+        });
+        ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(drawStars);
+    }
+    window.addEventListener('resize', initStars); initStars(); drawStars();
+
+    let db;
+    try {
+        db = JSON.parse(localStorage.getItem('PX_JP_V15.0'));
+        if (!db || typeof db !== 'object') db = null;
+        if (db && !db.dailyTasks) db.dailyTasks = [];
+        if (db && !db.visitedRealms) db.visitedRealms = [];
+        if (db && !db.treasures) {
+            db.treasures = { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 };
+        }
+        if (db && !db.bodhiRecords) {
+            db.bodhiRecords = [];
+        }
+        
+        if (db && db.lastMatrixDate === undefined) db.lastMatrixDate = "";
+        if (db && db.totalCorrect === undefined) db.totalCorrect = 0;
+        if (db && !db.clearedQ) db.clearedQ = [];
+        if (db && !db.failedQ) db.failedQ = {};
+        if (db && db.prajnaHints === undefined) db.prajnaHints = 0;
+        if (db && db.lastHintDate === undefined) db.lastHintDate = "";
+        
+        if (db && db.waterLevel === undefined) db.waterLevel = 1;
+        if (db && db.waterLastDate === undefined) db.waterLastDate = "";
+        if (db && db.tempBag === undefined) db.tempBag = 0;
+        
+        if (db && !db.preceptsData) db.preceptsData = { active: false, track: null, startTime: null, countA: 0, countB: 0, cycleStart: null, cycleCount: 0 };
+        
+        if (db && db.visionLevel === undefined) db.visionLevel = 1;
+        if (db && db.visionLastFailed === undefined) db.visionLastFailed = "";
+        if (db && db.visionLastDate === undefined) db.visionLastDate = ""; 
+
+        if (db && !db.bowData) db.bowData = { streakCount: 0, lastLoginDate: "", lastRewardStreak: 0 };
+
+        if (db && !db.personalRoom) db.personalRoom = { sessionCounts:{}, othList:{}, avatar:"", memo:"", loginDays:0, lastLogin:"", treasureClaimed:"" };
+        
+        if (db && !db.puxianData) {
+            db.puxianData = {
+                startDate: new Date().setHours(0,0,0,0), 
+                lastLogin: "", 
+                weekRecord: [false, false, false, false, false, false, false],
+                poolPoints: 0, totalDays365: 0, totalYears108: 0, totalPracticedDays: 0
+            };
+        }
+
+        if (db && !db.mandalaVault) db.mandalaVault = [0, 0, 0, 0, 0];
+        if (db && db.totalMerit === undefined) db.totalMerit = 0;
+        if (db && db.lastSettledMonth === undefined) db.lastSettledMonth = "";
+        if (db && (!db.lunar || !db.lunar.snapshot)) db.lunar = { snapshot: { bodhi: 0, puxian: 0, bow: 0 } };
+
+    } catch(e) {
+        console.error("法宝データの読み込みに失敗しました", e);
+    }
+
+    if (!db) {
+        db = { 
+            name: "", totalNian: 0, points: 0, dailyTasks: [], todayCount: 0, lastDate: new Date().toLocaleDateString(),
+            currentRank: "", streakDays: 0, lastNianDate: "",
+            treasures: { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 },
+            bodhiRecords: [],
+            
+            lastMatrixDate: "", totalCorrect: 0, clearedQ: [], failedQ: {}, prajnaHints: 0, lastHintDate: "",
+            
+            waterLevel: 1, waterLastDate: "", tempBag: 0,
+            visionLevel: 1, visionLastFailed: "", visionLastDate: "",
+            
+            bowData: { streakCount: 0, lastLoginDate: "", lastRewardStreak: 0 },
+
+            preceptsData: { active: false, track: null, startTime: null, countA: 0, countB: 0, cycleStart: null, cycleCount: 0 },
+            
+            puxianData: {
+                startDate: new Date().setHours(0,0,0,0), 
+                lastLogin: "", 
+                weekRecord: [false, false, false, false, false, false, false],
+                poolPoints: 0, totalDays365: 0, totalYears108: 0, totalPracticedDays: 0
+            },
+
+            personalRoom: { sessionCounts:{}, othList:{}, avatar:"", memo:"", loginDays:0, lastLogin:"", treasureClaimed:"" },
+
+            mandalaVault: [0, 0, 0, 0, 0],
+            totalMerit: 0,
+            lastSettledMonth: "",
+            lunar: { snapshot: { bodhi: 0, puxian: 0, bow: 0 } }
+        };
+    }
+
+    if (db.streakDays === undefined) db.streakDays = 0;
+    if (db.lastNianDate === undefined) db.lastNianDate = "";
+    if (db.musicList !== undefined) delete db.musicList;
+
+    const userName = db.name || "行者";
+    if (!db.createDate) db.createDate = new Date().toISOString();
+    const createDateObj = new Date(db.createDate);
+    const now = new Date();
+    const currentMonthStr = now.getFullYear() + "-" + (now.getMonth() + 1); 
+
+    const lastMonth = new Date(now.getFullYear(), now.getMonth(), 0); 
+    const daysInLastMonth = lastMonth.getDate();
+
+    const isRegisteredLastMonthButNotFirst = (createDateObj.getFullYear() === lastMonth.getFullYear() && createDateObj.getMonth() === lastMonth.getMonth() && createDateObj.getDate() > 1);
+    const isRegisteredThisMonth = (createDateObj.getFullYear() === now.getFullYear() && createDateObj.getMonth() === now.getMonth());
+    const isNewUserMidMonth = isRegisteredLastMonthButNotFirst || isRegisteredThisMonth;
+
+    const isFirstDay = (now.getDate() === 1) && !isNewUserMidMonth;
+    const hasSettledThisMonth = db.lastSettledMonth === currentMonthStr;
+
+    const curB = db.bodhiLitCount || 0;
+    const curP = (db.puxianData && db.puxianData.totalPracticedDays) ? db.puxianData.totalPracticedDays : 0;
+    const curW = (db.bowData && db.bowData.streakCount) ? db.bowData.streakCount : 0;
+
+    const delB = Math.max(0, curB - db.lunar.snapshot.bodhi);
+    const delP = Math.max(0, curP - db.lunar.snapshot.puxian);
+    const delW = Math.max(0, curW - db.lunar.snapshot.bow);
+    const totalDelta = delB + delP + delW;
+
+    const maxScore = daysInLastMonth * 3; 
+    let calcScore = Math.min(100, Math.floor((totalDelta / maxScore) * 100));
+
+    function getMeritWidth(merit) {
+        if (merit <= 1000) return (merit / 1000) * 48; 
+        if (merit <= 10000) return 48 + ((merit - 1000) / 9000) * 25; 
+        if (merit <= 100000) return 73 + ((merit - 10000) / 90000) * 17; 
+        return 90 + Math.min((merit - 100000) / 1000000 * 10, 10); 
+    }
+
+    let isCharging = false;
+
+    function startIntroCharge() {
+        if (isCharging) return;
+        
+        const tier = Math.ceil(calcScore / 20) || 1;
+        
+        if (isNewUserMidMonth && now.getDate() === 1) {
+            speak("道場を安立して全月に満たないため、資糧は来月一日に正式に結集されます。");
+            
+            document.getElementById('t-title-name').innerText = "法界告示";
+            document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1]; 
+            document.getElementById('t-name-display').innerText = "安立未円満";
+            document.getElementById('t-desc-display').innerHTML = `行者 ${userName} ‧ 道場安立より全月に満たず。<br><br>今月の資糧は結集基準に達していません。縁に随って修持してください。資糧は来月一日に正式に業鏡に顕化します。`;
+            
+            const m = document.getElementById('treasure-modal');
+            m.style.display = 'flex';
+            setTimeout(() => m.style.opacity = 1, 50);
+            return;
+        }
+        
+        if (!isFirstDay || hasSettledThisMonth) {
+            let noticeTitle = hasSettledThisMonth ? "結集已円満" : "因縁を静待す";
+            let msg = hasSettledThisMonth ? 
+                "今月の精進資糧は既に結集し封存されました。定課に安住し、来月一日の業鏡の再開を静かにお待ちください。" : 
+                "時機未だ至らず。此地は資糧結集の聖境にして、毎月一日にのみ業鏡を開き菩提を照見す。";
+                
+            speak(hasSettledThisMonth ? "今月の資糧は既に結集円満しました。来月一日をお待ちください。" : "時機未だ至らず。毎月一日に資糧の結集を開きます。");
+            
+            document.getElementById('t-title-name').innerText = "法界告示";
+            document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1]; 
+            document.getElementById('t-name-display').innerText = noticeTitle;
+            document.getElementById('t-desc-display').innerHTML = `行者 ${userName} ‧ ${msg}`;
+            
+            const m = document.getElementById('treasure-modal');
+            m.style.display = 'flex';
+            setTimeout(() => m.style.opacity = 1, 50);
+            return;
+        }
+
+        isCharging = true;
+        const handsWrap = document.getElementById('intro-hands-wrap');
+        handsWrap.classList.add('neural-glow'); 
+        
+        setTimeout(() => { finishIntro(); }, 1900);
+    }
+
+    function finishIntro() {
+        targetWarpSpeed = 25; targetStarScale = 3;
+        const intro = document.getElementById('intro-layer');
+        intro.style.opacity = 0;
+        
+        setTimeout(() => {
+            intro.style.display = 'none';
+            const vl = document.getElementById('vow-layer');
+            vl.style.display = 'flex';
+            
+            const vt = document.getElementById('vow-text');
+            vt.innerText = "発菩提心";
+            vt.style.opacity = 1;
+            
+            vl.onclick = function() {
+                vl.onclick = null; 
+                if (window.speechSynthesis) { window.speechSynthesis.speak(new SpeechSynthesisUtterance('')); }
+                vt.style.opacity = 0;
+                setTimeout(runVows, 800); 
+            };
+            setTimeout(() => { vl.style.opacity = 1; }, 50);
+        }, 1200);
+    }
+
+    const vows = ["衆生無辺誓願度", "煩悩無尽誓願断", "法門無量誓願学", "仏道無上誓願成"];
+    let vowIdx = 0;
+    function runVows() {
+        if (vowIdx < 4) {
+            const vt = document.getElementById('vow-text');
+            vt.style.opacity = 0;
+            setTimeout(() => {
+                vt.innerText = vows[vowIdx];
+                vt.style.opacity = 1;
+                speak(vows[vowIdx]);
+                vowIdx++;
+                setTimeout(runVows, 2800);
+            }, 600);
+        } else {
+            targetWarpSpeed = 0.5; targetStarScale = 1;
+            speak("功徳結集、業鏡顕化");
+            setTimeout(() => {
+                document.getElementById('vow-layer').style.opacity = 0;
+                setTimeout(() => {
+                    document.getElementById('vow-layer').style.display = 'none';
+                    
+                    const coreLayer = document.getElementById('core-layer');
+                    coreLayer.style.opacity = 1;
+                    
+                    const tracker = document.getElementById('score-tracker');
+                    tracker.innerText = "触れて結集";
+                    tracker.style.opacity = 1;
+                    
+                    coreLayer.style.pointerEvents = "auto"; 
+                    coreLayer.onclick = function() {
+                        coreLayer.onclick = null; 
+                        coreLayer.style.pointerEvents = "none"; 
+                        
+                        tracker.style.opacity = 0;
+                        
+                        startAnim(); 
+                    };
+                }, 1000);
+            }, 1800);
+        }
+    }
+
+    function startAnim() {
+        const fill = document.getElementById('energy-fill');
+        
+        fill.style.height = calcScore + '%';
+        
+        let cur = 0;
+        let intervalTime = calcScore > 0 ? (4000 / calcScore) : 4000; 
+        
+        let timer = setInterval(() => {
+            if (cur < calcScore) cur++;
+            
+            if(cur >= 10) document.getElementById('n1').classList.add('active');
+            if(cur >= 30) document.getElementById('n2').classList.add('active');
+            if(cur >= 50) document.getElementById('n3').classList.add('active');
+            if(cur >= 70) document.getElementById('n4').classList.add('active');
+            if(cur >= 90) document.getElementById('n5').classList.add('active');
+
+            if (cur >= calcScore) clearInterval(timer);
+        }, intervalTime);
+
+        setTimeout(() => {
+            let tier = Math.ceil(calcScore / 20) || 1;
+            document.getElementById(`n${tier}`).classList.add('ultimate');
+            setTimeout(showModal, 2500); 
+        }, 4500);
+    }
+
+    const stageExhortations = [
+        "行者 {name} ‧ 初発心。信は道元功徳の母なり、微塵の如しと雖も、亦た能く大千を映照す。願わくは行者此の念を守護し、信根を深く耕さんことを。",
+        "行者 {name} ‧ 安立境。持戒を本となし、定力漸く生ず。娑婆の紛擾の中に清浄なる法水を尋ね得ん、願わくは如理に安住し、菩提を潤沢せんことを。",
+        "行者 {name} ‧ 万行起。精進不懈、定慧均等。定慧の光は日増しに明朗に赴く、願わくは中道を行じ、自他を利し、功徳無量ならんことを。",
+        "行者 {name} ‧ 普回向。願力海が如く、広く衆生を納む。修持は已に普回向の光束と化す、願わくは願海を拡張し、法界の幽暗を照らさんことを。",
+        "行者 {name} ‧ 円満相。般若実相、本来清浄なり。自性蓮華は終に金蓮と成る、願わくは当体即是、永く退転せざらんことを。"
+    ];
+
+    function showModal() {
+        const tier = Math.ceil(calcScore / 20) || 1;
+        document.getElementById('t-title-name').innerText = `行者 ${userName} ‧ 修持円満`;
+        document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1];
+        document.getElementById('t-name-display').innerText = totemNames[tier-1];
+        
+        const finalDesc = stageExhortations[tier-1].replace("{name}", userName) + 
+                          `<br><br><span style="color:var(--gold); font-size:1.1rem; letter-spacing:2px;">今月の円満度：${calcScore}%</span>`;
+        document.getElementById('t-desc-display').innerHTML = finalDesc;
+
+        db.totalMerit += totalDelta;
+        db.lunar.snapshot = { bodhi: curB, puxian: curP, bow: curW };
+        db.lastSettledMonth = currentMonthStr;
+        db.mandalaVault[tier-1]++;
+        localStorage.setItem('PX_JP_V15.0', JSON.stringify(db));
+
+        const mFill = document.getElementById('merit-fill');
+        document.getElementById('merit-num-display').innerText = db.totalMerit;
+        setTimeout(() => { if(mFill) mFill.style.width = getMeritWidth(db.totalMerit) + '%'; }, 800);
+
+        speak("印記を獲得、" + totemNames[tier-1]);
+        
+        const core = document.getElementById('core-layer');
+        core.style.zIndex = "150"; 
+        core.style.transition = "opacity 1.2s ease";
+        core.style.opacity = 0;
+
+        const m = document.getElementById('treasure-modal');
+        m.style.display = 'flex';
+        setTimeout(() => m.style.opacity = 1, 50);
+    }
+
+   function openVault() {
+        document.getElementById('intro-layer').style.display = 'none';
+        document.getElementById('vow-layer').style.display = 'none';
+        document.getElementById('treasure-modal').style.display = 'none';
+        document.getElementById('core-layer').style.display = 'none';
+        document.getElementById('top-nav').style.display = 'flex';
+        document.getElementById('indra-bg').style.opacity = 1;
+        
+        document.getElementById('vault-user-info').innerHTML = `行者 ${userName} ‧ 今月の結集 ${totalDelta}`;
+
+        const grid = document.getElementById('vault-grid');
+        grid.innerHTML = '';
+        
+        db.mandalaVault.forEach((count, i) => {
+            let item = document.createElement('div');
+            item.style.cssText = "display:flex; flex-direction:column; align-items:center; background:rgba(255,255,255,0.03); border:1px solid rgba(139,168,156,0.2); border-radius:15px; padding:20px; width:150px; cursor:pointer;";
+            item.innerHTML = `${generatedSVGs[i]}<div style="color:var(--cyan); font-size:0.85rem; margin:12px 0;">${totemNames[i]}</div><div style="font-family:monospace; font-size:1.3rem; color:#fff;">× ${count}</div>`;
+            
+            item.onclick = () => { if(count > 0) promptDedicate(i, item); else speak("資糧不足"); };
+            grid.appendChild(item);
+        });
+        const vl = document.getElementById('vault-layer');
+        vl.style.display = 'flex';
+        setTimeout(() => vl.style.opacity = 1, 50);
+    }
+
+    function dedicate(idx, el) {
+        db.mandalaVault[idx]--;
+        localStorage.setItem('PX_JP_V15.0', JSON.stringify(db));
+        el.querySelector('div:last-child').innerText = '× ' + db.mandalaVault[idx];
+
+        const ov = document.getElementById('anim-overlay'), flash = document.getElementById('full-screen-flash'), txt = document.getElementById('anim-text'), btn = document.getElementById('close-anim-btn');
+        ov.style.display = 'block';
+        document.getElementById('anim-svg-container').innerHTML = generatedSVGs[idx];
+        speak("大願を十方に回向す");
+
+        setTimeout(() => ov.style.opacity = 1, 50);
+        setTimeout(() => {
+            flash.style.opacity = 1; 
+            document.getElementById('anim-svg-container').innerHTML = '';
+            
+            const container = document.getElementById('anim-overlay');
+            for (let k = 0; k < 250; k++) {
+                let d = document.createElement('div');
+                d.className = 'dust-particle';
+                d.style.background = Math.random() > 0.5 ? '#f3e5ab' : '#FCF6D8'; 
+                d.style.width = Math.random() * 4 + 2 + 'px'; d.style.height = d.style.width;
+                let a = Math.random() * Math.PI * 2, dist = 200 + Math.random() * 450;
+                d.style.setProperty('--tx', Math.cos(a) * dist + 'px');
+                d.style.setProperty('--ty', Math.sin(a) * dist + 'px');
+                d.style.animationDuration = (0.7 + Math.random() * 1.5) + 's';
+                container.appendChild(d);
+            }
+            speak("無量の微塵と化し、悉皆虚空に回向す");
+            
+            setTimeout(() => { 
+                flash.style.transition = 'opacity 1.5s ease-in'; 
+                flash.style.opacity = 0; 
+            }, 1200); 
+
+            txt.innerHTML = "【 因縁円満 ‧ 悉皆回向 】<br><span style='font-size:0.95rem; color:var(--cyan);'><br>印記は已に無漏の金剛光束と化し、虚空法界に回向せり。</span>";
+            txt.style.opacity = 1;
+            setTimeout(() => { btn.style.opacity = 1; btn.style.pointerEvents = 'auto'; }, 2500);
+        }, 1600);
+    }
+
+    function closeAnim() {
+        document.getElementById('anim-overlay').style.display = 'none';
+        document.querySelectorAll('.dust-particle').forEach(d => d.remove());
+        openVault();
+    }
+
+    function toggleHelp(s) {
+        const h = document.getElementById('help-panel');
+        if (s) {
+            h.style.display = 'flex'; setTimeout(()=>h.style.opacity = 1, 10);
+        } else {
+            h.style.opacity = 0; setTimeout(()=>h.style.display = 'none', 500);
+        }
+    }
+
+    let pendingDedicateIdx = -1;
+    let pendingDedicateEl = null;
+
+    function promptDedicate(idx, el) {
+        pendingDedicateIdx = idx;
+        pendingDedicateEl = el;
+        document.getElementById('confirm-svg').innerHTML = generatedSVGs[idx];
+        document.getElementById('confirm-name').innerText = totemNames[idx];
+        
+        const m = document.getElementById('confirm-layer');
+        m.style.display = 'flex';
+        setTimeout(() => m.style.opacity = 1, 10);
+    }
+
+    function cancelDedicate() {
+        const m = document.getElementById('confirm-layer');
+        m.style.opacity = 0;
+        setTimeout(() => m.style.display = 'none', 500);
+    }
+
+    function executeDedicate() {
+        cancelDedicate();
+        dedicate(pendingDedicateIdx, pendingDedicateEl);
+    }
+
+    </script>
+</body>
+</html>

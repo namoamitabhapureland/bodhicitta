@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <title>華藏莊嚴世界海 ． 二十重矩陣 (終極完整版)</title>
+    <style>
+        :root {
+            --bg-deep: #010103; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --silver: #e0e0e0;
+            --fire: #a83232;
+            --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            overflow: hidden; touch-action: none; overscroll-behavior: none; user-select: none;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 340px;
+            background: rgba(5,5,10,0.6); backdrop-filter: blur(10px);
+            border-left: 3px solid rgba(212,175,55,0.8); 
+            padding: 15px 20px; z-index: 100; transition: border-color 0.8s; pointer-events: none;
+            border-radius: 0 15px 15px 0; box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        }
+                /* 新增的橫向排列容器 */
+                /* 1. 改為 flex-start 向上對齊，確保標籤永遠錨定在第一行 */
+        .title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+        
+        /* 2. 稍微縮小字距 (2px -> 1px) 與字體 (1.15rem -> 1.05rem)，讓單行能容納更多字 */
+        .status-title { font-size: 1.05rem; font-weight: bold; color: var(--gold); letter-spacing: 1px; text-shadow: 0 0 10px rgba(0,0,0,0.8); transition: color 0.8s; margin: 0; line-height: 1.3; }
+
+        .status-buddha { font-size: 0.9rem; color: #fff; font-weight: bold; letter-spacing: 1px; margin-bottom: 8px; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
+        
+        /* 加入 flex-shrink: 0 確保形狀標籤不會因為名稱太長而被擠壓變形 */
+        .status-shape { font-size: 0.75rem; color: var(--cyan); letter-spacing: 1px; border: 1px solid rgba(139,168,156,0.5); padding: 3px 10px; border-radius: 12px; background: rgba(139,168,156,0.1); margin: 0; white-space: nowrap; flex-shrink: 0; }
+
+        .status-desc { font-size: 0.85rem; color: #ddd; line-height: 1.6; letter-spacing: 1px; }
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+        .ui-layer { position: absolute; bottom: 5%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 15px; }
+        #drag-hint { color:rgba(212,175,55,0.8); font-size:0.75rem; letter-spacing:2px; margin-bottom: 5px; text-shadow: 0 0 5px #000; }
+
+        .realm-picker-container {
+            width: 100%; overflow-x: auto; scroll-snap-type: x mandatory;
+            display: flex; gap: 12px; padding: 10px 50%;
+            scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;
+        }
+        .realm-picker-container::-webkit-scrollbar { display: none; }
+
+                .realm-item {
+            flex: 0 0 auto; scroll-snap-align: center;
+            width: 200px; /* 固定寬度，預留給英文版足夠空間 */
+            min-height: 75px; /* 固定最小高度，維持排版水平線 */
+            justify-content: center; /* 內部元素垂直置中 */
+            text-align: center; /* 文字水平置中 */
+            background: rgba(15,15,15,0.8); border: 1px solid rgba(255,255,255,0.2); 
+            color: #888; padding: 10px 15px; border-radius: 25px; font-size: 0.95rem; font-weight: bold; letter-spacing: 1.5px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            white-space: pre-wrap; /* 允許長文字與英文自然換行 */
+            line-height: 1.3;
+        }
+
+        .realm-item .r-num { font-size: 0.65rem; opacity: 0.6; letter-spacing: 1px; }
+        
+        .realm-item.active { transform: scale(1.1); background: rgba(20,20,20,0.95); border-color: var(--solid-gold); color: var(--gold); box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.2); }
+        .realm-item.active.cyan-mode { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(139,168,156,0.2); }
+        .realm-item.active.silver-mode { border-color: var(--silver); color: var(--silver); box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(224,224,224,0.2); }
+        .realm-item.active.fire-mode { border-color: var(--fire); color: #ff8a8a; box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(168,50,50,0.2); }
+
+        #theory-btn { 
+            width: 85%; max-width: 320px; justify-content: center;
+            background: linear-gradient(135deg, rgba(5,10,15,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(139,168,156,0.6); color: var(--cyan);
+            padding: 12px 20px; border-radius: 30px; font-size: 0.9rem; font-weight: bold; letter-spacing: 2px;
+            cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.3s;
+        }
+        #theory-btn:active { transform: scale(0.95); }
+
+        #theory-drawer { position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px); border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8); }
+        #theory-drawer.open { transform: translateY(0); }
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(212,175,55,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        .main-title { color: var(--gold); font-size: 1.5rem; letter-spacing: 3px; text-align: center; margin-bottom: 50px; text-shadow: 0 0 15px rgba(212,175,55,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--solid-gold), transparent); margin: 15px auto 0; }
+        .paragraph { font-size: 0.95rem; color: #ccc; line-height: 1.9; letter-spacing: 1px; text-align: justify; margin-bottom: 20px; }
+                .quote-box {
+            margin-top: 30px;
+            padding: 15px 20px;
+            background: linear-gradient(to right, rgba(212,175,55,0.1), transparent);
+            border-left: 3px solid var(--solid-gold);
+            border-radius: 0 10px 10px 0;
+            color: #e0e0e0;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            letter-spacing: 1.5px;
+            text-align: justify;
+        }
+        .quote-author {
+            color: var(--gold);
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: block;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+        }
+
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="back-btn" onclick="window.location.href='index.html?screen=3'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        回道場
+    </div>
+    <div id="status-panel">
+        <div class="title-row">
+            <div class="status-title" id="s-title">系統啟動中</div>
+            <div class="status-shape" id="s-shape"></div>
+        </div>
+        <div class="status-buddha" id="s-buddha"></div>
+        <div class="status-desc" id="s-desc">讀取法界矩陣...</div>
+    </div>
+
+   
+
+    <section class="matrix-section">
+        <canvas id="realmCanvas"></canvas>
+        <div class="ui-layer" id="ui-layer">
+            <div id="drag-hint">360° 全息滑動 ． 撥動星軌切換維度</div>
+            <div class="realm-picker-container" id="picker-container"></div>
+            <button id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                探究華藏法義
+            </button>
+        </div>
+    </section>
+
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()"><div class="close-bar"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+                <div style="color:var(--cyan); font-size:0.85rem; letter-spacing:2px; font-weight:bold; cursor:pointer;" onclick="closeTheoryDrawer()">收起法卷</div>
+                <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                    <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                    <span id="tts-text">聆聽法音</span>
+                </div>
+            </div>
+        </div>
+        <div class="theory-container" id="theory-content-box">
+            <h1 class="main-title" id="theory-title">華藏大世界</h1>
+            <p class="paragraph" id="theory-desc">載入中...</p>
+        </div>
+    </div>
+
+<script>
+            // ================= 1. 20重法界資料庫 (《八十華嚴》正統校對版) =================
+    const RealmMatrix = [
+        { id: 1, name: "最勝光遍照", buddha: "微塵數諸佛", shape: "廣大", theme: "gold", desc: "【體性】極致寶嚴，無有衰朽。<br>【眾生】光潔無瑕，海會同悲。", quote: { author: "清涼國師", text: "微塵剎海，交涉融通。廣狹無礙，一多相容。" } },
+        { id: 2, name: "種種香蓮華妙莊嚴", buddha: "普照十方熾然光明佛", shape: "蓮華", theme: "cyan", desc: "【體性】妙香凝結，氣韻流轉。<br>【眾生】非胎非卵，乘香華而化生。", quote: { author: "華嚴經旨", text: "毗盧遮那佛坐千葉大蓮華臺，葉葉皆百億化身。此二十重法界，猶如法身本源無盡化生之大千幻境；法身為萬有根本，幻化無量莊嚴。" } },
+        { id: 3, name: "一切寶莊嚴普照光", buddha: "師子吼雲音佛", shape: "寶月", theme: "silver", desc: "【體性】光影交錯，如幻如化。<br>【眾生】形隨意轉，聚散本無礙。", quote: { author: "法藏大師 ‧ 金師子章", text: "金乃唯一之本體，師子諸相皆為假名。矩陣萬法之流轉，其背後之明光，殆即不生不滅之「常寂光」；相雖萬殊，理體唯一。" } },
+        { id: 4, name: "種種光明華莊嚴", buddha: "普照法界虛空雲佛", shape: "種種華", theme: "gold", desc: "【體性】純然明光，離諸滯礙。<br>【眾生】以光為語，心照不宣。" },
+        { id: 5, name: "普放妙華光", buddha: "普喜無量功德佛", shape: "摩尼王", theme: "cyan", desc: "【體性】華藏重重，極盡莊嚴。<br>【眾生】以莊嚴為食，樂見妙相。" },
+        { id: 6, name: "淨妙光明", buddha: "無垢功德遍照佛", shape: "寶壇", theme: "silver", desc: "【體性】寶燄熾然，淨妙無極。<br>【眾生】威德具足，一念轉凡聖。", quote: { author: "清涼國師", text: "淨心即是華藏，悲智乃為莊嚴。" } },
+        { id: 7, name: "眾華光莊嚴", buddha: "華雲幢佛", shape: "華旋", theme: "cyan", desc: "【體性】流光溢彩，波颺無盡。<br>【眾生】觀色達空，感通十方。", quote: { author: "清涼國師", text: "理隨事變，一多緣起之無盡；事得理融，千差涉入而無礙。" } },
+        { id: 8, name: "出生威德光", buddha: "清淨日光明佛", shape: "半月", theme: "gold", desc: "【體性】威光遠被，徹照淵微。<br>【眾生】壽量恆長，慧光不滅。", quote: { author: "華嚴大意", text: "一切諸佛身，唯是一法身。諸佛名號乃針對不同根機眾生設立之度化方便；每一重佛號皆在彰顯該維度之清明澄澈，而非實有幾位真佛之區別。" } },
+        { id: 9, name: "出妙音聲", buddha: "師子光佛", shape: "梵篋", theme: "gold", desc: "【體性】無相無形，唯以法音震動成界。<br>【眾生】離於眼識，唯以音聲作佛事。", quote: { author: "李通玄 (長者)", text: "十方虛空，是吾一卷經。" } },
+        { id: 10, name: "金剛幢", buddha: "普照法界金剛雲佛", shape: "金剛幢", theme: "silver", desc: "【體性】堅固無能壞，猶如金剛本心。<br>【眾生】定慧不動，魔怨不傾。" },
+        { id: 11, name: "恆出現帝青寶光明", buddha: "福德雲大海佛", shape: "帝青寶", theme: "cyan", desc: "【體性】湛然幽邃，常出琉璃青光。<br>【眾生】深觀微密，沈照法源。" },
+        { id: 12, name: "光明照耀", buddha: "清淨華雲佛", shape: "寶冠", theme: "gold", desc: "【體性】重重交網，猶如帝釋明珠。<br>【眾生】一多相容，自他無礙。", quote: { author: "清涼國師", text: "事事無礙，如網孔相交，光光相照，無有障礙。" } },
+        { id: 13, name: "娑婆與極樂", buddha: "毗盧遮那如來", shape: "平正", theme: "cyan", desc: "【體性】染淨同源，苦樂交集。<br>【眾生】濁世剛強與淨土化生同處，乃悲智雙運之樞紐。", quote: { author: "悲智雙運 ‧ 李長者", text: "第十三重並存釋迦與彌陀，乃為圓融眾生之苦。一者於濁世紛擾中化導，一者指引純淨無染之歸途；二佛並現，實乃於世間具體接引之大方便。正所謂：不離世間而入法界，不捨五濁而嚴淨土。" } },
+        { id: 14, name: "寂靜離塵光", buddha: "遍法界勝音佛", shape: "寶帶", theme: "silver", desc: "【體性】清涼覆育，絕諸塵喧。<br>【眾生】離言絕慮，默契真如。" },
+        { id: 15, name: "眾妙光明燈", buddha: "普照法界法海雲佛", shape: "蓮華", theme: "gold", desc: "【體性】明燈高懸，無幽不燭。<br>【眾生】自性放光，為迷者作眼。", quote: { author: "李通玄 (長者)", text: "一切眾生，皆在諸佛果海之中，如瓶中水，如器中空。" } },
+        { id: 16, name: "清淨光遍照", buddha: "普勝智光明佛", shape: "圓滿", theme: "cyan", desc: "【體性】周遍十方，無欠無餘。<br>【眾生】漏盡智圓，常安大寂滅。", quote: { author: "清涼國師", text: "一塵才舉，大地全收。華藏莊嚴，不離一念。" } },
+        { id: 17, name: "寶莊嚴", buddha: "普照法界智雲佛", shape: "妙好", theme: "fire", desc: "【體性】赤光赫奕，清淨絕塵。<br>【眾生】大悲熾盛，誓拔沈淪。" },
+        { id: 18, name: "離塵", buddha: "普門光明雲佛", shape: "摩尼網", theme: "silver", desc: "【體性】微塵見剎，芥子納須彌。<br>【眾生】身極微細，遍遊無邊法界。" },
+        { id: 19, name: "清淨光普照", buddha: "普照虛空智光明佛", shape: "法界", theme: "gold", desc: "【體性】真如遍滿，無有方所。<br>【眾生】圓融徹悟，一念遍十方。", quote: { author: "李通玄 (長者)", text: "三世古今，始終不離於當念；十方剎海，廣狹無礙於一毫。" } },
+        { id: 20, name: "妙寶焰", buddha: "福德普勝智光明佛", shape: "寶燄", theme: "fire", desc: "【體性】妙寶燄聚，最上無極。<br>【眾生】唯存淨願，念念生生締造莊嚴。", quote: { author: "李通玄 (長者)", text: "若了唯心，則華藏無邊，不出法界；若明自性，則重重無盡，皆是神用。" } }
+    ];
+
+        
+
+
+
+    let currentRealmIndex = 12; // 預設娑婆極樂 (Index 12)
+
+    // ================= 🎨 繽紛多彩顏色庫 =================
+    const PastelColors = [
+        { hsl: "350, 100%, 85%", hex: "#FFB7C5" }, // 粉
+        { hsl: "120, 100%, 85%", hex: "#98FB98" }, // 淺綠
+        { hsl: "210, 100%, 85%", hex: "#87CEFA" }, // 淺藍
+        { hsl: "30, 100%, 80%", hex: "#FFDAB9" },  // 淺橘
+        { hsl: "0, 0%, 80%", hex: "#D3D3D3" },     // 淺灰
+        { hsl: "270, 100%, 85%", hex: "#E6E6FA" }  // 淺紫
+    ];
+    function getRandomPastel() { return PastelColors[Math.floor(Math.random()*PastelColors.length)]; }
+
+    // ================= 2. UI 導航 =================
+    const pickerContainer = document.getElementById('picker-container');
+    function initPicker() {
+        RealmMatrix.forEach((realm, index) => {
+            let btn = document.createElement('div');
+            btn.className = `realm-item ${realm.theme}-mode`;
+            btn.id = `picker-${index}`;
+            btn.innerHTML = `<span class="r-num">TIER ${realm.id}</span><span>${realm.name}</span>`;
+            btn.onclick = () => { selectRealm(index); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); };
+            pickerContainer.appendChild(btn);
+        });
+    }
+
+    function selectRealm(index) {
+        if(currentRealmIndex === index && document.getElementById(`picker-${index}`).classList.contains('active')) return;
+        currentRealmIndex = index;
+        let data = RealmMatrix[index];
+
+        document.querySelectorAll('.realm-item').forEach(el => el.classList.remove('active'));
+        document.getElementById(`picker-${index}`).classList.add('active');
+
+        document.getElementById('s-title').innerText = `第${data.id}重 ． ${data.name}`;
+        document.getElementById('s-buddha').innerText = `[教主] ${data.buddha}`;
+        document.getElementById('s-shape').innerText = `形狀：${data.shape}`;
+        document.getElementById('s-desc').innerHTML = data.desc;
+        document.getElementById('theory-title').innerText = `第${data.id}重 ． ${data.name}`;
+        
+        let theoryHTML = `本層為華藏世界海之第${data.id}重。<br><br>【教主】${data.buddha}<br>【國土形狀】呈現${data.shape}之相。<br>${data.desc}`;
+        
+        // 如果該層有祖師法語，則加上專屬排版的引言區塊
+        if (data.quote) {
+            theoryHTML += `<div class="quote-box"><span class="quote-author">【${data.quote.author} 云】</span>${data.quote.text}</div>`;
+        }
+        
+        document.getElementById('theory-desc').innerHTML = theoryHTML;
+
+        let themeColor = data.theme;
+        if(data.id === 16) themeColor = 'gold'; // ID 16強制金色
+
+        let baseColor = themeColor === 'gold' ? '#f3e5ab' : (themeColor === 'cyan' ? '#8ba89c' : (themeColor === 'silver' ? '#e0e0e0' : '#ff8a8a'));
+        let borderColor = themeColor === 'gold' ? 'rgba(212,175,55,0.8)' : (themeColor === 'cyan' ? 'rgba(139,168,156,0.8)' : (themeColor === 'silver' ? 'rgba(224,224,224,0.8)' : 'rgba(168,50,50,0.8)'));
+        
+        document.getElementById('s-title').style.color = baseColor; 
+        document.getElementById('s-shape').style.color = baseColor; 
+        document.getElementById('s-shape').style.borderColor = baseColor;
+        document.getElementById('status-panel').style.borderLeftColor = borderColor;
+
+        angleX = 0.3; angleY = 0; 
+        initParticleEngines(); 
+    }
+
+    // ================= 3. 3D 核心與 20 重幾何生成 (繽紛定製版) =================
+    const canvas = document.getElementById('realmCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, time = 0, stars = [], realmParticles = [];
+    let angleX = 0.3, angleY = 0, isDragging = false, lastMouseX = 0, lastMouseY = 0;
+    const FOV = 400; 
+
+    function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+    window.addEventListener('resize', resize); resize();
+
+    function project3D(x, y, z) {
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+        let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
+        if(z2 < -FOV+50) return null;
+        let scale = FOV / (FOV + z2 + 100); 
+        return { px: (width/2) + x2*scale, py: (height/2) - y1*scale + 20, scale: scale, pz: z2 };
+    }
+
+    function initParticleEngines() {
+                if(stars.length === 0) {
+            // 🛑 星星數量翻倍：增加到 1000 顆
+            for (let i = 0; i < 1000; i++) {
+                // 🛑 大小差異化：80% 是細小的遠星 (0.3~1.5)，20% 是特別巨大的近星 (1.5~4.0)
+                let starSize = Math.random() > 0.8 ? Math.random() * 2.5 + 1.5 : Math.random() * 1.2 + 0.3;
+                
+                stars.push({ 
+                    x: (Math.random()-0.5)*3000, 
+                    y: (Math.random()-0.5)*3000, 
+                    z: Math.random()*2000, 
+                    speed: Math.random()*2+0.5, 
+                    color: Math.random()>0.5 ? '#8ba89c' : '#f3e5ab', 
+                    size: starSize 
+                });
+            }
+        }
+
+        realmParticles = [];
+        let id = RealmMatrix[currentRealmIndex].id;
+
+        function addColorfulParticle(x, y, z, extra = {}) {
+            let pastel = getRandomPastel();
+            realmParticles.push({ x, y, z, ...extra, col: pastel });
+        }
+
+        if (id === 1) { // 廣大寶網
+            let N = 800, R = 180, goldenAngle = Math.PI * (3 - Math.sqrt(5)); 
+            for(let i=0; i<N; i++) {
+                let y = 1 - (i / (N - 1)) * 2, radius = Math.sqrt(1 - y*y), theta = goldenAngle * i;
+                addColorfulParticle(Math.cos(theta)*radius*R, y*R, Math.sin(theta)*radius*R, { seed: Math.random()*Math.PI*2, type: 'mani' });
+            }
+        }
+        else if (id === 2) { // 香蓮華
+            for (let l = 0; l < 4; l++) {
+                let pCount = [6, 8, 10, 12][l], rOut = 40 + l * 25, hUp = 20 + l * 20;  
+                for (let p = 0; p < pCount; p++) {
+                    let aC = (Math.PI * 2 / pCount) * p + (l * 0.3); 
+                    for (let t = 0; t <= 1; t += 0.1) { 
+                        for (let w = -1; w <= 1; w += 0.4) { 
+                            let pW = Math.sin(t * Math.PI) * (15 + l * 5), cR = t * rOut, cY = -t * hUp + (w * w * 12); 
+                            realmParticles.push({ x: cR * Math.cos(aC) - (w * pW) * Math.sin(aC), y: cY + 40, z: cR * Math.sin(aC) + (w * pW) * Math.cos(aC), type: 'lotus', l: l, t: t, col: {hsl: "139, 168, 156"} }); 
+                        }
+                    }
+                }
+            }
+            for(let i=0; i<300; i++) addColorfulParticle((Math.random()-0.5)*300, Math.random()*200-50, (Math.random()-0.5)*300, { type: 'aroma', sy: Math.random()*0.8+0.3, seed: Math.random()*Math.PI*2 });
+        }
+        else if (id === 3) { // 寶月 
+            for(let b = 1; b < 16; b++) {
+                let phi = (Math.PI / 16) * b;
+                for(let s = 0; s < 32; s++) {
+                    let theta = (Math.PI * 2 / 32) * s;
+                    realmParticles.push({ x: 130 * Math.sin(phi) * Math.cos(theta), y: 130 * Math.cos(phi), z: 130 * Math.sin(phi) * Math.sin(theta), theta: theta, phi: phi, type: 'grid', col:{hsl:"0,0%,88%"} });
+                }
+            }
+            for(let i = 0; i < 150; i++) {
+                let t = Math.random() * Math.PI * 2, p = Math.acos((Math.random() * 2) - 1), r = Math.random() * 50; 
+                realmParticles.push({ x: r*Math.sin(p)*Math.cos(t), y: r*Math.cos(p), z: r*Math.sin(p)*Math.sin(t), speed: Math.random()*0.05+0.02, type: 'core', col:{hsl:"0,0%,100%"} });
+            }
+        }
+        else if (id === 4) { // 光明華網 
+            for(let l = 1; l <= 6; l++) {
+                let rL = l * 25, yO = Math.sin(l * 0.5) * 20;
+                for(let p = 0; p < 12; p++) {
+                    let ang = (Math.PI * 2 / 12) * p + (l * 0.2); 
+                    for(let t = 0; t <= 1; t += 0.15) { 
+                        realmParticles.push({ x: rL * t * Math.cos(ang), y: yO * t - (t * t * 40), z: rL * t * Math.sin(ang), l: l, p: p, t: t, type: 'net' }); 
+                    }
+                }
+            }
+        }
+                else if (id === 5) { // 🛑 ✨ [變更1] 5. 普放妙華光 (中央光球 + 12 條光環籠)
+            // 🛑 A. 生成中央「不思議光球」核心
+            for(let i=0; i<300; i++) {
+                // 緊密的核心球
+                let t = Math.random() * Math.PI * 2, p = Math.acos((Math.random() * 2) - 1), r = Math.random() * 40; 
+                addColorfulParticle(r*Math.sin(p)*Math.cos(t), r*Math.cos(p), r*Math.sin(p)*Math.sin(t), { type: 'mani-core' });
+            }
+            
+            // 🛑 B. 生成外部「普放光華環籠」(12 條繽紛環)
+            for(let i=0; i<12; i++) {
+                // 為每一條環籠線分配一個繽紛色
+                let col = getRandomPastel();
+                // 12條環均勻分佈在 360 度
+                let bandAngle = (i / 12) * Math.PI * 2;
+                for(let a=0; a<Math.PI*2; a+=0.1) {
+                    realmParticles.push({
+                        lineId:i, a:a, bandAng:bandAngle, col: col, type:'mani-cage'
+                    });
+                }
+            }
+        }
+
+        else if (id === 6) { // 🛑 6. 最早的第九層 (立體音波曼陀羅) 
+            let layers = 15; let segments = 120;
+            for(let l = 0; l < layers; l++) {
+                let zBase = (l - layers/2) * 25;
+                let radiusBase = 120 * Math.sin((l/layers) * Math.PI) + 20;
+                for(let i = 0; i < segments; i++) {
+                    let theta = (i / segments) * Math.PI * 2;
+                    let col = getRandomPastel();
+                    realmParticles.push({ x: 0, y: 0, z: zBase, bR: radiusBase, th: theta, l: l, type: 'old9', col: col });
+                }
+            }
+        }
+                else if (id === 7) { // 🛑 7. 華旋 (七彩繽紛雙螺旋星系)
+            for(let i=0; i<1200; i++) {
+                let t = i / 1200, a = t * Math.PI * 15, r = t * 160;
+                // 根據半徑與角度，給予粒子連續的光譜色相 (0~360)
+                let baseHue = (t * 360 * 3) % 360; 
+                
+                realmParticles.push({ x: r*Math.cos(a), y: (Math.random()-0.5)*30, z: r*Math.sin(a), hue: baseHue });
+                realmParticles.push({ x: r*Math.cos(a+Math.PI), y: (Math.random()-0.5)*30, z: r*Math.sin(a+Math.PI), hue: (baseHue + 180) % 360 });
+            }
+        }
+
+        else if (id === 8) { // 半月 
+            for(let i=0; i<600; i++) {
+                let t = Math.random() * Math.PI, p = Math.acos((Math.random() * 2) - 1);
+                addColorfulParticle(140*Math.sin(p)*Math.cos(t), 140*Math.sin(p)*Math.sin(t), 140*Math.cos(p));
+            }
+        }
+        else if (id === 9) { // 梵篋 
+            let w = 120, h = 40, d = 160; 
+            for(let x = -w; x <= w; x += 15) {
+                for(let y = -h; y <= h; y += 15) {
+                    for(let z = -d; z <= d; z += 15) {
+                        if(Math.abs(x) === w || Math.abs(y) === h || Math.abs(z) === d) addColorfulParticle(x, y, z);
+                    }
+                }
+            }
+        }
+        else if (id === 10) { // 🛑 10. 維摩居室 (正方形放著裡面放線條佈滿)
+            let size = 110;
+            let v = [[-size,-size,-size],[size,-size,-size],[size,size,-size],[-size,size,-size],[-size,-size,size],[size,-size,size],[size,size,size],[-size,size,size]];
+            v.forEach(pt => realmParticles.push({ x:pt[0], y:pt[1], z:pt[2], type:'vimo-v', col: PastelColors[4] })); 
+            
+            for(let i=0; i<1200; i++) {
+                let col = getRandomPastel();
+                let x = (Math.random()-0.5)*size*1.9, y = (Math.random()-0.5)*size*1.9, z = (Math.random()-0.5)*size*1.9;
+                // 為了產生內部佈滿線條的感覺，讓粒子只沿著特定軸排列
+                if(Math.random()>0.5) { x = (Math.random()>0.5?size:-size)*Math.random(); } else { z = (Math.random()>0.5?size:-size)*Math.random(); }
+                realmParticles.push({ x, y, z, type:'vimo-line', col: col });
+            }
+        }
+        else if (id === 11) { // 帝青寶 
+            for(let i=0; i<800; i++) {
+                let t = Math.random()*Math.PI*2, p = Math.random()*Math.PI;
+                let x = 140 * Math.pow(Math.abs(Math.cos(p)), 0.5) * Math.sign(Math.cos(p)) * Math.cos(t);
+                let y = 140 * Math.pow(Math.abs(Math.sin(p)), 0.5) * Math.sign(Math.sin(p)) * Math.sin(t);
+                addColorfulParticle(x, y, 140*Math.cos(t));
+            }
+        }
+               else if (id === 12) { // ✨ [變更1] 12. 光明照曜 (不規則絲線原 + 圍繞光暈)
+            // 核心光暈粒子 (人造背景光暈塵埃球)
+            for(let i=0; i<150; i++) {
+                let pastel = getRandomPastel();
+                realmParticles.push({
+                    x: (Math.random()-0.5)*120, // 產生一個鬆散的核心塵埃球
+                    y: (Math.random()-0.5)*120,
+                    z: (Math.random()-0.5)*120,
+                    s: Math.random()*2+1, 
+                    type: 'halo-core', col: pastel 
+                });
+            }
+            // 12條不規則混亂動態光絲
+            for(let i=0; i<12; i++) {
+                // 為每一條絲線生成獨特的混亂頻率參數
+                let params = {
+                    fx: 2 + Math.random()*2, fy: 2 + Math.random()*2, fz: 2 + Math.random()*2,
+                    ph: Math.random()*Math.PI*2, col: getRandomPastel()
+                };
+                for(let a=0; a<Math.PI*2; a+=0.05) { // 提高粒子密度讓線形更明顯
+                    realmParticles.push({ lineId:i, a:a, ...params, type:'line-12chaotic' });
+                }
+            }
+        }
+
+                else if (id === 13) { // 13. 娑婆極樂雙星 (還原經典青金雙色)
+            for(let i = 0; i < 300; i++) {
+                // 娑婆世界 (琉璃青)
+                let t = Math.random() * Math.PI * 2, p = Math.acos(Math.random()*2 - 1), r = Math.random() * 50 + 10;
+                realmParticles.push({ x: r*Math.sin(p)*Math.cos(t), y: r*Math.cos(p), z: r*Math.sin(p)*Math.sin(t), s: Math.random()*2+1, type: 'saha' });
+                
+                // 極樂世界 (純金)
+                t = Math.random() * Math.PI * 2; p = Math.acos(Math.random()*2 - 1); r = Math.random() * 50 + 10;
+                realmParticles.push({ x: r*Math.sin(p)*Math.cos(t), y: r*Math.cos(p), z: r*Math.sin(p)*Math.sin(t), s: Math.random()*2+1.5, type: 'pure' });
+            }
+        }
+
+                else if (id === 14) { // 14. 寂靜功德 (14條繽紛寶帶交融)
+            for(let band = 0; band < 14; band++) {
+                // 給每一條帶子分配一個固定的繽紛色彩
+                let col = PastelColors[band % PastelColors.length];
+                // 14條帶子在 360 度立體空間中均勻錯開的角度
+                let angleOffset = (band / 14) * Math.PI * 2; 
+                
+                for(let i = 0; i < 60; i++) { // 每條帶子 60 個粒子，保持效能流暢
+                    let t = (i / 60) * Math.PI * 2;
+                    realmParticles.push({
+                        x: 0, y: 0, z: 0, 
+                        tOffset: t,        // 粒子在帶子上的位置
+                        angOff: angleOffset, // 這條帶子的專屬旋轉角
+                        band: band,        // 帶子編號，用來做微小呼吸差
+                        col: col, 
+                        type: 'ribbon-14'
+                    });
+                }
+            }
+        }
+
+               else if (id === 15) { // 15. 光明普照 (15圓複合曼陀羅網)
+            for(let i = 0; i < 15; i++) {
+                // 15個圓的圓心，均勻分佈在一個大圓軌道上
+                let centerAng = (i / 15) * Math.PI * 2;
+                let cx = 60 * Math.cos(centerAng);
+                let cy = 60 * Math.sin(centerAng);
+                let cz = Math.sin(i * 1.5) * 20; // 帶點 Z 軸起伏，呈現立體感
+                
+                // 從色彩庫隨機挑選繽紛色
+                let col = PastelColors[Math.floor(Math.random() * PastelColors.length)];
+
+                // 畫出每個圓周上的粒子
+                for(let a = 0; a < Math.PI * 2; a += 0.1) {
+                    realmParticles.push({
+                        cx: cx, cy: cy, cz: cz, // 記錄所屬的圓心
+                        ang: a,                 // 記錄在此圓上的角度
+                        col: col,               // 記錄這個圓的顏色
+                        type: 'lotus-15'
+                    });
+                }
+            }
+        }
+
+        else if (id === 16) { // 🛑 16. 改成金色 (費馬點陣)
+            for(let i=0; i<1000; i++) {
+                let p = Math.acos(1 - 2*i/1000), t = Math.PI * (1 + Math.sqrt(5)) * i;
+                realmParticles.push({ x: 140*Math.sin(p)*Math.cos(t), y: 140*Math.cos(p), z: 140*Math.sin(p)*Math.sin(t), col:{hsl:"48, 100%, 65%"}, glow: "#d4af37" });
+            }
+        }
+        else if (id === 17) { // 🛑 17. 一樣的線框 17條交錯
+            for(let i=0; i<17; i++) {
+                let col = getRandomPastel();
+                let rX = Math.random()*Math.PI*2, rY = Math.random()*Math.PI*2, rZ = Math.random()*Math.PI*2;
+                for(let a=0; a<Math.PI*2; a+=0.1) {
+                    realmParticles.push({ x:0, y:0, z:0, a:a, rX:rX, rY:rY, rZ:rZ, col:col, type:'knot-17' });
+                }
+            }
+        }
+        else if (id === 18) { // 色相摩尼網 
+            for(let i=0; i<800; i++) { addColorfulParticle((Math.random()-0.5)*260, (Math.random()-0.5)*260, (Math.random()-0.5)*260, { hueOffset: Math.random()*360 }); }
+        }
+                else if (id === 19) { // 🛑 19. 普照法界 (改成金色 Torus)
+            for(let i=0; i<800; i++) {
+                let u = Math.random()*Math.PI*2, v = Math.random()*Math.PI*2;
+                let x = (100 + 40*Math.cos(v)) * Math.cos(u);
+                let y = (100 + 40*Math.cos(v)) * Math.sin(u);
+                let z = 40 * Math.sin(v);
+                // 使用固定金色色彩配置
+                realmParticles.push({ x, y, z, col: {hsl: "48, 100%, 65%"}, hex: "#d4af37", type: 'dharma-19' });
+            }
+        }
+
+        else if (id === 20) { // 妙寶燄 
+            for(let i=0; i<1200; i++) {
+                let t = Math.random()*Math.PI*2, p = Math.acos((Math.random()*2)-1);
+                let noise = Math.sin(t*6)*20 + Math.cos(p*4)*25;
+                let isC = Math.random()>0.85; 
+                realmParticles.push({ x:0,y:0,z:0, baseR:80+noise+Math.random()*15, t, p, isC, oS:isC?Math.random()*0.08+0.03:0, hue:30+Math.random()*40, s:isC?Math.random()*3+2:Math.random()*1.5+0.5 });
+            }
+        }
+    }
+
+    // ================= 4. 全局物理變換與繽紛光影渲染 =================
+    function renderWorld() {
+        let projected = [];
+        let data = RealmMatrix[currentRealmIndex];
+        let id = data.id;
+
+        if(!isDragging && id !== 9 && id !== 13) angleY += 0.003; 
+        if(!isDragging && id === 9) { angleY += 0.005; angleX = Math.sin(time*0.5)*0.3; } 
+
+        realmParticles.forEach(p => {
+            let wx = p.x, wy = p.y, wz = p.z;
+            let a = 0.7, s = 1.5, isGlow = true;
+            
+            let pastel = p.col ? p.col : getRandomPastel();
+            let c = `rgba(${pastel.hsl},`;
+            let glowC = pastel.hex ? pastel.hex : `hsl(${pastel.hsl.split(',')[0]}, 100%, 75%)`;
+
+            // --- 每個世界的專屬動態運算 ---
+            if (id === 1) { // 廣大寶網
+                let breath = 1 + Math.sin(time*1.5 + p.seed)*0.03; wx *= breath; wy *= breath; wz *= breath;
+                let isBright = Math.sin(time*4 + p.seed) > 0.85; a = isBright ? 1 : 0.4; s = isBright ? 2.5 : 1.2;
+            }
+            else if (id === 2) { // 香蓮華
+                if (p.type === 'lotus') {
+                    let breath = 1 + Math.sin(time*2 + p.l)*0.06*p.t; wx *= breath; wy += Math.sin(time*1.5)*5; wz *= breath;
+                    a = 0.2 + (p.t*0.6); isGlow = p.t > 0.8;
+                } else {
+                    wy -= p.sy; if (wy < -200) wy = 150; p.y = wy;
+                    wx += Math.sin(wy*0.02 + time + p.seed)*20; wz += Math.cos(wy*0.02 + time + p.seed)*20;
+                    a = (Math.sin(time*3 + p.seed)+1)/2 * 0.8;
+                }
+            }
+            else if (id === 3) { // 寶月
+                if (p.type === 'grid') {
+                    let wave = 1 + Math.sin(time*3 + p.theta*4 + p.phi*2)*0.05; wx *= wave; wy *= wave; wz *= wave; a = 0.3 + Math.sin(p.phi)*0.6;
+                } else {
+                    let pulseR = 1 + Math.sin(time*5 + p.speed*100)*0.5; let rotA = time * p.speed * 10;
+                    wx = (p.x*Math.cos(rotA) - p.z*Math.sin(rotA)) * pulseR; wz = (p.x*Math.sin(rotA) + p.z*Math.cos(rotA)) * pulseR; wy *= pulseR; a = 1; s = 2.5;
+                }
+            }
+            else if (id === 4) { // 光明華網
+                let breath = 1 + Math.sin(time*2 + p.l)*0.1; wx *= breath; wy *= breath; wz *= breath;
+                let hue = (p.l*40 + p.p*20 + time*40) % 360; c = `hsla(${hue}, 100%, 75%,`; glowC = `hsl(${hue}, 100%, 75%)`; a = 0.4 + p.t*0.6; s = 1.8;
+            }
+                        else if (id === 5) { // 🛑 ✨ [變更2] 5. 摩尼王 (中央強光與光環籠交織)
+                if(p.type === 'mani-core') {
+                    // 中央光球：極度劇烈的高頻閃爍脈動
+                    let pulse = 1 + Math.sin(time*10)*0.1;
+                    wx = p.x * pulse; wy = p.y * pulse; wz = p.z * pulse;
+                    // 核心是超亮的白色光球，帶一點點彩色的光影
+                    c = `rgba(255,255,255,`; glowC = "#fff"; a = 0.9 + Math.sin(time*15)*0.1; s = 2.5; isGlow = true;
+                } else {
+                    // 外部光環籠：繞著 Y 軸錯位旋轉 (Neat公轉)
+                    let radius = 130; 
+                    let rotX = time*0.5 + p.lineId*0.3; // 自身抖動
+                    // 12條線均勻錯開，並繞著 Y 軸緩慢公轉
+                    let orbitY = time * 0.3 + p.bandAng;
+
+                    // A. 先生成基礎的豎直圓環 (繞 Y 軸)
+                    let bx = radius * Math.cos(p.a);
+                    let by = radius * Math.sin(p.a);
+                    let bz = 0;
+                    
+                    // B. 將帶子均勻錯開繞 Y 軸 (Cage結構)
+                    let x1 = bx * Math.cos(p.bandAng) - bz * Math.sin(p.bandAng);
+                    let y1 = by;
+                    let z1 = bx * Math.sin(p.bandAng) + bz * Math.cos(p.bandAng);
+                    
+                    // C. 整組結構一起緩慢公轉 (增加層次)
+                    let rotY = time * 0.2;
+                    wx = x1*Math.cos(rotY) - z1*Math.sin(rotY); wy = y1; wz = x1*Math.sin(rotY) + z1*Math.cos(rotY);
+                    
+                    // D. 呼吸感 (Cage交融)
+                    let breathe = 1 + Math.sin(time*1.5 + wy*0.01)*0.08;
+                    wx*=breathe; wy*=breathe; wz*=breathe;
+
+                    // 使用預存色彩
+                    c = `rgba(${p.col.hsl},`; glowC = p.col.hex; a = 0.8; s = 1.8; isGlow = true;
+                }
+            }
+
+            else if (id === 6) { // 🛑 6. 最早的第九層 (立體音波)
+                let f1 = 8, a1 = 15 * Math.sin(time*2 + p.l*0.5);
+                let f2 = 24, a2 = 5 * Math.cos(time*3);
+                let r = p.bR + a1 * Math.sin(f1 * p.th) + a2 * Math.cos(f2 * p.th);
+                wx = r * Math.cos(p.th + time*0.5);
+                wz = r * Math.sin(p.th + time*0.5);
+                wy = p.z; 
+                a = 0.3 + (p.l / 15) * 0.7;
+            }
+                        else if (id === 7) { // 🛑 7. 華旋 (七彩星系流動與光暈)
+                let rot = time * (1.5 + p.x / 200); 
+                wx = p.x * Math.cos(rot) - p.z * Math.sin(rot); 
+                wz = p.x * Math.sin(rot) + p.z * Math.cos(rot);
+                
+                // 動態七彩：讓星系的色彩隨時間向外流轉
+                let currentHue = (p.hue + time * 40) % 360;
+                c = `hsla(${currentHue}, 90%, 65%,`; 
+                glowC = `hsl(${currentHue}, 90%, 65%)`; 
+                a = 0.8;
+                s = 1.8;
+            }
+
+                        else if (id === 9) { // 🛑 9. 梵篋 (恢復強烈的音符跳動與頻譜感)
+                // 創造像音樂頻譜 (EQ) 一樣的高低彈跳波
+                let jump = Math.abs(Math.sin(p.x * 0.08 + time * 6) * Math.cos(p.z * 0.08 + time * 4));
+                
+                if (Math.abs(p.y) >= 40) {
+                    // 箱子上下蓋的粒子，像音柱一樣往外劇烈彈跳
+                    wy += (p.y > 0 ? 1 : -1) * jump * 35;
+                } else {
+                    // 箱子側邊的粒子，像琴弦一樣快速震動
+                    wx += Math.sin(time * 10 + p.y * 0.1) * 4;
+                    wz += Math.cos(time * 10 + p.y * 0.1) * 4;
+                }
+
+                // 加上整體的漂浮波浪感
+                wy += Math.sin(time * 3 + p.x * 0.05) * 10;
+                
+                // 跳動時粒子會變大、變亮，呈現音符閃爍的生命力
+                a = 0.4 + jump * 0.6;
+                s = 1.2 + jump * 2.5; 
+            }
+
+            else if (id === 10) { // 🛑 10. 維摩居室 (裡面佈滿線條流動)
+                if(p.type==='vimo-net') {
+                    // 讓線條粒子在方塊內跳動
+                    wx += Math.sin(time*2 + wz)*2; wy += Math.cos(time*2 + wx)*2; wz += Math.sin(time*2 + wy)*2;
+                    if(wx>110)wx=-110; if(wx<-110)wx=110; if(wy>110)wy=-110; if(wy<-110)wy=110; if(wz>110)wz=-110; if(wz<-110)wz=110;
+                    p.x=wx; p.y=wy; p.z=wz;
+                }
+                s = p.type==='vimo-v'?4:1.2; a = p.type==='vimo-v'?1:0.7;
+            }
+                        else if (id === 12) { // ✨ [變更2] 12. 光明照曜 (強烈光暈與混亂光原)
+                if(p.type === 'halo-core') {
+                    // 核心光暈粒子：呼吸與微弱晃動
+                    let breathe = 1 + Math.sin(time*2)*0.1;
+                    wx = p.x * breathe + Math.sin(time*5+p.x)*2; 
+                    wy = p.y * breathe; wz = p.z * breathe;
+                    a = 0.5 + Math.sin(time*4)*0.2; s = p.s;
+                } else {
+                    // 不規則混亂絲線：使用 Lissajous 曲線配合時間調變 (不Neat、不規則)
+                    let baseR = 120;
+                    // 時間調變幅度
+                    let amp = 1 + Math.sin(time*2 + p.lineId)*0.2;
+                    
+                    // 使用 init 存儲的 unique parameters 產生不規則交織
+                    wx = baseR * Math.cos(p.a * p.fx + time*1.5) * amp;
+                    wy = baseR * Math.sin(p.a * p.fy + time*1.3) * amp;
+                    wz = baseR * Math.sin(p.a * p.fz + time + p.ph) * amp;
+
+                    // 🛑 增加局部混亂度：產生光芒刺刺感
+                    wx += Math.sin(p.a*15 + time*8)*6; wy += Math.cos(p.a*15 + time*8)*6;
+
+                    a = 0.9; s = 2.0; 
+                }
+                // 使用預存色彩
+                c = `rgba(${p.col.hsl},`; glowC = p.col.hex;
+            }
+
+                        else if (id === 13) { // 13. 娑婆極樂 (還原雙星公轉與獨立色彩)
+                let ob = time * 0.8;
+                // 計算兩顆星的公轉軌道座標
+                let cx = 120 * Math.cos(p.type === 'saha' ? ob : ob + Math.PI);
+                let cz = 120 * Math.sin(p.type === 'saha' ? ob : ob + Math.PI);
+                let cyOffset = Math.sin(time * 2 + (p.type === 'saha' ? 0 : Math.PI)) * 20;
+                
+                // 加上公轉的軌道偏移
+                wx = p.x + cx; 
+                wy = p.y + cyOffset; 
+                wz = p.z + cz;
+                
+                // 經典還原：娑婆用琉璃青，極樂用純金
+                if (p.type === 'saha') {
+                    c = 'rgba(139,168,156,'; glowC = '#8ba89c'; a = 0.8;
+                } else {
+                    c = 'rgba(243,229,171,'; glowC = '#d4af37'; a = 0.9;
+                }
+                s = p.s;
+            }
+
+                       else if (id === 14) { // 14. 14條繽紛寶帶交錯流動
+                let flow = p.tOffset + time * 1.5; // 粒子流動速度
+                
+                // 基礎莫比烏斯環形狀
+                let bx = (90 + 30 * Math.cos(flow / 2)) * Math.cos(flow);
+                let by = (90 + 30 * Math.cos(flow / 2)) * Math.sin(flow);
+                let bz = 40 * Math.sin(flow / 2);
+                
+                // 將 14 條帶子繞著 Y 軸錯開旋轉，形成交疊的立體花結
+                wx = bx * Math.cos(p.angOff) - bz * Math.sin(p.angOff);
+                wy = by;
+                wz = bx * Math.sin(p.angOff) + bz * Math.cos(p.angOff);
+                
+                // 讓整組結構有像呼吸一樣的微小脈動交融感
+                let breath = 1 + Math.sin(time * 2 + p.band) * 0.05;
+                wx *= breath; wy *= breath; wz *= breath;
+                
+                a = 0.8; s = 1.8;
+            }
+
+                        else if (id === 15) { // 15. 光明普照 (15圓流動交織)
+                let r = 80; // 15個圓的半徑皆為 80
+                
+                // 讓粒子沿著自己的小圓軌道流動
+                let flowAng = p.ang + time * 3;
+                let localX = r * Math.cos(flowAng);
+                let localY = r * Math.sin(flowAng);
+                
+                wx = p.cx + localX;
+                wy = p.cy + localY;
+                wz = p.cz + Math.sin(p.ang * 3) * 15; // 圓環邊緣的立體扭曲
+                
+                // 使用預存的繽紛色彩
+                c = `rgba(${p.col.hsl},`;
+                glowC = p.col.hex;
+                a = 0.8; 
+                s = 1.5;
+            }
+
+            else if (id === 16) { // 🛑 16. 改成金色
+                c = `rgba(212,175,55,`; glowC = "#fff"; s = 1.8; a = 0.8;
+            }
+            else if (id === 17) { // 🛑 17. 17條線框交錯
+                let r = 130;
+                let bx = r * Math.cos(p.a);
+                let by = r * Math.sin(p.a);
+                let bz = 0;
+                // 用固定的隨機旋轉角 rX, rY, rZ 來錯位交疊
+                let y1 = by*Math.cos(p.rX) - bz*Math.sin(p.rX), z1 = by*Math.sin(p.rX) + bz*Math.cos(p.rX);
+                let x2 = bx*Math.cos(p.rY) - z1*Math.sin(p.rY), z2 = bx*Math.sin(p.rY) + z1*Math.cos(p.rY);
+                wx = x2*Math.cos(p.rZ) - y1*Math.sin(p.rZ); wy = x2*Math.sin(p.rZ) + y1*Math.cos(p.rZ); wz = z2;
+                a = 0.8;
+            }
+            else if (id === 18) { // 色相摩尼網
+                let hue = (time * 60 + p.hueOffset) % 360; c = `hsla(${hue}, 90%, 70%,`; glowC = `hsl(${hue}, 90%, 70%)`; s = 2.5;
+            }
+                        else if (id === 19) { // 🛑 19. 普照法界 (金色扭動)
+                wy += Math.sin(time * 2 + wx * 0.02) * 10; 
+                wz += Math.cos(time * 2 + wy * 0.02) * 10;
+                // 強制賦予金色渲染
+                c = `rgba(212,175,55,`; 
+                glowC = "#fff"; 
+                a = 0.8; 
+                s = 1.8;
+            }
+
+            else if (id === 20) { // 妙寶燄
+                if(p.isC) { p.t += p.oS; p.p += p.oS * 0.5; }
+                let breath = 1 + Math.sin(time*3 + p.t)*0.1; let r = p.baseR * breath;
+                wx = r*Math.sin(p.p)*Math.cos(p.t); wy = r*Math.cos(p.p) - 20; wz = r*Math.sin(p.p)*Math.sin(p.t);
+                let hue = p.isC ? 60 : (p.hue + time*20)%360; let lgt = p.isC ? 85 : 65;
+                c = `hsla(${hue}, 100%, ${lgt}%,`; glowC = `hsl(${hue}, 100%, ${lgt}%)`; s = p.s; a = p.isC?1:0.4+Math.sin(time*5+p.t)*0.3;
+            }
+
+            // --- 統一投影與收集 ---
+            let proj = project3D(wx, wy, wz);
+            if(proj) { projected.push({ x: proj.px, y: proj.py, z: proj.pz, sc: proj.scale, a: a, c: c, s: s, isGlow: isGlow, glowC: glowC }); }
+        });
+
+        // 第 13 重補畫光柱
+        if(id === 13) {
+            let cx1 = 120*Math.cos(time*0.8), cz1 = 120*Math.sin(time*0.8);
+            let cx2 = 120*Math.cos(time*0.8+Math.PI), cz2 = 120*Math.sin(time*0.8+Math.PI);
+            let p1 = project3D(cx1, Math.sin(time*2)*20, cz1); let p2 = project3D(cx2, Math.sin(time*2+Math.PI)*20, cz2);
+            if(p1 && p2) { ctx.beginPath(); ctx.moveTo(p1.px, p1.py); ctx.lineTo(p2.px, p2.py); ctx.strokeStyle = `rgba(212,175,55,0.2)`; ctx.lineWidth = 2*p1.scale; ctx.stroke(); }
+        }
+
+                // 統一渲染輸出
+        projected.sort((a,b) => b.z - a.z);
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.1, p.s * p.sc), 0, Math.PI*2);
+            ctx.fillStyle = p.c.includes('hsla') ? p.c + p.a + ')' : p.c + p.a + ')';
+            
+            if(p.isGlow) { 
+                // 針對第 12 重強制放大光暈強度 (2.5倍)，產生強烈圍繞感
+                let glowFactor = (id === 12) ? 2.5 : 1.0;
+                ctx.shadowBlur = 12 * p.sc * glowFactor; 
+                ctx.shadowColor = p.glowC; 
+            } else { 
+                ctx.shadowBlur = 0; 
+            }
+            
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+    }
+
+
+    // 星空 (粉藍粉綠繽紛)
+    function animate() {
+        ctx.fillStyle = 'rgba(1, 1, 3, 0.6)'; 
+        ctx.fillRect(0, 0, width, height);
+        time += 0.015;
+
+        ctx.globalCompositeOperation = 'screen';
+        stars.forEach(s => {
+            s.z -= s.speed; if (s.z <= 0) { s.z = 2000; s.x = (Math.random()-0.5)*3000; s.y = (Math.random()-0.5)*3000; }
+            let sc = FOV / (FOV + s.z); let sx = (width/2) + s.x*sc; let sy = (height/2) + s.y*sc - 50;
+            ctx.beginPath(); ctx.arc(sx, sy, Math.max(0.1, s.size*sc), 0, Math.PI*2);
+            ctx.fillStyle = s.color === '#f3e5ab' ? `rgba(255,183,197, ${Math.min(1, sc*2)})` : `rgba(135,206,250, ${Math.min(1, sc*2)})`; ctx.fill();
+        });
+        ctx.globalCompositeOperation = 'source-over';
+
+        renderWorld();
+        requestAnimationFrame(animate);
+    }
+
+    // 觸控與語音模組 
+    function onDown(e) { if(e.target.closest('.ui-layer') || e.target.closest('#theory-drawer')) return; isDragging = true; lastMouseX = e.touches?e.touches[0].clientX:e.clientX; lastMouseY = e.touches?e.touches[0].clientY:e.clientY; }
+    function onMove(e) { if (!isDragging) return; let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; angleY += (curX-lastMouseX)*0.01; angleX += (curY-lastMouseY)*0.01; angleX = Math.max(-Math.PI/2, Math.min(Math.PI/2, angleX)); lastMouseX=curX; lastMouseY=curY; }
+    function onUp() { isDragging = false; }
+    canvas.addEventListener('pointerdown', onDown); canvas.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp); canvas.addEventListener('pointercancel', onUp);
+    
+    function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+    function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+    document.getElementById('theory-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
+    
+    let isPlayingTheory = false; let theoryUtterance = null; window.sysUtterances = []; 
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return; const btnText = document.getElementById('tts-text'), btnIcon = document.getElementById('tts-icon');
+        if (isPlayingTheory) { window.speechSynthesis.cancel(); isPlayingTheory = false; btnText.innerText = "聆聽法音"; btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            let textToRead = Array.from(document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .paragraph')).map(n => n.textContent.trim()).join('。');
+            let isAndroid = /Android/i.test(navigator.userAgent); textToRead = isAndroid ? textToRead : textToRead.replace(/阿/g, 'ㄚ');
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead); theoryUtterance.lang = 'zh-TW'; theoryUtterance.rate = 0.85; 
+            if (isAndroid) { window.sysUtterances.push(theoryUtterance); let voices = window.speechSynthesis.getVoices(); if (voices.length > 0) { let zhVoice = voices.find(v => v.lang === 'zh-TW' && v.name.includes('Google')) || voices.find(v => v.lang.includes('zh')); if (zhVoice) theoryUtterance.voice = zhVoice; } }
+            theoryUtterance.onend = () => { isPlayingTheory = false; btnText.innerText = "聆聽法音"; btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>'; if(isAndroid) window.sysUtterances = window.sysUtterances.filter(u => u !== theoryUtterance); };
+            setTimeout(() => { window.speechSynthesis.speak(theoryUtterance); }, isAndroid ? 150 : 50); isPlayingTheory = true; btnText.innerText = "停止聆聽"; btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+    const originalCloseTheoryDrawer = closeTheoryDrawer; closeTheoryDrawer = function() { if (isPlayingTheory) toggleTheoryAudio(); originalCloseTheoryDrawer(); }
+
+    initPicker(); selectRealm(currentRealmIndex); 
+    setTimeout(() => { document.getElementById(`picker-${currentRealmIndex}`).scrollIntoView({ inline: 'center' }); }, 100);
+    animate();
+</script>
+</body>
+</html>

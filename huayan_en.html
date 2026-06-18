@@ -338,12 +338,12 @@
 
         </div>
     </div>
-
     <script>
-        // ---------------- Audio & TTS Logic ----------------
+        // ---------------- Audio & TTS Logic (Optimized Queue) ----------------
         let isPlayingTheory = false;
-        let theoryUtterance = null;
-        let sysUtterances = []; 
+        window.sysUtterances = []; 
+        window.speechQueue = [];
+        window.currentSpeechIndex = 0;
 
         function toggleTheoryAudio() {
             if (!window.speechSynthesis) return alert("TTS not supported.");
@@ -351,35 +351,82 @@
             const btnIcon = document.getElementById('tts-icon');
             
             if (isPlayingTheory) {
-                window.speechSynthesis.cancel(); isPlayingTheory = false;
-                btnText.innerText = "Listen";
-                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                stopTheoryAudio();
             } else {
                 let nodes = document.querySelectorAll('#theory-drawer .main-title, #theory-drawer .chapter-title, #theory-drawer .paragraph, #theory-drawer .sutra-quote');
-                let textToRead = Array.from(nodes).map(n => n.textContent.trim()).join('. ');
+                let textToRead = Array.from(nodes).map(n => n.textContent.trim()).join('\n');
                 textToRead = textToRead.replace(/I\./g, 'Chapter 1.').replace(/II\./g, 'Chapter 2.').replace(/III\./g, 'Chapter 3.').replace(/IV\./g, 'Chapter 4.');
                 
-                theoryUtterance = new SpeechSynthesisUtterance(textToRead);
-                theoryUtterance.lang = 'en-US'; theoryUtterance.rate = 0.85;
-
-                let isAndroid = /Android/i.test(navigator.userAgent);
-                if (isAndroid) {
-                    sysUtterances.push(theoryUtterance);
-                    let voices = window.speechSynthesis.getVoices();
-                    if (voices.length > 0) {
-                        let enVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) || voices.find(v => v.lang.startsWith('en'));
-                        if (enVoice) theoryUtterance.voice = enVoice;
-                    }
-                }
-
-                theoryUtterance.onend = () => {
-                    isPlayingTheory = false; btnText.innerText = "Listen";
-                    btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
-                    if(isAndroid) sysUtterances = sysUtterances.filter(u => u !== theoryUtterance);
-                };
+                // Split text by sentence endings and newlines to prevent buffer overflows on mobile devices
+                window.speechQueue = textToRead.split(/[.!?\n\r]/).map(s => s.trim()).filter(s => s.length > 0);
+                window.currentSpeechIndex = 0;
+                window.sysUtterances = [];
+                isPlayingTheory = true;
                 
-                window.speechSynthesis.speak(theoryUtterance); isPlayingTheory = true;
-                btnText.innerText = "Stop"; btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+                btnText.innerText = "Stop"; 
+                btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+                
+                if (window.speechQueue.length > 0) {
+                    executeSpeechQueue();
+                } else {
+                    stopTheoryAudio();
+                }
+            }
+        }
+
+        function stopTheoryAudio() {
+            const btnText = document.getElementById('tts-text');
+            const btnIcon = document.getElementById('tts-icon');
+            window.speechQueue = [];
+            window.currentSpeechIndex = 0;
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
+            window.sysUtterances = [];
+            isPlayingTheory = false;
+            btnText.innerText = "Listen";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        }
+
+        function executeSpeechQueue() {
+            if (!window.speechSynthesis || !isPlayingTheory || window.currentSpeechIndex >= window.speechQueue.length) {
+                if (window.currentSpeechIndex >= window.speechQueue.length && isPlayingTheory) {
+                    stopTheoryAudio();
+                }
+                return;
+            }
+            
+            let sentence = window.speechQueue[window.currentSpeechIndex];
+            const utterance = new SpeechSynthesisUtterance(sentence);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.85;
+            
+            // Keep reference to prevent garbage collection on mobile browsers
+            window.sysUtterances.push(utterance);
+            
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            if (isAndroid) {
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let enVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) || voices.find(v => v.lang.startsWith('en'));
+                    if (enVoice) utterance.voice = enVoice;
+                }
+            }
+            
+            utterance.onend = () => {
+                window.sysUtterances = window.sysUtterances.filter(u => u !== utterance);
+                window.currentSpeechIndex++;
+                executeSpeechQueue();
+            };
+            
+            utterance.onerror = () => {
+                window.sysUtterances = window.sysUtterances.filter(u => u !== utterance);
+                window.currentSpeechIndex++;
+                executeSpeechQueue();
+            };
+            
+            if (isAndroid) {
+                setTimeout(() => { window.speechSynthesis.speak(utterance); }, 100);
+            } else {
+                window.speechSynthesis.speak(utterance);
             }
         }
 
@@ -389,32 +436,44 @@
             if(curtain) curtain.style.opacity = '0';
         });
 
-                function navigateTo(url) {
-            if (window.speechSynthesis) window.speechSynthesis.cancel(); // ✨ 換頁時強制停止語音 ✨
+        function navigateTo(url) {
+            stopTheoryAudio();
             document.getElementById('page-curtain').style.opacity = '1';
             setTimeout(() => { window.location.href = url; }, 800);
         }
 
-
-                // ✨ 抽屜開關邏輯 ✨
+        // ---------------- Drawer Memory Management ----------------
         let isDrawerOpen = false;
+        let animationId = null;
+
         function openDrawer() {
             document.getElementById('theory-drawer').classList.add('open');
-            isDrawerOpen = true; // 開啟時標記，以暫停背景 3D 動畫
+            isDrawerOpen = true; 
             
-            // 💡 核心修正 1：玉簡打開時，徹底隱藏 3D 容器與星塵，釋放所有運算元
-            document.getElementById('universe-container').style.visibility = 'hidden';
-            document.getElementById('stardust-overlay').style.visibility = 'hidden';
+            // Optimization 1: Remove 3D structure from the render tree completely to free GPU memory
+            document.getElementById('universe-container').style.display = 'none';
+            document.getElementById('stardust-overlay').style.display = 'none';
+            
+            // Optimization 2: Explicitly cancel animation frame to completely sleep the main thread
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
         }
         
         function closeDrawer() {
             document.getElementById('theory-drawer').classList.remove('open');
-            isDrawerOpen = false; // 關閉時恢復動畫
-            if (window.speechSynthesis) window.speechSynthesis.cancel(); // ✨ 關閉抽屜時停止語音
+            isDrawerOpen = false; 
+            stopTheoryAudio(); 
             
-            // 💡 核心修正 2：玉簡關閉時，完好無損地把 3D 世界喚醒
-            document.getElementById('universe-container').style.visibility = 'visible';
-            document.getElementById('stardust-overlay').style.visibility = 'visible';
+            // Optimization 3: Restore 3D container rendering
+            document.getElementById('universe-container').style.display = 'flex';
+            document.getElementById('stardust-overlay').style.display = 'block';
+            
+            // Optimization 4: Restart 3D animation loop safely
+            if (!animationId) {
+                animateUniverse();
+            }
         }
 
         function closeModal(id) {
@@ -487,7 +546,7 @@
         geometricMandala.appendChild(drawGeometricLayer(55, 10, `${gold}0.35)`, `${gold}0.05)`));
         geometricMandala.appendChild(drawGeometricLayer(30, 10, `${gold}0.6)`, `${gold}0.1)`));
 
-               // 3D 蓮花
+        // 3D Lotus
         const standingLotus = document.getElementById('standing-lotus');
         function create3DPetal(angle, tiltX, gradientId, w, h, strokeOpacity) {
             let petal = document.createElement('div');
@@ -503,7 +562,6 @@
             return petal;
         }
 
-        // 同步生成蓮花，直接呼叫 HTML 中的靜態漸層字典
         for(let i=0; i<10; i++) standingLotus.appendChild(create3DPetal(i * 36, -10, 'ethereal-gold', 120, 160, 0.35));
         for(let i=0; i<10; i++) standingLotus.appendChild(create3DPetal((i * 36) + 18, -25, 'deep-gold', 110, 140, 0.6));
         for(let i=0; i<10; i++) standingLotus.appendChild(create3DPetal(i * 36, -45, 'deep-cyan', 90, 110, 0.75));
@@ -603,26 +661,26 @@
             setTimeout(() => dust.remove(), duration);
         }
 
-                function animateUniverse() {
-            // 💡 核心修正 3：玉簡打開時，徹底凍結此計時器，絕不允許佔用 1% 的 CPU 算力
+        function animateUniverse() {
+            // 💡 Optimization: Fully halt scheduling when the drawer is open to give 100% thread performance to reading
             if(isDrawerOpen) {
-                requestAnimationFrame(animateUniverse);
+                animationId = null;
                 return;
             }
 
-            if(!isDrawerOpen) {
-                if(!isDragging) {
-                    currentSpin -= 0.05;
-                    lotusOcean.style.transform = `rotateZ(${currentSpin}deg)`;
-                    for(let i=0; i<labels.length; i++) {
-                        labels[i].style.transform = `rotateX(-90deg) rotateY(${-currentSpin}deg)`;
-                    }
+            if(!isDragging) {
+                currentSpin -= 0.05;
+                lotusOcean.style.transform = `rotateZ(${currentSpin}deg)`;
+                for(let i=0; i<labels.length; i++) {
+                    labels[i].style.transform = `rotateX(-90deg) rotateY(${-currentSpin}deg)`;
                 }
-                spawnStardust(); 
             }
-            requestAnimationFrame(animateUniverse);
+            spawnStardust(); 
+            
+            animationId = requestAnimationFrame(animateUniverse);
         }
 
+        // Start initial animation loop
         animateUniverse();
 
         document.addEventListener('pointerdown', (e) => {
@@ -667,3 +725,4 @@
     </script>
 </body>
 </html>
+

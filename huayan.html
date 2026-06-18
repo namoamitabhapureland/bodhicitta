@@ -331,16 +331,16 @@
                     <svg class="chapter-icon" viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.5S12 2 12 2s8 1.5 8 8.5S12 22 12 22z" /><path d="M12 22s-4-5-4-10 4-7 4-7 4 2 4 7-4 10-4 10z" /><line x1="12" y1="5" x2="12" y2="22" /></svg>
                     <h2 class="chapter-title">【卷四】釋尊本懷 ‧ 淨土閉環</h2>
                 </div>
-                <p class="paragraph">華嚴經之絕唱為「普賢十大願王」，而此無盡行願，究竟於何處落實？本師釋迦牟尼佛之教法，首尾一如。其真實答案，早已刻印在《無量壽經》阿彌陀佛第四十八大願之「第二十二願」中：</p>
+                <p class="paragraph">華嚴經之絕唱為「普賢十大願王」，而此無盡行願，釋尊本師之教法，首尾一如。於《無量壽經》阿彌陀佛第四十八大願之「第二十二願」中：</p>
                 <div class="sutra-quote">「生我國者，究竟必至一生補處……咸共遵修普賢大士之德。」</div>
-                  <p class="paragraph">娑婆世界退緣太多，極難契入華嚴。故阿彌陀佛大悲願力，開闢極樂淨土。一旦往生，即證不退轉，具足無量神通道力，無礙圓滿普賢菩薩之廣大行願。</p>
+                  <p class="paragraph">娑婆世界退緣太多，故阿彌陀佛大悲願力，開闢極樂淨土。一旦往生，即證不退轉，具足無量神通道力，無礙圓滿普賢菩薩之廣大行願。</p>
             
             <p class="paragraph">彌陀保證往生極樂者皆至一生補處；然若菩薩因大悲心重，欲倒駕慈航回穢土度生，彌陀便賦予其「被弘誓鎧」的加持。這股能讓凡夫菩薩「超出常倫諸地之行」、橫超修道階位、在五濁惡世中自在化度的力量，正是「現前修習普賢之德」。</p>
-                 <p class="paragraph"><span class="highlight">行普賢菩薩願 ． 歸彌陀極樂國。</span>若依經教理路推演，這或許正是本師出世度生、指引吾等歸鄉的究竟本懷之一。願以至誠之心，探求如來真實義。</p>
+                 <p class="paragraph"><span class="highlight">以釋尊爲本師，發無上心。</span>行普賢菩薩願 ． 歸彌陀極樂國。</p>
             </div>
             
                     <div style="text-align: center; margin-top: 40px;">
-                <button class="btn-enter" style="width:auto; padding: 12px 40px; font-size:0.9rem;" onclick="navigateTo('matrix.html')">繼續觀想二十重法界</button>
+                <button class="btn-enter" style="width:auto; padding: 12px 40px; font-size:0.9rem;" onclick="navigateTo('matrix.html')">觀想二十重法界</button>
             </div>
 
         </div>
@@ -348,26 +348,67 @@
 
     <script>
       
-        // ✨ 同步主系統與發菩提心的絕對穩固語音引擎 ✨
+            // ================= 語音引擎防漏與自動分段排程機制 =================
         window.sysUtterances = [];
+        window.speechQueue = [];
+        window.currentSpeechIndex = 0;
+        window.speechRate = 0.85;
+
         function speak(t, r = 0.85) {
             if (!window.speechSynthesis) return; 
-            window.speechSynthesis.cancel(); 
             
+            // 1. 徹底清空舊隊列，阻止 cancel() 觸發舊事件的連鎖回呼漏洞
+            window.speechQueue = [];
+            window.currentSpeechIndex = 0;
+            window.speechSynthesis.cancel(); 
+            window.sysUtterances = [];
+            
+            // 2. 依據句尾標點與換行切分成短句，徹底避免行動裝置語音引擎緩衝區溢位
+            let sentences = t.split(/[。；！？\n\r]/);
+            window.speechQueue = sentences.map(s => s.trim()).filter(s => s.length > 0);
+            window.speechRate = r;
+            
+            if (window.speechQueue.length > 0) {
+                executeSpeechQueue();
+            }
+        }
+
+        function executeSpeechQueue() {
+            if (!window.speechSynthesis || window.currentSpeechIndex >= window.speechQueue.length) return;
+            
+            let t = window.speechQueue[window.currentSpeechIndex];
             let isAndroid = /Android/i.test(navigator.userAgent);
             let textToSpeak = isAndroid ? t : t.replace(/阿/g, 'ㄚ');
+            
             const m = new SpeechSynthesisUtterance(textToSpeak);
             m.lang = 'zh-TW'; 
-            m.rate = r; 
+            m.rate = window.speechRate; 
             
+            // 強制存入全域陣列，防止瀏覽器垃圾回收機制（GC）過早回收物件導致語音無故中斷
+            window.sysUtterances.push(m);
+
             if (isAndroid) {
-                window.sysUtterances.push(m);
                 let voices = window.speechSynthesis.getVoices();
                 if (voices.length > 0) {
                     let zhVoice = voices.find(v => v.lang === 'zh-TW' && v.name.includes('Google')) || voices.find(v => v.lang.includes('zh'));
                     if (zhVoice) m.voice = zhVoice;
                 }
-                m.onend = function() { window.sysUtterances = window.sysUtterances.filter(u => u !== m); };
+            }
+
+            // 綁定步進事件，順暢播放下一句
+            m.onend = function() { 
+                window.sysUtterances = window.sysUtterances.filter(u => u !== m); 
+                window.currentSpeechIndex++;
+                executeSpeechQueue();
+            };
+            
+            m.onerror = function() {
+                window.sysUtterances = window.sysUtterances.filter(u => u !== m);
+                window.currentSpeechIndex++;
+                executeSpeechQueue();
+            };
+
+            if (isAndroid) {
                 setTimeout(() => { window.speechSynthesis.speak(m); }, 150);
             } else {
                 window.speechSynthesis.speak(m);
@@ -386,7 +427,7 @@
         document.body.addEventListener('touchstart', unlockAudio, { once: true });
         document.body.addEventListener('mousedown', unlockAudio, { once: true });
 
-               // ✨ 朗讀華嚴義理的文本內容 (一字不漏完整版)
+        // 朗讀華嚴義理的文本內容
         function playTheoryVoice() {
             let text = `
                 大方廣佛華嚴經，華藏莊嚴世界海，法海一滴。
@@ -402,11 +443,10 @@
                 華藏大世界縱然宏大，若無行願亦無法契入。經中入法界品記載，善財童子為求無上菩提，發起五十三次參訪大善知識之壯舉，象徵著修行者從凡夫邁向成佛的五十三個心性階位。然華嚴之極致，非是懸浮於虛空，而是有其最真實之歸宿！善財童子參訪至最高境界之文殊與普賢兩大菩薩，此二大聖者，竟不約而同將華嚴最圓滿之果位，全數導向阿彌陀佛之極樂世界。文殊發願經：願我命終時，除滅諸障礙，面見阿彌陀，往生安樂國。華嚴經普賢行願品：願我臨欲命終時，盡除一切諸障礙，面見彼佛阿彌陀，即得往生安樂剎。
 
                 卷四：釋尊本懷，淨土閉環。
-                華嚴經之絕唱為普賢十大願王，而此無盡行願，究竟於何處落實？本師釋迦牟尼佛之教法，首尾一如。其真實答案，早已刻印在無量壽經阿彌陀佛第四十八大願之第二十二願中：生我國者，究竟必至一生補處，咸共遵修普賢大士之德。娑婆世界退緣太多，極難契入華嚴。故阿彌陀佛大悲願力，開闢極樂淨土。一旦往生，即證不退轉，具足無量神通道力，無礙圓滿普賢菩薩之廣大行願。
+                華嚴經之絕唱為普賢十大願王，而此無盡行願，本師釋迦牟尼佛之教法，首尾一如。於無量壽經阿彌陀佛第四十八大願之第二十二願中：生我國者，究竟必至一生補處，咸共遵修普賢大士之德。娑婆世界退緣太多，故阿彌陀佛大悲願力，開闢極樂淨土。一旦往生，即證不退轉，具足無量神通道力，無礙圓滿普賢菩薩之廣大行願。
                 
-                本數位道場之設立，正是為協助行者預習極樂法性。一次十念對頻，即已身在華藏第十三重；淨念相繼，即是重走善財五十三參之菩提大道。行普賢菩薩願，歸彌陀極樂國。若依經教理路推演，這或許正是本師出世度生、指引吾等歸鄉的究竟本懷之一。願以至誠之心，探求如來真實義。
             `;
-            speak(text, 0.85); // 語速微調為 0.85，讓長篇導讀更穩重
+            speak(text, 0.85); 
         }
 
         // 換頁過場
@@ -415,34 +455,51 @@
             if(curtain) curtain.style.opacity = '0';
         });
 
-                function navigateTo(url) {
-            if (window.speechSynthesis) window.speechSynthesis.cancel(); // ✨ 切換頁面時，強制停止語音！ ✨
+        function navigateTo(url) {
+            window.speechQueue = [];
+            window.currentSpeechIndex = 0;
+            if (window.speechSynthesis) window.speechSynthesis.cancel(); 
             document.getElementById('page-curtain').style.opacity = '1';
             setTimeout(() => { window.location.href = url; }, 800);
         }
 
-     
-                // ✨ 抽屜開關邏輯 ✨
+        // ================= 抽屜開關邏輯與動畫循環優化 =================
         let isDrawerOpen = false;
+        let animationId = null; 
+
         function openDrawer() {
             document.getElementById('theory-drawer').classList.add('open');
-            isDrawerOpen = true; // 開啟時標記，以暫停背景 3D 動畫
+            isDrawerOpen = true; 
             
-            // 💡 核心修正 1：玉簡打開時，徹底隱藏 3D 容器與星塵，釋放所有運算元
-            document.getElementById('universe-container').style.visibility = 'hidden';
-            document.getElementById('stardust-overlay').style.visibility = 'hidden';
+            // 💡 最佳化 1：改用 display: none 徹底將 3D 結構移出渲染樹，完全釋放 GPU 記憶體
+            document.getElementById('universe-container').style.display = 'none';
+            document.getElementById('stardust-overlay').style.display = 'none';
+            
+            // 💡 最佳化 2：直接取消下一次影格排程，令主線程完全靜止
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
         }
         
         function closeDrawer() {
             document.getElementById('theory-drawer').classList.remove('open');
-            isDrawerOpen = false; // 關閉時恢復動畫
-            if (window.speechSynthesis) window.speechSynthesis.cancel(); // ✨ 關閉抽屜時停止語音
+            isDrawerOpen = false; 
             
-            // 💡 核心修正 2：玉簡關閉時，完好無損地把 3D 世界喚醒
-            document.getElementById('universe-container').style.visibility = 'visible';
-            document.getElementById('stardust-overlay').style.visibility = 'visible';
+            // 關閉時清空語音隊列並停止
+            window.speechQueue = [];
+            window.currentSpeechIndex = 0;
+            if (window.speechSynthesis) window.speechSynthesis.cancel(); 
+            
+            // 💡 最佳化 3：回復 3D 畫布與星塵的佈局顯示
+            document.getElementById('universe-container').style.display = 'flex';
+            document.getElementById('stardust-overlay').style.display = 'block';
+            
+            // 💡 最佳化 4：重啟 3D 動畫循環
+            if (!animationId) {
+                animateUniverse();
+            }
         }
-
 
         function closeModal(id) {
             document.getElementById(id).classList.remove('show');
@@ -517,7 +574,7 @@
         geometricMandala.appendChild(drawGeometricLayer(55, 10, `${gold}0.35)`, `${gold}0.05)`));
         geometricMandala.appendChild(drawGeometricLayer(30, 10, `${gold}0.6)`, `${gold}0.1)`));
 
-                // 3D 蓮花
+        // 3D 蓮花
         const standingLotus = document.getElementById('standing-lotus');
         function create3DPetal(angle, tiltX, gradientId, w, h, strokeOpacity) {
             let petal = document.createElement('div');
@@ -533,7 +590,6 @@
             return petal;
         }
 
-        // 同步生成蓮花，直接呼叫 HTML 中的靜態漸層字典
         for(let i=0; i<10; i++) standingLotus.appendChild(create3DPetal(i * 36, -10, 'ethereal-gold', 120, 160, 0.35));
         for(let i=0; i<10; i++) standingLotus.appendChild(create3DPetal((i * 36) + 18, -25, 'deep-gold', 110, 140, 0.6));
         for(let i=0; i<10; i++) standingLotus.appendChild(create3DPetal(i * 36, -45, 'deep-cyan', 90, 110, 0.75));
@@ -634,26 +690,26 @@
             setTimeout(() => dust.remove(), duration);
         }
 
-                function animateUniverse() {
-            // 💡 核心修正 3：玉簡打開時，徹底凍結此計時器，絕不允許佔用 1% 的 CPU 算力
+        function animateUniverse() {
+            // 💡 最佳化 5：若玉簡已開啟，直接終止迴圈排程，將主線程算力 100% 留給閱讀界面
             if(isDrawerOpen) {
-                requestAnimationFrame(animateUniverse);
+                animationId = null;
                 return;
             }
 
-            if(!isDrawerOpen) {
-                if(!isDragging) {
-                    currentSpin -= 0.05;
-                    lotusOcean.style.transform = `rotateZ(${currentSpin}deg)`;
-                    for(let i=0; i<labels.length; i++) {
-                        labels[i].style.transform = `rotateX(-90deg) rotateY(${-currentSpin}deg)`;
-                    }
+            if(!isDragging) {
+                currentSpin -= 0.05;
+                lotusOcean.style.transform = `rotateZ(${currentSpin}deg)`;
+                for(let i=0; i<labels.length; i++) {
+                    labels[i].style.transform = `rotateX(-90deg) rotateY(${-currentSpin}deg)`;
                 }
-                spawnStardust(); 
             }
-            requestAnimationFrame(animateUniverse);
+            spawnStardust(); 
+            
+            animationId = requestAnimationFrame(animateUniverse);
         }
 
+        // 開啟初始動畫循環
         animateUniverse();
 
         document.addEventListener('pointerdown', (e) => {
@@ -689,13 +745,13 @@
         document.addEventListener('pointerup', () => { isDragging = false; });
         document.addEventListener('pointercancel', () => { isDragging = false; });
 
-        // 防凍結：強制破除手機滑動返回的 BFCache 黑屏
         window.addEventListener('pageshow', (e) => {
             if (e.persisted) {
                 const curtain = document.getElementById('page-curtain');
                 if(curtain) curtain.style.opacity = '0';
             }
         });
+
     </script>
 </body>
 </html>

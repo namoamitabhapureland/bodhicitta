@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+         <link rel="manifest" href="manifest_jp.json"   
+  <title>法華一仏乗 · 大法鼓経虚空システム</title>
+  <style>
+    /* 全局極簡與純淨美學設定 */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    :root {
+      --gold: #e5c158;
+      --solid-gold: #d4af37;
+      --cyan: #8ba89c;
+    }
+    
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #020205;
+      font-family: "Noto Serif JP", "ヒラギノ明朝 ProN", "Hiragino Mincho ProN", "MS Mincho", "MS 明朝", serif;
+    }
+
+    /* 彩色星塵 Canvas */
+    #starCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* 主內容容器：使大鼓居中 */
+    .container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* 頂部雙軌導航按鈕區域 */
+    .nav-container {
+      position: absolute;
+      top: max(20px, env(safe-area-inset-top));
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 隱藏經文與引導面板，確保版面絕對乾淨 */
+    .text-panel, .title-area, .guide-status, #guide-hint {
+      display: none !important;
+    }
+
+    /* 舞台與大鼓容器 */
+    .drum-stage {
+      width: 100%;
+      max-width: 850px;
+      height: 650px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: opacity 0.5s;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    /* 法鼓真如呼吸與微光脈動動畫 */
+    .drum-breathing-wrapper {
+      transform-origin: 450px 350px;
+      animation: drum-meditate-breath 5s ease-in-out infinite alternate;
+      will-change: transform, filter;
+    }
+
+    @keyframes drum-meditate-breath {
+      0% {
+        transform: scale(1.0);
+        filter: drop-shadow(0 0 6px rgba(229, 193, 88, 0.08));
+      }
+      100% {
+        transform: scale(1.025);
+        filter: drop-shadow(0 0 26px rgba(229, 193, 88, 0.38));
+      }
+    }
+
+    /* 鼓體受擊 3D 共震 */
+    .drum-master-group {
+      transform-origin: 450px 350px;
+      transition: transform 0.05s ease-out;
+    }
+    .drum-master-group.shake {
+      transform: scale(1.015) translate(-1px, 1px);
+    }
+
+    /* 單圈高效能法音波紋 */
+    .dharma-wave {
+      fill: none;
+      stroke-width: 3;
+      pointer-events: none;
+    }
+
+    /* 下方互動中樞區域 */
+    .control-area {
+      position: absolute;
+      bottom: max(30px, env(safe-area-inset-bottom));
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      z-index: 5;
+    }
+
+    /* 動態幾何能量條容器 */
+    .energy-gauge-container {
+      width: 260px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(229, 193, 88, 0.2);
+      border-radius: 3px;
+      position: relative;
+      display: none;
+    }
+
+    /* 內層流體能量條 */
+    .energy-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--cyan) 0%, var(--gold) 100%);
+      position: absolute;
+      left: 0;
+      top: 0;
+      box-shadow: 0 0 8px var(--gold);
+      border-radius: 3px;
+    }
+
+    /* 系統標準化按鈕樣式 */
+    .btn {
+      pointer-events: auto;
+      background: rgba(10, 11, 30, 0.6);
+      border: 1px solid rgba(229, 193, 88, 0.3);
+      color: var(--gold);
+      padding: 10px 24px;
+      font-size: 13px;
+      letter-spacing: 2px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-block;
+      backdrop-filter: blur(5px);
+    }
+
+    .btn:hover, .btn.active {
+      border-color: #e5c158;
+      color: #e5c158;
+      box-shadow: 0 0 12px rgba(229, 193, 88, 0.15);
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn:disabled {
+      border-color: rgba(122, 132, 153, 0.2);
+      color: #4a505e;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* ================= 各式彈框樣式 ================= */
+    .glass-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 9999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.5s; }
+    .glass-modal.show { opacity: 1; pointer-events: auto; }
+    .glass-content { width: 90%; max-width: 420px; max-height: 85vh; background: linear-gradient(135deg, rgba(20,25,30,0.95), rgba(5,10,15,0.98)); border: 1px solid rgba(212,175,55,0.5); border-radius: 20px; padding: 30px 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 20px 50px rgba(0,0,0,0.9); position: relative; }
+    
+    .modal-header { text-align: center; color: var(--gold); font-size: 1.2rem; letter-spacing: 4px; font-weight: bold; margin-bottom: 20px; border-bottom: 1px dashed rgba(212,175,55,0.3); padding-bottom: 15px; display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; }
+    
+    .step-container { overflow-y: auto; padding: 10px; flex-grow: 1; margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; width: 100%; }
+    .step-text { color: #ddd; font-size: 0.95rem; line-height: 1.8; text-align: justify; letter-spacing: 1px; width: 100%; }
+    
+    .agree-btn { 
+        -webkit-appearance: none; appearance: none;
+        background: linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(10,10,10,0.9) 100%); 
+        border: 1px solid rgba(212,175,55,0.5); color: var(--gold); padding: 12px 35px; 
+        border-radius: 30px; text-align: center; font-weight: bold; letter-spacing: 4px; 
+        cursor: pointer; transition: 0.3s; box-shadow: inset 0 0 10px rgba(212,175,55,0.05), 0 5px 15px rgba(0,0,0,0.5); 
+        font-family: inherit; width: auto; min-width: 180px; display: inline-block;
+    }
+    .agree-btn:active { transform: scale(0.96); background: rgba(212,175,55,0.3); border-color: var(--solid-gold); }
+
+    /* 讓大鼓本體在虛空中產生如呼吸般的微微懸浮與定力律動 */
+    #drum-hardware-group {
+      transform-origin: center;
+      animation: drumBreatheFloat 8s ease-in-out infinite;
+      transition: transform 0.04s linear; 
+    }
+
+    /* 擊鼓重擊時的震撼搖晃 */
+    #drum-hardware-group.shake {
+      animation: drumStrikeShake 0.04s linear infinite;
+    }
+
+    @keyframes drumBreatheFloat {
+      0% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-12px) rotate(0.4deg); }
+      100% { transform: translateY(0px) rotate(0deg); }
+    }
+
+    @keyframes drumStrikeShake {
+      0% { transform: translate(2px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-0.5deg); }
+      20% { transform: translate(-3px, 0px) rotate(0.5deg); }
+      30% { transform: translate(0px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(0.5deg); }
+      50% { transform: translate(-1px, 2px) rotate(-0.5deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      70% { transform: translate(2px, 1px) rotate(-0.5deg); }
+      80% { transform: translate(-1px, -1px) rotate(0.5deg); }
+      90% { transform: translate(2px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-0.5deg); }
+    }
+
+    /* 能量條刻度標籤樣式 */
+    .gauge-marker {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: monospace;
+      font-size: 11px;
+      color: rgba(229, 193, 88, 0.4); 
+      letter-spacing: 1px;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .marker-zero { left: -18px; }
+    .marker-hundred { right: -30px; }
+
+    /* ════ 大鼓本體容器響應式優化 ════ */
+    #drum-hardware-group {
+      transform-origin: center;
+      animation: drumBreatheFloat 8s ease-in-out infinite;
+      transition: transform 0.04s linear;
+      width: 60vmin;
+      height: 60vmin;
+      max-width: 280px;  
+      max-height: 280px;
+      margin: 0 auto;
+    }
+
+    /* ════ 橫書清淨正圓呼吸按鈕 ════ */
+    #recite-done-btn {
+      display: flex;
+      flex-direction: column; 
+      align-items: center;
+      justify-content: center;
+      
+      width: 108px;
+      height: 108px;
+      border-radius: 50% !important; 
+      margin: 20px auto 0 auto;
+      box-sizing: border-box;
+      flex-shrink: 0; 
+      
+      writing-mode: horizontal-tb !important;
+      white-space: normal;
+      word-break: break-word;
+      
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(229, 193, 88, 0.05));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      
+      border: 1px solid rgba(229, 193, 88, 0.25);
+      box-shadow: 0 0 15px rgba(229, 193, 88, 0.1), inset 0 0 10px rgba(255, 255, 255, 0.05);
+      
+      color: #e5c158;
+      font-size: 14px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-align: center;
+      line-height: 1.3;
+      padding: 12px; 
+      
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+      animation: btnNormalBreathe 4s ease-in-out infinite;
+    }
+
+    /* ════ 小螢幕行動裝置的等比例正圓縮放 ════ */
+    @media (max-width: 375px), (max-height: 667px) {
+      #recite-done-btn {
+        width: 90px;
+        height: 90px;
+        font-size: 12px;
+        padding: 8px;
+        margin: 12px auto 0 auto;
+      }
+    }
+
+    /* 滑鼠懸停與觸控焦點 */
+    #recite-done-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, rgba(229, 193, 88, 0.18), rgba(255, 255, 255, 0.05));
+      border-color: rgba(229, 193, 88, 0.5);
+      box-shadow: 0 0 22px rgba(229, 193, 88, 0.3), inset 0 0 12px rgba(255, 255, 255, 0.1);
+      transform: scale(1.02);
+    }
+
+    /* 蓄力狀態 */
+    #recite-done-btn.gathering {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.4);
+      animation: btnGatheringBreathe 1.4s ease-in-out infinite;
+    }
+
+    /* 停用狀態 */
+    #recite-done-btn:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+      animation: none;
+      box-shadow: none;
+    }
+
+    /* 靜態如意呼吸 */
+    @keyframes btnNormalBreathe {
+      0% { box-shadow: 0 0 12px rgba(229, 193, 88, 0.08); border-color: rgba(229, 193, 88, 0.2); }
+      50% { box-shadow: 0 0 22px rgba(229, 193, 88, 0.22); border-color: rgba(229, 193, 88, 0.4); }
+      100% { box-shadow: 0 0 12px rgba(229, 193, 88, 0.08); border-color: rgba(229, 193, 88, 0.2); }
+    }
+
+    /* 蓄力緊湊呼吸 */
+    @keyframes btnGatheringBreathe {
+      0% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.1); }
+      50% { box-shadow: 0 0 30px rgba(229, 193, 88, 0.35); }
+      100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.1); }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="starCanvas"></canvas>
+
+  <div class="nav-container">
+    <a href="index_jp.html?screen=3" class="btn">道場に戻る</a>
+    <button class="btn" id="ambient-toggle">真如法音：静音</button>
+  </div>
+
+  <div class="title-area"><h1></h1><p></p></div>
+  <div class="text-panel" id="text-panel">
+    <div class="text-line"></div><div class="text-line"></div><div class="text-line"></div>
+    <div class="text-line"></div><div class="text-line"></div><div class="text-line"></div>
+  </div>
+  <div class="guide-status" id="guide-status-label"></div>
+  <div id="guide-hint"></div>
+
+  <div class="container">
+    <div class="drum-stage" id="stage-interact">
+      <svg viewBox="0 0 800 800" id="drum-svg">
+        <defs>
+          <linearGradient id="crimson-barrel" x1="0%" y1="20%" x2="100%" y2="80%">
+            <stop offset="0%" stop-color="#8a161b" />
+            <stop offset="35%" stop-color="#590c10" />
+            <stop offset="80%" stop-color="#2e0305" />
+            <stop offset="100%" stop-color="#140002" />
+          </linearGradient>
+
+          <linearGradient id="drum-head-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="65%" stop-color="#f5ede2" />
+            <stop offset="100%" stop-color="#ded2bf" />
+          </linearGradient>
+
+          <linearGradient id="gold-metal" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fede6a" />
+            <stop offset="50%" stop-color="#d4af37" />
+            <stop offset="100%" stop-color="#8a6f1c" />
+          </linearGradient>
+
+          <g id="decorated-rivet-sym">
+            <circle cx="0" cy="0" r="5.5" fill="#543e07" />
+            <circle cx="0" cy="0" r="4" fill="url(#gold-metal)" />
+            <circle cx="-1" cy="-1" r="1.2" fill="#ffffff" opacity="0.5" />
+          </g>
+        </defs>
+
+        <g id="absolute-pure-drum-system" transform="translate(450, 350) scale(1.5) translate(-330, -350)">
+          <g class="drum-breathing-wrapper">
+            <g class="drum-master-group" id="drum-hardware-group">
+              <path d="M 330 130 Q 520 110 650 200 L 650 500 Q 520 590 330 570 Z" fill="url(#crimson-barrel)" />
+              <path d="M 330 130 Q 520 110 650 200" fill="none" stroke="url(#gold-metal)" stroke-width="1.5" opacity="0.55" />
+              <path d="M 330 131 Q 520 111 650 201" fill="none" stroke="#ffffff" stroke-width="0.5" opacity="0.18" />
+              <path d="M 330 570 Q 520 590 650 500" fill="none" stroke="url(#gold-metal)" stroke-width="1.5" opacity="0.55" />
+              <path d="M 330 569 Q 520 589 650 499" fill="none" stroke="#ffffff" stroke-width="0.5" opacity="0.18" />
+              <path d="M 330 335 Q 490 342 650 355" fill="none" stroke="url(#gold-metal)" stroke-width="1.5" opacity="0.55" />
+              <path d="M 330 336 Q 490 343 650 356" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.35" />
+              <path d="M 330 375 Q 490 382 650 385" fill="none" stroke="url(#gold-metal)" stroke-width="1.5" opacity="0.55" />
+              <path d="M 330 376 Q 490 383 650 386" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.35" />
+              <path d="M 490 132 Q 582 350 490 568" fill="none" stroke="url(#gold-metal)" stroke-width="1.5" opacity="0.55" />
+              <path d="M 490 132 Q 584 350 490 568" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.35" />
+              <path d="M 515 138 Q 593 350 515 563" fill="none" stroke="url(#gold-metal)" stroke-width="1.5" opacity="0.55" />
+              <path d="M 515 138 Q 595 350 515 563" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.35" />
+
+              <g transform="translate(545, 365)">
+                <rect x="-10" y="-20" width="20" height="40" rx="3" fill="url(#gold-metal)" stroke="#42350c" stroke-width="1" />
+                <circle cx="0" cy="0" r="12" fill="none" stroke="url(#gold-metal)" stroke-width="4" />
+              </g>
+
+              <ellipse cx="330" cy="350" rx="120" ry="220" fill="url(#drum-head-grad)" stroke="#baa185" stroke-width="2" />
+              <ellipse cx="330" cy="350" rx="120" ry="220" id="touch-glow-layer" fill="url(#gold-metal)" opacity="0" pointer-events="none" />
+              <path d="M 330 130 A 120 220 0 0 1 330 570" fill="none" stroke="url(#gold-metal)" stroke-width="5" opacity="0.9" />
+
+              <g transform="translate(330, 350) scale(0.65, 1.2)">
+                <circle cx="0" cy="0" r="45" fill="none" stroke="rgba(168, 137, 76, 0.3)" stroke-width="2" />
+                <circle cx="0" cy="0" r="12" fill="none" stroke="rgba(168, 137, 76, 0.35)" stroke-width="2" />
+                <path d="M 0 -45 L 0 45 M -45 0 L 45 0 M -31.8 -31.8 L 31.8 31.8 M -31.8 31.8 L 31.8 -31.8" stroke="rgba(168, 137, 76, 0.3)" stroke-width="1.5" />
+              </g>
+              <g id="complete-rim-rivets-container"></g>
+            </g> 
+          </g> 
+          <g id="wave-delivery-layer"></g>
+        </g>
+      </svg>
+    </div>
+
+    <div class="control-area">
+      <div class="energy-gauge-container" id="energy-gauge-wrap">
+        <span class="gauge-marker marker-zero">0</span>
+        <div class="energy-bar" id="energy-bar-fluid"></div>
+        <span class="gauge-marker marker-hundred">100</span>
+      </div>
+
+      <button class="btn active" id="recite-done-btn">撃鼓</button>
+    </div>
+  </div>
+
+  <div class="glass-modal" id="dharma-modal">
+    <div class="glass-content">
+      <div class="modal-header" id="modal-title">大法鼓音</div>
+      <div class="step-container">
+        <div class="step-text" id="modal-text">正法流転、虚空共鳴。</div>
+      </div>
+      <button class="agree-btn" id="modal-action">信受奉行</button>
+    </div>
+  </div>
+
+  <script>
+
+      // ════ 雙軌資料庫整合設定 (精確對接 PX_JP_V15.0 主系統) ════
+  const MAIN_DB_KEY = 'PX_JP_V15.0';  
+  const RITUAL_KEY = 'drumdb';           
+
+  let mainDb = JSON.parse(localStorage.getItem(MAIN_DB_KEY)) || {};
+  if (mainDb.points === undefined) mainDb.points = 0;
+
+  let drumDb = JSON.parse(localStorage.getItem(RITUAL_KEY)) || { strikeCount: 0, status: 'idling' };
+
+  // 解析網址參數，防禦無限重導向死迴圈
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentScreen = urlParams.get('screen');
+
+  if (drumDb.status !== 'auth_granted' && currentScreen !== '3') {
+      window.location.href = 'index_jp.html?screen=3';
+  }
+
+
+    // ════ 繪製彩色星塵與法界星球 ════
+    const canvas = document.getElementById('starCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, stars = [];
+    const starColors = ['rgba(243, 229, 171, ', 'rgba(255, 150, 150, ', 'rgba(150, 200, 255, ']; 
+
+    let planets = [];
+    function initPlanets() {
+      planets = [
+        { x: width * 0.15, y: height * 0.20, r: 65, dx: 0.03, dy: 0.015, c1: 'rgba(80, 130, 230, 0.25)', c2: 'rgba(30, 40, 90, 0.01)' },   
+        { x: width * 0.80, y: height * 0.15, r: 90, dx: -0.02, dy: 0.02, c1: 'rgba(254, 215, 100, 0.20)', c2: 'rgba(140, 90, 20, 0.01)' }, 
+        { x: width * 0.25, y: height * 0.75, r: 45, dx: 0.015, dy: -0.03, c1: 'rgba(245, 140, 170, 0.22)', c2: 'rgba(120, 40, 60, 0.01)' }, 
+        { x: width * 0.85, y: height * 0.70, r: 75, dx: -0.025, dy: -0.015, c1: 'rgba(120, 220, 160, 0.18)', c2: 'rgba(20, 80, 40, 0.01)' } 
+      ];
+    }
+
+    function resize() { 
+      width = window.innerWidth; 
+      height = window.innerHeight; 
+      canvas.width = width; 
+      canvas.height = height; 
+      initPlanets(); 
+    }
+    window.addEventListener('resize', resize); resize();
+    
+    for(let i=0; i<800; i++) { 
+        stars.push({ x: (Math.random()-0.5)*2000, y: (Math.random()-0.5)*2000, z: Math.random()*1000, s: Math.random()*3.5 + 0.5, colorType: Math.floor(Math.random() * 3) });
+    }
+
+    function drawStars() {
+        ctx.clearRect(0, 0, width, height); 
+        ctx.globalCompositeOperation = 'screen';
+
+        planets.forEach(p => {
+            p.x += p.dx;
+            p.y += p.dy;
+
+            if (p.x - p.r > width) p.x = -p.r;
+            if (p.x + p.r < 0) p.x = width + p.r;
+            if (p.y - p.r > height) p.y = -p.r;
+            if (p.y + p.r < 0) p.y = height + p.r;
+
+            let grad = ctx.createRadialGradient(p.x - p.r * 0.3, p.y - p.r * 0.3, p.r * 0.05, p.x, p.y, p.r);
+            grad.addColorStop(0, p.c1);
+            grad.addColorStop(1, p.c2);
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+        });
+
+        stars.forEach(s => { 
+            s.z -= 0.6; 
+            if(s.z <= 0) s.z = 1000; 
+            
+            let sc = 300 / (300 + s.z);
+            ctx.beginPath(); 
+            ctx.arc(width/2 + s.x*sc, height/2 + s.y*sc, s.s*sc, 0, Math.PI*2); 
+            ctx.fillStyle = starColors[s.colorType] + (sc * 3.0) + ')'; 
+            ctx.fill(); 
+        });
+
+        requestAnimationFrame(drawStars);
+    }
+    drawStars();
+
+    // 卯釘透視演算法
+    const rivetsContainer = document.getElementById('complete-rim-rivets-container');
+    const rivetCount = 54; 
+    const cx = 330, cy = 350; 
+    const rx = 120, ry = 220; 
+
+    for (let i = 0; i < rivetCount; i++) {
+      const angle = (i / rivetCount) * Math.PI * 2;
+      const cosVal = Math.cos(angle);
+      const sinVal = Math.sin(angle); 
+      const x = cx + rx * cosVal;
+      const y = cy + ry * sinVal;
+      const perspectiveFactor = cosVal; 
+      const scale = 0.85 + (perspectiveFactor * 0.15); 
+
+      const useTag = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+      useTag.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#decorated-rivet-sym');
+      useTag.setAttribute('x', x);
+      useTag.setAttribute('y', y);
+      useTag.setAttribute('transform', `translate(${x}, ${y}) scale(${scale}) translate(${-x}, ${-y})`);
+      useTag.setAttribute('opacity', 0.8 + (perspectiveFactor * 0.2)); 
+      rivetsContainer.appendChild(useTag);
+    }
+
+    // Web Audio API 核心音訊
+    let audioCtx = null;
+    let ambientOscs = [];
+    let isAmbientPlaying = false;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playDeepDrumSound(intensity = 'high') {
+      initAudio();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
+
+      const strikeNoise = audioCtx.createBufferSource();
+      const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.015, audioCtx.sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < noiseBuffer.length; i++) data[i] = Math.random() * 2 - 1;
+      strikeNoise.buffer = noiseBuffer;
+
+      const noiseFilter = audioCtx.createBiquadFilter();
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.setValueAtTime(intensity === 'high' ? 130 : intensity === 'mid' ? 150 : 180, now);
+      
+      const noiseGain = audioCtx.createGain();
+      noiseGain.gain.setValueAtTime(intensity === 'high' ? 0.45 : intensity === 'mid' ? 0.25 : 0.1, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.012);
+
+      const mainOsc = audioCtx.createOscillator();
+      const mainGain = audioCtx.createGain();
+      
+      mainOsc.type = 'sine';
+      let baseFreq = intensity === 'high' ? 115 : intensity === 'mid' ? 135 : 160;
+      let endFreq = intensity === 'high' ? 26 : intensity === 'mid' ? 35 : 50;
+      let duration = intensity === 'high' ? 1.4 : intensity === 'mid' ? 0.8 : 0.4;
+
+      mainOsc.frequency.setValueAtTime(baseFreq, now);
+      mainOsc.frequency.exponentialRampToValueAtTime(baseFreq * 0.35, now + 0.08);
+      mainOsc.frequency.linearRampToValueAtTime(endFreq, now + duration * 0.5);
+
+      mainGain.gain.setValueAtTime(0, now);
+      mainGain.gain.linearRampToValueAtTime(intensity === 'high' ? 1.0 : intensity === 'mid' ? 0.6 : 0.3, now + 0.004);
+      mainGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+      const lowpass = audioCtx.createBiquadFilter();
+      lowpass.type = 'lowpass';
+      lowpass.frequency.setValueAtTime(intensity === 'high' ? 140 : 180, now);
+
+      strikeNoise.connect(noiseGain);
+      noiseGain.connect(noiseFilter);
+      noiseFilter.connect(lowpass);
+      mainOsc.connect(mainGain);
+      mainGain.connect(lowpass);
+      lowpass.connect(audioCtx.destination);
+
+      strikeNoise.start(now);
+      mainOsc.start(now);
+      mainOsc.stop(now + duration + 0.1);
+    }
+
+    function toggleAmbient() {
+      initAudio();
+      const now = audioCtx.currentTime;
+      if (!isAmbientPlaying) {
+        ambientOscs = [];
+        const freqRatio = [54.0, 108.0, 162.0];
+        freqRatio.forEach((freq) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(0, now);
+          gain.gain.linearRampToValueAtTime(0.035, now + 2.5);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          ambientOscs.push({ osc, gain });
+        });
+        document.getElementById('ambient-toggle').textContent = '真如法音：流転';
+        document.getElementById('ambient-toggle').classList.add('active');
+        isAmbientPlaying = true;
+      } else {
+        ambientOscs.forEach((node) => {
+          node.gain.linearRampToValueAtTime(0, now + 1.2);
+          node.osc.stop(now + 1.3);
+        });
+        ambientOscs = [];
+        document.getElementById('ambient-toggle').textContent = '真如法音：静音';
+        document.getElementById('ambient-toggle').classList.remove('active');
+        isAmbientPlaying = false;
+      }
+    }
+
+    // ════ 儀軌與狀態控制核心邏輯 ════
+    const stage = document.getElementById('stage-interact');
+    const drumHardware = document.getElementById('drum-hardware-group');
+    const waveLayer = document.getElementById('wave-delivery-layer');
+    const ambientBtn = document.getElementById('ambient-toggle');
+    const reciteDoneBtn = document.getElementById('recite-done-btn');
+    const touchGlow = document.getElementById('touch-glow-layer');
+
+    const energyGaugeWrap = document.getElementById('energy-gauge-wrap');
+    const energyBarFluid = document.getElementById('energy-bar-fluid');
+
+    const dharmaModal = document.getElementById('dharma-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalText = document.getElementById('modal-text');
+    const modalAction = document.getElementById('modal-action');
+
+    let isGathering = false;     
+    let totalEarnedPoints = 0;   
+    let energyValue = 0;         
+    let energyDirection = 1;     
+    let energySpeed = 4;       
+    let energyRafId = null;
+
+    const ritualSteps = [
+      {
+        modalTitle: "第一撃完結 ‧ 魔網を震破す",
+        modalText: "『大法鼓経』に云わく、「一切の衆生……本より清浄にして、如来に等し」世間の戯論を破除し、邪見の劇毒を消殞せしむ。<br><br>法鼓初めて震い、世間の虚妄なる戯論を破除し、客塵邪見の劇毒をことごとく消殞せしむ。行者本来の清浄なる自性、法音に随って闇を破りて出ず。"
+      },
+      {
+        modalTitle: "第二撃完結 ‧ 功徳随喜",
+        modalText: "『大法鼓経』に云わく、「聴聞すれば即ち解脱す」衆生大乗の法音を聴聞すれば、信解すると否とを問わず、皆な貪瞋痴を断除する種子を植えん。<br><br>大鼓再び震い、この経を聴聞して乃至一念も随喜せば、その得る所の福徳は称記すべからず。如来蔵の中に、已に永く退転せざる菩提の種子を深く植えたり。"
+      },
+      {
+        modalTitle: "第三撃完結 ‧ 真如に証入す",
+        modalText: "『大法鼓経』に云わく、「若し善男子善女人、この経を聴聞せば……速やかに無上菩提に赴かん。」清浄なる仏性を開発し、如来蔵を証得す。<br><br>三界の虚空共鳴し、究竟の一乗正義ここに顕彰す。一切の衆生は本より自ら清浄にして、如来に等し。法音収摂し、行者の此の度の修持は已に円満して清浄なる資糧と化せり。"
+      }
+    ];
+
+    function runEnergyLoop() {
+      if (!isGathering) return;
+      
+      energyValue += energySpeed * energyDirection;
+      if (energyValue >= 100) {
+        energyValue = 100;
+        energyDirection = -1;
+      } else if (energyValue <= 0) {
+        energyValue = 0;
+        energyDirection = 1;
+      }
+      
+      energyBarFluid.style.width = energyValue + '%';
+      energyRafId = requestAnimationFrame(runEnergyLoop);
+    }
+
+    function startGathering() {
+      if (isGathering) return;
+      isGathering = true;
+      energyGaugeWrap.style.display = 'block';
+      energyValue = 0;
+      energyDirection = 1;
+      
+      reciteDoneBtn.textContent = "正念落槌";
+      reciteDoneBtn.classList.add('gathering'); 
+      
+      runEnergyLoop();
+    }
+
+    reciteDoneBtn.addEventListener('click', () => {
+      if (isGathering) {
+        performStrikeTap();
+      } else {
+        startGathering();
+      }
+    });
+
+    function performStrikeTap() {
+  if (!isGathering) return; 
+
+  isGathering = false;
+  cancelAnimationFrame(energyRafId);
+  reciteDoneBtn.classList.remove('gathering');
+
+  let finalEnergy = Math.round(energyValue);
+  let intensity = 'low';
+  let strikePoints = 0;
+  
+  if (drumDb.strikeCount > 2) drumDb.strikeCount = 2;
+  const currentStrikeIndex = drumDb.strikeCount;
+
+  if (finalEnergy >= 75) {
+    intensity = 'high';
+    strikePoints = 100; 
+  } else if (finalEnergy >= 35 && finalEnergy < 75) {
+    intensity = 'mid';
+    strikePoints = 50;  
+  } else {
+    intensity = 'low';
+    strikePoints = 10;  
+  }
+
+  totalEarnedPoints += strikePoints;
+
+  drumHardware.classList.add('shake');
+  setTimeout(() => drumHardware.classList.remove('shake'), 40);
+
+  touchGlow.style.transition = 'none';
+  touchGlow.style.opacity = '0.5';
+  requestAnimationFrame(() => {
+    touchGlow.style.transition = 'opacity 0.3s ease-out';
+    touchGlow.style.opacity = '0';
+  });
+
+  playDeepDrumSound(intensity);
+
+  let waveScale = intensity === 'high' ? 9 : intensity === 'mid' ? 5.5 : 2.5;
+  createWave(1.0, waveScale);
+
+  energyGaugeWrap.style.display = 'none';
+  reciteDoneBtn.disabled = true;
+
+  const stepData = ritualSteps[currentStrikeIndex];
+  modalTitle.textContent = stepData.modalTitle;
+  
+  // 經典日文語境潤飾：震撼の重撃（法理に妙契す）
+  let intensityDesc = intensity === 'high' ? '震撼の重撃（法理に妙契す）' : intensity === 'mid' ? '沈着の中撃（心神安住）' : '微光の軽撃（随縁摂心）';
+  modalText.innerHTML = `${stepData.modalText}<br><br><span style="color:var(--gold);">凝聚されしエネルギー：${finalEnergy}% (${intensityDesc})</span><br><span style="color:#fede6a;">獲得せし菩提資糧：+${strikePoints} 点</span>`;
+  
+  if (currentStrikeIndex === 2) {
+    modalAction.textContent = "円満収摂・功徳回向";
+  } else {
+    modalAction.textContent = "法義を承受し・次の一撃へ進む";
+  }
+
+  setTimeout(() => {
+    dharmaModal.classList.add('show');
+  }, 400);
+}
+
+stage.addEventListener('mousedown', (e) => { 
+  e.preventDefault(); 
+  if (isGathering) performStrikeTap(); else startGathering(); 
+});
+stage.addEventListener('touchstart', (e) => { 
+  e.preventDefault(); 
+  if (isGathering) performStrikeTap(); else startGathering(); 
+});
+
+ambientBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleAmbient(); });
+
+modalAction.addEventListener('click', () => {
+  dharmaModal.classList.remove('show');
+  drumDb.strikeCount += 1;
+  
+  if (drumDb.strikeCount >= 3) {
+    // 1. 累加法華一乘系統日文版總積分
+    mainDb.points = (mainDb.points || 0) + totalEarnedPoints; 
+
+    // 2. 精確對接並寫入主系統的「法鼓覺心」專屬防護欄位
+    if (!mainDb.drumData) {
+        mainDb.drumData = { totalCount: 0, lastDate: "" };
+    }
+    mainDb.drumData.totalCount = (mainDb.drumData.totalCount || 0) + 1;
+    mainDb.drumData.lastDate = new Date().toDateString();
+
+    localStorage.setItem(MAIN_DB_KEY, JSON.stringify(mainDb));
+
+    // 3. 重置單次擊鼓狀態
+    drumDb.status = "idling";
+    drumDb.strikeCount = 0;
+    localStorage.setItem(RITUAL_KEY, JSON.stringify(drumDb));
+
+    // 4. 圓滿後安全導向日文主面板指定畫面（第3螢幕）
+    window.location.href = 'index_jp.html?screen=3';
+  } else {
+    localStorage.setItem(RITUAL_KEY, JSON.stringify(drumDb));
+    
+    // 未滿三擊時，重置為日文擊鼓文字以進行下一擊
+    reciteDoneBtn.textContent = "撃鼓";
+    reciteDoneBtn.disabled = false;
+  }
+});
+
+    function createWave(initOpacity, speedScale) {
+      const ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+      ellipse.setAttribute('cx', '330');
+      ellipse.setAttribute('cy', '350');
+      ellipse.setAttribute('rx', '120');
+      ellipse.setAttribute('ry', '220');
+      ellipse.setAttribute('class', 'dharma-wave');
+      waveLayer.appendChild(ellipse);
+
+      let rxValue = 120;
+      let ryValue = 220;
+      let opacity = initOpacity;
+
+      function render() {
+        rxValue += speedScale; 
+        ryValue += speedScale * 1.83; 
+        opacity -= 0.012;
+
+        ellipse.setAttribute('rx', rxValue);
+        ellipse.setAttribute('ry', ryValue);
+        ellipse.setAttribute('style', `stroke: rgba(229, 193, 88, ${opacity}); opacity: ${opacity};`);
+
+        if (opacity > 0 && ellipse.parentNode) {
+          requestAnimationFrame(render);
+        } else {
+          ellipse.remove();
+        }
+      }
+      requestAnimationFrame(render);
+    }
+  </script>
+</body>
+</html>

@@ -536,11 +536,6 @@
     const lastMonth = new Date(now.getFullYear(), now.getMonth(), 0); 
     const daysInLastMonth = lastMonth.getDate();
 
-    const isRegisteredLastMonthButNotFirst = (createDateObj.getFullYear() === lastMonth.getFullYear() && createDateObj.getMonth() === lastMonth.getMonth() && createDateObj.getDate() > 1);
-    const isRegisteredThisMonth = (createDateObj.getFullYear() === now.getFullYear() && createDateObj.getMonth() === now.getMonth());
-    const isNewUserMidMonth = isRegisteredLastMonthButNotFirst || isRegisteredThisMonth;
-
-    const isFirstDay = (now.getDate() === 1) && !isNewUserMidMonth;
     const hasSettledThisMonth = db.lastSettledMonth === currentMonthStr;
 
     const curB = db.bodhiLitCount || 0;
@@ -565,49 +560,48 @@
     let isCharging = false;
 
     function startIntroCharge() {
-        if (isCharging) return;
+    if (isCharging) return;
+    
+    // 現在の位階を算出
+    const tier = Math.ceil(calcScore / 20) || 1;
+    
+    // 🛑 防衛条件 1：今日は1日ではない
+    if (now.getDate() !== 1) {
+        speak("時機未だ至らず。毎月一日に資糧の結集を開きます。");
         
-        const tier = Math.ceil(calcScore / 20) || 1;
+        document.getElementById('t-title-name').innerText = "法界告示";
+        document.getElementById('t-svg-display').innerHTML = generatedSVGs[0]; 
+        document.getElementById('t-name-display').innerText = "因縁を静待す";
+        document.getElementById('t-desc-display').innerHTML = `行者 ${userName} ‧ 時機未だ至らず。<br><br>精進指南に従い、業鏡は毎月一日にのみ開き、月度の回向を映し出します。定課に安住し、来月一日をお待ちください。`;
         
-        if (isNewUserMidMonth && now.getDate() === 1) {
-            speak("道場を安立して全月に満たないため、資糧は来月一日に正式に結集されます。");
-            
-            document.getElementById('t-title-name').innerText = "法界告示";
-            document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1]; 
-            document.getElementById('t-name-display').innerText = "安立未円満";
-            document.getElementById('t-desc-display').innerHTML = `行者 ${userName} ‧ 道場安立より全月に満たず。<br><br>今月の資糧は結集基準に達していません。縁に随って修持してください。資糧は来月一日に正式に業鏡に顕化します。`;
-            
-            const m = document.getElementById('treasure-modal');
-            m.style.display = 'flex';
-            setTimeout(() => m.style.opacity = 1, 50);
-            return;
-        }
-        
-        if (!isFirstDay || hasSettledThisMonth) {
-            let noticeTitle = hasSettledThisMonth ? "結集已円満" : "因縁を静待す";
-            let msg = hasSettledThisMonth ? 
-                "今月の精進資糧は既に結集し封存されました。定課に安住し、来月一日の業鏡の再開を静かにお待ちください。" : 
-                "時機未だ至らず。此地は資糧結集の聖境にして、毎月一日にのみ業鏡を開き菩提を照見す。";
-                
-            speak(hasSettledThisMonth ? "今月の資糧は既に結集円満しました。来月一日をお待ちください。" : "時機未だ至らず。毎月一日に資糧の結集を開きます。");
-            
-            document.getElementById('t-title-name').innerText = "法界告示";
-            document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1]; 
-            document.getElementById('t-name-display').innerText = noticeTitle;
-            document.getElementById('t-desc-display').innerHTML = `行者 ${userName} ‧ ${msg}`;
-            
-            const m = document.getElementById('treasure-modal');
-            m.style.display = 'flex';
-            setTimeout(() => m.style.opacity = 1, 50);
-            return;
-        }
-
-        isCharging = true;
-        const handsWrap = document.getElementById('intro-hands-wrap');
-        handsWrap.classList.add('neural-glow'); 
-        
-        setTimeout(() => { finishIntro(); }, 1900);
+        const m = document.getElementById('treasure-modal');
+        m.style.display = 'flex';
+        setTimeout(() => m.style.opacity = 1, 50);
+        return;
     }
+
+    // 🛑 防衛条件 2：今日は1日だが、既に今月分を結集済み
+    if (hasSettledThisMonth) {
+        speak("今月の資糧は既に結集円満しました。来月をお待ちください。");
+        
+        document.getElementById('t-title-name').innerText = "法界告示";
+        document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1]; 
+        document.getElementById('t-name-display').innerText = "結集已円満";
+        document.getElementById('t-desc-display').innerHTML = `行者 ${userName} ‧ 今月の精進資糧は既に結集し封存されました。<br><br>六度万行を日常に融け込ませ、来月一日の業鏡再開を静かにお待ちください。`;
+        
+        const m = document.getElementById('treasure-modal');
+        m.style.display = 'flex';
+        setTimeout(() => m.style.opacity = 1, 50);
+        return;
+    }
+
+    // ✅ すべての試験を通過、結集アニメーションを開始
+    isCharging = true;
+    const handsWrap = document.getElementById('intro-hands-wrap');
+    handsWrap.classList.add('neural-glow'); 
+    
+    setTimeout(() => { finishIntro(); }, 1900);
+}
 
     function finishIntro() {
         targetWarpSpeed = 25; targetStarScale = 3;

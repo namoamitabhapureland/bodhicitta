@@ -757,7 +757,7 @@ body {
         "行者 {name} ‧ 圓滿相。般若實相，本來清淨。自性蓮花終成金蓮，願當下即是，永不退轉。"
     ];
 
-    function showModal() {
+        function showModal() {
         const tier = Math.ceil(calcScore / 20) || 1;
         document.getElementById('t-title-name').innerText = `行者 ${userName} ‧ 修持圓滿`;
         document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1];
@@ -767,19 +767,33 @@ body {
                           `<br><br><span style="color:var(--gold); font-size:1.1rem; letter-spacing:2px;">當月圓滿度：${calcScore}%</span>`;
         document.getElementById('t-desc-display').innerHTML = finalDesc;
 
-        db.totalMerit += totalDelta;
-        db.lunar.snapshot = { bodhi: curB, puxian: curP, bow: curW };
+        // 👇👇👇 核心修正區域開始 👇👇👇
+        // 1. 即時抓取現在最新的分數
+        const nowB = db.bodhiLitCount || 0;
+        const nowP = (db.puxianData && db.puxianData.totalPracticedDays) ? db.puxianData.totalPracticedDays : 0;
+        const nowW = (db.bowData && db.bowData.streakCount) ? db.bowData.streakCount : 0;
+        
+        // 2. 即時計算真正的差額 (要入庫的功德)
+        const currentDelta = Math.max(0, nowB - db.lunar.snapshot.bodhi) + 
+                             Math.max(0, nowP - db.lunar.snapshot.puxian) + 
+                             Math.max(0, nowW - db.lunar.snapshot.bow);
+
+        // 3. 【關鍵順序】先將差額存入總庫，再更新快照！
+        db.totalMerit = (db.totalMerit || 0) + currentDelta;
+        db.lunar.snapshot = { bodhi: nowB, puxian: nowP, bow: nowW };
+        // 👆👆👆 核心修正區域結束 👆👆👆
+
         db.lastSettledMonth = currentMonthStr;
         db.mandalaVault[tier-1]++;
         localStorage.setItem('PX_V15.0', JSON.stringify(db));
 
+        // 更新 UI 介面，讓數字正確顯示
         const mFill = document.getElementById('merit-fill');
         document.getElementById('merit-num-display').innerText = db.totalMerit;
         setTimeout(() => { if(mFill) mFill.style.width = getMeritWidth(db.totalMerit) + '%'; }, 800);
 
         speak("獲贈印記，" + totemNames[tier-1]);
         
-        // 💡 核心物理修正：將圖騰的 Z 軸拉高到 150，蓋過獎窗的黑影！
         const core = document.getElementById('core-layer');
         core.style.zIndex = "150"; 
         core.style.transition = "opacity 1.2s ease";
@@ -789,7 +803,6 @@ body {
         m.style.display = 'flex';
         setTimeout(() => m.style.opacity = 1, 50);
     }
-
 
 
      // ════ 玖：印記庫與大願迴向 ════

@@ -581,14 +581,7 @@ body {
     const lastMonth = new Date(now.getFullYear(), now.getMonth(), 0); 
     const daysInLastMonth = lastMonth.getDate();
 
-    // 日期本位判定法：精準核對是否為上個月中途註冊，或本月才註冊的新人，徹底免除時分秒誤差
-    const isRegisteredLastMonthButNotFirst = (createDateObj.getFullYear() === lastMonth.getFullYear() && createDateObj.getMonth() === lastMonth.getMonth() && createDateObj.getDate() > 1);
-    const isRegisteredThisMonth = (createDateObj.getFullYear() === now.getFullYear() && createDateObj.getMonth() === now.getMonth());
-    const isNewUserMidMonth = isRegisteredLastMonthButNotFirst || isRegisteredThisMonth;
-
-    // 鐵律：只有在每月 1 日，且註冊滿完整全月的行者，才具備跑分資格
-    const isFirstDay = (now.getDate() === 1) && !isNewUserMidMonth;
-    const hasSettledThisMonth = db.lastSettledMonth === currentMonthStr;
+   const hasSettledThisMonth = db.lastSettledMonth === currentMonthStr;
 
     const curB = db.bodhiLitCount || 0;
     const curP = (db.puxianData && db.puxianData.totalPracticedDays) ? db.puxianData.totalPracticedDays : 0;
@@ -615,52 +608,48 @@ body {
     let isCharging = false;
 
     function startIntroCharge() {
-        if (isCharging) return;
+    if (isCharging) return;
+    
+    // 算出當前應顯化的圖騰位階（由你的分母數學自動決定）
+    const tier = Math.ceil(calcScore / 20) || 1;
+    
+    // 🛑 防呆條件 1：今天「不是」 1 號
+    if (now.getDate() !== 1) {
+        speak("時機未到，每月一日開啟資糧結集。");
         
-        // 算出當前應顯化的圖騰位階
-        const tier = Math.ceil(calcScore / 20) || 1;
+        document.getElementById('t-title-name').innerText = "法界告示";
+        document.getElementById('t-svg-display').innerHTML = generatedSVGs[0]; // 顯示未亮起的基礎圖騰
+        document.getElementById('t-name-display').innerText = "靜待因緣";
+        document.getElementById('t-desc-display').innerHTML = `行者 ${userName} ‧ 時機未到。<br><br>依循精進指南，業鏡僅於每月一日開啟，以凝聚你的月度回饋。請安住定課，靜待下月一日到來。`;
         
-        // 情況一：一日當天，但註冊未滿全月的新人
-        if (isNewUserMidMonth && now.getDate() === 1) {
-            speak("新安立道場未滿全月，資糧將於下月一日正式結集。");
-            
-            document.getElementById('t-title-name').innerText = "法界告示";
-            document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1]; // 正常顯化當前圖騰
-            document.getElementById('t-name-display').innerText = "安立未圓滿";
-            document.getElementById('t-desc-display').innerHTML = `行者 ${userName} ‧ 新安立道場未滿全月。<br><br>本月資糧未達結集基準，請隨緣修持，資糧將於下月一日正式顯化業鏡。`;
-            
-            const m = document.getElementById('treasure-modal');
-            m.style.display = 'flex';
-            setTimeout(() => m.style.opacity = 1, 50);
-            return;
-        }
-        
-        // 情況二：平常日子或是當月已結算過
-        if (!isFirstDay || hasSettledThisMonth) {
-            let noticeTitle = hasSettledThisMonth ? "結集已圓滿" : "靜待因緣";
-            let msg = hasSettledThisMonth ? 
-                "本月精進資糧已結集封存。請安住定課，靜待下月一日業鏡重開。" : 
-                "時機未到。此地為資糧結集聖境，惟每月一日方能開啟業鏡照見菩提。";
-                
-            speak(hasSettledThisMonth ? "本月資糧已結集圓滿，請靜待下月一日。" : "時機未到，每月一日開啟資糧結集。");
-            
-            document.getElementById('t-title-name').innerText = "法界告示";
-            document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1]; // 正常顯化當前圖騰
-            document.getElementById('t-name-display').innerText = noticeTitle;
-            document.getElementById('t-desc-display').innerHTML = `行者 ${userName} ‧ ${msg}`;
-            
-            const m = document.getElementById('treasure-modal');
-            m.style.display = 'flex';
-            setTimeout(() => m.style.opacity = 1, 50);
-            return;
-        }
-
-        isCharging = true;
-        const handsWrap = document.getElementById('intro-hands-wrap');
-        handsWrap.classList.add('neural-glow'); 
-        
-        setTimeout(() => { finishIntro(); }, 1900);
+        const m = document.getElementById('treasure-modal');
+        m.style.display = 'flex';
+        setTimeout(() => m.style.opacity = 1, 50);
+        return;
     }
+
+    // 🛑 防呆條件 2：今天是 1 號，但本月「已經按過了」
+    if (hasSettledThisMonth) {
+        speak("本月資糧已結集圓滿，請靜待下月。");
+        
+        document.getElementById('t-title-name').innerText = "法界告示";
+        document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1]; 
+        document.getElementById('t-name-display').innerText = "結集已圓滿";
+        document.getElementById('t-desc-display').innerHTML = `行者 ${userName} ‧ 本月精進資糧已結集封存。<br><br>請將六度萬行融入日常，靜待下個月一日業鏡重開。`;
+        
+        const m = document.getElementById('treasure-modal');
+        m.style.display = 'flex';
+        setTimeout(() => m.style.opacity = 1, 50);
+        return;
+    }
+
+    // ✅ 通過所有考驗，開始結集動畫！
+    isCharging = true;
+    const handsWrap = document.getElementById('intro-hands-wrap');
+    handsWrap.classList.add('neural-glow'); 
+    
+    setTimeout(() => { finishIntro(); }, 1900);
+}
 
 
     function finishIntro() {

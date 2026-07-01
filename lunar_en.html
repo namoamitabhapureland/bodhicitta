@@ -498,11 +498,6 @@ body {
     const lastMonth = new Date(now.getFullYear(), now.getMonth(), 0); 
     const daysInLastMonth = lastMonth.getDate();
 
-    const isRegisteredLastMonthButNotFirst = (createDateObj.getFullYear() === lastMonth.getFullYear() && createDateObj.getMonth() === lastMonth.getMonth() && createDateObj.getDate() > 1);
-    const isRegisteredThisMonth = (createDateObj.getFullYear() === now.getFullYear() && createDateObj.getMonth() === now.getMonth());
-    const isNewUserMidMonth = isRegisteredLastMonthButNotFirst || isRegisteredThisMonth;
-
-    const isFirstDay = (now.getDate() === 1) && !isNewUserMidMonth;
     const hasSettledThisMonth = db.lastSettledMonth === currentMonthStr;
 
     const curB = db.bodhiLitCount || 0;
@@ -526,49 +521,48 @@ body {
 
     let isCharging = false;
     function startIntroCharge() {
-        if (isCharging) return;
+    if (isCharging) return;
+    
+    // Calculate the current totem tier (handled automatically by your math)
+    const tier = Math.ceil(calcScore / 20) || 1;
+    
+    // 🛑 Anti-bug Condition 1: Today is NOT the 1st of the month
+    if (now.getDate() !== 1) {
+        speak("The time has not yet come. Merit settlement opens on the 1st of each month.");
         
-        const tier = Math.ceil(calcScore / 20) || 1;
+        document.getElementById('t-title-name').innerText = "Dharma Notice";
+        document.getElementById('t-svg-display').innerHTML = generatedSVGs[0]; // Shows the base unlit totem
+        document.getElementById('t-name-display').innerText = "Awaiting Causes";
+        document.getElementById('t-desc-display').innerHTML = `Practitioner ${userName} ‧ The time has not yet come.<br><br>According to the practice guide, the merit mirror only opens on the 1st of each month to reflect your monthly progress. Please maintain your daily practice and await the 1st of next month.`;
         
-        if (isNewUserMidMonth && now.getDate() === 1) {
-            speak("Your dojo has not completed a full month. Merits will be settled on the 1st of next month.");
-            
-            document.getElementById('t-title-name').innerText = "Dharma Notice";
-            document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1]; 
-            document.getElementById('t-name-display').innerText = "Incomplete Cycle";
-            document.getElementById('t-desc-display').innerHTML = `Practitioner ${userName} ‧ Your dojo has been active for less than a full month.<br><br>The merits have not reached the settlement standard. Please continue your practice; the merit mirror will officially manifest on the 1st of next month.`;
-            
-            const m = document.getElementById('treasure-modal');
-            m.style.display = 'flex';
-            setTimeout(() => m.style.opacity = 1, 50);
-            return;
-        }
-        
-        if (!isFirstDay || hasSettledThisMonth) {
-            let noticeTitle = hasSettledThisMonth ? "Settlement Complete" : "Awaiting Causes";
-            let msg = hasSettledThisMonth ? 
-                "This month's spiritual merits have been sealed. Please maintain your daily practice and wait for the mirror to reopen on the 1st of next month." : 
-                "The time has not yet come. This is the sacred realm for merit settlement, which only opens on the 1st of each month to reflect your Bodhi path.";
-                
-            speak(hasSettledThisMonth ? "This month's merits have been fully settled." : "The time has not yet come. Merit settlement opens on the 1st.");
-            
-            document.getElementById('t-title-name').innerText = "Dharma Notice";
-            document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1]; 
-            document.getElementById('t-name-display').innerText = noticeTitle;
-            document.getElementById('t-desc-display').innerHTML = `Practitioner ${userName} ‧ ${msg}`;
-            
-            const m = document.getElementById('treasure-modal');
-            m.style.display = 'flex';
-            setTimeout(() => m.style.opacity = 1, 50);
-            return;
-        }
-
-        isCharging = true;
-        const handsWrap = document.getElementById('intro-hands-wrap');
-        handsWrap.classList.add('neural-glow'); 
-        
-        setTimeout(() => { finishIntro(); }, 1900);
+        const m = document.getElementById('treasure-modal');
+        m.style.display = 'flex';
+        setTimeout(() => m.style.opacity = 1, 50);
+        return;
     }
+
+    // 🛑 Anti-bug Condition 2: Today is the 1st, but already settled this month
+    if (hasSettledThisMonth) {
+        speak("This month's merits have been fully settled. Please wait until next month.");
+        
+        document.getElementById('t-title-name').innerText = "Dharma Notice";
+        document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1]; 
+        document.getElementById('t-name-display').innerText = "Settlement Complete";
+        document.getElementById('t-desc-display').innerHTML = `Practitioner ${userName} ‧ This month's spiritual merits have been sealed.<br><br>Please integrate the Six Paramitas into your daily life and wait for the merit mirror to reopen on the 1st of next month.`;
+        
+        const m = document.getElementById('treasure-modal');
+        m.style.display = 'flex';
+        setTimeout(() => m.style.opacity = 1, 50);
+        return;
+    }
+
+    // ✅ Passed all checks, begin the settlement animation!
+    isCharging = true;
+    const handsWrap = document.getElementById('intro-hands-wrap');
+    handsWrap.classList.add('neural-glow'); 
+    
+    setTimeout(() => { finishIntro(); }, 1900);
+}
 
     function finishIntro() {
         targetWarpSpeed = 25; targetStarScale = 3;

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pureland-v3.0';
+const CACHE_NAME = 'pureland-v3.01';
 
 const ASSETS_TO_CACHE = [
     './',

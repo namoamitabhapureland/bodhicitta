@@ -174,8 +174,8 @@
     .stage { flex:1; position:relative; display:flex; justify-content:center; align-items:center; min-height:0; }
     
     #lotus-container {
-        width:min(75vw,200px); height:min(75vw,200px);
-        animation:breathe 20s infinite ease-in-out;
+        width:min(75vw,260px); height:min(75vw,260px);
+        animation:breathe 40s infinite ease-in-out;
         display:flex; justify-content:center; align-items:center; position:relative;
     }
     
@@ -191,6 +191,25 @@
         0%,100%{transform:scale(0.5);} 
         50%{transform:scale(0.75);}
     }
+         /* ✨ 過去歷代蓮花的緩慢公轉星軌 */
+@keyframes orbit-revolve {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.past-lotus-wrapper {
+    position: absolute; left: 50%; top: 50%;
+    width: 0; height: 0; pointer-events: none;
+    animation: orbit-revolve 60s linear infinite; /* 公轉速度，45秒一圈 */
+    z-index: 2;
+}
+
+.past-lotus-item {
+    position: absolute; 
+    width: 70px; /* 環繞的小蓮花尺寸 */
+    height: 70px;
+    left: 50%; top: 50%;
+}
     /* ✨ 專屬位階金剛印記標籤 ✨ */
     .rank-badge {
         display: flex; align-items: center; gap: 5px;
@@ -1138,34 +1157,23 @@ function buildEnergyBar(name, count) {
     // ══════════════════════════════════════════
 //  蓮花渲染
 // ══════════════════════════════════════════
-function renderLotus(p) {
-    const box  = document.getElementById('lotus-container');
-    const rank = document.getElementById('ui-rank-text');
-    if (p < 10) { box.innerHTML=''; rank.innerText="初發菩提"; box.style.filter="none"; return; }
+function buildLotusSVG(p) {
+    let layers=1, fill="url(#grad-10)", stroke="rgba(255,255,255,0.45)";
+    if(p>=50)     { fill="url(#grad-50)"; }
+    if(p>=100)    { layers=2; fill="url(#grad-100)"; stroke="rgba(212,175,55,0.55)"; }
+    if(p>=300)    { fill="url(#grad-300)"; }
+    if(p>=500)    { fill="url(#grad-500)"; }
+    if(p>=700)    { fill="url(#grad-700)"; }
+    if(p>=900)    { fill="url(#grad-900)"; }
+    if(p>=1000)   { fill="url(#grad-1000)"; }
+    if(p>=5000)   { fill="url(#grad-5000)"; }
+    if(p>=10000)  { fill="url(#grad-10000)"; }
+    if(p>=100000) { fill="url(#grad-15000)"; }
+    if(p>=500000) { fill="url(#grad-20000)"; }
+    if(p>=1000000){ fill="url(#grad-25000)"; }
+    if(p>=5000000){ fill="url(#grad-30000)"; }
+    if(p>=10000000){ stroke="#fff"; }
 
-    let layers=1, fill="url(#grad-10)", rTxt="清淨萌芽", stroke="rgba(255,255,255,0.45)", glow="none";
-    
-    if(p>=50)     { fill="url(#grad-50)"; rTxt="粉晶初綻"; }
-    if(p>=100)    { layers=2; fill="url(#grad-100)"; stroke="rgba(212,175,55,0.55)"; rTxt="聖潔初金"; }
-    if(p>=300)    { fill="url(#grad-300)"; rTxt="琉璃水月"; } 
-    if(p>=500)    { fill="url(#grad-500)"; rTxt="翡翠玉葉"; } 
-    if(p>=700)    { fill="url(#grad-700)"; rTxt="紫檀雲靄"; } 
-    if(p>=900)    { fill="url(#grad-900)"; rTxt="琥珀流光"; } 
-    
-    if(p>=1000)   { fill="url(#grad-1000)"; rTxt="初心幻彩"; } 
-    if(p>=5000)   { fill="url(#grad-5000)"; rTxt="青淨琉璃"; } 
-    if(p>=10000)  { fill="url(#grad-10000)"; rTxt="無染純金"; } 
-    
-    if(p>=100000) { fill="url(#grad-15000)"; rTxt="紫金霞光"; }    
-    if(p>=500000) { fill="url(#grad-20000)"; rTxt="晨曦玉露"; }    
-    if(p>=1000000){ fill="url(#grad-25000)"; rTxt="月魄銀輝"; }    
-    if(p>=5000000){ fill="url(#grad-30000)"; rTxt="玄黃凝脂"; }    
-    if(p>=10000000){ fill="url(#grad-30000)"; stroke="#fff"; rTxt="大圓滿耀金"; glow="drop-shadow(0 0 18px rgba(212,175,55,0.8)) drop-shadow(0 0 40px rgba(212,175,55,0.4))"; }
-
-    rank.innerText = rTxt;
-    box.style.filter = glow;
-
-    // ✨ 注入蓮花自轉 class="lotus-spin"
     let svg = `<svg class="lotus-spin" xmlns="http://www.w3.org/2000/svg" viewBox="-150 -150 300 300" style="width:100%;height:100%;overflow:visible;">`;
 
     for (let l = layers; l > 0; l--) {
@@ -1208,9 +1216,66 @@ function renderLotus(p) {
         svg += `<circle cx="-${cr*.18}" cy="-${cr*.22}" r="${cr*.28}" fill="rgba(255,255,255,0.38)"/>`;
     }
     svg += `</svg>`;
-    box.innerHTML = svg;
+    return svg;
 }
 
+// ── ✨ 升級版蓮花舞台（主蓮花＋歷代蓮花星軌） ──
+function renderLotus(p) {
+    const box  = document.getElementById('lotus-container');
+    const rank = document.getElementById('ui-rank-text');
+    if (p < 10) { box.innerHTML=''; rank.innerText="初發菩提"; box.style.filter="none"; return; }
+
+    // 1. 決定稱號與特效
+    let rTxt="清淨萌芽", glow="none";
+    if(p>=50)     { rTxt="粉晶初綻"; }
+    if(p>=100)    { rTxt="聖潔初金"; }
+    if(p>=300)    { rTxt="琉璃水月"; }
+    if(p>=500)    { rTxt="翡翠玉葉"; }
+    if(p>=700)    { rTxt="紫檀雲靄"; }
+    if(p>=900)    { rTxt="琥珀流光"; }
+    if(p>=1000)   { rTxt="初心幻彩"; }
+    if(p>=5000)   { rTxt="青淨琉璃"; }
+    if(p>=10000)  { rTxt="無染純金"; }
+    if(p>=100000) { rTxt="紫金霞光"; }
+    if(p>=500000) { rTxt="晨曦玉露"; }
+    if(p>=1000000){ rTxt="月魄銀輝"; }
+    if(p>=5000000){ rTxt="玄黃凝脂"; }
+    if(p>=10000000){ rTxt="大圓滿耀金"; glow="drop-shadow(0 0 18px rgba(212,175,55,0.8)) drop-shadow(0 0 40px rgba(212,175,55,0.4))"; }
+
+    rank.innerText = rTxt;
+    box.style.filter = glow;
+
+    // 2. 統整所有已解鎖的歷代蓮花
+    const thresholds = [10, 50, 100, 300, 500, 700, 900, 1000, 5000, 10000, 100000, 500000, 1000000, 5000000, 10000000];
+    let unlockedPts = thresholds.filter(t => p >= t);
+    
+    // 扣除掉目前所在的最高階 (它會當作主蓮花)，剩下的就是過去的解鎖紀錄
+    let pastPts = unlockedPts.slice(0, -1); 
+
+    // 3. 置中安放最高階的主蓮花
+    let html = `<div style="width:100%; height:100%; position:relative; z-index:5;">${buildLotusSVG(p)}</div>`;
+
+    // 4. 如果有過去的蓮花，依圓周率鋪在周圍形成星軌
+    if (pastPts.length > 0) {
+        html += `<div class="past-lotus-wrapper">`;
+        const radius = 120; // ✨ 這裡可以微調公轉軌道的半徑大小
+        
+        pastPts.forEach((pastVal, index) => {
+            // 計算每一朵小蓮花在圓周上的角度與位置
+            const angle = (index / pastPts.length) * Math.PI * 2;
+            const tx = Math.cos(angle) * radius;
+            const ty = Math.sin(angle) * radius;
+            
+            html += `
+            <div class="past-lotus-item" style="transform: translate(-50%, -50%) translate(${tx}px, ${ty}px);">
+                ${buildLotusSVG(pastVal)}
+            </div>`;
+        });
+        html += `</div>`;
+    }
+
+    box.innerHTML = html;
+}
 
 
 // ══════════════════════════════════════════

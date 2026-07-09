@@ -1771,10 +1771,10 @@ body {
     </div>
 
 
-    <div class="modal-overlay" id="offerings-modal">
+     <div class="modal-overlay" id="offerings-modal">
         <div class="modal-box">
-            <div style="color: var(--gold-light); font-size: 1.1rem; letter-spacing: 4px; margin-bottom: 25px; text-shadow: 0 0 15px rgba(212,175,55,0.6); font-weight: bold;">
-                【 十日圓滿 ‧ 廣修供養 】
+            <div id="today-sansen-title" style="color: var(--gold-light); font-size: 1.1rem; letter-spacing: 4px; margin-bottom: 25px; text-shadow: 0 0 15px rgba(212,175,55,0.6); font-weight: bold; text-align: center;">
+                【 恭迎西方三聖 ‧ 頂禮供養護持 】
             </div>
             <div class="modal-altar-table">
                 <div class="vessel-container water-cup"><svg class="svg-content" viewBox="0 0 100 150"><use href="#water-cup-model" /></svg></div>
@@ -1811,16 +1811,8 @@ body {
                 <div class="vessel-container fruit-plate"><svg class="svg-content" viewBox="0 0 100 150"><use href="#fruit-plate-model" /></svg></div>
                 <div class="vessel-container water-cup"><svg class="svg-content" viewBox="0 0 100 150"><use href="#water-cup-model" /></svg></div>
             </div>
-            <div style="color: #a0a0a0; font-size: 0.85rem; line-height: 1.6; letter-spacing: 1px; margin-bottom: 25px; text-align: center;">願以此清淨供養資糧，迴向法界眾生，<br>同生安樂國，得不退轉。</div>
+            <div id="today-sansen-text" style="color: #a0a0a0; font-size: 0.85rem; line-height: 1.6; letter-spacing: 1px; margin-bottom: 25px; text-align: center;">願以此清淨供養資糧，迴向法界眾生，<br>同生安樂國，得不退轉。</div>
             <button class="m-btn-prime" onclick="closeOfferingsModal()">合十收攝</button>
-        </div>
-    </div>
-    <div class="modal-overlay" id="modal">
-        <div class="modal-box" id="modal-box">
-            <div class="m-title" id="m-title"></div>
-            <div class="m-divider" id="m-div"></div>
-            <div class="m-text" id="m-text"></div>
-            <button class="m-btn-prime" id="m-btn" onclick="closeModal()">合十收攝</button>
         </div>
     </div>
 
@@ -1875,14 +1867,7 @@ body {
         }, 500);
     }
 
-    // 🌟 2. 開啟第二彈框 (靜態觀相)
-    function triggerOfferingsModal() {
-        const offeringsModal = document.getElementById('offerings-modal');
-        if (!offeringsModal) return;
-        offeringsModal.style.display = 'flex';
-        void offeringsModal.offsetWidth; 
-        offeringsModal.classList.add('show');
-    }
+
 
     // 🌟 3. 關閉第二彈框，觸發主畫面蓮花座下的真實供養
     function closeOfferingsModal() {
@@ -1920,120 +1905,95 @@ body {
             }, 60000); 
         }
     }
+// =================================================================
+// 🌟 2026-07-09 三聖合璧 ‧ 今日限定 24 小時專屬區塊（明日即復原）
+// =================================================================
 
-
-    // ✨ 海量金粉引擎 (純 CSS，極度輕量自動銷毀)
-    function spawnFlowerRain(totalFlowers = 250) {
-        let container = document.getElementById('gold-powder-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'gold-powder-container';
-            container.style.cssText = 'position:fixed; inset:0; pointer-events:none; z-index:50; overflow:hidden;';
-            document.body.appendChild(container);
-        }
-
-        for (let i = 0; i < totalFlowers; i++) {
-            const powder = document.createElement('div');
-            const size = Math.random() * 3 + 1.5; 
-            const startX = Math.random() * window.innerWidth;
-            const drift = (Math.random() - 0.5) * 250; 
-            const dur = Math.random() * 5 + 4; 
-            const delay = Math.random() * 2.5; 
-
-            powder.style.cssText = `
-                position: absolute; top: -10px; width: ${size}px; height: ${size}px; left: ${startX}px;
-                background: radial-gradient(circle, #fff 0%, #d4af37 50%, transparent 100%);
-                border-radius: 50%; box-shadow: 0 0 10px #d4af37, 0 0 3px #fff; opacity: 0;
-                animation: powder-fall ${dur}s linear ${delay}s forwards;
-            `;
-            powder.style.setProperty('--drift', drift + 'px');
-
-            container.appendChild(powder);
-
-            // 動畫結束自動拔除節點，不留痕跡
-            setTimeout(() => {
-                if (powder.parentNode) powder.remove();
-            }, (dur + delay) * 1000);
-        }
+function handleStreak() {
+    // 確保原本的修持天數邏輯能正常運作
+    if (!db.bowData) db.bowData = { streakCount: 0, lastLoginDate: "", lastRewardStreak: 0 };
+    const now = new Date();
+    const todayStr = now.toDateString(); 
+    if (db.bowData.lastLoginDate !== todayStr) {
+        db.bowData.streakCount++; 
+        db.bowData.lastLoginDate = todayStr;
+    }
+    document.getElementById('streak-text').innerText = `修持：第 ${db.bowData.streakCount || 1} 日`;
+    const bar = document.getElementById('streak-bar');
+    if (bar) {
+        bar.style.width = ((db.bowData.streakCount % 10) * 10) + '%';
+        if (db.bowData.streakCount % 10 === 0 && db.bowData.streakCount > 0) bar.style.width = '100%';
     }
 
-
-    // ✨ 修持邏輯：精準對接 bowData 專屬抽屜，解決資料遺失 Bug
-    function handleStreak() {
-        const now = new Date();
-        const todayStr = now.toDateString(); 
+    // 🌟 今日限定核心：限領一次防重複機制
+    if (!localStorage.getItem('sansen_joined_20260709')) {
         
-        // 🛑 防護：確保 bowData 存在
-        if (!db.bowData) db.bowData = { streakCount: 0, lastLoginDate: "", lastRewardStreak: 0 };
+        // 💧 1. 實質發放法寶（淨瓶 +3）與菩提資糧點數（+300）
+        db.points = (db.points || 0) + 300;
+        if (!db.treasures) db.treasures = { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 };
+        db.treasures.vase = (db.treasures.vase || 0) + 3; 
+        saveDB(); // 儲存至 V15 資料庫
+        
+        // 📝 2. 寫入記憶，防止今天重新整理網頁重複加點
+        localStorage.setItem('sansen_joined_20260709', 'true');
 
-        // 判斷是否為「新的一天」
-        if (db.bowData.lastLoginDate !== todayStr) {
-            db.bowData.streakCount++; 
-            db.bowData.lastLoginDate = todayStr;
+        // 🌟 3. 0.6 秒後，精準對準 ID 填入三聖合璧公告，並開啟彈窗
+        setTimeout(() => {
+            const offeringsModal = document.getElementById('offerings-modal');
+            const titleZone = document.getElementById('today-sansen-title');
+            const textZone = document.getElementById('today-sansen-text');
             
-            // 觸發里程碑判定 (10, 20, 30...) 且 該里程碑尚未領取獎勵
-            if (db.bowData.streakCount % 10 === 0 && db.bowData.lastRewardStreak !== db.bowData.streakCount) {
-                db.points += 100;
-                db.bowData.lastRewardStreak = db.bowData.streakCount; 
-                
-                let title = "十日 ‧ 初發心";
-                if (db.bowData.streakCount >= 100000) title = "無量 ‧ 盡未來際";
-                else if (db.bowData.streakCount >= 10000) title = "萬日 ‧ 不退轉";
-                else if (db.bowData.streakCount >= 1000) title = "千日 ‧ 得三昧";
-                else if (db.bowData.streakCount >= 100) title = "百日 ‧ 恆常念";
-                
-                // 🌟 新增：純淨抓取行者名號邏輯
-let currentName = "行 者";
-if (db.name && db.name.trim() !== "") {
-    currentName = db.name;
-}
-document.getElementById('milestone-name-display').innerText = currentName;
-// 🌟 新增結束
-                
-                // 動態美學：先讓能量棒衝滿，再跳彈框
-                setTimeout(() => {
-                    const bar = document.getElementById('streak-bar');
-                    if (bar) bar.style.width = '100%';
-                    
-                    setTimeout(() => {
-                        document.getElementById('milestone-title').innerText = `【 ${title} 】`;
-                        document.getElementById('milestone-text').innerHTML = `<span style="color:var(--gold-light); font-size: 0.95rem;">「懸繒然燈，散華燒香」</span><br>圓滿 ${db.bowData.streakCount} 日清淨觀相，懸掛莊嚴寶幡。<br>獲 <b style='color:var(--gold-solid)'>+100</b> 資糧匯入主系統。`;
+            // 準確命中 ID，強行將文字蓋上
+            if (titleZone) {
+                titleZone.innerText = "【 恭迎三聖 ‧ 普天同慶 】";
+            }
+            if (textZone) {
+                textZone.innerHTML = "恭迎觀世音菩薩、大勢至菩薩兩尊脅侍金身。<br>西方三聖圓滿具足，法界同歡。<br><br><span style='color:var(--gold-solid); font-weight:bold;'>【 殊勝功德 ‧ 廣植福田 】</span><br>今日至心稱念佛號、誦讀經典、諸惡莫作、眾善奉行，<br>乃至隨喜廣修供養，其功德無量無邊。<br><br><span style='color:#70d6ff; font-weight:bold;'>【 聖誕法禮 ‧ 琉璃甘露 】</span><br>今日登入系統回饋：<b style='color:#70d6ff'>【 琉璃淨瓶 】× 3 瓶</b> 供養尊像，<br>並獲菩提資糧 <b style='color:var(--gold-solid)'>300 點</b>。已自動匯入彌陀淨土主系統。<br>願此清淨功德，同向安樂剎，齊登極樂國。";
+            }
 
-                        
-                        const modal = document.getElementById('milestone-modal');
-                        modal.style.display = 'flex';
-                        void modal.offsetWidth; // 確保瀏覽器反應
-                        modal.classList.add('show');
-                    }, 800);
-                }, 500);
+            if (offeringsModal) {
+                offeringsModal.style.display = 'flex';
+                void offeringsModal.offsetWidth; 
+                offeringsModal.classList.add('show');
                 
-                saveDB();
-                document.getElementById('streak-text').innerText = `修持：第 ${db.bowData.streakCount} 日`;
-                return; // 里程碑日由上面的動畫接手，不執行下方一般更新
+                // 莊嚴漫天金粉花雨
+                spawnFlowerRain(450);
             }
-            saveDB();
-        }
-                // --- 一般日（或當日重複開啟）的 UI 更新 ---
-        document.getElementById('streak-text').innerText = `修持：第 ${db.bowData.streakCount || 1} 日`;
-        const bar = document.getElementById('streak-bar');
-        if (bar) {
-            // 如果當前天數是 10 的倍數（且已領過），能量棒保持 100% 直到關閉彈框或下一天
-            if (db.bowData.streakCount % 10 === 0 && db.bowData.streakCount > 0) {
-                bar.style.width = '100%';
-                
-                // 🌟 當天重複進入道場：直接觸發第二個觀相彈框！
-                setTimeout(() => {
-                    triggerOfferingsModal();
-                }, 600);
-                
-            } else {
-                bar.style.width = ((db.bowData.streakCount % 10) * 10) + '%';
-            }
-        }
+        }, 600);
     }
+}
+
+function spawnFlowerRain(totalFlowers = 450) { 
+    let container = document.getElementById('gold-powder-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'gold-powder-container';
+        container.style.cssText = 'position:fixed; inset:0; pointer-events:none; z-index:50; overflow:hidden;';
+        document.body.appendChild(container);
+    }
+    for (let i = 0; i < totalFlowers; i++) {
+        const powder = document.createElement('div');
+        const size = Math.random() * 4 + 1.5; 
+        const startX = Math.random() * window.innerWidth;
+        const drift = (Math.random() - 0.5) * 300; 
+        const dur = Math.random() * 3 + 2.5; 
+        const delay = Math.random() * 3.5; 
+        powder.style.cssText = `
+            position: absolute; top: -10px; width: ${size}px; height: ${size}px; left: ${startX}px;
+            background: radial-gradient(circle, #fff 20%, #d4af37 60%, transparent 100%);
+            border-radius: 50%; box-shadow: 0 0 12px #d4af37, 0 0 5px #fff; opacity: 0;
+            animation: powder-fall ${dur}s linear ${delay}s forwards;
+            will-change: transform, opacity;
+        `;
+        powder.style.setProperty('--drift', drift + 'px');
+        container.appendChild(powder);
+        setTimeout(() => { if (powder.parentNode) powder.remove(); }, (dur + delay) * 1000);
+    }
+}
+// =================================================================
 
 
-    // 模態框操作函數
+  
     function showModal(title, text, btnText, callback) {
         document.getElementById('m-title').innerHTML = title; 
         document.getElementById('m-text').innerHTML = text;

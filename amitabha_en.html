@@ -71,9 +71,10 @@ body {
         /* ======================================================================= */
 
                 
+         /* 佛尊主體層 */
         #buddha-scene {
             position: absolute; inset: 0; z-index: 10;
-            margin: 0 auto;
+            margin: 0 auto; /* 🌟 加上這一行，讓 iPad 和大螢幕完美置中 */
             display: flex; justify-content: center; align-items: center;
             transform-origin: 50% 80%; 
             transition: transform 4s cubic-bezier(0.25, 1, 0.5, 1);
@@ -84,14 +85,20 @@ body {
             transform: scale(1.35) translateY(5%);
         }
 
-
-              
+            /* 萬丈金光爆發層 */
         #burst-container {
-            position: absolute; inset: 0; /* 🌟 這裡改成 inset: 0; 確保金光也滿版置中 */
+            position: absolute; inset: 0; 
             display: flex; justify-content: center; align-items: center;
             z-index: 5; pointer-events: none;
+            /* 讓整層爆發帶有一點法界震動感 */
+            animation: space-shock 0.5s ease-out forwards;
         }
-
+        @keyframes space-shock {
+            0% { transform: scale(1); }
+            10% { transform: scale(1.03) translate(2px, -2px); }
+            30% { transform: scale(0.98) translate(-1px, 1px); }
+            100% { transform: scale(1) translate(0, 0); }
+        }
         .screen-flash {
             position: absolute; inset: 0; 
             background: radial-gradient(circle at 50% 50%, #fff 0%, #ffdf00 40%, transparent 80%);
@@ -99,14 +106,49 @@ body {
             animation: flash-fade 2.5s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
         }
         @keyframes flash-fade { 0% { opacity: 1; transform: scale(0.8); } 100% { opacity: 0; transform: scale(1.5); } }
-               .gold-ray {
-            position: absolute; width: 3px; height: 100vh;
+        /* 金光線條：數量不變，但加長、加大、動態不對稱 */
+        .gold-ray {
+            position: absolute; 
+            width: 4px; /* 微幅加粗 */
+            height: 150vh; /* 加長，確保射穿螢幕 */
             background: linear-gradient(to top, transparent, #FFD700, #FFFFFF, #FFD700, transparent);
-            box-shadow: 0 0 20px #FFD700, 0 0 10px #FFFFFF;
-            opacity: 0; transform-origin: center;
+            /* 優化陰影範圍，減輕 GPU 壓力，但提高主色亮度 */
+            box-shadow: 0 0 15px #FFD700;
+            opacity: 0; 
+            transform-origin: center center;
+            will-change: transform, opacity;
         }
-        @keyframes ray-burst { 0% { transform: scaleY(0.1) rotate(var(--rot)) translateY(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: scaleY(2) rotate(var(--rot)) translateY(-100vh); opacity: 0; } }
+        @keyframes ray-burst { 
+            0% { transform: scaleY(0.05) rotate(var(--rot)); opacity: 0; } 
+            15% { opacity: 1; transform: scaleY(0.6) rotate(var(--rot)); } 
+            100% { transform: scaleY(2.5) rotate(var(--rot)); opacity: 0; } 
+        }
+/* ✨ 新增：不卡頓的法界粒子擴散（利用硬體加速） */
+.space-particle {
+    position: absolute;
+    width: 80px;
+    height: 50px;
+    background: #fff;
+    border-radius: 70%;
+    box-shadow: 0 0 12px #fff, 0 0 25px var(--gold-light);
+    opacity: 0;
+    pointer-events: none;
+    /* 啟動 GPU 3D 渲染加速 */
+    will-change: transform, opacity;
+}
 
+@keyframes particle-explode {
+    0% {
+        transform: translate(0, 0) scale(0.5);
+        opacity: 1;
+    }
+    100% {
+        /* 利用 JS 傳入隨機角度與極大距離，像星空一樣炸裂開來 */
+        transform: translate(var(--tx), var(--ty)) scale(3);
+        opacity: 0;
+    }
+}
+        
 
         /* Buddha Floating Animation */
         .buddha-breathe {
@@ -2102,21 +2144,46 @@ document.getElementById('milestone-name-display').innerText = currentName;
     } 
     drawW();
 
-    // 🌟 5. 金光爆發與法語動畫引擎 🌟
-    function triggerGoldenBurst() {
+  function triggerGoldenBurst() {
         const container = document.getElementById('burst-container');
         if(!container) return;
         container.innerHTML = '';
+        
+        // 1. 原有的全螢幕閃光
         const flash = document.createElement('div');
         flash.className = 'screen-flash';
         container.appendChild(flash);
+        
+        // 2. 產生 54 條金光與不延遲的法界擴散粒子
         for(let i=0; i<54; i++) {
+            const angle = i * 6.66; // 均勻分散 360 度
+            
+            // 原有的金光
             const ray = document.createElement('div');
             ray.className = 'gold-ray';
-            ray.style.setProperty('--rot', `${i * 6.66}deg`);
+            ray.style.setProperty('--rot', `${angle}deg`);
             ray.style.animation = `ray-burst 2.5s cubic-bezier(0.1, 0.9, 0.2, 1) forwards`;
-            ray.style.animationDelay = `${Math.random() * 0.5}s`;
+            ray.style.animationDelay = `${Math.random() * 0.3}s`;
             container.appendChild(ray);
+            
+            // ✨ 新增：向外高速彈射的星芒粒子（不卡頓）
+            const particle = document.createElement('div');
+            particle.className = 'space-particle';
+            
+            // 計算噴射半徑（向外擴散 80 到 120 螢幕視窗距離）
+            const distance = 80 + Math.random() * 40; 
+            const rad = (angle * Math.PI) / 180;
+            const tx = Math.cos(rad) * distance + "vw";
+            const ty = Math.sin(rad) * distance + "vh";
+            
+            particle.style.setProperty('--tx', tx);
+            particle.style.setProperty('--ty', ty);
+            
+            // 動態給予 1.5 秒到 2.5 秒的隨機爆炸速度
+            particle.style.animation = `particle-explode ${1.5 + Math.random() * 1}s cubic-bezier(0.1, 0.8, 0.3, 1) forwards`;
+            particle.style.animationDelay = `${Math.random() * 0.4}s`;
+            
+            container.appendChild(particle);
         }
     }
 
@@ -2148,14 +2215,14 @@ document.getElementById('milestone-name-display').innerText = currentName;
             btn.classList.add('active');
             
             document.getElementById('buddha-scene').classList.add('bowing');
-            warpSpeed = 15; starScale = 2;
+            // warpSpeed = 15; starScale = 2;
             triggerGoldenBurst();
             
             speakWords("Infinite Light, blessings and peace");
             showBlessing("Infinite Light ‧ Protection & Peace");
             
             setTimeout(() => { 
-                warpSpeed = 0.5; starScale = 1; 
+               // warpSpeed = 0.5; starScale = 1; 
                 document.getElementById('buddha-scene').classList.remove('bowing');
                 btn.classList.remove('active'); 
             }, 3000);

@@ -1556,7 +1556,7 @@ However, when we look at time-travel plots in science fiction, we occasionally f
         id: "2026-07-14-ja-bodhisattva-pureland",
         isNew: true,
         lang: "ja",
-        category: "仏教学", 
+        category: "仏学", 
         title: "【菩薩道の践行】菩提心、一仏乗と仏国浄土の誕生",
         status: "四聖諦 ． 菩提心 ． 五十二位 ． 一仏乗 ． 浄土果報",
         humble: "本稿は、大乗経典の理趣に基づき、解脱道から菩提心への昇華を探求し、菩薩の階位と一仏乗の究竟を明らかにし、さらに諸仏の浄土が因位における無尽の行願と大悲の必然的な果報であることを示します。",

@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#020204">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest_en.json">
+    <title>Maitreya Dharma-Dhatu ‧ Great Compassion and Joy Shrine</title>
+    <style>
+        :root {
+            --bg-deep: #0a0b0d; 
+            --gold-light: #fbeba5; 
+            --gold-solid: #d4af37; 
+            --amber: #ffbf00; 
+        }
+        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; outline: none; }
+
+        html, body { 
+            background-color: var(--bg-deep); 
+            width: 100%; height: 100%; overflow: hidden; touch-action: none;
+        }
+        body { 
+            background: radial-gradient(circle at 50% 45%, #181b22 0%, var(--bg-deep) 100%); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", serif;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; color: #fff;
+            transition: background 2s ease;
+        }
+
+        /* Canvas & Water Ripple */
+        canvas { position: absolute; inset: 0; }
+        #starCanvas { z-index: 1; pointer-events: none; }
+        #waterCanvas { 
+            z-index: 2; mix-blend-mode: screen; opacity: 0.25; pointer-events: none; 
+            transition: opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        
+        body.bowing-active #waterCanvas,
+        body.incense-on #waterCanvas { 
+            opacity: 0 !important; 
+        }
+
+        /* Top Navigation - Amitabha Exit */
+        .nav-top { position: absolute; top: max(20px, env(safe-area-inset-top)); left: 20px; z-index: 1000; }
+        
+        /* Buddha Scene */
+        #buddha-scene {
+            position: absolute; inset: 0; z-index: 10; margin: 0 auto;
+            display: flex; justify-content: center; align-items: center;
+            transform-origin: 50% 75%; transition: transform 4s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none; width: 100%; max-width: 680px; 
+        }
+        #buddha-scene.bowing { transform: scale(1.28) translateY(2%); }
+
+        /* Aura Burst Special Effects */
+        #burst-container { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; z-index: 5; pointer-events: none; }
+        
+        .screen-flash {
+            position: absolute; inset: 0; 
+            background: radial-gradient(circle at 50% 45%, #ffffff 0%, #b9f6ca 45%, #69f0ae 70%, transparent 90%);
+            opacity: 1; pointer-events: none; z-index: 100; mix-blend-mode: screen;
+            animation: flash-fade 2.5s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+        }
+        @keyframes flash-fade { 0% { opacity: 1; transform: scale(0.8); } 100% { opacity: 0; transform: scale(1.5); } }
+
+        .gold-ray {
+            position: absolute; width: 3px; height: 150vh;
+            background: linear-gradient(to top, transparent, #69f0ae, #ffffff, #b9f6ca, transparent);
+            box-shadow: 0 0 15px #b9f6ca, 0 0 5px #ffffff; opacity: 0; transform-origin: center center; will-change: transform, opacity;
+        }
+        @keyframes ray-burst { 
+            0% { transform: scaleY(0.05) rotate(var(--rot)); opacity: 0; } 
+            15% { opacity: 1; transform: scaleY(0.6) rotate(var(--rot)); } 
+            100% { transform: scaleY(2.5) rotate(var(--rot)); opacity: 0; } 
+        }
+
+        .space-particle {
+            position: absolute; width: 60px; height: 40px; background: #ffffff; border-radius: 70%;
+            box-shadow: 0 0 12px #ffffff, 0 0 25px #69f0ae; opacity: 0; pointer-events: none; will-change: transform, opacity;
+        }
+        @keyframes particle-explode {
+            0% { transform: translate(0, 0) scale(0.5); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(2.5); opacity: 0; }
+        }
+
+        /* Bodhisattva Breathing & Floating Animation */
+        .buddha-breathe { width: 100%; height: auto; animation: floating 7s ease-in-out infinite alternate; position: relative; }
+        @keyframes floating {
+            0% { transform: translateY(0px); filter: drop-shadow(0 5px 15px rgba(212,175,55,0.15)); }
+            100% { transform: translateY(-40px); filter: drop-shadow(0 25px 40px rgba(212,175,55,0.35)); }
+        }
+        
+        .halo-pulse { transform-origin: 500px 300px; animation: halo-anim 4s infinite alternate ease-in-out; }
+        @keyframes halo-anim { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.03); opacity: 0.9; } }
+
+        /* Incense Smoke System */
+        #smoke-container { position: absolute; inset: 0; pointer-events: none; z-index: 15; overflow: hidden; }
+        .smoke-fine { position: absolute; width: 6px; height: 50px; background: linear-gradient(to top, rgba(240, 230, 210, 0.25), transparent); border-radius: 3px; filter: blur(4px); opacity: 0; animation: smoke-rise-fine 4.5s cubic-bezier(0.4, 0.1, 0.4, 1) forwards; }
+        @keyframes smoke-rise-fine { 0% { transform: translateY(0) scaleX(1); opacity: 0; } 20% { opacity: 0.5; } 100% { transform: translateY(-45vh) scaleX(2.5) translateX(var(--drift)); opacity: 0; } }
+
+        /* Candle Flicker Animation */
+        .candle-flicker { transform-origin: center bottom; animation: flicker-anim 2.5s ease-in-out infinite alternate; }
+        @keyframes flicker-anim { 0% { transform: scale(0.93) rotate(-1.2deg); opacity: 0.8; } 100% { transform: scale(1.04) rotate(1.2deg); opacity: 1; } }
+
+        /* Bottom Control Panel & Texts */
+        .ritual-container { position: absolute; bottom: max(30px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; width: 100%; z-index: 100; }
+        
+        /* Adjusted letter-spacing for longer English sentences */
+        #blessing-text { height: 25px; margin-bottom: 20px; color: var(--gold-light); font-size: 1.1rem; letter-spacing: 3px; text-shadow: 0 0 20px rgba(255,191,0,0.9), 0 0 10px #fff; opacity: 0; pointer-events: none; white-space: nowrap; }
+        @keyframes float-blessing { 0% { opacity: 0; transform: translateY(15px); } 20% { opacity: 1; transform: translateY(0); } 80% { opacity: 1; transform: translateY(-5px); } 100% { opacity: 0; transform: translateY(-15px); } }
+
+        .ritual-panel { display: flex; gap: 20px; }
+        
+        /* Optimized button size and padding for English words length */
+        .ritual-btn { color: var(--gold-light); font-size: 0.85rem; letter-spacing: 3px; cursor: pointer; transition: all 0.4s; padding: 12px 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(212,175,55,0.35); border-radius: 25px; backdrop-filter: blur(8px); font-weight: bold; text-shadow: 0 0 8px rgba(243,229,171,0.4); text-transform: uppercase; white-space: nowrap; }
+        .ritual-btn:hover, .ritual-btn.active { color: #fff; text-shadow: 0 0 15px var(--gold-light); border-color: rgba(212,175,55,0.85); background: rgba(212,175,55,0.15); box-shadow: 0 0 20px rgba(212,175,55,0.25); }
+        
+        .chant-hint { margin-top: 18px; font-size: 0.8rem; color: rgba(255,255,255,0.6); letter-spacing: 2px; pointer-events: none; font-style: italic; }
+
+        /* Censer & Altar Setup */
+        body.incense-on #censer-group { opacity: 1; transform: translateY(0); }
+        #censer-group { opacity: 0; transform: translateY(15px); transition: all 1.2s cubic-bezier(0.25, 1, 0.5, 1); }
+        .incense-glow { animation: glow-pulse 1.5s infinite alternate ease-in-out; }
+        @keyframes glow-pulse { 0% { r: 3px; opacity: 0.7; filter: drop-shadow(0 0 4px #ff4500); } 100% { r: 4.5px; opacity: 1; filter: drop-shadow(0 0 12px #ffaa00); } }
+
+        /* Urna Deformation Setup */
+        #buddha-urna {
+            transition: all 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+            transform-origin: 500px 190px;
+            fill: #ffd700 !important;
+        }
+        .bowing #buddha-urna {
+            r: 10px;
+            filter: drop-shadow(0 0 15px #ffd700) drop-shadow(0 0 35px #ffbf00);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Top Exit - Amitabha Link without jarring borders -->
+<div class="nav-top">
+    <a href="index_en.html" style="text-decoration: none; display: flex; flex-direction: column; align-items: center; background: none; border: none; padding: 0; outline: none;">
+        <!-- Lotus Icon Vector Definition -->
+        <svg class="lotus-icon" viewBox="0 0 100 25" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width: 80px; height: auto; display: block; filter: drop-shadow(0 0 8px rgba(212,175,55,0.3));">
+            <defs>
+              <linearGradient id="g-base" x1="50" y1="25" x2="50" y2="10" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#d4af37" stop-opacity="0.6"/><stop offset="100%" stop-color="#d4af37" stop-opacity="0"/></linearGradient>
+              <linearGradient id="g-outer" x1="50" y1="25" x2="50" y2="12" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3a2500" stop-opacity="0.55"/><stop offset="55%" stop-color="#8a6518" stop-opacity="0.52"/><stop offset="100%" stop-color="#c8a84b" stop-opacity="0.62"/></linearGradient>
+              <linearGradient id="g-mid" x1="50" y1="25" x2="50" y2="6" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5c3d00" stop-opacity="0.6"/><stop offset="48%" stop-color="#b8890f" stop-opacity="0.62"/><stop offset="100%" stop-color="#f0d070" stop-opacity="0.88"/></linearGradient>
+              <linearGradient id="g-inner" x1="50" y1="25" x2="50" y2="2" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#7a5502" stop-opacity="0.6"/><stop offset="42%" stop-color="#d4af37" stop-opacity="0.7"/><stop offset="100%" stop-color="#fffde7" stop-opacity="0.97"/></linearGradient>
+              <linearGradient id="g-center" x1="50" y1="25" x2="50" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#c8920a" stop-opacity="0.85"/><stop offset="32%" stop-color="#f3e5ab" stop-opacity="0.9"/><stop offset="68%" stop-color="#fffde7" stop-opacity="0.95"/><stop offset="100%" stop-color="#ffffff" stop-opacity="1"/></linearGradient>
+              <radialGradient id="g-stamen" cx="50" cy="25" r="6" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fffde7" stop-opacity="0.9"/><stop offset="100%" stop-color="#d4af37" stop-opacity="0"/></radialGradient>
+            </defs>
+            <rect x="0" y="22" width="100" height="3" fill="url(#g-base)"/>
+            <ellipse cx="50" cy="25.8" rx="42" ry="5.5" fill="rgba(212,175,55,0.1)"/>
+            <path d="M 41 25 C 25 25.2 7 21.5 4 15.5 C 15 20.5 33 24.2 50 25 Z" fill="url(#g-outer)" stroke="rgba(200,165,75,0.45)" stroke-width="0.22"/>
+            <path d="M 41 25 C 27 23.5 13 20 5.5 16" fill="none" stroke="rgba(243,229,171,0.5)" stroke-width="0.18" opacity="0.6"/>
+            <path d="M 59 25 C 75 25.2 93 21.5 96 15.5 C 85 20.5 67 24.2 50 25 Z" fill="url(#g-outer)" stroke="rgba(200,165,75,0.45)" stroke-width="0.22"/>
+            <path d="M 59 25 C 73 23.5 87 20 94.5 16" fill="none" stroke="rgba(243,229,171,0.5)" stroke-width="0.18" opacity="0.6"/>
+            <path d="M 47 25 C 37 23.2 22 16.5 23.5 7.5 C 33.5 15 43 22.5 50 25 Z" fill="url(#g-mid)" stroke="rgba(212,175,55,0.55)" stroke-width="0.28"/>
+            <path d="M 47 25 C 37 21.8 26.5 15 25 8.5" fill="none" stroke="rgba(243,229,171,0.6)" stroke-width="0.2" opacity="0.65"/>
+            <path d="M 53 25 C 63 23.2 78 16.5 76.5 7.5 C 66.5 15 57 22.5 50 25 Z" fill="url(#g-mid)" stroke="rgba(212,175,55,0.55)" stroke-width="0.28"/>
+            <path d="M 53 25 C 63 21.8 73.5 15 75 8.5" fill="none" stroke="rgba(243,229,171,0.6)" stroke-width="0.2" opacity="0.65"/>
+            <path d="M 49.2 25 C 45 22.5 37.5 14 40.5 3.8 C 46.5 12.5 48.2 21.5 50 25 Z" fill="url(#g-inner)" stroke="rgba(243,229,171,0.65)" stroke-width="0.3"/>
+            <path d="M 50.8 25 C 55 22.5 62.5 14 59.5 3.8 C 53.5 12.5 51.8 21.5 50 25 Z" fill="url(#g-inner)" stroke="rgba(243,229,171,0.65)" stroke-width="0.3"/>
+            <path d="M 50 25 C 47 19.5 45.8 11.5 50 1 C 54.2 11.5 53 19.5 50 25 Z" fill="url(#g-center)" stroke="#f3e5ab" stroke-width="0.38"/>
+            <circle cx="50" cy="1.3" r="1.5" fill="#ffffff" opacity="0.9"/>
+            <ellipse cx="50" cy="25.3" rx="4" ry="1.4" fill="url(#g-stamen)"/>
+        </svg>
+        <!-- Fine-tuned letter-spacing for English description -->
+        <span style="color: #fbeba5; font-size: 0.65rem; letter-spacing: 2px; margin-top: 6px; opacity: 0.75; text-shadow: 0 0 4px rgba(212,175,55,0.4); font-weight: 300; text-transform: uppercase;">Amitabha</span>
+    </a>
+</div>
+
+    <!-- Active Rendering Layers -->
+    <canvas id="starCanvas"></canvas>
+    <canvas id="waterCanvas"></canvas>
+    <div id="smoke-container"></div>
+    <div id="burst-container"></div>
+
+    <!-- Main Iconography Scene -->
+    <div id="buddha-scene">
+        <div class="buddha-breathe">
+            <svg viewBox="0 0 1000 1350" width="100%" height="100%" style="overflow: visible;">
+                <defs>
+                    <linearGradient id="guanyinGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#b8860b" />
+                        <stop offset="50%" stop-color="#daa520" />
+                        <stop offset="100%" stop-color="#8b6508" />
+                    </linearGradient>
+                    
+                    <radialGradient id="flame-glow" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#fff5cc" stop-opacity="1" />
+                        <stop offset="30%" stop-color="#ffcc00" stop-opacity="0.8" />
+                        <stop offset="70%" stop-color="#ff6600" stop-opacity="0.3" />
+                        <stop offset="100%" stop-color="transparent" stop-opacity="0" />
+                    </radialGradient>
+
+                    <radialGradient id="walnutMalaFill" cx="35%" cy="35%" r="65%">
+                        <stop offset="0%" stop-color="#FFD306" />
+                        <stop offset="50%" stop-color="#642100" />
+                        <stop offset="100%" stop-color="#642100" />
+                    </radialGradient>
+
+                    <linearGradient id="lotusFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#FFDF00" stop-opacity="0.95"/> 
+                        <stop offset="50%" stop-color="#D4AF37" stop-opacity="0.95"/> 
+                        <stop offset="100%" stop-color="#995000" stop-opacity="1"/> 
+                    </linearGradient>
+
+                    <linearGradient id="lotusFillBottom" x1="0%" y1="100%" x2="0%" y2="0%">
+                        <stop offset="0%" stop-color="#FFDF00" stop-opacity="0.95"/> 
+                        <stop offset="50%" stop-color="#D4AF37" stop-opacity="0.95"/> 
+                        <stop offset="100%" stop-color="#995000" stop-opacity="1"/> 
+                    </linearGradient>
+
+                    <linearGradient id="goldLotus" x1="50%" y1="0%" x2="50%" y2="100%">
+                        <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#FFD700;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#D4AF37;stop-opacity:1" />
+                    </linearGradient>
+
+                    <radialGradient id="junctionGlow" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#f3e5ab" stop-opacity="0.5"/>
+                        <stop offset="100%" stop-color="#f3e5ab" stop-opacity="0"/>
+                    </radialGradient>
+
+                    <filter id="halo-soft-blur" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="25" />
+                    </filter>
+
+                    <radialGradient id="haloGlowFill" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#FFF5B8" stop-opacity="1" />
+                        <stop offset="50%" stop-color="#FFD700" stop-opacity="0.6" />
+                        <stop offset="85%" stop-color="#B8860B" stop-opacity="0.2" />
+                        <stop offset="100%" stop-color="transparent" stop-opacity="0" />
+                    </radialGradient>
+
+                    <g id="pure-petal">
+                        <path d="M 500 840 Q 460 830, 440 780 C 440 710, 500 690, 500 690 C 500 690, 560 710, 560 780 Q 540 830, 500 840 Z" />
+                        <path d="M 500 815 Q 475 805, 465 780 C 465 730, 500 715, 500 715 C 500 715, 535 730, 535 780 Q 525 805, 500 815 Z" fill="none" />
+                    </g>
+                </defs>
+
+                <mask id="halo-cutout">
+                    <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                    <g fill="black" stroke="black" stroke-width="4">
+                        <use href="#maitreya-gourd-head" />
+                        <use href="#maitreya-new-ears" />
+                        <use href="#bodhisattva-robe-outline" />
+                        <use href="#maitreya-large-mala" fill-opacity="1" />
+                    </g>
+                </mask>
+
+               <g id="maitreya-scaled-wrapper" transform="scale(0.9) translate(0, 44)" transform-origin="500 550">
+                    <!-- Halo Structure -->
+                    <g class="halo-pulse" mask="url(#halo-cutout)">
+                        <circle cx="500" cy="250" r="200" fill="none" stroke="url(#guanyinGold)" stroke-width="50" />
+                        <circle cx="500" cy="250" r="240" fill="none" stroke="url(#guanyinGold)" stroke-width="2" />
+                    </g>
+                    <circle cx="500" cy="900" r="210" fill="url(#haloGlowFill)" filter="url(#halo-soft-blur)" style="mix-blend-mode: screen;" />
+
+                    <g id="bodhisattva-entity" fill="none" stroke="url(#guanyinGold)">
+                        <!-- Head Gourd Path -->
+                        <path id="maitreya-gourd-head" 
+                              d="M 390 240 C 350 80, 650 80, 610 240 C 635 240, 640 330, 605 340 C 585 365, 550 375, 500 375 C 450 375, 415 365, 395 340 C 360 330, 365 240, 390 240 Z" 
+                              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+
+                        <path id="bodhisattva-robe-outline" 
+                              d="M 360 275 C 280 340, 240 430, 240 430 C 200 520, 180 660, 120 740 C 90 780, 100 855, 205 855 L 795 855 C 900 855, 910 780, 880 740 C 820 660, 800 520, 760 430 C 760 430, 720 340, 640 275" 
+                              stroke-width="2.5" />
+
+                        <g id="buddha-face-features">
+                            <circle id="buddha-urna" cx="500" cy="190" r="4" fill="url(#guanyinGold)" stroke="none" />
+                            <path d="M 415 218 Q 455 185 494 210 L 484 262" stroke-width="1.5" />
+                            <path d="M 585 218 Q 545 185 506 210 L 516 262" stroke-width="1.5" />
+                            <path d="M 482 266 Q 500 278 518 266" stroke-width="1.5" />
+                            <path d="M 443 228 Q 461 224 479 228" stroke-width="1.8" stroke-linecap="round" />
+                            <path d="M 557 228 Q 539 224 521 228" stroke-width="1.8" stroke-linecap="round" />
+                            <path id="nose-wing-left" d="M 480 250 Q 476 256.5 481 263" stroke-width="1.2" stroke-linecap="round" />
+                            <path id="nose-wing-right" d="M 520 250 Q 524 256.5 519 263" stroke-width="1.2" stroke-linecap="round" />
+                            
+                            <!-- Laughing Eyes Group -->
+                            <g class="buddhas-eye-closed">
+                                <path d="M 415 235 Q 450 220 485 232" stroke-width="2.2" stroke-linecap="round" />
+                                <path d="M 415 235 Q 450 212 485 232" stroke-width="2.2" stroke-linecap="round" />
+                                <path d="M 585 235 Q 550 220 515 232" stroke-width="2.2" stroke-linecap="round" />
+                                <path d="M 585 235 Q 550 212 515 232" stroke-width="2.2" stroke-linecap="round" />
+                            </g>
+                            
+                            <!-- Great Compassionate Laughing Mouth -->
+                            <path d="M 414 282 Q 456 264 500 278" fill="none" stroke="url(#guanyinGold)" stroke-width="2" stroke-linecap="round" />
+                            <path d="M 586 282 Q 544 264 500 278" fill="none" stroke="url(#guanyinGold)" stroke-width="2" stroke-linecap="round" />
+                            
+                            <path d="M 412 280 Q 413 281.5 414 282 Q 456 274 500 283 Q 544 274 586 282 Q 587 281.5 588 280" stroke-width="3" />
+                            <path d="M 410 280 C 430 335, 570 335, 590 280" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                            <path id="mouth-dimple-left" d="M 410 280 Q 403 283, 407 290" stroke-width="2" stroke-linecap="round" />
+                            <path id="mouth-dimple-right" d="M 590 280 Q 597 283, 593 290" stroke-width="2" stroke-linecap="round" />
+                            <path d="M 440 308 Q 500 315 560 308" stroke-width="1.8" stroke-linecap="round" />
+                            <path d="M 455 338 Q 500 328 545 338" stroke-width="1.2" stroke-linecap="round" />
+                        </g>
+
+                        <!-- Ear Lobes Group -->
+                        <g id="maitreya-new-ears" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path id="ear-top-left" d="M 390 220 Q 360 215, 360 245 C 360 260, 368 275, 370 295" />
+                            <path id="ear-lobe-left" d="M 370 295 C 350 325, 350 395, 385 395 C 395 395, 395 365, 395 340" />
+                            <path id="ear-top-right" d="M 610 220 Q 640 215, 640 245 C 640 260, 632 275, 630 295" />
+                            <path id="ear-lobe-right" d="M 630 295 C 650 325, 650 395, 615 395 C 605 395, 605 365, 605 340" />
+                        </g>
+
+                        <!-- Chest Details -->
+                        <g id="maitreya-chest" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path id="chest-outline" d="M 362 465 Q 405 530, 500 495 Q 595 530, 638 465" />
+                            <circle id="chest-dot-left" cx="420" cy="455" r="3" fill="url(#guanyinGold)" stroke="none" />
+                            <circle id="chest-dot-right" cx="580" cy="455" r="3" fill="url(#guanyinGold)" stroke="none" />
+                        </g>
+
+                        <!-- Sacred Walnut Mala Beads -->
+                        <g id="maitreya-large-mala" stroke-width="2" stroke-linejoin="round" fill="url(#walnutMalaFill)" fill-opacity="0.95">
+                            <circle cx="347" cy="310" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="337" cy="340" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="333" cy="370" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="333" cy="402" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="335" cy="432" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="340" cy="462" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="347" cy="491" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="358" cy="519" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="378" cy="545" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="402" cy="568" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="430" cy="587" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="463" cy="600" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="500" cy="604" r="18" stroke="url(#guanyinGold)" stroke-width="2.5" fill-opacity="1" />
+                            <circle cx="537" cy="600" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="570" cy="587" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="598" cy="568" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="622" cy="545" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="642" cy="519" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="653" cy="491" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="660" cy="462" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="665" cy="432" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="667" cy="402" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="667" cy="370" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="663" cy="340" r="15" stroke="url(#guanyinGold)" />
+                            <circle cx="653" cy="310" r="15" stroke="url(#guanyinGold)" />
+                        </g>
+
+                        <!-- Belly & Garment Folds -->
+                        <g id="maitreya-belly-lines" stroke-width="2" stroke-linecap="round" fill="none" stroke="url(#guanyinGold)">
+                            <path d="M 320 420 C 300 550, 320 720, 500 720 C 680 720, 700 550, 680 420" />
+                            <path d="M 315 320 C 275 490, 305 730, 500 730 C 695 730, 725 490, 685 320" stroke-width="2" />
+                        </g>
+
+                        <path d="M 240 430 Q 180 560, 240 680" stroke-width="2" />
+                        <path d="M 760 430 Q 820 560, 760 680" stroke-width="2" />
+                        <path d="M 210 500 Q 250 640, 280 700" stroke-width="2" />
+                        <path d="M 790 500 Q 750 640, 720 700" stroke-width="2" />
+
+                        <!-- Mudra Structure -->
+                        <g transform="translate(500, 610) scale(0.7) translate(-100, -155)">
+                            <g id="left-hand">
+                                <path d="M -4.0 243 C 2.0 250, 10.0 253, 16.3 255" stroke-width="2.5" />
+                                <path d="M -1.0 278 C 5.0 286, 26.0 289, 45.3 290" stroke-width="2.5" />
+                                <path d="M 7.0 245 C 4.0 259, 4.0 273, 7.0 287" stroke-width="1.5" />
+                                <circle cx="6.0" cy="250" r="4.0" fill="url(#guanyinGold)" stroke="none" />
+                                <circle cx="4.5" cy="259" r="4.0" fill="url(#guanyinGold)" stroke="none" />
+                                <circle cx="4.5" cy="269" r="4.0" fill="url(#guanyinGold)" stroke="none" />
+                                <circle cx="6.0" cy="278" r="4.0" fill="url(#guanyinGold)" stroke="none" />
+                                <path d="M 16.3 255 C 20.0 236.0, 55.0 225.0, 96.0 225.0 C 98.5 229.0, 91.5 241.0, 86.3 243.0 L 66.3 246.0 C 40.0 250.0, 50.0 285.0, 112.0 278.0" stroke-width="2.5" />
+                                <path d="M 92.5 226.0 C 96.0 227.0, 96.0 230.0, 91.5 231.0 C 87.5 228.0, 84.0 225.1, 82.0 225.1" stroke-width="2.0" />
+                                <path d="M 26.3 265 C 26.3 280, 59.3 295, 100.7 295" stroke-width="2.5" />
+                            </g>
+                            <path d="M 65 210 Q 100 225 135 210" stroke="url(#guanyinGold)" stroke-width="2" stroke-linecap="round" fill="none" />
+                            <path d="M -35 210 Q 100 235 235 210" stroke="url(#guanyinGold)" stroke-width="2" stroke-linecap="round" fill="none" />
+                            <g id="right-hand">
+                                <path d="M 204.0 243 C 198.0 250, 190.0 253, 183.7 255" stroke-width="2.5" />
+                                <path d="M 201.0 278 C 195.0 286, 174.0 289, 154.7 290" stroke-width="2.5" />
+                                <path d="M 193.0 245 C 196.0 259, 196.0 273, 193.0 287" stroke-width="1.5" />
+                                <circle cx="194.0" cy="250" r="4.0" fill="url(#guanyinGold)" stroke="none" />
+                                <circle cx="195.5" cy="259" r="4.0" fill="url(#guanyinGold)" stroke="none" />
+                                <circle cx="195.5" cy="269" r="4.0" fill="url(#guanyinGold)" stroke="none" />
+                                <circle cx="194.0" cy="278" r="4.0" fill="url(#guanyinGold)" stroke="none" />
+                                <path d="M 183.7 255 C 180.0 236.0, 145.0 225.0, 104.0 225.0 C 101.5 229.0, 108.5 241.0, 113.7 243.0 L 133.7 246.0 C 160.0 255.0, 125.0 285.0, 88.0 278.0" stroke-width="2.5" />
+                                <path d="M 107.5 226.0 C 104.0 227.0, 104.0 230.0, 108.5 231.0 C 112.5 228.0, 116.0 225.1, 118.0 225.1" stroke-width="2.0" />
+                                <path d="M 173.7 265 C 173.7 280, 140.7 295, 99.3 295" stroke-width="2.5" />
+                            </g>
+                        </g>
+
+                        <!-- Padmasana Lotus Position -->
+                        <g id="maitreya-feet-group">
+                            <g class="buddha-foot-line-right" transform="translate(570, 730) scale(0.8) rotate(84) translate(-100, -180)">
+                                <path d="M 100 25 C 103 18, 107 20, 108 30 L 138 165 C 145 190, 160 230, 190 245 L 178 260 Q 172 263 168 265 L 115 235 Q 103 232 100 225 L 100 25 Z" fill="url(#guanyinGold)" fill-opacity="0.12" />
+                                <path d="M 100 25 C 103 18, 107 20, 108 30 L 138 165 C 145 190, 160 230, 190 245 L 178 260 Q 172 263 168 265" fill="none" stroke="url(#guanyinGold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M 138 165 C 145 190, 160 230, 190 245" fill="none" stroke="url(#guanyinGold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M 104 23 C 102 25, 102 32, 106 34" stroke="url(#guanyinGold)" stroke-width="1" fill="none" />
+                                <path d="M 100 25 L 100 225 Q 103 232 115 235" stroke="url(#guanyinGold)" stroke-width="1.5" stroke-linecap="round" fill="none" />
+                            </g>
+                            <g class="buddha-foot-line-left" transform="translate(430, 735) scale(-0.85, 0.9) rotate(84) translate(-100, -180)">
+                                <path d="M 100 25 C 103 18, 107 20, 108 30 L 111 60 C 112 70, 115 80, 120 90 L 112 235 Q 103 232 100 225 L 100 25 Z" fill="url(#guanyinGold)" fill-opacity="0.12" />
+                                <path d="M 100 25 C 103 18, 107 20, 108 30 L 111 60" fill="none" stroke="url(#guanyinGold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M 111 60 C 112 70, 115 80, 120 90" fill="none" stroke="url(#guanyinGold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M 104 23 C 102 25, 102 32, 106 34" stroke="url(#guanyinGold)" stroke-width="1" fill="none" />
+                                <path d="M 100 25 L 100 225 Q 103 232 112 235" stroke="url(#guanyinGold)" stroke-width="1.5" stroke-linecap="round" fill="none" />
+                            </g>
+                            <path d="M 140 720 Q 220 680 280 720" fill="none" stroke="url(#guanyinGold)" stroke-width="2" stroke-linecap="round" />
+                            <path d="M 860 720 Q 780 680 720 720" fill="none" stroke="url(#guanyinGold)" stroke-width="2" stroke-linecap="round" />
+                            <path d="M 283 717 Q 293 732 318 740 Q 360 745 400 748 L 468 751 L 512 753 C 516 772, 508 792, 490 827" fill="none" stroke="url(#guanyinGold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </g>
+                    </g> 
+
+                    <!-- Lotus Throne Pedestal Layer -->
+                    <g id="maitreya-lotus-seat" transform="translate(0, 100)">
+                        <ellipse cx="500" cy="815" rx="150" ry="40" fill="url(#junctionGlow)" style="mix-blend-mode: screen;" />
+                        <g stroke="url(#goldLotus)" stroke-width="1.5" stroke-linejoin="round">
+                            <g transform="scale(0.85, -0.75) translate(0, 130)" transform-origin="500 840" fill="url(#lotusFillBottom)">
+                                <use href="#pure-petal" transform="translate(-260, 10) rotate(-38, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(260, 10) rotate(38, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(-205, -10) rotate(-30, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(205, -10) rotate(30, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(-145, -20) rotate(-18, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(145, -20) rotate(18, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(-75, -30) rotate(-7, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(75, -30) rotate(7, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(0, -45) rotate(0, 500, 840)" />
+                            </g>
+
+                            <g transform="translate(0, 20)" fill="url(#lotusFill)">
+                                <use href="#pure-petal" transform="translate(-310, -120) rotate(-45, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(310, -120) rotate(45, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(-260, -100) rotate(-40, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(260, -100) rotate(40, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(-205, -65) rotate(-35, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(205, -65) rotate(35, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(-145, -30) rotate(-20, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(145, -30) rotate(18, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(-75, -23) rotate(-8, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(75, -23) rotate(8, 500, 840)" />
+                                <use href="#pure-petal" transform="translate(0, -23)" />
+                            </g>
+                        </g>
+                    </g>
+                </g>
+          
+                <!-- Incense Vessel & Candlesticks Set -->
+                <g id="censer-group" transform="translate(0, -120)">
+                    <line id="stick-left" x1="475" y1="1140" x2="480" y2="1270" stroke="#4a2e1b" stroke-width="6" stroke-linecap="round"/>
+                    <line id="stick-center" x1="500" y1="1125" x2="500" y2="1270" stroke="#4a2e1b" stroke-width="6" stroke-linecap="round"/>
+                    <line id="stick-right" x1="525" y1="1140" x2="520" y2="1270" stroke="#4a2e1b" stroke-width="6" stroke-linecap="round"/>
+                    
+                    <circle id="glow-left" cx="475" cy="1140" r="4" fill="#ff4500" class="incense-glow" />
+                    <circle id="glow-center" cx="500" cy="1125" r="4" fill="#ff4500" class="incense-glow" />
+                    <circle id="glow-right" cx="525" cy="1140" r="4" fill="#ff4500" class="incense-glow" />
+                    
+                    <path d="M 455 1275 C 430 1250, 435 1300, 460 1295" fill="none" stroke="url(#guanyinGold)" stroke-width="4" stroke-linecap="round" />
+                    <path d="M 545 1275 C 570 1250, 565 1300, 540 1295" fill="none" stroke="url(#guanyinGold)" stroke-width="4" stroke-linecap="round" />
+                    
+                    <path d="M 455 1270 C 455 1320, 545 1320, 545 1270 Z" fill="#0d1117" stroke="url(#guanyinGold)" stroke-width="2" />
+                    <ellipse cx="500" cy="1270" rx="45" ry="12" fill="#0b080a" stroke="url(#guanyinGold)" stroke-width="2" />
+                    <g id="ash-layer">
+                        <ellipse cx="500" cy="1270" rx="35" ry="7" fill="#333" />
+                    </g>
+                    
+                    <path d="M 475 1305 L 470 1325" stroke="url(#guanyinGold)" stroke-width="5" stroke-linecap="round" />
+                    <path d="M 525 1305 L 530 1325" stroke="url(#guanyinGold)" stroke-width="5" stroke-linecap="round" />
+                    <path d="M 500 1310 L 500 1330" stroke="url(#guanyinGold)" stroke-width="5" stroke-linecap="round" />
+                    
+                    <!-- Left Altar Candle -->
+                    <g id="candle-left-group">
+                        <path d="M 366 1280 C 366 1295, 358 1302, 358 1305 L 382 1305 C 382 1302, 374 1295, 374 1280 Z" fill="url(#guanyinGold)" stroke="rgba(212,175,55,0.5)" stroke-width="1"/>
+                        <ellipse cx="370" cy="1280" rx="6" ry="1.5" fill="url(#guanyinGold)"/>
+                        <ellipse cx="370" cy="1305" rx="12" ry="3" fill="#0b080a" stroke="rgba(212,175,55,0.8)" stroke-width="1.5"/>
+                        <rect id="candle-body-left" x="365" y="1220" width="10" height="60" rx="3" fill="url(#guanyinGold)" stroke="rgba(212,175,55,0.5)" stroke-width="1.5" opacity="0.85"/>
+                        <line id="candle-wick-left" x1="370" y1="1215" x2="370" y2="1225" stroke="#4a2e1b" stroke-width="2"/>
+                        <g id="flame-move-left">
+                            <g id="flame-group-left" class="candle-flicker" style="transform-origin: 370px 1215px;">
+                                <circle cx="370" cy="1205" r="18" fill="url(#flame-glow)" style="mix-blend-mode: screen;"/>
+                                <path d="M 370 1192 Q 375 1210 370 1215 Q 365 1210 370 1192 Z" fill="#FFFFFF" style="filter: drop-shadow(0 0 4px #FFD700);"/>
+                            </g>
+                        </g>
+                    </g>
+
+                    <!-- Right Altar Candle -->
+                    <g id="candle-right-group">
+                        <path d="M 626 1280 C 626 1295, 618 1302, 618 1305 L 642 1305 C 642 1302, 634 1295, 634 1280 Z" fill="url(#guanyinGold)" stroke="rgba(212,175,55,0.5)" stroke-width="1"/>
+                        <ellipse cx="630" cy="1280" rx="6" ry="1.5" fill="url(#guanyinGold)"/>
+                        <ellipse cx="630" cy="1305" rx="12" ry="3" fill="#0b080a" stroke="rgba(212,175,55,0.8)" stroke-width="1.5"/>
+                        <rect id="candle-body-right" x="625" y="1220" width="10" height="60" rx="3" fill="url(#guanyinGold)" stroke="rgba(212,175,55,0.5)" stroke-width="1.5" opacity="0.85"/>
+                        <line id="candle-wick-right" x1="630" y1="1215" x2="630" y2="1225" stroke="#4a2e1b" stroke-width="2"/>
+                        <g id="flame-move-right">
+                            <g id="flame-group-right" class="candle-flicker" style="transform-origin: 630px 1215px;">
+                                <circle cx="630" cy="1205" r="18" fill="url(#flame-glow)" style="mix-blend-mode: screen;"/>
+                                <path d="M 630 1192 Q 635 1210 630 1215 Q 625 1210 630 1192 Z" fill="#FFFFFF" style="filter: drop-shadow(0 0 4px #FFD700);"/>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </svg>
+        </div>
+    </div>
+                
+    <!-- Bottom Dashboard UI -->
+    <div class="ritual-container">
+        <div id="blessing-text"></div>
+        <div class="ritual-panel">
+            <div id="btn-bow" class="ritual-btn" onclick="toggleAction('bow')">Prostrate</div>
+            <div id="btn-incense" class="ritual-btn" onclick="toggleIncense()">Offer Incense</div>
+        </div>
+        <div class="chant-hint">Namo Coming Maitreya Buddha</div>
+    </div>
+
+    <script>
+        // English Speech Synthesis
+        function speakWords(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'en-US'; msg.rate = 0.80; msg.pitch = 0.85; 
+            window.speechSynthesis.speak(msg);
+        }
+
+        function showBlessing(text) {
+            const el = document.getElementById('blessing-text');
+            if(!el) return;
+            el.innerText = text;
+            el.style.animation = 'none';
+            void el.offsetWidth;
+            el.style.animation = 'float-blessing 3.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards';
+        }
+
+        // Prostration Core Action
+        function toggleAction(action) {
+            const btn = document.getElementById(`btn-${action}`);
+            if (!btn || btn.classList.contains('active')) return;
+
+            btn.classList.add('active');
+            document.body.classList.add('bowing-active');
+            document.getElementById('buddha-scene').classList.add('bowing');
+            
+            triggerGoldenBurst();
+            speakWords("With a joyful heart, I revere Maitreya Buddha.");
+            showBlessing("Joyful Maitreya ‧ The Future Dragon Flower Assembly");
+            
+            setTimeout(() => { 
+                document.getElementById('buddha-scene').classList.remove('bowing');
+                btn.classList.remove('active'); 
+                document.body.classList.remove('bowing-active');
+            }, 3000);
+        }
+
+        // Aura Pale-Green Burst Effect
+        function triggerGoldenBurst() {
+            const container = document.getElementById('burst-container');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            const flash = document.createElement('div');
+            flash.className = 'screen-flash';
+            container.appendChild(flash);
+            
+            for(let i=0; i<48; i++) {
+                const angle = i * 7.5;
+                const ray = document.createElement('div');
+                ray.className = 'gold-ray';
+                ray.style.setProperty('--rot', `${angle}deg`);
+                ray.style.animation = `ray-burst 2.5s cubic-bezier(0.1, 0.9, 0.2, 1) forwards`;
+                container.appendChild(ray);
+                
+                const particle = document.createElement('div');
+                particle.className = 'space-particle';
+                const distance = 70 + Math.random() * 50; 
+                const rad = (angle * Math.PI) / 180;
+                const tx = Math.cos(rad) * distance + "vw";
+                const ty = Math.sin(rad) * distance + "vh";
+                particle.style.setProperty('--tx', tx);
+                particle.style.setProperty('--ty', ty);
+                particle.style.animation = `particle-explode ${1.4 + Math.random() * 1}s cubic-bezier(0.1, 0.8, 0.3, 1) forwards`;
+                container.appendChild(particle);
+            }
+        }
+
+        // Incense Mechanics & Linear Timeline Timer
+        let incenseTimer, smokeTimer, incenseProgress = 0;
+
+        function toggleIncense() {
+            const btn = document.getElementById('btn-incense');
+            const isActive = document.body.classList.contains('incense-on');
+            
+            if (!isActive) {
+                document.body.classList.add('incense-on');
+                btn.classList.add('active');
+                speakWords("Repent sincerely to eradicate cyclic suffering.");
+                showBlessing("Beholding Maitreya ‧ Pay Homage with Infinite Joy");
+                
+                incenseProgress = 0;
+                createThreeSmoke(); 
+                
+                let startTime = Date.now();
+                function burn() {
+                    let elapsed = (Date.now() - startTime) / 1000;
+                    incenseProgress = Math.min(elapsed / 60, 1); 
+                    
+                    document.getElementById('stick-center').setAttribute('y1', 1125 + (145 * incenseProgress));
+                    document.getElementById('glow-center').setAttribute('cy', 1125 + (145 * incenseProgress));
+                    
+                    document.getElementById('stick-left').setAttribute('y1', 1140 + (130 * incenseProgress));
+                    document.getElementById('glow-left').setAttribute('cy', 1140 + (130 * incenseProgress));
+                    
+                    document.getElementById('stick-right').setAttribute('y1', 1140 + (130 * incenseProgress));
+                    document.getElementById('glow-right').setAttribute('cy', 1140 + (130 * incenseProgress));
+                    
+                    let meltAmount = 55 * incenseProgress;
+                    ['left', 'right'].forEach(side => {
+                        const candleBody = document.getElementById(`candle-body-${side}`);
+                        const candleWick = document.getElementById(`candle-wick-${side}`);
+                        const flameMove = document.getElementById(`flame-move-${side}`);
+                        
+                        if(candleBody) {
+                            candleBody.setAttribute('y', 1220 + meltAmount);
+                            candleBody.setAttribute('height', 55 - meltAmount);
+                        }
+                        if(candleWick) {
+                            candleWick.setAttribute('y1', 1215 + meltAmount);
+                            candleWick.setAttribute('y2', 1220 + meltAmount);
+                        }
+                        if(flameMove) {
+                            flameMove.style.transform = `translateY(${meltAmount}px)`;
+                        }
+                    });
+                    
+                    if (incenseProgress < 1 && document.body.classList.contains('incense-on')) {
+                        incenseTimer = requestAnimationFrame(burn);
+                    } else if (incenseProgress >= 1 && document.body.classList.contains('incense-on')) {
+                        resetIncense();
+                    }
+                }
+                incenseTimer = requestAnimationFrame(burn);
+            } else {
+                resetIncense();
+            }
+        }
+
+        function resetIncense() {
+            cancelAnimationFrame(incenseTimer);
+            clearTimeout(smokeTimer);
+            document.body.classList.remove('incense-on');
+            document.getElementById('btn-incense').classList.remove('active');
+            setTimeout(restoreIncensePosition, 1200);
+        }
+
+        function restoreIncensePosition() {
+            if(!document.body.classList.contains('incense-on')) {
+                document.getElementById('stick-center').setAttribute('y1', '1125');
+                document.getElementById('glow-center').setAttribute('cy', '1125');
+                document.getElementById('stick-left').setAttribute('y1', '1140');
+                document.getElementById('glow-left').setAttribute('cy', '1140');
+                document.getElementById('stick-right').setAttribute('y1', '1140');
+                document.getElementById('glow-right').setAttribute('cy', '1140');
+                
+                ['left', 'right'].forEach(side => {
+                    const candleBody = document.getElementById(`candle-body-${side}`);
+                    const candleWick = document.getElementById(`candle-wick-${side}`);
+                    const flameMove = document.getElementById(`flame-move-${side}`);
+                    
+                    if(candleBody) {
+                        candleBody.setAttribute('y', '1220');
+                        candleBody.setAttribute('height', '55');
+                    }
+                    if(candleWick) {
+                        candleWick.setAttribute('y1', '1215');
+                        candleWick.setAttribute('y2', '1220');
+                    }
+                    if(flameMove) {
+                        flameMove.style.transform = `translateY(0px)`;
+                    }
+                });
+            }
+        }
+
+        function createThreeSmoke() {
+            if (!document.body.classList.contains('incense-on') || incenseProgress >= 1) return;
+            const container = document.getElementById('smoke-container');
+            if (!container) return;
+            
+            const targets = ['glow-left', 'glow-center', 'glow-right'];
+            
+            targets.forEach(id => {
+                const glow = document.getElementById(id);
+                if (!glow) return;
+                const rect = glow.getBoundingClientRect(); 
+                
+                const puff = document.createElement('div');
+                puff.className = 'smoke-fine';
+                puff.style.setProperty('--drift', `${(Math.random() - 0.5) * 60}px`);
+                puff.style.left = `${rect.left + rect.width / 2 - 3}px`; 
+                puff.style.top = `${rect.top - 40}px`; 
+                
+                container.appendChild(puff);
+                setTimeout(() => puff.remove(), 4500);
+            });
+            
+            smokeTimer = setTimeout(createThreeSmoke, 450);
+        }
+
+        // Cosmos Background Stars Renderer
+        const canvas = document.getElementById('starCanvas'), ctx = canvas.getContext('2d'); 
+        let width, height, stars = []; 
+        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; } 
+        window.addEventListener('resize', resize); resize(); 
+
+        for (let i = 0; i < 300; i++) { 
+            stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, s: Math.random() * 1.8 }); 
+        } 
+        function renderStars() { 
+            ctx.fillStyle = 'rgba(10, 11, 13, 0.4)'; ctx.fillRect(0, 0, width, height); 
+            stars.forEach(s => { 
+                s.z -= 0.3; if (s.z <= 0) s.z = 2000; 
+                let sc = 400 / (400 + s.z); 
+                ctx.beginPath(); ctx.arc((width / 2) + s.x * sc, (height / 2) + s.y * sc, s.s * sc, 0, Math.PI * 2); 
+                ctx.fillStyle = '#fbeba5'; ctx.fill(); 
+            }); 
+            requestAnimationFrame(renderStars); 
+        } 
+        renderStars();
+    </script>
+</body>
+</html>

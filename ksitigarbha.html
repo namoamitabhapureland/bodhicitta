@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#020204">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <title>地藏法界 ‧ 願海九華瞻禮道場</title>
+    <style>
+        :root {
+            --bg-deep: #0a0b0d; 
+            --gold-light: #fbeba5; 
+            --gold-solid: #d4af37; 
+            --amber: #ffbf00; 
+        }
+        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; outline: none; }
+
+        html, body { 
+            background-color: var(--bg-deep); 
+            width: 100%; height: 100%; overflow: hidden; touch-action: none;
+        }
+        body { 
+            background: radial-gradient(circle at 50% 45%, #181b22 0%, var(--bg-deep) 100%); 
+            font-family: "PingFang TC", "Microsoft JhengHei", serif;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; color: #fff;
+            transition: background 2s ease;
+        }
+
+        /* 背景畫布與靜謐業海水波 */
+        canvas { position: absolute; inset: 0; }
+        #starCanvas { z-index: 1; pointer-events: none; }
+        #waterCanvas { 
+            z-index: 2; mix-blend-mode: screen; opacity: 0.25; pointer-events: none; 
+            transition: opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        
+        body.bowing-active #waterCanvas,
+        body.incense-on #waterCanvas { 
+            opacity: 0 !important; 
+        }
+
+        /* 頂部導航與護持資訊 */
+        .nav-top { position: absolute; top: max(20px, env(safe-area-inset-top)); left: 15px; z-index: 1000; display: flex; gap: 6px; }
+        .nav-btn { 
+            color: var(--gold-light); display: flex; align-items: center; gap: 6px; 
+            cursor: pointer; background: rgba(0,0,0,0.5); padding: 6px 12px; 
+            border-radius: 20px; border: 1px solid rgba(212,175,55,0.2); 
+            backdrop-filter: blur(5px); font-size: 0.75rem; letter-spacing: 1px; 
+            transition: 0.4s; opacity: 0.8; white-space: nowrap;
+        }
+        .nav-btn:hover { opacity: 1; border-color: var(--gold-solid); }
+
+        /* 聖像主體層 */
+        #buddha-scene {
+            position: absolute; inset: 0; z-index: 10; margin: 0 auto;
+            display: flex; justify-content: center; align-items: center;
+            transform-origin: 50% 75%; transition: transform 4s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none; width: 100%; max-width: 680px; 
+        }
+        #buddha-scene.bowing { transform: scale(1.28) translateY(2%); }
+
+        /* 萬丈白毫願力地藏紫光爆發層 */
+    #burst-container { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; z-index: 5; pointer-events: none; }
+    
+    .screen-flash {
+        position: absolute; inset: 0; 
+        /* 將原琥珀金改為神聖紫光 (#b388ff 聖紫、#7c4dff 梵紫) */
+        background: radial-gradient(circle at 50% 45%, #ffffff 0%, #b388ff 45%, #7c4dff 70%, transparent 90%);
+        opacity: 1; pointer-events: none; z-index: 100; mix-blend-mode: screen;
+        animation: flash-fade 2.5s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+    }
+    @keyframes flash-fade { 0% { opacity: 1; transform: scale(0.8); } 100% { opacity: 0; transform: scale(1.5); } }
+
+    .gold-ray {
+        position: absolute; width: 3px; height: 150vh;
+        /* 光束核心維持純白，兩側延伸為清淨紫光 */
+        background: linear-gradient(to top, transparent, #7c4dff, #ffffff, #b388ff, transparent);
+        box-shadow: 0 0 15px #b388ff, 0 0 5px #ffffff; opacity: 0; transform-origin: center center; will-change: transform, opacity;
+    }
+    @keyframes ray-burst { 
+        0% { transform: scaleY(0.05) rotate(var(--rot)); opacity: 0; } 
+        15% { opacity: 1; transform: scaleY(0.6) rotate(var(--rot)); } 
+        100% { transform: scaleY(2.5) rotate(var(--rot)); opacity: 0; } 
+    }
+
+    .space-particle {
+        position: absolute; width: 60px; height: 40px; background: #ffffff; border-radius: 70%;
+        /* 粒子邊緣的外發光改為琉璃紫光 */
+        box-shadow: 0 0 12px #ffffff, 0 0 25px #e040fb; opacity: 0; pointer-events: none; will-change: transform, opacity;
+    }
+    @keyframes particle-explode {
+        0% { transform: translate(0, 0) scale(0.5); opacity: 1; }
+        100% { transform: translate(var(--tx), var(--ty)) scale(2.5); opacity: 0; }
+    }
+
+        
+        /* 菩薩優雅凌空飄浮層 */
+        .buddha-breathe { width: 100%; height: auto; animation: floating 5s ease-in-out infinite alternate; position: relative; }
+        @keyframes floating {
+            0% { transform: translateY(-10px); filter: drop-shadow(0 5px 15px rgba(212,175,55,0.1.5)); }
+            100% { transform: translateY(-50px); filter: drop-shadow(0 25px 40px rgba(212,175,55,0.35)); }
+        }
+
+        /* 光相呼吸 */
+        .halo-pulse { transform-origin: 500px 300px; animation: halo-anim 4s infinite alternate ease-in-out; }
+        @keyframes halo-anim { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.03); opacity: 0.9; } }
+
+        /* 香煙霧系統 */
+        #smoke-container { position: absolute; inset: 0; pointer-events: none; z-index: 15; overflow: hidden; }
+        .smoke-fine { position: absolute; width: 6px; height: 50px; background: linear-gradient(to top, rgba(240, 230, 210, 0.25), transparent); border-radius: 3px; filter: blur(4px); opacity: 0; animation: smoke-rise-fine 4.5s cubic-bezier(0.4, 0.1, 0.4, 1) forwards; }
+        @keyframes smoke-rise-fine { 0% { transform: translateY(0) scaleX(1); opacity: 0; } 20% { opacity: 0.5; } 100% { transform: translateY(-45vh) scaleX(2.5) translateX(var(--drift)); opacity: 0; } }
+
+        /* 🕯️ 燭火微動態 */
+        .candle-flicker { transform-origin: center bottom; animation: flicker-anim 2.5s ease-in-out infinite alternate; }
+        @keyframes flicker-anim { 0% { transform: scale(0.93) rotate(-1.2deg); opacity: 0.8; } 100% { transform: scale(1.04) rotate(1.2deg); opacity: 1; } }
+
+        /* 底部控制面板 */
+        .ritual-container { position: absolute; bottom: max(30px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; width: 100%; z-index: 100; }
+        #blessing-text { height: 25px; margin-bottom: 20px; color: var(--gold-light); font-size: 1.1rem; letter-spacing: 8px; text-shadow: 0 0 20px rgba(255,191,0,0.9), 0 0 10px #fff; opacity: 0; pointer-events: none; white-space: nowrap; }
+        @keyframes float-blessing { 0% { opacity: 0; transform: translateY(15px); } 20% { opacity: 1; transform: translateY(0); } 80% { opacity: 1; transform: translateY(-5px); } 100% { opacity: 0; transform: translateY(-15px); } }
+
+        .ritual-panel { display: flex; gap: 40px; }
+        .ritual-btn { color: var(--gold-light); font-size: 1rem; letter-spacing: 6px; cursor: pointer; transition: all 0.4s; padding: 12px 24px; background: rgba(255,255,255,0.03); border: 1px solid rgba(212,175,55,0.35); border-radius: 25px; backdrop-filter: blur(8px); font-weight: bold; text-shadow: 0 0 8px rgba(243,229,171,0.4); }
+        .ritual-btn:hover, .ritual-btn.active { color: #fff; text-shadow: 0 0 15px var(--gold-light); border-color: rgba(212,175,55,0.85); background: rgba(212,175,55,0.15); box-shadow: 0 0 20px rgba(212,175,55,0.25); }
+        .chant-hint { margin-top: 18px; font-size: 0.8rem; color: rgba(255,255,255,0.6); letter-spacing: 4px; pointer-events: none; }
+
+        /* 供桌與香爐控制 */
+        body.incense-on #censer-group { opacity: 1; transform: translateY(0); }
+        #censer-group { opacity: 0; transform: translateY(15px); transition: all 1.2s cubic-bezier(0.25, 1, 0.5, 1); }
+        .incense-glow { animation: glow-pulse 1.5s infinite alternate ease-in-out; }
+        @keyframes glow-pulse { 0% { r: 3px; opacity: 0.7; filter: drop-shadow(0 0 4px #ff4500); } 100% { r: 4.5px; opacity: 1; filter: drop-shadow(0 0 12px #ffaa00); } }
+
+        /* 觀想導引彈窗 */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); backdrop-filter: blur(12px); z-index: 10000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.5s ease; pointer-events: none; }
+        .modal-overlay.show { display: flex !important; opacity: 1 !important; pointer-events: auto !important; }
+        .modal-box { width: 85%; max-width: 350px; max-height: 80vh; overflow-y: auto; background: linear-gradient(135deg, #141822, #07090e); border: 1px solid var(--gold-solid); border-radius: 20px; padding: 35px 25px; text-align: center; box-shadow: 0 0 50px rgba(212,175,55,0.2); transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .modal-overlay.show .modal-box { transform: scale(1); }
+        .m-title { color: var(--gold-light); font-size: 1.2rem; letter-spacing: 5px; margin-bottom: 15px; font-weight: bold; }
+        .m-text { font-size: 0.95rem; line-height: 1.8; margin-bottom: 30px; letter-spacing: 2px; color: #ccc; text-align: left; }
+        .m-btn-prime { background: rgba(212,175,55,0.1); border: 1px solid var(--gold-solid); color: var(--gold-light); padding: 12px; border-radius: 20px; font-size: 0.95rem; cursor: pointer; width: 100%; letter-spacing: 3px; }
+
+              /* --- 1. 白毫（金色）保持在原處 --- */
+        #buddha-urna {
+            transition: all 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+            transform-origin: 500px 190px;
+            fill: #cc2222 !important;
+        }
+        .bowing #buddha-urna {
+            r: 10px;
+            filter: drop-shadow(0 0 15px #ffd700) drop-shadow(0 0 35px #ffbf00);
+        }
+
+        /* --- 2. 摩尼寶珠（金色）與彩色能量光環 --- */
+        #mani-jewel-container {
+            transform-origin: 0px 0px; /* 錨定在雙手原處中心 */
+            /* 平時：在手上溫柔地放大縮小呼吸 */
+            animation: jewel-breathe 4s ease-in-out infinite alternate;
+            transition: transform 1.2s cubic-bezier(0.25, 1, 0.3, 1);
+        }
+
+        #mani-jewel {
+            fill: url(#kshitigarbhaGold) !important;
+            transition: filter 1.2s ease-in-out;
+        }
+
+       
+
+        /* 動態效果定義 */
+        @keyframes jewel-breathe {
+            0% { transform: scale(0.95); }
+            100% { transform: scale(1.08); }
+        }
+      
+
+        /* --- 3. 頂禮時：寶珠與光環從原處放大數倍 --- */
+        .bowing #mani-jewel-container {
+            animation: none; /* 頂禮時專注於放大 */
+            transform: scale(1.1); /* 從原處放大 3.5 倍（可依畫面隨意調整此數值） */
+        }
+        .bowing #mani-jewel {
+            filter: drop-shadow(0 0 25px #ffffff) drop-shadow(0 0 60px #ffd700);
+        }
+               /* 彩色能量光環：極高透明度、如琉璃清澈、若隱若現 */
+        #mani-rainbow-ring {
+            stroke: url(#rainbowGradient); /* 使用彩色漸層線條 */
+            stroke-width: 3.5; /* 稍微縮細線條，更顯精緻 */
+            fill: none;
+            transform-origin: 0px 0px;
+            opacity: 0.35; /* 大幅提高透明度，平時保持清透感 */
+            
+            /* 讓透明度與發光隨呼吸優雅地淡入淡出 */
+            animation: ring-glow 3s ease-in-out infinite alternate;
+            transition: all 1.2s cubic-bezier(0.25, 1, 0.3, 1);
+        }
+
+        /* 彩色能量圈的動態效果：主要控制「透明度」與微幅金銀光的流轉，不產生深色厚重感 */
+        @keyframes ring-glow {
+            0% { 
+                opacity: 0.25; 
+                filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.4)) 
+                        drop-shadow(0 0 8px rgba(255, 215, 0, 0.3)); 
+            }
+            100% { 
+                opacity: 0.55; /* 最亮時也保持半透明的高級感 */
+                filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.5)) 
+                        drop-shadow(0 0 20px rgba(255, 215, 0, 0.4)); 
+            }
+        }
+
+        /* 頂禮時：放大後線條變細，且保持聖潔的清透金芒 */
+        .bowing #mani-rainbow-ring {
+            animation: none;
+            opacity: 0.6; /* 頂禮放大時稍微增強，但依然保持剔透 */
+            stroke-width: 1.2; 
+            filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.6));
+        }
+
+
+    </style>
+</head>
+<body>
+
+    <!-- 頂部功能按鈕 -->
+<!-- 頂部導航：純向量美學、無突兀外框的「頂禮彌陀」出口 -->
+<div class="nav-top" style="position: absolute; top: max(20px, env(safe-area-inset-top)); left: 20px; z-index: 1000;">
+    <a href="amitabha.html" class="shine-effect highlight" style="text-decoration: none; display: flex; flex-direction: column; align-items: center; background: none; border: none; padding: 0; outline: none;">
+        <!-- 蓮花 Icon (精準放大比例，去除背景框) -->
+        <svg class="lotus-icon" viewBox="0 0 100 25" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width: 80px; height: auto; display: block; filter: drop-shadow(0 0 8px rgba(212,175,55,0.3));">
+            <defs>
+              <linearGradient id="g-base" x1="50" y1="25" x2="50" y2="10" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#d4af37" stop-opacity="0.6"/><stop offset="100%" stop-color="#d4af37" stop-opacity="0"/></linearGradient>
+              <linearGradient id="g-outer" x1="50" y1="25" x2="50" y2="12" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3a2500" stop-opacity="0.55"/><stop offset="55%" stop-color="#8a6518" stop-opacity="0.52"/><stop offset="100%" stop-color="#c8a84b" stop-opacity="0.62"/></linearGradient>
+              <linearGradient id="g-mid" x1="50" y1="25" x2="50" y2="6" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5c3d00" stop-opacity="0.6"/><stop offset="48%" stop-color="#b8890f" stop-opacity="0.62"/><stop offset="100%" stop-color="#f0d070" stop-opacity="0.88"/></linearGradient>
+              <linearGradient id="g-inner" x1="50" y1="25" x2="50" y2="2" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#7a5502" stop-opacity="0.6"/><stop offset="42%" stop-color="#d4af37" stop-opacity="0.7"/><stop offset="100%" stop-color="#fffde7" stop-opacity="0.97"/></linearGradient>
+              <linearGradient id="g-center" x1="50" y1="25" x2="50" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#c8920a" stop-opacity="0.85"/><stop offset="32%" stop-color="#f3e5ab" stop-opacity="0.9"/><stop offset="68%" stop-color="#fffde7" stop-opacity="0.95"/><stop offset="100%" stop-color="#ffffff" stop-opacity="1"/></linearGradient>
+              <radialGradient id="g-stamen" cx="50" cy="25" r="6" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fffde7" stop-opacity="0.9"/><stop offset="100%" stop-color="#d4af37" stop-opacity="0"/></radialGradient>
+            </defs>
+            <rect x="0" y="22" width="100" height="3" fill="url(#g-base)"/>
+            <ellipse cx="50" cy="25.8" rx="42" ry="5.5" fill="rgba(212,175,55,0.1)"/>
+            <path d="M 41 25 C 25 25.2 7 21.5 4 15.5 C 15 20.5 33 24.2 50 25 Z" fill="url(#g-outer)" stroke="rgba(200,165,75,0.45)" stroke-width="0.22"/>
+            <path d="M 41 25 C 27 23.5 13 20 5.5 16" fill="none" stroke="rgba(243,229,171,0.5)" stroke-width="0.18" opacity="0.6"/>
+            <path d="M 59 25 C 75 25.2 93 21.5 96 15.5 C 85 20.5 67 24.2 50 25 Z" fill="url(#g-outer)" stroke="rgba(200,165,75,0.45)" stroke-width="0.22"/>
+            <path d="M 59 25 C 73 23.5 87 20 94.5 16" fill="none" stroke="rgba(243,229,171,0.5)" stroke-width="0.18" opacity="0.6"/>
+            <path d="M 47 25 C 37 23.2 22 16.5 23.5 7.5 C 33.5 15 43 22.5 50 25 Z" fill="url(#g-mid)" stroke="rgba(212,175,55,0.55)" stroke-width="0.28"/>
+            <path d="M 47 25 C 37 21.8 26.5 15 25 8.5" fill="none" stroke="rgba(243,229,171,0.6)" stroke-width="0.2" opacity="0.65"/>
+            <path d="M 53 25 C 63 23.2 78 16.5 76.5 7.5 C 66.5 15 57 22.5 50 25 Z" fill="url(#g-mid)" stroke="rgba(212,175,55,0.55)" stroke-width="0.28"/>
+            <path d="M 53 25 C 63 21.8 73.5 15 75 8.5" fill="none" stroke="rgba(243,229,171,0.6)" stroke-width="0.2" opacity="0.65"/>
+            <path d="M 49.2 25 C 45 22.5 37.5 14 40.5 3.8 C 46.5 12.5 48.2 21.5 50 25 Z" fill="url(#g-inner)" stroke="rgba(243,229,171,0.65)" stroke-width="0.3"/>
+            <path d="M 50.8 25 C 55 22.5 62.5 14 59.5 3.8 C 53.5 12.5 51.8 21.5 50 25 Z" fill="url(#g-inner)" stroke="rgba(243,229,171,0.65)" stroke-width="0.3"/>
+            <path d="M 50 25 C 47 19.5 45.8 11.5 50 1 C 54.2 11.5 53 19.5 50 25 Z" fill="url(#g-center)" stroke="#f3e5ab" stroke-width="0.38"/>
+            <circle cx="50" cy="1.3" r="1.5" fill="#ffffff" opacity="0.9"/>
+            <ellipse cx="50" cy="25.3" rx="4" ry="1.4" fill="url(#g-stamen)"/>
+        </svg>
+        <!-- 微小優雅、靜謐內斂的文字說明 -->
+        <span style="color: #fbeba5; font-size: 0.68rem; letter-spacing: 3px; margin-top: 6px; opacity: 0.75; text-shadow: 0 0 4px rgba(212,175,55,0.4); font-weight: 300;">頂禮彌陀</span>
+    </a>
+</div>
+
+    <!-- 動態背景渲染層 -->
+    <canvas id="starCanvas"></canvas>
+    <canvas id="waterCanvas"></canvas>
+    <div id="smoke-container"></div>
+    <div id="burst-container"></div>
+<!-- 聖像場景主體 -->
+<div id="buddha-scene">
+    <div class="buddha-breathe">
+        <svg viewBox="0 0 1000 1350" width="100%" height="100%" style="overflow: visible;">
+            <defs>
+                <!-- 聖像金線漸層 -->
+                <linearGradient id="kshitigarbhaGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#d4af37" />
+                    <stop offset="50%" stop-color="#aa7c11" />
+                    <stop offset="100%" stop-color="#ffd700" />
+                </linearGradient>
+
+                <!-- 蓮花座漸層與定義 -->
+                <linearGradient id="lotusFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#FFDF00" stop-opacity="0.95"/> 
+                    <stop offset="50%" stop-color="#D4AF37" stop-opacity="0.95"/> 
+                    <stop offset="100%" stop-color="#995000" stop-opacity="1"/> 
+                </linearGradient>
+
+                <linearGradient id="lotusFillBottom" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" stop-color="#FFDF00" stop-opacity="0.95"/> 
+                    <stop offset="50%" stop-color="#D4AF37" stop-opacity="0.95"/> 
+                    <stop offset="100%" stop-color="#995000" stop-opacity="1"/> 
+                </linearGradient>
+
+                <radialGradient id="junctionGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#f3e5ab" stop-opacity="0.5"/>
+                    <stop offset="100%" stop-color="#f3e5ab" stop-opacity="0"/>
+                </radialGradient>
+
+                <radialGradient id="flame-glow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#ffffff" />
+                    <stop offset="30%" stop-color="#ffbf00" />
+                    <stop offset="100%" stop-color="transparent" />
+                </radialGradient>
+                
+                     <!-- 彩色能量光環的漸層色 -->
+                <linearGradient id="rainbowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#00CACA" />
+                    <stop offset="33%" stop-color="#D9B300" />
+                    <stop offset="66%" stop-color="#D9B300" />
+                    <stop offset="100%" stop-color="#D9B300" />
+                </linearGradient>
+                <!-- 聖潔光暈專用的強效模糊濾鏡 -->
+<filter id="halo-soft-blur" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="25" />
+</filter>
+
+<!-- 身光/頭光專用的法界金光放射漸層 -->
+<radialGradient id="haloGlowFill" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#FFF5B8" stop-opacity="1" />
+    <stop offset="50%" stop-color="#FFD700" stop-opacity="0.6" />
+    <stop offset="85%" stop-color="#B8860B" stop-opacity="0.2" />
+    <stop offset="100%" stop-color="transparent" stop-opacity="0" />
+</radialGradient>
+
+
+                <!-- 關鍵遮罩：已移除內部的縮放 transform，使其與法相結構達到 1:1 的絕對同步 -->
+                <mask id="halo-cutout">
+                    <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                    <g fill="black" stroke="black" stroke-width="4">
+                        <path d="M 500 125 
+                                 C 545 125, 565 160, 565 220 
+                                 C 565 250, 563 275, 558 295 
+                                 C 553 312, 549 324, 544 330 
+                                 C 542 336, 544 352, 550 370 
+                                 C 610 370, 650 400, 660 480 
+                                 C 670 560, 660 700, 654 820
+                                 C 648 940, 650 1000, 665 1020
+                                 Q 635 1040, 600 1045
+                                 Q 500 1010, 400 1045
+                                 Q 365 1040, 335 1020
+                                 C 350 1000, 352 940, 346 820
+                                 C 340 700, 330 560, 340 480 
+                                 C 350 400, 390 370, 450 370 
+                                 C 456 352, 458 336, 456 330 
+                                 C 451 324, 447 312, 442 295 
+                                 C 437 275, 435 250, 435 220 
+                                 C 435 160, 455 125, 500 125 Z" />
+                        <path d="M 435 220 Q 427 205 426 220 Q 418 270 434 320 Q 428 380 454 330 Q 440 280 435 220 Z" />
+                        <path d="M 565 220 Q 573 205 574 220 Q 582 270 566 320 Q 572 380 546 330 Q 560 280 565 220 Z" />
+                    </g>
+                </mask>
+            
+
+                <g id="pure-petal">
+                    <path d="M 500 840 Q 460 830, 440 780 C 440 710, 500 690, 500 690 C 500 690, 560 710, 560 780 Q 540 830, 500 840 Z" />
+                    <path d="M 500 815 Q 475 805, 465 780 C 465 730, 500 715, 500 715 C 500 715, 535 730, 535 780 Q 525 805, 500 815 Z" fill="none" />
+                </g>
+            </defs>
+
+           <!-- ─── 【全域母群組：在此微調整個聖像的大小與位置】 ─── -->
+            <!-- 目前基準等比例縮小至 80%，未來變動此處即可完全同步縮放、不對位問題已根除 -->
+            <g id="kshitigarbha-with-lotus" transform="translate(500, 675) scale(0.85) translate(-500, -675)">
+
+<!-- 神盛背光圈 (已納入母群組，完美的相對位置永不重疊與穿透) -->
+                <g class="halo-pulse" mask="url(#halo-cutout)">
+                    <!-- 內光圈 -->
+                    <circle cx="500" cy="300" r="230" fill="none" stroke="url(#kshitigarbhaGold)" stroke-width="50" />
+                    <!-- 外光圈 -->
+                    <circle cx="500" cy="300" r="260" fill="none" stroke="url(#kshitigarbhaGold)" stroke-width="2" />
+                </g>
+<!-- 背景身光暈染層（置於佛像與背景幾何線之間，達到完美的襯托效果） -->
+<circle cx="500" cy="1150" r="200" fill="url(#haloGlowFill)" filter="url(#halo-soft-blur)" style="mix-blend-mode: screen;" />
+
+    <!-- 地藏王菩薩錫杖 (已加上全自由調整器，可直接微調下方 transform 的數值) -->
+<!-- 範例設定：放大 1.1 倍 (scale)，並往左移動 40 像素、往上抬高 50 像素 (translate) -->
+<g id="khakkhara-staff" transform="translate(-10, -130) scale(1.2)" transform-origin="300 230" style="opacity: 0; transition: opacity 1.5s ease-in-out;">
+    
+    <!-- 杖身 (原色金黃色) -->
+    <line x1="300" y1="230" x2="300" y2="1150" stroke="#d4af37" stroke-width="10" stroke-linecap="round" />
+    
+    <!-- 錫杖頭部 (原色金黃色) -->
+    <g fill="none" stroke="#d4af37" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M 300 190 L 308 205 L 300 220 L 292 205 Z" fill="#d4af37" stroke="none" />
+        <path d="M 300 220 C 320 220, 260 250, 300 270 C 250 290, 250 330, 300 330" />
+        <path d="M 300 220 C 280 220, 340 250, 300 270 C 350 290, 350 330, 300 330" />
+        <circle cx="300" cy="295" r="16" />
+        <circle cx="280" cy="330" r="9" />
+        <circle cx="280" cy="345" r="9" />
+        <circle cx="280" cy="360" r="9" />
+        <circle cx="320" cy="330" r="9" />
+        <circle cx="320" cy="345" r="9" />
+        <circle cx="320" cy="360" r="9" />
+    </g>
+</g>
+
+
+                <!-- 菩薩主體 -->
+                <g id="bodhisattva-entity" stroke="url(#kshitigarbhaGold)" fill="none" stroke-linejoin="round">
+
+                    <!-- 內層拂地下擺 -->
+                    <g id="undergarment-skirt" stroke-width="2.1">
+                        <path d="M 380 1020 Q 382 1080, 355 1155" />
+                        <path d="M 620 1020 Q 618 1080, 645 1155" />
+                        <path d="M 355 1155 Q 500 1165, 645 1155" />
+                        <path d="M 353 1160 Q 500 1170, 647 1160" stroke-width="1" opacity="0.7" />
+                    </g>
+
+                    <!-- 菩薩主輪廓 -->
+                    <path id="kshitigarbha-robe-outline" 
+                          d="M 500 125 
+                             C 545 125, 565 160, 565 220 
+                             C 565 250, 563 275, 558 295 
+                             C 553 312, 549 324, 544 330 
+                             C 542 336, 544 352, 550 370 
+                             C 610 370, 650 400, 660 480 
+                             C 670 560, 660 700, 654 820
+                             C 648 940, 650 1000, 665 1020
+                             Q 635 1040, 600 1045
+                             Q 500 1010, 400 1045
+                             Q 365 1040, 335 1020
+                             C 350 1000, 352 940, 346 820
+                             C 340 700, 330 560, 340 480 
+                             C 350 400, 390 370, 450 370 
+                             C 456 352, 458 336, 456 330 
+                             C 451 324, 447 312, 442 295 
+                             C 437 275, 435 250, 435 220 
+                             C 435 160, 455 125, 500 125 Z" 
+                          stroke-width="2.1" />
+
+                    <!-- 耳廓 -->
+                    <path d="M 435 220 Q 427 205 426 220 Q 418 270 434 320 Q 428 380 454 330" stroke-width="2" fill="none" />
+                    <path d="M 565 220 Q 573 205 574 220 Q 582 270 566 320 Q 572 380 546 330" stroke-width="2" fill="none" />
+                    <path d="M 435 240 Q 425 275 437 305" stroke-width="2" fill="none" />
+                    <path d="M 565 240 Q 575 275 563 305" stroke-width="2" fill="none" />
+                    
+                    <!-- 大衣衣褶 -->
+                    <path d="M 375 900 Q 310 400, 375 1035" stroke-width="2" fill="none" />
+                    <path d="M 625 900 Q 690 360, 625 1035" stroke-width="2" fill="none" />
+                    <path d="M 375 800 Q 310 400, 375 1035" stroke-width="2" fill="none" />
+                    <path d="M 625 800 Q 690 360, 625 1035" stroke-width="2" fill="none" />
+
+                    <!-- 肩部線條 -->
+                    <path d="M 410 380 Q 482.4 708.9, 379.4 731.8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                    <path d="M 590 380 Q 517.6 708.9, 620.6 731.8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                    <path d="M 390 390 Q 482.4 708.9, 379.4 731.8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                    <path d="M 610 390 Q 517.6 708.9, 620.6 731.8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                    <path d="M 350 435 Q 482.4 708.9, 379.4 731.8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                    <path d="M 650 435 Q 517.6 708.9, 620.6 731.8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+
+                    <!-- 頸部與領口 -->
+                    <g id="neck-and-collar" stroke-width="1.3">
+                        <path d="M 459 330 Q 500 370 541 330" />
+                        <path d="M 461.5 350 Q 500 390 538.5 350" />
+                        
+                        <!-- 念珠圈 -->
+                        <g id="neck-mala-corrected" stroke="url(#kshitigarbhaGold)" fill="none" stroke-width="2.0">
+                            <circle cx="500" cy="460" r="8.0" fill="url(#kshitigarbhaGold)" stroke="none" /> 
+                            <circle cx="500" cy="478" r="9.9" fill="url(#kshitigarbhaGold)" stroke="none" /> 
+                            <circle cx="515" cy="457" r="6.0" fill="url(#kshitigarbhaGold)" stroke="none" />
+                            <circle cx="485" cy="467" r="6.0" fill="url(#kshitigarbhaGold)" stroke="none" />
+                            <circle cx="515" cy="467" r="6.0" fill="url(#kshitigarbhaGold)" stroke="none" />
+                            <circle cx="530" cy="451" r="6.0" fill="url(#kshitigarbhaGold)" stroke="none" />
+                            <circle cx="544" cy="442" r="6.0" fill="url(#kshitigarbhaGold)" stroke="none" />
+                            <circle cx="557" cy="431" r="6.0" fill="url(#kshitigarbhaGold)" stroke="none" />
+                            <circle cx="568" cy="417" r="6.0" fill="url(#kshitigarbhaGold)" stroke="none" />
+                            <circle cx="578" cy="402" r="6.0" fill="url(#kshitigarbhaGold)" stroke="none" />
+                            <circle cx="586" cy="385" r="6.0" fill="url(#kshitigarbhaGold)" stroke="none" />
+                            <circle cx="485" cy="457" r="6.0" fill="url(#kshitigarbhaGold)" stroke="none" />
+                            <circle cx="470" cy="451" r="6.0" fill="url(#kshitigarbhaGold)" stroke="none" />
+                            <circle cx="456" cy="442" r="6.0" fill="url(#kshitigarbhaGold)" stroke="none" />
+                            <circle cx="443" cy="431" r="6.0" fill="url(#kshitigarbhaGold)" stroke="none" />
+                            <circle cx="432" cy="417" r="6.0" fill="url(#kshitigarbhaGold)" stroke="none" />
+                            <circle cx="422" cy="402" r="6.0" fill="url(#kshitigarbhaGold)" stroke="none" />
+                            <circle cx="414" cy="385" r="6.0" fill="url(#kshitigarbhaGold)" stroke="none" />
+                        </g>
+
+                        <path d="M 440 376 C 440 425, 560 425, 560 376" stroke-width="1.5" stroke-linecap="round" fill="none" />
+                        <path d="M 432 376 C 432 450, 568 450, 568 376" stroke-width="1.5" stroke-linecap="round" fill="none" />
+                        <path d="M 430 376 C 450 575, 550 575, 570 376" stroke-width="1.5" stroke-linecap="round" fill="none" />
+                        <path d="M 425 376 C 450 585, 550 585, 575 376" stroke-width="1.5" stroke-linecap="round" fill="none" />
+
+                        <path d="M 390 727 Q 500 780, 610 727" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                        <path d="M 395 737 Q 500 788, 605 737" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                        <path d="M 400 747 Q 500 796, 600 747" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                        <path d="M 432 770 C 432 790, 568 790, 568 770" stroke-width="1.5" stroke-linecap="round" fill="none" />
+
+                        <path d="M 449 790 C 449 985, 551 985, 551 790" stroke-width="1.5" stroke-linecap="round" fill="none" />
+                        <path d="M 415 760 C 415 1110, 585 1110, 585 760" stroke-width="1.5" stroke-linecap="round" fill="none" />
+                    </g>
+
+                    <!-- 五官與白毫 -->
+                    <g id="buddha-face-features">
+                       <circle id="buddha-urna" cx="500" cy="190" r="3.5" fill="#cc2222" stroke="none" />
+
+                        <path d="M 440 210 Q 465 195 494 210 L 494 262" stroke-width="1.5" />
+                        <path d="M 560 210 Q 535 195 506 210 L 506 262" stroke-width="1.5" />
+                        <path d="M 493 266 Q 500 276 507 266" stroke-width="1.5" />
+                        <path d="M 443 228 Q 461 224 479 228" stroke-width="1.8" stroke-linecap="round" />
+                        <path d="M 557 228 Q 539 224 521 228" stroke-width="1.8" stroke-linecap="round" />
+                        
+                        <!-- 恢復純淨慈悲垂目 -->
+                        <g class="buddhas-eye-closed">
+                            <path d="M 444 234.5 Q 462 239 478 237.5 Q 479 239 478.5 240.5" stroke-width="2" stroke-linecap="round" />
+                            <path d="M 444 234.5 Q 462 245 478.5 240.5" stroke-width="1.8" stroke-linecap="round" />
+                            <path d="M 556 234.5 Q 538 239 522 237.5 Q 521 239 521.5 240.5" stroke-width="2" stroke-linecap="round" />
+                            <path d="M 556 234.5 Q 538 245 521.5 240.5" stroke-width="1.8" stroke-linecap="round" />
+                        </g>
+                        
+                        <path d="M 482 283.5 Q 483 284.5 484 285 Q 492 281 500 286 Q 508 281 516 285 Q 517 284.5 518 283.5" stroke-width="1.6" />
+                        <path d="M 480 283.5 Q 481 284.5 482 285 Q 500 289 518 285 Q 519 284.5 520 283.5" stroke-width="1.5" />
+                        <path d="M 486 289 Q 500 293 514 289" stroke-width="1.8" />
+                        <path d="M 486 312 Q 500 306 514 312" stroke-width="1.5" />
+                    </g>
+
+                    <!-- 雙手與摩尼明珠 -->
+                    <g transform="translate(500, 610) scale(0.7) translate(-100, -120)">
+                        <g id="large-mala-bead" transform="translate(100, 200) scale(1.9)" stroke-width="2" fill="none">
+                            <g id="mani-jewel-container">
+                                <circle id="mani-jewel" cx="0" cy="0" r="35" fill="url(#kshitigarbhaGold)" stroke="none" />
+                                <circle id="mani-rainbow-ring" cx="0" cy="0" r="38" />
+                            </g>
+                        </g>
+
+                        <g id="left-hand" fill="#0d1117">
+                            <path d="M -4.0 243 C 2.0 250, 10.0 253, 16.3 255" stroke-width="2.5" />
+                            <path d="M -1.0 278 C 5.0 286, 26.0 289, 45.3 290" stroke-width="2.5" />
+                            <path d="M 7.0 245 C 4.0 259, 4.0 273, 7.0 287" stroke-width="1.5" />
+                            <circle cx="6.0" cy="250" r="4.0" fill="#333333" stroke="none" />
+                            <circle cx="4.5" cy="259" r="4.0" fill="#333333" stroke="none" />
+                            <circle cx="4.5" cy="269" r="4.0" fill="#333333" stroke="none" />
+                            <circle cx="6.0" cy="278" r="4.0" fill="#333333" stroke="none" />
+                            <path d="M 16.3 255 C 20.0 236.0, 55.0 225.0, 96.0 225.0 C 98.5 229.0, 91.5 241.0, 86.3 243.0 L 66.3 246.0 C 40.0 250.0, 50.0 285.0, 112.0 278.0" stroke-width="2.5" />
+                            <path d="M 92.5 226.0 C 96.0 227.0, 96.0 230.0, 91.5 231.0 C 87.5 228.0, 84.0 225.1, 82.0 225.1" stroke-width="2.0" />
+                            <path d="M 26.3 265 C 26.3 280, 59.3 295, 100.7 295" stroke-width="2.5" />
+                        </g>
+
+                        <g id="right-hand" fill="#0d1117">
+                            <path d="M 183.7 255 C 190.0 253, 198.0 250, 204.0 243" stroke-width="2.5" />
+                            <path d="M 154.7 290 C 174.0 289, 195.0 286, 203.0 278" stroke-width="2.5" />
+                            <path d="M 193.0 245 C 196.0 259, 196.0 273, 193.0 287" stroke-width="1.5" />
+                            <circle cx="194.0" cy="250" r="4.0" fill="#333333" stroke="none" />
+                            <circle cx="195.5" cy="259" r="4.0" fill="#333333" stroke="none" />
+                            <circle cx="195.5" cy="269" r="4.0" fill="#333333" stroke="none" />
+                            <circle cx="194.0" cy="278" r="4.0" fill="#333333" stroke="none" />
+                            <path d="M 183.7 255 C 180.0 236.0, 145.0 225.0, 104.0 225.0 C 101.5 229.0, 108.5 241.0, 113.7 243.0 L 133.7 246.0 C 160.0 255.0, 125.0 285.0, 80.0 283.0 C 78.0 290.0, 80.0 294.0, 83.0 294.0" stroke-width="2.5" />
+                            <path d="M 107.5 226.0 C 104.0 227.0, 104.0 230.0, 108.5 231.0 C 112.5 228.0, 116.0 226.0, 118.0 225.1" stroke-width="2.0" />
+                            <path d="M 173.7 265 C 173.7 280, 140.7 295, 99.3 295" stroke-width="2.5" />
+                        </g>
+                    </g>
+
+                    <!-- 下擺扁半圓形 -->
+                    <g id="bottom-decor" stroke-width="2.1">
+                        <path d="M 370 1155 A 30 15 0 0 0 430 1155" />
+                        <path d="M 570 1155 A 30 15 0 0 0 630 1155" />
+                    </g>
+                </g>
+
+                <!-- 蓮花座底座：完美承托 -->
+                <g id="lotus-base" transform="translate(500, 1180) scale(0.9) translate(-500, -780)">
+                    <ellipse cx="500" cy="780" rx="140" ry="35" fill="url(#junctionGlow)" style="mix-blend-mode: screen;" />
+                    <g transform="translate(0, 30)" stroke="url(#kshitigarbhaGold)" stroke-width="1.8" stroke-linejoin="round" fill="url(#lotusFill)">
+                        <use href="#pure-petal" transform="translate(-135, -20) rotate(-16, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(135, -20) rotate(16, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(-70, -30) rotate(-7, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(70, -30) rotate(7, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(0, -40) rotate(0, 500, 840)" />
+                    </g>
+                    <g transform="translate(0, 70)" stroke="url(#kshitigarbhaGold)" stroke-width="1.8" stroke-linejoin="round" fill="url(#lotusFill)">
+                        <use href="#pure-petal" transform="translate(-120, -10) rotate(-12, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(120, -10) rotate(12, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(-60, 0) rotate(-5, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(60, 0) rotate(5, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(0, 5)" />
+                    </g>
+                </g>
+            </g> <!-- ─── 【全域母群組結束】 ─── -->
+
+            <!-- 實體香爐與雙火燭台座  -->
+<g id="censer-group">
+    <!-- 三支立香  -->
+    <line id="stick-left" x1="475" y1="1140" x2="480" y2="1270" stroke="#4a2e1b" stroke-width="6" stroke-linecap="round"/>
+    <line id="stick-center" x1="500" y1="1125" x2="500" y2="1270" stroke="#4a2e1b" stroke-width="6" stroke-linecap="round"/>
+    <line id="stick-right" x1="525" y1="1140" x2="520" y2="1270" stroke="#4a2e1b" stroke-width="6" stroke-linecap="round"/>
+    
+    <!-- 香頭紅亮光暈 -->
+    <circle id="glow-left" cx="475" cy="1140" r="4" fill="#ff4500" class="incense-glow" />
+    <circle id="glow-center" cx="500" cy="1125" r="4" fill="#ff4500" class="incense-glow" />
+    <circle id="glow-right" cx="525" cy="1140" r="4" fill="#ff4500" class="incense-glow" />
+    
+    <!-- 香爐左右雙耳流線細節 (精準融入地藏 Y 軸) -->
+    <path d="M 455 1275 C 430 1250, 435 1300, 460 1295" fill="none" stroke="url(#kshitigarbhaGold)" stroke-width="4" stroke-linecap="round" />
+    <path d="M 545 1275 C 570 1250, 565 1300, 540 1295" fill="none" stroke="url(#kshitigarbhaGold)" stroke-width="4" stroke-linecap="round" />
+    
+    <!-- 香爐主體與頂部香灰盤 -->
+    <path d="M 455 1270 C 455 1320, 545 1320, 545 1270 Z" fill="#0d1117" stroke="url(#kshitigarbhaGold)" stroke-width="2" />
+    <ellipse cx="500" cy="1270" rx="45" ry="12" fill="#0b080a" stroke="url(#kshitigarbhaGold)" stroke-width="2" />
+    <g id="ash-layer">
+        <ellipse cx="500" cy="1270" rx="35" ry="7" fill="#333" />
+    </g>
+    
+    <!-- 香爐下方的三足鼎立基座 (精準融入地藏 Y 軸) -->
+    <path d="M 475 1305 L 470 1325" stroke="url(#kshitigarbhaGold)" stroke-width="5" stroke-linecap="round" />
+    <path d="M 525 1305 L 530 1325" stroke="url(#kshitigarbhaGold)" stroke-width="5" stroke-linecap="round" />
+    <path d="M 500 1310 L 500 1330" stroke="url(#kshitigarbhaGold)" stroke-width="5" stroke-linecap="round" />
+    
+    <!-- 左側精緻燭台  -->
+    <g id="candle-left-group">
+        <path d="M 406 1280 C 406 1295, 398 1302, 398 1305 L 422 1305 C 422 1302, 414 1295, 414 1280 Z" fill="url(#kshitigarbhaGold)" stroke="rgba(212,175,55,0.5)" stroke-width="1"/>
+        <ellipse cx="410" cy="1280" rx="6" ry="1.5" fill="url(#kshitigarbhaGold)"/>
+        <ellipse cx="410" cy="1305" rx="12" ry="3" fill="#0b080a" stroke="rgba(212,175,55,0.8)" stroke-width="1.5"/>
+        <rect id="candle-body-left" x="405" y="1220" width="10" height="60" rx="3" fill="url(#kshitigarbhaGold)" stroke="rgba(212,175,55,0.5)" stroke-width="1.5" opacity="0.85"/>
+        <line id="candle-wick-left" x1="410" y1="1215" x2="410" y2="1225" stroke="#4a2e1b" stroke-width="2"/>
+        
+        <g id="flame-move-left">
+            <g id="flame-group-left" class="candle-flicker" style="transform-origin: 410px 1215px;">
+                <circle cx="410" cy="1205" r="18" fill="url(#flame-glow)" style="mix-blend-mode: screen;"/>
+                <path d="M 410 1192 Q 415 1210 410 1215 Q 405 1210 410 1192 Z" fill="#FFFFFF" style="filter: drop-shadow(0 0 4px #FFD700);"/>
+            </g>
+        </g>
+    </g>
+
+    <!-- 右側精緻燭台 (完整承襲彌陀的立體托盤與燭火焰心結構) -->
+    <g id="candle-right-group">
+        <path d="M 586 1280 C 586 1295, 578 1302, 578 1305 L 602 1305 C 602 1302, 594 1295, 594 1280 Z" fill="url(#kshitigarbhaGold)" stroke="rgba(212,175,55,0.5)" stroke-width="1"/>
+        <ellipse cx="590" cy="1280" rx="6" ry="1.5" fill="url(#kshitigarbhaGold)"/>
+        <ellipse cx="590" cy="1305" rx="12" ry="3" fill="#0b080a" stroke="rgba(212,175,55,0.8)" stroke-width="1.5"/>
+        <rect id="candle-body-right" x="585" y="1220" width="10" height="60" rx="3" fill="url(#kshitigarbhaGold)" stroke="rgba(212,175,55,0.5)" stroke-width="1.5" opacity="0.85"/>
+        <line id="candle-wick-right" x1="590" y1="1215" x2="590" y2="1225" stroke="#4a2e1b" stroke-width="2"/>
+        
+        <g id="flame-move-right">
+            <g id="flame-group-right" class="candle-flicker" style="transform-origin: 590px 1215px;">
+                <circle cx="590" cy="1205" r="18" fill="url(#flame-glow)" style="mix-blend-mode: screen;"/>
+                <path d="M 590 1192 Q 595 1210 590 1215 Q 585 1210 590 1192 Z" fill="#FFFFFF" style="filter: drop-shadow(0 0 4px #FFD700);"/>
+            </g>
+        </g>
+    </g>
+</g>
+
+        </svg>
+    </div>
+</div>
+
+<!-- 修持面板控制區 -->
+<div class="ritual-container">
+    <div id="blessing-text"></div>
+    <div class="ritual-panel">
+        <div class="ritual-btn" id="btn-bow" onclick="toggleAction('bow')">頂禮地藏</div>
+        <div class="ritual-btn" id="btn-incense" onclick="toggleIncense()">燃燈燒香</div>
+    </div>
+    <div class="chant-hint">南無大願地藏王菩薩 ‧ 身心至誠皈命</div>
+</div>
+
+
+    <script>
+        // 莊嚴語音與法語
+        function speakWords(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'zh-TW'; msg.rate = 0.82; msg.pitch = 0.82; 
+            window.speechSynthesis.speak(msg);
+        }
+
+        function showBlessing(text) {
+            const el = document.getElementById('blessing-text');
+            if(!el) return;
+            el.innerText = text;
+            el.style.animation = 'none';
+            void el.offsetWidth;
+            el.style.animation = 'float-blessing 3.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards';
+        }
+
+       
+function toggleAction(action) {
+    const btn = document.getElementById(`btn-${action}`);
+    if (!btn || btn.classList.contains('active')) return;
+
+    // 獲取錫杖元素
+    const staff = document.getElementById('khakkhara-staff');
+    
+    // 頂禮開始：浮現錫杖
+    if (staff) staff.style.opacity = '1'; 
+
+    btn.classList.add('active');
+    document.body.classList.add('bowing-active');
+    document.getElementById('buddha-scene').classList.add('bowing');
+    
+    triggerGoldenBurst();
+    speakWords("地獄不空，誓不成佛");
+    showBlessing("眾生度盡 ‧ 方證菩提");
+    
+    // 頂禮結束：恢復初始狀態
+    setTimeout(() => { 
+        document.getElementById('buddha-scene').classList.remove('bowing');
+        btn.classList.remove('active'); 
+        document.body.classList.remove('bowing-active');
+        
+        // 禮拜結束後自動收攝錫杖
+        if (staff) staff.style.opacity = '0'; 
+    }, 3000);
+}
+
+        // 萬丈金光粒子特效
+        function triggerGoldenBurst() {
+            const container = document.getElementById('burst-container');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            const flash = document.createElement('div');
+            flash.className = 'screen-flash';
+            container.appendChild(flash);
+            
+            for(let i=0; i<48; i++) {
+                const angle = i * 7.5;
+                const ray = document.createElement('div');
+                ray.className = 'gold-ray';
+                ray.style.setProperty('--rot', `${angle}deg`);
+                ray.style.animation = `ray-burst 2.5s cubic-bezier(0.1, 0.9, 0.2, 1) forwards`;
+                container.appendChild(ray);
+                
+                const particle = document.createElement('div');
+                particle.className = 'space-particle';
+                const distance = 70 + Math.random() * 50; 
+                const rad = (angle * Math.PI) / 180;
+                const tx = Math.cos(rad) * distance + "vw";
+                const ty = Math.sin(rad) * distance + "vh";
+                particle.style.setProperty('--tx', tx);
+                particle.style.setProperty('--ty', ty);
+                particle.style.animation = `particle-explode ${1.4 + Math.random() * 1}s cubic-bezier(0.1, 0.8, 0.3, 1) forwards`;
+                container.appendChild(particle);
+            }
+        }
+
+        // 燃香物理計時器
+        let incenseTimer, smokeTimer, incenseProgress = 0;
+
+        function toggleIncense() {
+            const btn = document.getElementById('btn-incense');
+            const isActive = document.body.classList.contains('incense-on');
+            
+            if (!isActive) {
+    document.body.classList.add('incense-on');
+    btn.classList.add('active');
+    
+    // 將英文拼音改為最接近傳統莊嚴梵音的中文擬音
+    speakWords("嗡，缽囉 摩 鄰 陀 寧，娑訶"); 
+    
+    showBlessing("滅定業真言 ‧ 粉碎罪障");
+
+                incenseProgress = 0;
+                createDualSmoke();
+                
+                let startTime = Date.now();
+                function burn() {
+                    let elapsed = (Date.now() - startTime) / 1000;
+                    incenseProgress = Math.min(elapsed / 60, 1); // 60秒完全燃盡
+                    
+                    document.getElementById('stick-center').setAttribute('y1', 1125 + (145 * incenseProgress));
+                    document.getElementById('glow-center').setAttribute('cy', 1125 + (145 * incenseProgress));
+                    
+                    document.getElementById('stick-left').setAttribute('y1', 1140 + (130 * incenseProgress));
+                    document.getElementById('glow-left').setAttribute('cy', 1140 + (130 * incenseProgress));
+                    
+                    document.getElementById('stick-right').setAttribute('y1', 1140 + (130 * incenseProgress));
+                    document.getElementById('glow-right').setAttribute('cy', 1140 + (130 * incenseProgress));
+                    
+                    let meltAmount = 45 * incenseProgress;
+                    ['left', 'right'].forEach(side => {
+                        document.getElementById(`candle-body-${side}`).setAttribute('y', 1220 + meltAmount);
+                        document.getElementById(`candle-body-${side}`).setAttribute('height', 55 - meltAmount);
+                        document.getElementById(`candle-wick-${side}`).setAttribute('y1', 1215 + meltAmount);
+                        document.getElementById(`candle-wick-${side}`).setAttribute('y2', 1220 + meltAmount);
+                        document.getElementById(`flame-move-${side}`).style.transform = `translateY(${meltAmount}px)`;
+                    });
+                    
+                    if (incenseProgress < 1 && document.body.classList.contains('incense-on')) {
+                        incenseTimer = requestAnimationFrame(burn);
+                    } else if (incenseProgress >= 1 && document.body.classList.contains('incense-on')) {
+                        resetIncense();
+                    }
+                }
+                incenseTimer = requestAnimationFrame(burn);
+            } else {
+                resetIncense();
+            }
+        }
+
+        function resetIncense() {
+            cancelAnimationFrame(incenseTimer);
+            clearTimeout(smokeTimer);
+            document.body.classList.remove('incense-on');
+            document.getElementById('btn-incense').classList.remove('active');
+            setTimeout(restoreIncensePosition, 1200);
+        }
+
+        function restoreIncensePosition() {
+            if(!document.body.classList.contains('incense-on')) {
+                document.getElementById('stick-center').setAttribute('y1', '1125');
+                document.getElementById('glow-center').setAttribute('cy', '1125');
+                document.getElementById('stick-left').setAttribute('y1', '1140');
+                document.getElementById('glow-left').setAttribute('cy', '1140');
+                document.getElementById('stick-right').setAttribute('y1', '1140');
+                document.getElementById('glow-right').setAttribute('cy', '1140');
+                ['left', 'right'].forEach(side => {
+                    document.getElementById(`candle-body-${side}`).setAttribute('y', '1220');
+                    document.getElementById(`candle-body-${side}`).setAttribute('height', '55');
+                    document.getElementById(`candle-wick-${side}`).setAttribute('y1', '1215');
+                    document.getElementById(`flame-move-${side}`).style.transform = `translateY(0px)`;
+                });
+            }
+        }
+
+        function createDualSmoke() {
+            if (!document.body.classList.contains('incense-on') || incenseProgress >= 1) return;
+            const container = document.getElementById('smoke-container');
+            const glow = document.getElementById('glow-center');
+            const rect = glow.getBoundingClientRect(); 
+            
+            const puff = document.createElement('div');
+            puff.className = 'smoke-fine';
+            puff.style.setProperty('--drift', `${(Math.random() - 0.5) * 50}px`);
+            puff.style.left = `${rect.left + rect.width / 2 - 3}px`; 
+            puff.style.top = `${rect.top - 50}px`; 
+            container.appendChild(puff);
+            setTimeout(() => puff.remove(), 4500);
+            
+            smokeTimer = setTimeout(createDualSmoke, 450);
+        }
+
+        // 背景星河渲染
+        const canvas = document.getElementById('starCanvas'), ctx = canvas.getContext('2d'); 
+        let width, height, stars = []; 
+        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; } 
+        window.addEventListener('resize', resize); resize(); 
+
+        for (let i = 0; i < 280; i++) { 
+            stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, s: Math.random() * 1.8 }); 
+        } 
+        function renderStars() { 
+            ctx.fillStyle = 'rgba(10, 11, 13, 0.4)'; ctx.fillRect(0, 0, width, height); 
+            stars.forEach(s => { 
+                s.z -= 0.3; if (s.z <= 0) s.z = 2000; 
+                let sc = 400 / (400 + s.z); 
+                ctx.beginPath(); ctx.arc((width / 2) + s.x * sc, (height / 2) + s.y * sc, s.s * sc, 0, Math.PI * 2); 
+                ctx.fillStyle = '#fbeba5'; ctx.fill(); 
+            }); 
+            requestAnimationFrame(renderStars); 
+        } 
+        renderStars();
+
+    </script>
+</body>
+</html>

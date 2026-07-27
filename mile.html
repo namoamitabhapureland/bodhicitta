@@ -27,14 +27,20 @@
             transition: background 2s ease;
         }
 
-        /* 背景畫布與靜謐海水波 */
+      /* 背景畫布 */
         canvas { position: absolute; inset: 0; }
-        #starCanvas { z-index: 1; pointer-events: none; }
+        #starCanvas { z-index: 1; pointer-events: none; transition: filter 2s ease; }
+        
+        /* 🌟 修改點：平時常態下，水波紋完全顯現 */
         #waterCanvas { 
-            z-index: 2; mix-blend-mode: screen; opacity: 0.25; pointer-events: none; 
-            transition: opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 2; 
+            mix-blend-mode: screen; 
+            opacity: 0.6; 
+            pointer-events: none; 
+            transition: opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1); /* 優化過渡時間至 1.2 秒 */
         }
         
+        /* 🌟 新增：當頂禮（bowing-active）或燒香（incense-on）觸發時，水波紋瞬間優雅淡出隱藏 */
         body.bowing-active #waterCanvas,
         body.incense-on #waterCanvas { 
             opacity: 0 !important; 
@@ -184,6 +190,52 @@
         box-shadow: 0 0 18px rgba(212,175,55,0.45);
         transform: scale(0.97);
     }
+        /* =========================================================
+   佛珠與中央大母珠 特效 CSS
+   ========================================================= */
+
+/* 1. 所有小佛珠基本平滑過渡 */
+.mala-bead {
+    transform-origin: var(--cx) var(--cy);
+    transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1), filter 1.2s ease;
+}
+
+/* 2. 中央圓滿大佛珠（母珠）常態金色呼吸脈動與發光 */
+.master-bead {
+    transform-origin: 500px 604px;
+    transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1), filter 1.2s ease;
+    animation: masterBeadPulse 4s infinite ease-in-out;
+}
+
+/* 母珠常態金色呼吸動畫 */
+@keyframes masterBeadPulse {
+    0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.4));
+    }
+    50% {
+        transform: scale(1.12); /* 放大12% */
+        filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.95)) drop-shadow(0 0 20px rgba(255, 191, 0, 0.6));
+    }
+}
+
+/* ---------------------------------------------------------
+   頂禮狀態特效 (.bowing 觸發時)
+   --------------------------------------------------------- */
+
+/* A. 頂禮時整串佛珠微微放亮與溫和放大 */
+.bowing .mala-bead {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
+}
+
+/* B. 頂禮時中央母珠極致放大發亮 */
+.bowing .master-bead {
+    animation: none; /* 暫停常態呼吸，進入頂禮爆發狀態 */
+    transform: scale(2.35); /* 放大 35% */
+    filter: drop-shadow(0 0 18px #ffd700) drop-shadow(0 0 35px #ffbf00);
+}
+
 
     </style>
 </head>
@@ -317,8 +369,9 @@
                 <defs>
                     <linearGradient id="guanyinGold" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stop-color="#b8860b" />
-                        <stop offset="50%" stop-color="#daa520" />
-                        <stop offset="100%" stop-color="#8b6508" />
+                        <stop offset="33%" stop-color="#FFD700" />
+                        <stop offset="66%" stop-color="#EACD76" />
+                        <stop offset="100%" stop-color="#CD7F32" />
                     </linearGradient>
                     
                     <radialGradient id="flame-glow" cx="50%" cy="50%" r="50%">
@@ -409,8 +462,13 @@
                         <!-- 外光圈 -->
                         <circle cx="500" cy="250" r="240" fill="none" stroke="url(#guanyinGold)" stroke-width="2" />
                     </g>
-<!-- 背景身光暈染層（置於佛像與背景幾何線之間，達到完美的襯托效果） -->
-<circle cx="500" cy="900" r="210" fill="url(#haloGlowFill)" filter="url(#halo-soft-blur)" style="mix-blend-mode: screen;" />
+                  <!-- 背景身光暈染層（置於佛像與背景幾何線之間，達到完美的襯托效果） -->
+                        <circle cx="500" cy="900" r="250" fill="url(#haloGlowFill)" filter="url(#halo-soft-blur)" style="mix-blend-mode: screen;" />
+
+                        <circle cx="300" cy="900" r="150" fill="url(#haloGlowFill)" filter="url(#halo-soft-blur)" style="mix-blend-mode: screen;" />
+
+                        <circle cx="700" cy="900" r="150" fill="url(#haloGlowFill)" filter="url(#halo-soft-blur)" style="mix-blend-mode: screen;" />
+
 
                     <g id="bodhisattva-entity" fill="none" stroke="url(#guanyinGold)">
                         <!-- 【大圓滿葫蘆形臉型】 -->
@@ -480,36 +538,40 @@
                             <circle id="chest-dot-right" cx="580" cy="455" r="3" fill="url(#guanyinGold)" stroke="none" />
                         </g>
 
-                <!-- 【全新圓滿大佛珠群組】 -->
+          <!-- 【全新圓滿大佛珠群組】 -->
 <g id="maitreya-large-mala" stroke-width="2" stroke-linejoin="round" fill="url(#walnutMalaFill)" fill-opacity="0.95">
-    <circle cx="347" cy="310" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="337" cy="340" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="333" cy="370" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="333" cy="402" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="335" cy="432" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="340" cy="462" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="347" cy="491" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="358" cy="519" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="378" cy="545" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="402" cy="568" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="430" cy="587" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="463" cy="600" r="15" stroke="url(#guanyinGold)" />
-    <!-- 中央圓滿大佛珠：加粗金框以顯莊嚴 -->
-    <circle cx="500" cy="604" r="18" stroke="url(#guanyinGold)" stroke-width="2.5" fill-opacity="1" />
-    <circle cx="537" cy="600" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="570" cy="587" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="598" cy="568" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="622" cy="545" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="642" cy="519" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="653" cy="491" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="660" cy="462" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="665" cy="432" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="667" cy="402" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="667" cy="370" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="663" cy="340" r="15" stroke="url(#guanyinGold)" />
-    <circle cx="653" cy="310" r="15" stroke="url(#guanyinGold)" />
-</g>
+    <circle class="mala-bead" style="--cx:347px; --cy:310px;" cx="347" cy="310" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:337px; --cy:340px;" cx="337" cy="340" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:333px; --cy:370px;" cx="333" cy="370" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:333px; --cy:402px;" cx="333" cy="402" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:335px; --cy:432px;" cx="335" cy="432" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:340px; --cy:462px;" cx="340" cy="462" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:347px; --cy:491px;" cx="347" cy="491" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:358px; --cy:519px;" cx="358" cy="519" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:378px; --cy:545px;" cx="378" cy="545" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:402px; --cy:568px;" cx="402" cy="568" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:430px; --cy:587px;" cx="430" cy="587" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:463px; --cy:600px;" cx="463" cy="600" r="15" stroke="url(#guanyinGold)" />
+    
+   
+    
+    <circle class="mala-bead" style="--cx:537px; --cy:600px;" cx="537" cy="600" r="15" stroke="url(#guanyinGold)" />
 
+ <!-- 中央圓滿大佛珠（母珠）：加粗金框 + 專屬主珠類別 -->
+    <circle class="master-bead" cx="500" cy="604" r="18" stroke="url(#guanyinGold)" stroke-width="2.5" fill-opacity="1" />
+
+    <circle class="mala-bead" style="--cx:570px; --cy:587px;" cx="570" cy="587" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:598px; --cy:568px;" cx="598" cy="568" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:622px; --cy:545px;" cx="622" cy="545" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:642px; --cy:519px;" cx="642" cy="519" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:653px; --cy:491px;" cx="653" cy="491" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:660px; --cy:462px;" cx="660" cy="462" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:665px; --cy:432px;" cx="665" cy="432" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:667px; --cy:402px;" cx="667" cy="402" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:667px; --cy:370px;" cx="667" cy="370" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:663px; --cy:340px;" cx="663" cy="340" r="15" stroke="url(#guanyinGold)" />
+    <circle class="mala-bead" style="--cx:653px; --cy:310px;" cx="653" cy="310" r="15" stroke="url(#guanyinGold)" />
+</g>
                         <!-- 【寬闊的大兜肚與法衣褶線】 -->
                         <g id="maitreya-belly-lines" stroke-width="2" stroke-linecap="round" fill="none" stroke="url(#guanyinGold)">
                             <path d="M 320 420 C 300 550, 320 720, 500 720 C 680 720, 700 550, 680 420" />
@@ -698,7 +760,7 @@
             <div id="btn-bow" class="ritual-btn" onclick="toggleAction('bow')">頂禮彌勒</div>
             <div id="btn-incense" class="ritual-btn" onclick="toggleIncense()">燃燈燒香</div>
         </div>
-        <div class="chant-hint">南無當來下生彌勒尊佛</div>
+        <div class="chant-hint">請默念佛號</div>
     </div>
 
    
@@ -912,28 +974,127 @@
         document.getElementById(id).classList.remove('show'); 
     }
 
-        // 背景星河渲染
-        const canvas = document.getElementById('starCanvas'), ctx = canvas.getContext('2d'); 
-        let width, height, stars = []; 
-        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; } 
-        window.addEventListener('resize', resize); resize(); 
+      function navigateWithWarp(url) {
+    window.location.href = url;
+}
 
-        for (let i = 0; i < 360; i++) { 
-            stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, s: Math.random() * 1.8 }); 
-        } 
-        function renderStars() { 
-            ctx.fillStyle = 'rgba(10, 11, 13, 0.4)'; ctx.fillRect(0, 0, width, height); 
-            stars.forEach(s => { 
-                s.z -= 0.3; if (s.z <= 0) s.z = 2000; 
-                let sc = 400 / (400 + s.z); 
-                ctx.beginPath(); ctx.arc((width / 2) + s.x * sc, (height / 2) + s.y * sc, s.s * sc, 0, Math.PI * 2); 
-                ctx.fillStyle = '#fbeba5'; ctx.fill(); 
-            }); 
-            requestAnimationFrame(renderStars); 
-        } 
-        renderStars();
 
        
+
+       
+const canvas = document.getElementById('starCanvas'); 
+const ctx = canvas.getContext('2d'); 
+let width, height, stars = [], warpSpeed = 1.8, starScale = 0.8; 
+
+function resize() { 
+    width = window.innerWidth; 
+    height = window.innerHeight; 
+    canvas.width = width; 
+    canvas.height = height; 
+} 
+window.addEventListener('resize', resize); 
+resize(); 
+
+
+const STAR_COLORS = ['#28FF28', '#28FF28', '#82D900', '#EAC100', '#EAC100', '#DFFFDF', '#82D900']; 
+for (let i = 0; i < 260; i++) { 
+    stars.push({ 
+        x: (Math.random() - 0.5) * 2000, 
+        y: (Math.random() - 0.5) * 2000, 
+        z: Math.random() * 2000, 
+        color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)], 
+        s: Math.random() * 2.2 + 0.5 
+    }); 
+} 
+
+function renderStars() { 
+   
+    ctx.fillStyle = 'rgba(5, 2, 4, 0.35)'; 
+    ctx.fillRect(0, 0, width, height); 
+    ctx.globalCompositeOperation = 'screen'; 
+    
+    stars.forEach(s => { 
+        s.z -= warpSpeed; 
+        if (s.z <= 0) { 
+            s.z = 2000; 
+            s.x = (Math.random() - 0.5) * 2000; 
+            s.y = (Math.random() - 0.5) * 2000; 
+        } 
+        let sc = 400 / (400 + s.z); 
+        let drawY = (height / 2) + s.y * sc; 
+        
+     
+        if (drawY > height * 0.72) return; 
+        
+        ctx.beginPath(); 
+        ctx.arc((width / 2) + s.x * sc, drawY, s.s * sc * starScale, 0, Math.PI * 2); 
+        ctx.fillStyle = s.color; 
+        ctx.globalAlpha = Math.min(0.85, sc * 2.2); 
+        ctx.fill(); 
+        ctx.globalAlpha = 1; 
+    }); 
+    
+    ctx.globalCompositeOperation = 'source-over'; 
+    requestAnimationFrame(renderStars); 
+} 
+renderStars();
+
+
+const wCvs = document.getElementById('waterCanvas'), wCtx = wCvs.getContext('2d'); 
+let ww, wh, wTime = 0; 
+
+function resW() { 
+    ww = wCvs.width = window.innerWidth; 
+    wh = wCvs.height = window.innerHeight; 
+} 
+window.addEventListener('resize', resW); 
+resW(); 
+
+const SeaThemes = [
+    { h: 22, s: 22, l: 22 }, 
+    { h: 22,  s: 18, l: 15 }, 
+    { h: 100,  s: 223, l: 11 }  
+];
+
+function drawW() { 
+    wCtx.clearRect(0, 0, ww, wh); 
+    wTime += 0.001; // 速度略為提升，展現動能
+
+    for (let i = 0; i < 3; i++) { 
+        wCtx.beginPath(); 
+        let shift = i * 1; 
+        let grad = wCtx.createLinearGradient(0, wh * 0.1, 0, wh); 
+        let t = SeaThemes[i]; 
+        
+
+// 樣板字串改為：
+grad.addColorStop(0,   `hsla(${t.h}, ${t.s}%, ${t.l}%, 0.15)`); 
+grad.addColorStop(0.4, `hsla(${t.h}, ${t.s}%, ${t.l}%, 0.45)`); 
+grad.addColorStop(1,   `hsla(${t.h}, ${t.s}%, ${t.l}%, 0.85)`); 
+
+        
+        wCtx.fillStyle = grad; 
+        
+        // 海多重正弦波計算
+        for (let x = 0; x <= ww; x += 5) { 
+            let y = Math.sin(x * 113+ wTime + shift) * 2
+                  + Math.sin(x * 0.005- wTime * 1.5) * 100 
+                  + (wh * 0.99) 
+                  + Math.cos(wTime * 0.3 + i) * 22; 
+                  
+            if (x === 0) wCtx.moveTo(x, y); 
+            else wCtx.lineTo(x, y); 
+        } 
+        
+        wCtx.lineTo(ww, wh); 
+        wCtx.lineTo(0, wh); 
+        wCtx.fill(); 
+    } 
+    requestAnimationFrame(drawW); 
+} 
+drawW();
+   
+
     </script>
 </body>
 </html>

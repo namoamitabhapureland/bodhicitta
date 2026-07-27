@@ -27,14 +27,20 @@
             transition: background 2s ease;
         }
 
-        /* Canvas & Serene Water Ripple */
+           /* 背景畫布 */
         canvas { position: absolute; inset: 0; }
-        #starCanvas { z-index: 1; pointer-events: none; }
+        #starCanvas { z-index: 1; pointer-events: none; transition: filter 2s ease; }
+        
+        /* 🌟 修改點：平時常態下，水波紋完全顯現 */
         #waterCanvas { 
-            z-index: 2; mix-blend-mode: screen; opacity: 0.25; pointer-events: none; 
-            transition: opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 2; 
+            mix-blend-mode: screen; 
+            opacity: 0.6; 
+            pointer-events: none; 
+            transition: opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1); /* 優化過渡時間至 1.2 秒 */
         }
         
+        /* 🌟 新增：當頂禮（bowing-active）或燒香（incense-on）觸發時，水波紋瞬間優雅淡出隱藏 */
         body.bowing-active #waterCanvas,
         body.incense-on #waterCanvas { 
             opacity: 0 !important; 
@@ -364,9 +370,11 @@
             <svg viewBox="0 0 1000 1350" width="100%" height="100%" style="overflow: visible;">
                 <defs>
                     <linearGradient id="kshitigarbhaGold" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#d4af37" />
-                        <stop offset="50%" stop-color="#aa7c11" />
-                        <stop offset="100%" stop-color="#ffd700" />
+                         <stop offset="0%" stop-color="#d4af37" />
+                       <stop offset="33%" stop-color="#FFD700" />
+                        <stop offset="66%" stop-color="#EACD76" />
+                        <stop offset="100%" stop-color="#CD7F32" />
+              
                     </linearGradient>
 
                     <linearGradient id="lotusFill" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -451,7 +459,12 @@
                         <circle cx="500" cy="300" r="260" fill="none" stroke="url(#kshitigarbhaGold)" stroke-width="2" />
                     </g>
                     
-                    <circle cx="500" cy="1150" r="200" fill="url(#haloGlowFill)" filter="url(#halo-soft-blur)" style="mix-blend-mode: screen;" />
+<!-- 背景身光暈染層（置於佛像與背景幾何線之間，達到完美的襯托效果） -->
+<circle cx="500" cy="1150" r="250" fill="url(#haloGlowFill)" filter="url(#halo-soft-blur)" style="mix-blend-mode: screen;" />
+<circle cx="350" cy="1130" r="100" fill="url(#junctionGlow)" style="mix-blend-mode: screen;" />
+<circle cx="650" cy="1130" r="100" fill="url(#junctionGlow)" style="mix-blend-mode: screen;" />
+           
+
 
                     <!-- Khakkhara Staff -->
                     <g id="khakkhara-staff" transform="translate(-10, -130) scale(1.2)" transform-origin="300 230" style="opacity: 0; transition: opacity 1.5s ease-in-out;">
@@ -881,26 +894,124 @@
         document.getElementById(id).classList.remove('show'); 
     }
 
-        /* Universe Star Rendering */
-        const canvas = document.getElementById('starCanvas'), ctx = canvas.getContext('2d'); 
-        let width, height, stars = []; 
-        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; } 
-        window.addEventListener('resize', resize); resize(); 
+       function navigateWithWarp(url) {
+    window.location.href = url;
+}
 
-        for (let i = 0; i < 360; i++) { 
-            stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, s: Math.random() * 1.8 }); 
+
+       
+          // --- 1. 幽冥星空/業塵畫布 (starCanvas) ---
+const canvas = document.getElementById('starCanvas'); 
+const ctx = canvas.getContext('2d'); 
+let width, height, stars = [], warpSpeed = 1, starScale = 1.5; 
+
+function resize() { 
+    width = window.innerWidth; 
+    height = window.innerHeight; 
+    canvas.width = width; 
+    canvas.height = height; 
+} 
+window.addEventListener('resize', resize); 
+resize(); 
+
+// 幽冥業塵色彩：金赤、血紅、暗赭、幽火綠、冷金
+const STAR_COLORS = ['#4A1515', '#4A1515', '#FF5500', '#FF5500', '#4A1515', '#AA0000', '#AA0000']; 
+for (let i = 0; i < 200; i++) { 
+    stars.push({ 
+        x: (Math.random() - 0.5) * 2000, 
+        y: (Math.random() - 0.5) * 2000, 
+        z: Math.random() * 2000, 
+        color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)], 
+        s: Math.random() * 2.2 + 0.5 
+    }); 
+} 
+
+function renderStars() { 
+    // 深幽冥暗背景，微帶深紅沉澱感
+    ctx.fillStyle = 'rgba(5, 2, 4, 0.35)'; 
+    ctx.fillRect(0, 0, width, height); 
+    ctx.globalCompositeOperation = 'screen'; 
+    
+    stars.forEach(s => { 
+        s.z -= warpSpeed; 
+        if (s.z <= 0) { 
+            s.z = 2000; 
+            s.x = (Math.random() - 0.5) * 2000; 
+            s.y = (Math.random() - 0.5) * 2000; 
         } 
-        function renderStars() { 
-            ctx.fillStyle = 'rgba(10, 11, 13, 0.4)'; ctx.fillRect(0, 0, width, height); 
-            stars.forEach(s => { 
-                s.z -= 0.3; if (s.z <= 0) s.z = 2000; 
-                let sc = 400 / (400 + s.z); 
-                ctx.beginPath(); ctx.arc((width / 2) + s.x * sc, (height / 2) + s.y * sc, s.s * sc, 0, Math.PI * 2); 
-                ctx.fillStyle = '#fbeba5'; ctx.fill(); 
-            }); 
-            requestAnimationFrame(renderStars); 
+        let sc = 400 / (400 + s.z); 
+        let drawY = (height / 2) + s.y * sc; 
+        
+        // 保留上方空間給地藏尊像，微塵沉降至業海上邊緣即隱去
+        if (drawY > height * 0.72) return; 
+        
+        ctx.beginPath(); 
+        ctx.arc((width / 2) + s.x * sc, drawY, s.s * sc * starScale, 0, Math.PI * 2); 
+        ctx.fillStyle = s.color; 
+        ctx.globalAlpha = Math.min(0.85, sc * 2.2); 
+        ctx.fill(); 
+        ctx.globalAlpha = 1; 
+    }); 
+    
+    ctx.globalCompositeOperation = 'source-over'; 
+    requestAnimationFrame(renderStars); 
+} 
+renderStars();
+
+// --- 2. 地獄業海/業火波濤畫布 (waterCanvas) ---
+const wCvs = document.getElementById('waterCanvas'), wCtx = wCvs.getContext('2d'); 
+let ww, wh, wTime = 0; 
+
+function resW() { 
+    ww = wCvs.width = window.innerWidth; 
+    wh = wCvs.height = window.innerHeight; 
+} 
+window.addEventListener('resize', resW); 
+resW(); 
+
+const hellSeaThemes = [
+    { h: 350, s: 75, l: 18 }, // 深紫紅底浪
+    { h: 10,  s: 85, l: 28 }, // 血赤大浪
+    { h: 35,  s: 90, l: 45 }  // 業火金赤表浪
+];
+
+function drawW() { 
+    wCtx.clearRect(0, 0, ww, wh); 
+    wTime += 0.004; // 業海翻騰速度略為提升，展現動能
+
+    for (let i = 0; i < 3; i++) { 
+        wCtx.beginPath(); 
+        let shift = i * 3; 
+        let grad = wCtx.createLinearGradient(0, wh * 0.55, 0, wh); 
+        let t = hellSeaThemes[i]; 
+        
+
+// 樣板字串改為：
+grad.addColorStop(0,   `hsla(${t.h}, ${t.s}%, ${t.l}%, 0.15)`); 
+grad.addColorStop(0.4, `hsla(${t.h}, ${t.s}%, ${t.l}%, 0.45)`); 
+grad.addColorStop(1,   `hsla(${t.h}, ${t.s}%, ${t.l}%, 0.85)`); 
+
+        
+        wCtx.fillStyle = grad; 
+        
+        // 業海多重正弦波計算
+        for (let x = 0; x <= ww; x += 5) { 
+            let y = Math.sin(x * 11+ wTime + shift) * 44 
+                  + Math.sin(x * 14- wTime * 1) * 33 
+                  + (wh * 1) 
+                  + Math.cos(wTime * 1.5+ i) * 33; 
+                  
+            if (x === 0) wCtx.moveTo(x, y); 
+            else wCtx.lineTo(x, y); 
         } 
-        renderStars();
+        
+        wCtx.lineTo(ww, wh); 
+        wCtx.lineTo(0, wh); 
+        wCtx.fill(); 
+    } 
+    requestAnimationFrame(drawW); 
+} 
+drawW();
     </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pureland-v4.17';
+const CACHE_NAME = 'pureland-v4.18';
 
 const ASSETS_TO_CACHE = [
     './',
@@ -107,6 +107,9 @@ const ASSETS_TO_CACHE = [
     './mile.html',
     './mile_en.html',
     './mile_jp.html',
+    './manju-samanta.html',
+    './manju-samanta_en.html',
+    './manju-samanta_jp.html',
     './drum.html',
     './drum_en.html',
     './drum_jp.html',

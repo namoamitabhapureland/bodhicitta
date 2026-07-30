@@ -2,6 +2,104 @@ const rawArticles = [
     // ==========================================
     // 中文文章
     // ==========================================
+    {
+  id: "2026-07-30-zh-nagarjuna-asanga-vasubandhu-complete",
+  isNew: true,
+  lang: "zh",
+  category: "佛學",
+  title: "大乘法將龍樹、無著與世親：破執顯真、開顯一佛乘的菩提法界",
+  status: "生平軌跡 ． 著述引證 ． 中觀唯識 ． 雙峰並峙 ． 一乘究竟",
+  humble: "本篇文獻嚴謹引述大乘根本經論，還原龍樹菩薩、無著菩薩與世親菩薩之真實行誼與法理。佛法乃平等的眾生皆可成佛之一佛乘。若無諸位大士之造論譯傳，大乘究竟涅槃之法門將斷絕於世。",
+  content: `<div style="display: flex; gap: 15px; margin: 25px 0 40px 0; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 180px; border: 1px solid rgba(139, 168, 156, 0.4); padding: 18px; background: rgba(139, 168, 156, 0.06); border-radius: 12px; text-align: center;">
+        <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(139, 168, 156, 0.4); padding: 1px 6px; margin-bottom: 8px; color: #8ba89c; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">八宗共祖</span>
+        <strong style="display: block; font-size: 1.1rem; color: #8ba89c; letter-spacing: 2px;">龍樹菩薩</strong>
+        <span style="display: block; font-size: 0.75rem; color: #888; margin-top: 5px; line-height: 1.4;">千部論主 ‧ 中觀般若<br>顯無自性空 ‧ 破邪顯正</span>
+    </div>
+    <div style="flex: 1; min-width: 180px; border: 1px solid rgba(224, 224, 224, 0.15); padding: 18px; background: rgba(255, 255, 255, 0.02); border-radius: 12px; text-align: center;">
+        <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(224, 224, 224, 0.2); padding: 1px 6px; margin-bottom: 8px; color: #b0b0b0; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">唯識始祖</span>
+        <strong style="display: block; font-size: 1.1rem; color: #e0e0e0; letter-spacing: 2px;">無著菩薩</strong>
+        <span style="display: block; font-size: 0.75rem; color: #888; margin-top: 5px; line-height: 1.4;">上升兜率 ‧ 承傳彌勒<br>萬法唯識 ‧ 菩提心藍圖</span>
+    </div>
+    <div style="flex: 1; min-width: 180px; border: 1px solid rgba(212, 175, 55, 0.4); padding: 18px; background: rgba(212, 175, 55, 0.08); border-radius: 12px; text-align: center; box-shadow: inset 0 0 10px rgba(212, 175, 55, 0.05);">
+        <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(212, 175, 55, 0.4); padding: 1px 6px; margin-bottom: 8px; color: #d4af37; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">千部論師</span>
+        <strong style="display: block; font-size: 1.1rem; color: #f3e5ab; letter-spacing: 2px;">世親菩薩</strong>
+        <span style="display: block; font-size: 0.75rem; color: #aaa; margin-top: 5px; line-height: 1.4;">轉小入大 ‧ 唯識集大成<br>唯識三十頌 ‧ 轉識成智</span>
+    </div>
+</div>
+
+[一、 歷史軌跡與經典著述：三位大菩薩的生平與造論]
+
+1. 龍樹菩薩 (Nāgārjuna) —— 承繼文殊大智，破暗顯明的「千部論主」
+龍樹菩薩約生活於西元二至三世紀的南印度，出身婆羅門種姓。早年聰慧，後因避難體悟「欲為苦本」而毅然出家。初期通達小乘三藏，後接觸深奧大乘經典。其一生致力於破除部派佛教對「大乘非佛說」的質疑，被後世尊稱為「千部論主」與「八宗共祖」。
+■ 核心著述與經釋：
+  * 經釋類：《大智度論》（詮釋《摩訶般若波羅蜜經》）、《十住毘婆沙論》（詮釋《華嚴經‧十地品》）。
+  * 中觀論典類：《中論》、《十二門論》、《七十空性論》、《迴諍論》。
+  * 勸誡與菩提道類：《菩提資糧論》、《寶行王正論》、《勸發諸王要葛藤》（《龍樹菩薩勸誡王頌》）。
+
+2. 無著菩薩 (Asaṅga) —— 承繼彌勒大悲，擘畫唯識藍圖的宗師
+無著菩薩約生活於西元四至五世紀的北印度。最初於小乘化地部出家，因對大乘「空性」產生極大疑惑，於雞足山閉關十二年專修彌勒觀行。後因極大悲心割肉餵狗，業障冰消，感得彌勒菩薩現身。自此夜間上升兜率內院親聆法要，白天向大眾宣說，傳譯並奠定大乘瑜伽唯識體系。
+■ 核心著述與經釋：
+  * 傳述彌勒五論：《瑜伽師地論》、《大乘莊嚴經論》、《分別瑜伽論》（已失傳）、《辯中邊論》、《金剛般若論》。
+  * 自造唯識大論：《攝大乘論》、《大乘阿毘達磨集論》、《顯揚聖教論》、《順中論》。
+
+3. 世親菩薩 (Vasubandhu，天親) —— 轉小入大，廣造經論的「千部論師」
+世親菩薩為無著菩薩之胞弟，最初於說一切有部出家，造《阿毘達磨俱舍論》名震五天竺，早年偏執小乘、毀謗大乘。後經兄長無著菩薩以病況為誘因彈斥引導，並為其宣說《十地經》與《解深密經》，世親菩薩豁然大悟，深感昔日毀謗大乘之罪，欲自割舌頭謝罪。無著菩薩勸曰：「昔以舌毀大乘，今當以舌讚大乘。」自此大轉法輪，廣造大乘論釋，同獲「千部論師」之美譽。
+■ 核心著述與經釋：
+  * 唯識根本論著：《唯識三十頌》（唯識宗核心理論基石）、《唯識二十頌》、《大乘百法明門論》、《大乘五蘊論》。
+  * 大乘經論釋著：《十住經論》（釋《華嚴‧十地品》）、《金剛般若波羅蜜經論》、《妙法蓮華經優波提舍》、《無量壽經優波提舍》（《往生論》）、《辯中邊論釋》。
+
+[二、 傳說與乘願再來：法界實相的記憶喚醒]
+
+1. 龍樹菩薩「龍宮取《華嚴經》」與三本之說
+傳說：在佛經語境中，「海」譬喻甚深禪定與如來藏海，「龍宮」代表佛陀甚深法藏的隱密處。龍樹菩薩透過極深定力（如海龍王定），潛入心識深處，契悟了佛陀最初覺悟的《華嚴》境界。
+華嚴三本之說：據傳龍樹菩薩於龍宮所見之《華嚴經》有上、中、下三本：
+  * 上本：有十個世界微塵數葛藤頌、一世界微塵數品。
+  * 中本：有四十九萬九千二百頌、一千二百品。
+  * 下本：有十萬頌、四十八品。
+上本與中本因卷帙龐大、義理深奧，非凡夫心量所能持，故未攜回。龍樹菩薩僅將「下本」攜回人間流傳。今日我們所見的《八十華嚴》（實叉難陀譯，共四十品、八十卷），實質僅有約四萬五千頌，尚不足下本的一半。由此可知，我們今日所讀的《華嚴經》雖已極其浩瀚，仍非全貌，更顯大乘法界之不可思議。
+
+2. 無著菩薩「上升兜率天聽法」
+傳說：「上升兜率天」表徵無著菩薩修持「彌勒定」達極致之境界。在甚深定中打破時空維度，清淨心識與彌勒菩薩的悲願法界感應道交，藉此向當時對大乘起疑的世人顯現清淨傳承。
+乘願再來：無著菩薩與彌勒菩薩同為大乘法界眷屬。他在定中進入兜率內院，是帶著前世修行的強大記憶與定力，跨維度接收法理，出定後將其轉譯為人類能理解的嚴密唯識邏輯。
+
+[三、 經典引證與核心法理：破除聲聞偏執，顯發一佛乘]
+
+若無大乘經典與諸位菩薩的造論闡釋，世人將自甘於阿羅漢的偏空涅槃，失卻無上菩提。
+
+1. 龍樹菩薩與中觀般若：破「實有」與「斷滅」，顯無自性空
+《中論》卷四〈觀四諦品〉云：「諸佛依二諦，為眾生說法，一者世諦，二者第一義諦。若人不能知，分別於二諦，則於甚深佛，不知真實義。」又云：「因緣所生法，我說即是空，亦名為假名，亦是中道義。」
+《大智度論》卷三十一亦云：「般若波羅蜜實法不空，能令諸法空。何以故？般若波羅蜜無相無作無生無滅，能照諸法無自性。」
+龍樹菩薩透過經論徹底破除聲聞乘對「法有實體」的執著，亦破除外道的斷滅見，開顯《般若經》之究竟空義，使行者知曉一切法皆從因緣生，無自性即是實相。
+
+2. 無著菩薩與瑜伽唯識：建構萬法唯識，發起無上菩提
+無著菩薩造《攝大乘論》，其開篇即引《解深密經》云：「阿陀那識甚深細，一切種子如暴流，我於凡愚不開演，恐彼分別執為我。」
+《瑜伽師地論》卷三十五〈菩薩地〉云：「云何菩薩自利利他？謂諸菩薩於大菩提發正願已，修集無量福德智慧二種資糧，極善通達一切法無自性性，不墮聲聞、獨覺地中。」
+唯識學精細開顯了阿賴耶識（藏識）的運作，說明生死輪迴與淨土建立皆不離心識。無著菩薩更在《大乘莊嚴經論》中強調發菩提心之重要，使行者知曉如何在空性中起修六度萬行。
+
+3. 世親菩薩與識變貫通：轉迷成悟，銜接中觀與唯識
+世親菩薩於《唯識三十頌》寫道：「由假立我法，有種種相轉，彼依識所變，此能變唯三。」又於頌末云：「此即無漏界，不思議善常，安樂解脫身，大牟尼名法。」
+世親菩薩將無著菩薩龐雜的唯識思想融會貫通，精煉為三十二頌（含《二十頌》與《三十頌》），將「萬法唯識、轉識成智」的修行路徑標示得極其清晰，完成了大乘唯識體系的頂層設計。
+
+[四、 佛法平等無二：從解脫道拓展至一佛乘]
+
+「佛」教是教人如何成佛之道。眾生皆有佛性，《妙法蓮華經》明確開示，聲聞、緣覺僅是中途的暫歇之所，究竟歸宿唯有一佛乘：
+《妙法蓮華經·方便品》云：「十方佛土中，唯有一乘法，無二亦無三，除佛方便說。」
+《妙法蓮華經·譬喻品》以「化城喻」明示：三乘（聲聞、緣覺、菩薩）乃佛陀為怯弱眾生設立之方便化城，待其休息具足定慧後，終須引導其進入無上菩提的大道。
+
+原始佛教的四聖諦、八正道、十二因緣，實為大乘菩薩道的基礎根苗。而龍樹、無著與世親則是將此根苗向盡虛空遍法界拓展：
+1. 苦諦：從自身的生老病死，擴展為「一切有情皆在苦海」的大悲。
+2. 集諦：從個人煩惱習氣，擴展為「煩惱無盡誓願斷」的弘願。
+3. 道諦：從三十七道品，擴展為圓滿六度萬行的無上菩提道。
+
+[五、 若無經典與諸大士，大乘如何傳播？]
+
+1. 抵禦小乘與外道的夾擊：初期大乘經典初現於世時，遭遇部派佛教以嚴密論議（阿毘達磨）排擠，斥為「大乘非佛說」。若無龍樹菩薩以《中論》八不中道摧枯拉朽，大乘法藏將湮沒於歷史。
+2. 提供成佛的具體地圖：大乘經義浩瀚若海，若無無著菩薩與世親菩薩造《瑜伽師地論》、《唯識三十頌》與《大乘百法明門論》，將初信至成佛的五十二位、三無數劫修證次第巨細靡遺地標示清楚，修行人將無所適從，甚至落入狂慧或惡取空。
+
+諸位菩薩一位立中觀之體（破相顯空），一位與其弟建唯識之用（萬法唯識、轉識成智），將解脫道的根脈全面開展為平等的、人人皆可成佛的無上菩提大道。這正是大乘佛法得以流傳千古、普度群萌的根本命脈。`
+},
+
 
   {
         id: "2026-07-14-zh-bodhisattva-pureland",
@@ -776,6 +874,94 @@ Neukart 的理論認為，神祕的暗物質與暗能量與這些「資訊」息
     // ==========================================
     // 英文文章 (English Articles)
     // ==========================================
+    {
+  id: "2026-07-30-en-nagarjuna-asanga-vasubandhu-complete",
+  isNew: true,
+  lang: "en",
+  category: "Buddhism",
+  title: "Mahayana Masters Nāgārjuna, Asaṅga, and Vasubandhu: Refuting Attachment, Revealing Truth, and Unveiling the One Buddha Vehicle",
+  status: "Historical Traces ． Canonical Citations ． Madhyamaka & Yogācāra ． Dual Pillars ． Ultimate One Vehicle",
+  humble: "This article rigorously cites fundamental Mahayana sutras and treatises to reconstruct the authentic deeds and teachings of Bodhisattvas Nāgārjuna, Asaṅga, and Vasubandhu. The Buddhadharma is the equal One Buddha Vehicle wherein all sentient beings can attain Buddhahood. Without the commentaries and translations of these great masters, the ultimate Nirvana teachings of Mahayana would have been severed from the world.",
+  content: `<div style="display: flex; gap: 15px; margin: 25px 0 40px 0; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 180px; border: 1px solid rgba(139, 168, 156, 0.4); padding: 18px; background: rgba(139, 168, 156, 0.06); border-radius: 12px; text-align: center;">
+        <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(139, 168, 156, 0.4); padding: 1px 6px; margin-bottom: 8px; color: #8ba89c; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">Ancestor of Eight Schools</span>
+        <strong style="display: block; font-size: 1.1rem; color: #8ba89c; letter-spacing: 1px;">Nāgārjuna Bodhisattva</strong>
+        <span style="display: block; font-size: 0.75rem; color: #888; margin-top: 5px; line-height: 1.4;">Master of 1,000 Treatises<br>Madhyamaka ‧ Emptiness of Self-Nature</span>
+    </div>
+    <div style="flex: 1; min-width: 180px; border: 1px solid rgba(224, 224, 224, 0.15); padding: 18px; background: rgba(255, 255, 255, 0.02); border-radius: 12px; text-align: center;">
+        <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(224, 224, 224, 0.2); padding: 1px 6px; margin-bottom: 8px; color: #b0b0b0; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">Yogācāra Founder</span>
+        <strong style="display: block; font-size: 1.1rem; color: #e0e0e0; letter-spacing: 1px;">Asaṅga Bodhisattva</strong>
+        <span style="display: block; font-size: 0.75rem; color: #888; margin-top: 5px; line-height: 1.4;">Transmitter of Maitreya's Teachings<br>Great Compassion ‧ Mind-Only Blueprint</span>
+    </div>
+    <div style="flex: 1; min-width: 180px; border: 1px solid rgba(212, 175, 55, 0.4); padding: 18px; background: rgba(212, 175, 55, 0.08); border-radius: 12px; text-align: center; box-shadow: inset 0 0 10px rgba(212, 175, 55, 0.05);">
+        <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(212, 175, 55, 0.4); padding: 1px 6px; margin-bottom: 8px; color: #d4af37; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">Master of 1,000 Treatises</span>
+        <strong style="display: block; font-size: 1.1rem; color: #f3e5ab; letter-spacing: 1px;">Vasubandhu Bodhisattva</strong>
+        <span style="display: block; font-size: 0.75rem; color: #aaa; margin-top: 5px; line-height: 1.4;">Converted from Hinayana<br>Systematizer ‧ Transformation of Consciousness</span>
+    </div>
+</div>
+
+[I. Historical Traces and Canonical Works: The Lives and Treatises of the Three Great Bodhisattvas]
+
+1. Nāgārjuna Bodhisattva (Nāgārjuna) —— Inheritor of Mañjuśrī's Great Wisdom, "Master of a Thousand Treatises" Dispel Ignorance
+Nāgārjuna lived around the 2nd to 3rd century CE in South India, born into a Brahmin family. Exceptionally gifted in his youth, he later entered the monastic order after realizing that "desire is the root of suffering." Initially mastering the Theravada/Nikaya Tripitaka, he subsequently encountered profound Mahayana sutras. Throughout his life, he refuted doubts cast by early Buddhist schools regarding Mahayana not being the Buddha's teaching. Honored as the "Master of a Thousand Treatises" and "Ancestor of Eight Schools."
+■ Core Treatises and Commentaries:
+  * Sutra Commentaries: Mahāprajñāpāramitā-śāstra (Commentary on the Perfection of Wisdom Sutra), Daśabhūmika-vibhāṣā (Commentary on the Ten Grounds Chapter of the Avataṃsaka Sūtra).
+  * Madhyamaka Treatises: Mūlamadhyamakakārikā (Fundamental Verses on the Middle Way), Dvādaśamukha-śāstra (Twelve Gate Treatise), Śūnyatāsaptati (Seventy Verses on Emptiness), Vigrahavyāvartanī.
+  * Advice & Bodhi Path: Bodhisambhāra-śāstra (Provision for Enlightenment), Ratnāvalī (Precious Garland), Suhṛllekha (Letter to a Friend).
+
+2. Asaṅga Bodhisattva (Asaṅga) —— Inheritor of Maitreya's Great Compassion, Architect of Yogācāra
+Asaṅga lived around the 4th to 5th century CE in North India. He originally took vows in the Mahīśāsaka school and suffered deep doubts concerning Mahayana "Emptiness." He spent 12 years in solitary retreat on Mount Kukkuṭapāda practicing Maitreya contemplation. Moved by extreme compassion—cutting his own flesh to feed a dog and cleansing its wounds—his karmic obstacles melted away, and the dog revealed itself as Maitreya Bodhisattva. From then on, he ascended to Tuṣita Heaven at night to receive teachings and expounded them during the day, establishing the Yogācāra framework.
+■ Core Treatises and Commentaries:
+  * Five Treatises of Maitreya: Yogācārabhūmi-śāstra, Mahāyānasūtrālaṃkāra, Madhyāntavibhāga, Abhisamayālaṃkāra, Dharmadharmatāvibhāga.
+  * Self-Authored Treatises: Mahāyānasaṃgraha, Abhidharmasamuccaya, Prakaraṇāryavāca-śāstra.
+
+3. Vasubandhu Bodhisattva (Vasubandhu) —— Converting from Hinayana to Mahayana, Systematizing the Dharma
+Vasubandhu was the younger brother of Asaṅga. He initially ordained in the Vaibhāṣika/Sarvāstivāda tradition and authored the Abhidharmakośa-bhāṣya, which amazed all of India, though he initially disparaged Mahayana. Persuaded by Asaṅga, who recited the Daśabhūmika and Saṃdhinirmocana Sutras to him, Vasubandhu experienced deep awakening. Overcome with remorse, he wished to cut out his tongue to atone for his slander. Asaṅga counseled: "As you used your tongue to criticize Mahayana, use it now to praise Mahayana." Vasubandhu then dedicated himself to expounding Mahayana, also earning the title "Master of a Thousand Treatises."
+■ Core Treatises and Commentaries:
+  * Fundamental Yogācāra Works: Triṃśikā-vijñaptimātratāsiddhi (Thirty Verses on Mind-Only), Viṃśatikā-vijñaptimātratāsiddhi (Twenty Verses), Mahāyāna-śatadharma-prakāśamukha-śāstra (Treatise on the Hundred Dharmas).
+  * Commentary Works: Daśabhūmikasūtra-bhāṣya, Sukhāvatīvyūhopadeśa (Treatise on Rebirth in the Pure Land), Saddharmapuṇḍarīka-upadeśa.
+
+[II. Legends and Return of Vows: Awakening Memories of the Dharma Realm]
+
+1. Nāgārjuna's "Retrieving the Avataṃsaka Sūtra from the Dragon Palace" & The Three Recensions
+Legend: In Buddhist metaphors, the "ocean" represents deep samādhi and the Tathāgatagarbha, while the "Dragon Palace" represents the hidden treasury of the Buddha's profound teachings. Through deep meditation, Nāgārjuna accessed the depths of consciousness and realized the ultimate realm awakened by the Buddha under the Bodhi Tree.
+The Three Recensions: Nāgārjuna reportedly found three versions in the Dragon Palace:
+  * Upper Recension: Infinite verses as vast as particles in ten world systems.
+  * Middle Recension: 499,200 verses and 1,200 chapters.
+  * Lower Recension: 100,000 verses and 48 chapters.
+The Upper and Middle recensions were too vast and profound for human capacity, so Nāgārjuna brought back only the "Lower Recension." The current 80-volume Avataṃsaka Sūtra (translated by Śikṣānanda) contains roughly 45,000 verses—less than half of the Lower Recension. This reveals that the current text, though vast, is only a fraction of the full realm.
+
+2. Asaṅga's "Ascending to Tuṣita Heaven"
+Legend: Ascending to Tuṣita symbolizes Asaṅga's mastery of "Maitreya Samādhi," transcending time and space to connect with Maitreya's compassionate vow realm, demonstrating an authentic lineage to the world.
+Return of Vows: Asaṅga and Maitreya belong to the same spiritual family. His ascension was an awakening of past-life momentum and meditation power, translating divine wisdom into rigorous human logic.
+
+[III. Canonical Citations and Core Doctrines: Breaking Hinayana Attachments, Revealing the One Vehicle]
+
+1. Nāgārjuna and Madhyamaka: Eradicating "Inherent Existence" and "Annihilationism"
+Mūlamadhyamakakārikā (Chapter 24) states: "The Buddhas rely on Two Truths to teach: Conventional Truth and Ultimate Truth. Those who do not understand the distinction cannot comprehend the profound reality of the Buddha's teaching." It further states: "Whatever arises dependently is declared to be empty. It is a conventional designation, and it is the Middle Way."
+Mahāprajñāpāramitā-śāstra (Vol. 31) states: "Prajñāpāramitā itself is not empty, yet it reveals all dharmas to be empty... as it is unproduced, unceasing, and devoid of intrinsic nature."
+
+2. Asaṅga and Yogācāra: Establishing Mind-Only and Inspiring Bodhicitta
+In Mahāyānasaṃgraha, Asaṅga quotes the Saṃdhinirmocana Sūtra: "The Ādāna-consciousness is subtle and profound, all seeds flowing like a torrential stream. I do not reveal it to the ignorant, lest they mistake it for a self."
+Yogācārabhūmi-śāstra (Vol. 35) states: "Bodhisattvas cultivate vast merit and wisdom, thoroughly understanding the emptiness of self-nature in all dharmas, without falling into the levels of Śrāvakas or Pratyekabuddhas."
+
+3. Vasubandhu and Consciousness Transformation: Turning Delusion into Awakening
+In Triṃśikā-vijñaptimātratāsiddhi, Vasubandhu writes: "The metaphors of self and dharmas evolve in various ways based on the transformation of consciousness." He concludes: "This is the realm of non-leakage, wondrous, stable, and blissful—the liberation body, the ultimate Dharmakāya of the Great Muni."
+
+[IV. Equality in Buddhadharma: From Liberation to the One Buddha Vehicle]
+
+The Lotus Sutra explicitly reveals that Śrāvaka and Pratyekabuddha paths are merely temporary resting places, with the ultimate destination being the One Buddha Vehicle:
+Lotus Sutra (Chapter 2): "In the Buddha-lands of the ten directions, there is only the law of the One Vehicle, neither two nor three, except when the Buddha speaks using expedients."
+Chapter 3 uses the "Parable of the Conjured City" to illustrate that the Three Vehicles are expedients created for weary practitioners, who must eventually enter the Supreme Bodhi Path.
+
+[V. Propagation of Mahayana without the Masters]
+
+1. Defending Against Misunderstandings: Without Nāgārjuna's Mūlamadhyamakakārikā, Mahayana teachings faced being dismissed by early schools as "not spoken by the Buddha."
+2. Providing a Complete Roadmap: Without Asaṅga and Vasubandhu's Yogācārabhūmi-śāstra and Triṃśikā, practitioners would lack precise stages (the 52 Bodhisattva stages) to cultivate wisdom and compassion, risking falling into wild intellectualism or nihilism.
+
+Together, these masters established the essence of Emptiness (Madhyamaka) and the application of Mind-Only (Yogācāra), making the equal One Vehicle available to all.`
+},
+
       {
         id: "2026-07-14-en-bodhisattva-pureland",
         isNew: true,
@@ -1552,6 +1738,87 @@ However, when we look at time-travel plots in science fiction, we occasionally f
     // ==========================================
     // 日文文章 (Japanese Articles)
     // ==========================================
+    {
+  id: "2026-07-30-ja-nagarjuna-asanga-vasubandhu-complete",
+  isNew: true,
+  lang: "ja",
+  category: "仏学",
+  title: "大乗の法将 竜樹・無著・世親：執着を破り真理を顕す・一仏乗の菩提法界",
+  status: "歴史的軌跡 ． 経論引証 ． 中観と唯識 ． 雙峰並峙 ． 一乗究竟",
+  humble: "本稿は、大乗の根本経論を厳謹に引証し、竜樹菩薩・無著菩薩・世親菩薩の真実の行誼と法理を復元するものです。仏法とは一切衆生が等しく成仏できる「一仏乗」に他なりません。これら大士の造論と訳伝がなければ、大乗の究竟涅槃の法門は世に絶えていたでしょう。",
+  content: `<div style="display: flex; gap: 15px; margin: 25px 0 40px 0; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 180px; border: 1px solid rgba(139, 168, 156, 0.4); padding: 18px; background: rgba(139, 168, 156, 0.06); border-radius: 12px; text-align: center;">
+        <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(139, 168, 156, 0.4); padding: 1px 6px; margin-bottom: 8px; color: #8ba89c; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">八宗の祖</span>
+        <strong style="display: block; font-size: 1.1rem; color: #8ba89c; letter-spacing: 2px;">竜樹菩薩 (ナーガールジュナ)</strong>
+        <span style="display: block; font-size: 0.75rem; color: #888; margin-top: 5px; line-height: 1.4;">千部論主 ‧ 中観般若<br>自性空の開顕 ‧ 破邪顕正</span>
+    </div>
+    <div style="flex: 1; min-width: 180px; border: 1px solid rgba(224, 224, 224, 0.15); padding: 18px; background: rgba(255, 255, 255, 0.02); border-radius: 12px; text-align: center;">
+        <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(224, 224, 224, 0.2); padding: 1px 6px; margin-bottom: 8px; color: #b0b0b0; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">唯識の始祖</span>
+        <strong style="display: block; font-size: 1.1rem; color: #e0e0e0; letter-spacing: 2px;">無著菩薩 (アサンガ)</strong>
+        <span style="display: block; font-size: 0.75rem; color: #888; margin-top: 5px; line-height: 1.4;">兜率天昇天 ‧ 慈氏伝承<br>万法唯識 ‧ 菩提心体系</span>
+    </div>
+    <div style="flex: 1; min-width: 180px; border: 1px solid rgba(212, 175, 55, 0.4); padding: 18px; background: rgba(212, 175, 55, 0.08); border-radius: 12px; text-align: center; box-shadow: inset 0 0 10px rgba(212, 175, 55, 0.05);">
+        <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(212, 175, 55, 0.4); padding: 1px 6px; margin-bottom: 8px; color: #d4af37; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">千部の論師</span>
+        <strong style="display: block; font-size: 1.1rem; color: #f3e5ab; letter-spacing: 2px;">世親菩薩 (ヴァスバンドゥ)</strong>
+        <span style="display: block; font-size: 0.75rem; color: #aaa; margin-top: 5px; line-height: 1.4;">小乗から大乗へ ‧ 唯識の集大成<br>唯識三十頌 ‧ 転識成智</span>
+    </div>
+</div>
+
+[一、 歴史的軌跡と著述：三位の大菩薩の生平と造論]
+
+1. 竜樹菩薩 (Nāgārjuna) —— 文殊の大智を継承し、暗冥を破る「千部論主」
+竜樹菩薩は紀元2〜3世紀頃の南インドに生まれ、バラモン種の出身でした。若くして聡明でしたが、「愛欲は苦の根本である」と悟り出家。初期は小乗三蔵を極め、後に深遠なる大乗経典に接しました。部派仏教による「大乗非仏説」の異論を打ち破り、中観般若によって大乗の法理を最高峰に高め、「千部論主」「八宗の祖」と尊称されます。
+■ 核心著述と経釈：
+  * 経釈類：『大智度論』（『摩訶般若波羅蜜経』の釈）、『十住毘婆沙論』（『華嚴経・十地品』の釈）。
+  * 中観論典類：『中論』、『十二門論』、『七十空性論』、『廻諍論』。
+  * 勧誡・菩提道類：『菩提資糧論』、『宝行王正論』、『龍樹菩薩勧誡王頌』。
+
+2. 無著菩薩 (Asaṅga) —— 弥勒の大悲を継承し、唯識の藍図を描く宗師
+無著菩薩は紀元4〜5世紀頃の北インドに生まれ、当初は化地部で出家しましたが、大乗の「空性」に深い疑問を抱き、鶏足山で12年間弥勒観を専修しました。極大の大悲心をもって傷ついた犬を救い、業障が冰消して弥勒菩薩の現身を得ました。夜間は兜率内院にのぼり法要を聴き、昼は大衆に宣説して『瑜伽師地論』などの唯識根本大論を伝承しました。
+■ 核心著述と経釈：
+  * 伝述（弥勒五論）：『瑜伽師地論』、『大乗荘厳経論』、『分別瑜伽論』（散失）、『弁中辺論』、『金剛般若論』。
+  * 自造唯識論典：『摂大乗論』、『大乗阿毘達磨集論』、『顕揚聖教論』。
+
+3. 世親菩薩 (Vasubandhu，天親) —— 小乗から大乗へ転じ、経論を広造した「千部論師」
+世親菩薩は無著菩薩の弟であり、当初は説一切有部で出家し『阿毘達磨倶舎論』を造って全インドに名を馳せましたが、当初は大乗を誹謗していました。兄の無著菩薩より『十地経』や『解深密経』の開示を受け大悟し、深く懺悔しました。無著の「かつて舌をもって大乗を毀謗したならば、今度は舌をもって大乗を讃嘆せよ」との助言を受け、大乗の法輪を回し『唯識三十頌』などを著して「千部論師」と称えられました。
+■ 核心著述と経釈：
+  * 唯識根本論著：『唯識三十頌』、『唯識二十頌』、『大乗百法明門論』、『大乗五蘊論』。
+  * 大乗経論釈著：『十住経論』、『金剛般若波羅蜜経論』、『妙法蓮華経優波提舎』、『無量寿経優波提舎』（『往生論』）。
+
+[二、 伝承と乗願再來：法界実相の記憶の覚醒]
+
+1. 竜樹菩薩「竜宮にて『華厳経』を得る」と三本説
+伝承：仏教の比喩において「海」は甚深の禅定と如来蔵海を、「竜宮」は仏陀の甚深法蔵の隠密処を表します。竜樹菩薩は深定に入り、心識の深層において仏陀が菩提樹下で悟られた『華厳』の境界に契合しました。
+華厳三本説：竜樹が竜宮で見た『華厳経』には上・中・下の三本があったと伝えられます。
+  * 上本：十世界微塵数頌・一世界微塵数品。
+  * 中本：四十九万九千二百頌・一千二百品。
+  * 下本：十万頌・四十八品。
+上本と中本はあまりに膨大で義理が深奥であるため、竜樹は「下本」のみを人間界に持ち帰りました。今日見られる『八十華厳』（実叉難陀訳）は、約四万五千頌に過ぎず、下本の半分にも満ちません。私たちが目にする『華厳経』もまた全貌の一部であり、大乗法界の不可思議さを示しています。
+
+2. 無著菩薩「兜率天に上昇して法を聴く」
+伝承：「兜率天上昇」は、無著菩薩が「弥勒定」を極めた境界を表します。定中において時空の次元を超え、清浄な心識が弥勒菩薩の悲願法界と感応道交したことを示します。
+
+[三、 経論の引証と核心法理：声聞の偏執を破り、一仏乗を顕す]
+
+1. 竜樹菩薩と中観般若：実有と断滅を破り、無自性空を顕す
+『中論』観四諦品に云く：「諸仏は二諦に依って、衆生のために法を説く。一には世俗諦、二には第一義諦なり。若し人能く知らざれば、二諦において分別す、則ち甚深の仏法において、リアルなる義を知らず。」また云く：「因縁所生の法、我は即ち是れ空なりと説く、亦た是れ仮名と名け、亦た是れ中道の義なり。」
+
+2. 無著菩薩と瑜伽唯識：万法唯識を建構し、無上菩提を発起す
+無著菩薩の『摂大乗論』に『解深密経』を引いて云く：「阿陀那識は甚深細なり、一切の種子は暴流の如し。我は凡愚において開演せず、彼が分別して執して我と為んことを恐る。」
+
+3. 世親菩薩と識変貫通：迷いを転じて悟りを成す
+世親菩薩は『唯識三十頌』に云く：「仮に我法を立するによりて、種々の相の転ずること有り、彼れは識の所変に依る。」頌の末に云く：「此れ即ち無漏界、不思議にして善にして常なり、安楽なる解脱身、大牟尼を法と名づく。」
+
+[四、 仏法平等無二：解脱道から一仏乗へ]
+
+『妙法蓮華経』方便品に云く：「十方仏土の中には、唯だ一乗の法のみ有り、二無く亦た三無し、仏の方便の説を除く。」
+三乗（声聞・縁覚・菩提）は仏陀が便宜上設けられた「化城」であり、最終的にはすべての衆生が「一仏乗」という無上菩提の大道に入るのです。
+
+[五、 経論と諸大士なくして大乗の伝播なし]
+
+竜樹菩薩が『中論』をもって八不中道を示し、無著・世親菩薩が『瑜伽師地論』や『唯識三十頌』をもって五十二位の修証の階位を明確に示さなければ、大乗の究竟の法は歴史の中に埋没していたでしょう。一人は「中観の体（空性）」を立て、一人は「唯識の用（諸法唯識）」を建てることで、平等なる成仏への道を全人類に開いたのです。`
+},
+
       {
         id: "2026-07-14-ja-bodhisattva-pureland",
         isNew: true,

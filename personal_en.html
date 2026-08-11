@@ -1198,107 +1198,73 @@ memo.oninput=e => { db.personalRoom.memo=e.target.value; saveDB(); };
 //  Mala (Rosary) Animation Logic
 // ══════════════════════════════════════════
 
-const MALA_N   = 36;       
-const MALA_CX  = 190;      
-const MALA_CY  = 346;      
-const MALA_R   = 235;      
-const MALA_STEP = 360/MALA_N; 
+const MALA_N    = 36;       
+const MALA_CX   = 190;      
+const MALA_CY   = 346;      
+const MALA_R    = 235;      
+const MALA_STEP = 360 / MALA_N; 
 
 let malaAngle     = 0;     
 let malaAnimFrame = null;
+
+
+const colorStyles = [
+    { // 1. 琥珀金 (1~108)
+        grad: `<stop offset="30%" stop-color="#d4af37" stop-opacity="0.9"/><stop offset="100%" stop-color="#5c3a00" stop-opacity="0.9"/>`,
+        stroke: 'rgba(155,78,22,0.2)'
+    },
+    { // 2. 翡翠綠 (109~216)
+        grad: `<stop offset="0%" stop-color="#e8f5e9" stop-opacity="1"/><stop offset="25%" stop-color="#81c784" stop-opacity="0.95"/><stop offset="70%" stop-color="#2e7d32" stop-opacity="0.9"/><stop offset="100%" stop-color="#0d5313" stop-opacity="1"/>`,
+        stroke: 'rgba(46,125,50,0.5)'
+    },
+    { // 3. 硃砂紅 (217~324)
+        grad: `<stop offset="0%" stop-color="#ffebee" stop-opacity="1"/><stop offset="25%" stop-color="#e57373" stop-opacity="0.95"/><stop offset="65%" stop-color="#c62828" stop-opacity="0.9"/><stop offset="100%" stop-color="#3e0000" stop-opacity="1"/>`,
+        stroke: 'rgba(198,40,40,0.5)'
+    },
+    { // 4. 巧克(325~432)
+        grad: `<stop offset="0%" stop-color="#f5f5dc" stop-opacity="1"/><stop offset="30%" stop-color="#a67c52" stop-opacity="0.95"/><stop offset="70%" stop-color="#5c3a21" stop-opacity="0.9"/> <stop offset="100%" stop-color="#1f1005" stop-opacity="1"/>`,
+        stroke: 'rgba(92,58,33,0.5)'
+    },
+
+    { // 5. 琉璃藍 (433~540)
+        grad: `<stop offset="0%" stop-color="#e1f5fe" stop-opacity="1"/><stop offset="25%" stop-color="#0288d1" stop-opacity="0.95"/><stop offset="70%" stop-color="#0d47a1" stop-opacity="0.9"/><stop offset="100%" stop-color="#00103a" stop-opacity="1"/>`,
+        stroke: 'rgba(13,71,161,0.55)'
+    },
+    { // 6. 蓮花粉 (541~648)
+        grad: `<stop offset="0%" stop-color="#fff0f5" stop-opacity="0.7"/><stop offset="25%" stop-color="#f48fb1" stop-opacity="0.9"/><stop offset="70%" stop-color="#ad1457" stop-opacity="0.9"/><stop offset="100%" stop-color="#4a001f" stop-opacity="0.8"/>`,
+        stroke: 'rgba(173,20,87,0.5)'
+    },
+    { // 7. 紫羅蘭 (649~756)
+        grad: `<stop offset="0%" stop-color="#f3e5f5" stop-opacity="1"/><stop offset="25%" stop-color="#ba68c8" stop-opacity="0.95"/><stop offset="70%" stop-color="#6a1b9a" stop-opacity="0.9"/><stop offset="100%" stop-color="#2a004a" stop-opacity="1"/>`,
+        stroke: 'rgba(106,27,154,0.5)'
+    },
+    { // 8. 琥珀橙 (757~864)
+        grad: `<stop offset="0%" stop-color="#fff3e0" stop-opacity="1"/><stop offset="30%" stop-color="#ffb74d" stop-opacity="0.95"/><stop offset="70%" stop-color="#e65100" stop-opacity="0.9"/><stop offset="100%" stop-color="#3e1000" stop-opacity="0.5"/>`,
+        stroke: 'rgba(230,81,0,0.5)'
+    },
+    { // 9. glod (865~972)
+        grad: `<stop offset="0%" stop-color="#fffbee" stop-opacity="1"/><stop offset="25%" stop-color="#fce57a" stop-opacity="0.95"/><stop offset="65%" stop-color="#c07d12" stop-opacity="0.9"/><stop offset="100%" stop-color="#2a1001" stop-opacity="1"/>`,
+        stroke: 'rgba(155, 78, 22, 0.52)'
+    },
+
+
+    { // 10. 蜜蠟黃 (973~1080)
+        grad: `<stop offset="0%" stop-color="#fffde7" stop-opacity="0.8"/><stop offset="25%" stop-color="#fff176" stop-opacity="0.95"/><stop offset="70%" stop-color="#3e1000" stop-opacity="1"/><stop offset="100%" stop-color="#c07d12" stop-opacity="1"/>`,
+        stroke: 'rgba(245,127,23,0.5)'
+    }
+];
 
 function initMala() {
     const g = document.getElementById('mala-g');
     const mainGrad = document.getElementById('bead-main');
     if (!g) return;
     
-    // 獲取當前總計數與 1080 無限輪迴計算
+    // 計算當前對應色彩索引
     let count = db.personalRoom.sessionCounts[curBuddha] || 0;
+    let styleIndex = count > 0 ? Math.floor((count - 1) / 108) % colorStyles.length : 0;
     
-    // 計算輪迴位置：超過 1080 後會自動折返回 1~1080 循環（0則保持 0）
-    let cycleCount = count > 0 ? ((count - 1) % 1080) + 1 : 0;
-    
-    let currentBeadMainGradient = '';
-    let beadStroke = 'rgba(155,78,22,0.52)';
-
-    // 每 108 次變色，1080 無止境輪迴
-    if (cycleCount === 0) {
-        currentBeadMainGradient = `
-            <stop offset="0%" stop-color="#fffbee" stop-opacity="1"/>
-            <stop offset="25%" stop-color="#fce57a" stop-opacity="0.95"/>
-            <stop offset="65%" stop-color="#c07d12" stop-opacity="0.9"/>
-            <stop offset="100%" stop-color="#2a1001" stop-opacity="1"/>`;
-        beadStroke = 'rgba(155,78,22,0.52)';
-} else if (cycleCount > 0 && cycleCount <= 108) {
-    currentBeadMainGradient = `
-        <stop offset="30%" stop-color="#d4af37" stop-opacity="0.9"/>
-        <stop offset="100%" stop-color="#5c3a00" stop-opacity="0.9"/>`;
-    beadStroke = 'rgba(155,78,22,0.2)';
-
-    } else if (cycleCount > 108 && cycleCount <= 216) {
-        currentBeadMainGradient = `
-            <stop offset="0%" stop-color="#e8f5e9" stop-opacity="1"/>
-            <stop offset="25%" stop-color="#81c784" stop-opacity="0.95"/>
-            <stop offset="70%" stop-color="#2e7d32" stop-opacity="0.9"/>
-            <stop offset="100%" stop-color="#0d5313" stop-opacity="1"/>`;
-        beadStroke = 'rgba(46,125,50,0.5)';
-    } else if (cycleCount > 216 && cycleCount <= 324) {
-        currentBeadMainGradient = `
-            <stop offset="0%" stop-color="#ffebee" stop-opacity="1"/>
-            <stop offset="25%" stop-color="#e57373" stop-opacity="0.95"/>
-            <stop offset="65%" stop-color="#c62828" stop-opacity="0.9"/>
-            <stop offset="100%" stop-color="#3e0000" stop-opacity="1"/>`;
-        beadStroke = 'rgba(198,40,40,0.5)';
-    } else if (cycleCount > 324 && cycleCount <= 432) {
-        currentBeadMainGradient = `
-            <stop offset="0%" stop-color="#f5f5dc" stop-opacity="1"/>
-            <stop offset="30%" stop-color="#a67c52" stop-opacity="0.95"/>
-            <stop offset="70%" stop-color="#5c3a21" stop-opacity="0.9"/>
-            <stop offset="100%" stop-color="#1f1005" stop-opacity="1"/>`;
-        beadStroke = 'rgba(92,58,33,0.5)';
-    } else if (cycleCount > 432 && cycleCount <= 540) {
-        currentBeadMainGradient = `
-            <stop offset="0%" stop-color="#e1f5fe" stop-opacity="1"/>
-            <stop offset="25%" stop-color="#0288d1" stop-opacity="0.95"/>
-            <stop offset="70%" stop-color="#0d47a1" stop-opacity="0.9"/>
-            <stop offset="100%" stop-color="#00103a" stop-opacity="1"/>`;
-        beadStroke = 'rgba(13,71,161,0.55)';
-    } else if (cycleCount > 540 && cycleCount <= 648) {
-        currentBeadMainGradient = `
-            <stop offset="0%" stop-color="#fff0f5" stop-opacity="0.7"/>
-            <stop offset="25%" stop-color="#f48fb1" stop-opacity="0.9"/>
-            <stop offset="70%" stop-color="#ad1457" stop-opacity="0.9"/>
-            <stop offset="100%" stop-color="#4a001f" stop-opacity="0.8"/>`;
-        beadStroke = 'rgba(173,20,87,0.5)';
-    } else if (cycleCount > 648 && cycleCount <= 756) {
-        currentBeadMainGradient = `
-            <stop offset="0%" stop-color="#f3e5f5" stop-opacity="1"/>
-            <stop offset="25%" stop-color="#ba68c8" stop-opacity="0.95"/>
-            <stop offset="70%" stop-color="#6a1b9a" stop-opacity="0.9"/>
-            <stop offset="100%" stop-color="#2a004a" stop-opacity="1"/>`;
-        beadStroke = 'rgba(106,27,154,0.5)';
-    } else if (cycleCount > 756 && cycleCount <= 864) {
-        currentBeadMainGradient = `
-            <stop offset="0%" stop-color="#fff3e0" stop-opacity="1"/>
-            <stop offset="30%" stop-color="#ffb74d" stop-opacity="0.95"/>
-            <stop offset="70%" stop-color="#e65100" stop-opacity="0.9"/>
-            <stop offset="100%" stop-color="#3e1000" stop-opacity="0.5"/>`;
-        beadStroke = 'rgba(230,81,0,0.5)';
-    } else if (cycleCount > 864 && cycleCount <= 972) {
-        currentBeadMainGradient = `
-            <stop offset="0%" stop-color="#fffde7" stop-opacity="0.9"/>
-            <stop offset="25%" stop-color="#fff176" stop-opacity="0.95"/>
-            <stop offset="70%" stop-color="#ffffff" stop-opacity="0.85"/>
-            <stop offset="100%" stop-color="#ffffff" stop-opacity="0.9"/>`;
-        beadStroke = 'rgba(245,127,23,0.5)';
-    } else if (cycleCount > 972 && cycleCount <= 1080) {
-        currentBeadMainGradient = `
-            <stop offset="0%" stop-color="#fffde7" stop-opacity="0.8"/>
-            <stop offset="25%" stop-color="#fff176" stop-opacity="0.95"/>
-            <stop offset="70%" stop-color="#3e1000" stop-opacity="1"/>
-            <stop offset="100%" stop-color="#c07d12" stop-opacity="1"/>`;
-        beadStroke = 'rgba(245,127,23,0.5)';
-    }
+    let currentBeadMainGradient = colorStyles[styleIndex].grad;
+    let beadStroke = colorStyles[styleIndex].stroke;
 
     if (mainGrad) {
         mainGrad.innerHTML = currentBeadMainGradient;
@@ -1319,54 +1285,54 @@ function initMala() {
 
         const isGuru   = (i === 0);
         const isMarker = !isGuru && (i % 9 === 0); 
-        
         const r        = isGuru ? 22 : isMarker ? 18.5 : 16.5;
 
-        // 全體連動變色：統一填色為 url(#bead-main) 與當前次第 beadStroke
         const fill   = 'url(#bead-main)';
         const stroke = beadStroke;
         const sw     = isGuru ? 1.6 : isMarker ? 1.1 : 0.85;
 
-        // 大葫蘆佛塔 (連動變色)
         if (isGuru) {
+            // ── 1. 大葫蘆母珠主體 ──
+            html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" filter="url(#guru-glow)"/>`;
             
-            const pStroke = beadStroke;
-            
-            // 1. 葫蘆下層
+            // 母珠立體高光
+            const hx = (x - r * 0.30).toFixed(2);
+            const hy = (y - r * 0.33).toFixed(2);
+            const hr = (r * 0.21).toFixed(2);
+            html += `<ellipse cx="${hx}" cy="${hy}" rx="${hr}" ry="${(r*0.17).toFixed(2)}" fill="rgba(255,255,255,0.70)"/>`;
+            html += `<circle cx="${(x - r * 0.13).toFixed(2)}" cy="${(y - r * 0.16).toFixed(2)}" r="${(r * 0.065).toFixed(2)}" fill="rgba(255,255,255,0.92)"/>`;
+
+            // ── 2. 葫蘆下層塔身 ──
             const h1_r = r * 0.40;             
             const h1_y = y - r - h1_r + 4;     
-            html += `<circle cx="${x.toFixed(2)}" cy="${h1_y.toFixed(2)}" r="${h1_r.toFixed(2)}" fill="url(#bead-main)" stroke="${pStroke}" stroke-width="0.85" filter="url(#guru-glow)"/>`;
+            html += `<circle cx="${x.toFixed(2)}" cy="${h1_y.toFixed(2)}" r="${h1_r.toFixed(2)}" fill="${fill}" stroke="${stroke}" stroke-width="0.85" filter="url(#guru-glow)"/>`;
             html += `<circle cx="${(x - h1_r*0.25).toFixed(2)}" cy="${(h1_y - h1_r*0.25).toFixed(2)}" r="${(h1_r*0.18).toFixed(2)}" fill="#fff" opacity="0.75"/>`;
 
-            // 2. 葫蘆上層
+            // ── 3. 葫蘆上層塔身 ──
             const h2_r = r * 0.25;             
             const h2_y = h1_y - h1_r - h2_r + 2; 
-            html += `<circle cx="${x.toFixed(2)}" cy="${h2_y.toFixed(2)}" r="${h2_r.toFixed(2)}" fill="url(#bead-main)" stroke="${pStroke}" stroke-width="0.65" filter="url(#guru-glow)"/>`;
+            html += `<circle cx="${x.toFixed(2)}" cy="${h2_y.toFixed(2)}" r="${h2_r.toFixed(2)}" fill="${fill}" stroke="${stroke}" stroke-width="0.65" filter="url(#guru-glow)"/>`;
             html += `<circle cx="${(x - h2_r*0.25).toFixed(2)}" cy="${(h2_y - h2_r*0.25).toFixed(2)}" r="${(h2_r*0.18).toFixed(2)}" fill="#fff" opacity="0.75"/>`;
 
-            // 3. 佛塔頂尖
+            // ── 4. 佛塔頂尖 ──
             const top_h = r * 0.20;            
             const top_y = h2_y - h2_r - top_h;
-            html += `<polygon points="${x.toFixed(2)},${top_y.toFixed(2)} ${(x - r*0.11).toFixed(2)},${(h2_y - h2_r + 0.8).toFixed(2)} ${(x + r*0.11).toFixed(2)},${(h2_y - h2_r + 0.8).toFixed(2)}" fill="url(#bead-main)" stroke="${pStroke}" stroke-width="0.5"/>`;
+            html += `<polygon points="${x.toFixed(2)},${top_y.toFixed(2)} ${(x - r*0.11).toFixed(2)},${(h2_y - h2_r + 0.8).toFixed(2)} ${(x + r*0.11).toFixed(2)},${(h2_y - h2_r + 0.8).toFixed(2)}" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>`;
 
-            // 4. 大葫蘆下層左右記子
+            // ── 5. 兩側記子 ──
             const side_r = 3.5;
-            
-            // 右斜下方小珠
             const rx = x + (h1_r + side_r - 1) * Math.cos(35 * Math.PI / 180);
             const ry = h1_y + (h1_r + side_r - 1) * Math.sin(35 * Math.PI / 180);
-            html += `<circle cx="${rx.toFixed(2)}" cy="${ry.toFixed(2)}" r="${side_r}" fill="url(#bead-main)" stroke="${pStroke}" stroke-width="0.65" filter="url(#guru-glow)"/>`;
+            html += `<circle cx="${rx.toFixed(2)}" cy="${ry.toFixed(2)}" r="${side_r}" fill="${fill}" stroke="${stroke}" stroke-width="0.65" filter="url(#guru-glow)"/>`;
             html += `<circle cx="${(rx - side_r*0.25).toFixed(2)}" cy="${(ry - side_r*0.25).toFixed(2)}" r="${(side_r*0.18).toFixed(2)}" fill="#fff" opacity="0.75"/>`;
 
-            // 左斜下方小珠
             const lx = x + (h1_r + side_r - 1) * Math.cos(145 * Math.PI / 180);
             const ly = h1_y + (h1_r + side_r - 1) * Math.sin(145 * Math.PI / 180);
-            html += `<circle cx="${lx.toFixed(2)}" cy="${ly.toFixed(2)}" r="${side_r}" fill="url(#bead-main)" stroke="${pStroke}" stroke-width="0.65" filter="url(#guru-glow)"/>`;
+            html += `<circle cx="${lx.toFixed(2)}" cy="${ly.toFixed(2)}" r="${side_r}" fill="${fill}" stroke="${stroke}" stroke-width="0.65" filter="url(#guru-glow)"/>`;
             html += `<circle cx="${(lx - side_r*0.25).toFixed(2)}" cy="${(ly - side_r*0.25).toFixed(2)}" r="${(side_r*0.18).toFixed(2)}" fill="#fff" opacity="0.75"/>`;
-        }
 
-        // 珠體繪製（酒桶形隔珠 vs 普通圓珠）
-        if (isMarker) {
+        } else if (isMarker) {
+            // ── 酒桶形隔珠 ──
             const bW = 34; 
             const bH = 21;
             html += `<rect x="${(x - bW/2).toFixed(2)}" y="${(y - bH/2).toFixed(2)}" width="${bW}" height="${bH}" rx="5" ry="5" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" transform="rotate(${(deg + 90).toFixed(2)}, ${x.toFixed(2)}, ${y.toFixed(2)})" filter="url(#bead-glow)"/>`;
@@ -1374,28 +1340,21 @@ function initMala() {
             // 酒桶形專屬光斑
             html += `<ellipse cx="${(x - bW*0.12).toFixed(2)}" cy="${(y - bH*0.15).toFixed(2)}" rx="${(bW*0.25).toFixed(2)}" ry="${(bH*0.15).toFixed(2)}" fill="rgba(255,255,255,0.55)" transform="rotate(${(deg + 90).toFixed(2)}, ${x.toFixed(2)}, ${y.toFixed(2)})"/>`;
             html += `<circle cx="${(x - bW*0.05).toFixed(2)}" cy="${(y - bH*0.05).toFixed(2)}" r="${(bH * 0.08).toFixed(2)}" fill="rgba(255,255,255,0.92)" transform="rotate(${(deg + 90).toFixed(2)}, ${x.toFixed(2)}, ${y.toFixed(2)})"/>`;
+            html += `<rect x="${(x - 25/2).toFixed(2)}" y="${(y - 21/2).toFixed(2)}" width="25" height="21" rx="6" ry="6" fill="none" stroke="${stroke}" stroke-width="0.8" transform="rotate(${(deg + 90).toFixed(2)}, ${x.toFixed(2)}, ${y.toFixed(2)})" opacity="0.5"/>`;
+
         } else {
-            // 普通圓珠
-            html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" filter="url(#${isGuru ? 'guru-glow' : 'bead-glow'})"/>`;
+            // ── 普通圓珠 ──
+            html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" filter="url(#bead-glow)"/>`;
 
             // 普通圓珠立體光斑
             const hx = (x - r * 0.30).toFixed(2);
             const hy = (y - r * 0.33).toFixed(2);
             const hr = (r * 0.21).toFixed(2);
-            html += `<ellipse cx="${hx}" cy="${hy}" rx="${hr}" ry="${(r*0.17).toFixed(2)}" fill="rgba(255,255,255,${isGuru ? 0.70 : 0.55})"/>`;
+            html += `<ellipse cx="${hx}" cy="${hy}" rx="${hr}" ry="${(r*0.17).toFixed(2)}" fill="rgba(255,255,255,0.55)"/>`;
 
             const h2x = (x - r * 0.13).toFixed(2);
             const h2y = (y - r * 0.16).toFixed(2);
             html += `<circle cx="${h2x}" cy="${h2y}" r="${(r * 0.065).toFixed(2)}" fill="rgba(255,255,255,0.92)"/>`;
-        }
-
-      
-        if (isGuru) {
-            html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(r*0.52).toFixed(1)}" fill="none" stroke="${beadStroke}" stroke-width="1.2" opacity="0.5"/>`;
-        }
-        
-        if (isMarker) {
-            html += `<rect x="${(x - 25/2).toFixed(2)}" y="${(y - 21/2).toFixed(2)}" width="25" height="21" rx="6" ry="6" fill="none" stroke="${beadStroke}" stroke-width="0.8" transform="rotate(${(deg + 90).toFixed(2)}, ${x.toFixed(2)}, ${y.toFixed(2)})" opacity="0.5"/>`;
         }
     }
 
@@ -1421,7 +1380,7 @@ function animateMala(from, to) {
     malaAnimFrame = requestAnimationFrame(step);
 }
 
-// 念珠觸控與點擊
+// 念珠觸控與點擊綁定
 const malaWrap = document.getElementById('mala-wrap');
 let malaStartY = 0;
 let nianLocked = false; 
@@ -1434,23 +1393,25 @@ function fireMala(x, y) {
     animateMala(malaAngle, malaAngle + MALA_STEP);
 }
 
-malaWrap.addEventListener('touchstart', e => {
-    malaStartY = e.touches[0].clientY;
-}, { passive: true });
+if (malaWrap) {
+    malaWrap.addEventListener('touchstart', e => {
+        malaStartY = e.touches[0].clientY;
+    }, { passive: true });
 
-malaWrap.addEventListener('touchend', e => {
-    e.preventDefault(); 
-    const touch = e.changedTouches[0];
-    const deltaY = Math.abs(touch.clientY - malaStartY);
-    
-    if (deltaY < 20) {
-        fireMala(touch.clientX, touch.clientY);
-    }
-}, { passive: false });
+    malaWrap.addEventListener('touchend', e => {
+        e.preventDefault(); 
+        const touch = e.changedTouches[0];
+        const deltaY = Math.abs(touch.clientY - malaStartY);
+        
+        if (deltaY < 20) {
+            fireMala(touch.clientX, touch.clientY);
+        }
+    }, { passive: false });
 
-malaWrap.addEventListener('click', e => {
-    fireMala(e.clientX, e.clientY);
-});
+    malaWrap.addEventListener('click', e => {
+        fireMala(e.clientX, e.clientY);
+    });
+}
 
 
 // ══════════════════════════════════════════

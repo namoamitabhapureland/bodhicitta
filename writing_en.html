@@ -12,6 +12,11 @@
 --text-gold: #f3e5ab;
 --gold-glow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.3);
 --mandala-red: rgba(70, 15, 15, 0.45);
+--ruyi-scale: 0.9;
+--ruyi-scale-x: 2.4; /* 橫向拉伸 1.5 倍 */
+--ruyi-offset-y: -12px;
+--ruyi-offset-x: 0px; /* 修正坐標系後，設為 0px 即可精準居中 */
+       
 }
 * { box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; }
 body {
@@ -36,7 +41,21 @@ transform: translateZ(0);
 .mist-5 { width: 800px; height: 400px; left: 35%; bottom: -40px; background: radial-gradient(ellipse, rgba(255,255,255,0.25) 0%, transparent 70%); animation-duration: 14s; animation-delay: -10s; }
 @keyframes drift-mist { 0% { transform: translateX(-40px) translateY(10px) scale(1); opacity: 0.6; } 100% { transform: translateX(40px) translateY(-10px) scale(1.1); opacity: 1; } }
 /* Main Practice Page */
-#page-main { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%; }
+/* Main Practice Page */
+#page-main { 
+    position: absolute; 
+    inset: 0; 
+    z-index: 10; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    width: 100%; 
+    height: 100%; 
+    opacity: 0; 
+    pointer-events: none; 
+    transition: opacity 1.5s ease;
+}
+
 .neon-flow { background: linear-gradient(90deg, #FDF5D3, #D4AF37, #E5989B, #89CFF0, #C9A0DC, #D4AF37, #FDF5D3); background-size: 200% 100%; animation: energyFlow 4s linear infinite; }
 @keyframes energyFlow { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
 .nav-top { width: 90%; max-width: 480px; z-index: 20; display: flex; justify-content: space-between; align-items: center; margin-top: max(15px, env(safe-area-inset-top)); padding: 12px 20px; background: rgba(5, 5, 8, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(212,175,55,0.2); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
@@ -513,9 +532,313 @@ pointer-events: none;
 /* z-index must be set to 10002 to perfectly overlay on top of the original modal (10001) */
 z-index: 10002;
 }
-</style>
+
+  /* 能量匯聚 Canvas */
+#realmCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 99999;
+    background-color: transparent;
+    pointer-events: none;
+    transition: opacity 1s ease;
+}
+
+
+/* 寶塔中央主視覺圖層（獨立定位於畫面中心偏上） */
+#meditator-layer {
+    position: fixed;
+    top: 46%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* 精確絕對置中 */
+    width: 28vw;
+    max-width: 180px;
+    min-width: 90px;
+    height: auto;
+    z-index: 100000;
+    pointer-events: none;
+    opacity: 0; /* 由 JavaScript 控管淡入，或與偈語同步 */
+    transition: opacity 1.5s ease;
+}
+
+.meditator-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 200 / 230;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.meditator-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    opacity: 0.9; 
+    filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.4));
+}
+
+
+
+ 
+
+/* ==========================================
+   三層雲霧獨立飄動動畫
+   ========================================== */
+.stupa-cloud {
+  transform-origin: 100px 200px;
+  transform-box: fill-box;
+}
+
+/* 1. 金光底層：慢速穩重左右飄移 */
+.cloud-layer-1 {
+  animation: cloudFloat1 2s ease-in-out infinite alternate;
+}
+
+/* 2. 冰藍中層：中速錯向左右飄移 */
+.cloud-layer-2 {
+  animation: cloudFloat2 3s ease-in-out infinite alternate;
+}
+
+/* 3. 紫霞表層：輕盈快速左右飄移 */
+.cloud-layer-3 {
+  animation: cloudFloat3 2s ease-in-out infinite alternate;
+}
+
+/* 動畫改為相對位移 (translateX)，避免干擾 Y 軸高度與 HTML 的 translate 設定 */
+@keyframes cloudFloat1 {
+  0% { transform: translateX(-25px); }
+  100% { transform: translateX(65px); }
+}
+
+@keyframes cloudFloat2 {
+  0% { transform: translateX(25px); }
+  100% { transform: translateX(-65px); }
+}
+
+@keyframes cloudFloat3 {
+  0% { transform: translateX(-35px); }
+  100% { transform: translateX(70px); }
+}
+
+/* 雲托托線控制容器（保持原樣即可） */
+.ruyi-adjustable-group {
+  transform: translate(var(--ruyi-offset-x), var(--ruyi-offset-y)) 
+             scale(var(--ruyi-scale-x), var(--ruyi-scale));
+  transform-origin: 100px 225px;
+}
+
+
+    </style>
 </head>
+
 <body oncontextmenu="return false;">
+
+    <!-- 全黑背景與 Canvas 粒子層 -->
+    <canvas id="realmCanvas"></canvas>
+
+    <!-- 中央寶塔主視覺 -->
+    <div id="meditator-layer">
+        <div class="meditator-container" id="meditator-btn">
+            <svg viewBox="0 0 200 230" class="meditator-svg" style="overflow: visible;">
+                <defs>
+                    <!-- 寶塔主體漸層 -->
+                    <linearGradient id="paleGold3DGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#bf9e48" />
+                        <stop offset="25%" stop-color="#f5eabf" />
+                        <stop offset="50%" stop-color="#ffffff" />
+                        <stop offset="75%" stop-color="#f5eabf" />
+                        <stop offset="100%" stop-color="#bf9e48" />
+                    </linearGradient>
+
+                    <!-- 1. 白金金光漸層（底層雲霧專用） -->
+                    <linearGradient id="cloudGradGold" x1="0%" y1="50%" x2="100%" y2="50%">
+                        <stop offset="0%" stop-color="#bf9e48" stop-opacity="0.2"/>
+                        <stop offset="20%" stop-color="#FCEBB6" stop-opacity="0.6"/>
+                        <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.8"/>
+                        <stop offset="80%" stop-color="#E5A853" stop-opacity="0.5"/>
+                        <stop offset="100%" stop-color="#bf9e48" stop-opacity="0.2"/>
+                    </linearGradient>
+
+                    <!-- 2. 極淡冰藍漸層（中層雲霧專用） -->
+                    <linearGradient id="cloudGradBlue" x1="0%" y1="50%" x2="100%" y2="50%">
+                        <stop offset="0%" stop-color="#8ba89c" stop-opacity="0.1"/>
+                        <stop offset="30%" stop-color="#E0F2FE" stop-opacity="0.7"/>
+                        <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.85"/>
+                        <stop offset="70%" stop-color="#BAE6FD" stop-opacity="0.6"/>
+                        <stop offset="100%" stop-color="#8ba89c" stop-opacity="0.1"/>
+                    </linearGradient>
+
+                    <!-- 3. 霓光紫霞漸層（表層雲霧專用） -->
+                    <linearGradient id="cloudGradPurple" x1="0%" y1="50%" x2="100%" y2="50%">
+                        <stop offset="0%" stop-color="#C9A0DC" stop-opacity="0.1"/>
+                        <stop offset="25%" stop-color="#F472B6" stop-opacity="0.4"/>
+                        <stop offset="50%" stop-color="#E9D5FF" stop-opacity="0.75"/>
+                        <stop offset="75%" stop-color="#C9A0DC" stop-opacity="0.5"/>
+                        <stop offset="100%" stop-color="#818CF8" stop-opacity="0.1"/>
+                    </linearGradient>
+
+                    <!-- 貫穿底線漸層 -->
+                    <linearGradient id="ruyiLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#E5A853" stop-opacity="0.1"/>
+                        <stop offset="20%" stop-color="#FCEBB6" stop-opacity="0.95"/>
+                        <stop offset="50%" stop-color="#FFF8E7" stop-opacity="1"/>
+                        <stop offset="80%" stop-color="#FCEBB6" stop-opacity="0.95"/>
+                        <stop offset="100%" stop-color="#E5A853" stop-opacity="0.1"/>
+                    </linearGradient>
+
+                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="1.8" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+
+                    <!-- 法輪圖騰 -->
+                    <g id="stupa-totem-model" stroke="url(#paleGold3DGrad)" stroke-width="0.8">
+                        <circle cx="0" cy="0" r="1.5" fill="#bf9e48" stroke="none"/>
+                        <circle cx="0" cy="0" r="3" fill="none"/>
+                        <path d="M 0,-4 C 1.5,-6 3.5,-6 5,-4 C 3.5,-2 1.5,-2 0,-4 Z" fill="#bf9e48" transform="rotate(0)"/>
+                        <path d="M 0,-4 C 1.5,-6 3.5,-6 5,-4 C 3.5,-2 1.5,-2 0,-4 Z" fill="#bf9e48" transform="rotate(45)"/>
+                        <path d="M 0,-4 C 1.5,-6 3.5,-6 5,-4 C 3.5,-2 1.5,-2 0,-4 Z" fill="#bf9e48" transform="rotate(90)"/>
+                        <path d="M 0,-4 C 1.5,-6 3.5,-6 5,-4 C 3.5,-2 1.5,-2 0,-4 Z" fill="#bf9e48" transform="rotate(135)"/>
+                        <path d="M 0,-4 C 1.5,-6 3.5,-6 5,-4 C 3.5,-2 1.5,-2 0,-4 Z" fill="#bf9e48" transform="rotate(180)"/>
+                        <path d="M 0,-4 C 1.5,-6 3.5,-6 5,-4 C 3.5,-2 1.5,-2 0,-4 Z" fill="#bf9e48" transform="rotate(225)"/>
+                        <path d="M 0,-4 C 1.5,-6 3.5,-6 5,-4 C 3.5,-2 1.5,-2 0,-4 Z" fill="#bf9e48" transform="rotate(270)"/>
+                        <path d="M 0,-4 C 1.5,-6 3.5,-6 5,-4 C 3.5,-2 1.5,-2 0,-4 Z" fill="#bf9e48" transform="rotate(315)"/>
+                    </g>
+
+                    <!-- 單門模組 -->
+                    <g id="eaved-gate">
+                        <path d="M -16,35 L -16,10 L 0,-8 L 16,10 L 16,35 Z" fill="url(#paleGold3DGrad)" stroke="#ffffff" stroke-width="0.8" filter="url(#glow)"/>
+                        <path d="M -11,35 L -11,12 L 0,-2 L 11,12 L 11,35 Z" fill="#ffffff" stroke="#ffffff" stroke-width="0.5"/>
+                        <path d="M -6,35 L -6,15 L 0,4 L 6,15 L 6,35 Z" fill="#000000" stroke="none"/>
+                        <path d="M -16,10 Q -18,7 -19,4 Q -17,6 -15,9 Z" fill="#ffffff" stroke="#ffffff" stroke-width="0.4"/>
+                        <path d="M 16,10 Q 18,7 19,4 Q 17,6 15,9 Z" fill="#ffffff" stroke="#ffffff" stroke-width="0.4"/>
+                    </g>
+
+                    <!-- 完整寶塔主體結構 -->
+                    <g id="stupa-side">
+                        <g filter="url(#glow)" fill="url(#paleGold3DGrad)" stroke="#ffffff" stroke-width="0.6" stroke-linejoin="round">
+                            <path d="M 48 138 Q 43 142 46 146 L 154 146 Q 157 142 152 138 Z" />
+                            <path d="M 46 146 Q 40 150 43 154 L 157 154 Q 160 150 154 146 Z" />
+                            <path d="M 43 154 Q 36 158 39 162 L 161 162 Q 164 158 157 154 Z" />
+                            <path d="M 39 162 Q 31 166 34 170 L 166 170 Q 169 166 161 162 Z" />
+                            <path d="M 34 170 Q 25 174 28 178 L 172 178 Q 175 174 166 170 Z" />
+                            <path d="M 28 178 Q 18 182 21 186 L 179 186 Q 182 182 172 178 Z" />
+                            <path d="M 21 186 Q 10 190 13 194 L 187 194 Q 190 190 179 186 Z" />
+                            <path d="M 13 194 Q 2 198 5 202 L 195 202 Q 198 198 187 194 Z" />
+                            <path d="M 5 202 L 195 202 L 195 212 L 5 212 Z" />
+                            <path d="M 48 138 C 48 108, 70 88, 76 83 C 82 78, 88 72, 90 66 L 110 66 C 112 72, 118 78, 124 83 C 130 88, 152 108, 152 138 Z" />
+                            <path d="M 58 112 Q 100 107 142 112" fill="none" stroke="#ffffff" stroke-width="0.5"/>
+                            <path d="M 70 94 Q 100 90 130 94" fill="none" stroke="#ffffff" stroke-width="0.5"/>
+                            <path d="M 81 79 Q 100 76 119 79" fill="none" stroke="#ffffff" stroke-width="0.5"/>
+                            <path d="M 80 71 L 120 71 L 120 77 Q 100 73 80 77 Z" />
+                            <path d="M 82 71 L 118 71 L 118 67 L 82 67 Z" />
+                            <path d="M 84 67 L 116 67 L 116 63 L 84 63 Z" />
+                            <path d="M 86 63 L 114 63 L 114 60 L 86 60 Z" />
+                            <path d="M 86 60 A 14 11 0 0 1 114 60 Z" fill="url(#paleGold3DGrad)" stroke="#ffffff" stroke-width="0.6"/>
+                        </g>
+
+                        <g fill="#f5eabf" stroke="#ffffff" stroke-width="0.2">
+                            <path d="M 89 60 L 89 54 A 1.5 2 0 0 1 92 54 L 92 60 Z" />
+                            <path d="M 95 60 L 95 51 A 1.5 2.5 0 0 1 98 51 L 98 60 Z" />
+                            <path d="M 102 60 L 102 51 A 1.5 2.5 0 0 1 105 51 L 105 60 Z" />
+                            <path d="M 108 60 L 108 54 A 1.5 2 0 0 1 111 54 L 111 60 Z" />
+                        </g>
+
+                        <g filter="url(#glow)" fill="url(#paleGold3DGrad)" stroke="#ffffff" stroke-width="0.4">
+                            <path d="M 93.5 49.0 Q 91.5 47.7 94.0 46.4 L 106.0 46.4 Q 108.5 47.7 106.5 49.0 Z" />
+                            <path d="M 94.0 46.4 Q 92.2 45.2 94.5 43.9 L 105.5 43.9 Q 107.8 45.2 106.0 46.4 Z" />
+                            <path d="M 94.5 43.9 Q 92.8 42.8 95.0 41.5 L 105.0 41.5 Q 107.2 42.8 105.5 43.9 Z" />
+                            <path d="M 95.0 41.5 Q 93.5 40.4 95.5 39.2 L 104.5 39.2 Q 106.5 40.4 105.0 41.5 Z" />
+                            <path d="M 95.5 39.2 Q 94.1 38.2 96.0 37.0 L 104.0 37.0 Q 105.9 38.2 104.5 39.2 Z" />
+                            <path d="M 96.0 37.0 Q 94.8 36.1 96.5 35.0 L 103.5 35.0 Q 105.2 36.1 104.0 37.0 Z" />
+                            <path d="M 96.5 35.0 Q 95.4 34.1 97.0 33.1 L 103.0 33.1 Q 104.6 34.1 103.5 35.0 Z" />
+                            <path d="M 97.0 33.1 Q 96.0 32.3 97.5 31.3 L 102.5 31.3 Q 104.0 32.3 103.0 33.1 Z" />
+                            <path d="M 97.5 31.3 Q 96.6 30.6 98.0 29.7 L 102.0 29.7 Q 103.4 30.6 102.5 31.3 Z" />
+                            <path d="M 98.0 29.7 Q 97.2 29.0 98.5 28.2 L 101.5 28.2 Q 102.8 29.0 102.0 29.7 Z" />
+                            <path d="M 98.5 28.2 Q 97.8 27.6 99.0 26.9 L 101.0 26.9 Q 102.2 27.6 101.5 28.2 Z" />
+                            <path d="M 99.0 26.9 Q 98.4 26.4 99.3 25.7 L 100.7 25.7 Q 101.6 26.4 101.0 26.9 Z" />
+                            <path d="M 99.3 25.7 Q 98.8 25.3 99.6 24.8 L 100.4 24.8 Q 101.2 25.3 100.7 25.7 Z" />
+                        </g>
+
+                        <g filter="url(#glow)">
+                            <path d="M 100 24 L 95 21 C 97 20, 98 19, 100 21 C 102 19, 103 20, 105 21 Z" fill="url(#paleGold3DGrad)" stroke="#ffffff" stroke-width="0.4"/>
+                            <path d="M 100 20 L 96 17 C 98 16, 99 15, 100 17 C 101 15, 102 16, 104 17 Z" fill="url(#paleGold3DGrad)" stroke="#ffffff" stroke-width="0.4"/>
+                            <path d="M 100,16 C 98,13 99,10 100,8 C 101,10 102,13 100,16 Z" fill="#ffffff" stroke="url(#paleGold3DGrad)" stroke-width="0.5"/>
+                            <line x1="100" y1="8" x2="100" y2="4" stroke="#ffffff" stroke-width="0.8" stroke-linecap="round"/>
+                        </g>
+
+                        <g stroke-linejoin="round">
+                            <use href="#eaved-gate" transform="translate(90, 55) scale(0.09)" />
+                            <use href="#eaved-gate" transform="translate(96, 55) scale(0.09)" />
+                            <use href="#eaved-gate" transform="translate(104, 55) scale(0.09)" />
+                            <use href="#eaved-gate" transform="translate(110, 55) scale(0.09)" />
+                            <use href="#eaved-gate" transform="translate(100, 152) scale(1.7)" />
+                        </g>
+                        
+                        <use href="#stupa-totem-model" x="100" y="132" filter="url(#glow)" />
+                    </g>
+                </defs>
+
+                <!-- 背景光暈與多重寶塔陣列 -->
+                <ellipse cx="100" cy="130" rx="60" ry="70" fill="url(#paleGold3DGrad)" opacity="0.1" style="filter: blur(12px);" />
+                <use href="#stupa-side" transform="translate(0, -70) scale(1.9)" transform-origin="100 130" opacity="0.2" />
+                <use href="#stupa-side" transform="translate(-130, -55) scale(1.7)" transform-origin="100 130" opacity="0.85" />
+                <use href="#stupa-side" transform="translate(130, -20) scale(1.2)" transform-origin="100 130" opacity="0.8" />
+                <use href="#stupa-side" transform="translate(-220, 15) scale(0.8)" transform-origin="100 130" opacity="0.99" />
+                <use href="#stupa-side" transform="translate(220, 25) scale(0.7)" transform-origin="100 130" opacity="0.99" />
+                <use href="#stupa-side" transform="translate(75, 40) scale(0.5)" transform-origin="100 130" opacity="0.9" />
+                <use href="#stupa-side" transform="translate(0, 0)" />
+
+                <!-- 3層多色彩雲霧層（採用雙層結構：外層可隨意調整 translate/scale，內層獨立執行 CSS 動畫） -->
+                <!-- 1. 白金金光雲霧層（底層） -->
+                <g transform="translate(0, 15) scale(1.0)" style="filter: blur(14px);" opacity="0.55">
+                    <g class="stupa-cloud cloud-layer-1">
+                        <path d="M -200,202 C -20,178 20,172 60,195 C 100,218 140,172 180,192 C 220,208 240,180 400,202 L 260,225 C 220,238 180,218 140,232 C 100,240 60,218 15,230 C -20,238 -45,218 -60,225 Z" fill="url(#cloudGradGold)"/>
+                    </g>
+                </g>
+
+                <!-- 2. 極淡冰藍雲霧層（中層） -->
+                <g transform="translate(0, 15) scale(1.0)" style="filter: blur(10px);" opacity="0.5">
+                    <g class="stupa-cloud cloud-layer-2">
+                        <path d="M -160,205 C -30,185 30,200 80,180 C 130,160 170,195 230,185 C 280,175 310,195 380,205 L 280,228 C 210,235 150,210 90,228 C 30,235 -30,210 -80,222 Z" fill="url(#cloudGradBlue)"/>
+                    </g>
+                </g>
+
+                <!-- 3. 霓光紫霞雲霧層（表層） -->
+                <g transform="translate(0, 20) scale(1.0)" style="filter: blur(8px);" opacity="0.45">
+                    <g class="stupa-cloud cloud-layer-3">
+                        <path d="M -130,210 C 10,188 50,212 90,198 C 130,182 170,215 210,200 C 225,192 235,208 300,212 L 240,228 C 200,236 160,218 120,230 C 80,238 40,218 -30,228 Z" fill="url(#cloudGradPurple)"/>
+                    </g>
+                </g>
+
+                <!-- 貫穿底部雙線托架 -->
+                <g class="ruyi-adjustable-group">
+                    <g transform="translate(100, -5)">
+                        <g fill="none" stroke-linecap="round">
+                            <!-- 第一層：柔和暗金襯底線 -->
+                            <g stroke="#3a2e18" stroke-width="6" opacity="0.65">
+                                <path d="M -160,225 C -80,235 80,235 160,225"/>
+                                <path d="M -130,231 C -60,238 60,238 130,231"/>
+                            </g>
+
+                            <!-- 第二層：金色發光主托線 -->
+                            <g stroke="url(#ruyiLineGrad)" style="filter: drop-shadow(0px 0px 4px rgba(252, 235, 182, 0.6));">
+                                <path d="M -160,225 C -80,235 80,235 160,225" stroke-width="2"/>
+                                <path d="M -130,231 C -60,238 60,238 130,231" stroke-width="2" opacity="0.9"/>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+
+            </svg>
+        </div>
+    </div>
 <div id="page-transition-curtain" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 999999; opacity: 0; pointer-events: none; transition: opacity 0.8s ease-in-out;"></div>
 <div id="vow-alert-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 10000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s;">
 <div id="vow-alert-box" style="background: linear-gradient(135deg, rgba(20,20,20,0.95), rgba(5,5,5,0.98)); border: 1px solid rgba(212,175,55,0.4); border-radius: 20px; padding: 35px 25px; width: 85%; max-width: 340px; text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.9), inset 0 0 15px rgba(212,175,55,0.1); transform: scale(0.95); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);">
@@ -1259,6 +1582,117 @@ z-index: 10002;
             `);
         });
     });
+      
+let aCtx;
+function initAudio() {
+    if (!aCtx) aCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (aCtx.state === 'suspended') aCtx.resume();
+}
+
+function playGatherSound() {
+    initAudio();
+    let osc = aCtx.createOscillator(), gain = aCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(108, aCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(864, aCtx.currentTime + 2.8);
+    
+    gain.gain.setValueAtTime(0.01, aCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.4, aCtx.currentTime + 1.4);
+    gain.gain.exponentialRampToValueAtTime(0.01, aCtx.currentTime + 2.8);
+    
+    osc.connect(gain);
+    gain.connect(aCtx.destination);
+    osc.start();
+    osc.stop(aCtx.currentTime + 2.8);
+}
+
+// ════ Canvas 粒子引擎 ════
+const realmCanvas = document.getElementById('realmCanvas');
+const rCtx = realmCanvas.getContext('2d');
+let rw, rh, rParticles = [], isGathering = true;
+
+function resizeRealmCanvas() {
+    rw = window.innerWidth;
+    rh = window.innerHeight;
+    realmCanvas.width = rw;
+    realmCanvas.height = rh;
+}
+window.addEventListener('resize', resizeRealmCanvas);
+resizeRealmCanvas();
+
+function initGatherParticles() {
+    rParticles = [];
+    for (let i = 0; i < 600; i++) {
+        let angle = Math.random() * Math.PI * 2;
+        let radius = Math.random() * 800 + 200;
+        rParticles.push({
+            x: rw / 2 + Math.cos(angle) * radius,
+            y: rh * 0.45 + Math.sin(angle) * radius,
+            size: Math.random() * 2 + 1.5,
+            speed: Math.random() * 0.05 + 0.02,
+            hue: Math.random() * 20 + 30 // 30~50 溫潤暖金光
+        });
+    }
+}
+
+function drawGatheringing() {
+    if (!isGathering) return;
+    
+    // 👈 替換此行：改為清空畫布，讓底層星空透出來
+    rCtx.clearRect(0, 0, rw, rh);
+    
+    rCtx.globalCompositeOperation = 'screen';
+    let targetX = rw / 2, targetY = rh * 0.45;
+    
+
+
+    rParticles.forEach(p => {
+        p.x += (targetX - p.x) * p.speed;
+        p.y += (targetY - p.y) * p.speed;
+        p.speed *= 1.05;
+
+        rCtx.beginPath();
+        rCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        rCtx.fillStyle = `hsla(${p.hue}, 80%, 70%, 0.8)`;
+        rCtx.fill();
+    });
+    
+    rCtx.globalCompositeOperation = 'source-over';
+    requestAnimationFrame(drawGatheringing);
+}
+
+function startIntroEffect() {
+    initGatherParticles();
+    drawGatheringing();
+    playGatherSound();
+
+    const meditatorEl = document.getElementById('meditator-layer');
+    const pageMainEl = document.getElementById('page-main');
+
+    if (meditatorEl) meditatorEl.style.opacity = '1';
+
+    setTimeout(() => {
+        isGathering = false;
+        if (meditatorEl) meditatorEl.style.opacity = '0';
+        if (realmCanvas) realmCanvas.style.opacity = '0';
+
+        // 動畫結束時顯示主介面並淡入
+        if (pageMainEl) {
+            pageMainEl.style.display = 'flex';
+            setTimeout(() => { pageMainEl.style.opacity = '1'; }, 50);
+        }
+
+        setTimeout(() => {
+            rCtx.clearRect(0, 0, rw, rh);
+            realmCanvas.style.display = 'none';
+            if (meditatorEl) meditatorEl.style.display = 'none';
+        }, 1000);
+    }, 5000);
+}
+
+window.addEventListener('click', initAudio, { once: true });
+window.addEventListener('touchstart', initAudio, { once: true, passive: true });
+window.addEventListener('load', startIntroEffect);
 </script>
 </body>
 </html>

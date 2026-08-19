@@ -516,25 +516,72 @@
         localStorage.setItem('PX_JP_V15.0', JSON.stringify(db));
     }
         
-    const now = new Date();
-    const lastMonthObj = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const daysInLastMonth = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+    const langTexts = {
+    alreadySettledVoice: "今月の修行は進行中です。来月までお待ちください。",
+    noticeTitle: "法界の告知",
+    alreadySettledName: "今月の修行蓄積中",
+    alreadySettledDesc: `修行者 ${userName} ‧ 今月の功徳は背景で蓄積されています。<br><br>今月は集計を行いません。日常の精進を続け、来月以降に結集を行ってください。`,
+    completionTitle: `修行者 ${userName} ‧ 修行円満`,
+    monthlyScore: "今月の円満度：",
+    gainSealVoice: "印記を授与： "
+};
 
-    const targetSettleMonthStr = lastMonthObj.getFullYear() + "-" + (lastMonthObj.getMonth() + 1);
-    const hasSettledLastMonth = db.lastSettledMonth === targetSettleMonthStr;
+const now = new Date();
 
-    const curB = db.bodhiLitCount || 0;
-    const curP = (db.puxianData && db.puxianData.totalPracticedDays) ? db.puxianData.totalPracticedDays : 0;
-    const curW = (db.bowData && db.bowData.streakCount) ? db.bowData.streakCount : 0;
+// 【新增/修改】計算所有「已完結且未結算」的歷史月份
+function getUnsettledCompletedMonths(lastSettledStr, nowObj) {
+    let unsettled = [];
+    const lastCompletedObj = new Date(nowObj.getFullYear(), nowObj.getMonth() - 1, 1);
+    const endYear = lastCompletedObj.getFullYear();
+    const endMonth = lastCompletedObj.getMonth() + 1;
 
-    const delB = Math.max(0, curB - (db.lunar.snapshot.bodhi || 0));
-    const delP = Math.max(0, curP - (db.lunar.snapshot.puxian || 0));
-    const delW = Math.max(0, curW - (db.lunar.snapshot.bow || 0));
-    const totalDelta = delB + delP + delW;
+    let startYear, startMonth;
+    if (!lastSettledStr) {
+        let createDate = new Date(db.createDate || nowObj);
+        startYear = createDate.getFullYear();
+        startMonth = createDate.getMonth() + 1;
+    } else {
+        let parts = lastSettledStr.split('-');
+        startYear = parseInt(parts[0], 10);
+        startMonth = parseInt(parts[1], 10) + 1;
+        if (startMonth > 12) { startMonth = 1; startYear++; }
+    }
 
-    const maxScore = daysInLastMonth * 3; 
-    let calcScore = Math.min(100, Math.max(0, Math.floor((totalDelta / maxScore) * 100)));
-    if (isNaN(calcScore)) calcScore = 0;
+    let y = startYear, m = startMonth;
+    while (y < endYear || (y === endYear && m <= endMonth)) {
+        unsettled.push({
+            year: y,
+            month: m,
+            str: `${y}-${m}`,
+            daysInMonth: new Date(y, m, 0).getDate()
+        });
+        m++;
+        if (m > 12) { m = 1; y++; }
+    }
+    return unsettled;
+}
+
+// 取得待結算清單
+const pendingMonths = getUnsettledCompletedMonths(db.lastSettledMonth, now);
+const hasPending = pendingMonths.length > 0;
+const currentTargetMonth = hasPending ? pendingMonths[0] : null;
+
+// 計算當前待結算月份的增量與分數
+const curB = db.bodhiLitCount || 0;
+const curP = (db.puxianData && db.puxianData.totalPracticedDays) ? db.puxianData.totalPracticedDays : 0;
+const curW = (db.bowData && db.bowData.streakCount) ? db.bowData.streakCount : 0;
+
+const delB = Math.max(0, curB - (db.lunar.snapshot.bodhi || 0));
+const delP = Math.max(0, curP - (db.lunar.snapshot.puxian || 0));
+const delW = Math.max(0, curW - (db.lunar.snapshot.bow || 0));
+const totalDelta = delB + delP + delW;
+
+// 分母改用當次結算月份的固定天數
+const daysInTargetMonth = currentTargetMonth ? currentTargetMonth.daysInMonth : 30;
+const maxScore = daysInTargetMonth * 3; 
+let calcScore = Math.min(100, Math.max(0, Math.floor((totalDelta / maxScore) * 100)));
+if (isNaN(calcScore)) calcScore = 0;
+
 
     function getMeritWidth(merit) {
         if (!merit || merit <= 0) return 0;
@@ -546,31 +593,35 @@
 
     let isCharging = false;
 
-    function startIntroCharge() {
-        if (isCharging) return;
-        const tier = Math.ceil(calcScore / 20) || 1;
-
-        if (hasSettledLastMonth) {
-            speak("先月の資糧は已に結集円満しました。来月をお待ちください。");
-            document.getElementById('t-title-name').innerText = "法界告示";
-            document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1]; 
-            document.getElementById('t-name-display').innerText = "結集已に円満す";
-            document.getElementById('t-desc-display').innerHTML = `行者 ${userName} 殿 ‧ 先月 (${targetSettleMonthStr}) の精進資糧は已に結集封存されました。<br><br>六度万行を日常に融合させ、来月の業鏡再開をお待ちください。`;
-            
-            const m = document.getElementById('treasure-modal');
-            if(m) {
-                m.style.display = 'flex';
-                setTimeout(() => m.style.opacity = 1, 50);
-            }
-            return;
-        }
-
-        isCharging = true;
-        const handsWrap = document.getElementById('intro-hands-wrap');
-        if(handsWrap) handsWrap.classList.add('neural-glow'); 
+ 
+// 【修改】開始充電/結集判斷
+function startIntroCharge() {
+    if (isCharging) return;
+    const tier = Math.ceil(calcScore / 20) || 1;
+    
+    // 【修改】若無待結算歷史月份（當月尚未完結）
+    if (!hasPending) {
+        // 多語系語音與文字切換區 (詳見三語區塊)
+        speak(langTexts.alreadySettledVoice);
+        document.getElementById('t-title-name').innerText = langTexts.noticeTitle;
+        document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1]; 
+        document.getElementById('t-name-display').innerText = langTexts.alreadySettledName;
+        document.getElementById('t-desc-display').innerHTML = langTexts.alreadySettledDesc;
         
-        setTimeout(() => { finishIntro(); }, 1900);
+        const m = document.getElementById('treasure-modal');
+        if(m) {
+            m.style.display = 'flex';
+            setTimeout(() => m.style.opacity = 1, 50);
+        }
+        return;
     }
+
+    isCharging = true;
+    const handsWrap = document.getElementById('intro-hands-wrap');
+    if(handsWrap) handsWrap.classList.add('neural-glow'); 
+    
+    setTimeout(() => { finishIntro(); }, 1900);
+}
 
     function finishIntro() {
         targetWarpSpeed = 25; targetStarScale = 3;
@@ -681,58 +732,57 @@
         "行者 {name} ‧ 普回向。願力海が如く、広く衆生を納む。修持は已に普回向の光束と化す、願わくは願海を拡張し、法界の幽暗を照らさんことを。",
         "行者 {name} ‧ 円満相。般若実相、本来清浄なり。自性蓮華は終に金蓮と成る、願わくは当体即是、永く退転せざらんことを。"
     ];
+// 【修改】顯示 Modal 與保存數據
+function showModal() {
+    const tier = Math.ceil(calcScore / 20) || 1;
+    document.getElementById('t-title-name').innerText = langTexts.completionTitle.replace("{userName}", userName);
+    document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1];
+    document.getElementById('t-name-display').innerText = totemNames[tier-1];
+    
+    const finalDesc = stageExhortations[tier-1].replace("{name}", userName) + 
+                      `<br><br><span style="color:var(--gold); font-size:1.1rem; letter-spacing:2px;">${langTexts.monthlyScore}${calcScore}%</span>`;
+    document.getElementById('t-desc-display').innerHTML = finalDesc;
 
-    function showModal() {
-        const tier = Math.ceil(calcScore / 20) || 1;
-        const tTitle = document.getElementById('t-title-name');
-        if (tTitle) tTitle.innerText = `行者 ${userName} ‧ 修持円満`;
-        
-        const tSvg = document.getElementById('t-svg-display');
-        if (tSvg) tSvg.innerHTML = generatedSVGs[tier-1];
-        
-        const tName = document.getElementById('t-name-display');
-        if (tName) tName.innerText = totemNames[tier-1];
-        
-        const finalDesc = stageExhortations[tier-1].replace("{name}", userName) + 
-                          `<br><br><span style="color:var(--gold); font-size:1.1rem; letter-spacing:2px;">今月円満度：${calcScore}%</span>`;
-        const tDesc = document.getElementById('t-desc-display');
-        if (tDesc) tDesc.innerHTML = finalDesc;
+    const nowB = db.bodhiLitCount || 0;
+    const nowP = (db.puxianData && db.puxianData.totalPracticedDays) ? db.puxianData.totalPracticedDays : 0;
+    const nowW = (db.bowData && db.bowData.streakCount) ? db.bowData.streakCount : 0;
+    
+    const currentDelta = Math.max(0, nowB - (db.lunar.snapshot.bodhi || 0)) + 
+                         Math.max(0, nowP - (db.lunar.snapshot.puxian || 0)) + 
+                         Math.max(0, nowW - (db.lunar.snapshot.bow || 0));
 
-        const nowB = db.bodhiLitCount || 0;
-        const nowP = (db.puxianData && db.puxianData.totalPracticedDays) ? db.puxianData.totalPracticedDays : 0;
-        const nowW = (db.bowData && db.bowData.streakCount) ? db.bowData.streakCount : 0;
-
-        const currentDelta = Math.max(0, nowB - (db.lunar.snapshot ? db.lunar.snapshot.bodhi : 0)) + 
-                             Math.max(0, nowP - (db.lunar.snapshot ? db.lunar.snapshot.puxian : 0)) + 
-                             Math.max(0, nowW - (db.lunar.snapshot ? db.lunar.snapshot.bow : 0));
-
-        db.totalMerit = (db.totalMerit || 0) + currentDelta;
-        db.lunar.snapshot = { bodhi: nowB, puxian: nowP, bow: nowW };
-        db.lastSettledMonth = targetSettleMonthStr;
-        db.mandalaVault[tier-1]++;
-
-        localStorage.setItem('PX_JP_V15.0', JSON.stringify(db));
-
-        const mFill = document.getElementById('merit-fill');
-        const mNum = document.getElementById('merit-num-display');
-        if (mNum) mNum.innerText = db.totalMerit;
-        setTimeout(() => { if(mFill) mFill.style.width = getMeritWidth(db.totalMerit) + '%'; }, 800);
-
-        speak("印記を獲得、" + totemNames[tier-1]);
-        
-        const core = document.getElementById('core-layer');
-        if (core) {
-            core.style.zIndex = "150"; 
-            core.style.transition = "opacity 1.2s ease";
-            core.style.opacity = 0;
-        }
-
-        const m = document.getElementById('treasure-modal');
-        if (m) {
-            m.style.display = 'flex';
-            setTimeout(() => m.style.opacity = 1, 50);
-        }
+    db.totalMerit = (db.totalMerit || 0) + currentDelta;
+    db.lunar.snapshot = { bodhi: nowB, puxian: nowP, bow: nowW };
+    
+    // 【修改】將 lastSettledMonth 推進至當次結算的歷史月份
+    if (currentTargetMonth) {
+        db.lastSettledMonth = currentTargetMonth.str;
     }
+
+    db.mandalaVault[tier-1]++;
+    localStorage.setItem('PX_JP_V15.0', JSON.stringify(db));
+
+    const mFill = document.getElementById('merit-fill');
+    const mNum = document.getElementById('merit-num-display');
+    if(mNum) mNum.innerText = db.totalMerit;
+    if(mFill) setTimeout(() => { mFill.style.width = getMeritWidth(db.totalMerit) + '%'; }, 800);
+
+    speak(langTexts.gainSealVoice + totemNames[tier-1]);
+    
+    const core = document.getElementById('core-layer');
+    if(core) {
+        core.style.zIndex = "150"; 
+        core.style.transition = "opacity 1.2s ease";
+        core.style.opacity = 0;
+    }
+
+    const m = document.getElementById('treasure-modal');
+    if(m) {
+        m.style.display = 'flex';
+        setTimeout(() => m.style.opacity = 1, 50);
+    }
+}
+
 
     function openVault() {
         document.getElementById('intro-layer').style.display = 'none';

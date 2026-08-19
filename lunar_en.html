@@ -287,7 +287,6 @@ body {
             </div>
         </div>
     </div>
-
 <script>
     function speak(t) {
         if (!window.speechSynthesis) return; window.speechSynthesis.cancel();
@@ -483,6 +482,16 @@ body {
         };
     }
 
+    const langTexts = {
+        alreadySettledVoice: "Current month cultivation is in progress. Please wait until next month.",
+        noticeTitle: "Dharma Realm Notice",
+        alreadySettledName: "Accumulating Current Month",
+        alreadySettledDesc: `Practitioner ${db.name || "Practitioner"} ‧ Current month merits are accumulating in the background.<br><br>Settlement is closed for the current month. Please continue your practice; settlement will open next month.`,
+        completionTitle: "Practitioner {userName} ‧ Fulfillment",
+        monthlyScore: "Monthly Completion: ",
+        gainSealVoice: "Received Seal, "
+    };
+
     if (db.streakDays === undefined) db.streakDays = 0;
     if (db.lastNianDate === undefined) db.lastNianDate = "";
     if (db.musicList !== undefined) delete db.musicList;
@@ -498,35 +507,56 @@ body {
         localStorage.setItem('PX_EN_V15.0', JSON.stringify(db));
     }
 
-    // --- 【萬年曆與時間邊界防護：百分百無 Bug 之月分計算】 ---
     const now = new Date();
-    
-    // 取得上個月的第 1 天（原生 Date 自動精確處理跨年 1月->12月 與閏年）
-    const lastMonthFirstDay = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    
-    // 取得上個月的總天數 (當月第 0 天即上月最後一天)
-    const daysInLastMonth = new Date(now.getFullYear(), now.getMonth(), 0).getDate(); 
-    
-    // 生成百分百無 Bug 的結算月份標籤 (例如 "2026-7")
-    const targetSettleMonthStr = lastMonthFirstDay.getFullYear() + "-" + (lastMonthFirstDay.getMonth() + 1);
 
-    const hasSettledThisMonth = db.lastSettledMonth === targetSettleMonthStr;
+    function getUnsettledCompletedMonths(lastSettledStr, nowObj) {
+        let unsettled = [];
+        const lastCompletedObj = new Date(nowObj.getFullYear(), nowObj.getMonth() - 1, 1);
+        const endYear = lastCompletedObj.getFullYear();
+        const endMonth = lastCompletedObj.getMonth() + 1;
+
+        let startYear, startMonth;
+        if (!lastSettledStr) {
+            let createDate = new Date(db.createDate || nowObj);
+            startYear = createDate.getFullYear();
+            startMonth = createDate.getMonth() + 1;
+        } else {
+            let parts = lastSettledStr.split('-');
+            startYear = parseInt(parts[0], 10);
+            startMonth = parseInt(parts[1], 10) + 1;
+            if (startMonth > 12) { startMonth = 1; startYear++; }
+        }
+
+        let y = startYear, m = startMonth;
+        while (y < endYear || (y === endYear && m <= endMonth)) {
+            unsettled.push({
+                year: y,
+                month: m,
+                str: `${y}-${m}`,
+                daysInMonth: new Date(y, m, 0).getDate()
+            });
+            m++;
+            if (m > 12) { m = 1; y++; }
+        }
+        return unsettled;
+    }
+
+    const pendingMonths = getUnsettledCompletedMonths(db.lastSettledMonth, now);
+    const hasPending = pendingMonths.length > 0;
+    const currentTargetMonth = hasPending ? pendingMonths[0] : null;
 
     const curB = db.bodhiLitCount || 0;
     const curP = (db.puxianData && db.puxianData.totalPracticedDays) ? db.puxianData.totalPracticedDays : 0;
     const curW = (db.bowData && db.bowData.streakCount) ? db.bowData.streakCount : 0;
 
-    const snapB = (db.lunar && db.lunar.snapshot && db.lunar.snapshot.bodhi) ? db.lunar.snapshot.bodhi : 0;
-    const snapP = (db.lunar && db.lunar.snapshot && db.lunar.snapshot.puxian) ? db.lunar.snapshot.puxian : 0;
-    const snapW = (db.lunar && db.lunar.snapshot && db.lunar.snapshot.bow) ? db.lunar.snapshot.bow : 0;
-
-    const delB = Math.max(0, curB - snapB);
-    const delP = Math.max(0, curP - snapP);
-    const delW = Math.max(0, curW - snapW);
+    const delB = Math.max(0, curB - (db.lunar.snapshot.bodhi || 0));
+    const delP = Math.max(0, curP - (db.lunar.snapshot.puxian || 0));
+    const delW = Math.max(0, curW - (db.lunar.snapshot.bow || 0));
     const totalDelta = delB + delP + delW;
 
-    const maxScore = daysInLastMonth * 3; 
-    let calcScore = maxScore > 0 ? Math.min(100, Math.floor((totalDelta / maxScore) * 100)) : 0;
+    const daysInTargetMonth = currentTargetMonth ? currentTargetMonth.daysInMonth : 30;
+    const maxScore = daysInTargetMonth * 3; 
+    let calcScore = Math.min(100, Math.max(0, Math.floor((totalDelta / maxScore) * 100)));
     if (isNaN(calcScore)) calcScore = 0;
 
     function getMeritWidth(merit) {
@@ -543,21 +573,20 @@ body {
         
         const tier = Math.ceil(calcScore / 20) || 1;
 
-        // 已完成上月結算，防止重複結算
-        if (hasSettledThisMonth) {
-            speak("This month's merits have been fully settled. Please wait until next month.");
+        if (!hasPending) {
+            speak(langTexts.alreadySettledVoice);
             
             const tTitleName = document.getElementById('t-title-name');
-            if (tTitleName) tTitleName.innerText = "Dharma Notice";
+            if (tTitleName) tTitleName.innerText = langTexts.noticeTitle;
             
             const tSvgDisp = document.getElementById('t-svg-display');
             if (tSvgDisp) tSvgDisp.innerHTML = generatedSVGs[tier-1]; 
             
             const tNameDisp = document.getElementById('t-name-display');
-            if (tNameDisp) tNameDisp.innerText = "Settlement Complete";
+            if (tNameDisp) tNameDisp.innerText = langTexts.alreadySettledName;
             
             const tDescDisp = document.getElementById('t-desc-display');
-            if (tDescDisp) tDescDisp.innerHTML = `Practitioner ${userName} ‧ This month's spiritual merits have been sealed.<br><br>Please integrate the Six Paramitas into your daily life and wait for the merit mirror to reopen next month.`;
+            if (tDescDisp) tDescDisp.innerHTML = langTexts.alreadySettledDesc;
             
             const m = document.getElementById('treasure-modal');
             if (m) {
@@ -567,7 +596,6 @@ body {
             return;
         }
 
-        // 檢查通過，開啟結算動畫
         isCharging = true;
         const handsWrap = document.getElementById('intro-hands-wrap');
         if (handsWrap) handsWrap.classList.add('neural-glow'); 
@@ -692,56 +720,49 @@ body {
 
     function showModal() {
         const tier = Math.ceil(calcScore / 20) || 1;
-        const tTitleName = document.getElementById('t-title-name');
-        if (tTitleName) tTitleName.innerText = `Practitioner ${userName} ‧ Practice Fulfilled`;
-        
-        const tSvgDisp = document.getElementById('t-svg-display');
-        if (tSvgDisp) tSvgDisp.innerHTML = generatedSVGs[tier-1];
-        
-        const tNameDisp = document.getElementById('t-name-display');
-        if (tNameDisp) tNameDisp.innerText = totemNames[tier-1];
+        document.getElementById('t-title-name').innerText = langTexts.completionTitle.replace("{userName}", userName);
+        document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1];
+        document.getElementById('t-name-display').innerText = totemNames[tier-1];
         
         const finalDesc = stageExhortations[tier-1].replace("{name}", userName) + 
-                          `<br><br><span style="color:var(--gold); font-size:1.1rem; letter-spacing:2px;">Monthly Fulfillment: ${calcScore}%</span>`;
-        const tDescDisp = document.getElementById('t-desc-display');
-        if (tDescDisp) tDescDisp.innerHTML = finalDesc;
+                          `<br><br><span style="color:var(--gold); font-size:1.1rem; letter-spacing:2px;">${langTexts.monthlyScore}${calcScore}%</span>`;
+        document.getElementById('t-desc-display').innerHTML = finalDesc;
 
         const nowB = db.bodhiLitCount || 0;
         const nowP = (db.puxianData && db.puxianData.totalPracticedDays) ? db.puxianData.totalPracticedDays : 0;
         const nowW = (db.bowData && db.bowData.streakCount) ? db.bowData.streakCount : 0;
         
-        const snapB = (db.lunar && db.lunar.snapshot && db.lunar.snapshot.bodhi) ? db.lunar.snapshot.bodhi : 0;
-        const snapP = (db.lunar && db.lunar.snapshot && db.lunar.snapshot.puxian) ? db.lunar.snapshot.puxian : 0;
-        const snapW = (db.lunar && db.lunar.snapshot && db.lunar.snapshot.bow) ? db.lunar.snapshot.bow : 0;
-
-        const currentDelta = Math.max(0, nowB - snapB) + 
-                             Math.max(0, nowP - snapP) + 
-                             Math.max(0, nowW - snapW);
+        const currentDelta = Math.max(0, nowB - (db.lunar.snapshot.bodhi || 0)) + 
+                             Math.max(0, nowP - (db.lunar.snapshot.puxian || 0)) + 
+                             Math.max(0, nowW - (db.lunar.snapshot.bow || 0));
 
         db.totalMerit = (db.totalMerit || 0) + currentDelta;
         db.lunar.snapshot = { bodhi: nowB, puxian: nowP, bow: nowW };
+        
+        if (currentTargetMonth) {
+            db.lastSettledMonth = currentTargetMonth.str;
+        }
 
-        db.lastSettledMonth = targetSettleMonthStr;
         db.mandalaVault[tier-1]++;
-
+        // 修正 Key 為 PX_EN_V15.0
         localStorage.setItem('PX_EN_V15.0', JSON.stringify(db));
 
         const mFill = document.getElementById('merit-fill');
-        const mNumDisp = document.getElementById('merit-num-display');
-        if (mNumDisp) mNumDisp.innerText = db.totalMerit;
-        setTimeout(() => { if(mFill) mFill.style.width = getMeritWidth(db.totalMerit) + '%'; }, 800);
+        const mNum = document.getElementById('merit-num-display');
+        if(mNum) mNum.innerText = db.totalMerit;
+        if(mFill) setTimeout(() => { mFill.style.width = getMeritWidth(db.totalMerit) + '%'; }, 800);
 
-        speak("Mark of fulfillment granted, " + totemNames[tier-1]);
+        speak(langTexts.gainSealVoice + totemNames[tier-1]);
         
         const core = document.getElementById('core-layer');
-        if (core) {
+        if(core) {
             core.style.zIndex = "150"; 
             core.style.transition = "opacity 1.2s ease";
             core.style.opacity = 0;
         }
 
         const m = document.getElementById('treasure-modal');
-        if (m) {
+        if(m) {
             m.style.display = 'flex';
             setTimeout(() => m.style.opacity = 1, 50);
         }
@@ -887,6 +908,7 @@ body {
         if (meritFill) meritFill.style.width = getMeritWidth(db.totalMerit || 0) + '%';
     })();
 </script>
+
 
 </body>
 </html>

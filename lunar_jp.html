@@ -537,34 +537,37 @@
         }
         localStorage.setItem('PX_JP_V15.0', JSON.stringify(db));
     }
+        
+const now = new Date();
+// 取上一個月的第一天與最後一天，完美解決跨年（1月）的月份轉換計算問題
+const lastMonthObj = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+const daysInLastMonth = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
 
-    const now = new Date();
-    const currentMonthStr = now.getFullYear() + "-" + (now.getMonth() + 1); 
+const targetSettleMonthStr = lastMonthObj.getFullYear() + "-" + (lastMonthObj.getMonth() + 1);
+const hasSettledLastMonth = db.lastSettledMonth === targetSettleMonthStr;
 
-    const lastMonth = new Date(now.getFullYear(), now.getMonth(), 0); 
-    const daysInLastMonth = lastMonth.getDate();
+const curB = db.bodhiLitCount || 0;
+const curP = (db.puxianData && db.puxianData.totalPracticedDays) ? db.puxianData.totalPracticedDays : 0;
+const curW = (db.bowData && db.bowData.streakCount) ? db.bowData.streakCount : 0;
 
-    const curB = db.bodhiLitCount || 0;
-    const curP = (db.puxianData && db.puxianData.totalPracticedDays) ? db.puxianData.totalPracticedDays : 0;
-    const curW = (db.bowData && db.bowData.streakCount) ? db.bowData.streakCount : 0;
+const delB = Math.max(0, curB - (db.lunar.snapshot.bodhi || 0));
+const delP = Math.max(0, curP - (db.lunar.snapshot.puxian || 0));
+const delW = Math.max(0, curW - (db.lunar.snapshot.bow || 0));
+const totalDelta = delB + delP + delW;
 
-    const delB = Math.max(0, curB - (db.lunar.snapshot ? db.lunar.snapshot.bodhi : 0));
-    const delP = Math.max(0, curP - (db.lunar.snapshot ? db.lunar.snapshot.puxian : 0));
-    const delW = Math.max(0, curW - (db.lunar.snapshot ? db.lunar.snapshot.bow : 0));
-    const totalDelta = delB + delP + delW;
+const maxScore = daysInLastMonth * 3; 
+let calcScore = Math.min(100, Math.max(0, Math.floor((totalDelta / maxScore) * 100)));
+if (isNaN(calcScore)) calcScore = 0; // 防呆補釘
 
-    const maxScore = daysInLastMonth * 3; 
-    let calcScore = Math.min(100, Math.floor((totalDelta / maxScore) * 100));
-    if (calcScore <= 0) calcScore = 10; 
+function getMeritWidth(merit) {
+    if (!merit || merit <= 0) return 0;
+    if (merit <= 1000) return (merit / 1000) * 48; 
+    if (merit <= 10000) return 48 + ((merit - 1000) / 9000) * 25; 
+    if (merit <= 100000) return 73 + ((merit - 10000) / 90000) * 17; 
+    return 90 + Math.min((merit - 100000) / 1000000 * 10, 10); 
+}
 
-    function getMeritWidth(merit) {
-        if (merit <= 1000) return (merit / 1000) * 48; 
-        if (merit <= 10000) return 48 + ((merit - 1000) / 9000) * 25; 
-        if (merit <= 100000) return 73 + ((merit - 10000) / 90000) * 17; 
-        return 90 + Math.min((merit - 100000) / 1000000 * 10, 10); 
-    }
-
-    let isCharging = false;
+let isCharging = false;
 
     // 🔒 結集觸發（二重觸發防止機制）
 function startIntroCharge() {

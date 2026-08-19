@@ -532,7 +532,18 @@ if (db.streakDays === undefined) db.streakDays = 0;
 if (db.lastNianDate === undefined) db.lastNianDate = "";
 if (db.musicList !== undefined) delete db.musicList;
 
-// ════ 核心時間與整月固定分母邏輯 (已修復跨年月份 Bug) ════
+// ════【修復】多語系字典宣告 (避免 ReferenceError) ════
+const langTexts = {
+    alreadySettledVoice: "當月修持尚在進行中，請靜待下月結集。",
+    noticeTitle: "法界告示",
+    alreadySettledName: "當月修持累積中",
+    alreadySettledDesc: `行者 ${db?.name || "行者"} ‧ 本月修持資糧正在背景穩定累積中。<br><br>當月不進行結集，請保持日常精進，待下月 1 日起即可重開業鏡封存功德。`,
+    completionTitle: "行者 {userName} ‧ 修持圓滿",
+    monthlyScore: "當月圓滿度：",
+    gainSealVoice: "獲贈印記，"
+};
+
+// ════【修改】核心時間與多月份結集 logic ════
 const userName = db.name || "行者";
 if (!db.createDate) {
     if (db.totalNian > 0 || db.bodhiLitCount > 0 || db.streakDays > 0) {
@@ -544,13 +555,46 @@ if (!db.createDate) {
 }
 
 const now = new Date();
-// 取上一個月的第一天與最後一天，完美解決跨年（1月）的月份轉換計算問題
-const lastMonthObj = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-const daysInLastMonth = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
 
-const targetSettleMonthStr = lastMonthObj.getFullYear() + "-" + (lastMonthObj.getMonth() + 1);
-const hasSettledLastMonth = db.lastSettledMonth === targetSettleMonthStr;
+// 計算所有「已完結且未結算」的歷史月份
+function getUnsettledCompletedMonths(lastSettledStr, nowObj) {
+    let unsettled = [];
+    const lastCompletedObj = new Date(nowObj.getFullYear(), nowObj.getMonth() - 1, 1);
+    const endYear = lastCompletedObj.getFullYear();
+    const endMonth = lastCompletedObj.getMonth() + 1;
 
+    let startYear, startMonth;
+    if (!lastSettledStr) {
+        let createDate = new Date(db.createDate || nowObj);
+        startYear = createDate.getFullYear();
+        startMonth = createDate.getMonth() + 1;
+    } else {
+        let parts = lastSettledStr.split('-');
+        startYear = parseInt(parts[0], 10);
+        startMonth = parseInt(parts[1], 10) + 1;
+        if (startMonth > 12) { startMonth = 1; startYear++; }
+    }
+
+    let y = startYear, m = startMonth;
+    while (y < endYear || (y === endYear && m <= endMonth)) {
+        unsettled.push({
+            year: y,
+            month: m,
+            str: `${y}-${m}`,
+            daysInMonth: new Date(y, m, 0).getDate()
+        });
+        m++;
+        if (m > 12) { m = 1; y++; }
+    }
+    return unsettled;
+}
+
+// 取得待結算清單
+const pendingMonths = getUnsettledCompletedMonths(db.lastSettledMonth, now);
+const hasPending = pendingMonths.length > 0;
+const currentTargetMonth = hasPending ? pendingMonths[0] : null;
+
+// 計算當前待結算月份的增量與分數
 const curB = db.bodhiLitCount || 0;
 const curP = (db.puxianData && db.puxianData.totalPracticedDays) ? db.puxianData.totalPracticedDays : 0;
 const curW = (db.bowData && db.bowData.streakCount) ? db.bowData.streakCount : 0;
@@ -560,9 +604,14 @@ const delP = Math.max(0, curP - (db.lunar.snapshot.puxian || 0));
 const delW = Math.max(0, curW - (db.lunar.snapshot.bow || 0));
 const totalDelta = delB + delP + delW;
 
-const maxScore = daysInLastMonth * 3; 
+// 分母改用當次結算月份的固定天數
+const daysInTargetMonth = currentTargetMonth ? currentTargetMonth.daysInMonth : 30;
+const maxScore = daysInTargetMonth * 3; 
 let calcScore = Math.min(100, Math.max(0, Math.floor((totalDelta / maxScore) * 100)));
-if (isNaN(calcScore)) calcScore = 0; // 防呆補釘
+if (isNaN(calcScore)) calcScore = 0;
+
+
+
 
 function getMeritWidth(merit) {
     if (!merit || merit <= 0) return 0;
@@ -574,16 +623,19 @@ function getMeritWidth(merit) {
 
 let isCharging = false;
 
+// 【修改】開始充電/結集判斷
 function startIntroCharge() {
     if (isCharging) return;
     const tier = Math.ceil(calcScore / 20) || 1;
     
-    if (hasSettledLastMonth) {
-        speak("上月資糧已結集圓滿，請靜待下月。");
-        document.getElementById('t-title-name').innerText = "法界告示";
+    // 【修改】若無待結算歷史月份（當月尚未完結）
+    if (!hasPending) {
+        // 多語系語音與文字切換區 (詳見三語區塊)
+        speak(langTexts.alreadySettledVoice);
+        document.getElementById('t-title-name').innerText = langTexts.noticeTitle;
         document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1]; 
-        document.getElementById('t-name-display').innerText = "結集已圓滿";
-        document.getElementById('t-desc-display').innerHTML = `行者 ${userName} ‧ 上月份 (${targetSettleMonthStr}) 精進資糧已結集封存。<br><br>請將六度萬行融入日常，靜待下個月重開業鏡。`;
+        document.getElementById('t-name-display').innerText = langTexts.alreadySettledName;
+        document.getElementById('t-desc-display').innerHTML = langTexts.alreadySettledDesc;
         
         const m = document.getElementById('treasure-modal');
         if(m) {
@@ -599,6 +651,7 @@ function startIntroCharge() {
     
     setTimeout(() => { finishIntro(); }, 1900);
 }
+
 
 function finishIntro() {
     targetWarpSpeed = 25; targetStarScale = 3;
@@ -707,14 +760,15 @@ const stageExhortations = [
     "行者 {name} ‧ 圓滿相。般若實相，本來清淨。自性蓮花終成金蓮，願當下即是，永不退轉。"
 ];
 
+// 【修改】顯示 Modal 與保存數據
 function showModal() {
     const tier = Math.ceil(calcScore / 20) || 1;
-    document.getElementById('t-title-name').innerText = `行者 ${userName} ‧ 修持圓滿`;
+    document.getElementById('t-title-name').innerText = langTexts.completionTitle.replace("{userName}", userName);
     document.getElementById('t-svg-display').innerHTML = generatedSVGs[tier-1];
     document.getElementById('t-name-display').innerText = totemNames[tier-1];
     
     const finalDesc = stageExhortations[tier-1].replace("{name}", userName) + 
-                      `<br><br><span style="color:var(--gold); font-size:1.1rem; letter-spacing:2px;">當月圓滿度：${calcScore}%</span>`;
+                      `<br><br><span style="color:var(--gold); font-size:1.1rem; letter-spacing:2px;">${langTexts.monthlyScore}${calcScore}%</span>`;
     document.getElementById('t-desc-display').innerHTML = finalDesc;
 
     const nowB = db.bodhiLitCount || 0;
@@ -727,7 +781,11 @@ function showModal() {
 
     db.totalMerit = (db.totalMerit || 0) + currentDelta;
     db.lunar.snapshot = { bodhi: nowB, puxian: nowP, bow: nowW };
-    db.lastSettledMonth = targetSettleMonthStr;
+    
+    // 【修改】將 lastSettledMonth 推進至當次結算的歷史月份
+    if (currentTargetMonth) {
+        db.lastSettledMonth = currentTargetMonth.str;
+    }
 
     db.mandalaVault[tier-1]++;
     localStorage.setItem('PX_V15.0', JSON.stringify(db));
@@ -737,7 +795,7 @@ function showModal() {
     if(mNum) mNum.innerText = db.totalMerit;
     if(mFill) setTimeout(() => { mFill.style.width = getMeritWidth(db.totalMerit) + '%'; }, 800);
 
-    speak("獲贈印記，" + totemNames[tier-1]);
+    speak(langTexts.gainSealVoice + totemNames[tier-1]);
     
     const core = document.getElementById('core-layer');
     if(core) {
@@ -752,6 +810,7 @@ function showModal() {
         setTimeout(() => m.style.opacity = 1, 50);
     }
 }
+
 
 function openVault() {
     document.getElementById('intro-layer').style.display = 'none';

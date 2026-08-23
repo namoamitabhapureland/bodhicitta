@@ -2710,257 +2710,216 @@ function speak(t, r) {
 
 
 function getLotusSVG(rankType, nianCount = 0, overrideLevel = null) {
-
     const safeRank = rankType || ""; 
     
-
     let nLevel = 1;
     if (overrideLevel !== null) {
         nLevel = Math.max(1, Math.min(overrideLevel, 10)); 
     } else {
-        if (nianCount >= 100000000) nLevel = 10;      // [1億] 至心歸命
-        else if (nianCount >= 10000000) nLevel = 9;   // [1千萬] 機法深信
-        else if (nianCount >= 1000000) nLevel = 8;    // [100萬] 潛通佛智
-        else if (nianCount >= 500000) nLevel = 7;     // [50萬] 都攝六根
-        else if (nianCount >= 100000) nLevel = 6;     // [10萬] 一心專念
-        else if (nianCount >= 10000) nLevel = 5;      // [1萬] 信願具足
-        else if (nianCount >= 5000) nLevel = 4;       // [5000] 淨念相繼
-        else if (nianCount >= 500) nLevel = 3;        // [500] 一念清淨
-        else if (nianCount >= 10) nLevel = 2;         // [10] 十念圓滿
-        else nLevel = 1;                              // [基礎] 初發心
+        if (nianCount >= 100000000) nLevel = 10;
+        else if (nianCount >= 10000000) nLevel = 9;
+        else if (nianCount >= 1000000) nLevel = 8;
+        else if (nianCount >= 500000) nLevel = 7;
+        else if (nianCount >= 100000) nLevel = 6;
+        else if (nianCount >= 10000) nLevel = 5;
+        else if (nianCount >= 5000) nLevel = 4;
+        else if (nianCount >= 500) nLevel = 3;
+        else if (nianCount >= 10) nLevel = 2;
+        else nLevel = 1;
     }
 
     const cx = 50, cy = 50;
     const id = `svg-${Math.random().toString(36).substr(2, 5)}`; 
 
-    // ── 花瓣路徑生成器 (5-5 交錯十瓣比例) ──
-    function P(r0, r1, hw, bulge, shape) {
+    // 平滑貝茲花瓣生成器
+    function P(r0, r1, hw, bulge) {
         const bx = cx, by = cy - r0, tx = cx, ty = cy - r1;
-        const my = cy - (r0 + r1) / 2;
-        if (shape === 'slim') return `M${bx - hw * .7} ${by} C${bx - bulge * .75} ${my} ${tx - 1.5} ${ty + 3} ${tx} ${ty} C${tx + 1.5} ${ty + 3} ${bx + bulge * .75} ${my} ${bx + hw * .7} ${by}Z`;
-        if (shape === 'wide') return `M${bx - hw} ${by} C${bx - bulge * 1.35} ${my + 4} ${tx - bulge * .45} ${ty + 7} ${tx} ${ty} C${tx + bulge * .45} ${ty + 7} ${bx + bulge * 1.35} ${my + 4} ${bx + hw} ${by}Z`;
-        return `M${bx - hw} ${by} C${bx - bulge} ${my} ${tx - bulge * .3} ${ty + 5} ${tx} ${ty} C${tx + bulge * .3} ${ty + 5} ${bx + bulge} ${my} ${bx + hw} ${by}Z`;
+        const my = cy - (r0 + r1) * 0.5;
+        return `M ${bx - hw} ${by} C ${bx - bulge} ${my}, ${tx - 1} ${ty + 2}, ${tx} ${ty} C ${tx + 1} ${ty + 2}, ${bx + bulge} ${my}, ${bx + hw} ${by} Z`;
     }
 
-    function rotatedPetals(n, r0, r1, hw, bulge, shape, fill, op, offset = 0) {
+    function rotatedPetals(n, r0, r1, hw, bulge, fill, op, offset = 0) {
         let s = '';
+        const angleStep = 360 / n;
         for (let i = 0; i < n; i++) {
-            const a = i * (360 / n) + offset;
-            s += `<path d="${P(r0, r1, hw, bulge, shape)}" fill="${fill}" opacity="${op}" transform="rotate(${a} ${cx} ${cy})"/>`;
+            const a = i * angleStep + offset;
+            s += `<path d="${P(r0, r1, hw, bulge)}" fill="${fill}" opacity="${op}" transform="rotate(${a} ${cx} ${cy})"/>`;
         }
         return s;
     }
-    // ── 微型向量幾何引擎 (只負責算數學畫線) ──
-    function pt(n, r, deg=0) {
-        let pts=[], off = -Math.PI/2 + deg*Math.PI/180;
-        for(let k=0;k<n;k++) pts.push([r*Math.cos(2*Math.PI*k/n + off), r*Math.sin(2*Math.PI*k/n + off)]);
-        return pts;
-    }
-    function st(n, r1, r2, deg=0) {
-        let pts=[], off=-Math.PI/2+deg*Math.PI/180;
-        for(let k=0;k<2*n;k++) {
-            let r=k%2===0?r1:r2;
-            pts.push([r*Math.cos(Math.PI*k/n+off), r*Math.sin(Math.PI*k/n+off)]);
-        }
-        return pts;
-    }
-    function pStr(pts) { return pts.map(p=>p[0].toFixed(2)+','+p[1].toFixed(2)).join(' '); }
-    function K(pts, stroke, sw, op) {
-        let s='';
-        for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++) s+=`<line x1="${pts[i][0].toFixed(2)}" y1="${pts[i][1].toFixed(2)}" x2="${pts[j][0].toFixed(2)}" y2="${pts[j][1].toFixed(2)}"/>`;
-        return `<g stroke="${stroke}" stroke-width="${sw}" opacity="${op}">${s}</g>`;
-    }
-    function D(pts, r, fill, op) {
-        return `<g opacity="${op}">${pts.map(p=>`<circle cx="${p[0].toFixed(2)}" cy="${p[1].toFixed(2)}" r="${r}" fill="${fill}"/>`).join('')}</g>`;
-    }
 
-       // ── 共用定義 (完全保留舊有，安全追加新色彩) ──
-    const sharedDefs = `
-    <defs>
-        <filter id="glo${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <filter id="sof${id}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.1" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <radialGradient id="rg-unified-gold" cx="50%" cy="50%" r="60%">
-            <stop offset="0%" stop-color="#fffce0"/><stop offset="28%" stop-color="#f0c030"/><stop offset="65%" stop-color="#906010"/><stop offset="100%" stop-color="#4c3008"/>
-        </radialGradient>
-        <radialGradient id="rg-void" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#111111" stop-opacity="0.95"/><stop offset="70%" stop-color="#0a0500" stop-opacity="0.8"/><stop offset="100%" stop-color="#000000" stop-opacity="0"/>
-        </radialGradient>
-        
-        <radialGradient id="rg-mandala-base-${id}" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#2a1606"/><stop offset="60%" stop-color="#140a02"/><stop offset="100%" stop-color="#080401"/>
-        </radialGradient>
-        <radialGradient id="rg-glow-faith-${id}" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/><stop offset="25%" stop-color="#ffe6d5" stop-opacity="0.85"/><stop offset="65%" stop-color="#ff9955" stop-opacity="0.25"/><stop offset="100%" stop-color="#cc5500" stop-opacity="0"/>
-        </radialGradient>
-        <radialGradient id="rg-glow-abiding-${id}" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/><stop offset="25%" stop-color="#fff4cc" stop-opacity="0.85"/><stop offset="65%" stop-color="#ffcc00" stop-opacity="0.2"/><stop offset="100%" stop-color="#aa7700" stop-opacity="0"/>
-        </radialGradient>
-        <radialGradient id="rg-glow-practice-${id}" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/><stop offset="25%" stop-color="#e6f9ff" stop-opacity="0.85"/><stop offset="65%" stop-color="#33bbff" stop-opacity="0.2"/><stop offset="100%" stop-color="#0066aa" stop-opacity="0"/>
-        </radialGradient>
-        <radialGradient id="rg-glow-dedication-${id}" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/><stop offset="25%" stop-color="#ffe6fa" stop-opacity="0.85"/><stop offset="50%" stop-color="#dd66dd" stop-opacity="0.4"/><stop offset="75%" stop-color="#ffbfa3" stop-opacity="0.2"/><stop offset="100%" stop-color="#440088" stop-opacity="0"/>
-        </radialGradient>
-        <radialGradient id="rg-glow-bhumi-${id}" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/><stop offset="20%" stop-color="#fffaee" stop-opacity="0.9"/><stop offset="45%" stop-color="#ff99cc" stop-opacity="0.5"/><stop offset="70%" stop-color="#66ccff" stop-opacity="0.25"/><stop offset="100%" stop-color="#aa66ff" stop-opacity="0"/>
-        </radialGradient>
-    </defs>`;
-
-    const voidBg = `<circle cx="50" cy="50" r="42" fill="url(#rg-void)"><animate attributeName="r" values="41;43;41" dur="6s" repeatCount="indefinite"/></circle>`;
-
-    // ── 統一金剛底座圖示 (彩色幾何與呼吸光暈版) ──
-    let innerSvg = '';
-    let glowId = `rg-glow-abiding-${id}`; 
+    // 五階尊像色調微調 (信/願/行/善/德)
     const isRank = (t) => safeRank.includes(t);
+    
+    let themeColor = { top: '#fffbe6', mid: '#ffd700', bot: '#FFE153' };
 
     if (isRank('信') || isRank('Faith')) {
-        glowId = `rg-glow-faith-${id}`;
-        let o = pt(9,97,0), m = pt(9,70,20), i = pt(9,40,0);
-        innerSvg = `
-        <polygon points="${pStr(o)}" stroke="#ffcca0" stroke-width="1.2" fill="none" opacity="0.8"/>
-        <polygon points="${pStr(m)}" stroke="#ffaa66" stroke-width="0.8" fill="none" opacity="0.6"/>
-        ${K(o,'#ffb870',0.3,0.4)}
-        ${K(m,'#ff9955',0.4,0.5)}
-        <polygon points="${pStr(st(9,97,25,0))}" fill="rgba(255,150,80,0.08)" stroke="#ffe0c0" stroke-width="1.5"/>
-        <polygon points="${pStr(i)}" stroke="#ffcc99" stroke-width="1" fill="none" opacity="0.7"/>
-        ${K(i,'#ffaa66',0.5,0.6)}
-        ${D(o,2,'#ffcca0',0.8)}${D(m,1.5,'#ffb870',0.7)}
-        `;
+        themeColor = { top: '#FFF0AC', mid: '#FFBB77', bot: '#000000' };
     } else if (isRank('願') || isRank('Vow')) {
-        glowId = `rg-glow-abiding-${id}`;
-        let o = pt(10,97,0), p1 = pt(5,80,0), p2 = pt(5,80,36), i = pt(10,45,18);
-        innerSvg = `
-        <polygon points="${pStr(o)}" stroke="#ffe066" stroke-width="1.2" fill="none" opacity="0.8"/>
-        ${K(o,'#ffd633',0.3,0.4)}
-        <polygon points="${pStr(p1)}" stroke="#ffcc00" stroke-width="1" fill="rgba(255,200,0,0.05)"/>
-        <polygon points="${pStr(p2)}" stroke="#ffcc00" stroke-width="1" fill="rgba(255,200,0,0.05)"/>
-        <polygon points="${pStr(st(10,97,20,0))}" fill="none" stroke="#fff0b3" stroke-width="1.5"/>
-        ${K(i,'#ffc266',0.5,0.6)}
-        ${D(o,2,'#ffe066',0.8)}
-        `;
+        themeColor = { top: '#e6f2ff', mid: '#FF9D6F', bot: '#0b2545' };
     } else if (isRank('行') || isRank('Practice')) {
-        glowId = `rg-glow-practice-${id}`;
-        let o = pt(12,97,0), m = pt(12,65,15), i = pt(12,35,0);
-        let t1 = pt(3,97,0), t2 = pt(3,97,30), t3 = pt(3,97,60), t4 = pt(3,97,90);
-        innerSvg = `
-        <polygon points="${pStr(o)}" stroke="#e6ffff" stroke-width="1.2" fill="none" opacity="0.8"/>
-        ${K(o,'#99ffff',0.2,0.3)}
-        <polygon points="${pStr(t1)}" stroke="#66ccff" stroke-width="1" fill="rgba(100,200,255,0.05)"/>
-        <polygon points="${pStr(t2)}" stroke="#66ccff" stroke-width="1" fill="rgba(100,200,255,0.05)"/>
-        <polygon points="${pStr(t3)}" stroke="#66ccff" stroke-width="1" fill="rgba(100,200,255,0.05)"/>
-        <polygon points="${pStr(t4)}" stroke="#66ccff" stroke-width="1" fill="rgba(100,200,255,0.05)"/>
-        <polygon points="${pStr(st(12,97,25,0))}" stroke="#ccffff" stroke-width="1.5" fill="none"/>
-        ${K(m,'#33bbff',0.3,0.5)}
-        ${K(i,'#99eeff',0.5,0.6)}
-        ${D(o,2,'#e6ffff',0.8)}
-        `;
+        themeColor = { top: '#fff0f0', mid: '#FF8000', bot: '#FFAF60' };
     } else if (isRank('善') || isRank('Goodness')) {
-        glowId = `rg-glow-dedication-${id}`;
-        let o1 = pt(8,97,0), o2 = pt(8,97,22.5), i1 = pt(8,50,11.25);
-        let all = [...o1, ...o2];
-        innerSvg = `
-        <polygon points="${pStr(o1)}" stroke="#ffccff" stroke-width="1.2" fill="none" opacity="0.8"/>
-        <polygon points="${pStr(o2)}" stroke="#ffbfa3" stroke-width="1.2" fill="none" opacity="0.8"/>
-        ${K(all,'#ddaaee',0.2,0.4)}
-        <polygon points="${pStr(st(8,97,20,0))}" stroke="#ffddaa" stroke-width="1.5" fill="rgba(255,200,100,0.06)"/>
-        <polygon points="${pStr(st(8,97,20,22.5))}" stroke="#eebbff" stroke-width="1.2" fill="none"/>
-        ${K(i1,'#ee99ff',0.5,0.6)}
-        ${D(o1,2.2,'#ffccff',0.8)}
-        ${D(o2,2.2,'#ffbfa3',0.8)}
-        `;
+        themeColor = { top: '#fffbe6', mid: '#ffd700', bot: '#FFE153' };
     } else if (isRank('德') || isRank('Virtue')) {
-        glowId = `rg-glow-bhumi-${id}`;
-        let o = pt(14,97,0);
-        const colors = ['#ff7b7b', '#ffb347', '#ffea70', '#85e085', '#70b3ff', '#c299ff', '#ffb3e6'];
-        let stars = '';
-        for(let k=0; k<7; k++) {
-            let rOut = 97 - k * 7;
-            let rIn = 25 + k * 6;
-            stars += `<polygon points="${pStr(st(14, rOut, rIn, k * 12.85))}" stroke="${colors[k]}" stroke-width="1.2" fill="rgba(255,255,255,0.03)"/>`;
-        }
-        let colorfulDots = `<g opacity="0.9">`;
-        let pts = pt(14,97,0);
-        for(let k=0; k<14; k++) {
-            colorfulDots += `<circle cx="${pts[k][0].toFixed(2)}" cy="${pts[k][1].toFixed(2)}" r="2.5" fill="${colors[k%7]}"/>`;
-        }
-        colorfulDots += `</g>`;
+        themeColor = { top: '#C6A300', mid: '#EAC100', bot: '#FFDC35' };
+    }
+    const c = themeColor;
 
-        innerSvg = `
-        ${K(o,'#ffffff',0.12,0.4)}
-        ${stars}
-        <polygon points="${pStr(pt(14, 25, 0))}" stroke="#ffffff" stroke-width="1.5" fill="none"/>
-        ${colorfulDots}
-        `;
+    // 精緻調色盤
+    const colors = {
+        lv1:  { t: "#ffffff", m: "#ffb7b2", b: "#e2858e", o: 0.95 },
+        lv2:  { t: "#ffffff", m: "#cbf0f8", b: "#f8bbd0", o: 0.9 },
+        lv3:  { t: "#e0f7fa", m: "#4dd0e1", b: "#00838f", o: 0.9 },
+        lv4:  { t: "#f3e5f5", m: "#ba68c8", b: "#7b1fa2", o: 0.9 },
+        lv5:  { t: "#e1f5fe", m: "#29b6f6", b: "#0277bd", o: 0.9 },
+        lv6:  { t: "#ffebee", m: "#e53935", b: "#b71c1c", o: 0.9 },
+        lv7_1: { t: "#ffffff", m: "#ff4081", b: "#c2185b", o: 0.60 },
+        lv7_2: { t: "#ffffff", m: "#00e5ff", b: "#00838f", o: 0.45 },
+        lv7_3: { t: "#ffffff", m: "#b388ff", b: "#6200ea", o: 0.55 },
+        lv7_4: { t: "#ffffff", m: "#00e676", b: "#008744", o: 0.40 },
+        lv7_5: { t: "#ffffff", m: "#ffd700", b: "#ff8f00", o: 0.65 },
+        lv7_6: { t: "#ffffff", m: "#ff6e40", b: "#d84315", o: 0.50 },
+        lv8:  { t: "#f3e5f5", m: "#ab47bc", b: "#fbc02d", o: 0.9 },
+        lv9:  { t: "#ffffff", m: "#fff9c4", b: "#fbc02d", o: 0.95 },
+        lv10: { t: "#ffffff", m: "#ffd700", b: "#ff6f00", o: 1.0 }
+    };
+
+    function makeGrad(gradId, col) {
+        return `
+        <radialGradient id="${gradId}" cx="50%" cy="85%" r="95%">
+            <stop offset="0%" stop-color="${col.t}" stop-opacity="${col.o}"/>
+            <stop offset="50%" stop-color="${col.m}" stop-opacity="${col.o * 0.85}"/>
+            <stop offset="100%" stop-color="${col.b}" stop-opacity="${col.o * 0.65}"/>
+        </radialGradient>`;
     }
 
-    let bgContent = '';
-    if (innerSvg) {
-        bgContent = `
-        <circle cx="${cx}" cy="${cy}" r="21.8" fill="url(#rg-mandala-base-${id})" stroke="#b08820" stroke-width="0.8"/>
-        <g transform="translate(${cx}, ${cy}) scale(0.193)">
-            ${innerSvg}
-            <circle cx="0" cy="0" r="32" fill="url(#${glowId})">
-                <animate attributeName="opacity" values="0.4; 1; 0.4" dur="4s" repeatCount="indefinite"/>
-            </circle>
-        </g>
-        <circle cx="${cx}" cy="${cy}" r="21.8" fill="none" stroke="#000000" stroke-width="0.5" opacity="0.6"/>
-        `;
-    } else {
-        // 保底：若讀不到上述位階，依然退回安全的舊版純金底盤
-        bgContent = `<circle cx="${cx}" cy="${cy}" r="21" fill="url(#rg-unified-gold)" stroke="#f0d060" stroke-width=".7"/>`;
-    }
+    const sharedDefs = `
+    <defs>
+        <filter id="glo${id}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="sof${id}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.1" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        
+        <radialGradient id="personGrad-${id}" cx="50%" cy="38%" r="75%">
+            <stop offset="0%" stop-color="${c.top}"/>
+            <stop offset="50%" stop-color="${c.mid}"/>
+            <stop offset="100%" stop-color="${c.bot}"/>
+        </radialGradient>
 
-    // ── 蓮花顏料與十階演化生成 (妙依美學強化版 - 修正 6,7,8 階) ──
+        <linearGradient id="goldRing-${id}" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fff6d0"/>
+            <stop offset="50%" stop-color="#ffd700"/>
+            <stop offset="100%" stop-color="#a8710a"/>
+        </linearGradient>
+
+        <radialGradient id="rg-void" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#111111" stop-opacity="0.95"/><stop offset="75%" stop-color="#0a0500" stop-opacity="0.85"/><stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="rg-center-base-${id}" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#3a2408"/><stop offset="60%" stop-color="#1c1004"/><stop offset="100%" stop-color="#0a0602"/>
+        </radialGradient>
+
+        ${makeGrad(`g-lv1-${id}`, colors.lv1)}
+        ${makeGrad(`g-lv2-${id}`, colors.lv2)}
+        ${makeGrad(`g-lv3-${id}`, colors.lv3)}
+        ${makeGrad(`g-lv4-${id}`, colors.lv4)}
+        ${makeGrad(`g-lv5-${id}`, colors.lv5)}
+        ${makeGrad(`g-lv6-${id}`, colors.lv6)}
+        ${makeGrad(`g-lv7_1-${id}`, colors.lv7_1)}
+        ${makeGrad(`g-lv7_2-${id}`, colors.lv7_2)}
+        ${makeGrad(`g-lv7_3-${id}`, colors.lv7_3)}
+        ${makeGrad(`g-lv7_4-${id}`, colors.lv7_4)}
+        ${makeGrad(`g-lv7_5-${id}`, colors.lv7_5)}
+        ${makeGrad(`g-lv7_6-${id}`, colors.lv7_6)}
+        ${makeGrad(`g-lv8-${id}`, colors.lv8)}
+        ${makeGrad(`g-lv9-${id}`, colors.lv9)}
+        ${makeGrad(`g-lv10-${id}`, colors.lv10)}
+    </defs>`;
+
+    const voidBg = `<circle cx="50" cy="50" r="49.5" fill="url(#rg-void)"><animate attributeName="r" values="48.5;49.5;48.5" dur="6s" repeatCount="indefinite"/></circle>`;
+
+    const bgContent = `
+    <circle cx="${cx}" cy="${cy}" r="35.3" fill="none" stroke="#ffefb0" stroke-width="0.5" opacity="0.7"/>
+    <circle cx="${cx}" cy="${cy}" r="34.5" fill="url(#rg-center-base-${id})" stroke="url(#goldRing-${id})" stroke-width="1.4"/>
+    
+    <!-- 尊像主體 -->
+    <g transform="translate(${cx - 38.5}, ${cy - 41.5}) scale(0.077)" opacity="0.97">
+        <path d="M 500 108 C 506 108, 508 114, 508 118 C 522 118, 524 145, 510 155 C 550 155, 565 170, 565 220 C 565 250, 563 275, 558 295 C 553 312, 549 324, 544 330 C 542 336, 544 352, 550 370 C 610 370, 650 400, 670 480 C 690 560, 680 660, 650 700 C 720 680, 800 700, 830 750 C 860 800, 830 840, 770 840 L 230 840 C 170 840, 140 800, 170 750 C 200 700, 280 680, 350 700 C 320 660, 310 560, 330 480 C 350 400, 390 370, 450 370 C 456 352, 458 336, 456 330 C 451 324, 447 312, 442 295 C 437 275, 435 250, 435 220 C 435 170, 450 155, 490 155 C 476 145, 478 118, 492 118 C 492 114, 494 108, 500 108 Z" 
+              fill="url(#personGrad-${id})" stroke="none" />
+        <path d="M 435 220 Q 427 205 426 220 Q 418 270 434 320 Q 428 380 454 330" fill="url(#personGrad-${id})" stroke="none" />
+        <path d="M 565 220 Q 573 205 574 220 Q 582 270 566 320 Q 572 380 546 330" fill="url(#personGrad-${id})" stroke="none" />
+    </g>
+
+    <circle cx="${cx}" cy="${cy}" r="34.5" fill="none" stroke="#000000" stroke-width="0.4" opacity="0.5"/>
+    `;
+
+    // 階層演化邏輯 (1~10階)
     let lotusContent = '';
 
-    if (nLevel === 1) { // [0] 白瓷銀
-        lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="75%" r="100%"><stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/><stop offset="100%" stop-color="#cfd8dc" stop-opacity="0.6"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="65%" r="100%"><stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/><stop offset="100%" stop-color="#eceff1" stop-opacity="0.7"/></radialGradient></defs>
-        ${rotatedPetals(8,22,46,7,11,'round',`url(#lA${id})`,.85)}${rotatedPetals(8,22,38,5.5,8,'round',`url(#lB${id})`,.65,22.5)}`;
-    } else if (nLevel === 2) { // [10] 玫瑰金
-        lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="75%" r="100%"><stop offset="0%" stop-color="#fff0f0" stop-opacity="0.95"/><stop offset="100%" stop-color="#e4a8a8" stop-opacity="0.65"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="65%" r="100%"><stop offset="0%" stop-color="#fff5f5" stop-opacity="0.9"/><stop offset="100%" stop-color="#f4c8c8" stop-opacity="0.75"/></radialGradient></defs>
-        ${rotatedPetals(8,22,46,7,11,'round',`url(#lA${id})`,.85)}${rotatedPetals(8,22,38,5.5,8,'round',`url(#lB${id})`,.65,22.5)}`;
-    } else if (nLevel === 3) { // [500] 琉璃粉
-        lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="75%" r="100%"><stop offset="0%" stop-color="#fff0f5"/><stop offset="100%" stop-color="#f48fb1" stop-opacity=".75"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="65%" r="100%"><stop offset="0%" stop-color="#ffe8f2"/><stop offset="100%" stop-color="#f8bbd0" stop-opacity=".85"/></radialGradient></defs>
-        ${rotatedPetals(8,22,46,7,11,'round',`url(#lA${id})`,.92)}${rotatedPetals(8,22,38,5.5,8,'round',`url(#lB${id})`,.7,22.5)}`;
-    } else if (nLevel === 4) { // [5000] 冰晶藍
-        lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="72%" r="100%"><stop offset="0%" stop-color="#e0f7fa" stop-opacity="0.95"/><stop offset="100%" stop-color="#81d4fa" stop-opacity="0.7"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="58%" r="100%"><stop offset="0%" stop-color="#e1f5fe" stop-opacity="0.9"/><stop offset="100%" stop-color="#b3e5fc" stop-opacity="0.8"/></radialGradient></defs>
-        ${rotatedPetals(8,22,46,9,14,'wide',`url(#lA${id})`,.88)}${rotatedPetals(8,22,37,6,9,'wide',`url(#lB${id})`,.6,22.5)}`;
-    } else if (nLevel === 5) { // [1萬] 翡翠玉
-        lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="78%" r="100%"><stop offset="0%" stop-color="#e0f2f1"/><stop offset="100%" stop-color="#80cbc4" stop-opacity=".8"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="62%" r="100%"><stop offset="0%" stop-color="#e0f7fa"/><stop offset="100%" stop-color="#b2dfdb" stop-opacity=".85"/></radialGradient></defs>
-        ${rotatedPetals(10,22,46,6,9,'point',`url(#lA${id})`,.9)}${rotatedPetals(10,22,36,4,6,'slim',`url(#lB${id})`,.6,18)}`;
-    } else if (nLevel === 6) { // [10萬] 月光琉璃 (✨ 優化：降低飽和度，光感更透明)
-        lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="78%" r="100%"><stop offset="0%" stop-color="#e1f5fe"/><stop offset="100%" stop-color="#90caf9" stop-opacity=".7"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="62%" r="100%"><stop offset="0%" stop-color="#f0f4c3" stop-opacity="0.4"/><stop offset="100%" stop-color="#b2dfdb" stop-opacity=".7"/></radialGradient></defs>
-        ${rotatedPetals(10,22,47,6.5,10,'point',`url(#lA${id})`,.9)}${rotatedPetals(10,22,38,4.5,7,'slim',`url(#lB${id})`,.75,18)}`;
-    } else if (nLevel === 7) { // [50萬] 珍珠彩虹 (✨ 重大調整：雙層交錯 ‧ 拒絕陽春)
-        const cols = ['#ffcdd2','#ffe0b2','#fff9c4','#dcedc8','#b2dfdb','#b3e5fc','#c5cae9','#e1bee7','#f8bbd0','#f5f5f5'];
-        // 外層 10 片
-        let out = Array.from({length:10}, (_, i) => `<path d="${P(22,46,7.5,11,'round')}" fill="${cols[i]}" opacity=".85" transform="rotate(${i*36} ${cx} ${cy})"/>`).join('');
-        // 內層 10 片 (旋轉 18 度填補縫隙，縮短長度增加立體感)
-        let inv = Array.from({length:10}, (_, i) => `<path d="${P(22,38,5.5,8,'round')}" fill="${cols[(i+5)%10]}" opacity=".65" transform="rotate(${i*36 + 18} ${cx} ${cy})"/>`).join('');
-        lotusContent = out + inv;
-    } else if (nLevel === 8) { // [100萬] 紫霞仙金 (✨ 優化：薰衣草漸變透金色，減少沈重感)
-        lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="75%" r="100%"><stop offset="0%" stop-color="#fff9c4" stop-opacity="0.9"/><stop offset="100%" stop-color="#ce93d8" stop-opacity=".8"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="65%" r="100%"><stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/><stop offset="100%" stop-color="#e1bee7" stop-opacity=".85"/></radialGradient></defs>
-        ${rotatedPetals(10,22,47,7,12,'wide',`url(#lA${id})`,.95)}${rotatedPetals(10,22,38,5,8,'round',`url(#lB${id})`,.75,18)}`;
-    } else if (nLevel === 9) { // [1000萬] 耀眼純金
-        lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="73%" r="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#ffd54f" stop-opacity=".9"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="63%" r="100%"><stop offset="0%" stop-color="#fffde7"/><stop offset="100%" stop-color="#ffe082" stop-opacity=".85"/></radialGradient></defs>
-        ${rotatedPetals(8,22,47,8.5,12,'round',`url(#lA${id})`,.95)}${rotatedPetals(8,22,44,8,11,'round',`url(#lB${id})`,.88,22.5)}`;
-    } else { // [1億] 圓滿琉璃金 (✨ 參數校對：精準對齊 8, 7.5)
-        lotusContent = `<defs><radialGradient id="lA${id}" cx="50%" cy="75%" r="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#ffca28" stop-opacity=".9"/></radialGradient><radialGradient id="lB${id}" cx="50%" cy="65%" r="100%"><stop offset="0%" stop-color="#fffde7"/><stop offset="100%" stop-color="#ffb300" stop-opacity=".85"/></radialGradient></defs>
-        ${rotatedPetals(12,22,48,7,10,'round',`url(#lA${id})`,.98)}${rotatedPetals(12,22,42,6,8.5,'round',`url(#lB${id})`,.9,15)}${rotatedPetals(12,22,34,4.5,6.5,'round',`url(#lA${id})`,.8,7.5)}`;
+    if (nLevel === 1) { 
+        lotusContent = rotatedPetals(10, 34.5, 48.5, 6.8, 9.5, `url(#g-lv1-${id})`, .92) +
+                       rotatedPetals(10, 34.5, 42.0, 5.2, 7.5, `url(#g-lv1-${id})`, .75, 18);
+    } else if (nLevel === 2) { 
+        lotusContent = rotatedPetals(10, 34.5, 48.5, 6.0, 8.5, `url(#g-lv2-${id})`, .90) +
+                       rotatedPetals(10, 34.5, 43.0, 4.8, 6.8, `url(#g-lv2-${id})`, .78, 18) +
+                       rotatedPetals(8, 34.5, 38.5, 3.5, 5.0, `url(#g-lv2-${id})`, .65, 0);
+    } else if (nLevel === 3) { 
+        lotusContent = rotatedPetals(12, 34.5, 48.8, 5.8, 8.0, `url(#g-lv3-${id})`, .90) +
+                       rotatedPetals(12, 34.5, 43.5, 4.5, 6.2, `url(#g-lv3-${id})`, .80, 15) +
+                       rotatedPetals(10, 34.5, 39.0, 3.2, 4.6, `url(#g-lv3-${id})`, .70, 0);
+    } else if (nLevel === 4) { 
+        lotusContent = rotatedPetals(12, 34.5, 48.5, 5.0, 7.0, `url(#g-lv4-${id})`, .88) +
+                       rotatedPetals(12, 34.5, 43.0, 4.0, 5.5, `url(#g-lv4-${id})`, .78, 15) +
+                       rotatedPetals(8, 34.5, 38.5, 3.0, 4.0, `url(#g-lv4-${id})`, .7, 0);
+    } else if (nLevel === 5) { 
+        lotusContent = rotatedPetals(12, 34.5, 48.5, 5.0, 7.0, `url(#g-lv5-${id})`, .9) +
+                       rotatedPetals(12, 34.5, 43.0, 4.0, 5.5, `url(#g-lv5-${id})`, .8, 15) +
+                       rotatedPetals(10, 34.5, 38.5, 3.2, 4.2, `url(#g-lv5-${id})`, .75, 0);
+    } else if (nLevel === 6) { 
+        lotusContent = rotatedPetals(14, 34.5, 49.0, 4.5, 6.5, `url(#g-lv6-${id})`, .92) +
+                       rotatedPetals(14, 34.5, 43.5, 3.8, 5.2, `url(#g-lv6-${id})`, .82, 12.85) +
+                       rotatedPetals(10, 34.5, 39.0, 3.2, 4.2, `url(#g-lv6-${id})`, .8, 0);
+    } else if (nLevel === 7) { 
+        lotusContent = rotatedPetals(4, 34.5, 49.5, 4.8, 6.8, `url(#g-lv7_1-${id})`, .60, 0) +
+                       rotatedPetals(4, 34.5, 49.5, 4.8, 6.8, `url(#g-lv7_2-${id})`, .45, 30) +
+                       rotatedPetals(4, 34.5, 49.5, 4.8, 6.8, `url(#g-lv7_3-${id})`, .55, 60) +
+                       
+                       rotatedPetals(4, 34.5, 44.5, 3.8, 5.2, `url(#g-lv7_4-${id})`, .40, 15) +
+                       rotatedPetals(4, 34.5, 44.5, 3.8, 5.2, `url(#g-lv7_5-${id})`, .65, 45) +
+                       rotatedPetals(4, 34.5, 44.5, 3.8, 5.2, `url(#g-lv7_6-${id})`, .50, 75) +
+
+                       rotatedPetals(6, 34.5, 40.0, 3.0, 4.2, `url(#g-lv7_1-${id})`, .50, 0) +
+                       rotatedPetals(6, 34.5, 40.0, 3.0, 4.2, `url(#g-lv7_3-${id})`, .50, 30) +
+
+                       rotatedPetals(6, 34.5, 37.0, 2.4, 3.4, `url(#g-lv7_5-${id})`, .60, 15);
+    } else if (nLevel === 8) { 
+        lotusContent = rotatedPetals(16, 34.5, 49.5, 4.0, 6.0, `url(#g-lv8-${id})`, .9) +
+                       rotatedPetals(16, 34.5, 44.5, 3.5, 4.8, `url(#g-lv8-${id})`, .85, 11.25) +
+                       rotatedPetals(12, 34.5, 40.0, 3.0, 4.2, `url(#g-lv8-${id})`, .8, 0) +
+                       rotatedPetals(10, 34.5, 37.0, 2.6, 3.6, `url(#g-lv9-${id})`, .78, 18);
+    } else if (nLevel === 9) { 
+        lotusContent = rotatedPetals(16, 34.5, 49.5, 4.0, 6.0, `url(#g-lv9-${id})`, .92) +
+                       rotatedPetals(16, 34.5, 45.0, 3.5, 4.8, `url(#g-lv9-${id})`, .88, 11.25) +
+                       rotatedPetals(14, 34.5, 41.0, 3.0, 4.2, `url(#g-lv9-${id})`, .85, 0) +
+                       rotatedPetals(12, 34.5, 38.0, 2.6, 3.6, `url(#g-lv10-${id})`, .8, 15) +
+                       rotatedPetals(8, 34.5, 35.5, 2.2, 3.0, `url(#g-lv10-${id})`, .75, 0);
+    } else { 
+        lotusContent = rotatedPetals(18, 34.5, 49.5, 3.8, 5.5, `url(#g-lv10-${id})`, .95) +
+                       rotatedPetals(18, 34.5, 45.5, 3.2, 4.6, `url(#g-lv10-${id})`, .9, 10) +
+                       rotatedPetals(14, 34.5, 42.0, 2.8, 4.0, `url(#g-lv10-${id})`, .88, 0) +
+                       rotatedPetals(12, 34.5, 39.0, 2.5, 3.5, '#ffffff', .85, 15) +
+                       rotatedPetals(10, 34.5, 36.5, 2.0, 2.8, `url(#g-lv10-${id})`, .8, 0);
     }
 
- 
-
     return `
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
-        ${sharedDefs}${voidBg}${bgContent}
-<g filter="url(#sof${id})" style="transform-origin: 50px 50px; animation: lotus-overall-breathing 4s infinite ease-in-out;">
-    ${lotusContent}
-</g>
-
-        <circle cx="50" cy="50" r="1.8" fill="#ffffff" opacity=".95" filter="url(#glo${id})"/>
-    </svg>`;
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; shape-rendering: geometricPrecision; text-rendering: geometricPrecision;">
+    ${sharedDefs}${voidBg}
+    <g filter="url(#sof${id})" style="transform-origin: 50px 50px; animation: lotus-overall-breathing 4s infinite ease-in-out; will-change: transform; backface-visibility: hidden;">
+        ${bgContent}
+        ${lotusContent}
+    </g>
+</svg>`;
 }
+
 
     
 

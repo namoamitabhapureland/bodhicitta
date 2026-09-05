@@ -2,6 +2,74 @@ const rawArticles = [
     // ==========================================
     // 中文文章
     // ==========================================
+{
+        id: "2026-09-07-zh-agama-mahayana-naraka-deva",
+        isNew: true,
+        lang: "zh",
+        category: "佛學", 
+        title: "原始阿含與大乘經藏之地獄與天人宇宙觀考據及業報機制探微",
+        status: "四部阿含 ． 大般若 ． 華嚴 ． 法華 ． 涅槃",
+        humble: "本篇札記立足於原始佛教四部《阿含經》與具備梵本傳世之大乘經藏（Sūtra），嚴謹梳理地獄（Naraka）與天人（Deva）之三界宇宙觀。從業力感召、自然律法則及實相觀之角度，完整考證墮入惡道之條件、受劫時間之換算，以及臨終發露懺悔之實質效應與大乘實相之開展。",
+        content: `[一、 地獄（Naraka / Niraya）體系考據與典籍記載之演進]
+在佛教經藏中，「地獄」一詞多譯為「泥梨」或「捺落迦」，其本質並非一神教概念中由外在神祇建構之永久懲罰場所，而是眾生因造作極重惡業，於臨終四大分散時，心識所感召顯化之極苦境地。
+
+原始佛教四部《阿含經》建立地獄之基礎架構，而具備梵本傳世之大乘經藏（如《大方廣佛華嚴經》、《妙法蓮華經》）則於空間維度與微細苦相上進行廣大擴展：
+
+其一，為八大地獄（八熱地獄）與附屬地獄。《長阿含經·地獄經》明確列出八大主獄：等活地獄（眾生持鐵爪兵刃互殺，死後冷風吹拂或獄卒喊「等活」即復生繼續受刑）、黑繩地獄（獄卒以熱鐵繩劃線，隨後依線鋸斬剖裂）、眾合地獄（兩座大鐵山合攏將眾生壓碎）、叫喚地獄（置於熱鐵鑊或鐵室中煎煮發出慘叫）、大叫喚地獄（煎熬劇痛勝於前，嚎啕慘呼）、燒熱地獄（置於熱鐵板上通體大火炙烤）、大燒熱地獄（以三股鐵叉刺穿，置於大火中徹內徹外焚燒）、阿鼻地獄（又名無間地獄，受苦、時間、空間皆無間斷，造五逆重罪者直入此獄）。八大地獄每座各有四門，門外設有十六遊增地獄（如煻灰坑、屍糞泥、刀山劍樹等），罪業未盡者需依次經歷。此外，《雜阿含經》亦記載疱地獄、阿波波地獄、大蓮花地獄等十寒地獄，眾生因極寒凍至身體起疱裂開，或發出牙齒打顫之擬聲。大乘經藏如《華嚴經·十地品》則進一步列舉邊地獄與獨地獄，展現業力感召果報之極致多樣性。
+
+其二，為審判者與「五天使」之角色定位。《中阿含經·天使經》記載閻羅王以「生、老、病、死、受刑罪人」五現象警惕世人。然閻羅王並非獨裁之主宰者，其本身亦受業力牽制。閻羅王審問時宣告：「汝今作惡，非父母親友所作，實汝自作，今當自受。」此乃強調「業果自負」之鐵律，閻羅王僅為業力法則之宣告者。
+
+其三，為地獄本質從「客觀境域」至「唯心所現」之開展。《阿含經》多從生滅法與業因果報之客觀事相描述地獄；而大乘梵本經典如《大方廣佛華嚴經·夜摩天宮讚歎品》則揭示：「若人欲了知，三世一切佛，應觀法界性，一切唯心造。」揭示地獄之烈火、刀山、獄卒，本質上皆是眾生無明妄想、強烈瞋恚心所幻現之業力影相。
+
+[二、 天人（Deva）體系考據與三界構造之層次]
+天人體系是佛教三界宇宙觀之頂層構造。佛教並非盲目吸收古印度神話，而是將傳統神祇「佛教化」與「倫理化」，併入三界輪迴框架中。天人壽命雖長，仍未脫離生死無常。
+
+《長阿含經·世紀經》、《增一阿含經》與大乘梵本《妙法蓮華經》（Saddharmapuṇḍarīka Sūtra）等，共通構築了完整之三界（Traidhātuka）二十八天結構，並將其擴展至十方無量佛土：
+
+其一，為欲界天（6天）。具有物質欲望與情愛，依次為四天王天、忉利天（帝釋天居所）、夜摩天、兜率天、化樂天、他化自在天。
+
+其二，為色界天（18天）。無欲界情慾，離粗重物質，以禪定樂為食。其中初禪天含大梵天（被婆羅門教誤為創世主，《長阿含經·梵動經》揭示其僅為劫初最先投生之初禪天王，因壽長而生創世傲慢，實未脫輪迴）；二禪天、三禪天、四禪天則包含廣果天、無想天及五淨居天等。
+
+其三，為無色界天（4天）。無物質型態，純為精神意識狀態，包含空無邊處天、識無邊處天、無所有處天、非想非非想處天。
+
+典籍同時揭示天人之無常性與解脫觀。《增一阿含經》記載天人福報享盡時會出現「天人五衰」（頭上花萎、腋下出汗、衣裳垢穢、身體臭穢、不樂本座），隨即隨業下墮。《妙法蓮華經·譬喻品》亦云：「三界無安，猶如火宅，眾苦充滿，甚可怖畏。」且《增一阿含經·等見品》明確指出，諸佛皆出於人間，不在天界成佛；天界因極樂而易沉溺懈怠，人間苦樂參半，方為修習解脫最勝之器皿。
+
+[三、 下地獄之條件、業力機制與下墮容易度]
+在《阿含經》與大乘經藏中，墮入地獄並非外部神祇之懲罰，而是嚴格遵循「自作自受、因果相應」之宇宙自然律。其感召條件與機制如下：
+
+其一，為感召地獄之核心惡業。第一為「十惡業」：身三（殺生、偷盜、邪淫）、口四（妄語、兩舌、惡口、綺語）、意三（貪欲、瞋恚、邪見），《雜阿含經》指出具足十惡且至死不悔者必墮地獄。第二為「五逆罪」（無間業）：殺父、殺母、殺阿羅漢、破和合僧、出佛身血，《增一阿含經》記載造五逆者命終無有間隔，直接墮入阿鼻地獄。第三為「邪見與毀謗正法」：《增一阿含經·賢劫品》強調「無過於邪見者，邪見者不可救療」；大乘《妙法蓮華經·譬喻品》亦明確指出，若人對正法生起毀謗、輕賤、嫉妒，命終直接墮入阿鼻地獄，受苦一劫，劫盡復生他方阿鼻地獄。毀謗正法直接遮蔽自己與他人之慧命，故感召極重地獄業。
+
+其二，為眾生下墮之容易性。在《雜阿含經》中，佛陀以手沾泥比喻：「得人身者，如爪上泥；失人身而墮地獄、餓鬼、畜生者，如大地土。」此乃示警凡夫隨順本能之貪瞋痴與口業生活，其心識慣性自然趨向下墮。
+
+其三，為地獄受刑時間之經文換算。《阿含經》與大乘經藏皆強調「業盡方出」，地獄時間極長但非永刑。八熱地獄中最輕之等活地獄，壽命為500歲（其1日等於四天王天500歲，即人間50年為四天王天1日），換算人間約為1.62兆年；最重之阿鼻地獄壽命長達整整「一中劫」。十寒地獄中，《雜阿含經》以「每隔百年取出一粒20斛桶中胡麻」為一胡麻劫，最輕之疱地獄壽命即等於此劫數，後續寒地獄則成倍數遞增。
+
+[四、 臨終懺悔機制、心識轉化與大乘終極救拔]
+關於造惡後之轉化機制，原始阿含與大乘經藏展現了從「業報轉化」至「實相救拔」之深層理趣：
+
+其一，為業力成熟之順序機制與懺悔效應。眾生臨終隨業投生遵循「隨重業（五逆等極重罪）、隨近業（臨終一念）、隨習業（一生習慣）」之法則。真誠發露懺悔（永不再犯）能切斷臨終瞋恚與恐懼心，使心識不與地獄惡境產生同頻共振。《阿含經》記載阿闍世王造殺父重罪，後至心向佛發露懺悔，原本應長劫受苦之阿鼻地獄業，轉化為如「拍球落地即彈起」般極短時間之受苦（拍球地獄）。此即「重罪轉輕受」，改變了受苦之強度與時間，然因果法則並未被否定。
+
+其二，為僥倖心態之極大風險。《雜阿含經》以「樹倒」為喻，樹平時向東傾斜，倒下必然向東。若平時抱持「先作惡、後懺悔」之功利心，本身即屬深重邪見與欺誆心。臨終之際四大分離、身心劇痛驚恐，若無平時正念訓練，心識慣性快過思考，極難生起純淨真誠之懺悔心。
+
+其三，為大乘經藏對地獄眾生之終極救拔與授記。大乘經藏在大悲願力與實相觀上，對《阿含經》進行了超越性的圓融。梵本《妙法蓮華經·提婆達多品》（Devadatta-parivarta）中，佛陀授記曾造破僧、出佛身血重罪而墮地獄之提婆達多，於未來世當得成佛，號天王如來。此彰顯大乘「一切眾生皆有佛性」與「地獄罪人亦能發心成佛」之終極平等觀，顯示地獄雖苦，然實相本空，大悲救拔無有邊際。
+
+[引用與延伸閱讀註解]
+【註1】：關於八大地獄與遊增地獄
+出自《長阿含經·卷十九·地獄經》。經中詳細記載等活、黑繩、堆壓、叫喚、大叫喚、燒熱、大燒熱、阿鼻八大地獄，以及每獄附屬之十六遊增地獄名號與刑罰相貌。
+【註2】：關於閻羅王與五天使
+出自《中阿含經·卷一·天使經》（對應巴利聖典 Mūlapariyāya-nikāya 之 Devadūta Sutta）。經中記載閻羅王以生、老、病、死、罪人五天使審問罪人，並強調業果自負。
+【註3】：關於三界二十八天構造與大梵天慢心
+出自《長阿含經·卷二十·世紀經》與《長阿含經·卷十四·梵動經》。經中系統性建構欲界、色界、無色界，並解構大梵天創世神話，指出其僅為初禪天王。
+【註4】：關於爪上泥之喻與十惡業墮落
+出自《雜阿含經·卷四十四》及《雜阿含經·卷三十一》。佛陀以爪上泥與大地土比喻得人身與失人身之比例，並說明具足十惡業感召地獄之相應關係。
+【註5】：關於十寒地獄與胡麻劫壽命換算
+出自《雜阿含經·卷四十八》及《相應部·提婆達多相應》。經中以每百年取出一粒20斛桶中胡麻之比喻，說明疱地獄等十寒地獄之極長壽命。
+【註6】：關於阿闍世王懺悔與重罪轉輕受
+出自《長阿含經·卷十七·沙門果經》及《增一阿含經》。記載阿闍世王殺父後至心向佛發露懺悔，重罪得轉輕受，免去長劫無間地獄之苦。
+【註7】：關於華嚴經唯心所現與地獄本質
+出自梵本《大方廣佛華嚴經》（Mahāvaipulya Buddhāvataṃsaka Sūtra）〈夜摩天宮菩薩說偈品〉及〈十地品〉。經中提出「一切唯心造」之核心實相觀，揭示地獄景象乃惡業心識所感召之幻相。
+【註8】：關於梵本法華經謗法墮地獄與提婆達多授記
+出自梵本《妙法蓮華經》（Saddharmapuṇḍarīka Sūtra）〈譬喻品〉及〈提婆達多品〉。經文詳細記載毀謗大乘正法者直入阿鼻地獄，同時佛陀授記提婆達多未來成佛，彰顯佛性平等與大乘實相之終極圓滿。`
+    },
 
   {
     id: "2026-09-06-zh-mahayana-sutra-chronology-and-textual-history",
@@ -1085,6 +1153,74 @@ Neukart 的理論認為，神祕的暗物質與暗能量與這些「資訊」息
     // ==========================================
     // 英文文章 (English Articles)
     // ==========================================
+  {
+    "id": "2026-09-07-en-agama-mahayana-naraka-deva",
+    "isNew": true,
+    "lang": "en",
+    "category": "Buddhism",
+    "title: "An Examination of Naraka and Deva Cosmology in the Āgamas and Mahāyāna Sūtras",
+    "status": "Four Āgamas · Mahāprajñāpāramitā · Avataṃsaka · Saddharmapuṇḍarīka · Mahāparinirvāṇa",
+    "humble": "This study objectively examines the cosmology of Naraka (hell) and Deva (realms of heavenly beings) within the Trailokya framework, drawing strictly from the Early Buddhist Āgamas and Sanskrit-attested Mahāyāna Sūtras. It presents a comparative analysis of the conditions for falling into adverse realms, mathematical conversions of karmic retribution lifespans, the efficacy of deathbed confession, and the doctrinal evolution from karmic natural law to ultimate mind-only reality.",
+    "content": `[I. Textual Foundations and Evolution of the Naraka (Hell) System]
+In Buddhist canonical literature, hell is designated by the terms Naraka or Niraya. It does not denote a place of eternal damnation created by an external deity, but rather an excruciating state of existence generated and experienced by the consciousness of a sentient being upon the dissolution of the four elements at death, driven by severe unwholesome karma.
+
+The Early Buddhist Āgamas established the foundational architecture of Naraka, while Sanskrit-attested Mahāyāna Sūtras (such as the Mahāvaipulya Avataṃsaka Sūtra and Saddharmapuṇḍarīka Sūtra) expanded this framework across vast spatial dimensions and subtle configurations of suffering:
+
+First, the Eight Great Hells (Eight Hot Hells) and Auxiliary Hells. The Dīrgha Āgama (Niraya Sūtra) specifies the eight primary hells: Saṃjīva (where beings attack one another with iron claws and weapons, reviving upon cool winds or the call "revive!"), Kālasūtra (beings are marked with hot iron cords and sliced with iron saws), Saṃghāta (beings are crushed between colliding iron mountains), Raurava (beings are boiled in iron cauldrons, crying in agony), Mahāraurava (intense torment eliciting even greater lamentation), Tapana (beings are roasted on scorching iron plates), Pratāpana (beings are pierced with iron tridents and burned thoroughly), and Avīci (Uninterrupted Hell, where suffering, time, and space are without interval; those who commit the Five Inexpiable Offenses fall directly here). Each Great Hell possesses four gates leading to sixteen Sub-Hells (such as the Pit of Burning Ashes, Excrement and Mud, and the Sword-Leaf Forest). Furthermore, the Saṃyukta Āgama details the Ten Cold Hells (e.g., Arbuda, Nirarbuda), where extreme cold causes the skin to blister and crack. Mahāyāna Sūtras, such as the Avataṃsaka Sūtra (Daśabhūmika chapter), further delineate peripheral and isolated hells, illustrating the exhaustive diversity of karmic manifestations.
+
+Second, the Role of Yama and the Five Heavenly Messengers. The Madhyama Āgama (Devadūta Sūtra) records that King Yama admonishes deceased souls using five warnings: birth, old age, sickness, death, and punished criminals. However, Yama is not an absolute judge; he is equally bound by the law of karma. During interrogation, Yama proclaims: "This evil was committed by you alone, not by your parents or friends, and you alone must reap its fruit." This emphasizes the immutable law of karmic self-responsibility, positioning Yama merely as an announcer of karmic law.
+
+Third, the Doctrinal Evolution from Objective Realm to Mind-Only Manifestation. While the Āgamas describe the torments of hell through objective karmic cause and effect, Sanskrit Mahāyāna literature—such as the Avataṃsaka Sūtra (Yāma Heaven Chapter)—reveals: "If one wishes to fully comprehend all Buddhas of the three times, one should contemplate the nature of the Dharmadhātu: everything is created by the mind alone." This establishes that the flames, iron mountains, and wardens of Naraka are fundamentally karmic shadow projections originating from ignorance, delusion, and intense hatred within the mind.
+
+[II. Structure and Classification of the Deva (Heavenly) Realm]
+The Deva realm constitutes the upper structure of Buddhist cosmology. Early Buddhism did not uncritically adopt ancient Indian mythology; rather, it "Buddhicized" and moralized traditional deities, incorporating them into the realm of saṃsāra. Though Devas enjoy immensely long lifespans, they remain subject to impermanence.
+
+The Dīrgha Āgama (Lokadhātu Sūtra), Ekottara Āgama, and Sanskrit Mahāyāna Sūtras like the Saddharmapuṇḍarīka Sūtra collectively construct the twenty-eight heavenly levels of the Three Realms (Trailokya), extending them across infinite worlds in the ten directions:
+
+First, the Desire Realm (Kāmadhātu - 6 heavens). Inhabitants possess physical desires and attachments, comprising the Cāturmahārājikā, Trāyastriṃśa (abode of Śakra), Yāma, Tuṣita, Nirmāṇarati, and Paranirmitavaśavartin heavens.
+
+Second, the Form Realm (Rūpadhātu - 18 heavens). Free from sensory lust, beings exist in refined subtle form, nourished by meditative absorption (dhyāna). The First Dhyāna includes the Mahābrahmā Heaven (whose ruler was mistakenly viewed by Brahmanism as the creator; the Dīrgha Āgama's Brahmajāla Sūtra clarifies that Mahābrahmā was merely the first being reborn there at the start of a cosmic cycle and harbored the delusion of creation due to his longevity). The Second, Third, and Fourth Dhyānas encompass the Bṛhatphala and Śuddhāvāsa (Pure Abodes) heavens.
+
+Third, the Formless Realm (Ārūpyadhātu - 4 heavens). Entirely devoid of physical matter, existing purely as states of consciousness: Ākāśānantyāyatana, Vijñānānantyāyatana, Ākiṃcanyāyatana, and Naivasamjñānāsamjñāyatana.
+
+These texts also emphasize the impermanence of heavenly existence. The Ekottara Āgama records that when a Deva's merit is exhausted, five signs of decay appear (fading flower crowns, sweat under armpits, soiled garments, body odor, and restlessness), followed by rebirth according to remaining karma. The Lotus Sūtra states: "The three realms are without peace, just like a burning house, filled with manifold sufferings." Furthermore, the Ekottara Āgama explicit states that all Buddhas attain enlightenment in the human realm, not in the heavens, because heavenly beings are easily blinded by pleasure, whereas the human realm presents the ideal balance of suffering and joy to spark the seeker's mind.
+
+[III. Conditions, Mechanisms, and Lifespan Conversions for Falling into Naraka]
+In both the Āgamas and Mahāyāna Sūtras, falling into hell is not a punishment inflicted by an external deity, but an exact operation of the natural law of cause and effect (Karma):
+
+First, Core Unwholesome Karma. This includes the Ten Unwholesome Actions (bodily: killing, stealing, sexual misconduct; verbal: lying, divisive speech, harsh speech, idle gossip; mental: covetousness, ill will, wrong view). The Saṃyukta Āgama notes that committing these ten actions without repentance leads inevitably to Naraka. Second, the Five Inexpiable Offenses (Anantarya): killing one's father, killing one's mother, killing an Arhat, causing schism in the Sangha, and maliciously shedding a Buddha's blood. The Ekottara Āgama records that perpetrators of these five acts fall directly into Avīci Hell without delay. Third, Wrong Views (Micchā-diṭṭhi) and Slandering the True Dharma. The Ekottara Āgama states: "There is no fault greater than wrong view." The Lotus Sūtra similarly records that slandering or scorning the Dharma causes immediate rebirth in Avīci Hell for a kalpa, as slandering the Dharma directly obscures the spiritual wisdom of oneself and others.
+
+Second, The Ease of Descending into Adverse Realms. In the Saṃyukta Āgama, the Buddha uses a famous simile: "Those who retain human form are like the dirt under a fingernail; those who lose human form and fall into hell, hungry ghost, or animal realms are like the dirt on the great earth." This serves as an objective warning regarding how easily uncultivated human habits align with unwholesome karmic trajectories.
+
+Third, Lifespan Conversions in Naraka. All texts emphasize that hell is not an eternal sentence; beings depart once their karma is exhausted (karma-kṣaya). The lifespan in Saṃjīva (the mildest Hot Hell) is 500 years, where 1 day equals 500 years in the Cāturmahārājikā Heaven (and 1 day in Cāturmahārājikā equals 50 human years), converting to roughly 1.62 trillion human years. The lifespan in Avīci Hell lasts an entire Medium Kalpa (Antara-kalpa). For the Cold Hells, the Saṃyukta Āgama presents the simile of a 20-kuruṣa sesame barrel from which one grain is removed every 100 years; the lifespan of Arbuda Hell equals the time required to empty the barrel, with subsequent cold hells increasing exponentially.
+
+[IV. Deathbed Confession, Karmic Transformation, and Ultimate Mahāyāna Liberation]
+Regarding the transformation of unwholesome karma, the Āgamas and Mahāyāna Sūtras illustrate a profound transition from karmic mitigation to ultimate realization:
+
+First, Order of Karmic Maturation and Confession. At the time of death, karma matures according to weight: Heavy Karma (Anantarya offenses), Proximate Karma (deathbed thoughts), and Habitual Karma (lifelong habits). Sincere confession and repentance (with the vow never to repeat the act) can sever the continuity of aversion and fear at death, preventing the consciousness from resonating with hellish environments. The Āgamas record that King Ajātaśatru committed patricide, but due to his profound deathbed repentance before the Buddha, his severe karma bound for Avīci was mitigated into a brief experience in a minor hell (resembling a ball bouncing off the ground). This demonstrates the principle of "heavy karma borne lightly," altering duration and intensity without violating causality.
+
+Second, The Danger of Opportunism. The Saṃyukta Āgama compares human habit to a leaning tree: if a tree leans eastward, it will inevitably fall eastward when cut. Relying on a calculated mindset of "sinning now, repenting later" constitutes a severe delusion in itself. Under the agony and disorientation of death, an untrained mind will be driven by instinct rather than genuine repentance.
+
+Third, Ultimate Liberation in Mahāyāna Realization. Mahāyāna Sūtras elevate the Āgama perspective through the realization of the emptiness of karma and universal Buddha-nature. In the Sanskrit Saddharmapuṇḍarīka Sūtra (Devadatta-parivarta), the Buddha predicts that Devadatta—who committed schism and shed a Buddha's blood—will ultimately attain Buddhahood as the Tathāgata Devarāja. This demonstrates the supreme Mahāyāna teaching that all beings possess Buddha-nature, and even those in the deepest hells can eventually awaken, revealing that while suffering in Naraka is real on the relative level, all karma is fundamentally empty in ultimate reality.
+
+[Citations and References]
+[Note 1]: Eight Great Hells and Auxiliary Hells
+Source: Dīrgha Āgama, Fascicle 19, Niraya Sūtra. Detailed records of the eight hot hells, their sixteen sub-hells, and their corresponding punitive manifestations.
+[Note 2]: King Yama and the Five Messengers
+Source: Madhyama Āgama, Fascicle 1, Devadūta Sūtra (parallel to Devadūta Sutta, MN 130). Describes Yama's interrogation regarding the five messengers and the doctrine of individual karmic responsibility.
+[Note 3]: Structure of the Three Realms and Mahābrahmā's Delusion
+Source: Dīrgha Āgama, Fascicle 20 (Lokadhātu Sūtra) and Fascicle 14 (Brahmajāla Sūtra). Establishes the 28 heavens and deconstructs the creation myth of Mahābrahmā.
+[Note 4]: Simile of Dirt on Fingernail and the Ten Unwholesome Actions
+Source: Saṃyukta Āgama, Fascicles 44 and 31. The Buddha illustrates the rarity of human rebirth and the exact correspondence between the ten unwholesome actions and fall into hell.
+[Note 5]: Cold Hells and the Sesame Kalpa Calculation
+Source: Saṃyukta Āgama, Fascicle 48 and Devadatta Saṃyutta (SN 6.10). Uses the sesame barrel metaphor to quantify the lifespans of the cold hells.
+[Note 6]: King Ajātaśatru's Repentance and Karmic Mitigation
+Source: Dīrgha Āgama, Fascicle 17 (Śrāmaṇyapala Sūtra) and Ekottara Āgama. Documents how Ajātaśatru's sincere repentance converted an Avīci sentence into a brief karmic retribution.
+[Note 7]: Mind-Only Nature of Hell in the Avataṃsaka Sūtra
+Source: Sanskrit Mahāvaipulya Avataṃsaka Sūtra (Yāma Heaven and Daśabhūmika Chapters). Expounds "all is created by the mind alone," revealing hellish visions as projections of karmic seed-consciousness.
+[Note 8]: Slander of Dharma and Devadatta's Prediction in the Lotus Sūtra
+Source: Sanskrit Saddharmapuṇḍarīka Sūtra (Aupamya and Devadatta Parivartas). Details the karmic retribution for slandering the Dharma, alongside the prediction of Devadatta's Buddhahood.`
+  },
 
   {
     "id": "2026-09-06-en-mahayana-sutra-chronology-and-textual-history",
@@ -2156,7 +2292,74 @@ However, when we look at time-travel plots in science fiction, we occasionally f
     // ==========================================
     // 日文文章 (Japanese Articles)
     // ==========================================
+ {
+    "id": "2026-09-07-ja-agama-mahayana-naraka-deva",
+    "isNew": true,
+    "lang": "ja",
+    "category": "仏学",
+    "title": "阿含経典および大乗経典における地獄・天人宇宙観の考証と業報の展開",
+    "status": "四阿含 ． 般若 ． 華厳 ． 法華 ． 涅槃",
+    "humble": "本札記は、原始仏教の四『阿含経』および梵本（サンスクリット原典）の存在する大乗経典に即し、地獄（Naraka）と天人（Deva）の三界宇宙観を客観的に整理・考察したものである。悪道へ堕落する条件、地獄の寿命計算、臨終における発露懺悔の実質的効用、ならびに業報法則から唯心実相観への教理的展開について論述する。",
+    "content: `[一、 地獄（Naraka / Niraya）体系の考証と典籍における変遷]
+仏教経典において「地獄」は「泥梨」あるいは「捺落迦」と音訳される。その本質は、一神教的な絶対神によって造られた永劫の懲罰の場ではなく、衆生が極めて重い悪業をなし、臨終において四大（身体）が分解する際、自らの心識が感応して現出させる極苦の境界である。
 
+原始仏教の四『阿含経』は地獄の基礎的構造を確立し、梵本が存在する大乗経典（『華厳経』『法華経』等）はこれを空間的次元および微細な苦相においてさらに拡大・深化させた。
+
+第一に、八大地獄（八熱地獄）と付属地獄。『長阿含経・地獄経』は八つの主獄を明記する。等活地獄（鉄の爪や兵刃で互いに殺傷し合い、冷風や鬼卒の「等活」の叫びで蘇り受刑を繰り返す）、黒繩地獄（熱鉄の縄で身体に線を引き、鋸で割裂する）、衆合地獄（二つの鉄山が挟み込み押し潰す）、叫喚地獄（熱鉄の釜や室で煮られ悲鳴をあげる）、大叫喚地獄（さらに激しい苦痛で惨呼する）、焦熱地獄（熱鉄板の上で全身を焼き焦がされる）、大焦熱地獄（三股の鉄叉で刺され全身が赤熱して焼かれる）、阿鼻地獄（無間地獄。苦痛・時間・空間に一切の隙間がなく、五逆罪を造った者が直下する）。八大地獄の四門の外には、それぞれ十六の遊増地獄（煻灰坑、屍糞泥、刀山剣樹等）が配置される。また『雑阿含経』には、極寒により皮膚が裂け歯の噛み合い音を発する阿部陀（疱）などの十寒地獄が記される。大乗『華厳経・十地品』ではさらに辺地獄や独地獄が挙げられ、業報の多角的な顕現が示される。
+
+第二に、閻魔王と「五天使」の役割。『中阿含経・天使經』によれば、閻魔王は「生・老・病・死・受刑の罪人」の五つの現象を警戒の使い（五天使）として示し、亡者を審問する。しかし閻魔王は独裁的な主宰者ではなく、彼自身も業力に縛られている。閻魔王は「お前が自ら造った悪業であり、両親や親友のせいではない。お前自身が受けねばならない」と告げる。これは「自作自受」の絶対法則の宣告者に過ぎないことを意味する。
+
+第三に、客観的境界から「唯心所現」への展開。『阿含経』が因果業報の客観的事相として地獄を描写するのに対し、サンスクリット大乗経典である『華厳経・夜摩天宮讃歎品』は「若人欲了知、三世一切佛、應觀法界性、一切唯心造」と説く。地獄の烈火や獄卒は、根底においては衆生自らの無明妄想と強烈な瞋恚の心が投影された業の影にほかならない。
+
+[二、 天人（Deva）体系の考証と三界構造の層次]
+天人体系は、仏教の三界宇宙観における最上層の構造である。仏教は古代インド神話を無批判に受容したのではなく、伝統的な神々を「仏教化」し「倫理化」して三界輪廻の枠組みに組み込んだ。天人の寿命は極めて長いが、生死の無常を免れてはいない。
+
+『長阿含経・世紀経』『増一阿含経』、および梵本『法華経』（Saddharmapuṇḍarīka Sūtra）などは、三界（Kāmadhātu, Rūpadhātu, Ārūpyadhātu）二十八天の構造を構築し、それを十方無量の仏国土へと拡張している。
+
+第一に、欲界天（6天）。物質的欲望と情愛を有し、四天王天、忉利天（帝釋天の居所）、夜摩天、兜率天、化楽天、他化自在天からなる。
+
+第二に、色界天（18天）。欲界の情欲を離れ、清浄な物質（色）のみを有し、禅定の楽を食とする。初禅天の大人とされる大梵天について、『長阿含経・梵動経』は、劫の始めに最初に生まれ長寿であるため「我は創世主なり」と傲慢を生じたに過ぎず、輪廻を脱していないと解明する。二禅・三禅・四禅天には広果天や五浄居天などが含まれる。
+
+第三に、無色界天（4天）。物質的形態を完全に離れ、純粋な精神意識の状態であり、空無辺処・識無邊処・無所有処・非想非非想処天からなる。
+
+典籍は天人の無常性と解脱観をも強調する。『増一阿含経』には、天福が尽きるとき「天人五衰」（頭上の花がしおれる、脇の下に汗が出る、衣が汚れる、身体が臭う、本座を楽しめない）が現れ、業に従って下堕することが示される。『法華経・譬喻品』も「三界は安きこと無く、唯だ火宅の如し」と説く。また『増一阿含経』は、諸仏はみな人間界において成仏し、天界では成仏しないと明記する。天界は享楽のために怠惰に陥りやすく、苦楽相半ばする人間界こそが解脱への道（菩提心）を起こす最勝の器であるからである。
+
+[三、 地獄へ堕落する条件・業力メカニズム・下堕の容易性]
+経典において、地獄への下堕は外在的な神の処罰ではなく、「因果相応」の宇宙的自然律に厳密に従う。
+
+第一に、感応の核心となる悪業。第一は「十悪業」（身三・口四・意三）であり、『雑阿含経』は十悪を具足して改めない者は必ず地獄に落ちると説く。第二は「五逆罪」（父を殺す、母を殺す、阿羅漢を殺す、僧伽の和合を破る、仏の身から血を出させる）であり、『増一阿含経』は五逆を造る者は隔絶なく阿鼻地獄に直下すると記録する。第三は「邪見と正法への誹謗」である。『増一阿含経』は「邪見より過解なるものは無し」と述べ、大乗『法華経・譬喩品』も正法を誹謗し軽蔑する者は阿鼻地獄に落ちて一劫の間苦痛を受けると説く。正法の誹謗は自己と他者の慧命を直接遮断するため、最も重い業を招く。
+
+第二に、衆生の下堕の容易さ。『雑阿含経』において仏陀は「人身を得る者は爪の上の泥の如く、人身を失い地獄・餓鬼・畜生に堕ちる者は大地の土の如し」と比喩される。これは、放任された日常の貪瞋痴や口業がいかに容易に下堕の業道へと繋がるかを客観的に示告している。
+
+第三に、地獄の受刑時間の換算。地獄の寿命は「業尽きれば出づ」の原則に従い、永遠の刑罰ではない。八熱地獄で最も軽微な等活地獄の寿命は500歳（四天王天の500歳を1日とし、人間界の50年が四天王天の1日に相当）であり、人間界の約1.62兆年に換算される。最も重い阿鼻地獄の寿命は整々「一中劫」に及ぶ。十寒地獄について『雑阿含経』は、100年に1粒ずつ胡麻を取り出す比喩（胡麻劫）を用いてその天文学的な長寿を算出する。
+
+[四、 臨終の懺悔メカニズム・心識転換・大乗の終極的救済]
+悪業の転換に関して、阿含と大乗経典は業報の軽減から実相の解脱に至る深遠な理趣を示している。
+
+第一に、業力の成熟順序と懺悔の効用。臨終における受生は「重業（五逆等）」「近業（臨終の一念）」「習業（普段の習慣）」の優先順序に従う。真実の発露懺悔（二度と繰り返さない決意）は、臨終における瞋恚や恐懼の継続を断ち切り、心識が地獄の悪境と同頻共振するのを防ぐ。『阿含経』には、父を殺した阿闍世王が仏前で至心に懺悔したことにより、阿鼻地獄の長劫の苦痛が「まりが地面に跳ね返る」ような極めて短時間の小地獄の受苦へと転換（重罪軽受）された例が記録されている。
+
+第二に、投機的心態の危険性。『雑阿含経』は樹木の比喩を用い、日常的に東に傾いている木は倒れる時も必ず東に倒れると説く。「今は悪をなし、死ぬ前に懺悔すればよい」という計算された心態それ自体が深重な邪見であり、臨終の混乱と四大の分離の苦痛の中では、日常の習性が思考に勝り、純粋な懺悔を起こすことは極めて困難である。
+
+第三に、大乗経典における地獄衆生への終極的授記。梵本『法華経・提婆達多品』（Devadatta-parivarta）において、仏陀は出仏身血・破和合僧の重罪を犯して地獄に堕ちた提婆達多に対し、未来世において「天王如来」として成仏するであろうと授記（予言）する。これは大乗の「一切衆生悉有仏性」と「地獄の罪人もまた成仏し得る」という終極の平等観を示し、地獄の相は相応として存在するものの、実相の観点においては罪業本空であり、大悲の救済が無限であることを顕彰している。
+
+[引用・参照注記]
+【注1】：八大地獄と遊増地獄について
+『長阿含経・巻十九・地獄経』。八熱地獄および各獄に付属する十六遊増地獄の名称と刑罰の相貌を詳細に記載。
+【注2】：閻魔王と五天使について
+『中阿含経・巻一・天使経』（巴利聖典 Devadūta Sutta と対照）。閻魔王が五天使をもって罪人を審問し、自作自受の法則を強調する。
+【注3】：三界二十八天の構造と大梵天の傲慢について
+『長阿含経・巻二十・世紀経』および『長阿含経・巻十四・梵動経』。三界の構造を体系化し、大梵天の創世神話を解体する。
+【注4】：爪の上の泥の比喩と十悪業の堕落について
+『雑阿含経・巻四十四』および『雑阿含経・巻三十一』。爪上の泥と大地の土で人身の尊さを比喻し、十悪業と地獄受生の関係を説明する。
+【注5】：十寒地獄と胡麻劫の寿命計算について
+『雑阿含経・巻四十八』および『相應部・提婆達多相應』。100年に1粒の胡麻の比喩を用いて寒地獄の長遠な寿命を解説する。
+【注6】：阿闍世王の懺悔と重罪軽受について
+『長阿含経・巻十七・沙門果経』および『増一阿含経』。阿闍世王の懺悔により無間地獄の罪が軽受に転換された事実を記述。
+【注7】：華厳経における地獄の唯心所現について
+梵本『大方廣佛華嚴經』（Yāma天宮および十地品）。「一切唯心造」の実相観を提示し、地獄の景象が心識の影であることを明かす。
+【注8】：法華経における謗法の罪と提婆達多の成仏授記について
+梵本『妙法蓮華經』（譬喻品および提婆達多品）。正法誹謗の重罪と、提婆達多への成仏授記を通じ、佛性の平等と実相の円満を示す。`
+  },
   {
     "id": "2026-09-06-ja-mahayana-sutra-chronology-and-textual-history",
     "isNew": true,

@@ -2,15 +2,16 @@ const rawArticles = [
     // ==========================================
     // 中文文章
     // ==========================================
-    {
-  id: "2026-09-06-zh-mahayana-sutra-chronology-and-textual-history",
-  isNew: true,
-  lang: "zh",
-  category: "佛學",
-  title: "大乘經卷出土寫本時序與文獻演進考證：兼論語言局限性與三藏結集實貌",
-  status: "考古實物 ． 寫本時序 ． 語言局限 ． 結集實貌 ． 意涵還原",
-  humble: "本篇文獻以考古實物與文獻學資料為基礎，整理大乘經卷出土寫本與寫定年代之時序；並從文字語言之局限性、大小乘僧團傳承機制及論師註釋之歷史定位，客觀還原佛典傳播之本質。",
-  content: `<div style="display: flex; gap: 15px; margin: 25px 0 40px 0; flex-wrap: wrap;">
+
+  {
+    id: "2026-09-06-zh-mahayana-sutra-chronology-and-textual-history",
+    isNew: true,
+    lang: "zh",
+    category: "佛學",
+    title: "大乘經卷出土寫本時序與文獻演進考證：兼論語言局限性與三藏結集實貌",
+    status: "考古實物 ． 寫本時序 ． 語言局限 ． 結集實貌 ． 意涵還原",
+    humble: "本篇文獻以考古實物與文獻學資料為基礎，整理大乘經卷出土寫本與寫定年代之時序；並從文字語言之局限性、大小乘僧團傳承機制及論師註釋之歷史定位，客觀還原佛典傳播之本質。",
+    content: `<div style="display: flex; gap: 15px; margin: 25px 0 40px 0; flex-wrap: wrap;">
     <div style="flex: 1; min-width: 180px; border: 1px solid rgba(139, 168, 156, 0.4); padding: 18px; background: rgba(139, 168, 156, 0.06); border-radius: 12px; text-align: center;">
         <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(139, 168, 156, 0.4); padding: 1px 6px; margin-bottom: 8px; color: #8ba89c; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">經典載體</span>
         <strong style="display: block; font-size: 1.1rem; color: #8ba89c; letter-spacing: 2px;">語言與文字</strong>
@@ -38,69 +39,69 @@ const rawArticles = [
 
 3. 僧團集體結集之運作形式
 無論是聲聞乘（小乘）或大乘經典，在文獻學上皆非單一作者之手筆，而是僧團集體整理、編譯與傳承之成果：
-  * 聲聞乘經典：多經由早期部派僧團之官方會議（結集）進行審定與誦出，形成各部派阿含經與律藏之體系。
-  * 大乘經典：多由深山、森林或特定修行僧團（非官方傳承體系）於長年修持體驗中，將深廣之法界觀察與教示整理寫定，並在中亞與印度各地流傳。
+  - 聲聞乘經典：多經由早期部派僧團之官方會議（結集）進行審定與誦出，形成各部派阿含經與律藏之體系。
+  - 大乘經典：多由深山、森林或特定修行僧團（非官方傳承體系）於長年修持體驗中，將深廣之法界觀察與教示整理寫定，並在中亞與印度各地流傳。
 
 [二、 大乘經典出土寫本時序考證（依考古與寫定年代）]
 
 以下依據全球考古出土之古寫本殘片（含犍陀羅語寫本、斯柯延收集品 Schøyen Collection、吉爾吉斯/阿富汗巴米揚寫本、尼泊爾貝葉經）與文獻翻譯考證，整理大乘經典出現與寫定之時間軸：
 
 1. 早期大乘經典期（西元前 1 世紀 － 西元 2 世紀）
-  * 《八千頌般若經》（Aṣṭasāhasrikā Prajñāpāramitā Sūtra）：考古出土最古老殘片為「Split Collection」犍陀羅語樺樹皮寫本（約西元 50–100 年），為目前已知出土年代最早之大乘寫本實物。漢譯由支婁迦讖於西元 179 年譯出（《道行般若經》）。
-  * 《阿閦佛國經》（Akṣobhyavyūha Sūtra）：狄爾（Dir）出土之犍陀羅語殘片年代約為西元 1 至 2 世紀。漢譯由支婁迦讖於西元 2 世紀後半譯出。
-  * 《般舟三昧經》（Pratyutpanna-buddha-sammukhāvasthita-samādhi Sūtra）：巴米揚出土寫本殘片年代約為西元 2 至 3 世紀。漢譯由支婁迦讖於西元 179 年譯出。
-  * 《大本無量壽經》（Mahā-sukhāvatīvyūha Sūtra）：出土之殘片（如斯柯延收集品）可追溯至西元 2 至 3 世紀。漢譯於西元 2 世紀末已有早期譯本流傳。
-  * 《小本阿彌陀經》（Sūkṣma-sukhāvatīvyūha Sūtra）：早期獨立寫本殘片年代約為西元 2 至 4 世紀。漢譯由鳩摩羅什於西元 402 年譯出。
+  - 《八千頌般若經》（Aṣṭasāhasrikā Prajñāpāramitā Sūtra）：考古出土最古老殘片為「Split Collection」犍陀羅語樺樹皮寫本（約西元 50–100 年），為目前已知出土年代最早之大乘寫本實物。漢譯由支婁迦讖於西元 179 年譯出（《道行般若經》）。
+  - 《阿閦佛國經》（Akṣobhyavyūha Sūtra）：狄爾（Dir）出土之犍陀羅語殘片年代約為西元 1 至 2 世紀。漢譯由支婁迦讖於西元 2 世紀後半譯出。
+  - 《般舟三昧經》（Pratyutpanna-buddha-sammukhāvasthita-samādhi Sūtra）：巴米揚出土寫本殘片年代約為西元 2 至 3 世紀。漢譯由支婁迦讖於西元 179 年譯出。
+  - 《大本無量壽經》（Mahā-sukhāvatīvyūha Sūtra）：出土之殘片（如斯柯延收集品）可追溯至西元 2 至 3 世紀。漢譯於西元 2 世紀末已有早期譯本流傳。
+  - 《小本阿彌陀經》（Sūkṣma-sukhāvatīvyūha Sūtra）：早期獨立寫本殘片年代約為西元 2 至 4 世紀。漢譯由鳩摩羅什於西元 402 年譯出。
 
 2. 中期大乘經典期（西元 2 世紀 － 西元 5 世紀）
-  * 《十地經》（Daśabhūmika Sūtra，即後世《華嚴經》之核心單行本）：中亞與尼泊爾出土有獨立梵文寫本，寫定年代約西元 2 至 3 世紀。西元 3 世紀龍樹菩薩曾造《十住毘婆沙論》對其進行解讀。
-  * 《妙法蓮華經》（Saddharmapuṇḍarīka Sūtra）：新疆庫車與巴米揚出土寫本殘片年代約西元 3 至 4 世紀；吉爾吉斯出土寫本約西元 5 至 6 世紀。漢譯由竺法護於西元 286 年首譯。
-  * 《維摩詰所說經》（Vimalakīrtinirdeśa Sūtra）：中亞殘片年代約西元 3 至 4 世紀，藏文與布達拉宮保存有後世完整寫本。漢譯由支謙於西元 3 世紀初譯出。
-  * 《大般涅槃經》（Mahāparinirvāṇa Sūtra，大乘）：巴米揚出土之梵文殘片年代約西元 3 至 4 世紀。漢譯由法顯於西元 416 年譯出。
-  * 《勝鬘經》（Śrīmālādevī Siṃhanāda Sūtra）：文獻引用段落寫本年代約西元 4 至 5 世紀。漢譯由求那跋陀羅於西元 435 年譯出。
-  * 《入楞伽經》（Laṅkāvatāra Sūtra）：寫本底本年代約西元 4 至 5 世紀。漢譯由求那跋陀羅於西元 443 年譯出。
+  - 《十地經》（Daśabhūmika Sūtra，即後世《華嚴經》之核心單行本）：中亞與尼泊爾出土有獨立梵文寫本，寫定年代約西元 2 至 3 世紀。西元 3 世紀龍樹菩薩曾造《十住毘婆沙論》對其進行解讀。
+  - 《妙法蓮華經》（Saddharmapuṇḍarīka Sūtra）：新疆庫車與巴米揚出土寫本殘片年代約西元 3 至 4 世紀；吉爾吉斯出土寫本約西元 5 至 6 世紀。漢譯由竺法護於西元 286 年首譯。
+  - 《維摩詰所說經》（Vimalakīrtinirdeśa Sūtra）：中亞殘片年代約西元 3 至 4 世紀，藏文與布達拉宮保存有後世完整寫本。漢譯由支謙於西元 3 世紀初譯出。
+  - 《大般涅槃經》（Mahāparinirvāṇa Sūtra，大乘）：巴米揚出土之梵文殘片年代約西元 3 至 4 世紀。漢譯由法顯於西元 416 年譯出。
+  - 《勝鬘經》（Śrīmālādevī Siṃhanāda Sūtra）：文獻引用段落寫本年代約西元 4 至 5 世紀。漢譯由求那跋陀羅於西元 435 年譯出。
+  - 《入楞伽經》（Laṅkāvatāra Sūtra）：寫本底本年代約西元 4 至 5 世紀。漢譯由求那跋陀羅於西元 443 年譯出。
 
 3. 晚期大乘與密續交疊經典期（西元 5 世紀 － 西元 8 世紀）
-  * 《金光明經》（Suvarṇaprabhāsa Sūtra）：新疆與中亞出土寫本殘片年代約西元 5 世紀。漢譯由曇無讖於西元 5 世紀初譯出。
-  * 《解深密經》（Saṃdhinirmocana Sūtra）：文獻片段保留於《瑜伽師地論》梵本中，文本定型約西元 4 至 5 世紀。漢譯由玄奘於西元 647 年譯出。
-  * 《大日經》（Mahāvairocana Sūtra）：尼泊爾與西藏保存之梵文寫本年代約西元 7 世紀。漢譯由善無畏於西元 725 年譯出。
+  - 《金光明經》（Suvarṇaprabhāsa Sūtra）：新疆與中亞出土寫本殘片年代約西元 5 世紀。漢譯由曇無讖於西元 5 世紀初譯出。
+  - 《解深密經》（Saṃdhinirmocana Sūtra）：文獻片段保留於《瑜伽師地論》梵本中，文本定型約西元 4 至 5 世紀。漢譯由玄奘於西元 647 年譯出。
+  - 《大日經》（Mahāvairocana Sūtra）：尼泊爾與西藏保存之梵文寫本年代約西元 7 世紀。漢譯由善無畏於西元 725 年譯出。
 
 [三、 其他具備古印度梵文/中亞寫本之大乘經典整理]
 
 除了上述具備明確歷史年代演進線索之核心經典外，考古學與文獻學界於印度、尼泊爾、西藏及中亞地區，亦發現大量其他具備原始梵文（或中亞語言）手稿與殘片之大乘經典：
 
 1. 般若部類獨立經典
-  * 《金剛般若波羅蜜經》（Vajracchedikā Prajñāpāramitā Sūtra）：中亞與吉爾吉斯皆出土有極其古老之梵文寫本。
-  * 《心經》（Prajñāpāramitāhṛdaya Sūtra）：保存有古梵文貝葉寫本與古代石刻寫本。
-  * 《二萬五千頌般若經》與《十萬頌般若經》：尼泊爾與印度保存有完整之梵文貝葉手稿。
+  - 《金剛般若波羅蜜經》（Vajracchedikā Prajñāpāramitā Sūtra）：中亞與吉爾吉斯皆出土有極其古老之梵文寫本。
+  - 《心經》（Prajñāpāramitāhṛdaya Sūtra）：保存有古梵文貝葉寫本與古代石刻寫本。
+  - 《二萬五千頌般若經》與《十萬頌般若經》：尼泊爾與印度保存有完整之梵文貝葉手稿。
 
 2. 大寶積部與集部經典
-  * 《郁伽長者經》（Ugraparipṛcchā Sūtra）：出土有早期犍陀羅語與梵文殘片。
-  * 《父子相見經》（Pitāputrasamāgama Sūtra）：保存有印度與尼泊爾梵文手稿。
-  * 《賢劫經》（Bhadrakalpika Sūtra）：中亞地區出土有梵文與于闐文殘片。
+  - 《郁伽長者經》（Ugraparipṛcchā Sūtra）：出土有早期犍陀羅語與梵文殘片。
+  - 《父子相見經》（Pitāputrasamāgama Sūtra）：保存有印度與尼泊爾梵文手稿。
+  - 《賢劫經》（Bhadrakalpika Sūtra）：中亞地區出土有梵文與于闐文殘片。
 
 3. 其他獨立大乘經典
-  * 《入法界品》（Gaṇḍavyūha Sūtra）：即善財童子五十三參之原始單行本，保存有獨立且完整之梵文貝葉經。
-  * 《首楞嚴三昧經》（Śūraṅgama-samādhi Sūtra）：古印度流傳之大乘經典，保存有梵文殘片與西藏譯本（注意：此經與唐代房融筆受之《大佛頂首楞嚴經》於文獻源流上不同）。
-  * 《藥師琉璃光如來本願功德經》（Bhaiṣajyaguru Sūtra）：吉爾吉斯與中亞地區出土有極為完整之梵文寫本。
+  - 《入法界品》（Gaṇḍavyūha Sūtra）：即善財童子五十三參之原始單行本，保存有獨立且完整之梵文貝葉經。
+  - 《首楞嚴三昧經》（Śūraṅgama-samādhi Sūtra）：古印度流傳之大乘經典，保存有梵文殘片與西藏譯本（注意：此經與唐代房融筆受之《大佛頂首楞嚴經》於文獻源流上不同）。
+  - 《藥師琉璃光如來本願功德經》（Bhaiṣajyaguru Sūtra）：吉爾吉斯與中亞地區出土有極為完整之梵文寫本。
 
 [四、 出土寫本之文獻意義與歷史考據對照]
 
 | 順序 | 經典名稱（梵文名） | 最早考古寫本實物年代與出土地 | 漢譯首譯年代 | 文獻學與考古特徵 |
 | :--- | :--- | :--- | :--- | :--- |
-| **1** | **《八千頌般若經》** (*Aṣṭasāhasrikā*) | **西元 1 世紀下半葉**（犍陀羅 Birch Bark） | 西元 179 年（支婁迦讖） | 全球現存最古老之大乘寫本實物。 |
-| **2** | **《阿閦佛國經》** (*Akṣobhyavyūha*) | **西元 1–2 世紀**（巴基斯坦狄爾） | 西元 147–186 年（支婁迦讖） | 早期淨土思想與佛土構建之文字寫本。 |
-| **3** | **《般舟三昧經》** (*Pratyutpanna*) | **西元 2–3 世紀**（阿富汗巴米揚） | 西元 179 年（支婁迦讖） | 早期禪觀與專念見佛之傳承寫本。 |
-| **4** | **《大本無量壽經》** (*Mahā-sukhāvatī*) | **西元 2–3 世紀**（中亞斯柯延殘片） | 西元 2 世紀末（傳支樓迦讖/支謙） | 獨立傳承之大本淨土系統寫本。 |
-| **5** | **《十地經》** (*Daśabhūmika*) | **西元 2–3 世紀**（中亞/尼泊爾寫本） | 西元 297 年（竺法護） | 華嚴體系之核心骨架，龍樹、世親造論之依據。 |
-| **6** | **《妙法蓮華經》** (*Saddharmapuṇḍarīka*) | **西元 3–4 世紀**（新疆庫車/和田殘片） | 西元 286 年（竺法護） | 中期大乘一乘思想之大集結寫本。 |
-| **7** | **《維摩詰經》** (*Vimalakīrtinirdeśa*) | **西元 3–4 世紀**（中亞殘片） | 西元 220–252 年（支謙） | 勝義居士思想與空性辯證之寫本。 |
-| **8** | **《小本阿彌陀經》** (*Sūkṣma-sukhāvatī*) | **西元 3–4 世紀**（北印/中亞殘片） | 西元 402 年（鳩摩羅什） | 極簡化專念操作之獨立淨土寫本。 |
-| **9** | **《大般涅槃經》** (*Mahāparinirvāṇa*) | **西元 3–4 世紀**（巴米揚殘片） | 西元 416 年（法顯） | 如來藏與佛性常住思想之寫本。 |
-| **10** | **《勝鬘經》** (*Śrīmālādevī*) | **西元 4–5 世紀**（文獻引文梵片） | 西元 435 年（求那跋陀羅） | 如來藏與一乘思想之寫本。 |
-| **11** | **《入楞伽經》** (*Laṅkāvatāra*) | **西元 4–5 世紀**（吉爾吉斯寫本底本） | 西元 5 世紀初（曇無讖/求那跋陀羅） | 唯識與如來藏統合之寫本。 |
-| **12** | **《解深密經》** (*Saṃdhinirmocana*) | **西元 4–5 世紀**（論典夾雜梵片） | 西元 538 年（菩提流支） | 唯識學派三性三無性理論之寫本。 |
-| **13** | **《金光明經》** (*Suvarṇaprabhāsa*) | **西元 5 世紀**（新疆和田寫本） | 西元 5 世紀初（曇無讖） | 護國思想與陀羅尼結合之寫本。 |
+| 1 | 《八千頌般若經》(Aṣṭasāhasrikā) | 西元 1 世紀下半葉（犍陀羅 Birch Bark） | 西元 179 年（支婁迦讖） | 全球現存最古老之大乘寫本實物。 |
+| 2 | 《阿閦佛國經》(Akṣobhyavyūha) | 西元 1–2 世紀（巴基斯坦狄爾） | 西元 147–186 年（支婁迦讖） | 早期淨土思想與佛土構建之文字寫本。 |
+| 3 | 《般舟三昧經》(Pratyutpanna) | 西元 2–3 世紀（阿富汗巴米揚） | 西元 179 年（支婁迦讖） | 早期禪觀與專念見佛之傳承寫本。 |
+| 4 | 《大本無量壽經》(Mahā-sukhāvatī) | 西元 2–3 世紀（中亞斯柯延殘片） | 西元 2 世紀末（傳支樓迦讖/支謙） | 獨立傳承之大本淨土系統寫本。 |
+| 5 | 《十地經》(Daśabhūmika) | 西元 2–3 世紀（中亞/尼泊爾寫本） | 西元 297 年（竺法護） | 華嚴體系之核心骨架，龍樹、世親造論之依據。 |
+| 6 | 《妙法蓮華經》(Saddharmapuṇḍarīka) | 西元 3–4 世紀（新疆庫車/和田殘片） | 西元 286 年（竺法護） | 中期大乘一乘思想之大集結寫本。 |
+| 7 | 《維摩詰經》(Vimalakīrtinirdeśa) | 西元 3–4 世紀（中亞殘片） | 西元 220–252 年（支謙） | 勝義居士思想與空性辯證之寫本。 |
+| 8 | 《小本阿彌陀經》(Sūkṣma-sukhāvatī) | 西元 3–4 世紀（北印/中亞殘片） | 西元 402 年（鳩摩羅什） | 極簡化專念操作之獨立淨土寫本。 |
+| 9 | 《大般涅槃經》(Mahāparinirvāṇa) | 西元 3–4 世紀（巴米揚殘片） | 西元 416 年（法顯） | 如來藏與佛性常住思想之寫本。 |
+| 10 | 《勝鬘經》(Śrīmālādevī) | 西元 4–5 世紀（文獻引文梵片） | 西元 435 年（求那跋陀羅） | 如來藏與一乘思想之寫本。 |
+| 11 | 《入楞伽經》(Laṅkāvatāra) | 西元 4–5 世紀（吉爾吉斯寫本底本） | 西元 5 世紀初（曇無讖/求那跋陀羅） | 唯識與如來藏統合之寫本。 |
+| 12 | 《解深密經》(Saṃdhinirmocana) | 西元 4–5 世紀（論典夾雜梵片） | 西元 538 年（菩提流支） | 唯識學派三性三無性理論之寫本。 |
+| 13 | 《金光明經》(Suvarṇaprabhāsa) | 西元 5 世紀（新疆和田寫本） | 西元 5 世紀初（曇無讖） | 護國思想與陀羅尼結合之寫本。 |
 
 [五、 誦持功德與論師註釋之歷史定位]
 
@@ -109,24 +110,26 @@ const rawArticles = [
 
 2. 論師（Śāstrakāra）註釋之開放性與百花齊放
 由於語言符號具局限性，且經典文字多為簡要之提示，後世阿羅漢與菩薩論師（如龍樹、無著、世親、陳那等）遂撰寫「論（Śāstra）」，對經典進行邏輯推演、範疇分類與體系化解讀：
-  * 百家爭鳴：各家論師代表其個人或學派對教示之理解，形成了大乘佛學多元而豐富之學術論辯（百花齊放）。
-  * 權限定位：沒有任何單一論師能夠完全代表釋迦牟尼佛本身。論典乃為輔助閱讀經文之工具，而非終極真理本身。
+  - 百家爭鳴：各家論師代表其個人或學派對教示之理解，形成了大乘佛學多元而豐富之學術論辯（百花齊放）。
+  - 權限定位：沒有任何單一論師能夠完全代表釋迦牟尼佛本身。論典乃為輔助閱讀經文之工具，而非終極真理本身。
 
 [六、 結論：得意忘言與還原教示本意]
 
 梳理經典之出土寫本時序與傳承歷史，其目的在於回歸客觀與理性之修證態度：
 1. 離文字相：理解大小乘經典皆為僧團於歷史脈絡中輯錄傳承之載體，不執著於「文字即是佛陀親筆」之迷思。
 2. 尋求真實義：文字與寫本為載具，背誦與傳播為手段。修習者之核心任務，在於透過語言符號，體會並實踐經典背後所欲傳遞之實相、空性與覺性運作（如來真實義）。`
-},
-        {
-  id: "2026-09-05-zh-agama-sanskrit-canonical-evolution-historical-analysis",
-  isNew: true,
-  lang: "zh",
-  category: "佛學",
-  title: "《阿含經》文獻層累與集結演進考證：從原始核心到部派分裂與梵本寫本之歷史全貌",
-  status: "阿含文本 ． 文本層累 ． 部派集結 ． 梵本考證 ． 歷史還原",
-  humble: "本篇文獻針對《阿含經》（Āgama）之口傳集結、結集演進、文獻層累結構、阿育王時期之部派分化，以及現代出土梵文寫本進行客觀客觀之文獻學與考古學梳理。",
-  content: `<div style="display: flex; gap: 15px; margin: 25px 0 40px 0; flex-wrap: wrap;">
+  },
+
+
+  {
+    id: "2026-09-05-zh-agama-sanskrit-canonical-evolution-historical-analysis",
+    isNew: true,
+    lang: "zh",
+    category: "佛學",
+    title: "《阿含經》文獻層累與集結演進考證：從原始核心到部派分裂與梵本寫本之歷史全貌",
+    status: "阿含文本 ． 文本層累 ． 部派集結 ． 梵本考證 ． 歷史還原",
+    humble: "本篇文獻針對《阿含經》（Āgama）之口傳集結、結集演進、文獻層累結構、阿育王時期之部派分化，以及現代出土梵文寫本進行客觀客觀之文獻學與考古學梳理。",
+    content: `<div style="display: flex; gap: 15px; margin: 25px 0 40px 0; flex-wrap: wrap;">
     <div style="flex: 1; min-width: 180px; border: 1px solid rgba(139, 168, 156, 0.4); padding: 18px; background: rgba(139, 168, 156, 0.06); border-radius: 12px; text-align: center;">
         <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(139, 168, 156, 0.4); padding: 1px 6px; margin-bottom: 8px; color: #8ba89c; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">原始核心</span>
         <strong style="display: block; font-size: 1.1rem; color: #8ba89c; letter-spacing: 2px;">相應/雜阿含</strong>
@@ -147,65 +150,68 @@ const rawArticles = [
 [一、 早期結集與口傳文本時代（Pre-Canonical Oral Era）]
 
 1. 佛陀時代之語言與傳播載體
-  * **口頭宣說**：西元前 5 世紀，釋迦牟尼佛之教導採用古印度東部方言（Middle Indo-Aryan Prakrits，如 Māgadhi 或 Ardhamāgadhi），並無書面文字記錄。
-  * **集體吟誦（Saṅgāyana）**：經文傳承依賴誦經師（Bhāṇaka）系統進行口耳相傳，藉由格式化、重複性之偈頌與長行段落協助記憶。
+  - 口頭宣說：西元前 5 世紀，釋迦牟尼佛之教導採用古印度東部方言（Middle Indo-Aryan Prakrits，如 Māgadhi 或 Ardhamāgadhi），並無書面文字記錄。
+  - 集體吟誦（Saṅgāyana）：經文傳承依賴誦經師（Bhāṇaka）系統進行口耳相傳，藉由格式化、重複性之偈頌與長行段落協助記憶。
 
 2. 王舍城第一結集（First Council at Rājagṛha）
-  * **集結內容**：佛陀入滅後，長老尊者於王舍城召開會議。由阿難（Ānanda）誦出法（Sūtra），優波離（Upāli）誦出律（Vinaya）。
-  * **原始形態**：此時期之「經」多為短篇之教示（Sūtra）與偈頌（Gāthā），尚未形成龐大之四阿含經卷構造。
+  - 集結內容：佛陀入滅後，長老尊者於王舍城召開會議。由阿難（Ānanda）誦出法（Sūtra），優波離（Upāli）誦出律（Vinaya）。
+  - 原始形態：此時期之「經」多為短篇之教示（Sūtra）與偈頌（Gāthā），尚未形成龐大之四阿含經卷構造。
 
 [二、 高等文獻學下之《阿含經》文獻層累結構（Textual Stratification）]
 
 現代高等文獻學與比對分析顯示，現存阿含/尼柯耶文本呈現明確之歷史層累（Layering）現象：
 
 1. 最原始核心層（Primitive Kernel）
-  * **代表文本**：《雜阿含經》（Saṃyuktāgama）之核心對應章節 / 《相應部》（Saṃyutta-nikāya）。
-  * **結構特徵**：以主題分類（Saṃyukta），聚焦於「五蘊（Skandha）」、「六入處（Āyatana）」、「十二因緣（Nidāna）」及「八正道（Mārga）」。
-  * **內涵特徵**：高度抽象、現象學式之心識分析與解脫道，欠缺複雜之宇宙觀、神話色彩與龐大之本生故事。
+  - 代表文本：《雜阿含經》（Saṃyuktāgama）之核心對應章節 / 《相應部》（Saṃyutta-nikāya）。
+  - 結構特徵：以主題分類（Saṃyukta），聚焦於「五蘊（Skandha）」、「六入處（Āyatana）」、「十二因緣（Nidāna）」及「八正道（Mārga）」。
+  - 內涵特徵：高度抽象、現象學式之心識分析與解脫道，欠缺複雜之宇宙觀、神話色彩與龐大之本生故事。
 
 2. 中期發展層（Developmental Expansion）
-  * **代表文本**：《中阿含經》（Madhyamāgama）與《長阿含經》（Dīrghāgama）。
-  * **結構特徵**：呈現中等與長篇之對話論辯，納入與外道（如尼乾子/耆那教）之教義辯駁，以及針對僧團戒律與制度之詳細規範。
+  - 代表文本：《中阿含經》（Madhyamāgama）與《長阿含經》（Dīrghāgama）。
+  - 結構特徵：呈現中等與長篇之對話論辯，納入與外道（如尼乾子/耆那教）之教義辯駁，以及針對僧團戒律與制度之詳細規範。
 
 3. 晚期/部派層累層（Sectarian Interpolation Layer）
-  * **代表文本**：《增一阿含經》（Ekottarika-āgama）及《長阿含經》中之《世記經》（Lokadhātu-sūtra）等。
-  * **結構特徵**：引入法數遞增（一法至十一法）編排，大量納入天人宇宙觀、地獄（Naraka）描述、四生（胎卵濕化）細節、本生（Jātaka）與譬喻（Avadāna），並帶有早期功德勸善與信仰化色彩。
+  - 代表文本：《增一阿含經》（Ekottarika-āgama）及《長阿含經》中之《世記經》（Lokadhātu-sūtra）等。
+  - 結構特徵：引入法數遞增（一法至十一法）編排，大量納入天人宇宙觀、地獄（Naraka）描述、四生（胎卵濕化）細節、本生（Jātaka）與譬喻（Avadāna），並帶有早期功德勸善與信仰化色彩。
 
 [三、 阿育王時期、華氏城結集與部派地理分化]
 
 1. 阿育王（Emperor Aśoka，約西元前 3 世紀）之歷史角色
-  * **經濟供養與僧團膨脹**：阿育王崇信佛法，給予僧團免稅與優渥供養，導致非佛教徒與不同見解者湧入僧團，引發內部布薩（Posadha）儀式之衝突。
-  * **第三次結集（Pāṭaliputra Council）**：由目犍連帝須（Moggaliputta Tissa）主持。此結集為分別說部（Vibhajjavāda）內部之教義整頓與清肅，**並未建立全印度統一且唯一之官方阿含文本**。
+  - 經濟供養與僧團膨脹：阿育王崇信佛法，給予僧團免稅與優渥供養，導致非佛教徒與不同見解者湧入僧團，引發內部布薩（Posadha）儀式之衝突。
+  - 第三次結集（Pāṭaliputra Council）：由目犍連帝須（Moggaliputta Tissa）主持。此結集為分別說部（Vibhajjavāda）內部之教義整頓與清肅，並未建立全印度統一且唯一之官方阿含文本。
 
 2. 地理擴散與語言分化（Linguistic Differentiation）
-  * **南傳分支（Pāli Stream）**：由阿育王之子摩哂陀（Mahinda）傳入斯里蘭卡，以巴利語（Pāli）傳承，形成現存之《巴利語五部尼柯耶（Five Nikāyas）》。
-  * **北傳分支（Sanskrit Stream）**：留在印度西北部（犍陀羅、迦濕彌羅、摩菟羅）之部派（如說一切有部、法藏部、大眾部），逐漸將口傳經典梵民俗化與古典梵文（Sanskrit）化，形成梵文《四阿含經》。
+  - 南傳分支（Pāli Stream）：由阿育王之子摩哂陀（Mahinda）傳入斯里蘭卡，以巴利語（Pāli）傳承，形成現存之《巴利語五部尼柯耶（Five Nikāyas）》。
+  - 北傳分支（Sanskrit Stream）：留在印度西北部（犍陀羅、迦濕彌羅、摩菟羅）之部派（如說一切有部、法藏部、大眾部），逐漸將口傳經典梵民俗化與古典梵文（Sanskrit）化，形成梵文《四阿含經》。
 
 [四、 四阿含之結構整理與漢譯部派歸屬]
 
 | 阿含名稱 | 巴利對應 | 古印度編排原則 | 漢譯本之部派歸屬 |
 | :--- | :--- | :--- | :--- |
-| **《雜阿含經》** | Saṃyutta-nikāya | 依教理主題（五蘊、六入、因緣等）分類 | 說一切有部（Sarvāstivāda） |
-| **《中阿含經》** | Majjhima-nikāya | 篇幅中等之經文對話與教理辨析 | 說一切有部（Sarvāstivāda） |
-| **《長阿含經》** | Dīgha-nikāya | 篇幅較長之經文，多破斥外道與論述宇宙觀 | 法藏部（Dharmaguptaka） |
-| **《增一阿含經》** | Aṅguttara-nikāya | 依法數（從一法至十一法）遞增編排 | 大眾部（Mahāsāṃghika）或大眾部系 |
+| 《雜阿含經》 | Saṃyutta-nikāya | 依教理主題（五蘊、六入、因緣等）分類 | 說一切有部（Sarvāstivāda） |
+| 《中阿含經》 | Majjhima-nikāya | 篇幅中等之經文對話與教理辨析 | 說一切有部（Sarvāstivāda） |
+| 《長阿含經》 | Dīgha-nikāya | 篇幅較長之經文，多破斥外道與論述宇宙觀 | 法藏部（Dharmaguptaka） |
+| 《增一阿含經》 | Aṅguttara-nikāya | 依法數（從一法至十一法）遞增編排 | 大眾部（Mahāsāṃghika）或大眾部系 |
 
 [五、 考古出土之古印度梵文寫本實物實證]
 
 現代考古學已發掘大量古印度梵文《阿含經》寫本實物，證實《阿含經》非僅存於漢譯或巴利譯本：
 
 1. 史柯因蒐藏（Schøyen Collection / 巴米揚寫本）
-  * **出土地點**：阿富汗巴米揚洞窟（Bamiyan）。
-  * **文本內容**：包含西元 2 至 8 世紀之《長阿含經》與《中阿含經》樺樹皮殘卷（使用 Birch-bark 與 Proto-Śāradā 體字），屬根本說一切有部傳承。
+  - 出土地點：阿富汗巴米揚洞窟（Bamiyan）。
+  - 文本內容：包含西元 2 至 8 世紀之《長阿含經》與《中阿含經》樺樹皮殘卷（使用 Birch-bark 與 Proto-Śāradā 體字），屬根本說一切有部傳承。
 
 2. 吐魯番與新疆出土寫本（Turfan Manuscripts）
-  * **出土地點**：德國考察隊於新疆吐魯番、庫車，斯坦因於和田地區發掘。
-  * **文本內容**：出土數百頁 3 至 6 世紀之說一切有部梵文《雜阿含經》與《中阿含經》貝葉與紙本寫本，與漢譯《雜阿含經》（求那跋陀羅譯）高度對應。
+  - 出土地點：德國考察隊於新疆吐魯番、庫車，斯坦因於和田地區發掘。
+  - 文本內容：出土數百頁 3 至 6 世紀之說一切有部梵文《雜阿含經》與《中阿含經》貝葉與紙本寫本，與漢譯《雜阿含經》（求那跋陀羅譯）高度對應。
 
 3. 犍陀羅語寫本（Gāndhārī Manuscripts）
-  * **出土地點**：阿富汗與巴基斯坦西北部。
-  * **文本內容**：出土西元前 1 世紀至西元 2 世紀採用祛盧文（Kharoṣṭhī script）書寫之犍陀羅語阿含經文殘卷（如 Senior Collection），為現存最古老之實物佛典寫本。`
-},
+  - 出土地點：阿富汗與巴基斯坦西北部。
+  - 文本內容：出土西元前 1 世紀至西元 2 世紀採用祛盧文（Kharoṣṭhī script）書寫之犍陀羅語阿含經文殘卷（如 Senior Collection），為現存最古老之實物佛典寫本。`
+  },
+
+
+
 
     {
   id: "2026-07-30-zh-nagarjuna-asanga-vasubandhu-complete",
@@ -1079,15 +1085,16 @@ Neukart 的理論認為，神祕的暗物質與暗能量與這些「資訊」息
     // ==========================================
     // 英文文章 (English Articles)
     // ==========================================
-       {
-  id: "2026-09-06-en-mahayana-sutra-chronology-and-textual-history",
-  isNew: true,
-  lang: "en",
-  category: "Buddhism",
-  title: "Chronology of Extant Mahāyāna Manuscripts and Textual History: Linguistic Limitations and the Historical Councils",
-  status: "Archaeological Artifacts ． Manuscript Chronology ． Linguistic Limits ． Canonical Councils ． Hermeneutic Restoration",
-  humble: "Based on archaeological artifacts and philological research, this document outlines the historical timeline of extant Mahāyāna manuscripts and their redaction, while objectively contextualizing scriptural transmission through the limits of language, monastic lineage mechanisms, and commentarial treatises.",
-  content: `<div style="display: flex; gap: 15px; margin: 25px 0 40px 0; flex-wrap: wrap;">
+
+  {
+    "id": "2026-09-06-en-mahayana-sutra-chronology-and-textual-history",
+    "isNew": true,
+    "lang": "en",
+    "category": "Buddhism",
+    "title": "Chronology of Extant Mahāyāna Manuscripts and Textual History: Linguistic Limitations and the Historical Councils",
+    "status": "Archaeological Artifacts ． Manuscript Chronology ． Linguistic Limits ． Canonical Councils ． Hermeneutic Restoration",
+    "humble": "Based on archaeological artifacts and philological research, this document outlines the historical timeline of extant Mahāyāna manuscripts and their redaction, while objectively contextualizing scriptural transmission through the limits of language, monastic lineage mechanisms, and commentarial treatises.",
+    "content": `<div style="display: flex; gap: 15px; margin: 25px 0 40px 0; flex-wrap: wrap;">
     <div style="flex: 1; min-width: 180px; border: 1px solid rgba(139, 168, 156, 0.4); padding: 18px; background: rgba(139, 168, 156, 0.06); border-radius: 12px; text-align: center;">
         <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(139, 168, 156, 0.4); padding: 1px 6px; margin-bottom: 8px; color: #8ba89c; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">Scriptural Medium</span>
         <strong style="display: block; font-size: 1.1rem; color: #8ba89c; letter-spacing: 2px;">Language & Script</strong>
@@ -1095,7 +1102,7 @@ Neukart 的理論認為，神祕的暗物質與暗能量與這些「資訊」息
     </div>
     <div style="flex: 1; min-width: 180px; border: 1px solid rgba(224, 224, 224, 0.15); padding: 18px; background: rgba(255, 255, 255, 0.02); border-radius: 12px; text-align: center;">
         <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(224, 224, 224, 0.2); padding: 1px 6px; margin-bottom: 8px; color: #b0b0b0; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">Transmission</span>
-        <span style="display: block; font-size: 1.1rem; color: #e0e0e0; letter-spacing: 2px;">Monastic Recitation</span>
+        <strong style="display: block; font-size: 1.1rem; color: #e0e0e0; letter-spacing: 2px;">Monastic Recitation</strong>
         <span style="display: block; font-size: 0.75rem; color: #888; margin-top: 5px; line-height: 1.4;">Oral Tradition ‧ Later Redaction<br>Official & Non-Official Streams</span>
     </div>
     <div style="flex: 1; min-width: 180px; border: 1px solid rgba(212, 175, 55, 0.4); padding: 18px; background: rgba(212, 175, 55, 0.08); border-radius: 12px; text-align: center; box-shadow: inset 0 0 10px rgba(212, 175, 55, 0.05);">
@@ -1115,69 +1122,69 @@ Language and script are conventional symbol systems constrained by grammar, time
 
 3. Institutional Mechanisms of Monastic Recitation
 From a philological perspective, neither Śrāvakayāna (Nikāya) nor Mahāyāna scriptures were composed by a single author. They represent the collective compilation, editing, and preservation efforts of monastic communities:
-  * Śrāvakayāna Scriptures: Mostly codified and chanted during official councils (Saṅgīti) of early monastic Nikāyas, forming the Āgamas and Vinaya Piṭakas.
-  * Mahāyāna Scriptures: Mostly preserved, systematized, and written down by forest-dwelling, meditative, or specialized monastic communities across Central Asia and India over centuries of contemplative experience.
+  - Śrāvakayāna Scriptures: Mostly codified and chanted during official councils (Saṅgīti) of early monastic Nikāyas, forming the Āgamas and Vinaya Piṭakas.
+  - Mahāyāna Scriptures: Mostly preserved, systematized, and written down by forest-dwelling, meditative, or specialized monastic communities across Central Asia and India over centuries of contemplative experience.
 
 [2. Chronology of Extant Mahāyāna Manuscripts (Based on Archaeology and Redaction Dates)]
 
 Based on globally recovered manuscript fragments (including Gāndhārī manuscripts, the Schøyen Collection, Gilgit/Bamiyan manuscripts, and Nepalese palm-leaf manuscripts), the historical timeline of Mahāyāna scriptural redaction is structured as follows:
 
 1. Early Mahāyāna Scriptural Period (1st Century BCE – 2nd Century CE)
-  * *Aṣṭasāhasrikā Prajñāpāramitā Sūtra*: The oldest extant physical fragment is the Gāndhārī birch-bark manuscript in the Split Collection (c. 50–100 CE). Translated into Chinese by Lokakṣema in 179 CE.
-  * *Akṣobhyavyūha Sūtra*: Gāndhārī fragments recovered from Dir date to the 1st–2nd century CE. Translated into Chinese in the late 2nd century CE by Lokakṣema.
-  * *Pratyutpanna-buddha-sammukhāvasthita-samādhi Sūtra*: Bamiyan fragments date to the 2nd–3rd century CE. Translated into Chinese by Lokakṣema in 179 CE.
-  * *Mahā-sukhāvatīvyūha Sūtra*: Manuscript fragments (e.g., Schøyen Collection) date to the 2nd–3rd century CE. Early Chinese translations circulated by the late 2nd century CE.
-  * *Sūkṣma-sukhāvatīvyūha Sūtra*: Independent early fragments date to the 2nd–4th century CE. Translated into Chinese by Kumārajīva in 402 CE.
+  - Aṣṭasāhasrikā Prajñāpāramitā Sūtra: The oldest extant physical fragment is the Gāndhārī birch-bark manuscript in the Split Collection (c. 50–100 CE). Translated into Chinese by Lokakṣema in 179 CE.
+  - Akṣobhyavyūha Sūtra: Gāndhārī fragments recovered from Dir date to the 1st–2nd century CE. Translated into Chinese in the late 2nd century CE by Lokakṣema.
+  - Pratyutpanna-buddha-sammukhāvasthita-samādhi Sūtra: Bamiyan fragments date to the 2nd–3rd century CE. Translated into Chinese by Lokakṣema in 179 CE.
+  - Mahā-sukhāvatīvyūha Sūtra: Manuscript fragments (e.g., Schøyen Collection) date to the 2nd–3rd century CE. Early Chinese translations circulated by the late 2nd century CE.
+  - Sūkṣma-sukhāvatīvyūha Sūtra: Independent early fragments date to the 2nd–4th century CE. Translated into Chinese by Kumārajīva in 402 CE.
 
 2. Middle Mahāyāna Scriptural Period (2nd Century CE – 5th Century CE)
-  * *Daśabhūmika Sūtra* (Core independent text of the later *Avataṃsaka Sūtra*): Independent Sanskrit manuscripts exist from Central Asia and Nepal (2nd–3rd century CE). Commented on by Nāgārjuna in his *Daśabhūmika-vibhāṣā*.
-  * *Saddharmapuṇḍarīka Sūtra*: Fragments from Kuča, Khotan, and Bamiyan date to the 3rd–4th century CE. First translated into Chinese by Dharmarakṣa in 286 CE.
-  * *Vimalakīrtinirdeśa Sūtra*: Central Asian fragments date to the 3rd–4th century CE. Translated into Chinese by Zhi Qian in the early 3rd century CE.
-  * *Mahāparinirvāṇa Sūtra* (Mahāyāna): Sanskrit fragments from Bamiyan date to the 3rd–4th century CE. Translated into Chinese by Faxian in 416 CE.
-  * *Śrīmālādevī Siṃhanāda Sūtra*: Manuscript citations date to the 4th–5th century CE. Translated into Chinese by Guṇabhadra in 435 CE.
-  * *Laṅkāvatāra Sūtra*: Underlying manuscript tradition dates to the 4th–5th century CE. Translated into Chinese by Guṇabhadra in 443 CE.
+  - Daśabhūmika Sūtra (Core independent text of the later Avataṃsaka Sūtra): Independent Sanskrit manuscripts exist from Central Asia and Nepal (2nd–3rd century CE). Commented on by Nāgārjuna in his Daśabhūmika-vibhāṣā.
+  - Saddharmapuṇḍarīka Sūtra: Fragments from Kuča, Khotan, and Bamiyan date to the 3rd–4th century CE. First translated into Chinese by Dharmarakṣa in 286 CE.
+  - Vimalakīrtinirdeśa Sūtra: Central Asian fragments date to the 3rd–4th century CE. Translated into Chinese by Zhi Qian in the early 3rd century CE.
+  - Mahāparinirvāṇa Sūtra (Mahāyāna): Sanskrit fragments from Bamiyan date to the 3rd–4th century CE. Translated into Chinese by Faxian in 416 CE.
+  - Śrīmālādevī Siṃhanāda Sūtra: Manuscript citations date to the 4th–5th century CE. Translated into Chinese by Guṇabhadra in 435 CE.
+  - Laṅkāvatāra Sūtra: Underlying manuscript tradition dates to the 4th–5th century CE. Translated into Chinese by Guṇabhadra in 443 CE.
 
 3. Late Mahāyāna & Esoteric Transition Period (5th Century CE – 8th Century CE)
-  * *Suvarṇaprabhāsa Sūtra*: Fragments from Khotan and Central Asia date to the 5th century CE. Translated into Chinese by Dharmakṣema in the early 5th century CE.
-  * *Saṃdhinirmocana Sūtra*: Sanskrit fragments preserved within the *Yogācārabhūmi-śāstra*, text finalized around the 4th–5th century CE. Translated into Chinese by Xuanzang in 647 CE.
-  * *Mahāvairocana Sūtra*: Extant Sanskrit manuscripts in Nepal/Tibet date to c. 7th century CE. Translated into Chinese by Śubhakarasiṃha in 725 CE.
+  - Suvarṇaprabhāsa Sūtra: Fragments from Khotan and Central Asia date to the 5th century CE. Translated into Chinese by Dharmakṣema in the early 5th century CE.
+  - Saṃdhinirmocana Sūtra: Sanskrit fragments preserved within the Yogācārabhūmi-śāstra, text finalized around the 4th–5th century CE. Translated into Chinese by Xuanzang in 647 CE.
+  - Mahāvairocana Sūtra: Extant Sanskrit manuscripts in Nepal/Tibet date to c. 7th century CE. Translated into Chinese by Śubhakarasiṃha in 725 CE.
 
 [3. Additional Mahāyāna Scriptures with Extant Sanskrit / Central Asian Manuscripts]
 
 Beyond the core texts above, archaeological and philological efforts across India, Nepal, Tibet, and Central Asia have recovered numerous other Mahāyāna manuscripts:
 
 1. Independent Prajñāpāramitā Texts
-  * *Vajracchedikā Prajñāpāramitā Sūtra*: Extremely early Sanskrit manuscripts discovered in Central Asia and Gilgit.
-  * *Prajñāpāramitāhṛdaya Sūtra*: Ancient palm-leaf manuscripts and stone inscriptions preserved.
-  * *Pañcaviṃśatisāhasrikā* & *Śatasāhasrikā Prajñāpāramitā*: Complete Sanskrit palm-leaf manuscripts preserved in Nepal and India.
+  - Vajracchedikā Prajñāpāramitā Sūtra: Extremely early Sanskrit manuscripts discovered in Central Asia and Gilgit.
+  - Prajñāpāramitāhṛdaya Sūtra: Ancient palm-leaf manuscripts and stone inscriptions preserved.
+  - Pañcaviṃśatisāhasrikā & Śatasāhasrikā Prajñāpāramitā: Complete Sanskrit palm-leaf manuscripts preserved in Nepal and India.
 
 2. Ratnakūṭa and Collection Sūtras
-  * *Ugraparipṛcchā Sūtra*: Early Gāndhārī and Sanskrit fragments recovered.
-  * *Pitāputrasamāgama Sūtra*: Sanskrit manuscripts preserved in India and Nepal.
-  * *Bhadrakalpika Sūtra*: Fragments in Sanskrit and Khotanese recovered in Central Asia.
+  - Ugraparipṛcchā Sūtra: Early Gāndhārī and Sanskrit fragments recovered.
+  - Pitāputrasamāgama Sūtra: Sanskrit manuscripts preserved in India and Nepal.
+  - Bhadrakalpika Sūtra: Fragments in Sanskrit and Khotanese recovered in Central Asia.
 
 3. Other Independent Mahāyāna Scriptures
-  * *Gaṇḍavyūha Sūtra* (The entry into the Dharmadhātu, Sudhana's pilgrimage): Preserved as an independent, complete Sanskrit palm-leaf manuscript.
-  * *Śūraṅgama-samādhi Sūtra*: Ancient Indian Mahāyāna text preserved in Sanskrit fragments and Tibetan translation (Note: Textually distinct from the Tang-dynasty *Śūraṅgama Sūtra*).
-  * *Bhaiṣajyaguru Sūtra*: Complete Sanskrit manuscripts recovered from Gilgit and Central Asia.
+  - Gaṇḍavyūha Sūtra (The entry into the Dharmadhātu, Sudhana's pilgrimage): Preserved as an independent, complete Sanskrit palm-leaf manuscript.
+  - Śūraṅgama-samādhi Sūtra: Ancient Indian Mahāyāna text preserved in Sanskrit fragments and Tibetan translation (Note: Textually distinct from the Tang-dynasty Śūraṅgama Sūtra).
+  - Bhaiṣajyaguru Sūtra: Complete Sanskrit manuscripts recovered from Gilgit and Central Asia.
 
 [4. Archaeological Concordance of Extant Manuscripts]
 
 | No. | Sūtra Title (Sanskrit) | Earliest Archaeological Manuscript Date & Location | First Chinese Translation Date | Philological & Archaeological Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| **1** | ***Aṣṭasāhasrikā*** | **Late 1st c. BCE – 1st c. CE** (Gāndhārī Birch Bark) | 179 CE (Lokakṣema) | World's oldest surviving physical Mahāyāna manuscript. |
-| **2** | ***Akṣobhyavyūha*** | **1st–2nd c. CE** (Dir, Pakistan) | 147–186 CE (Lokakṣema) | Early written manuscript of Pure Land and Buddha-field doctrine. |
-| **3** | ***Pratyutpanna*** | **2nd–3rd c. CE** (Bamiyan, Afghanistan) | 179 CE (Lokakṣema) | Early manuscript on meditation and visualizing the Buddhas. |
-| **4** | ***Mahā-sukhāvatī*** | **2nd–3rd c. CE** (Schøyen Fragments, Central Asia) | Late 2nd c. CE (Attrib. Lokakṣema / Zhi Qian) | Independent transmission manuscript of the Larger Pure Land Sūtra. |
-| **5** | ***Daśabhūmika*** | **2nd–3rd c. CE** (Central Asia / Nepal) | 297 CE (Dharmarakṣa) | Structural core of *Avataṃsaka*; basis for commentaries by Nāgārjuna & Vasubandhu. |
-| **6** | ***Saddharmapuṇḍarīka*** | **3rd–4th c. CE** (Kuča / Khotan Fragments) | 286 CE (Dharmarakṣa) | Major codification manuscript of the Ekayāna doctrine. |
-| **7** | ***Vimalakīrtinirdeśa*** | **3rd–4th c. CE** (Central Asian Fragments) | 220–252 CE (Zhi Qian) | Manuscript on lay bodhisattva practice and Śūnyatā dialectics. |
-| **8** | ***Sūkṣma-sukhāvatī*** | **3rd–4th c. CE** (North India / Central Asia) | 402 CE (Kumārajīva) | Independent manuscript detailing simplified mindfulness practice. |
-| **9** | ***Mahāparinirvāṇa*** | **3rd–4th c. CE** (Bamiyan Fragments) | 416 CE (Faxian) | Manuscript emphasizing Tathāgatagarbha and permanent Buddha-nature. |
-| **10** | ***Śrīmālādevī*** | **4th–5th c. CE** (Textual Citation Fragments) | 435 CE (Guṇabhadra) | Manuscript articulating Tathāgatagarbha and Ultimate Ekayāna. |
-| **11** | ***Laṅkāvatāra*** | **4th–5th c. CE** (Gilgit Underlying Text) | Early 5th c. CE (Dharmakṣema / Guṇabhadra) | Manuscript synthesizing Yogācāra and Tathāgatagarbha. |
-| **12** | ***Saṃdhinirmocana*** | **4th–5th c. CE** (Embedded Śāstra Fragments) | 538 CE (Bodhiruci) | Foundational manuscript for the Three Natures (*Trisvabhāva*) theory. |
-| **13** | ***Suvarṇaprabhāsa*** | **5th c. CE** (Khotan Manuscripts) | Early 5th c. CE (Dharmakṣema) | Manuscript combining state-protection doctrines and Dhāraṇī. |
+| 1 | 《Aṣṭasāhasrikā》 | Late 1st c. BCE – 1st c. CE (Gāndhārī Birch Bark) | 179 CE (Lokakṣema) | World's oldest surviving physical Mahāyāna manuscript. |
+| 2 | 《Akṣobhyavyūha》 | 1st–2nd c. CE (Dir, Pakistan) | 147–186 CE (Lokakṣema) | Early written manuscript of Pure Land and Buddha-field doctrine. |
+| 3 | 《Pratyutpanna》 | 2nd–3rd c. CE (Bamiyan, Afghanistan) | 179 CE (Lokakṣema) | Early manuscript on meditation and visualizing the Buddhas. |
+| 4 | 《Mahā-sukhāvatī》 | 2nd–3rd c. CE (Schøyen Fragments, Central Asia) | Late 2nd c. CE (Attrib. Lokakṣema / Zhi Qian) | Independent transmission manuscript of the Larger Pure Land Sūtra. |
+| 5 | 《Daśabhūmika》 | 2nd–3rd c. CE (Central Asia / Nepal) | 297 CE (Dharmarakṣa) | Structural core of Avataṃsaka; basis for commentaries by Nāgārjuna & Vasubandhu. |
+| 6 | 《Saddharmapuṇḍarīka》 | 3rd–4th c. CE (Kuča / Khotan Fragments) | 286 CE (Dharmarakṣa) | Major codification manuscript of the Ekayāna doctrine. |
+| 7 | 《Vimalakīrtinirdeśa》 | 3rd–4th c. CE (Central Asian Fragments) | 220–252 CE (Zhi Qian) | Manuscript on lay bodhisattva practice and Śūnyatā dialectics. |
+| 8 | 《Sūkṣma-sukhāvatī》 | 3rd–4th c. CE (North India / Central Asia) | 402 CE (Kumārajīva) | Independent manuscript detailing simplified mindfulness practice. |
+| 9 | 《Mahāparinirvāṇa》 | 3rd–4th c. CE (Bamiyan Fragments) | 416 CE (Faxian) | Manuscript emphasizing Tathāgatagarbha and permanent Buddha-nature. |
+| 10 | 《Śrīmālādevī》 | 4th–5th c. CE (Textual Citation Fragments) | 435 CE (Guṇabhadra) | Manuscript articulating Tathāgatagarbha and Ultimate Ekayāna. |
+| 11 | 《Laṅkāvatāra》 | 4th–5th c. CE (Gilgit Underlying Text) | Early 5th c. CE (Dharmakṣema / Guṇabhadra) | Manuscript synthesizing Yogācāra and Tathāgatagarbha. |
+| 12 | 《Saṃdhinirmocana》 | 4th–5th c. CE (Embedded Śāstra Fragments) | 538 CE (Bodhiruci) | Foundational manuscript for the Three Natures (Trisvabhāva) theory. |
+| 13 | 《Suvarṇaprabhāsa》 | 5th c. CE (Khotan Manuscripts) | Early 5th c. CE (Dharmakṣema) | Manuscript combining state-protection doctrines and Dhāraṇī. |
 
 [5. Merit of Recitation and the Role of Commentarial Treatises]
 
@@ -1185,25 +1192,25 @@ Beyond the core texts above, archaeological and philological efforts across Indi
 During periods of religious persecution or when manuscript copying was scarce, oral recitation and memorization were the primary means to preserve the Dharma. Thus, scriptural emphasis on "receiving, holding, reading, reciting, and explaining" served the practical historical purpose of ensuring teachings survived socio-political upheavals.
 
 2. Open Diversity of Commentarial Treatises (Śāstrakāras)
-Because language is limited and sūtra texts are concise, later masters (e.g., Nāgārjuna, Asaṅga, Vasubandhu, Dignāga) composed treatises (*Śāstras*) to provide logical deduction, classification, and systematic interpretation:
-  * Plurality of Interpretations: Commentators represented individual or school-specific realizations, giving rise to rich academic debate across Mahāyāna scholasticism.
-  * Authority and Limits: No single commentator speaks as the absolute surrogate for the Buddha. Treatises serve as analytical tools to illuminate scriptures, not as ultimate truth in themselves.
+Because language is limited and sūtra texts are concise, later masters (e.g., Nāgārjuna, Asaṅga, Vasubandhu, Dignāga) composed treatises (Śāstras) to provide logical deduction, classification, and systematic interpretation:
+  - Plurality of Interpretations: Commentators represented individual or school-specific realizations, giving rise to rich academic debate across Mahāyāna scholasticism.
+  - Authority and Limits: No single commentator speaks as the absolute surrogate for the Buddha. Treatises serve as analytical tools to illuminate scriptures, not as ultimate truth in themselves.
 
 [6. Conclusion: Grasping Intent Beyond Words]
 
 Examining manuscript chronology and transmission history fosters an objective, rational approach to practice:
 1. Beyond Clinging to Scriptural Tokens: Recognizing that scriptures are historical carriers compiled by monastic communities prevents fundamentalist misunderstandings.
-2. Seeking Ultimate Meaning: Textual manuscripts are vehicles; recitation and copying are methods. The practitioner's primary task is to realize and manifest the ultimate truth (*Tathāgata-bhūtatā*), emptiness (*Śūnyatā*), and awakened nature beyond linguistic forms.`
-},
-    {
-  id: "2026-09-05-en-agama-sanskrit-canonical-evolution-historical-analysis",
-  isNew: true,
-  lang: "en",
-  category: "Buddhism",
-  title: "Textual Stratification and Canonical Evolution of the Āgamas: An Archaeological and Philological Reconstruction",
-  status: "Āgama Texts ． Textual Stratification ． Sectarian Councils ． Sanskrit Manuscripts ． Historical Reconstruction",
-  humble: "This document presents an objective text-critical and archaeological analysis of the oral recitation, canonical evolution, structural stratification, Aśokan sectarian division, and extant Sanskrit manuscripts of the Āgamas.",
-  content: `<div style="display: flex; gap: 15px; margin: 25px 0 40px 0; flex-wrap: wrap;">
+2. Seeking Ultimate Meaning: Textual manuscripts are vehicles; recitation and copying are methods. The practitioner's primary task is to realize and manifest the ultimate truth (Tathāgata-bhūtatā), emptiness (Śūnyatā), and awakened nature beyond linguistic forms.`
+  },
+  {
+    "id": "2026-09-05-en-agama-sanskrit-canonical-evolution-historical-analysis",
+    "isNew": true,
+    "lang": "en",
+    "category": "Buddhism",
+    "title": "Textual Stratification and Canonical Evolution of the Āgamas: An Archaeological and Philological Reconstruction",
+    "status": "Āgama Texts ． Textual Stratification ． Sectarian Councils ． Sanskrit Manuscripts ． Historical Reconstruction",
+    "humble": "This document presents an objective text-critical and archaeological analysis of the oral recitation, canonical evolution, structural stratification, Aśokan sectarian division, and extant Sanskrit manuscripts of the Āgamas.",
+    "content": `<div style="display: flex; gap: 15px; margin: 25px 0 40px 0; flex-wrap: wrap;">
     <div style="flex: 1; min-width: 180px; border: 1px solid rgba(139, 168, 156, 0.4); padding: 18px; background: rgba(139, 168, 156, 0.06); border-radius: 12px; text-align: center;">
         <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(139, 168, 156, 0.4); padding: 1px 6px; margin-bottom: 8px; color: #8ba89c; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">Primitive Kernel</span>
         <strong style="display: block; font-size: 1.1rem; color: #8ba89c; letter-spacing: 2px;">Saṃyukta-āgama</strong>
@@ -1224,63 +1231,65 @@ Examining manuscript chronology and transmission history fosters an objective, r
 [1. The Pre-Canonical Era and Oral Transmission (Pre-Canonical Oral Era)]
 
 1. Linguistic Medium during the Buddha's Lifetime
-  * **Oral Delivery**: In the 5th century BCE, Siddhārtha Gautama communicated his teachings in local Middle Indo-Aryan vernaculars (Prākrits, such as Māgadhi or Ardhamāgadhi) without written records.
-  * **Communal Chanting (Saṅgāyana)**: Textual transmission relied on specialized reciters (Bhāṇakas) who memorized and preserved the teachings via standardized, repetitive mnemonic structures.
+  - Oral Delivery: In the 5th century BCE, Siddhārtha Gautama communicated his teachings in local Middle Indo-Aryan vernaculars (Prākrits, such as Māgadhi or Ardhamāgadhi) without written records.
+  - Communal Chanting (Saṅgāyana): Textual transmission relied on specialized reciters (Bhāṇakas) who memorized and preserved the teachings via standardized, repetitive mnemonic structures.
 
 2. The First Council at Rājagṛha
-  * **Compilation Content**: Following the Buddha's Parinirvāṇa, senior disciples convened at Rājagṛha. Ānanda recited the Dhamma (Sūtras) and Upāli recited the Vinaya.
-  * **Primitive Structure**: The content consisted primarily of short prose units (Sūtras) and metric verses (Gāthās), prior to the formation of the four major Āgama collections.
+  - Compilation Content: Following the Buddha's Parinirvāṇa, senior disciples convened at Rājagṛha. Ānanda recited the Dhamma (Sūtras) and Upāli recited the Vinaya.
+  - Primitive Structure: The content consisted primarily of short prose units (Sūtras) and metric verses (Gāthās), prior to the formation of the four major Āgama collections.
 
 [2. Textual Stratification under Higher Textual Criticism]
 
 Comparative philological analysis reveals three distinct historical layers within the extant Āgama/Nikāya literature:
 
 1. The Primitive Kernel
-  * **Representative Texts**: The core of the *Saṃyukta-āgama* / *Saṃyutta-nikāya*.
-  * **Structural Features**: Thematically organized (Saṃyukta) around the Five Aggregates (*Skandhas*), Six Sense Bases (*Āyatanas*), Dependent Origination (*Pratītyasamutpāda*), and the Noble Eightfold Path (*Mārga*).
-  * **Doctrinal Features**: Highly analytical, focusing purely on phenomenological mental observation and cessation without elaborate cosmology or mythological narratives.
+  - Representative Texts: The core of the Saṃyukta-āgama / Saṃyutta-nikāya.
+  - Structural Features: Thematically organized (Saṃyukta) around the Five Aggregates (Skandhas), Six Sense Bases (Āyatanas), Dependent Origination (Pratītyasamutpāda), and the Noble Eightfold Path (Mārga).
+  - Doctrinal Features: Highly analytical, focusing purely on phenomenological mental observation and cessation without elaborate cosmology or mythological narratives.
 
 2. Developmental Expansion Layer
-  * **Representative Texts**: The *Madhyama-āgama* and *Dīrghāgama*.
-  * **Structural Features**: Extended narrative dialogues, formal refutations of rival ascetic traditions (e.g., Jainism), and structured monastic regulations.
+  - Representative Texts: The Madhyama-āgama and Dīrghāgama.
+  - Structural Features: Extended narrative dialogues, formal refutations of rival ascetic traditions (e.g., Jainism), and structured monastic regulations.
 
 3. Sectarian / Late Interpolation Layer
-  * **Representative Texts**: The *Ekottarika-āgama* and cosmological texts like the *Lokadhātu-sūtra* in the *Dīrghāgama*.
-  * **Structural Features**: Numerical classification (items 1 through 11), integration of folk cosmology, depictions of hells (*Naraka*), heavens (*Deva*), four modes of birth (*Catur-yoni*), and *Jātaka/Avadāna* narrative literature.
+  - Representative Texts: The Ekottarika-āgama and cosmological texts like the Lokadhātu-sūtra in the Dīrghāgama.
+  - Structural Features: Numerical classification (items 1 through 11), integration of folk cosmology, depictions of hells (Naraka), heavens (Deva), four modes of birth (Catur-yoni), and Jātaka/Avadāna narrative literature.
 
 [3. The Aśokan Era, Pāṭaliputra Council, and Geographical Dispersion]
 
 1. Emperor Aśoka's Role (c. 3rd Century BCE)
-  * **Monastic Influx**: Imperial patronage led to an influx of diverse ascetics into the Sangha, causing internal conflicts regarding monastic purity and the *Uposatha* ceremony.
-  * **The Third Council at Pāṭaliputra**: Led by Moggaliputta Tissa, this council functioned as an internal purge affirming the *Vibhajjavāda* tradition, rather than establishing a single universal canon for all of India.
+  - Monastic Influx: Imperial patronage led to an influx of diverse ascetics into the Sangha, causing internal conflicts regarding monastic purity and the Uposatha ceremony.
+  - The Third Council at Pāṭaliputra: Led by Moggaliputta Tissa, this council functioned as an internal purge affirming the Vibhajjavāda tradition, rather than establishing a single universal canon for all of India.
 
 2. Geographical and Linguistic Dispersion
-  * **Southern Stream (Pāli)**: Introduced to Śrī Laṅkā by Mahinda, preserving the *Pāli Nikāyas*.
-  * **Northern Stream (Sanskrit)**: Retained in Northwestern India (Gāndhāra, Kaśmīra), Sanskritized by schools like the Sarvāstivāda, forming the Sanskrit *Āgamas*.
+  - Southern Stream (Pāli): Introduced to Śrī Laṅkā by Mahinda, preserving the Pāli Nikāyas.
+  - Northern Stream (Sanskrit): Retained in Northwestern India (Gāndhāra, Kaśmīra), Sanskritized by schools like the Sarvāstivāda, forming the Sanskrit Āgamas.
 
-[4. Structural Categorization and Sectarian Attribuhion of the Four Chinese Āgamas]
+[4. Structural Categorization and Sectarian Attribution of the Four Chinese Āgamas]
 
 | Chinese Āgama | Pāli Equivalent | Organizational Principle | Sectarian Attribution |
 | :--- | :--- | :--- | :--- |
-| **Saṃyukta-āgama** (雜阿含經) | Saṃyutta-nikāya | Categorized by doctrinal themes (Aggregates, Sense Bases, Causes) | Sarvāstivāda (說一切有部) |
-| **Madhyama-āgama** (中阿含經) | Majjhima-nikāya | Medium-length discourses and doctrinal debates | Sarvāstivāda (說一切有部) |
-| **Dīrghāgama** (長阿含經) | Dīgha-nikāya | Long narrative discourses and cosmological refutations | Dharmaguptaka (法藏部) |
-| **Ekottarika-āgama** (增一阿含經) | Aṅguttara-nikāya | Numerical progression (Items 1 to 11) | Mahāsāṃghika lineage (大眾部系) |
+| 《Saṃyukta-āgama》 | Saṃyutta-nikāya | Categorized by doctrinal themes (Aggregates, Sense Bases, Causes) | Sarvāstivāda |
+| 《Madhyama-āgama》 | Majjhima-nikāya | Medium-length discourses and doctrinal debates | Sarvāstivāda |
+| 《Dīrghāgama》 | Dīgha-nikāya | Long narrative discourses and cosmological refutations | Dharmaguptaka |
+| 《Ekottarika-āgama》 | Aṅguttara-nikāya | Numerical progression (Items 1 to 11) | Mahāsāṃghika lineage |
 
 [5. Archaeological Verification of Extant Sanskrit Manuscripts]
 
 1. The Schøyen Collection (Bamiyan Manuscripts)
-  * **Location**: Bamiyan, Afghanistan.
-  * **Content**: Birch-bark fragments of the *Dīrghāgama* and *Madhyama-āgama* in Proto-Śāradā script dating from the 2nd to 8th centuries CE.
+  - Location: Bamiyan, Afghanistan.
+  - Content: Birch-bark fragments of the Dīrghāgama and Madhyama-āgama in Proto-Śāradā script dating from the 2nd to 8th centuries CE.
 
 2. Turfan and Khotan Discoveries
-  * **Location**: Silk Road sites in Xinjiang.
-  * **Content**: Hundreds of manuscript folios of the Sarvāstivāda Sanskrit *Saṃyukta-āgama* and *Madhyama-āgama* matching the Chinese translations.
+  - Location: Silk Road sites in Xinjiang.
+  - Content: Hundreds of manuscript folios of the Sarvāstivāda Sanskrit Saṃyukta-āgama and Madhyama-āgama matching the Chinese translations.
 
 3. Gāndhārī Kharoshthi Manuscripts
-  * **Location**: Northwestern Pakistan and Afghanistan.
-  * **Content**: The oldest surviving Buddhist manuscript fragments (1st century BCE to 2nd century CE), written in Gāndhārī Prakrit.`
-},
+  - Location: Northwestern Pakistan and Afghanistan.
+  - Content: The oldest surviving Buddhist manuscript fragments (1st century BCE to 2nd century CE), written in Gāndhārī Prakrit.`
+  },
+
+
 
 
     {
@@ -2147,15 +2156,16 @@ However, when we look at time-travel plots in science fiction, we occasionally f
     // ==========================================
     // 日文文章 (Japanese Articles)
     // ==========================================
-{
-  id: "2026-09-06-ja-mahayana-sutra-chronology-and-textual-history",
-  isNew: true,
-  lang: "ja",
-  category: "仏学",
-  title: "大乗経典出土写本の時系列と文献展開の考察：言語の局限性と三蔵結集の実貌",
-  status: "考古実物 ． 写本時系列 ． 言語局限 ． 結集実貌 ． 意涵復元",
-  humble: "本文献は考古出土資料と文献学研究に基づき、大乗経典写本の成立・書き定めの歴史的時系列を整理し、言語の局限性、大小乗の伝承メカニズム、論師注釈の歴史的位置付けから、仏典伝播の本質を客観的に復元したものである。",
-  content: `<div style="display: flex; gap: 15px; margin: 25px 0 40px 0; flex-wrap: wrap;">
+
+  {
+    "id": "2026-09-06-ja-mahayana-sutra-chronology-and-textual-history",
+    "isNew": true,
+    "lang": "ja",
+    "category": "仏学",
+    "title": "大乗経典出土写本の時系列と文献展開の考察：言語の局限性と三蔵結集の実貌",
+    "status": "考古実物 ． 写本時系列 ． 言語局限 ． 結集実貌 ． 意涵復元",
+    "humble": "本文献は考古出土資料と文献学研究に基づき、大乗経典写本の成立・書き定めの歴史的時系列を整理し、言語の局限性、大小乗の伝承メカニズム、論師注釈の歴史的位置付けから、仏典伝播の本質を客観的に復元したものである。",
+    "content": `<div style="display: flex; gap: 15px; margin: 25px 0 40px 0; flex-wrap: wrap;">
     <div style="flex: 1; min-width: 180px; border: 1px solid rgba(139, 168, 156, 0.4); padding: 18px; background: rgba(139, 168, 156, 0.06); border-radius: 12px; text-align: center;">
         <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(139, 168, 156, 0.4); padding: 1px 6px; margin-bottom: 8px; color: #8ba89c; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">経典の媒体</span>
         <strong style="display: block; font-size: 1.1rem; color: #8ba89c; letter-spacing: 2px;">言語と文字</strong>
@@ -2163,7 +2173,7 @@ However, when we look at time-travel plots in science fiction, we occasionally f
     </div>
     <div style="flex: 1; min-width: 180px; border: 1px solid rgba(224, 224, 224, 0.15); padding: 18px; background: rgba(255, 255, 255, 0.02); border-radius: 12px; text-align: center;">
         <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(224, 224, 224, 0.2); padding: 1px 6px; margin-bottom: 8px; color: #b0b0b0; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">伝承メカニズム</span>
-        <span style="display: block; font-size: 1.1rem; color: #e0e0e0; letter-spacing: 2px;">教団の集団結集</span>
+        <span style="display: block; font-size: 1.1rem; color: #e0e0e0; letter-spacing: 2px;">僧団の集団結集</span>
         <span style="display: block; font-size: 0.75rem; color: #888; margin-top: 5px; line-height: 1.4;">口耳相承 ‧ 後世の文字化<br>公式・非公式の多角流承</span>
     </div>
     <div style="flex: 1; min-width: 180px; border: 1px solid rgba(212, 175, 55, 0.4); padding: 18px; background: rgba(212, 175, 55, 0.08); border-radius: 12px; text-align: center; box-shadow: inset 0 0 10px rgba(212, 175, 55, 0.05);">
@@ -2183,67 +2193,67 @@ However, when we look at time-travel plots in science fiction, we occasionally f
 
 3. サンガ集団結集の運用形態
 声聞乗（小乗）であれ大乗であれ、文献学的に単一著者の手によるものではなく、教団全体による編纂・伝承の成果である：
-  * 声聞乗経典：部派教団の公式会議（結集）を経て誦出され、各部派の阿含経と律蔵を形成した。
-  * 大乗経典：森林や山林に棲む修行僧団や特定の密修グループ（非公式伝承体系）が、長年の観照体験に基づき、法界の深広な真理を整理・文字化し、中央アジアやインド各地で流承させた。
+  - 声聞乗経典：部派教団の公式会議（結集）を経て誦出され、各部派の阿含経と律蔵を形成した。
+  - 大乗経典：森林や山林に棲む修行僧団や特定の密修グループ（非公式伝承体系）が、長年の観照体験に基づき、法界の深広な真理を整理・文字化し、中央アジアやインド各地で流承させた。
 
 [二、 大乗経典出土写本の時系列考察（考古・成典年代に基づく）]
 
 世界各地で出土した古写本断片（ガンダーラ語写本、ショイエン・コレクション Schøyen Collection、バーミヤン写本、ネパール貝葉経など）に基づき、大乗経典の文字化の歴史的タイムラインを以下に整理する：
 
 1. 初期大乗経典期（紀元前 1 世紀 － 紀元 2 世紀）
-  * 『八千頌般若経』（Aṣṭasāhasrikā Prajñāpāramitā Sūtra）：最古の出土写本は「Split Collection」のガンダーラ語樺皮写本（約 50–100 年）。漢訳は支婁迦讖により 179 年に訳出（『道行般若経』）。
-  * 『阿閦仏国経』（Akṣobhyavyūha Sūtra）：パキスタン・ディール出土のガンダーラ語断片は紀元 1–2 世紀。漢訳は 2 世紀後半に支婁迦讖により訳出。
-  * 『般舟三昧経』（Pratyutpanna-buddha-sammukhāvasthita-samādhi Sūtra）：バーミヤン出土断片は 2–3 世紀。漢訳は 179 年に支婁迦讖により訳出。
-  * 『大本無量寿経』（Mahā-sukhāvatīvyūha Sūtra）：ショイエン・コレクション等の断片は 2–3 世紀。漢訳は 2 世紀末に初期訳本が流承。
-  * 『小本阿弥陀経』（Sūkṣma-sukhāvatīvyūha Sūtra）：単独断片は 2–4 世紀。漢訳は 402 年に鳩摩羅什により訳出。
+  - 『八千頌般若経』（Aṣṭasāhasrikā Prajñāpāramitā Sūtra）：最古の出土写本は「Split Collection」のガンダーラ語樺皮写本（約 50–100 年）。漢訳は支婁迦讖により 179 年に訳出（『道行般若経』）。
+  - 『阿閦仏国経』（Akṣobhyavyūha Sūtra）：パキスタン・ディール出土のガンダーラ語断片は紀元 1–2 世紀。漢訳は 2 世紀後半に支婁迦讖により訳出。
+  - 『般舟三昧経』（Pratyutpanna-buddha-sammukhāvasthita-samādhi Sūtra）：バーミヤン出土断片は 2–3 世紀。漢訳は 179 年に支婁迦讖により訳出。
+  - 『大本無量寿経』（Mahā-sukhāvatīvyūha Sūtra）：ショイエン・コレクション等の断片は 2–3 世紀。漢訳は 2 世紀末に初期訳本が流承。
+  - 『小本阿弥陀経』（Sūkṣma-sukhāvatīvyūha Sūtra）：単独断片は 2–4 世紀。漢訳は 402 年に鳩摩羅什により訳出。
 
 2. 中期大乗経典期（紀元 2 世紀 － 紀元 5 世紀）
-  * 『十地経』（Daśabhūmika Sūtra，後の『華嚴経』の核心単行本）：中央アジアおよびネパールにサンスクリット単行本が存在（2–3 世紀）。龍樹が『十住毘婆沙論』で釈論を展開。
-  * 『妙法蓮華経』（Saddharmapuṇḍarīka Sūtra）：クチャ、ホータン、バーミヤン出土断片は 3–4 世紀。漢訳は 286 年に竺法護が初訳。
-  * 『維摩詰所説経』（Vimalakīrtinirdeśa Sūtra）：中央アジア断片は 3–4 世紀。漢訳は 3 世紀初頭に支謙により訳出。
-  * 『大般涅槃経』（Mahāparinirvāṇa Sūtra，大乗）：バーミヤン出土のサンスクリット断片は 3–4 世紀。漢訳は 416 年に法顕により訳出。
-  * 『勝鬘経』（Śrīmālādevī Siṃhanāda Sūtra）：文献引用写本断片は 4–5 世紀。漢訳は 435 年に求那跋陀羅により訳出。
-  * 『入楞伽経』（Laṅkāvatāra Sūtra）：底本写本年代は 4–5 世紀。漢訳は 443 年に求那跋陀羅により訳出。
+  - 『十地経』（Daśabhūmika Sūtra，後の『華嚴経』の核心単行本）：中央アジアおよびネパールにサンスクリット単行本が存在（2–3 世紀）。龍樹が『十住毘婆沙論』で釈論を展開。
+  - 『妙法蓮華経』（Saddharmapuṇḍarīka Sūtra）：クチャ、ホータン、バーミヤン出土断片は 3–4 世紀。漢訳は 286 年に竺法護が初訳。
+  - 『維摩詰所説経』（Vimalakīrtinirdeśa Sūtra）：中央アジア断片は 3–4 世紀。漢訳は 3 世紀初頭に支謙により訳出。
+  - 『大般涅槃経』（Mahāparinirvāṇa Sūtra，大乗）：バーミヤン出土のサンスクリット断片は 3–4 世紀。漢訳は 416 年に法顕により訳出。
+  - 『勝鬘経』（Śrīmālādevī Siṃhanāda Sūtra）：文献引用写本断片は 4–5 世紀。漢訳は 435 年に求那跋陀羅により訳出。
+  - 『入楞伽経』（Laṅkāvatāra Sūtra）：底本写本年代は 4–5 世紀。漢訳は 443 年に求那跋陀羅により訳出。
 
 3. 後期大乗・密教交畳期（紀元 5 世紀 － 紀元 8 世紀）
-  * 『金光明経』（Suvarṇaprabhāsa Sūtra）：ホータン出土写本断片は 5 世紀。漢訳は 5 世紀初頭に曇無讖により訳出。
-  * 『解深密経』（Saṃdhinirmocana Sūtra）：『瑜伽師地論』サンスクリット本の中にテキストが保持され、4–5 世紀に成立。漢訳は 647 年に玄奘により訳出。
-  * 『大日経』（Mahāvairocana Sūtra）：ネパール・チベット保存のサンスクリット写本は 7 世紀頃。漢訳は 725 年に善無畏により訳出。
+  - 『金光明経』（Suvarṇaprabhāsa Sūtra）：ホータン出土写本断片は 5 世紀。漢訳は 5 世紀初頭に曇無讖により訳出。
+  - 『解深密経』（Saṃdhinirmocana Sūtra）：『瑜伽師地論』サンスクリット本の中にテキストが保持され、4–5 世紀に成立。漢訳は 647 年に玄奘により訳出。
+  - 『大日経』（Mahāvairocana Sūtra）：ネパール・チベット保存のサンスクリット写本は 7 世紀頃。漢訳は 725 年に善無畏により訳出。
 
 [三、 その他サンスクリット・中央アジア写本が存在する大乗経典]
 
 1. 般若部の独立経典
-  * 『金剛般若波羅蜜経』（Vajracchedikā）：中央アジアおよびギルギットで古代サンスクリット写本が出土。
-  * 『般若心経』（Prajñāpāramitāhṛdaya）：古代サンスクリット貝葉本および石刻写本が保存されている。
-  * 『二万五千頌般若経』・『十万頌般若経』：ネパールやインドに完全な梵文貝葉手稿が保存。
+  - 『金剛般若波羅蜜経』（Vajracchedikā）：中央アジアおよびギルギットで古代サンスクリット写本が出土。
+  - 『般若心経』（Prajñāpāramitāhṛdaya）：古代サンスクリット貝葉本および石刻写本が保存されている。
+  - 『二万五千頌般若経』・『十万頌般若経』：ネパールやインドに完全な梵文貝葉手稿が保存。
 
 2. 大宝積部・集部経典
-  * 『郁伽長者経』（Ugraparipṛcchā）：初期ガンダーラ語およびサンスクリット断片が出土。
-  * 『父子相見經』（Pitāputrasamāgama）：インド・ネパールにサンスクリット手稿が保存。
-  * 『賢劫経』（Bhadrakalpika）：中央アジアでサンスクリットおよびコータン語断片が出土。
+  - 『郁伽長者経』（Ugraparipṛcchā）：初期ガンダーラ語およびサンスクリット断片が出土。
+  - 『父子相見經』（Pitāputrasamāgama）：インド・ネパールにサンスクリット手稿が保存。
+  - 『賢劫経』（Bhadrakalpika）：中央アジアでサンスクリットおよびコータン語断片が出土。
 
 3. その他の独立大乗経典
-  * 『入法界品』（Gaṇḍavyūha Sūtra，善財童子五十三参の単行本）：単独の完全なサンスクリット貝葉本が保存。
-  * 『首楞嚴三昧経』（Śūraṅgama-samādhi Sūtra）：サンスクリット断片およびチベット訳本が存続（※唐代の『大仏頂首楞厳経』とは文献的源流が異なる）。
-  * 『薬師琉璃光如来本願功徳経』（Bhaiṣajyaguru Sūtra）：ギルギット等で完全なサンスクリット写本が出土。
+  - 『入法界品』（Gaṇḍavyūha Sūtra，善財童子五十三参の単行本）：単独の完全なサンスクリット貝葉本が保存。
+  - 『首楞嚴三昧経』（Śūraṅgama-samādhi Sūtra）：サンスクリット断片およびチベット訳本が存続（※唐代の『大仏頂首楞厳経』とは文献的源流が異なる）。
+  - 『薬師琉璃光如来本願功徳経』（Bhaiṣajyaguru Sūtra）：ギルギット等で完全なサンスクリット写本が出土。
 
 [四、 出土写本の文献史的対照表]
 
 | 順 | 経典名称（サンスクリット名） | 最古の考古写本年代・出土地 | 漢訳初訳年代 | 文献学・考古学的特徴 |
 | :--- | :--- | :--- | :--- | :--- |
-| **1** | **『八千頌般若経』** (*Aṣṭasāhasrikā*) | **紀元 1 世紀後半**（ガンダーラ樺皮） | 179 年（支婁迦讖） | 現存する世界最古の大乗写本実物。 |
-| **2** | **『阿閦仏国経』** (*Akṣobhyavyūha*) | **1–2 世紀**（パキスタン・ディール） | 147–186 年（支婁迦讖） | 早期浄土思想と仏国土構想の文字写本。 |
-| **3** | **『般舟三昧経』** (*Pratyutpanna*) | **2–3 世紀**（アフガニスタン・バーミヤン） | 179 年（支婁迦讖） | 早期の禅観と専念見仏の伝承写本。 |
-| **4** | **『大本無量寿経』** (*Mahā-sukhāvatī*) | **2–3 世紀**（中央アジア・ショイエン断片） | 2 世紀末（伝・支樓迦讖/支謙） | 独立伝承の大本浄土体系写本。 |
-| **5** | **『十地経』** (*Daśabhūmika*) | **2–3 世紀**（中央アジア/ネパール写本） | 297 年（竺法護） | 華厳体系の骨格。龍樹・世親が釈論を作成。 |
-| **6** | **『妙法蓮華経』** (*Saddharmapuṇḍarīka*) | **3–4 世紀**（新疆クチャ/ホータン断片） | 286 年（竺法護） | 中期大乗の一乗思想を集大成した写本。 |
-| **7** | **『維摩詰経』** (*Vimalakīrtinirdeśa*) | **3–4 世紀**（中央アジア断片） | 220–252 年（支謙） | 勝義居士思想と空性辯証の写本。 |
-| **8** | **『小本阿弥陀経』** (*Sūkṣma-sukhāvatī*) | **3–4 世紀**（北インド/中央アジア断片） | 402 年（鳩摩羅什） | 極簡略化された専念行の独立浄土写本。 |
-| **9** | **『大般涅槃経』** (*Mahāparinirvāṇa*) | **3–4 世紀**（バーミヤン断片） | 416 年（法顕） | 如来蔵と仏性常住思想の写本。 |
-| **10** | **『勝鬘経』** (*Śrīmālādevī*) | **4–5 世紀**（文献引用断片） | 435 年（求那跋陀羅） | 如来蔵と一乗思想の写本。 |
-| **11** | **『入楞伽経』** (*Laṅkāvatāra*) | **4–5 世紀**（ギルギット底本） | 5 世紀初頭（曇無讖/求那跋陀羅） | 唯識と如来蔵を統合した写本。 |
-| **12** | **『解深密経』** (*Saṃdhinirmocana*) | **4–5 世紀**（論書夾雑断片） | 538 年（菩提流支） | 唯識学派の三性三無性説の写本。 |
-| **13** | **『金光明経』** (*Suvarṇaprabhāsa*) | **5 世紀**（新疆ホータン写本） | 5 世紀初頭（曇無讖） | 鎮護国家思想と陀羅尼が結合した写本。 |
+| 1 | 《『八千頌般若経』》 | 紀元 1 世紀後半（ガンダーラ樺皮） | 179 年（支婁迦讖） | 現存する世界最古の大乗写本実物。 |
+| 2 | 《『阿閦仏国経』》 | 1–2 世紀（パキスタン・ディール） | 147–186 年（支婁迦讖） | 早期浄土思想と仏国土構想の文字写本。 |
+| 3 | 《『般舟三昧経』》 | 2–3 世紀（アフガニスタン・バーミヤン） | 179 年（支婁迦讖） | 早期の禅観と専念見仏の伝承写本。 |
+| 4 | 《『大本無量寿経』》 | 2–3 世紀（中央アジア・ショイエン断片） | 2 世紀末（伝・支樓迦讖/支謙） | 独立伝承の大本浄土体系写本。 |
+| 5 | 《『十地経』》 | 2–3 世紀（中央アジア/ネパール写本） | 297 年（竺法護） | 華厳体系の骨格。龍樹・世親が釈論を作成。 |
+| 6 | 《『妙法蓮華経』》 | 3–4 世紀（新疆クチャ/ホータン断片） | 286 年（竺法護） | 中期大乗の一乗思想を集大成した写本。 |
+| 7 | 《『維摩詰経』》 | 3–4 世紀（中央アジア断片） | 220–252 年（支謙） | 勝義居士思想と空性辯証の写本。 |
+| 8 | 《『小本阿弥陀経』》 | 3–4 世紀（北インド/中央アジア断片） | 402 年（鳩摩羅什） | 極簡略化された専念行の独立浄土写本。 |
+| 9 | 《『大般涅槃経』》 | 3–4 世紀（バーミヤン断片） | 416 年（法顕） | 如来蔵と仏性常住思想の写本。 |
+| 10 | 《『勝鬘経』》 | 4–5 世紀（文献引用断片） | 435 年（求那跋陀羅） | 如来蔵と一乗思想の写本。 |
+| 11 | 《『入楞伽経』》 | 4–5 世紀（ギルギット底本） | 5 世紀初頭（曇無讖/求那跋陀羅） | 唯識と如来蔵を統合した写本。 |
+| 12 | 《『解深密経』》 | 4–5 世紀（論書夾雑断片） | 538 年（菩提流支） | 唯識学派の三性三無性説の写本。 |
+| 13 | 《『金光明経』》 | 5 世紀（新疆ホータン写本） | 5 世紀初頭（曇無讖） | 鎮護国家思想と陀羅尼が結合した写本。 |
 
 [五、 読誦の功徳と論師注釈の歴史的位置付け]
 
@@ -2252,25 +2262,24 @@ However, when we look at time-travel plots in science fiction, we occasionally f
 
 2. 論師（Śāstrakāra）による注釈の多様性
 言語記号には限界があり、経文は簡潔な提示にとどまるため、後世の論師（龍樹、無著、世親、陳那など）は「論（Śāstra）」を著し、経典の論理的演繹や体系化を行った：
-  * 学派の展開：各論師は独自の観照と学述体系を提示し、大乗仏教の豊かな学問的展開（百花繚乱）をもたらした。
-  * 論書の限界：特定の論師一人が釈尊の真意を独占的に代表することはない。論典は経文を解釈するための補助工具であり、終極の真理そのものではない。
+  - 学派の展開：各論師は独自の観照と学述体系を提示し、大乗仏教の豊かな学問的展開（百花繚乱）をもたらした。
+  - 論書の限界：特定の論師一人が釈尊の真意を独占的に代表することはない。論典は経文を解釈するための補助工具であり、終極の真理そのものではない。
 
 [六、 結論：得意忘言と教説本義への復元]
 
 出土写本の時系列と伝承史を客観的に紐解く目的は、理知的かつ客観的な修証へと回帰することにある：
 1. 文字相を離れる：大小乗の経典が歴史的脈絡の中で教団により編纂された媒体であることを理解し、「文字そのものが仏陀の直筆である」という教條的ドグマにとらわれない。
 2. 如来の真義を體解する：文字や写本は載具であり、暗誦や流布は手段である。修行者の本来の課題は、言語記号を通じて、その背景にある実相、空性、そして覚性の運作（如来のリアルな真義）を體解し実践することである。`
-},
-
-    {
-  id: "2026-09-05-ja-agama-sanskrit-canonical-evolution-historical-analysis",
-  isNew: true,
-  lang: "ja",
-  category: "仏学",
-  title: "『阿含経』の文献層重と結集展開の考察：原始核心から部派分裂、サンスクリット写本の歴史的全貌",
-  status: "阿含テキスト ． 文献層重 ． 部派結集 ． 梵本考察 ． 歴史的復元",
-  humble: "本文献は、『阿含経』（Āgama）の口伝結集、結集の展開、文献的層重構造、アショーカ王期の部派分裂、および出土したサンスクリット写本実物について、文献学および考古学に基づき客観的に整理したものである。",
-  content: `<div style="display: flex; gap: 15px; margin: 25px 0 40px 0; flex-wrap: wrap;">
+  },
+  {
+    "id": "2026-09-05-ja-agama-sanskrit-canonical-evolution-historical-analysis",
+    "isNew": true,
+    "lang": "ja",
+    "category": "仏学",
+    "title": "『阿含経』の文献層重と結集展開の考察：原始核心から部派分裂、サンスクリット写本の歴史的全貌",
+    "status": "阿含テキスト ． 文献層重 ． 部派結集 ． 梵本考察 ． 歴史的復元",
+    "humble": "本文献は、『阿含経』（Āgama）の口伝結集、結集の展開、文献的層重構造、アショーカ王期の部派分裂、および出土したサンスクリット写本実物について、文献学および考古学に基づき客観的に整理したものである。",
+    "content": `<div style="display: flex; gap: 15px; margin: 25px 0 40px 0; flex-wrap: wrap;">
     <div style="flex: 1; min-width: 180px; border: 1px solid rgba(139, 168, 156, 0.4); padding: 18px; background: rgba(139, 168, 156, 0.06); border-radius: 12px; text-align: center;">
         <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(139, 168, 156, 0.4); padding: 1px 6px; margin-bottom: 8px; color: #8ba89c; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">原始核心</span>
         <strong style="display: block; font-size: 1.1rem; color: #8ba89c; letter-spacing: 2px;">相応 / 雑阿含</strong>
@@ -2279,7 +2288,7 @@ However, when we look at time-travel plots in science fiction, we occasionally f
     <div style="flex: 1; min-width: 180px; border: 1px solid rgba(224, 224, 224, 0.15); padding: 18px; background: rgba(255, 255, 255, 0.02); border-radius: 12px; text-align: center;">
         <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(224, 224, 224, 0.2); padding: 1px 6px; margin-bottom: 8px; color: #b0b0b0; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">歴史的展開</span>
         <strong style="display: block; font-size: 1.1rem; color: #e0e0e0; letter-spacing: 2px;">アショーカ王と部派分裂</strong>
-        <span style="display: block; font-size: 0.75rem; color: #888; margin-top: 5px; line-height: 1.4;">口伝暗誦・華氏城結集<br>地理的拡散と言語的分化</span>
+        <span style="display: block; font-size: 0.75rem; color: #888; margin-top: 5px; line-height: 1.4;">口伝暗誦・華氏城結集<br>地理的拡散言語言語的分化</span>
     </div>
     <div style="flex: 1; min-width: 180px; border: 1px solid rgba(212, 175, 55, 0.4); padding: 18px; background: rgba(212, 175, 55, 0.08); border-radius: 12px; text-align: center; box-shadow: inset 0 0 10px rgba(212, 175, 55, 0.05);">
         <span style="display: inline-block; font-size: 0.75rem; border: 1px solid rgba(212, 175, 55, 0.4); padding: 1px 6px; margin-bottom: 8px; color: #d4af37; border-radius: 4px; background: rgba(10,15,20,0.6); letter-spacing: 1px;">写本実証</span>
@@ -2291,65 +2300,65 @@ However, when we look at time-travel plots in science fiction, we occasionally f
 [一、 初期結集と口伝テキスト時代（Pre-Canonical Oral Era）]
 
 1. 仏陀時代の言語と伝承媒体
-  * **口頭伝承**：紀元前5世紀、釈尊の教えは古代インド東部の俗語（MāgadhiやArdhamāgadhiなどのPrakrits）で説かれ、文字記録は存在しなかった。
-  * **集団暗誦（Saṅgāyana）**：テキストの伝承は暗誦師（Bhāṇaka）の制度に依存し、定型化・反復的な韻文および長行を用いて記憶された。
+  - 口頭伝承：紀元前5世紀、釈尊の教えは古代インド東部の俗語（MāgadhiやArdhamāgadhiなどのPrakrits）で説かれ、文字記録は存在しなかった。
+  - 集団暗誦（Saṅgāyana）：テキストの伝承は暗誦師（Bhāṇaka）の制度に依存し、定型化・反復的な韻文および長行を用いて記憶された。
 
 2. 王舎城第一結集（First Council at Rājagṛha）
-  * **結集内容**：仏滅後、長老らが王舎城に集結。阿難（Ānanda）が法（Sūtra）を、優波離（Upāli）が律（Vinaya）を誦出した。
-  * **原始形態**：この時期の「経」は短篇の教示（Sūtra）や偈頌（Gāthā）であり、現在のような四大阿含の構造は未形成であった。
+  - 結集内容：仏滅後、長老らが王舎城に集結。阿難（Ānanda）が法（Sūtra）を、優波離（Upāli）が律（Vinaya）を誦示した。
+  - 原始形態：この時期の「経」は短篇の教示（Sūtra）や偈頌（Gāthā）であり、現在のような四大阿含の構造は未形成であった。
 
 [二、 高等文献学に基づく『阿含経』の文献層重構造（Textual Stratification）]
 
 現代の文献比較分析により、現存の阿含・ニカーヤテキストには明確な歴史的層重構造が認められる：
 
 1. 最原始核心層（Primitive Kernel）
-  * **代表テキスト**：『雑阿含経』（Saṃyukta-āgama）の核心的章節 / 『相応部』（Saṃyutta-nikāya）。
-  * **構造的特徴**：主題別（Saṃyukta）に分類され、「五蘊（Skandha）」、「六入処（Āyatana）」、「十二因縁（Nidāna）」、「八正道（Mārga）」に集中する。
-  * **教理的特徴**：高度に抽象的であり、現象学的な心識観察と解脱道に集中し、複雑な宇宙観や神話・本生譚を欠く。
+  - 代表テキスト：『雑阿含経』（Saṃyukta-āgama）の核心的章節 / 『相応部』（Saṃyutta-nikāya）。
+  - 構造的特徴：主題別（Saṃyukta）に分類され、「五蘊（Skandha）」、「六入処（Āyatana）」、「十二因縁（Nidāna）」、「八正道（Mārga）」に集中する。
+  - 教理的特徴：高度に抽象的であり、現象学的な心識観察と解脱道に集中し、複雑な宇宙観や神話・本生譚を欠く。
 
 2. 中期展開層（Developmental Expansion）
-  * **代表テキスト**：『中阿含經』（Madhyamāgama）および『長阿含經』（Dīrghāgama）。
-  * **構造的特徴**：中篇・長篇の対話論駁、ジャイナ教など他教論師との教理論争、修行僧の論理的規範を含む。
+  - 代表テキスト：『中阿含經』（Madhyamāgama）および『長阿含經』（Dīrghāgama）。
+  - 構造的特徴：中篇・長篇の対話論駁、ジャイナ教など他教論師との教理論争、修行僧の論理的規範を含む。
 
 3. 後期 / 部派付加層（Sectarian Interpolation Layer）
-  * **代表テキスト**：『増一阿含經』（Ekottarika-āgama）および『長阿含經』中の『世記經』（Lokadhātu-sūtra）など。
-  * **構造的特徴**：法数の漸増（1から11）による分類、天人宇宙観、地獄（Naraka）の描写、四生（胎卵湿化）の細目、本生（Jātaka）・譬喩（Avadāna）文学の導入。
+  - 代表テキスト：『増一阿含經』（Ekottarika-āgama）および『長阿含經』中の『世記經』（Lokadhātu-sūtra）など。
+  - 構造的特徴：法数の漸増（1から11）による分類、天人宇宙観、地獄（Naraka）の描写、四生（胎卵湿化）の細目、本生（Jātaka）・譬喩（Avadāna）文学の導入。
 
 [三、 アショーカ王期、華氏城結集と部派の地理的分化]
 
 1. アショーカ王（Emperor Aśoka、前3世紀頃）の歴史的役割
-  * **経済的寄進と僧団の拡大**：王の仏教庇護により非仏教徒が僧団に流入し、布薩（Posadha）の実施を巡る内部対立が生じた。
-  * **第三結集（Pāṭaliputra Council）**：モッガリプッタ・ティッサの主導による。これは分別説部（Vibhajjavāda）内部の粛清であり、**全インド統一の標準聖典を制定したものではない**。
+  - 経済的寄進と僧団の拡大：王の仏教庇護により非仏教徒が僧団に流入し、布薩（Posadha）の実施を巡る内部対立が生じた。
+  - 第三結集（Pāṭaliputra Council）：モッガリプッタ・ティッサの主導による。これは分別説部（Vibhajjavāda）内部の粛清であり、全インド統一の標準聖典を制定したものではない。
 
 2. 地理的拡散と言語的分化
-  * **南方伝承（Pāli Stream）**：マヒンダによりスリランカへ伝わり、パーリ語（Pāli）による『パーリ五部ニカーヤ』を形成。
-  * **北方伝承（Sanskrit Stream）**：インド西北部に残った部派（説一切有部など）によりサンスクリット（Sanskrit）化され、梵文『四阿含経』を形成。
+  - 南方伝承（Pāli Stream）：マヒンダによりスリランカへ伝わり、パーリ語（Pāli）による『パーリ五部ニカーヤ』を形成。
+  - 北方伝承（Sanskrit Stream）：インド西北部に残った部派（説一切有部など）によりサンスクリット（Sanskrit）化され、梵文『四阿含経』を形成。
 
 [四、 四阿含の構造と漢訳本の部派帰属]
 
 | 阿含名称 | パーリ対応 | 古代インドの編纂原則 | 漢訳本の部派帰属 |
 | :--- | :--- | :--- | :--- |
-| **『雑阿含経』** | Saṃyutta-nikāya | 教理解析の主題別分類（五蘊、六入、因縁など） | 説一切有部（Sarvāstivāda） |
-| **『中阿含経』** | Majjhima-nikāya | 中篇の教理対話と論駁 | 説一切有部（Sarvāstivāda） |
-| **『長阿含経』** | Dīgha-nikāya | 長篇の対話、異道破斥、宇宙観 | 法蔵部（Dharmaguptaka） |
-| **『増一阿含経』** | Aṅguttara-nikāya | 法数の漸増（1から11）による編纂 | 大衆部（Mahāsāṃghika）系 |
+| 《『雑阿含経』》 | Saṃyutta-nikāya | 教理解析の主題別分類（五蘊、六入、因縁など） | 説一切有部 |
+| 《『中阿含経』》 | Majjhima-nikāya | 中篇の教理対話と論駁 | 説一切有部 |
+| 《『長阿含経』》 | Dīgha-nikāya | 長篇の対話、異道破斥、宇宙観 | 法蔵部 |
+| 《『増一阿含経』》 | Aṅguttara-nikāya | 法数の漸増（1から11）による編纂 | 大衆部系 |
 
-[五、 考古出土によるサンスクリット写本実物による実證]
+[5. 考古出土によるサンスクリット写本実物による実證]
 
 現代考古学により、サンスクリット原典写本の実物が多数発見されている：
 
 1. ショイエン・コレクション（バーミヤン写本）
-  * **出土地点**：アフガニスタン・バーミヤン遺跡。
-  * **内容**：2世紀から8世紀にかけての『長阿含経』および『中阿含経』の樺皮写本（Proto-Śāradā文字）。
+  - 出土地點：アフガニスタン・バーミヤン遺跡。
+  - 内容：2世紀から8世紀にかけての『長阿含経』および『中阿含経』の樺皮写本（Proto-Śāradā文字）。
 
 2. トゥルファンおよびタクラマカン砂漠出土写本
-  * **出土地點**：新疆ウイグル自治区トゥルファン、クチャ、ホータン。
-  * **内容**：説一切有部のサンスクリット版『雑阿含経』『中阿含経』の葉本・紙本写本。
+  - 出土地點：新疆ウイグル自治区トゥルファン、クチャ、ホータン。
+  - 内容：説一切有部のサンスクリット版『雑阿含経』『中阿含経』の葉本・紙本写本。
 
 3. ガンダーラ語写本（Gāndhārī Manuscripts）
-  * **出土地點**：パキスタン西北部およびアフガニスタン。
-  * **内容**：紀元前1世紀から紀元2世紀にカローシュティー文字（Kharoṣṭhī）で記された最古のガンダーラ語阿含テキスト。`
-},
+  - 出土地點：パキスタン西北部およびアフガニスタン。
+  - 内容：紀元前1世紀から紀元2世紀にカローシュティー文字（Kharoṣṭhī）で記された最古のガンダーラ語阿含テキスト。`
+  },
     {
   id: "2026-07-30-ja-nagarjuna-asanga-vasubandhu-complete",
   isNew: true,

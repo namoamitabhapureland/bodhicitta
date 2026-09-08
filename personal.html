@@ -204,24 +204,28 @@
     height: 1px;
     background: radial-gradient(circle, #fff 30%, rgba(255,255,255,0.2) 100%);
     border-radius: 50%;
-    box-shadow: 0 0 18px #fff, 0 0 35px rgba(212,175,55,0.6);
+    box-shadow: 0 0 10px rgba(255,255,255,0.6), 0 0 20px rgba(212,175,55,0.4);
     z-index: 10; 
     animation: breathe 40s infinite ease-in-out;
 }
 
-/* ✦ 核心修改：呼吸放大時同步發光發亮 (Glow Effect) */
+/* ✦ 核心修正：最大時顯示層次感的外圍花瓣光芒 */
 @keyframes breathe { 
     0%, 100% {
         transform: scale(0.45);
-        filter: brightness(0.9) drop-shadow(0 0 5px rgba(212,175,55,0.2));
+        /* 收縮時僅保留極隱約的邊緣微光，幾乎無光 */
+        filter: drop-shadow(0 0 1px rgba(212,175,55,0.1));
     } 
     50% {
         transform: scale(0.75);
-        filter: brightness(1.35) drop-shadow(0 0 25px rgba(243,229,171,0.8)) drop-shadow(0 0 50px rgba(212,175,55,0.5));
+        /* 放大至最大時：
+           第 1 層 (8px)：緊貼花瓣邊緣的清晰亮高光
+           第 2 層 (22px)：向外擴散的金色羽化光暈，不遮擋整體線條 */
+        filter: drop-shadow(0 0 8px rgba(255, 245, 200, 0.85)) 
+                drop-shadow(0 0 22px rgba(212, 175, 55, 0.55));
     }
 }
 
-/* ✦ 取消蓮花旋轉，節約 CPU 資源 */
 .lotus-spin { 
     width: 100%; 
     height: 100%; 
@@ -1992,7 +1996,7 @@ function navigateWithWarp(targetUrl) {
 }
 
 // ══════════════════════════════════════════
-//  淨土鑽石銀河星空 (旋轉銀河 + 耀眼十字星芒)
+//  淨土鑽石銀河星空 (蓮花呼吸連動版)
 // ══════════════════════════════════════════
 const cvs = document.getElementById('starCanvas');
 const ctx = cvs.getContext('2d');
@@ -2007,6 +2011,9 @@ const starColors = [
     '212, 175, 55',  // 琉光金
     '200, 225, 255'  // 琉璃冷藍
 ];
+
+// ── 呼吸動畫設定 ──
+const BREATHE_CYCLE = 35000; // 35 秒，必須與 CSS 蓮花呼吸 35s 完全一致
 
 // ── 繪製十字星芒繪圖函式 ──
 function drawCrossFlare(x, y, size, color, alpha) {
@@ -2070,10 +2077,10 @@ function initS() {
         galaxyDust.push({
             r: dist, 
             theta: angle + offset,
-            size: isFlare ? Math.random() * 1.8 + 1.2 : Math.random() * 1.5 + 0.5,
+            baseSize: isFlare ? Math.random() * 1.8 + 1.2 : Math.random() * 1.5 + 0.5,
             color: starColors[Math.floor(Math.random() * starColors.length)],
-            alpha: (1 - dist) * 0.6 + 0.1,
-            hasFlare: isFlare // 註記是否渲染十字光芒
+            baseAlpha: (1 - dist) * 0.6 + 0.1,
+            hasFlare: isFlare
         });
     }
 }
@@ -2084,44 +2091,55 @@ function drawS() {
     const cx = cvs.width / 2;
     const cy = cvs.height / 1.8;
     const t = Date.now();
-    const maxR = Math.min(cvs.width, cvs.height) * 1.2; // 銀河整體半徑
+    
+    // ✦ 關鍵呼吸因子 calculations (0.0 ~ 1.0 之間波動，週期為 35秒)
+    // -Math.cos 確保 0s 時為 0 (縮小)，17.5s 時為 1 (盛開)
+    const breatheFactor = (1 - Math.cos((t % BREATHE_CYCLE) / BREATHE_CYCLE * Math.PI * 2)) / 2;
 
-    // ── 繪製銀河中心琉光核心 ──
-    const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR * 0.3);
-    coreGrad.addColorStop(0, 'rgba(255, 255, 255, 0.25)'); // 中心鑽石純白
-    coreGrad.addColorStop(0.5, 'rgba(255, 248, 220, 0.08)'); // 香檳暖金
+    // 銀河總半徑隨蓮花盛開輕微擴展 (1.0 ~ 1.15 倍)
+    const baseR = Math.min(cvs.width, cvs.height) * 1.2;
+    const maxR = baseR * (1 + breatheFactor * 0.15); 
+
+    // ── 1. 繪製銀河中心琉光核心 (隨呼吸強弱變化) ──
+    const coreAlpha = 0.08 + breatheFactor * 0.25; // 盛開時中心核心變亮
+    const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR * 0.35);
+    coreGrad.addColorStop(0, `rgba(255, 255, 255, ${coreAlpha})`); // 鑽石純白
+    coreGrad.addColorStop(0.5, `rgba(255, 248, 220, ${coreAlpha * 0.35})`); // 香檳暖金
     coreGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = coreGrad;
     ctx.beginPath();
-    ctx.arc(cx, cy, maxR * 0.3, 0, Math.PI * 2);
+    ctx.arc(cx, cy, maxR * 0.35, 0, Math.PI * 2);
     ctx.fill();
 
-    // ── 繪製旋轉銀河粒子 ──
+    // ── 2. 繪製旋轉銀河粒子 (隨呼吸調整透明度與尺寸) ──
     const rotSpeed = t * 0.00005; // 安詳旋轉速度
     galaxyDust.forEach(d => {
         const currentAngle = d.theta + rotSpeed;
         const currentDist = d.r * maxR;
 
-        // 計算平面旋轉，並加上傾斜角
         const rawX = Math.cos(currentAngle) * currentDist;
         const rawY = Math.sin(currentAngle) * currentDist * 0.44; 
 
         const gx = cx + rawX;
         const gy = cy + rawY;
 
+        // 呼吸調控：盛開時粒子微幅變大、透明度提升
+        const currentAlpha = d.baseAlpha * (0.4 + breatheFactor * 0.6);
+        const currentSize = d.baseSize * (0.85 + breatheFactor * 0.3);
+
         // 渲染基礎圓形粒子
         ctx.beginPath();
-        ctx.fillStyle = `rgba(${d.color}, ${d.alpha * 0.8})`;
-        ctx.arc(gx, gy, d.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${d.color}, ${currentAlpha * 0.8})`;
+        ctx.arc(gx, gy, currentSize, 0, Math.PI * 2);
         ctx.fill();
 
-        // 亮星額外繪製十字星芒
+        // 亮星十字星芒：蓮花盛開時星芒更璀璨
         if (d.hasFlare) {
-            drawCrossFlare(gx, gy, d.size, d.color, d.alpha * 0.9);
+            drawCrossFlare(gx, gy, currentSize, d.color, currentAlpha * 0.9);
         }
     });
 
-    // ── 繪製前景推進星空 ──
+    // ── 3. 繪製前景推進星空 ──
     stars.forEach(s => {
         s.z -= 0.32; 
         if (s.z <= 0) {
@@ -2139,6 +2157,9 @@ function drawS() {
             let alpha = Math.min(1, (1 - s.z / cvs.width) + 0.3);
             alpha *= (0.3 + Math.abs(Math.sin(t * s.sp + s.off)) * 0.7);
 
+            // 前景星空也疊加少許蓮花呼吸感
+            alpha *= (0.6 + breatheFactor * 0.4);
+
             ctx.beginPath();
             ctx.fillStyle = `rgba(${s.color}, ${alpha})`;
             ctx.arc(px, py, size, 0, Math.PI * 2);
@@ -2152,6 +2173,7 @@ function drawS() {
 window.onresize = initS;
 initS();
 drawS();
+
 // ══════════════════════════════════════════
 //  全域防下拉刷新
 // ══════════════════════════════════════════

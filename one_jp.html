@@ -300,25 +300,26 @@
         const userName = db.name || "行者";
         const deck = document.getElementById('deck-container');
         
-               // 防禦機制：若備份檔未包含 milestones 結構則補上空物件
-        if (!db.milestones) db.milestones = {};
+                      if (!db.milestones) db.milestones = {};
 
         let autoActiveIdx = -1;
 
         MILESTONES.forEach((m, idx) => {
             const alreadyClaimed = milestones[m.key] === true;
-            // 取消 autoActiveIdx === -1 的限制，讓 JSON 還原時能自動跳轉至當前最高達成的卡片
-            if (currentTotal >= m.target && !alreadyClaimed) { 
+            const isUnlocked = currentTotal >= m.target;
+
+            if (isUnlocked && !alreadyClaimed) { 
                 autoActiveIdx = idx; 
             }
 
             const card = document.createElement('div');
             card.className = `card card-${idx}`;
             
-            // 允許手動點擊任意卡片進行觀賞
             card.onclick = (e) => { 
                 e.stopPropagation(); 
-                focusCard(idx); 
+                if (isUnlocked || alreadyClaimed) {
+                    focusCard(idx); 
+                }
             };
 
             card.innerHTML = `
@@ -328,7 +329,7 @@
                             <use href="#totem-prajna-symbol"/>
                         </svg>
                         <div style="margin-top:20px; color:${m.color}; font-size:0.75rem; letter-spacing:3px; font-weight:bold; opacity:0.8">
-                            ${(currentTotal >= m.target || alreadyClaimed) ? '功徳円満' : '修行中'}
+                            ${(isUnlocked || alreadyClaimed) ? '功徳円満' : '修行中'}
                         </div>
                     </div>
                     <div class="card-front card-face" style="box-shadow: inset 0 0 40px ${m.color}33">
@@ -347,7 +348,6 @@
             `;
             deck.appendChild(card);
         });
-
 
         window.onload = () => {
             setTimeout(() => { 
@@ -416,13 +416,13 @@
             }, 800);
         }
 
-                function returnToSystem(e, key) {
+                    function returnToSystem(e, key) {
             if (e) e.stopPropagation();
             
             if (!key) { 
                 resetAllCards(); 
                 return; 
-            } 
+            }
 
             document.getElementById('page-curtain').style.opacity = '1';
             

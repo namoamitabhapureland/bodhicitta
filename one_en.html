@@ -269,33 +269,24 @@
         const userName = db.name || "Practitioner";
         const deck = document.getElementById('deck-container');
         
-                     if (!db.milestones) db.milestones = {};
-
         let autoActiveIdx = -1;
-        let maxUnlockedIdx = -1; // 記錄當前解鎖最高階的卡片
 
         MILESTONES.forEach((m, idx) => {
             const alreadyClaimed = milestones[m.key] === true;
-            const isUnlocked = currentTotal >= m.target;
-
-            if (isUnlocked) {
-                maxUnlockedIdx = idx; // 只要達標，就持續更新最高解鎖索引
-                if (!alreadyClaimed && autoActiveIdx === -1) { 
-                    autoActiveIdx = idx; // 優先記錄第一張「達標但未領取」的卡
-                }
+            if (currentTotal >= m.target && !alreadyClaimed && autoActiveIdx === -1) { 
+                autoActiveIdx = idx; 
             }
 
             const card = document.createElement('div');
             card.className = `card card-${idx}`;
             
-            // 🌟 嚴格權限控制：未達標卡片點擊完全無反應，無法提前翻開
-            card.onclick = (e) => { 
-                e.stopPropagation(); 
-                if (isUnlocked || alreadyClaimed) {
+            if (alreadyClaimed) {
+                card.onclick = (e) => { 
+                    e.stopPropagation(); 
                     focusCard(idx); 
-                }
-            };
-
+                };
+            }
+            
             card.innerHTML = `
                 <div class="card-inner">
                     <div class="card-back card-face" style="box-shadow: inset 0 0 25px ${m.color}55">
@@ -303,7 +294,7 @@
                             <use href="#totem-prajna-symbol"/>
                         </svg>
                         <div style="margin-top:20px; color:${m.color}; font-size:0.75rem; letter-spacing:3px; font-weight:bold; opacity:0.8">
-                            ${(isUnlocked || alreadyClaimed) ? 'PERFECTED' : 'CULTIVATING...'}
+                            ${(currentTotal >= m.target || alreadyClaimed) ? 'PERFECTED' : 'CULTIVATING...'}
                         </div>
                     </div>
                     <div class="card-front card-face" style="box-shadow: inset 0 0 40px ${m.color}33">
@@ -314,7 +305,7 @@
                             <div class="cert-user">${userName}</div>
                         </div>
                         <div class="cert-desc">Recitations: <b>${m.target.toLocaleString()}</b><br>${m.desc}</div>
-                        <button class="btn-confirm" onclick="returnToSystem(event, '${alreadyClaimed ? '' : m.key}')">
+                        <button class="btn-confirm" onclick="returnToSystem('${alreadyClaimed ? '' : m.key}')">
                             ${alreadyClaimed ? 'CLOSE SEAL' : 'REJOICE IN MERIT ． RETURN'}
                         </button>
                     </div>
@@ -322,7 +313,6 @@
             `;
             deck.appendChild(card);
         });
-
 
         window.onload = () => {
             setTimeout(() => { 
@@ -334,10 +324,9 @@
             }
         };
 
-                function focusCard(idx) {
+        function focusCard(idx) {
             resetAllCards();
             const targetCard = document.querySelector(`.card-${idx}`);
-            if (!targetCard) return;
             targetCard.classList.add('is-active');
             
             setTimeout(() => {
@@ -390,14 +379,12 @@
             }, 800);
         }
 
-                function returnToSystem(e, key) {
-            if (e) e.stopPropagation();
-            
+        function returnToSystem(key) {
             if (!key) { 
                 resetAllCards(); 
                 return; 
-            }
-
+            } // 空字串代表是回顧模式，僅收起卡牌不跳轉
+            
             document.getElementById('page-curtain').style.opacity = '1';
             
             if (!db.milestones) db.milestones = {};
@@ -408,8 +395,6 @@
                 window.location.href = 'index_en.html'; 
             }, 800);
         }
-
-
     </script>
 </body>
 </html>

@@ -300,32 +300,24 @@
         const userName = db.name || "行者";
         const deck = document.getElementById('deck-container');
         
-                   if (!db.milestones) db.milestones = {};
-
         let autoActiveIdx = -1;
-        let maxUnlockedIdx = -1; // 記錄當前解鎖最高階的卡片
 
         MILESTONES.forEach((m, idx) => {
             const alreadyClaimed = milestones[m.key] === true;
-            const isUnlocked = currentTotal >= m.target;
-
-            if (isUnlocked) {
-                maxUnlockedIdx = idx; // 只要達標，就持續更新最高解鎖索引
-                if (!alreadyClaimed && autoActiveIdx === -1) { 
-                    autoActiveIdx = idx; // 優先記錄第一張「達標但未領取」的卡
-                }
+            if (currentTotal >= m.target && !alreadyClaimed && autoActiveIdx === -1) { 
+                autoActiveIdx = idx; 
             }
 
             const card = document.createElement('div');
             card.className = `card card-${idx}`;
             
-            // 嚴格點擊控制：只有達標或已領取的卡片可以手動點擊
-            card.onclick = (e) => { 
-                e.stopPropagation(); 
-                if (isUnlocked || alreadyClaimed) {
+            if (alreadyClaimed) {
+                card.onclick = (e) => { 
+                    e.stopPropagation(); 
                     focusCard(idx); 
-                }
-            };
+                };
+            }
+
             card.innerHTML = `
                 <div class="card-inner">
                     <div class="card-back card-face" style="box-shadow: inset 0 0 25px ${m.color}55">
@@ -333,7 +325,7 @@
                             <use href="#totem-prajna-symbol"/>
                         </svg>
                         <div style="margin-top:20px; color:${m.color}; font-size:0.75rem; letter-spacing:3px; font-weight:bold; opacity:0.8">
-                            ${(isUnlocked || alreadyClaimed) ? '功徳円満' : '修行中'}
+                            ${(currentTotal >= m.target || alreadyClaimed) ? '功徳円満' : '修行中'}
                         </div>
                     </div>
                     <div class="card-front card-face" style="box-shadow: inset 0 0 40px ${m.color}33">
@@ -344,7 +336,7 @@
                             <div class="cert-user">${userName}</div>
                         </div>
                         <div class="cert-desc">念仏累計 <b>${m.target.toLocaleString()}</b> 声<br>${m.desc}</div>
-                        <button class="btn-confirm" onclick="returnToSystem(event, '${alreadyClaimed ? '' : m.key}')">
+                        <button class="btn-confirm" onclick="returnToSystem('${alreadyClaimed ? '' : m.key}')">
                             ${alreadyClaimed ? '契印を閉じる' : '歓喜功徳 ． システムに戻る'}
                         </button>
                     </div>
@@ -363,10 +355,9 @@
             }
         };
 
-                function focusCard(idx) {
+        function focusCard(idx) {
             resetAllCards();
             const targetCard = document.querySelector(`.card-${idx}`);
-            if(!targetCard) return;
             targetCard.classList.add('is-active');
             
             setTimeout(() => {
@@ -374,7 +365,6 @@
                 startLotusAnimation(idx);
             }, 800);
         }
-
 
         function resetAllCards(e) {
             document.querySelectorAll('.card').forEach(c => {
@@ -420,13 +410,11 @@
             }, 800);
         }
 
-                    function returnToSystem(e, key) {
-            if (e) e.stopPropagation();
-            
+        function returnToSystem(key) {
             if (!key) { 
                 resetAllCards(); 
                 return; 
-            }
+            } 
 
             document.getElementById('page-curtain').style.opacity = '1';
             
@@ -438,7 +426,6 @@
                 window.location.href = 'index_jp.html'; 
             }, 800);
         }
-
     </script>
 </body>
 </html>

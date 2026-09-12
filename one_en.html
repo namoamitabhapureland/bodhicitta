@@ -208,7 +208,7 @@
     { key: 'nian_100k', target: 100000, title: 'Wholehearted Focus', desc: 'Exclusively mindful of Amitabha.<br>Without distraction, settling the scattered mind on the great name.', grad: 'grad-100k', color: '#ba68c8' },
     { key: 'nian_500k', target: 500000, title: 'Gathering Senses', desc: 'Gathering the six senses in continuous pure mindfulness.<br>Using the Buddha\'s name to naturally subdue wandering thoughts.', grad: 'grad-500k', color: '#4dd0e1' },
     { key: 'nian_1m',   target: 1000000, title: 'Subtle Resonance', desc: 'Secretly aligning with the wondrous path.<br>Through honest recitation, an ordinary mind unknowingly connects with Buddha\'s wisdom.', grad: 'grad-1m', color: '#f48fb1' },
-    { key: 'nian_10m',  target: 10000000, title: 'Profound Faith', desc: 'Deeply recognizing oneself as an ordinary mortal incapable of escaping Samsara.<br>Firmly trusting Amitabha\'s Great Vow, completely abandoning self-power.', grad: 'grad-100m', color: '#81d4fa' },
+    { key: 'nian_10m',  target: 10000000, title: 'Profound Faith', desc: 'Deeply recognizing oneself as an ordinary mortal incapable of escaping Samsara.<br>Firmly trusting Amitabha\'s Great Vow, completely abandoning self-power.', grad: 'grad-10m', color: '#81d4fa' },
     { key: 'nian_100m', target: 100000000, title: 'Complete Refuge', desc: 'World-Honored One, I single-mindedly take refuge in the Tathagata of Unhindered Light.<br>Letting go of all contrivance, wholeheartedly surrendering to Amitabha.', grad: 'grad-100m', color: '#ffb300' }
 ];
 
@@ -269,24 +269,27 @@
         const userName = db.name || "Practitioner";
         const deck = document.getElementById('deck-container');
         
+                if (!db.milestones) db.milestones = {};
+
         let autoActiveIdx = -1;
 
         MILESTONES.forEach((m, idx) => {
             const alreadyClaimed = milestones[m.key] === true;
-            if (currentTotal >= m.target && !alreadyClaimed && autoActiveIdx === -1) { 
+            // 修正 1：移除 autoActiveIdx === -1 的限制，防止 JSON 還原鎖死
+            if (currentTotal >= m.target && !alreadyClaimed) { 
                 autoActiveIdx = idx; 
             }
 
             const card = document.createElement('div');
             card.className = `card card-${idx}`;
             
-            if (alreadyClaimed) {
-                card.onclick = (e) => { 
-                    e.stopPropagation(); 
-                    focusCard(idx); 
-                };
-            }
-            
+            // 修正 2：允許所有卡片手動點擊，並阻止事件冒泡
+            card.onclick = (e) => { 
+                e.stopPropagation(); 
+                focusCard(idx); 
+            };
+
+            // 保留您原本英文版的完整 HTML 結構與英文字樣
             card.innerHTML = `
                 <div class="card-inner">
                     <div class="card-back card-face" style="box-shadow: inset 0 0 25px ${m.color}55">
@@ -305,7 +308,7 @@
                             <div class="cert-user">${userName}</div>
                         </div>
                         <div class="cert-desc">Recitations: <b>${m.target.toLocaleString()}</b><br>${m.desc}</div>
-                        <button class="btn-confirm" onclick="returnToSystem('${alreadyClaimed ? '' : m.key}')">
+                        <button class="btn-confirm" onclick="returnToSystem(event, '${alreadyClaimed ? '' : m.key}')">
                             ${alreadyClaimed ? 'CLOSE SEAL' : 'REJOICE IN MERIT ． RETURN'}
                         </button>
                     </div>
@@ -324,9 +327,10 @@
             }
         };
 
-        function focusCard(idx) {
+                function focusCard(idx) {
             resetAllCards();
             const targetCard = document.querySelector(`.card-${idx}`);
+            if (!targetCard) return;
             targetCard.classList.add('is-active');
             
             setTimeout(() => {
@@ -379,12 +383,14 @@
             }, 800);
         }
 
-        function returnToSystem(key) {
+        function returnToSystem(e, key) {
+            if (e) e.stopPropagation();
+            
             if (!key) { 
                 resetAllCards(); 
                 return; 
-            } // 空字串代表是回顧模式，僅收起卡牌不跳轉
-            
+            }
+
             document.getElementById('page-curtain').style.opacity = '1';
             
             if (!db.milestones) db.milestones = {};
@@ -395,6 +401,7 @@
                 window.location.href = 'index_en.html'; 
             }, 800);
         }
+
     </script>
 </body>
 </html>

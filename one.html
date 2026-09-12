@@ -272,21 +272,26 @@
         const userName = db.name || "行者";
         const deck = document.getElementById('deck-container');
         
-                       if (!db.milestones) db.milestones = {};
+                     if (!db.milestones) db.milestones = {};
 
         let autoActiveIdx = -1;
+        let maxUnlockedIdx = -1; // 記錄當前解鎖最高階的卡片
 
         MILESTONES.forEach((m, idx) => {
             const alreadyClaimed = milestones[m.key] === true;
             const isUnlocked = currentTotal >= m.target;
 
-            if (isUnlocked && !alreadyClaimed) { 
-                autoActiveIdx = idx; 
+            if (isUnlocked) {
+                maxUnlockedIdx = idx; // 只要達標，就持續更新最高解鎖索引
+                if (!alreadyClaimed && autoActiveIdx === -1) { 
+                    autoActiveIdx = idx; // 優先記錄第一張「達標但未領取」的卡
+                }
             }
 
             const card = document.createElement('div');
             card.className = `card card-${idx}`;
             
+            // 🌟 嚴格權限控制：未達標卡片點擊完全無反應，無法提前翻開
             card.onclick = (e) => { 
                 e.stopPropagation(); 
                 if (isUnlocked || alreadyClaimed) {

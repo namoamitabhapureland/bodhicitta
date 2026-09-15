@@ -13,17 +13,38 @@
         }
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; }
         body { 
-            background: radial-gradient(circle at 50% 50%, #0a0e14 0%, var(--bg-deep) 100%); 
-            font-family: "PingFang TC", "Microsoft JhengHei", serif;
-            overflow: hidden; touch-action: none; width: 100vw; height: 100dvh;
-            display: flex; justify-content: center; align-items: center; color: #fff;
-        }
-
+    /* 強制指定底色為極深純黑，阻止 Safari 自動補上白色背景渲染層 */
+    background-color: #020203 !important;
+    background: radial-gradient(circle at 50% 50%, #0a0e14 0%, var(--bg-deep) 100%); 
+    font-family: "PingFang TC", "Microsoft JhengHei", serif;
+    /* 關鍵：改用特定方向控制，避免 WebKit 鎖死頂部狀態列的邊界 */
+    overflow-x: hidden;
+    overflow-y: hidden;
+    touch-action: none; 
+    width: 100vw; 
+    height: 100dvh;
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    color: #fff;
+    /* 強制隔離 CSS 渲染層，不讓子元素（如霧氣與毛玻璃）向上溢出滲透至狀態列 */
+    isolation: isolate;
+}
         #starCanvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
         #vignette { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(circle at 50% 30%, transparent 10%, rgba(1, 1, 3, 0.95) 100%); }
 
-        #mist-layer { position: absolute; bottom: -10%; left: -10%; width: 120%; height: 60%; z-index: 5; pointer-events: none; mix-blend-mode: screen; overflow: hidden; }
-        /* 移除 filter: blur(45px); 加入 translateZ 觸發 GPU 獨立圖層運算 */
+      #mist-layer { 
+    position: absolute; 
+    bottom: -10%; 
+    left: -10%; 
+    width: 120%; 
+    height: 60%; 
+    z-index: 5; 
+    pointer-events: none; 
+    /* 移除 mix-blend-mode: screen; 避免 Safari 對濾鏡圖層繪製出白/黑框 */
+    overflow: hidden; 
+}
+  /* 移除 filter: blur(45px); 加入 translateZ 觸發 GPU 獨立圖層運算 */
 .mist-cloud { 
     position: absolute; border-radius: 50%; 
     animation: drift-mist 15s infinite alternate ease-in-out; 
@@ -66,7 +87,25 @@
         /* PAGE 2 */
         #page-2 { position: absolute; inset: 0; z-index: 10; display: none; flex-direction: column; align-items: center; width: 100%; height: 100%; }
         .neon-flow { background: linear-gradient(90deg, #FDF5D3, #D4AF37, #E5989B, #89CFF0, #C9A0DC, #D4AF37, #FDF5D3); background-size: 200% 100%; animation: energyFlow 4s linear infinite; }
-        .nav-top { width: 90%; max-width: 480px; z-index: 20; display: flex; justify-content: space-between; align-items: center; margin-top: max(20px, env(safe-area-inset-top)); padding: 12px 20px; background: rgba(5, 5, 8, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(212,175,55,0.2); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+.nav-top { 
+    width: 90%; 
+    max-width: 480px; 
+    z-index: 20; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-top: max(20px, env(safe-area-inset-top)); 
+    padding: 12px 20px; 
+    /* 明確給予深色底，防止毛玻璃計算邊緣時產生白邊 */
+    background: rgba(5, 5, 8, 0.75) !important; 
+    backdrop-filter: blur(15px); 
+    -webkit-backdrop-filter: blur(15px); 
+    border: 1px solid rgba(212,175,55,0.2); 
+    border-radius: 20px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
+    /* 強制獨立渲染層 */
+    transform: translateZ(0);
+}
         .nav-btn { display: flex; align-items: center; gap: 8px; color: var(--gold-light); font-size: 0.85rem; letter-spacing: 2px; cursor: pointer; transition: 0.3s; }
         .nav-btn svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.5; fill: none; }
         .nav-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.1); }

@@ -59,23 +59,20 @@
 
         #scene { flex: 1; display: flex; justify-content: center; align-items: center; perspective: 1200px; overflow: hidden; position: relative; z-index: 10; }
         #carousel { width: 80px; height: 180px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); }
-/* 修改 CSS */
-.vessel { 
-    position: absolute; top: 0; left: -10px; width: 100px; height: 150px; 
-    cursor: pointer; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    /* 新增這行：提示 iOS 預先優化 3D 圖層渲染 */
-    will-change: transform;
-}
 
-.bottle-svg { 
-    position: absolute; inset: 0; width: 100%; height: 100%; 
-    z-index: 2; pointer-events: none; transition: filter 0.3s;
-    /* 新增這行：防止高斯模糊造成 GPU Layer 記憶體溢出 */
-    transform: translateZ(0);
-}
+        .vessel { 
+            position: absolute; top: 0; left: -10px; width: 100px; height: 150px; 
+            cursor: pointer; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            will-change: transform;
+        }
+
+        .bottle-svg { 
+            position: absolute; inset: 0; width: 100%; height: 100%; 
+            z-index: 2; pointer-events: none; transition: filter 0.3s;
+            transform: translateZ(0);
+        }
 
         .vessel.selected { transform: translateY(-18px); }
-
         .vessel.selected .bottle-svg { filter: drop-shadow(0 0 20px rgba(243, 229, 171, 0.6)); }
 
         .drop-jump { position: fixed; width: 22px; height: 22px; border-radius: 50%; box-shadow: inset -3px -3px 8px rgba(0,0,0,0.5), inset 3px 3px 8px rgba(255,255,255,0.9); z-index: 1000; pointer-events: none; }
@@ -104,7 +101,6 @@
         .m-btn-prime { background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); border-color: var(--solid-gold); color: var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.1); }
         .m-btn-prime:active { background: rgba(212,175,55,0.3); }
 
-        /* 自定義捲軸 */
         .modal-box::-webkit-scrollbar { width: 4px; }
         .modal-box::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.3); border-radius: 2px; }
     </style>
@@ -155,7 +151,7 @@
 <div id="footer">
     <div class="tool-btn" onclick="showInfo()">指南</div>
     <div class="tool-btn" onclick="initLevel()">重整</div>
-<div class="tool-btn" onclick="window.location.href='vision.html'">觀相</div>
+    <div class="tool-btn" onclick="window.location.href='vision.html'">觀相</div>
     <div class="tool-btn" style="border-color:var(--solid-gold); color:var(--gold);" onclick="triggerExit()">退場</div>
 </div>
 
@@ -169,17 +165,12 @@
 </div>
 
 <script>
-    // --------------------------------------------------
-    // 資料庫防護初始化
-    // --------------------------------------------------
     let db = {};
     try { db = JSON.parse(localStorage.getItem('PX_V15.0')) || {}; } catch(e) { db = {}; }
     
     db.waterLevel = db.waterLevel || 1;
-    
-    // 同步觀相悟陣變數 (中文資料庫 PX_V15.0)
-db.visionLevel = db.visionLevel || 1;
-db.visionLastFailed = db.visionLastFailed || "";
+    db.visionLevel = db.visionLevel || 1;
+    db.visionLastFailed = db.visionLastFailed || "";
 
     db.tempBag = db.tempBag || 0;
     db.points = db.points || 0;
@@ -193,9 +184,8 @@ db.visionLastFailed = db.visionLastFailed || "";
     const COLORS = ['red', 'cyan', 'gold', 'purple', 'green', 'orange', 'pink', 'white', 'black', 'gray', 'blue', 'yellow', 'brown', 'magenta'];
     let game = { vessels: [], selectedIdx: null, isAnimating: false, rotY: 0, startTime: Date.now(), starSpeed: 1, currentEncounter: null, isHuayan: false };
     let timerInterval = null;
-    let synth = window.speechSynthesis; // 語音引擎
+    let synth = window.speechSynthesis;
 
-    // 音效引擎
     let audioCtx = null;
     function initAudio() { try { if (!audioCtx) { const AC = window.AudioContext || window.webkitAudioContext; if(AC) audioCtx = new AC(); } if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); } catch(e) {} }
     function playTone(freq, type, dur, vol) { try { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + dur); } catch(e) {} }
@@ -204,9 +194,6 @@ db.visionLastFailed = db.visionLastFailed || "";
     function playErr() { playTone(200, 'sawtooth', 0.2, 0.2); } 
     function playWin() { playTone(432, 'sine', 2.0, 0.5); } 
 
-    // --------------------------------------------------
-    // 視覺引擎：完美 SVG 白框淨瓶
-    // --------------------------------------------------
     function getBottleSVG(idx) {
         return `
         <svg viewBox="0 0 100 150" class="bottle-svg">
@@ -221,20 +208,15 @@ db.visionLastFailed = db.visionLastFailed || "";
         </svg>`;
     }
 
-     // 修正一：導入「反向推演法」，杜絕數學死局，保證 100% 有解
     function generateVessels(total, colorCount) {
-        // 1. 初始化完美理順狀態 (完成態)
         let v = [];
         for (let i = 0; i < total; i++) {
             v.push(i < colorCount ? [COLORS[i], COLORS[i], COLORS[i]] : []);
         }
 
-        // 2. 反向亂序引擎：模擬「合法倒水」的逆動作
-        const scrambleSteps = colorCount * 40; // 依顏色數量決定打亂深度
+        const scrambleSteps = colorCount * 40;
 
         for (let step = 0; step < scrambleSteps; step++) {
-            // A. 尋找合法的「反向來源」(T)
-            // 規則：正向只能倒入空瓶或同色瓶，故反向抽離時，頂部必須是單層，或是兩層以上同色。
             let validSources = [];
             v.forEach((bottle, idx) => {
                 if (bottle.length === 1) {
@@ -244,13 +226,11 @@ db.visionLastFailed = db.visionLastFailed || "";
                 }
             });
 
-            if (validSources.length === 0) break; // 防護機制
+            if (validSources.length === 0) break;
             
             let sourceIdx = validSources[Math.floor(Math.random() * validSources.length)];
             let colorToMove = v[sourceIdx][v[sourceIdx].length - 1];
 
-            // B. 尋找合法的「反向目標」(S)
-            // 規則：不能是滿瓶，且不能是來源瓶本身
             let validTargets = [];
             v.forEach((bottle, idx) => {
                 if (bottle.length < 3 && idx !== sourceIdx) {
@@ -261,7 +241,6 @@ db.visionLastFailed = db.visionLastFailed || "";
             if (validTargets.length === 0) continue;
             let targetIdx = validTargets[Math.floor(Math.random() * validTargets.length)];
 
-            // C. 執行反向倒水
             v[sourceIdx].pop();
             v[targetIdx].push(colorToMove);
         }
@@ -269,34 +248,29 @@ db.visionLastFailed = db.visionLastFailed || "";
         return v;
     }
 
-
-
- // ✨ 莊嚴入口選擇器 (防卡死優化版)
- function showEntrance() {
-     const entranceHtml = `
-         <div style="margin-bottom:20px; font-size:0.9rem; color:#aaa; line-height:1.8; letter-spacing:2px;">
-             殊途同歸，皆向淨土。<br>先觀相後淨水，調伏心念。
-         </div>
-         <div class="m-action-group">
-             <button class="m-btn m-btn-prime" style="border-color:var(--gold); color:var(--gold);" 
-                 onclick="initAudio(); closeModal(); window.location.href='vision.html'">
-                 觀相悟陣（基礎）
-             </button>
-             <button class="m-btn m-btn-prime" 
-                 onclick="initAudio(); closeModal(); setTimeout(() => initLevel(), 100);">
-                 琉璃淨水（進階）
-             </button>
-             <div style="height:10px;"></div>
-             <button class="m-btn" onclick="window.location.href='index.html?screen=3'">歸返主道場</button>
-         </div>
-     `;
-     // 微小延遲讓星空背景先渲染
-     setTimeout(() => {
-         showModal("假借修真 ‧ 雙極分支", "", null, null, entranceHtml);
-         document.getElementById('m-text').style.display = 'none';
-     }, 150);
- }
-
+    function showEntrance() {
+        const entranceHtml = `
+            <div style="margin-bottom:20px; font-size:0.9rem; color:#aaa; line-height:1.8; letter-spacing:2px;">
+                殊途同歸，皆向淨土。<br>先觀相後淨水，調伏心念。
+            </div>
+            <div class="m-action-group">
+                <button class="m-btn m-btn-prime" style="border-color:var(--gold); color:var(--gold);" 
+                    onclick="initAudio(); closeModal(); window.location.href='vision.html'">
+                    觀相悟陣（基礎）
+                </button>
+                <button class="m-btn m-btn-prime" 
+                    onclick="initAudio(); closeModal(); setTimeout(() => initLevel(), 100);">
+                    琉璃淨水（進階）
+                </button>
+                <div style="height:10px;"></div>
+                <button class="m-btn" onclick="window.location.href='index.html?screen=3'">歸返主道場</button>
+            </div>
+        `;
+        setTimeout(() => {
+            showModal("假借修真 ‧ 雙極分支", "", null, null, entranceHtml);
+            document.getElementById('m-text').style.display = 'none';
+        }, 150);
+    }
 
     function initLevel() {
         document.querySelectorAll('.huayan-planet, .drop-jump').forEach(el => el.remove());
@@ -307,12 +281,10 @@ db.visionLastFailed = db.visionLastFailed || "";
         const lv = db.waterLevel;
         let totalVessels, colorCount;
 
-        // 第一關：絕對簡單引導模式 (3瓶，2色，1空)
         if (lv === 1) {
             totalVessels = 3; colorCount = 2;
             document.getElementById('tutorial-ui').style.opacity = '1';
         } else {
-            // 動態難度：緩步升至 16 瓶、14 色
             totalVessels = Math.min(16, 4 + Math.floor((lv - 1) / 10)); 
             colorCount = totalVessels - 2; 
             document.getElementById('tutorial-ui').style.opacity = '0';
@@ -344,56 +316,33 @@ db.visionLastFailed = db.visionLastFailed || "";
         startTimer();
     }
 
-// 定義原生 CSS 琉璃漸層配色表（不用再跑 SVG <defs> 引用，GPU 快取極快）
-const COLOR_GRADIENTS = {
-    'red': 'linear-gradient(180deg, #ff4d4d 0%, #800000 100%)',
-    'cyan': 'linear-gradient(180deg, #00e5ff 0%, #004d40 100%)',
-    'gold': 'linear-gradient(180deg, #ffe066 0%, #8b6508 100%)',
-    'purple': 'linear-gradient(180deg, #d8b4fe 0%, #4a148c 100%)',
-    'green': 'linear-gradient(180deg, #80ed99 0%, #1b5e20 100%)',
-    'orange': 'linear-gradient(180deg, #ffb703 0%, #e65100 100%)',
-    'pink': 'linear-gradient(180deg, #ffb7c5 0%, #880e4f 100%)',
-    'white': 'linear-gradient(180deg, #ffffff 0%, #b0b0b0 100%)',
-    'black': 'linear-gradient(180deg, #606060 0%, #050505 100%)',
-    'gray': 'linear-gradient(180deg, #b0b0b0 0%, #404040 100%)',
-    'blue': 'linear-gradient(180deg, #4da6ff 0%, #000080 100%)',
-    'yellow': 'linear-gradient(180deg, #ffff80 0%, #b3b300 100%)',
-    'brown': 'linear-gradient(180deg, #e6b89c 0%, #5c3a21 100%)',
-    'magenta': 'linear-gradient(180deg, #ff80df 0%, #800060 100%)'
-};
-
-function renderWater(idx) {
-    const g = document.getElementById(`w-${idx}`);
-    if (!g) return;
-    while (g.firstChild) { g.removeChild(g.firstChild); }
-    
-    const slots = [{y:103.75, h:27}, {y:77.5, h:26.5}, {y:51.25, h:26.5}];
-    game.vessels[idx].forEach((c, i) => {
-        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        rect.setAttribute("x", "0"); 
-        rect.setAttribute("y", slots[i].y); 
-        rect.setAttribute("width", "100"); 
-        rect.setAttribute("height", slots[i].h);
+    /* 正確的 SVG renderWater 渲染 */
+    function renderWater(idx) {
+        const g = document.getElementById(`w-${idx}`);
+        if (!g) return;
+        while (g.firstChild) { g.removeChild(g.firstChild); }
         
-        // 直接寫入 inline style CSS 漸層，效能提升 10 倍！
-        rect.style.fill = 'transparent'; // SVG 屬性退位
-        rect.style.background = COLOR_GRADIENTS[c] || '#fff';
-        // 為了相容 SVG rect，使用 CSS fill 結合內嵌漸層
-        rect.setAttribute("fill", `url(#grad-${c})`); 
-        g.appendChild(rect);
-        
-        if(i === game.vessels[idx].length - 1) {
-            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.setAttribute("x1", "10"); line.setAttribute("y1", slots[i].y); 
-            line.setAttribute("x2", "90"); line.setAttribute("y2", slots[i].y);
-            line.setAttribute("stroke", "rgba(255,255,255,0.85)"); 
-            line.setAttribute("stroke-width", "1.5"); 
-            g.appendChild(line);
-        }
-    });
-}
+        const slots = [{y:103.75, h:27}, {y:77.5, h:26.5}, {y:51.25, h:26.5}];
+        game.vessels[idx].forEach((c, i) => {
+            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute("x", "0"); 
+            rect.setAttribute("y", slots[i].y); 
+            rect.setAttribute("width", "100"); 
+            rect.setAttribute("height", slots[i].h);
+            rect.setAttribute("fill", `url(#grad-${c})`); 
+            g.appendChild(rect);
+            
+            if(i === game.vessels[idx].length - 1) {
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", "10"); line.setAttribute("y1", slots[i].y); 
+                line.setAttribute("x2", "90"); line.setAttribute("y2", slots[i].y);
+                line.setAttribute("stroke", "rgba(255,255,255,0.85)"); 
+                line.setAttribute("stroke-width", "1.5"); 
+                g.appendChild(line);
+            }
+        });
+    }
 
-    // 最短路徑旋轉邏輯
     async function handleTap(idx, theta) {
         if (game.isAnimating || game.currentEncounter || game.isHuayan) return;
         const targetEl = document.getElementById(`v-${idx}`);
@@ -452,7 +401,6 @@ function renderWater(idx) {
                 { transform: `translate(${ex}px, ${ey}px) scale(0.6)`, opacity: 0 }
             ], { duration: 380, easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)', fill: 'forwards' });
             
-            // 設立狀態鎖，防止設備休眠導致的 Promise 永遠不解析
             let isResolved = false;
             const finishAnim = () => {
                 if(isResolved) return;
@@ -462,15 +410,10 @@ function renderWater(idx) {
             };
             
             anim.onfinish = finishAnim;
-            // 450毫秒後若動畫未正常結束，強制釋放狀態
             setTimeout(finishAnim, 450); 
         });
     }
 
-
-    // --------------------------------------------------
-    // 結算與法界異象庫
-    // --------------------------------------------------
     const SCRIPTURES = [
         { t: "釋迦如來 ‧ 演說大經", c: "【發菩提心，一向專念】。<br>此三輩往生之根本，行者當攝心入定。", b: "南無本師釋迦牟尼佛", color: "rgba(243,229,171,0.25)" },
         { t: "法藏比丘 ‧ 弘願顯現", c: "【設我得佛，十方眾生，至心信樂】。<br>四十八願，願願皆為導歸極樂。", b: "南無阿彌陀佛", color: "rgba(255,255,255,0.3)" },
@@ -498,7 +441,6 @@ function renderWater(idx) {
             }
             db.tempBag += earnedPoints;
             
-            // ✨ 滿百自動提領邏輯 (精準找零版)
             let syncMsg = "";
             if (db.tempBag >= 100) {
                 let transferAmount = Math.floor(db.tempBag / 100) * 100; 
@@ -507,7 +449,6 @@ function renderWater(idx) {
                 syncMsg = `<br><span style="color:#00e5ff; font-weight:bold;">資糧圓滿！已將 ${transferAmount} 點自動匯入主系統。</span><br>`;
             }
             
-            // 每 20 關固定化現淨瓶
             let dropMsg = "";
             let levelPassed = db.waterLevel - 1;
             if (levelPassed % 20 === 0 && levelPassed > 0) { 
@@ -525,7 +466,6 @@ function renderWater(idx) {
             }
             saveDB();
             
-            // 過關白霧特效
             game.starSpeed = 25; playWin();
             const overlay = document.getElementById('vision-overlay');
             overlay.style.background = 'radial-gradient(circle, #fff 0%, transparent 80%)';
@@ -536,7 +476,6 @@ function renderWater(idx) {
                 game.starSpeed = 1; overlay.style.opacity = '0';
                 document.getElementById('center-point').style.transform = 'translate(-50%, -50%) scale(1)';
                 
-                // ✨ 把 syncMsg 加入到所有彈窗裡
                 if (levelPassed % 5 === 0 && levelPassed > 0) {
                     const s = SCRIPTURES[Math.floor(Math.random()*SCRIPTURES.length)];
                     triggerRPG(s, clearMsg + syncMsg + dropMsg);
@@ -550,8 +489,7 @@ function renderWater(idx) {
         }
     }
 
-    // ✨ 華藏二十重世界 (每 3 關觸發)
-   function triggerHuayanWorld(lvl, extraMsg) {
+    function triggerHuayanWorld(lvl, extraMsg) {
         game.isHuayan = true;
         game.starSpeed = 60; 
         let layer = Math.floor(lvl / 3) % 20 + 1;
@@ -559,7 +497,6 @@ function renderWater(idx) {
         const planet = document.createElement('div');
         planet.className = 'huayan-planet';
         
-        // ✨ 改用絕對色碼，防止在部分裝置或變數丟失時變成隱形透明！
         const cols = ['rgba(0,229,255,0.4)', 'rgba(216,180,254,0.4)', 'rgba(255,224,102,0.4)', 'rgba(255,102,204,0.4)'];
         
         planet.style.background = `radial-gradient(circle, ${cols[layer % 4]} 0%, transparent 70%)`;
@@ -618,7 +555,6 @@ function renderWater(idx) {
         closeModal(); showLevelClear(""); 
     }
 
-    // ✨ 說明與語音導讀
     function showInfo() {
         let infoHtml = `
             <div style="font-size: 0.85rem; line-height: 1.8; text-align: left; color: #d0d0d0; letter-spacing: 1px; margin-bottom: 20px;">
@@ -645,10 +581,9 @@ function renderWater(idx) {
         synth.speak(utterThis);
     }
 
-             function triggerExit() {
+    function triggerExit() {
         let html = `<button class="m-btn" onclick="window.location.href='vision.html'">觀相悟陣</button>`;
         if (db.tempBag >= 100) { 
-            // ✨ 只顯示 100 的倍數讓長輩提領
             let tAmt = Math.floor(db.tempBag / 100) * 100;
             html += `<button class="m-btn m-btn-prime" onclick="syncPoints()">${tAmt} 點入庫道場</button>`; 
         } else { 
@@ -658,9 +593,6 @@ function renderWater(idx) {
         showModal("法水觀心 ‧ 暫歇", "放下手機，請給身邊的人一個微笑，或在心中默默感恩。<br><br>清淨，即在當下。", null, null, html);
         document.getElementById('m-text').style.display = 'block';
     }
-
-    
-
 
     function showModal(title, text, btnText, callback, customHtml) {
         document.getElementById('m-title').innerHTML = title;
@@ -673,11 +605,10 @@ function renderWater(idx) {
     function closeModal() { 
         document.getElementById('modal').classList.remove('show'); 
         game.currentEncounter = null; 
-        if(synth.speaking) synth.cancel(); // 關閉時停止語音
+        if(synth.speaking) synth.cancel();
         if(window.currentCallback) { window.currentCallback(); window.currentCallback = null; } 
     }
 
-       // ✨ 精準找零的手動提領
     function syncPoints() { 
         let transferAmount = Math.floor(db.tempBag / 100) * 100;
         if (transferAmount > 0) {
@@ -688,11 +619,8 @@ function renderWater(idx) {
         window.location.href = 'index.html'; 
     }
 
-
-          // 修正二：時劫封頂機制，避免無限膨脹
     function startTimer() {
         clearInterval(timerInterval);
-        // 加入上限封頂：無論幾百關，時劫最高鎖定為 90 分鐘
         const limit = Math.min(90, 30 + db.waterLevel) * 60 * 1000;
         
         timerInterval = setInterval(() => {
@@ -716,16 +644,7 @@ function renderWater(idx) {
         }, 10000); 
     }
 
-
-
-
-            
-
-
-
-    // --------------------------------------------------
-    // 背景引擎：星空前進穿梭與滑動防干擾
-    // --------------------------------------------------
+    // 背景引擎
     const canvas = document.getElementById('bgCanvas'); const ctx = canvas.getContext('2d');
     let cw, ch, stars = [], orbs = [];
     function res() { cw=canvas.width=window.innerWidth; ch=canvas.height=window.innerHeight; }
@@ -738,7 +657,6 @@ function renderWater(idx) {
     function draw() {
         ctx.fillStyle = '#010204'; ctx.fillRect(0,0,cw,ch); ctx.globalCompositeOperation = 'screen';
         
-        // 華藏世界金色星軌特效
         if(game.isHuayan) {
             ctx.fillStyle = 'rgba(212,175,55,0.05)';
             ctx.fillRect(0,0,cw,ch);
@@ -759,75 +677,70 @@ function renderWater(idx) {
     }
     draw();
 
-  let isD = false, sx = 0, dragDelta = 0, animFrameId = null;
+    let isD = false, sx = 0, dragDelta = 0, animFrameId = null;
 
-document.addEventListener('pointerdown', e => { 
-    if(game.isAnimating||game.currentEncounter||game.isHuayan||e.target.closest('.tool-btn')||e.target.closest('.modal-box')) return; 
-    isD=true; sx=e.clientX; dragDelta=0; 
-    document.getElementById('carousel').style.transition='none'; 
-    initAudio(); 
-});
+    document.addEventListener('pointerdown', e => { 
+        if(game.isAnimating||game.currentEncounter||game.isHuayan||e.target.closest('.tool-btn')||e.target.closest('.modal-box')) return; 
+        isD=true; sx=e.clientX; dragDelta=0; 
+        document.getElementById('carousel').style.transition='none'; 
+        initAudio(); 
+    });
 
-document.addEventListener('pointermove', e => { 
-    if(!isD) return; 
-    let dx = e.clientX - sx; 
-    dragDelta += Math.abs(dx); 
-    game.rotY += dx * 0.4; 
-    sx = e.clientX; 
-    
-    // 綁定繪製更新到瀏覽器下一幀，避免手勢頻率高於繪製頻率導致的畫面硬塞頓卡
-    if (!animFrameId) {
-        animFrameId = requestAnimationFrame(() => {
-            document.getElementById('carousel').style.transform = `rotateY(${game.rotY}deg)`; 
-            updateShading();
-            animFrameId = null;
+    document.addEventListener('pointermove', e => { 
+        if(!isD) return; 
+        let dx = e.clientX - sx; 
+        dragDelta += Math.abs(dx); 
+        game.rotY += dx * 0.4; 
+        sx = e.clientX; 
+        
+        if (!animFrameId) {
+            animFrameId = requestAnimationFrame(() => {
+                document.getElementById('carousel').style.transform = `rotateY(${game.rotY}deg)`; 
+                updateShading();
+                animFrameId = null;
+            });
+        }
+    });
+
+    const endDrag = () => { 
+        if(isD) { 
+            isD=false; 
+            if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+            document.getElementById('carousel').style.transition='transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)'; 
+        } 
+    };
+    document.addEventListener('pointerup', endDrag); 
+    document.addEventListener('pointercancel', endDrag); 
+    document.addEventListener('pointerleave', endDrag);
+
+    /* 正確且順暢的光影計算 */
+    function updateShading() {
+        if (game.shadingTicking) return;
+        game.shadingTicking = true;
+
+        requestAnimationFrame(() => {
+            const vessels = document.querySelectorAll('.vessel');
+            vessels.forEach(c => {
+                let currentAngle = (parseFloat(c.dataset.theta) + game.rotY) % 360; 
+                if(currentAngle < 0) currentAngle += 360;
+                let dist = Math.min(currentAngle, 360 - currentAngle);
+                
+                if(dist > 85) { 
+                    c.style.opacity = '0.35';
+                } else { 
+                    c.style.opacity = c.classList.contains('selected') ? '1' : (1 - (dist / 120)).toFixed(2);
+                }
+            });
+            game.shadingTicking = false;
         });
     }
-});
 
-const endDrag = () => { 
-    if(isD) { 
-        isD=false; 
-        if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
-        document.getElementById('carousel').style.transition='transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)'; 
-    } 
-};
-document.addEventListener('pointerup', endDrag); 
-document.addEventListener('pointercancel', endDrag); 
-document.addEventListener('pointerleave', endDrag);
-
-function updateShading() {
-    // 採用 requestAnimationFrame 進行節流（Throttle），防止 120Hz 拖慢 CPU
-    if (game.shadingTicking) return;
-    game.shadingTicking = true;
-
-    requestAnimationFrame(() => {
-        const vessels = document.querySelectorAll('.vessel');
-        vessels.forEach(c => {
-            let currentAngle = (parseFloat(c.dataset.theta) + game.rotY) % 360; 
-            if(currentAngle < 0) currentAngle += 360;
-            let dist = Math.min(currentAngle, 360 - currentAngle);
-            
-            // 絕不在 3D 轉盤中動態改動 filter: brightness，這會強制 iOS 重繪全圖層！
-            // 改為使用透明度 opacity 與簡單 scale 替代，滑動順暢度瞬間達到 60~120 幀滿格！
-            if(dist > 85) { 
-                c.style.opacity = '0.35';
-            } else { 
-                c.style.opacity = c.classList.contains('selected') ? '1' : (1 - (dist / 120)).toFixed(2);
-            }
-        });
-        game.shadingTicking = false;
-    });
-}
-
-    // ✨ 智慧開局攔截：檢查是否從觀相直接跳轉過來
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('play') === '1') {
-        initLevel(); // 有帶密語參數，直接啟動淨水陣法
+        initLevel();
     } else {
-        showEntrance(); // 沒有參數，顯示雙極分支選單
+        showEntrance();
     }
-
 </script>
 </body>
 </html>

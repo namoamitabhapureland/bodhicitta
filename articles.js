@@ -2,6 +2,145 @@ const rawArticles = [
     // ==========================================
     // 中文文章
     // ==========================================
+    {
+        id: "2026-09-24-zh-early-buddhism-dhamma",
+        isNew: true,
+        lang: "zh",
+        category: "佛學", 
+        title: "文獻演進考證探究「三寶」本義",
+        status: "世俗僧 ． 勝義僧 ． 依導三寶 ． 緣起法 ． 共和制度與因緣",
+        humble: "本篇札記立足於早期佛教與原始法脈之理趣，探討「僧」與「三寶」之古老本義，解析佛陀作為觀察者所指引之「法」與「自然律」，還原教團運作之歷史因緣與實踐本質。",
+        content: `[一、 語源與詞義：「僧」的真正底細]
+要還原「僧」最原始、講究且嚴謹的本義，必須回到印度早期佛教（Early Buddhism）與巴利聖典（Pāli Canon）的脈絡，擺脫後來漢傳佛教將「僧」單純等同於「剃頭出家的僧人（僧伽）」這種通俗演變。
+
+在最古老的佛法體系中，「僧」絕不是指「出家人的集合」，也不是指「某一個比丘」。
+
+1. 原詞
+梵語 Saṅgha（巴利語 Saṅgha），漢譯音譯為「僧伽」，簡稱「僧」。
+
+2. 本義
+在古印度，Saṅgha 本來是一個世俗政治與社會詞彙，意思是「共和政體」、「議會」、「團體」或「行會」。古印度當時有兩種政體：國王統治的「王權國」（Rājya），以及由眾人集會共同決策的「共和國」（Saṅgha/Gaṇa）。
+
+3. 佛陀的借用
+佛陀創立修行團體時，採納了當時印度共和國（如離車族 Licchavi）的民主議事機制，將這個「平等、民主、無至高領袖、以戒律法規為依歸的集體」稱為 Saṅgha（僧伽）。
+
+[二、 嚴謹定義：兩個層次（世俗僧與勝義僧）]
+早期佛法將「僧」嚴格劃分為兩個層面。歸依三寶中的「僧寶」，專指後者。
+
+1. 事相僧 / 世俗僧（Sammuti-saṅgha）
+凡夫所組成的僧團組織。至少必須有四位受具足戒的比丘（或比丘尼）同界共住，才能構成一個「僧伽」。單獨一位比丘（個人）在律制上不能稱為「僧伽」，只能稱作「比丘」（Bhikkhu）。僧團沒有「總裁」或「教宗」，完全依據《律藏》（Vinaya）的「羯磨」（Kamma，集會表決）機制運作。佛陀涅槃前明確表示：「以法為師，以戒為師」，僧伽是沒有個人領袖的民主自治體。
+
+2. 勝義僧 / 聖者僧（Ariya-saṅgha）—— 這才是真正的「僧寶」
+在巴利聖典（如《寶經》Ratana Sutta 及《六隨念》Anussati）中，歸依三寶所指的「僧寶」（Saṅgha-ratana），嚴格定義為「四雙八輩」的聖者團體：
+向須陀洹 / 須陀洹（初果）
+向斯陀含 / 斯陀含（二果）
+向阿那含 / 阿那含（三果）
+向阿羅漢 / 阿羅漢（四果）
+
+關鍵打破：「勝義僧」不限出家或在家。只要證得初果（入流）以上的在家居士，在「勝義僧寶」的層面上，其地位高於未證果的凡夫出家比丘。凡夫比丘只是「事相僧」，而證果的聖者才是真正的「僧寶」。
+
+[三、 古老聖典中「僧寶」的八大品質（Saṅghaguṇa）]
+在最古老的《經藏》中，每一次誦念僧寶，都必須具備這八種品質，這是檢驗何為「僧」的最高標準：
+
+1. Suppaṭipanno（依正道而行 / 善行者）：切實踐行八正道。
+2. Ujuppaṭipanno（依直道而行 / 正直者）：心行正直，遠離諂曲狡詐。
+3. Ñāyappaṭipanno（依理道而行 / 智理者）：為了導向涅槃、解脫苦痛而修持。
+4. Sāmīcippaṭipanno（依合宜道而行 / 隨順者）：威儀具足，法隨法行。
+5. Āhuneyyo（應受供養 / 可奉獻處）：值得從遠方帶來物品供養。
+6. Pāhuneyyo（應受款待 / 可親近處）：值得像尊貴客人般被接待。
+7. Dakkhiṇeyyo（應受布施 / 福田）：布施給他們能帶來極大果報（「世間無上福田」）。
+8. Añjalikaraṇīyo（應受合掌 / 可頂禮處）：值得世人合掌恭敬。
+
+[四、 四眾弟子（Catu-parisā）與「大僧伽」]
+在早期印度佛教的宏觀視角中，完整的佛陀教團是由「四眾」共同支撐的：比丘（Bhikkhu）、比丘尼（Bhikkhunī）、優婆塞（Upāsaka，男居士）、優婆夷（Upāsikā，女居士）。
+
+出家眾（比丘/比丘尼）負責住持正法、專修與傳承律儀；在家眾（男/女居士）負責護持生活資具與在世間踐行佛法。兩者互為依存，共同構成廣義的「四眾僧團」。
+
+[五、 歸依三寶的演變與確立]
+歷史事實與文獻考證證明：「皈依三寶」並非後世演變出來的產物，而是佛陀親自創立、從佛教誕生第一天起就存在的核心儀式。在最早期，皈依經歷了三個歷史階段：
+
+1. 佛教誕生的第一天：只有「皈依二寶」
+佛陀剛於菩提樹下成道、尚未度化五比丘時，兩位來自遠方的商人——提謂（Tapussa）與波利（Bhallika）供養蜜餅。當時世上只有佛陀與法，完全沒有僧團，佛陀讓他們念誦：「我皈依佛，我皈依法。」（Dvevācikagahaṇa，二詞皈依者）。
+
+2. 鹿野苑初轉法輪：正式誕生「三寶」
+佛陀於鹿野苑為五比丘說《轉法輪經》，五人證果受戒。此時世上有了佛（釋迦牟尼）、法（四聖諦與八正道）、僧（五比丘組成的第一個僧伽）。隨後富家子弟耶舍（Yasa）之父證得初果，念誦了歷史上第一次完整的「皈依三寶」（Tevācikagahaṇa），成為第一位正式的三寶優婆塞。
+
+3. 早期聖典中的標準「三皈依」誓詞
+在最古老的巴利聖典中，凡夫加入教團均親口宣誓標準古語：
+Buddhaṁ saraṇaṁ gacchāmi（我以佛陀為依導）
+Dhammaṁ saraṇaṁ gacchāmi（我以正法為依導）
+Saṅghaṁ saraṇaṁ gacchāmi（我以僧伽為依導）
+
+[六、 佛陀的定位與「法與律」]
+從現代政治學與宗教學來看，佛陀並未創立一個制度化的「宗教」。佛陀稱呼自己所指引的這條路為 Dhamma-Vinaya（法與律）：
+Dhamma（法）：宇宙與生命的真實規律（四聖諦、緣起法、八正道）。「法」是本來就存在的真理，佛陀只是「發現者」（Discoverer），而不是「發明者」。
+Vinaya（律）：為了讓修行者和睦共住、專心修道而訂立的團體生活規範。
+
+佛陀稱呼跟隨者是在行持 Brahmacariya（清淨的梵行），建立超越種姓、民主共和的沙門修行社群（Saṅgha）。佛陀在臨終前（《大般涅槃經》Mahāparinibbāna Sutta）明確表示：「當以自己為洲渚，以自己為依歸；以法為洲渚，以法為依歸，勿以他法為依歸。」
+
+[七、 皈依法：法的真實三層涵義]
+既然佛陀是覺察者、觀察者，且活著時未留下文字，他要弟子「皈依」的「法」（Dhamma），包含三個層次：
+
+1. 第一層：生命的客觀運作法則（自然律）
+「若如來出世，若如來不出世，法界常住。」此自然律包含「緣起法」（此有故彼有，此生故彼生）與「三法印」（無常、苦、無我）。皈依法，就是停止對現實世界抱持幻想，親自去觀察並承認這個客觀法則。
+
+2. 第二層：親自觀察的方法與路徑（實踐）
+佛陀所謂的法，是一套「觀察身心的操作手冊」，如「八正道」與「四念處」（身、受、心、法）。法就像一張救生的木筏（筏喻），目的是帶人渡過苦海，上了岸之後木筏應當放下。
+
+3. 第三層：親身體驗到的解脫狀態（結果）
+巴利聖典讚歎「法寶」之誓詞（Dhammaguṇa）揭示了法的六大品質：
+Svākkhāto（善說）：經得起檢驗，純淨無瑕。
+Sandiṭṭhiko（現見）：此生此世、當下就能親自看見。
+Akāliko（無時 / 即時）：超越時間，照著觀察效果立刻產生。
+Ehipassiko（來看看 / 歡迎檢驗）：意即 "Come and see!"，邀請親自實驗而非盲信。
+Opaneyyiko（導向內在）：引導向內觀察自己的身心。
+Paccattaṁ veditabbo viññūhi（智者自證）：每位修行者在自己內心親身體驗與證悟。
+
+[八、 指月的手指與智者的邏輯]
+真正的智者絕不給人現成的答案或終極教條，因為答案會變成另一種執著與思想包裹。
+
+《卡拉瑪經》（Kālāma Sutta）中，佛陀提出「十不信」，教導不要因為傳說、傳統、經典、推論、權威或導師之名而盲信，唯有當自己親自觀察體驗，知道其為善、無害、能帶來平靜與解脫時才去實踐。
+
+古老智者所做的一切，不是給予答案，而是提供工具（觀照身心）與指出方向（指月之手）。「看」這個動作必須由自己完成。真正的智慧，永遠是「現見」（Sandiṭṭhiko）與「智者自證」（Paccattaṁ veditabbo）。
+
+[九、 歷史的緣起與超越：共和政體與僧團自治]
+若從「緣起法」（Idappaccayatā）的角度審視，佛陀創立僧團制度，絕非脫離時空背景的憑空發明，而是對當時代社會因緣的深邃洞察與超拔轉化。
+
+1. 當時的政治因緣：古印度的共和國（Gana-Sangha）
+在西元前6世紀的北印度，除了專制王權國外，廣泛存在著如離車族（Licchavi）與佛陀出身的釋迦族（Sākya）等部落共和國。離車族設有公眾議事廳（Santhāgāra），由代表集會共同決議、公開討論並以多數表決定案。佛陀在《大般涅槃經》中讚歎離車族的「七不退法」，第一條即是「常常集會，講論正事」。這說明佛陀極為熟悉並高度肯定世俗共和制度的理性與效能。
+
+2. 因緣的轉化：從「種姓貴族共和」到「真正的普世平等」
+世俗共和國的民主，僅限於剎帝利貴族階層，仍受限於種姓與階級的藩籬。佛陀借用（Gana-Sangha）的議事架構，卻注入了「緣起無我」與「法（Dharma）的普世性」：
+打破種姓制度：「四河入海，無復河名；四姓出家，同稱釋子。」徹底收納賤民、乞丐與各階層，實現了人類歷史上極早且極為徹底的平等社群。
+嚴密的立法與表決機制（羯磨）：將世俗議事制度法律化，創設了法定人數（Quorum）、動議宣告（一白三羯磨）、無記名投票（行籌 Śalākā）與代理投票等程序。
+去中心化的以法為師：不設集權教宗或世襲繼承人，臨終指示「以戒為師，以法為師」，將最高權威交給客觀真理與律制規約。
+
+世俗的離車國最終消逝於歷史洪流，但佛陀順應此因緣所建立的「僧伽（Saṅgha）」，卻將這種「集集共識、無記名表決、少數服從多數、以法為尊」的民主自治精神，以修行共同體的形式傳承了兩千多年。這正是緣起法在歷史制度上最動人的展現——順應時空因緣，卻超越俗世局限。
+
+【註1】：Saṅgha 語源與世俗民主體制
+參見巴利律藏《大品》（Mahāvagga）。早期僧團採用古印度共和國（如 Licchavi）之集議制度，無個人獨裁領袖，以「羯磨」（Kamma）集體表決運作。
+
+【註2】：勝義僧與四雙八輩
+參見《小誦經·寶經》（Ratana Sutta）及《增支部》。定義真正的僧寶為證得初果向至四果得之聖者團體（Ariya-saṅgha），打破出家與在家之外相界線。
+
+【註3】：僧寶八品質（Saṅghaguṇa）
+參見《相應部·六隨念》（Anussati）。詳述聖者僧團具備之八種功德與接受世間供養之法理依據。
+
+【註4】：早期三皈依之建立
+參見巴利律藏《大品》。記載提謂、波利二商人受「二詞皈依」，以及耶舍之父受「三詞皈依」之歷史過程。
+
+【註5】：法與律（Dhamma-Vinaya）與遺教
+參見《長部·大般涅槃經》（Mahāparinibbāna Sutta）。佛陀開示弟子應「自為洲渚，法為洲渚」，確立以法與戒為師之原則。
+
+【註6】：法的六大品質（Dhammaguṇa）
+參見《相應部》。經文強調法乃 Sandiṭṭhiko（現見）、Ehipassiko（歡迎檢驗）與 Paccattaṁ veditabbo viññūhi（智者自證），展現實用主義與理性驗證之本質。
+
+【註7】：卡拉瑪經之「十不信」
+出自《增支部·卡拉瑪經》（Kālāma Sutta）。佛陀開示破除權威盲信、建立獨立親身體驗觀照之核心準則。
+
+【註8】：共和政體與羯磨律制之因緣
+參見《長部·大般涅槃經》（Mahāparinibbāna Sutta）對離車族「七不退法」之讚歎，以及《律藏·隨事篇》對於羯磨（Kamma）、行籌（Śalākā）投票與法定人數之嚴謹規約。展現佛陀因應時空條件，轉化世俗共和政體為去中心化法治僧團之緣起智慧。`
+    },
 
   {
     id: "2026-09-06-zh-mahayana-sutra-chronology-and-textual-history",
@@ -1085,7 +1224,145 @@ Neukart 的理論認為，神祕的暗物質與暗能量與這些「資訊」息
     // ==========================================
     // 英文文章 (English Articles)
     // ==========================================
+    {
+        id: "2026-09-24-en-early-buddhism-dhamma",
+        isNew: true,
+        lang: "en",
+        category: "Buddhism", 
+        title: "[The Source of the Path of Liberation] The Original Meaning of the Three Jewels, Natural Law, and the Finger Pointing at the Moon",
+        status: "Conventional Sangha ． Ultimate Sangha ． Three Refuge-Giver ． Dependent Origination ． Republican Systems and Conditions ． Finger Pointing at the Moon",
+        humble: "This note, grounded in the rationale of early Buddhism and the original Dharma lineage, explores the ancient and precise definitions of 'Sangha' and the 'Three Jewels,' analyzes the 'Dharma' and 'Natural Law' as observed and indicated by the Buddha, and restores the historical conditions and true essence of the order's operation and practice.",
+        content: `[I. Etymology and Original Meaning: The True Foundation of "Sangha"]
+To restore the most original, precise, and rigorous definition of "Sangha," one must return to the context of Early Buddhism in India and the Pāli Canon, transcending the later popular evolution in Chinese Buddhism that reduced "Sangha" merely to a collection of tonsured monastic monks.
 
+In the most ancient Buddhist system, "Sangha" does not refer to "a collective of monastics," nor does it refer to "an individual monk."
+
+1. The Original Word
+Sanskrit: Saṅgha (Pāli: Saṅgha), transliterated into Chinese as "Sangha" (僧伽) or abbreviated as "Seng" (僧).
+
+2. Original Meaning
+In ancient India, Saṅgha was originally a secular political and social term meaning "republican government," "assembly," "association," or "guild." Ancient India had two main forms of governance: "Monarchies" (Rājya) ruled by kings, and "Republics" (Saṅgha/Gaṇa) where decisions were made collectively by the assembly.
+
+3. The Buddha's Adoption
+When the Buddha founded the spiritual community, He adopted the democratic, deliberative mechanism of the Indian republics (such as the Licchavis) and termed this "equitable, democratic, leaderless collective governed by precepts and laws" as the Saṅgha.
+
+[II. Rigorous Definition: Two Levels (Conventional Sangha and Ultimate Sangha)]
+Early Buddhism strictly divided the "Sangha" into two levels. The "Sangha Jewel" in the Three Jewels refers exclusively to the latter.
+
+1. Conventional Sangha (Sammuti-saṅgha)
+The monastic organization composed of ordinary, unawakened beings. At least four fully ordained monks (Bhikkhus) or nuns (Bhikkhunīs) residing within the same boundary are required to form a "Saṅgha." A single individual monk cannot be called a "Saṅgha" under monastic law, but only a "Bhikkhu." The monastic order had no "President" or "Pope"; it operated entirely through the "Kamma" (assembly voting) mechanism of the Vinaya. Before His Parinirvana, the Buddha explicitly stated: "Take the Dharma and Vinaya as your teacher." The Saṅgha is a democratic, autonomous body without a personal leader.
+
+2. Ultimate Sangha / Noble Sangha (Ariya-saṅgha) — The True "Sangha Jewel"
+In the Pāli Canon (such as the Ratana Sutta and Anussati), the "Sangha Jewel" (Saṅgha-ratana) referred to in taking refuge is strictly defined as the community of Noble Ones (Ariya) comprising the "Four Pairs and Eight Noble Individuals":
+Path to Stream-entry / Stream-enterer (Sotāpanna)
+Path to Once-returner / Once-returner (Sakadāgāmi)
+Path to Non-returner / Non-returner (Anāgāmi)
+Path to Arahantship / Arahant
+
+A Crucial Breakthrough: The "Ultimate Sangha" is not limited to monastics or laypersons. As long as a lay practitioner (such as the householder Citta) attains the first fruit (Stream-entry) or above, their spiritual status as the "Ultimate Sangha Jewel" is higher than that of an unawakened monastic monk. Ordinary monastics are merely the "Conventional Sangha," whereas the Awakened Noble Ones constitute the true "Sangha Jewel."
+
+[III. The Eight Qualities of the Sangha Jewel in Ancient Scriptures (Saṅghaguṇa)]
+In the oldest Sutta Piṭaka, whenever the Sangha Jewel is chanted, it must possess these eight qualities, which serve as the highest standard for verifying what constitutes a "Sangha":
+
+1. Suppaṭipanno (Practicing the good way): Faithfully practicing the Noble Eightfold Path.
+2. Ujuppaṭipanno (Practicing the straight way): Honest in heart and conduct, free from deceit and hypocrisy.
+3. Ñāyappaṭipanno (Practicing the wise way): Cultivating for the attainment of Nirvana and the cessation of suffering.
+4. Sāmīcippaṭipanno (Practicing the proper way): Possessing proper deportment, practicing in accord with the Dharma.
+5. Āhuneyyo (Worthy of gifts): Worthy of receiving offerings brought from afar.
+6. Pāhuneyyo (Worthy of hospitality): Worthy of being received like noble guests.
+7. Dakkhiṇeyyo (Worthy of offerings / Field of Merit): Offerings made to them yield immense fruit ("An unexcelled field of merit for the world").
+8. Añjalikaraṇīyo (Worthy of reverent salutation): Worthy of receiving respectful palms joined together by the world.
+
+[IV. The Fourfold Assembly (Catu-parisā) and the "Great Saṅgha"]
+In the macro-perspective of early Indian Buddhism, the complete Buddhist community was supported together by the "Fourfold Assembly": Bhikkhus (monks), Bhikkhunīs (nuns), Upāsakas (laymen), and Upāsikās (laywomen).
+
+The monastic order (monks and nuns) was responsible for upholding the True Dharma, dedicated practice, and transmitting the precepts; the lay community (laymen and laywomen) was responsible for supporting daily requisites and practicing the Dharma in secular life. The two were interdependent, together forming the broad "Fourfold Saṅgha."
+
+[V. The Evolution and Establishment of Refuge in the Three Jewels]
+Historical evidence and textual criticism prove that "Taking Refuge in the Three Jewels" was not a later invention, but a core ritual personally established by the Buddha from the very inception of Buddhism. In the earliest period, taking refuge underwent three historical stages:
+
+1. The First Day of Buddhism: Only "Refuge in Two Jewels"
+When the Buddha had just attained enlightenment under the Bodhi tree and had not yet converted the five monks, two merchants from afar—Tapussa and Bhallika—offered rice cakes. At that time, only the Buddha and the Dharma existed in the world, with no monastic order yet. The Buddha instructed them to recite: "I take refuge in the Buddha, I take refuge in the Dharma" (Dvevācikagahaṇa, refuge-takers of two words).
+
+2. First Turning of the Dharma Wheel at Sarnath: The Official Birth of the "Three Jewels"
+The Buddha delivered the Dhammacakkappavattana Sutta to the five monks at Sarnath, and all five attained fruit and were ordained. At this point, the world possessed the Buddha (Shakyamuni), the Dharma (Four Noble Truths and Eightfold Path), and the Sangha (the first Saṅgha formed by the five monks). Soon after, the father of Yasa (a wealthy youth) attained the first fruit and recited the historical first complete "Refuge in the Three Jewels" (Tevācikagahaṇa), becoming the first official lay follower (Upāsaka) of the Three Jewels.
+
+3. Standard Formula of the "Three Refuges" in Early Scriptures
+In the most ancient Pāli scriptures, anyone joining the community recited the standard ancient formula:
+Buddhaṁ saraṇaṁ gacchāmi (I go to the Buddha as my refuge/guide)
+Dhammaṁ saraṇaṁ gacchāmi (I go to the Dharma as my refuge/guide)
+Saṅghaṁ saraṇaṁ gacchāmi (I go to the Saṅgha as my refuge/guide)
+
+[VI. The Buddha's Position and "Dhamma-Vinaya"]
+From the perspective of modern political science and religious studies, the Buddha did not found an institutionalized "religion." The Buddha referred to the path He pointed out as Dhamma-Vinaya (Dharma and Discipline):
+Dhamma (Dharma): The objective natural laws of the universe and life (Four Noble Truths, Dependent Origination, Eightfold Path). "Dharma" is an eternally existing truth; the Buddha was merely its "Discoverer," not its "Inventor."
+Vinaya (Discipline): Rules of communal life established so practitioners could live in harmony and focus on spiritual cultivation.
+
+The Buddha described His followers as practicing Brahmacariya (the pure holy life), establishing a democratic and republican community of ascetics (Saṅgha) transcending caste. Before His Parinirvana (Mahāparinibbāna Sutta), the Buddha explicitly instructed: "Be an island unto yourselves, a refuge unto yourselves; take the Dharma as your island, the Dharma as your refuge, look for no other refuge."
+
+[VII. Refuge in the Dharma: The Three Levels of True Meaning]
+Since the Buddha was an observer who left no written texts during His lifetime, the "Dharma" (Dhamma) He instructed His disciples to take refuge in consists of three levels:
+
+1. Level 1: Objective Operating Laws of Life (Natural Law)
+"Whether Tathāgatas arise or do not arise, the Dharma element eternally remains." This natural law encompasses "Dependent Origination" (When this is, that is; with the arising of this, that arises) and the "Three Marks of Existence" (Impermanence, Suffering, Non-self). Taking refuge in the Dharma means stopping illusions about the real world, personally observing and accepting this objective law.
+
+2. Level 2: The Path and Method of Personal Observation (Practice)
+The Dharma spoken of by the Buddha is an "operational manual for observing mind and body," such as the "Eightfold Path" and "Four Satipaṭṭhānas" (Body, Feelings, Mind, Phenomena). The Dharma is like a raft for crossing the river (Raft Simile); its purpose is to carry one across the ocean of suffering. Once on the other shore, the raft should be set aside.
+
+3. Level 3: The Experiential State of Liberation (Result)
+The ancient verse praising the "Dharma Jewel" (Dhammaguṇa) in the Pāli Canon reveals six intrinsic qualities of the Dharma:
+Svākkhāto (Well-expounded): Stands up to scrutiny, pure throughout.
+Sandiṭṭhiko (Directly visible): Can be personally seen right here in this life, in the present moment.
+Akāliko (Timeless / Immediate): Transcends time; results occur immediately upon observation.
+Ehipassiko (Inviting to come and see): "Come and see!" It invites personal experimentation rather than blind belief.
+Opaneyyiko (Leading inward): Guides one to observe their own body and mind inward.
+Paccattaṁ veditabbo viññūhi (To be personally experienced by the wise): Each practitioner experiences and realizes it directly within their own mind.
+
+[VIII. The Finger Pointing at the Moon and the Logic of the Wise]
+True wise beings never hand down ready-made answers or ultimate dogmas, because an answer itself becomes another attachment and mental burden.
+
+In the Kālāma Sutta, the Buddha presented the "Ten Non-Beliefs," teaching not to believe blindly based on tradition, legend, scriptures, logic, authority, or the status of a teacher. Only when one observes and experiences personally, knowing that these practices are wholesome, blameless, and lead to peace and liberation, should one practice them.
+
+All that ancient wise beings did was not to give answers, but to provide tools (observing mind and body) and point out the direction (the finger pointing at the moon). The act of "seeing" must be accomplished by oneself. True wisdom is always "directly visible" (Sandiṭṭhiko) and "personally experienced by the wise" (Paccattaṁ veditabbo).
+
+[IX. Historical Dependent Origination and Transcendence: Republican Systems and Monastic Autonomy]
+Examined through the lens of "Dependent Origination" (Idappaccayatā), the Buddha's establishment of the monastic system was by no means an invention out of thin air divorced from historical reality, but a profound insight into and sublime transformation of the societal conditions of His era.
+
+1. The Political Conditions of the Era: Ancient Indian Republics (Gana-Sangha)
+In 6th-century BCE Northern India, alongside autocratic monarchies, republican states such as the Licchavis and the Śākyas (the Buddha's own clan) flourished. The Licchavis maintained a public assembly hall (Santhāgāra), where representatives gathered to make collective decisions, debate openly, and pass resolutions by majority vote. In the Mahāparinibbāna Sutta, the Buddha praised the Licchavis' "Seven Conditions of Welfare," the first being "assembling frequently and in large numbers." This demonstrates that the Buddha was intimately familiar with and highly appreciative of the rationality and efficacy of secular republican governance.
+
+2. The Transformation of Conditions: From "Caste Aristocratic Republic" to "True Universal Equality"
+The democracy of secular republics was restricted to the Kshatriya warrior aristocracy, still bound by caste and class barriers. The Buddha adopted the deliberative framework of the Gana-Sangha, but infused it with the wisdom of "Non-self" and the "Universality of the Dharma":
+Abolishing the Caste System: "Just as the four great rivers enter the ocean and lose their former names, so do the four castes who go forth under the Dharma become simply disciples of the Sakyan." The Buddha welcomed untouchables, beggars, and people of all classes, establishing an unprecedented and thoroughly egalitarian community in human history.
+Rigorous Legislative and Deliberative Mechanisms (Kamma): He formalized secular deliberative procedures into monastic law, introducing quorums, formal motions (ñatti-catuttha-kamma), secret balloting using voting sticks (Śalākā), and proxy voting.
+Decentralized Guidance by the Dharma: He established no centralized authority or hereditary successor, instructing on His deathbed to "take the Dharma and Vinaya as your teacher," entrusting supreme authority to objective truth and monastic rules.
+
+Though the secular Licchavi republic ultimately faded into history, the Saṅgha established by the Buddha in response to these conditions carried forward this spirit of consensus, secret balloting, majority rule, and governance by law as a spiritual community for over two millennia. This stands as a most moving manifestation of Dependent Origination in institutional history—adapting to temporal conditions while transcending worldly limitations.
+
+[Note 1]: Etymology of Saṅgha and Secular Republican Systems
+See Pāli Vinaya Piṭaka (Mahāvagga). The early monastic order adopted the democratic assembly system of Indian republics (such as Licchavi), operating without an autocratic leader and resolving matters collectively through Kamma.
+
+[Note 2]: Ultimate Sangha and the Four Pairs and Eight Individuals
+See Khuddakapāṭha (Ratana Sutta) and Aṅguttara Nikāya. Defines the true Sangha Jewel as the community of Noble Ones (Ariya-saṅgha) from Stream-entry path to Arahantship, breaking the external boundaries between monastics and laypeople.
+
+[Note 3]: The Eight Qualities of the Sangha Jewel (Saṅghaguṇa)
+See Saṁyutta Nikāya (Anussati). Details the eight spiritual qualities of the Noble Sangha and the doctrinal justification for accepting worldly offerings.
+
+[Note 4]: Establishment of Early Refuge
+See Pāli Vinaya Piṭaka (Mahāvagga). Records the historical process of Tapussa and Bhallika receiving the "Two-Word Refuge" and Yasa's father receiving the "Three-Word Refuge."
+
+[Note 5]: Dhamma-Vinaya and Final Instructions
+See Dīgha Nikāya (Mahāparinibbāna Sutta). The Buddha instructed disciples to "be an island unto yourselves, take the Dharma as your island," establishing the principle of taking the Dharma and Vinaya as teacher.
+
+[Note 6]: The Six Qualities of the Dharma (Dhammaguṇa)
+See Saṁyutta Nikāya. Emphasizes that the Dharma is Sandiṭṭhiko (directly visible), Ehipassiko (inviting to come and see), and Paccattaṁ veditabbo viññūhi (personally experienced by the wise), reflecting its pragmatic and empirical nature.
+
+[Note 7]: The Ten Non-Beliefs in the Kālāma Sutta
+From Aṅguttara Nikāya (Kālāma Sutta). The core guideline taught by the Buddha to dismantle blind belief in authority and establish independent, personal experiential observation.
+
+[Note 8]: Republican Systems and the Vinaya Kamma Procedures
+See Dīgha Nikāya (Mahāparinibbāna Sutta) for the Buddha's praise of the Licchavis' "Seven Conditions of Welfare," and the Vinaya Piṭaka (Khandhaka) for the rigorous rules regarding Kamma, balloting (Śalākā), and quorums. Illustrates the Buddha's wisdom of Dependent Origination in adapting secular republican governance into a decentralized, rule-based monastic order.`
+    },
   {
     "id": "2026-09-06-en-mahayana-sutra-chronology-and-textual-history",
     "isNew": true,
@@ -2157,6 +2434,145 @@ However, when we look at time-travel plots in science fiction, we occasionally f
     // 日文文章 (Japanese Articles)
     // ==========================================
 
+    {
+        id: "2026-09-24-ja-early-buddhism-dhamma",
+        isNew: true,
+        lang: "ja",
+        category: "仏学", 
+        title: "【解脱道の源流】三宝の本義、自然律と月を指す指",
+        status: "世俗僧 ． 勝義僧 ． 依導の三宝 ． 縁起法 ． 共和制度と因縁 ． 月を指す指",
+        humble: "本稿は、初期仏教および原始法脈の理趣に基づき、「僧」と「三宝」の古来の厳密な本義を探求し、観察者としての仏陀が示した「法」と「自然律」を解明し、教団運営の歴史的因縁と実践の真のあり方を明らかにします。",
+        content: `[一、 語源と語義：「僧」の真の底細]
+「僧」の最も原始的で厳密な本義を復元するには、インドの初期仏教（Early Buddhism）およびパーリ聖典（Pāli Canon）の文脈に立ち返る必要があります。「僧」を単に剃髪出家した僧侶の集団（僧伽）と同義とみなす、後世の漢伝仏教における通俗的な変遷から脱却しなければなりません。
+
+最古の仏法体系において、「僧」とは「出家者の集合」を指すものでもなければ、「特定の比丘一人」を指すものでもありませんでした。
+
+1. 原語
+サンスクリット語：Saṅgha（パーリ語：Saṅgha）。音訳して「僧伽（そうギャ）」、略して「僧」と訳されました。
+
+2. 本義
+古代インドにおいて、Saṅghaとは本来、世俗の政治・社会用語であり、「共和政体」、「議会」、「団体」、「組合」を意味していました。当時の古代インドには、王が統治する「王権国」（Rājya）と、合議によって決議を行う「共和國」（Saṅgha/Gaṇa）の二つの政体が存在していました。
+
+3. 仏陀の借用
+仏陀が修行団体を設立された際、当時のインド共和國（ヴァッンジ国やリッチャヴィ族など）の民主的な議事メカニズムを採用され、この「平等、民主、絶対的指導者を置かず、戒律と法規に依拠する集団」をSaṅgha（僧伽）と名付けられました。
+
+[二、 厳密な定義：二つの階層（世俗僧と勝義僧）]
+初期仏教では、「僧」を二つの階層に厳格に区分していました。歸依三宝における「僧宝」とは、専ら後者を指します。
+
+1. 事相僧 / 世俗僧（Sammuti-saṅgha）
+凡夫によって構成される僧団組織。少なくとも具足戒を受けた四人以上の比丘（または比丘尼）が同一の結界内に共住して初めて「僧伽」を構成できます。単独の一人の比丘（個人）は律制上「僧伽」と呼ぶことはできず、「比丘（Bhikkhu）」としか呼べません。僧団には「総裁」や「教皇」は存在せず、すべて『律蔵』（Vinaya）の「羯磨（Kamma、集会決議）」メカニズムによって運営されます。仏陀は入滅直前に「法を師とし、戒を師とせよ」と明確に示されました。僧伽は個人指導者を持たない民主的な自治体なのです。
+
+2. 勝義僧 / 聖者僧（Ariya-saṅgha）—— これこそが真の「僧宝」
+パーリ聖典（『宝経』Ratana Suttaや『六随念』Anussatiなど）において、帰依三宝の指す「僧宝」（Saṅgha-ratana）とは、厳格に「四双八輩」の聖者集団として定義されています。
+預流向 / 預流果（初果）
+一度向 / 一度果（二果）
+不還向 / 不還果（三果）
+阿羅漢向 / 阿羅漢果（四果）
+
+決定的な打破：「勝義僧」は出家・在家を問いません。初果（預流）以上を証得した在在家居士（質多羅長者など）は、「勝義僧宝」の階層において、未証の凡夫出家比丘よりも高い精神的地位にあります。凡夫の比丘は単なる「事相僧」であり、証果した聖者こそが真の「僧宝」なのです。
+
+[三、 古代聖典における「僧宝」の八大功徳（Saṅghaguṇa）]
+最古の『経蔵』において、僧宝を誦念する際には必ず以下の八つの功徳を備えているとされ、これこそが何が「僧」であるかを検証する最高基準でした。
+
+1. Suppaṭipanno（正道に行じる者 / 善行者）：八正道を確実に実践する。
+2. Ujuppaṭipanno（直道に行じる者 / 正直者）：心行が正直であり、阿諛諂曲を離れている。
+3. Ñāyappaṭipanno（理道に行じる者 / 智理者）：涅槃と苦の止息に導くために修習する。
+4. Sāmīcippaṭipanno（合宜道に行じる者 / 随順者）：威儀を具足し、法に随順して行じる。
+5. Āhuneyyo（供養を受けるに値する者）：遠方からもたらされた供養物を受けるに値する。
+6. Pāhuneyyo（歓待を受けるに値する者）：尊い客人のように接待されるに値する。
+7. Dakkhiṇeyyo（布施を受けるに値する者 / 福田）：彼らに布施することは絶大な果報をもたらす（「世間の無上の福田」）。
+8. Añjalikaraṇīyo（合掌を受けるに値する者）：世人から合掌・恭敬されるに値する。
+
+[四、 四衆弟子（Catu-parisā）と「大僧伽」]
+初期インド仏教の微視的視点において、完全な仏陀の教団は「四衆」によって共に支えられていました。比丘（Bhikkhu）、比丘尼（Bhikkhunī）、優婆塞（Upāsaka、男性居士）、優婆夷（Upāsikā、女性居士）です。
+
+出家衆（比丘・比丘尼）は正法の維持、専修、および律儀の伝承を担い、在家衆（男・女居士）は生活資具の護持と世俗における仏法の実踐を担いました。両者は相互に依存し合い、共に広義の「四衆僧団」を形成していたのです。
+
+[五、 帰依三宝の変遷と確立]
+歴史的事實と文献考証は、「帰依三宝」が後世に創作されたものではなく、仏陀自らが創始し、仏教誕生の初日から存在した核心的な儀礼であることを証明しています。最初期において、帰依は三つの歷史的段階を経ました。
+
+1. 仏教誕生の初日：「二宝帰依」のみ
+仏陀が菩提樹下で成道された直後、世界にまだ一人の出家僧もいなかった時、遠方からの二人の商人——提謂（Tapussa）と波利（Bhallika）が蜜餅を供養しました。当時世界には仏陀と法のみが存在し、僧団はまだありませんでした。仏陀は彼らに「我は仏に帰依し、我は法に帰依す」（Dvevācikagahaṇa、二語帰依者）と誦念させました。
+
+2. 鹿野苑の初転法輪：「三宝」の正式な誕生
+仏陀が鹿野苑にて五比丘のために『転法輪経』を説かれ、五人が証果・出家しました。ここに世界には仏（釈迦牟尼）、法（四聖諦と八正道）、僧（五比丘による最初の僧伽）が揃いました。続いて富豪の子・耶舎（Yasa）の父が初果を証し、歴史上最初の完全な「帰依三宝」（Tevācikagahaṇa）を誦念し、正式な三宝優婆塞第一号となりました。
+
+3. 早期聖典における標準的な「三帰依」の誓詞
+最古のパーリ聖典において、教団に加わる者は仏陀の前で以下の標準的な古代語を自ら唱えました。
+Buddhaṁ saraṇaṁ gacchāmi（我は仏陀を拠り所として帰依し奉る）
+Dhammaṁ saraṇaṁ gacchāmi（我は正法を拠り所として帰依し奉る）
+Saṅghaṁ saraṇaṁ gacchāmi（我は僧伽を拠り所として帰依し奉る）
+
+[六、 仏陀の立ち位置と「法と律」]
+現代の政治学や宗教学の観点から見れば、仏陀は制度化された「宗教」を創始したわけではありませんでした。仏陀は自らが指し示す道をDhamma-Vinaya（法と律）と呼ばれました。
+Dhamma（法）：宇宙と生命の客観的な真理・法則（四聖諦、縁起法、八正道）。「法」は本来存在する真理であり、仏陀はその「発見者」（Discoverer）であり、「発明者」ではありません。
+Vinaya（律）：修行者が和合して共住し、専心して修道するための集団生活の規範。
+
+仏陀は従者をBrahmacariya（清浄なる梵行）を行じる者と呼び、身分階級を超克した民主的共和制の沙門修行コミュニティ（Saṅgha）を確立されました。入滅直前（『大般涅槃経』Mahāparinibbāna Sutta）、仏陀は「自らを島（拠り所）とし、法を島とし、他を拠り所とするなかれ」と明確に遺誡されました。
+
+[七、 帰依割：法の三つの真実の階層]
+仏陀は観察者であり、在世中に文字を残さなかった以上、弟子たちに「帰依」を命じた「法」（Dhamma）には三つの階層が含まれています。
+
+1. 第一階層：生命の客観的運行法則（自然律）
+「如来の出世すると、出世せざるとを問わず、法界は常住なり。」この自然律には「縁起法」（これ有るが故に彼有り、これ生じるが故に彼生じる）と「三法印」（無常、苦、無我）が含まれます。法に帰依するとは、現実世界への幻想を捨て、自らこの客観法則を観察し、受け入れることです。
+
+2. 第二階層：自ら観察する方法と道のり（実践）
+仏陀の説かれた法とは、「身心を観察するための実践マニュアル」であり、「八正道」や「四念処」（身・受・心・法）を指します。法は川を渡るための筏（筏の譬喩）のようなものであり、その目的は苦の海を渡ることにあります。岸に達した後は、筏は捨て去るべきものです。
+
+3. 第三階層：自ら体験する解脱の境界（結果）
+パーリ聖典における「法宝」を称讃する古来の誓詞（Dhammaguṇa）は、法の六つの品質を顕わ示しています。
+Svākkhāto（善説）：検証に耐えうる、清浄無垢なるもの。
+Sandiṭṭhiko（現見）：今生・現前において自ら見ることができるもの。
+Akāliko（無時 / 即時）：時間を超越し、観察に従えば直ちに効果が現れるもの。
+Ehipassiko（来たりて見よ）："Come and see!"（来て見よ！）と呼びかけ、盲信ではなく親しく検証することを求めるもの。
+Opaneyyiko（内へと導く）：自己の身心を内観するよう導くもの。
+Paccattaṁ veditabbo viññūhi（智者の自証）：各修行者が自らの心内において直接体験し証得するもの。
+
+[八、 月を指す指と智者の論理]
+真の智者は、既成の答えや終極の教条を人々に与えることは絶対にしありません。答えそのものが別の執着や観念の縛りとなってしまうからです。
+
+『カラマ経』（Kālāma Sutta）において、仏陀は「十の不信」を提示され、伝統、伝説、経典、推論、権威、あるいは師の威光に基づいて盲信してはならないと教えられました。自ら観察・体験し、それが善であり、害がなく、平静と解脱をもたらすと知った時にのみ、それを実践すべきであると説かれたのです。
+
+古の智者が行ったすべてのことは、答えを与えることではなく、道具（身心の観照）を提供し、方向（月を指す指）を示すことでした。「見る」という行為自体は、自分自身で完結させなければなりません。真の智慧とは、常に「現見」（Sandiṭṭhiko）であり、「智者の自証」（Paccattaṁ veditabbo）なのです。
+
+[九、 歴史の縁起と超越：共和政体と僧団の自治]
+「縁起法」（Idappaccayatā）の視点から審察するならば、仏陀による僧団制度の確立は、決して歴史的現実から切り離された空中楼閣の創造ではなく、当時の社会構造という因縁に対する深い洞察と超脱的昇華であったことが分かります。
+
+1. 当時の政治的因縁：古代インドの共和國（Gana-Sangha）
+紀元前6世紀の北インドには、専制王権国の他に、ヴァンジ国リッチャヴィ族や仏陀の出身である釈迦族（Sākya）などの部族共和國が広範に存在していました。リッチャヴィ族は公衆議事堂（Santhāgāra）を設け、代表者が集会して共同で決議を行い、公開討論と多数決によって合意を形成していました。仏陀は『大般涅槃経』においてリッチャヴィ族の「七つの不退法」を称讃され、その第一条に「しばしば集会し、正事を論ず」を挙げられました。これは、仏陀が世俗の共和制度の合理性と効能を深く熟知し、高度に評価されていたことを示しています。
+
+2. 因縁の転換：「身分貴族的共和」から「真の普世的平等」へ
+世俗の共和國における民主主義はクシャトリヤ武士階級に限られ、依然としてカーストと階級の障壁に囚われていました。仏陀はGana-Sanghaの議事枠組みを採用しつつ、そこに「縁起無我」と「法（Dharma）の普遍性」を注入されました。
+カースト制度の打倒：「四つの大河が海に入れば元の名を失うように、四姓が出家すれば皆等しく釈子となる。」不可触民や生活困窮者を含むあらゆる階層を受け入れ、人類史において極めて早期かつ徹底した平等コミュニティを実現されました。
+厳密な立法と表決メカニズム（羯磨）：世俗の議事手続きを律法化し、定足数（Quorum）、動議宣告（一白三羯磨）、投票用竹籌（Śalākā）による無記名投票、委任投票などの手続きを創始されました。
+「法を師とする」去中心化（分散型）：中央集権的な教皇や世襲の継承者を置かず、臨終に際して「法を師とし、戒を師とせよ」と示され、最高権威を客観的な真理と律規に託されました。
+
+世俗のリッチャヴィ國は最終的に歴史の潮流の中に消滅しましたが、仏陀がこの因縁に応じつつ打ち立てられた「僧伽（Saṅgha）」は、この合議、無記名表決、多数決、そして法による統治という民主的自治の精神を、修行共同体の形をとって二千年以上も継承し続けてきました。これこそが、制度の歴史における縁起法の最も感銘深い顕現であり——時空の因縁に順応しつつ、世俗の限界を超越した姿なのです。
+
+【註1】：Saṅghaの語源と世俗の共和政体
+パーリ律蔵『大品』（Mahāvagga）を参照。初期僧団はヴァンジ国などの民主的集議制度を採用し、独裁的指導者を置かず、「羯磨」（Kamma）による集団表決で運営された。
+
+【註2】：勝義僧と四双八輩
+『小誦経・宝経』（Ratana Sutta）および『増支部』を参照。真の僧宝を預流向から阿羅漢果に至る聖者集団（Ariya-saṅgha）と定義し、出家・在家という外相の境界を打す。
+
+【註3】：僧宝の八功徳（Saṅghaguṇa）
+『相応部・六随念』（Anussati）を参照。聖者僧団の備える八種の徳性と、世間の供養を受ける法理的根拠を詳述する。
+
+【註4】：初期における三帰依の確立
+パーリ律蔵『大品』を参照。提謂・波利の二商人が「二語帰依」を受け、耶舎の父が「三語帰依」を受けた歴史的経緯を記載する。
+
+【註5】：法と律（Dhamma-Vinaya）と遺教
+『長部・大般涅槃経』（Mahāparinibbāna Sutta）を参照。仏陀は弟子たちに「自らを島とし、法を島とせよ」と示され、法と戒を師とすべき原則を確立された。
+
+【註6】：法の六功徳（Dhammaguṇa）
+『相応部』を参照。法がSandiṭṭhiko（現見）、Ehipassiko（来たりて見よ）、Paccattaṁ veditabbo viññūhi（智者の自証）であることを強調し、その実用主義と理性的な検証の質を示す。
+
+【註7】：カラマ経の「十の不信」
+『増支部・カラマ経』（Kālāma Sutta）より。権威への盲信を打破し、独立した直接の体験的観察を確立するために仏陀が示された核心的基準。
+
+【註8】：共和政体と羯磨律制の因縁
+『長部・大般涅槃経』（Mahāparinibbāna Sutta）におけるリッチャヴィ族の「七不退法」の称讃、および『律蔵・犍度』における羯磨（Kamma）、行籌（Śalākā）による表決、定足数に関する厳密な規律を参照。時空の条件に応じ、世俗の共和政体を去中心的な法治僧団へと転化された仏陀の縁起の智慧を示す。`
+    },
   {
     "id": "2026-09-06-ja-mahayana-sutra-chronology-and-textual-history",
     "isNew": true,

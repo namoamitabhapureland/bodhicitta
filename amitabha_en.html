@@ -461,7 +461,7 @@ body {
 /* 2. 頂禮時化現：精準歸位、放大至 0.45、顯現琉璃光 */
 #buddha-scene.bowing #bodhisattva-left {
     opacity: 0.55;
-    transform: translate(500px, 320px) scale(-0.5 0.5);
+    transform: translate(500px, 320px) scale(-0.5, 0.5);
 }
 #buddha-scene.bowing #bodhisattva-right {
     opacity: 0.55;
@@ -478,6 +478,32 @@ body {
     opacity: 0.65;
     transform: translate(500px, 280px) scale(0.55);
 }
+/* ==================== Android 專屬：單獨放大兩尊脅侍菩薩（莊嚴呈現） ==================== */
+/* 1. 眼睛對調 */
+#buddha-scene.bowing-android .buddha-eye-open { display: block !important; }
+#buddha-scene.bowing-android .buddha-eye-closed { display: none !important; }
+
+/* 2. 手印切換（合十 -> 接引印） */
+#buddha-scene.bowing-android .buddha-hands-closed { display: none !important; }
+#buddha-scene.bowing-android .buddha-hands-open { display: block !important; }
+
+/* 3. 卍字發亮 */
+#buddha-scene.bowing-android .buddha-swastika {
+    opacity: 1.4 !important;
+}
+
+/* 4. 觀音與大勢至菩薩化現：單獨提升比例至 1.0，展現與阿彌陀佛相襯的莊嚴氣勢 */
+#buddha-scene.bowing-android #bodhisattva-left {
+    opacity: 0.85;
+
+    transform: translate(500px, 360px) scale(-0.55, 0.55);
+}
+#buddha-scene.bowing-android #bodhisattva-right {
+    opacity: 0.85;
+
+    transform: translate(500px, 360px) scale(0.55);
+}
+
 
 
     </style>
@@ -2406,34 +2432,41 @@ document.getElementById('milestone-name-display').innerText = currentName;
         void el.offsetWidth; 
         el.style.animation = 'float-blessing 3.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards'; 
     }
-    function toggleAction(action) {
-        const btn = document.getElementById(`btn-${action}`);
-        if(!btn) return;
+  function toggleAction(action) {
+    const btn = document.getElementById(`btn-${action}`);
+    if(!btn) return;
 
-        if (action === 'bow') {
-            if (btn.classList.contains('active')) return; 
-            btn.classList.add('active');
-            
-            // 🌟 新增：在 body 掛上頂禮狀態，通知水波紋隱形
+    // 判斷是否為 Android 設備
+    const isAndroid = /Android/i.test(navigator.userAgent);
+
+    if (action === 'bow') {
+        if (btn.classList.contains('active')) return; 
+        btn.classList.add('active');
+        
+        if (isAndroid) {
+            // ─── Android 專屬：僅觸發菩薩化現與手印眼睛切換（不放大全景、不放萬丈金光） ───
+            document.getElementById('buddha-scene').classList.add('bowing-android');
+        } else {
+            // ─── 蘋果 (iOS)：100% 原汁原味，位移 + 畫面放大 + 萬丈金光 + 菩薩化現 ───
             document.body.classList.add('bowing-active');
-            
             document.getElementById('buddha-scene').classList.add('bowing');
-           // warpSpeed = 15; starScale = 2;
             triggerGoldenBurst();
-            
-            speakWords("Infinite Light, blessings and peace");
-            showBlessing("Infinite Light ‧ Protection & Peace");
-            
-            setTimeout(() => { 
-                // warpSpeed = 0.5; starScale = 1; 
+        }
+        
+        speakWords("Infinite Light, blessings and peace");
+        showBlessing("Infinite Light ‧ Protection & Peace");
+        
+        setTimeout(() => { 
+            if (isAndroid) {
+                document.getElementById('buddha-scene').classList.remove('bowing-android');
+            } else {
                 document.getElementById('buddha-scene').classList.remove('bowing');
-                btn.classList.remove('active'); 
-                
-                // 🌟 新增：頂禮 3 秒結束後，移除狀態，讓水波紋溫和浮現
                 document.body.classList.remove('bowing-active');
-            }, 5500);
-        } 
-    }
+            }
+            btn.classList.remove('active'); 
+        }, 5500);
+    } 
+}
 
     // 🌟 6. 燃香供佛雙層煙霧與落灰引擎 🌟
     let incenseTimer, smokeTimer, ashTimer;

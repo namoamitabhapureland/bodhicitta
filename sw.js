@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pureland-v4.70';
+const CACHE_NAME = 'pureland-v4.71';
 
 const ASSETS_TO_CACHE = [
     './',
@@ -115,7 +115,44 @@ const ASSETS_TO_CACHE = [
     './drum_jp.html',
     './lunar.html',
     './lunar_en.html',
-    './lunar_jp.html'
+    './lunar_jp.html',
+    './index_cn.html',
+    './manifest_cn.json',
+    './config_cn.js',
+    './one_cn.html',
+    './realm_cn.html',
+    './48vows_cn.html',
+    './88buddhas_cn.html',
+    './amitabha_cn.html',
+    './blessing_cn.html',
+    './bodhi_cn.html',
+    './coin_cn.html',
+    './dizang_cn.html',
+    './esoteric_cn.html',
+    './fahua_cn.html',
+    './huayan_cn.html',
+    './maitreya-kalpa_cn.html',
+    './personal_cn.html',
+    './prajna_cn.html',
+    './precepts_cn.html',
+    './puxian_cn.html',
+    './reader_cn.html',
+    './shurangama_cn.html',
+    './treasure_cn.html',
+    './vimalakirti_cn.html',
+    './water_cn.html',
+    './weishi_cn.html',
+    './wheel_cn.html',
+    './writing_cn.html',
+    './zen_cn.html',
+    './matrix_cn.html',
+    './vision_cn.html',
+    './8treasures_cn.html',
+    './ksitigarbha_cn.html',
+    './mile_cn.html',
+    './manju-samanta_cn.html',
+    './drum_cn.html',
+    './lunar_cn.html'
 ];
 
 self.addEventListener('install', (event) => {

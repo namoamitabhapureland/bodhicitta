@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <meta name="robots" content="noindex, nofollow">
+        <link rel="manifest" href="manifest_cn.json">
+    <title>弥陀大愿 ． 极乐莲邦</title>
+    <style>
+        :root {
+            --bg-deep: #020205; 
+            --gold: #f3e5ab; 
+            --solid-gold: #d4af37; 
+            --cyan: #8ba89c; 
+            --silver: #e0e0e0;
+            --text-main: #d0d0d0;
+        }
+        
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "PingFang SC", "Microsoft YaHei", serif;
+            overflow: hidden; touch-action: none; overscroll-behavior: none;
+            -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none;
+            -moz-user-select: none; -ms-user-select: none; user-select: none;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px;
+            background: transparent; border-left: 2px solid rgba(212,175,55,0.6); 
+            padding: 10px 20px; z-index: 100; transition: 1s; pointer-events: none;
+        }
+        .status-title { font-size: 1.15rem; font-weight: bold; color: var(--gold); letter-spacing: 2px; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); transition: 1s;}
+        .status-desc { font-size: 0.85rem; color: #bbb; line-height: 1.8; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); transition: 1s;}
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; transition: background 0.8s; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+        #lengyan-flash {
+            position: absolute; inset: 0; background: #ffffff; z-index: 50; opacity: 0;
+            pointer-events: none; transition: opacity 0.1s ease-out;
+        }
+
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 12px; transition: opacity 1s;}
+        
+        .switch-btn {
+            width: 85%; max-width: 320px; justify-content: center;
+            background: linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95)); 
+            border: 1px solid rgba(212,175,55,0.5); color: var(--gold);
+            padding: 14px 20px; border-radius: 30px; font-size: 1rem; font-weight: bold; letter-spacing: 2px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(212,175,55,0.1);
+        }
+        .switch-btn:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(212,175,55,0.5); }
+        
+        #theory-btn { border-color:rgba(139,168,156,0.8); color:var(--cyan); background:rgba(5,10,15,0.9); display: none; }
+        
+        #hold-hint {
+            color: rgba(212,175,55,0.8); font-size: 1rem; letter-spacing: 3px; font-weight: bold;
+            text-shadow: 0 0 10px rgba(212,175,55,0.5); padding: 15px; text-align: center;
+        }
+
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(139,168,156,0.4); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        .drawer-header { position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.95)); padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2); }
+        .close-bar { width: 40px; height: 4px; background: rgba(139,168,156,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        
+        .theory-container { padding: 30px 7% 20px; max-width: 720px; margin: 0 auto; }
+        
+        .humble-statement { font-size: 0.85rem; color: #b0b0b0; line-height: 1.8; text-align: justify; padding: 20px; border: 1px solid rgba(139,168,156,0.2); border-radius: 12px; background: rgba(10,15,20,0.3); margin-bottom: 50px; }
+        
+        .main-title { color: var(--cyan); font-size: 1.5rem; letter-spacing: 3px; text-align: center; margin-bottom: 50px; text-shadow: 0 0 15px rgba(139,168,156,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); margin: 15px auto 0; }
+        
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .c-icon { width: 24px; height: 24px; stroke: var(--cyan); fill: none; stroke-width: 1.5; filter: drop-shadow(0 0 5px rgba(139,168,156,0.4)); flex-shrink: 0;}
+        .c-title { color: var(--cyan); font-size: 1.15rem; letter-spacing: 1.5px; font-weight: bold; }
+        .c-text { color: var(--text-main); font-size: 0.95rem; line-height: 1.9; text-align: justify; padding-left: 39px; letter-spacing: 0.8px;}
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
+                /* 增加玉简专属按钮与抽屉样式 */
+        #vows-btn { border-color:rgba(139,168,156,0.6); color:#e0f2ec; background:rgba(5,15,10,0.9); display: none; }
+        
+        #vows-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh; background: rgba(5, 8, 5, 0.96); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(139,168,156,0.5); border-radius: 25px 25px 0 0; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #vows-drawer.open { transform: translateY(0); }
+        
+        .vow-box { margin-bottom: 25px; padding: 20px; border-left: 2px solid rgba(139,168,156,0.5); background: linear-gradient(90deg, rgba(139,168,156,0.08), transparent); border-radius: 0 12px 12px 0; }
+        .vow-num { color: var(--gold); font-size: 0.9rem; margin-bottom: 8px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 5px rgba(212,175,55,0.3); }
+        .vow-text { color: var(--text-main); font-size: 1.05rem; line-height: 1.9; text-align: justify; letter-spacing: 1.5px; }
+
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="back-btn" onclick="window.location.href='index_cn.html'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        回道场
+    </div>
+
+    <div id="status-panel">
+        <div class="status-title" id="s-title">弥陀愿力接引</div>
+        <div class="status-desc" id="s-desc">「万念归一，光芒四射。」<br>长按萤幕凝聚金光，愿生极乐。</div>
+    </div>
+
+    <section class="matrix-section" id="bg-section">
+        <canvas id="realmCanvas"></canvas>
+        <div id="lengyan-flash"></div> 
+        
+        <div class="ui-layer" id="ui-layer">
+            <div id="hold-hint">长按萤幕十秒 再放开 进入大愿海</div>
+        
+            <button class="switch-btn" id="vows-btn" onclick="openVowsDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="2" ry="2"></rect><line x1="8" y1="3" x2="8" y2="21"></line><line x1="12" y1="3" x2="12" y2="21"></line><line x1="16" y1="3" x2="16" y2="21"></line></svg>
+                恭阅四十八愿玉简
+            </button>
+            
+            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                探究弥陀无量愿海
+            </button>
+        </div>
+   </section>
+
+<div id="theory-drawer">
+    <div class="drawer-header" onclick="closeTheoryDrawer()">
+        <div class="close-bar"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+            <div style="color:var(--cyan); font-size:0.85rem; letter-spacing:2px; font-weight:bold; cursor:pointer;" onclick="closeTheoryDrawer()">收起法卷</div>
+            <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                <span id="tts-text">聆听法音</span>
+            </div>
+        </div>
+    </div>
+    <div class="theory-container" id="theory-content-box">
+        <div class="humble-statement">法海浩瀚，唯佛与佛乃能究尽。本文仅为一介在家居士，依经教逻辑与祖师大德之注疏，试图探求如来真实义之修学略影。若有未尽或错漏之处，皆属个人智识之局限，祈愿三宝加被，同修共鉴。</div>
+        
+        <h1 class="main-title">觉海澄观 ． 弥陀净土之实相与菩提心要</h1>
+        
+        <div style="color:rgba(255,255,255,0.8); font-size:0.95rem; line-height:1.8; margin-bottom: 2rem; text-align: justify; text-justify: inter-ideograph;">
+            《无量寿经》梵文原典迭经译传，异本中所载法藏比丘因地发愿之数，有二十四至四十九之别。经历代祖师大德判释与文献考核，今以魏译四十八愿为上求佛道、下化众生之主流圭臬。四十八愿实乃极乐净土之缔造枢机，尽摄弥陀之悲智双运。
+        </div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <div class="c-title">第一篇　清净法界与色身圆融</div>
+            </div>
+            <div class="c-text">国无恶道与不堕恶趣之愿，极乐之境从本源蠲除三涂之业感。此乃无尽之护念，俾令修行者灵命根基永不退堕。而身悉金色、形无好丑，实为泯除形相之妄别，当攀缘与高下之心失其所依，方能与一真法界冥契交感。至若光明无量与寿命无量，其真义断非世俗贪恋之长生。无量光，宛如法身遍照之圆融，一即一切；而无量寿，实乃开演一处无退转之胜妙境地，护持往生者於无尽岁月中圆满菩提。待弥陀化缘既毕，入於涅槃，观音大士绍继佛位，此无量寿之宏旨，即在护持愿力之永恒传续。而寿命随愿修短，更微显此土实乃菩萨道之栖神化驿，行者若资粮具足，随时皆可倒驾慈航，重返十方无量世界。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <div class="c-title">第二篇　不更恶道之真机</div>
+            </div>
+            <div class="c-text">第二愿「不更三恶道」紧摄於第一愿「国无恶道」与「无量寿」之後，实乃法界最深密之对比与呼应。此愿特以极乐之「人、天」为授记标的，乃「以小示大」之胜妙权巧。首层真机，即为回入十方大千世界度化群迷之大士预设不坏之防护网：纵然随缘受生，亦绝不流转於重浊业境。更深层之奥秘，在於凡曾生极乐者，阿赖耶识深处已然凝结弥陀本愿之无漏种子，於无尽之回入受生中，生生世世自然绝缘於三恶趣之牵引，无有退转。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+               <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <circle cx="12" cy="12" r="4"/>
+                    <path d="M12 2v6"/><path d="M12 16v6"/><path d="M2 12h6"/><path d="M16 12h6"/>
+                </svg>
+                <div class="c-title">第三篇　声闻回心与一佛乘之归宿</div>
+            </div>
+            <div class="c-text">国中声闻无数，印证原始佛教实为觉悟之初基。然独善其身终难契入究竟涅槃，当声闻众沐浴於极乐法性，心随境转，便如《法华》所云，回小向大，发菩提心，汇入一佛乘之浩瀚。而边地疑城之设，犹如法界最慈悲之韬光之所，令夹带世俗微细惑障之众生，於无苦之境缓缓洗涤蜕变。一旦契入，便蒙不住定聚必至灭度之加被，彷佛顿超一大阿僧祇劫，直证初地之不退转。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+
+               <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                </svg>
+                <div class="c-title">第四篇　纯善无漏与转染成净之妙用</div>
+            </div>
+            <div class="c-text">极乐国土不闻不善之名，所受快乐如漏尽比丘。此乐非感官之短暂生灭，乃常寂光中之大寂静。国土清净照见十方，令行者谛观空性而不失明了。衣服随念而至，於此清净法界中，念起物现乃法尔如是之理。诸天敬礼，犹如立一转染成净之法界常轨，令菩提心无限赓续。宝树中能见十方佛国，宛若帝网重重，累世宿命与十方苦难皆可洞鉴无碍，令行者常兴悲智，不失度生之宏愿。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <div class="c-title">第五篇　破除相执与转身受记</div>
+            </div>
+            <div class="c-text">转女成男之深旨，实非仅局於极乐本国之化现。极乐本无性别之相，皆为纯粹无碍之金刚法躯。此愿真机乃十方世界之女性，若深厌女身业缚，蒙此愿力加被，尽此一报身後，来世即永不受女身。若以菩萨道进程观之，无论南传严定男身受记，或北传蒙佛授记後须示现男身以圆满佛道，弥陀此愿实为十方发心大士预先拔除宿业藩篱。国中菩萨智慧辩才不可限量，更充实行者应对华严大世界无量众生心性流转之软实力，乃践行普贤大愿最坚实之渡世津梁。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                <div class="c-title">第六篇　神足彻视与法界藏识之交融</div>
+            </div>
+            <div class="c-text">此五神通之愿，旨趣印证极乐圣众了达「身」非「我」之幻相，无贪计我执，自绝贪嗔痴之妄念。弥陀深智为令往生者慧命相续，必假莲胎化生之净妙色身为依托。临命终时，凭弥陀愿力牵引，将娑婆之幻我转识成智。於彼境中，行者神识可与法界藏识（阿赖耶）无碍交融，宿命因缘互摄互照。极乐圣众皆得洞鉴三世因果，彼此心念交参，净妙法身更具神足飞举之能，天眼彻视、天耳遥闻，皆臻至圆满无漏。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-8m0 0V4m0 8h8m-8 0H4"/></svg>
+                <div class="c-title">第七篇　平等法相与普贤妙供</div>
+            </div>
+            <div class="c-text">身具三十二大丈夫相与那罗延金刚不坏之躯，实乃承继「形无好丑」之深密义理。国中所谓「人、天、声闻、菩萨」，皆属随顺他方世界之方便假名，其实无二无别，正为彻底泯除娑婆众生之分别妄见。而一食之顷供养十方诸佛，供具随心如意，此皆契入普贤大愿之自然流露。彼土既无造作，亦无世俗之营求交易，万物皆为清净心识之化现，以供养之行，任运圆满福慧之资粮。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 22h20L12 2z"/></svg>
+                <div class="c-title">第八篇　实有报土与香光胜缘</div>
+            </div>
+            <div class="c-text">极乐国土万物严净光丽，宝香普熏十方，见菩提树即获无生法忍。此殊胜境界印证弥陀净土乃「实有报土」，绝非偏空之唯心所现。行者褪去娑婆粗重病苦，得金刚之躯处於至美之境，实乃弥陀深智：藉众生残存之微细「我执」与感官觉受，转化为向道之胜缘。宝树之无量光，交摄华严之常寂光，於光影交错间，昭示修行与光之甚深密意，令行者於无垢相中，直悟清净本心。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.36-6.36l-1.41 1.41M6.05 17.95l-1.41 1.41m14.14 0l-1.41-1.41M6.05 6.05L4.64 4.64"/></svg>
+                <div class="c-title">第九篇　光频化育与演说无碍</div>
+            </div>
+            <div class="c-text">蒙佛光照触而身心柔软，万物皆能随愿演说妙法。此法界之光，其频率足以拔济心灵，实为无量光与常寂光之同体，亦即「菩提心不灭」之永恒法身。菩萨欲修何法，皆能随愿得闻。国中菩萨演说法要必契一切智，其所具备之智慧神通，乃为断除生死洪流、践行普贤度生大愿，绝非世俗有漏之业通。此智辩无碍，实为广度群迷之无上利器。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                <div class="c-title">第十篇　法界印可与中继摄受</div>
+            </div>
+            <div class="c-text">诸佛称叹，犹如十方如来对此化驿之同声印可。最末之闻名得益、生尊贵家与获三法忍，乃弥陀为彼等乘愿再来之大权菩萨，所设之遥相摄受誓愿。他方高僧大德闻弥陀名号即得诸根具足。极乐实为法界之「中继大站」，彼等无惧生死之行者，焉知非昔日早经极乐薰修、回入他方世界之大士？其於娑婆听闻圣号，便能唤醒阿赖耶识中之印记，纵处五浊恶世，亦能於转识成智刹那，重获不退转之深慧定力。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                <div class="c-title">第十一篇　本愿海会与菩提心宗</div>
+            </div>
+            <div class="c-text">第十八、十九、二十愿，实为接引众生之核心枢机。极乐非仅个人拔苦，实为孕育度生菩萨之法界摇篮。第十八愿以「至心信乐」为宗，此乃首要之基。深信极乐与娑婆法则之迥异，唯依佛力，不假造作。早植善根，方能於临命终时绝虑断疑，无碍往生；第十九愿「发菩提心」，实乃契入法界之究竟大乘正因。考诸《无量寿经》三辈往生之枢机，无论品位高下，咸以「发无上菩提心」为首要津梁；复观《华严》奥旨，善财童子南询五十三参，其发轫之初，亦必先发此无上大觉之心。盖因菩提心乃诸佛之本源、成佛之真种。行者唯有立此宏大誓愿，方能与弥陀悲愿之海同频交感，令心识不昧，蒙佛摄受，直登阿惟越致（不退转）之寂灭尊位；第二十愿「至心回向」普摄群机，将世出世间一切善根，悉数汇入弥陀愿海。善导大师云：「以佛愿力，五逆十恶，罪灭得生。」道尽弥陀无条件之究竟慈悲。学佛终极乃是成佛，而奥义尽在《金刚经》：「应灭度无量众生，实无众生得灭度者。」此大空性见，方是极乐菩萨乘愿再来之真实底气。</div>
+        </div>
+        <div class="chapter-divider"></div>
+
+        <div class="chapter-box">
+            <div class="c-header">
+                <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15l-2 5-9-5 9-5 2 5zM12 15l2-5 9 5-9 5-2-5zM12 10V2"/></svg>
+                <div class="c-title">第十二篇　一生补处与普贤大行</div>
+            </div>
+            <div class="c-text">第二十二愿实乃四十八愿之巅顶与化育标的。生彼国者究竟必至一生补处，此乃必成正觉之绝对授记。然其甚深奥义，更在於「超出常伦诸地之行，现前修习普贤之德」。极乐菩萨证此位次，绝非耽溺净土安乐，而是披弘誓大铠，回入十方浊恶之世，示现八相成道，广济群迷。行普贤愿，归弥陀土，隐然相合世尊出世度生之究竟本怀。这更是菩萨不住生死、不住涅槃，将法身遍入十方无量世界之大悲极致。四十八愿，至此方显周遍法界之圆满无碍。</div>
+        </div>
+    </div>
+</div>
+<div id="vows-drawer">
+    <div class="drawer-header" onclick="closeVowsDrawer()">
+        <div class="close-bar"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+            <div style="color:var(--cyan); font-size:0.85rem; letter-spacing:2px; font-weight:bold; cursor:pointer;" onclick="closeVowsDrawer()">收起玉简</div>
+            <div id="tts-vows-btn" onclick="event.stopPropagation(); toggleVowsAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+                <svg id="tts-vows-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                <span id="tts-vows-text">恭聆愿文</span>
+            </div>
+        </div>
+    </div>
+    <div class="theory-container" id="vows-content-box">
+        <h1 class="main-title" style="color:#e0f2ec; text-shadow: 0 0 15px rgba(139,168,156,0.4);">佛说无量寿经 ． 四十八大愿</h1>
+        <div class="humble-statement">曹魏康僧铠译本。法藏比丘於世自在王佛前，发弘誓愿，建立极乐净土。行者当以至诚心，恭阅愿文，契入弥陀本愿海。</div>
+        
+        <div class="vow-box"><div class="vow-num">第一愿</div><div class="vow-text">设我得佛，国有地狱、饿鬼、畜生者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第二愿</div><div class="vow-text">设我得佛，国中天人寿终之後，复更三恶道者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第三愿</div><div class="vow-text">设我得佛，国中天人，不悉真金色者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第四愿</div><div class="vow-text">设我得佛，国中天人，形色不同，有好丑者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第五愿</div><div class="vow-text">设我得佛，国中天人，不识宿命，下至知百千亿那由他诸劫事者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第六愿</div><div class="vow-text">设我得佛，国中天人，不得天眼，下至见百千亿那由他诸佛国者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第七愿</div><div class="vow-text">设我得佛，国中天人，不得天耳，下至闻百千亿那由他诸佛所说，不悉受持者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第八愿</div><div class="vow-text">设我得佛，国中天人，不得见他心智，下至知百千亿那由他诸佛国中众生心念者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第九愿</div><div class="vow-text">设我得佛，国中天人，不得神足，於一念顷，下至不能超过百千亿那由他诸佛国者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第十愿</div><div class="vow-text">设我得佛，国中天人，若起想念，贪计身者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第十一愿</div><div class="vow-text">设我得佛，国中天人，不住定聚，必至灭度者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第十二愿</div><div class="vow-text">设我得佛，光明有限量，下至不照百千亿那由他诸佛国者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第十三愿</div><div class="vow-text">设我得佛，寿命有限量，下至百千亿那由他劫者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第十四愿</div><div class="vow-text">设我得佛，国中声闻，有能计量，乃至三千大千世界众生，悉成缘觉，於百千劫，悉共计校，知其数者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第十五愿</div><div class="vow-text">设我得佛，国中天人，寿命无能限量。除其本愿，修短自在。若不尔者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第十六愿</div><div class="vow-text">设我得佛，国中天人，乃至闻有不善名者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第十七愿</div><div class="vow-text">设我得佛，十方世界无量诸佛，不悉咨嗟称我名者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第十八愿</div><div class="vow-text">设我得佛，十方众生，至心信乐，欲生我国，乃至十念，若不生者，不取正觉。唯除五逆，诽谤正法。</div></div>
+        <div class="vow-box"><div class="vow-num">第十九愿</div><div class="vow-text">设我得佛，十方众生，发菩提心，修诸功德，至心发愿，欲生我国，临寿终时，假令不与大众围绕，现其人前者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十愿</div><div class="vow-text">设我得佛，十方众生，闻我名号，系念我国，植众德本，至心回向，欲生我国，不果遂者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十一愿</div><div class="vow-text">设我得佛，国中天人，不悉成满三十二大人相者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十二愿</div><div class="vow-text">设我得佛，他方佛土诸菩萨众，来生我国，究竟必至一生补处。除其本愿自在所化。为众生故，被弘誓铠，积累德本，度脱一切。游诸佛国，修菩萨行，供养十方诸佛如来。开化恒沙无量众生，使立无上正真之道，超出常伦诸地之行，现前修习普贤之德。若不尔者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十三愿</div><div class="vow-text">设我得佛，国中菩萨，承佛神力，供养诸佛，一食之顷，不能遍至无数无量亿那由他诸佛国者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十四愿</div><div class="vow-text">设我得佛，国中菩萨，在诸佛前，现其德本，诸所求求，供养之具，若不如意者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十五愿</div><div class="vow-text">设我得佛，国中菩萨，不能演说一切智者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十六愿</div><div class="vow-text">设我得佛，国中菩萨，不得金刚那罗延身者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十七愿</div><div class="vow-text">设我得佛，国中天人，一切万物，严净光丽，形色殊特，穷微极妙，无能称量。其诸众生，乃至逮得天眼，有能明了，辨其名数者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十八愿</div><div class="vow-text">设我得佛，国中菩萨，乃至少功德者，不能知见其道场树无量光色，高四百万里者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第二十九愿</div><div class="vow-text">设我得佛，国中菩萨，若受读经法，讽诵持说，而不得辩才智慧者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十愿</div><div class="vow-text">设我得佛，国中菩萨，智慧辩才，若可限量者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十一愿</div><div class="vow-text">设我得佛，国土清净，皆悉照见十方一切无量无数不可思议诸佛世界，犹如明镜，睹其面像。若不尔者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十二愿</div><div class="vow-text">设我得佛，自地以上，至於虚空，宫殿、楼观、池流、华树，国土所有一切万物，皆以无量杂宝、百千种香而共合成。严饰奇妙，超诸天人。其香普熏十方世界。菩萨闻者，皆修佛行。若不如是，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十三愿</div><div class="vow-text">设我得佛，十方无量不可思议诸佛世界众生之类，蒙我光明触其身者，身心柔软，超过天人。若不尔者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十四愿</div><div class="vow-text">设我得佛，十方无量不可思议诸佛世界众生之类，闻我名字，不得菩萨无生法忍、深总持者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十五愿</div><div class="vow-text">设我得佛，十方无量不可思议诸佛世界，其有女人，闻我名字，欢喜信乐，发菩提心，厌恶女身。寿终之後，复为女像者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十六愿</div><div class="vow-text">设我得佛，十方无量不可思议诸佛世界诸菩萨众，闻我名字，寿终之後，常修梵行，至成佛道。若不尔者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十七愿</div><div class="vow-text">设我得佛，十方无量不可思议诸佛世界诸天人民，闻我名字，五体投地，稽首作礼，欢喜信乐，修菩萨行，诸天世人，莫不致敬。若不尔者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十八愿</div><div class="vow-text">设我得佛，国中天人，欲得衣服，随念即至，如佛所赞应法妙服，自然在身。有求裁缝、捣染、浣濯者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第三十九愿</div><div class="vow-text">设我得佛，国中天人，所受快乐，不如漏尽比丘者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十愿</div><div class="vow-text">设我得佛，国中菩萨，随意欲见十方无量严净佛土，应时如愿，於宝树中，皆悉照见，犹如明镜，睹其面像。若不尔者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十一愿</div><div class="vow-text">设我得佛，他方国土诸菩萨众，闻我名字，至於得佛，诸根缺陋不具足者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十二愿</div><div class="vow-text">设我得佛，他方国土诸菩萨众，闻我名字，皆悉逮得清净解脱三昧。住是三昧，一发意顷，供养无量不可思议诸佛世尊，而不失定意。若不尔者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十三愿</div><div class="vow-text">设我得佛，他方国土诸菩萨众，闻我名字，寿终之後，生尊贵家。若不尔者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十四愿</div><div class="vow-text">设我得佛，他方国土诸菩萨众，闻我名字，欢喜踊跃，修菩萨行，具足德本。若不尔者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十五愿</div><div class="vow-text">设我得佛，他方国土诸菩萨众，闻我名字，皆悉逮得普等三昧。住是三昧，至於成佛，常见无量不可思议一切如来。若不尔者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十六愿</div><div class="vow-text">设我得佛，国中菩萨，随其志愿所欲闻法，自然得闻。若不尔者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十七愿</div><div class="vow-text">设我得佛，他方国土诸菩萨众，闻我名字，不即得至不退转者，不取正觉。</div></div>
+        <div class="vow-box"><div class="vow-num">第四十八愿</div><div class="vow-text">设我得佛，他方国土诸菩萨众，闻我名字，不即得至第一忍、第二第三法忍，於诸佛法，不能即得不退转者，不取正觉。</div></div>
+    </div>
+</div>
+
+
+<script>
+
+    const canvas = document.getElementById('realmCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    let currentRealm = 0; // 0: 弥陀接引, 1: 探弥陀48愿海
+    let time = 0;
+
+    // 粒子系统与莲花阵列
+    let jieyinParticles = [];
+    let yuanhaiParticles = [];
+    let lotusMatrix = []; // 储存 48 朵金莲
+    
+    let angleX = 0.6, angleY = 0;
+    let isDragging = false;
+    let lastMouseX = 0, lastMouseY = 0;
+    
+    // 物理状态变数
+    let charge = 0;         // 蓄力值 (0-100)
+    let gravityForce = 0;   // 接引的引力
+    let flashIntensity = 0; // 爆光强度
+    let waveColorBlend = 0; // 愿海颜色过渡 (0=青灰, 1=纯金)
+    let transitioning = false;
+
+    const FOV = 400; 
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+    }
+    window.addEventListener('resize', resize); resize();
+
+    function initEngines() {
+        // 1. 弥陀愿力接引：金色光尘
+        jieyinParticles = [];
+        for(let i=0; i<1500; i++) {
+            jieyinParticles.push({
+                x: (Math.random() - 0.5) * 1200, y: (Math.random() - 0.5) * 1200, z: (Math.random() - 0.5) * 1200,
+                vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, vz: (Math.random() - 0.5) * 2,
+                c: Math.random() > 0.5 ? '#f3e5ab' : '#d4af37', 
+                s: Math.random() * 2 + 1
+            });
+        }
+
+        // 2. 探弥陀愿海：海浪波纹
+        yuanhaiParticles = [];
+        for(let r = 20; r <= 800; r += 15) {
+            let count = Math.floor(r * 0.4);
+            for(let i=0; i<count; i++) {
+                let theta = (i / count) * Math.PI * 2;
+                yuanhaiParticles.push({ 
+                    baseX: r * Math.cos(theta), baseY: r * Math.sin(theta), dist: r, theta: theta, 
+                    s: Math.random() * 1.5 + 0.5 
+                });
+            }
+        }
+
+        // 3. 建立 48 朵金莲矩阵
+        lotusMatrix = [];
+        // 主金莲 (第 1 朵)
+        lotusMatrix.push({
+            r: 0, theta: 0, orbitSpeed: 0, rotateSpeed: 0.2, scale: 1.0, phase: 0
+        });
+        // 伴生中小金莲 (第 2 到 48 朵)
+        for(let i=1; i<48; i++) {
+            lotusMatrix.push({
+                r: 60 + Math.random() * 350,               // 轨道半径分布
+                theta: Math.random() * Math.PI * 2,        // 初始角度
+                orbitSpeed: (Math.random() - 0.5) * 0.015, // 公转速度 (有正有负)
+                rotateSpeed: (Math.random() - 0.5) * 0.8,  // 自转速度
+                scale: 0.15 + Math.random() * 0.35,        // 缩放比例 (主莲的 15% 到 50%)
+                phase: Math.random() * Math.PI * 2         // 独立呼吸相位
+            });
+        }
+    }
+
+    function project3D(x, y, z) {
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX), cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+        let x2 = x*cosY - z1*sinY, z2 = x*sinY + z1*cosY;
+        if(z2 < -FOV+10) return null;
+        let scale = FOV / (FOV + z2); 
+        return { x: (width/2) + x2*scale, y: (height/2) - y1*scale - 50, scale: scale, z: z2 };
+    }
+
+    // ✨ 绘制纯金莲花 (纯向量)
+    function drawGiantLotus(proj, beat, blend, rotation, scaleMult) {
+        if(!proj) return;
+        ctx.save();
+        ctx.translate(proj.x, proj.y);
+        
+        let s = proj.scale * (3.5 * scaleMult + beat * 0.15 * scaleMult + blend * 0.5 * scaleMult); 
+        ctx.scale(s, s);
+        ctx.rotate(rotation); 
+        
+        ctx.shadowBlur = (15 + blend * 20) * scaleMult; 
+        ctx.shadowColor = '#d4af37';
+        
+        let petalCount = 12; 
+        for(let i=0; i<petalCount; i++) {
+            ctx.rotate((Math.PI * 2) / petalCount);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(15, -30, 0, -60);
+            ctx.quadraticCurveTo(-15, -30, 0, 0);
+            
+            let grad = ctx.createLinearGradient(0, 0, 0, -60);
+            grad.addColorStop(0, '#d4af37');
+            let tipR = Math.floor(243 + (255 - 243) * blend);
+            let tipG = Math.floor(229 + (255 - 229) * blend);
+            let tipB = Math.floor(171 + (255 - 171) * blend);
+            grad.addColorStop(1, `rgba(${tipR}, ${tipG}, ${tipB}, 1)`); 
+            
+            ctx.fillStyle = grad;
+            ctx.fill();
+            
+            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.stroke();
+        }
+        
+        for(let i=0; i<petalCount; i++) {
+            ctx.rotate(((Math.PI * 2) / petalCount) + 0.1);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(8, -15, 0, -35);
+            ctx.quadraticCurveTo(-8, -15, 0, 0);
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = 0.6 + blend * 0.4;
+            ctx.fill();
+        }
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, 6, 0, Math.PI*2);
+        ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = 1;
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        
+        ctx.restore();
+    }
+
+    // --- 弥陀愿力接引 ---
+    function renderJieyin() {
+        if(isDragging && !transitioning) {
+            charge += 0.35; 
+            if(charge > 100) charge = 100;
+            gravityForce = charge / 100; 
+        } else if (!transitioning) {
+            charge = 0; 
+            gravityForce *= 0.90; 
+        }
+
+        flashIntensity *= 0.92;
+        if(flashIntensity > 0.01) {
+            document.getElementById('lengyan-flash').style.opacity = flashIntensity;
+        }
+
+        if(!isDragging) angleY += 0.002;
+
+        let projected = [];
+        jieyinParticles.forEach(p => {
+            p.x += p.vx; p.y += p.vy; p.z += p.vz;
+            let distToCenter = Math.sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+            
+            if(gravityForce > 0.1) {
+                let pull = (gravityForce * 1500) / (distToCenter + 10);
+                p.vx -= (p.x / distToCenter) * pull; p.vy -= (p.y / distToCenter) * pull; p.vz -= (p.z / distToCenter) * pull;
+                p.vx *= 0.9; p.vy *= 0.9; p.vz *= 0.9;
+            } else {
+                p.vx += (Math.random()-0.5)*0.5; p.vy += (Math.random()-0.5)*0.5; p.vz += (Math.random()-0.5)*0.5;
+                if(p.vx > 3) p.vx = 3; if(p.vy > 3) p.vy = 3; if(p.vz > 3) p.vz = 3;
+            }
+
+            if(p.x > 600) p.x = -600; if(p.x < -600) p.x = 600;
+            if(p.y > 600) p.y = -600; if(p.y < -600) p.y = 600;
+            if(p.z > 600) p.z = -600; if(p.z < -600) p.z = 600;
+
+            let proj = project3D(p.x, p.y, p.z);
+            if(proj) {
+                let isBright = distToCenter < 120 * gravityForce + 30;
+                let color = isBright ? `rgba(255,255,255,${0.6 + gravityForce*0.4})` : p.c;
+                projected.push({ x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, c: color, s: p.s, isBright: isBright });
+            }
+        });
+
+        projected.sort((a,b) => b.z - a.z);
+
+        let coreProj = project3D(0,0,0);
+        if(coreProj) {
+            ctx.globalCompositeOperation = 'screen';
+            let coreR = (5 + 45 * gravityForce) * coreProj.scale * (1 + Math.sin(time*10)*0.1);
+            let grad = ctx.createRadialGradient(coreProj.x, coreProj.y, 0, coreProj.x, coreProj.y, coreR * 3);
+            grad.addColorStop(0, `rgba(255, 255, 255, ${Math.max(0.5, gravityForce)})`);
+            grad.addColorStop(0.3, `rgba(243, 229, 171, ${Math.max(0.4, gravityForce * 0.8)})`);
+            grad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+            ctx.beginPath(); ctx.arc(coreProj.x, coreProj.y, coreR * 3, 0, Math.PI*2);
+            ctx.fillStyle = grad; ctx.fill();
+        }
+
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.sc * (1 + (p.isBright ? gravityForce : 0)); 
+            if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.x, p.y, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if(p.isBright && gravityForce > 0.5) { ctx.shadowBlur = 15 * p.sc; ctx.shadowColor = '#ffffff'; } 
+            else { ctx.shadowBlur = 0; }
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+    }
+
+    // --- 探弥陀48愿海 ---
+    function renderYuanhai() {
+        waveColorBlend += ((isDragging ? 1 : 0) - waveColorBlend) * 0.05;
+
+        if(!isDragging) {
+            angleY += 0.001; 
+            angleX += (0.6 - angleX) * 0.02;
+        }
+
+        let projected = [];
+        yuanhaiParticles.forEach(p => {
+            let waveZ = Math.sin(p.dist * 0.05 - time * 2) * 40;
+            let proj = project3D(p.baseX, p.baseY, waveZ);
+            if(proj) {
+                let r = Math.floor(139 + (243 - 139) * waveColorBlend);
+                let g = Math.floor(168 + (229 - 168) * waveColorBlend);
+                let b = Math.floor(156 + (171 - 156) * waveColorBlend);
+                let a = 0.3 + waveColorBlend * 0.5; 
+
+                projected.push({ 
+                    x: proj.x, y: proj.y, z: proj.z, sc: proj.scale, 
+                    c: `rgba(${r},${g},${b},${a})`, s: p.s * (1 + waveColorBlend * 0.5)
+                });
+            }
+        });
+
+        projected.sort((a,b) => b.z - a.z);
+
+        ctx.globalCompositeOperation = 'screen';
+        projected.forEach(p => {
+            let fSize = p.s * p.sc; if(fSize < 0.2) return;
+            ctx.beginPath(); ctx.arc(p.x, p.y, fSize, 0, Math.PI*2); ctx.fillStyle = p.c;
+            if(waveColorBlend > 0.5) { ctx.shadowBlur = 5 * p.sc; ctx.shadowColor = '#d4af37'; } else { ctx.shadowBlur = 0; }
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+
+        // ✨ 绘制 48 朵金莲矩阵 ✨
+        // 为了 3D 正确遮挡，将莲花也做深度排序
+        let projectedLotuses = [];
+        lotusMatrix.forEach(lotus => {
+            lotus.theta += lotus.orbitSpeed; // 公转
+            // 让莲花随著海浪轨道起伏
+            let waveOffset = Math.sin(lotus.r * 0.05 - time * 2) * 40;
+            let lx = Math.cos(lotus.theta) * lotus.r;
+            let lz = Math.sin(lotus.theta) * lotus.r + waveOffset + 10; // 稍微浮於水面
+            
+            let proj = project3D(lx, 0, lz);
+            if(proj) projectedLotuses.push({ proj: proj, lotus: lotus });
+        });
+
+        projectedLotuses.sort((a,b) => b.proj.z - a.proj.z);
+
+        projectedLotuses.forEach(item => {
+            let beat = Math.sin(time * 2 + item.lotus.phase); // 独立呼吸
+            let rotation = time * item.lotus.rotateSpeed;     // 独立自转
+            drawGiantLotus(item.proj, beat, waveColorBlend, rotation, item.lotus.scale);
+        });
+    }
+
+    function animate() {
+        ctx.fillStyle = 'rgba(2, 2, 5, 0.5)';
+        ctx.fillRect(0, 0, width, height);
+        time += 0.02;
+
+        if (currentRealm === 0) renderJieyin(); 
+        else renderYuanhai();
+        
+        requestAnimationFrame(animate);
+    }
+
+function toggleRealm(type) {
+    if(currentRealm === type) return;
+    currentRealm = type;
+    
+    let title = document.getElementById('s-title'); 
+    let desc = document.getElementById('s-desc');
+    let hintContainer = document.getElementById('hold-hint');
+    let theoryBtn = document.getElementById('theory-btn');
+    let vowsBtn = document.getElementById('vows-btn'); // 这里抓取玉简按钮
+
+    if (type === 0) {
+        title.innerText = "弥陀愿力接引"; 
+        desc.innerHTML = "「万念归一，光芒四射。」<br>长按萤幕凝聚金光，愿生极乐。";
+        title.style.color = 'var(--gold)';
+        hintContainer.style.display = 'block';
+        theoryBtn.style.display = 'none';
+        vowsBtn.style.display = 'none'; // 接引阶段隐藏
+        angleX = 0.2; angleY = 0; 
+        charge = 0; gravityForce = 0;
+    } else {
+        title.innerText = "探弥陀无量愿海"; 
+        desc.innerHTML = "「清净海浪，大愿金莲。」<br>360度滑动萤幕，点亮无量大愿海。";
+        title.style.color = 'var(--cyan)';
+        hintContainer.style.display = 'none';
+
+        theoryBtn.style.display = 'flex';
+        vowsBtn.style.display = 'flex'; // 愿海阶段显示
+        angleX = 0.6; angleY = 0; 
+    }
+}
+
+
+
+    function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+    function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+        function openVowsDrawer() { document.getElementById('vows-drawer').classList.add('open'); }
+    function closeVowsDrawer() { document.getElementById('vows-drawer').classList.remove('open'); }
+    
+    document.getElementById('vows-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
+
+
+    document.getElementById('theory-drawer').addEventListener('pointerdown', (e) => e.stopPropagation());
+    document.getElementById('ui-layer').addEventListener('pointerdown', (e) => e.stopPropagation());
+
+    // --- 互动侦测 ---
+    function onDown(e) { 
+        if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return; 
+        isDragging = true; 
+        lastMouseX = e.touches?e.touches[0].clientX:e.clientX; 
+        lastMouseY = e.touches?e.touches[0].clientY:e.clientY; 
+    }
+    
+    function onMove(e) { 
+        if (!isDragging) return; 
+        let curX = e.touches?e.touches[0].clientX:e.clientX; let curY = e.touches?e.touches[0].clientY:e.clientY; 
+        
+        if(currentRealm === 1) {
+            angleY += (curX-lastMouseX)*0.01; 
+            angleX += (curY-lastMouseY)*0.01; 
+            angleX = Math.max(-Math.PI/2, Math.min(Math.PI/2, angleX)); 
+        }
+        lastMouseX=curX; lastMouseY=curY; 
+    }
+    
+    function onUp() { 
+        if(!isDragging) return;
+        isDragging = false; 
+        
+        // 弥陀接引：蓄力超过 90 (约五秒) 放手，触发爆光与过场
+        if(currentRealm === 0 && charge > 90 && !transitioning) {
+            flashIntensity = 1; 
+            document.getElementById('lengyan-flash').style.opacity = flashIntensity;
+            transitioning = true;
+            
+            // 引力自然衰退混乱，等待 3.5 秒後跳转莲海
+            setTimeout(() => {
+                if(currentRealm === 0) toggleRealm(1);
+                transitioning = false;
+                charge = 0; 
+                gravityForce = 0;
+            }, 3500);
+        }
+    }
+
+    canvas.addEventListener('mousedown', onDown); window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchstart', onDown, {passive: true}); canvas.addEventListener('touchmove', onMove, {passive: true}); window.addEventListener('touchend', onUp);
+
+    
+        // ================= ✨ 经文玉简 TTS 语音系统 ✨ =================
+    let isPlayingVows = false;
+    let vowsUtterance = null;
+
+    function toggleVowsAudio() {
+        if (!window.speechSynthesis) return alert("您的设备不支援语音功能");
+        const btnText = document.getElementById('tts-vows-text'); const btnIcon = document.getElementById('tts-vows-icon');
+        
+        if (isPlayingVows) {
+            window.speechSynthesis.cancel(); isPlayingVows = false; btnText.innerText = "恭聆愿文";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            // 中断可能正在播放的探究文章语音
+            if (isPlayingTheory) toggleTheoryAudio();
+            
+            let contentNodes = document.querySelectorAll('#vows-content-box .vow-num, #vows-content-box .vow-text');
+            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('，');
+            
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            textToRead = isAndroid ? textToRead : textToRead.replace(/阿/g, 'ㄚ');
+            
+            vowsUtterance = new SpeechSynthesisUtterance(textToRead); vowsUtterance.lang = 'zh-CN'; vowsUtterance.rate = 0.85; 
+            if (isAndroid) {
+                window.sysUtterances.push(vowsUtterance);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let zhVoice = voices.find(v => v.lang === 'zh-CN' && v.name.includes('Google')) || voices.find(v => v.lang.includes('zh'));
+                    if (zhVoice) vowsUtterance.voice = zhVoice;
+                }
+            }
+            vowsUtterance.onend = () => {
+                isPlayingVows = false; btnText.innerText = "恭聆愿文";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                if(isAndroid) window.sysUtterances = window.sysUtterances.filter(u => u !== vowsUtterance);
+            };
+            setTimeout(() => { window.speechSynthesis.speak(vowsUtterance); }, isAndroid ? 150 : 50);
+            isPlayingVows = true; btnText.innerText = "停止聆听";
+            btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    const originalCloseVowsDrawer = closeVowsDrawer;
+    closeVowsDrawer = function() { if (isPlayingVows) toggleVowsAudio(); originalCloseVowsDrawer(); }
+
+    // ================= ✨ TTS 语音导航系统 ✨ =================
+
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+    window.sysUtterances = []; 
+
+    if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = function() { speechSynthesis.getVoices(); };
+    }
+
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("您的设备不支援语音功能");
+        const btnText = document.getElementById('tts-text'); const btnIcon = document.getElementById('tts-icon');
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel(); isPlayingTheory = false; btnText.innerText = "聆听法音";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            let contentNodes = document.querySelectorAll('#theory-content-box .main-title, #theory-content-box .c-title, #theory-content-box .c-text, #theory-content-box .humble-statement');
+            let textToRead = Array.from(contentNodes).map(node => node.textContent.trim()).join('。');
+            textToRead = textToRead.replace(/一、/g, '第一章：').replace(/二、/g, '第二章：').replace(/三、/g, '第三章：');
+            
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            textToRead = isAndroid ? textToRead : textToRead.replace(/阿/g, 'ㄚ');
+            
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead); theoryUtterance.lang = 'zh-CN'; theoryUtterance.rate = 0.85; 
+            if (isAndroid) {
+                window.sysUtterances.push(theoryUtterance);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let zhVoice = voices.find(v => v.lang === 'zh-CN' && v.name.includes('Google')) || voices.find(v => v.lang.includes('zh'));
+                    if (zhVoice) theoryUtterance.voice = zhVoice;
+                }
+            }
+            theoryUtterance.onend = () => {
+                isPlayingTheory = false; btnText.innerText = "聆听法音";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                if(isAndroid) window.sysUtterances = window.sysUtterances.filter(u => u !== theoryUtterance);
+            };
+            setTimeout(() => { window.speechSynthesis.speak(theoryUtterance); }, isAndroid ? 150 : 50);
+            isPlayingTheory = true; btnText.innerText = "停止聆听";
+            btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    const originalCloseTheoryDrawer = closeTheoryDrawer;
+    closeTheoryDrawer = function() { if (isPlayingTheory) toggleTheoryAudio(); originalCloseTheoryDrawer(); }
+
+    initEngines(); toggleRealm(0); animate();
+</script>
+</body>
+</html>

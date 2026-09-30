@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <link rel="manifest" href="manifest_cn.json">
+    <title>唯识矩阵 ． 轮回之谜</title>
+    <style>
+        :root {
+            --bg-deep: #010103;
+            --gold: #f3e5ab;
+            --solid-gold: #d4af37;
+            --cyan: #8ba89c;
+            --text-main: #d0d0d0;
+        }
+        /* ✨ 锁死本体滑动，确保 360 度 3D 旋转绝对丝滑 ✨ */
+        body { 
+            margin: 0; background: var(--bg-deep); color: var(--text-main); 
+            font-family: "PingFang SC", "Microsoft YaHei", serif;
+            overflow: hidden; touch-action: none; user-select: none;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* ================= UI 浮层与按钮 ================= */
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; letter-spacing: 1px; cursor: pointer;
+            text-shadow: 0 0 8px rgba(212,175,55,0.5); background: rgba(0,0,0,0.5); 
+            padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.3);
+            backdrop-filter: blur(5px); transition: all 0.3s;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2); }
+
+        .matrix-section { position: absolute; inset: 0; background: #000; overflow: hidden; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        .dharmadhatu-light {
+            position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, rgba(139,168,156,0.02) 50%, transparent 80%);
+            animation: breath 8s infinite alternate ease-in-out; pointer-events: none; transition: opacity 2s; z-index: 0;
+        }
+        @keyframes breath { 0% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* 💡 加法级金光闪耀：不遮蔽，只叠加增辉 💡 */
+        #golden-flash {
+            position: absolute; inset: 0; background: rgba(243, 229, 171, 1);
+            mix-blend-mode: screen; opacity: 0; pointer-events: none; z-index: 50;
+        }
+
+        .ui-layer { position: absolute; bottom: 8%; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10; gap: 15px; transition: opacity 1s;}
+        
+        .switch-btn {
+            background: rgba(15,15,15,0.8); border: 1px solid rgba(139,168,156,0.5); color: var(--cyan);
+            padding: 14px 30px; border-radius: 30px; font-size: 1rem; font-weight: bold; letter-spacing: 2px;
+            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.5s; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+        }
+        .switch-btn:active { transform: scale(0.95); }
+        .switch-btn.pure-mode {
+            border-color: var(--solid-gold); color: #000; background: linear-gradient(135deg, var(--solid-gold), #b08d2b);
+            box-shadow: 0 0 30px rgba(212,175,55,0.6), inset 0 0 10px rgba(255,255,255,0.3);
+        }
+
+        #theory-btn { border-color: rgba(139,168,156,0.8); color: var(--cyan); background: rgba(5,15,10,0.8); }
+        #yizhen-btn { display: none; border-color: var(--gold); color: var(--gold); background: rgba(10,5,0,0.9); }
+        
+        #status-panel {
+            position: absolute; top: 70px; left: 5%; width: 90%; max-width: 320px;
+            background: rgba(5,5,10,0.7); backdrop-filter: blur(12px);
+            border-left: 3px solid rgba(139,168,156,0.6); padding: 15px; z-index: 10; transition: 0.8s; pointer-events: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-radius: 0 10px 10px 0;
+        }
+        .status-title { font-size: 1.1rem; font-weight: bold; color: var(--cyan); letter-spacing: 2px; margin-bottom: 5px; transition: 0.8s; }
+        .status-desc { font-size: 0.8rem; color: #aaa; line-height: 1.6; transition: 0.8s; }
+        
+        /* 结界警告弹窗 */
+        #lock-warning {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(10,10,10,0.95); border: 1px solid var(--cyan); padding: 30px; border-radius: 15px;
+            color: #eee; text-align: center; z-index: 9999; opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 40px rgba(139,168,156,0.2), inset 0 0 20px rgba(139,168,156,0.1); width: 85%; max-width: 320px;
+        }
+        #lock-warning.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+
+        /* 终章法语 (一真法界专属) */
+        #epilogue-overlay {
+            position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 60; opacity: 0; pointer-events: none; transition: opacity 3s ease-in;
+        }
+        .epilogue-text {
+            color: var(--gold); font-size: 1.1rem; letter-spacing: 6px; line-height: 2.5; text-align: center;
+            text-shadow: 0 0 15px rgba(212,175,55,0.8); font-weight: bold; margin-top: 15vh;
+        }
+
+        /* ================= 抽屉式：法宝阁文案区 ================= */
+        #theory-drawer {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 85vh;
+            background: rgba(5, 5, 8, 0.95); backdrop-filter: blur(20px);
+            border-top: 1.5px solid rgba(212,175,55,0.4); border-radius: 25px 25px 0 0;
+            transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 2000; overflow-y: auto; padding: 0 0 80px 0; touch-action: pan-y; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #theory-drawer.open { transform: translateY(0); }
+        
+        .drawer-header {
+            position: sticky; top: 0; background: linear-gradient(to bottom, rgba(5,5,8,1), rgba(5,5,8,0.9));
+            padding: 15px; text-align: center; z-index: 10; border-bottom: 1px solid rgba(139,168,156,0.2);
+        }
+        .close-bar { width: 40px; height: 4px; background: rgba(212,175,55,0.4); border-radius: 2px; margin: 0 auto 10px; cursor: pointer; }
+        .close-btn { color: var(--cyan); font-size: 0.9rem; letter-spacing: 2px; font-weight: bold; cursor: pointer; }
+
+        .theory-container { padding: 30px 6% 20px; max-width: 680px; margin: 0 auto; }
+
+        .humble-statement {
+            font-size: 0.85rem; color: rgba(243,229,171,0.6); line-height: 1.8; text-align: justify;
+            padding: 20px; border: 1px solid rgba(212,175,55,0.2); border-radius: 12px;
+            background: rgba(20,15,5,0.3); margin-bottom: 50px; font-style: italic; letter-spacing: 1px;
+        }
+
+        .main-title { color: var(--gold); font-size: 1.5rem; letter-spacing: 5px; text-align: center; margin-bottom: 50px; font-weight: normal; text-shadow: 0 0 15px rgba(212,175,55,0.3); }
+        .main-title::after { content: ''; display: block; width: 50px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--solid-gold), transparent); margin: 15px auto 0; }
+
+        .chapter-box { margin-bottom: 50px; }
+        .c-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .c-icon { width: 22px; height: 22px; stroke: var(--gold); fill: none; stroke-width: 1.2; filter: drop-shadow(0 0 5px rgba(212,175,55,0.4)); }
+        .c-title { color: var(--gold); font-size: 1.15rem; letter-spacing: 3px; font-weight: bold; }
+        
+        .science-note { font-size: 0.8rem; color: rgba(139,168,156,0.8); letter-spacing: 1px; padding-left: 34px; margin-bottom: 12px; font-family: monospace; display: flex; align-items: center; gap: 8px; }
+        .science-note::before { content: '▰'; font-size: 0.5rem; color: rgba(139,168,156,0.4); }
+
+        .c-text { color: var(--text-main); font-size: 0.95rem; line-height: 2.1; text-align: justify; padding-left: 34px; letter-spacing: 0.5px; }
+        
+        /* ✨ 柔光修辞 (取代刺眼的白字) ✨ */
+        .soft-highlight { 
+            color: var(--cyan); 
+            border-bottom: 1px dotted rgba(139,168,156,0.6); 
+            padding-bottom: 2px;
+        }
+
+        .chapter-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,168,156,0.2), transparent); margin: 35px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="back-btn" onclick="window.location.href='index_cn.html?screen=3'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        回道场
+    </div>
+
+    <section class="matrix-section">
+        <div class="dharmadhatu-light" id="bg-light"></div>
+        <div id="golden-flash"></div> <div id="status-panel">
+            <div class="status-title" id="s-title">娑婆态 ． 凡圣同居</div>
+            <div class="status-desc" id="s-desc">
+                载体：碳基半透明态，生灭无常。<br>传输：实线上传，但受限於硬体，下载微弱。<br>法座：空无。
+            </div>
+        </div>
+
+        <canvas id="matrixCanvas"></canvas>
+
+        <div id="epilogue-overlay">
+            <div class="epilogue-text">
+                万相坍缩，归於寂静。<br>
+                唯一不灭的，<br>
+                是那明知皆空，<br>
+                却无止尽行菩萨道的大悲心。
+            </div>
+        </div>
+
+        <div class="ui-layer" id="ui-layer">
+            <button class="switch-btn" id="toggle-btn" onclick="toggleState()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                <span id="btn-text">切换极乐金身</span>
+            </button>
+            
+            <button class="switch-btn" id="theory-btn" onclick="openTheoryDrawer()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                探轮回之谜
+            </button>
+
+            <button class="switch-btn" id="yizhen-btn" onclick="checkAndTriggerImplosion()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93"/></svg>
+                转入一真法界
+            </button>
+
+            <div style="color:rgba(139,168,156,0.5); font-size:0.75rem; letter-spacing:3px;" id="drag-hint">360° 全息滑动俯瞰</div>
+        </div>
+    </section>
+    
+    <div id="lock-warning">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="1.5" style="margin-bottom:15px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <div style="font-weight:bold; letter-spacing:3px; margin-bottom:12px; color:var(--gold); font-size:1.2rem;">结界未解</div>
+        <div style="font-size:0.9rem; line-height:1.8; color:#bbb; margin-bottom:25px;">
+            需达 <span style="color:#fff; font-weight:bold;">十信位</span><br>或累积念佛满 <span style="color:#fff; font-weight:bold;">一万声</span><br>方可契入一真法界之观想。
+        </div>
+        <button style="background:linear-gradient(135deg, var(--cyan), #6b8a7c); color:#000; border:none; padding:10px 25px; border-radius:20px; font-weight:bold; cursor:pointer; letter-spacing:2px;" onclick="document.getElementById('lock-warning').classList.remove('show')">继续精进</button>
+    </div>
+
+    <div id="theory-drawer">
+        <div class="drawer-header" onclick="closeTheoryDrawer()">
+    <div class="close-bar"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px;">
+        <div class="close-btn">收起古卷</div>
+        <div id="tts-btn" onclick="event.stopPropagation(); toggleTheoryAudio()" style="color:var(--gold); font-size:0.85rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(212,175,55,0.15); padding: 6px 12px; border-radius:20px; border: 1px solid rgba(212,175,55,0.4);">
+            <svg id="tts-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+            <span id="tts-text">聆听法音</span>
+        </div>
+    </div>
+                <div class="theory-container">
+            
+            <div class="humble-statement">
+                「法海浩瀚，唯佛与佛乃能究尽。本文仅为一介在家居士，依经教逻辑与祖师大德之注疏，试图探求如来真实义之修学略影。若有未尽或错漏之处，皆属个人智识之局限，祈愿三宝加被，同修共鉴。」
+            </div>
+
+            <h1 class="main-title">唯识密码 ． 轮回之谜</h1>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <div class="c-title">戏梦与觉知</div>
+                </div>
+                <div class="c-text">
+                    生命，<span class="soft-highlight">或许</span>就像是一场多重交叠的虚空幻网。我们皆是落入轮回剧本中的行者，因入戏太深，往往将色身之悲欢误认为真实。然而，真正的觉醒，<span class="soft-highlight">似乎</span>并非要去否定「我正身处幻象」之现象，而是能在演绎业力的同时，常保第三人称之清明。<br><br>真正的菩萨，洞悉了这场生死戏码的底层轨迹，故而「不怕死」——因其明白轮回仅是载体的更迭；同时也「不等死」——因其知晓自己身披幻相，有著必须圆满的利他宏愿。
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    <div class="c-title">识之驱动与微观生灭</div>
+                </div>
+                <div class="c-text">
+                    生死流转，究竟由何驱动？第八识（阿赖耶识）宛如含藏万法的深邃识海，它<span class="soft-highlight">可能</span>只是一团庞大且无分别的「累劫记忆丛聚」，若无外力牵引，便如古井无波。<br><br>真正启动轮回的，<span class="soft-highlight">似乎</span>是第七识（我执）。因我执强烈地「恐惧断灭、渴望存在」，这股无明的求生欲，便会抓取阿赖耶识的业力种子，盲目地投入新的胎胞。我们<span class="soft-highlight">不妨作如是观</span>：阿赖耶识海如同无尽的生命本源，而生生世世更迭的「我」，就像是浩瀚星海中明灭的微尘。千万次色身的崩解与新生，看似无常，但每一次淬炼留下的智慧与痕迹，<span class="soft-highlight">或许</span>都是为了成就最终那一次「转识成智」的究竟圆满。
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <div class="c-title">临终交关与无上接引</div>
+                </div>
+                <div class="c-text">
+                    为何诸佛皆将解脱的契机，指归於「临命终时」？这其中<span class="soft-highlight">或许</span>隐藏著生命载体最深层的玄机。<br><br>凡夫在世，神识之运作高度依赖肉身与大脑的支撑。当无常降临，生理机能濒临瓦解，这<span class="soft-highlight">似乎</span>是我执即将失去物质依托、坠入盲目业力牵引的「生死交关」。一旦色身彻底停息，失去现世清晰记忆的微弱神识，便<span class="soft-highlight">可能</span>只能随业风飘荡，不知魂归何处。<br><br>而阿弥陀佛的慈悲接引，<span class="soft-highlight">或许</span>正是精准捕捉了这「色身将坏、神识尚存一丝清明」的黄金微芒。法界无法强行摄受，行者必须於此际生起「发无上菩提心」这唯一的契合愿力。一旦愿心相印，弥陀的无量光网便能在神识消散前，将我执与阿赖耶识的完整相续，瞬间化生至极乐的九品莲胎之中。
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><polygon points="12 2 2 22 22 22"/></svg>
+                    <div class="c-title">四土交融与极乐实相</div>
+                </div>
+                <div class="c-text">
+                    关於净土的本质，自古有「唯心」与「实有」之辨。若极乐世界仅是「唯心土」，那<span class="soft-highlight">似乎</span>便无需设立「无漏金身」与种种庄严胜境。正因其乃弥陀大愿所成就的「实报庄严土」，且为摄受身处「凡圣同居土」的芸芸众生，才<span class="soft-highlight">必须</span>存在这套极度严谨的金刚机制。<br><br>满地的黄金琉璃，<span class="soft-highlight">或许</span>并非世俗贪求之财宝，而是为提供极致的「法界清音与视觉降噪」，令习惯於五浊纷扰的众生得以安顿心神。世尊曾言极乐有「人天、菩萨」之称，这<span class="soft-highlight">可能</span>仅是顺应众生来处的「方便权说」。实质上，一旦化生於彼，皆是「咸同一类，形无异状」。当美丑、强弱的差异被彻底抹平，<span class="soft-highlight">似乎</span>便从根源上拔除了引发贪嗔痴的业力温床，使行者能在无欲的庄严土中，澄心谛观空性。
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                    <div class="c-title">慈悲过渡与时空跃升</div>
+                </div>
+                <div class="c-text">
+                    弥陀的大愿，展现了法界中最不可思议的包容与拔擢。<br><br>
+                    若未发大心、未解大乘广智，却又不想随业流转者，这座净土<span class="soft-highlight">似乎</span>慈悲地降下了「七宝宫殿」。这五百年并非惩罚，而<span class="soft-highlight">可能</span>是让带著世俗杂质的我执，在无苦的宫殿中慢慢洗涤，待疑情尽断，方得见佛闻法。<br><br>
+                    为令受限於时空观念的凡夫，体悟此大愿之震撼，我们<span class="soft-highlight">不妨权作降维观想</span>：依常规大乘菩萨道，行者需在生死中搏杀<span class="soft-highlight">一万大劫</span>修满十信，方能证入「初住」；甚至需耗费<span class="soft-highlight">一大阿僧祇劫</span>（无数宇宙的生灭），方能登「初地」，取得绝对不退转的「正定聚」之位。<br><br>
+                    然而娑婆退缘无数，发心极难。弥陀法门之玄妙，在於凡夫一经登入，虽带著宿世习气，却能蒙受「不住定聚，必至灭度」之加被。此等同於<span class="soft-highlight">为行者省却了整整一大阿僧祇劫的轮回蹉跎</span>，瞬间取得初地菩萨的不退转凭证；若是他方高阶菩萨来生，则直登「究竟必至一生补处」，获取法界最顶级的证悟资源。<br><br>
+
+                </div>
+            </div>
+            <div class="chapter-divider"></div>
+
+            <div class="chapter-box">
+                <div class="c-header">
+                    <svg class="c-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <div class="c-title">乘愿再来与华严法界</div>
+                </div>
+                <div class="c-text">
+                    当行者在净土洞悉了生死之幻相，必定会依循大悲心重返世间。然而，这份重返的愿力并不仅限於娑婆世界。在浩瀚无垠的华严大世界中，十方无量星球的修行者皆会汇聚於极乐，当他们成就智慧後，亦会「随其本愿」，化身前往宇宙中任何需要救度的黯淡角落。<br><br>在重披肉身、涉入尘劳的实战中，极乐世界的护念，<span class="soft-highlight">似乎</span>确保了外派行者拥有不堕恶道的底线保障。即便在新环境的五浊中一时迷失，其阿赖耶识中深厚的「向善惯性」，<span class="soft-highlight">总有机会</span>如强大的引力般将其牵引而回。同时，法界中无数已归位的菩萨，<span class="soft-highlight">或许</span>会化作因缘交错中的「善知识」，在关键节点唤醒行者的觉知。而「生尊贵家」之大愿，<span class="soft-highlight">可能</span>正是为了令行者越过底层生存之焦虑，尽速解锁累世智慧，投入宏大的度化之业。
+                </div>
+            </div>
+            
+            <div style="text-align:center; margin-top: 60px; margin-bottom: 30px;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(212,175,55,0.4)" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/>
+                </svg>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // 读取本地资料
+        let db = { totalNian: 0, points: 0 };
+        try {
+            let localDb = JSON.parse(localStorage.getItem('PX_CN_V15.0'));
+            if (localDb) db = localDb;
+        } catch(e) {}
+
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [], lotusParticles = [], dataLinks = [], stars = [], sublimeDust = [];
+        
+        let rotX = -0.15; let rotY = 0; 
+        let isDragging = false; let startX, startY;
+        let vX = 0, vY = 0; 
+
+        let targetState = 0; 
+        let tLotus = 0; let tGold = 0; let tCollapse = 1.0; 
+
+        // 伪光晕
+        const glowCanvas = document.createElement('canvas');
+        glowCanvas.width = glowCanvas.height = 32;
+        const gCtx = glowCanvas.getContext('2d');
+        const gGrad = gCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
+        gGrad.addColorStop(0, 'rgba(255,255,255,1)');
+        gGrad.addColorStop(0.2, 'rgba(212,175,55,0.6)');
+        gGrad.addColorStop(1, 'rgba(212,175,55,0)');
+        gCtx.fillStyle = gGrad; gCtx.fillRect(0,0,32,32);
+
+        function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+        window.addEventListener('resize', resize); resize();
+
+        function generateTopology() {
+            particles = []; lotusParticles = []; dataLinks = []; stars = []; sublimeDust = [];
+            function addPt(arr, x, y, z, rnd, type) { arr.push({x, y, z, rnd, type}); }
+
+            for (let lat=0; lat<=Math.PI; lat+=0.25) { for (let lon=0; lon<Math.PI*2; lon+=0.25) { addPt(particles, 14*Math.sin(lat)*Math.cos(lon), -85+20*Math.cos(lat), 16*Math.sin(lat)*Math.sin(lon), Math.random(), 'body'); }}
+            for (let y=-60; y<=25; y+=3) { let w = 35-Math.pow((y+60)*0.12, 2); if (y>-10) w += (y+10)*0.8; for (let lon=0; lon<Math.PI*2; lon+=0.25) addPt(particles, w*Math.cos(lon), y, (12+(y>0?y*0.3:0))*Math.sin(lon), Math.random(), 'body'); }
+            for (let t=0; t<=1; t+=0.04) { let lx = -32*(1-t)-12*t-Math.sin(t*Math.PI)*15, ly = -55*(1-t)+25*t+Math.sin(t*Math.PI)*8, lz = 30*t; let rx = 32*(1-t)+12*t+Math.sin(t*Math.PI)*15; for(let a=0; a<Math.PI*2; a+=1.5) { addPt(particles, lx+4*Math.cos(a), ly, lz+4*Math.sin(a), Math.random(), 'body'); addPt(particles, rx+4*Math.cos(a), ly, lz+4*Math.sin(a), Math.random(), 'body'); } }
+            for (let lon=0; lon<Math.PI*2; lon+=0.08) { let x=40*Math.cos(lon), y=32+4*Math.sin(lon*2), z=10+30*Math.sin(lon); for (let rad=0; rad<Math.PI*2; rad+=0.8) addPt(particles, x+7*Math.cos(rad), y+7*Math.sin(rad), z, Math.random(), 'body'); }
+
+            const manasR = 110;
+            for(let i=0; i<200; i++) { let t=Math.random()*Math.PI*2, p=Math.acos(Math.random()*2-1); addPt(particles, manasR*Math.sin(p)*Math.cos(t), -15+manasR*Math.cos(p), manasR*Math.sin(p)*Math.sin(t), Math.random(), 'manas'); }
+            
+            const alayaR = 240;
+            for(let i=0; i<500; i++) { let t=Math.random()*Math.PI*2, p=Math.acos(Math.random()*2-1); addPt(particles, alayaR*Math.sin(p)*Math.cos(t), -15+alayaR*Math.cos(p), alayaR*Math.sin(p)*Math.sin(t), Math.random(), 'alaya'); }
+
+            const layers = [{n:10,l:25,t:0.2,w:12,b:-3,y:40}, {n:14,l:45,t:0.7,w:18,b:8,y:45}, {n:18,l:70,t:1.25,w:26,b:22,y:50}];
+            layers.forEach((L, idx) => {
+                for(let i=0; i<L.n; i++) {
+                    let a = (Math.PI*2/L.n)*i+(idx*0.2);
+                    for(let t=0; t<=1; t+=0.05) { for(let v=-1; v<=1; v+=0.25) {
+                        if(Math.abs(v)>0.7 || t>0.8 || Math.random()>0.4) {
+                            let pW=L.w*Math.sin(t*Math.PI), oR=t*L.l*Math.sin(L.t)+Math.pow(t,2)*L.b, uY=-t*L.l*Math.cos(L.t);
+                            addPt(lotusParticles, oR*Math.cos(a)-(v*pW)*Math.sin(a), uY+L.y, oR*Math.sin(a)+(v*pW)*Math.cos(a), Math.random(), 'lotus');
+                        }
+                    }}
+                }
+            });
+
+            for(let i=0; i<40; i++) dataLinks.push({s: Math.floor(Math.random()*500), e: particles.length-Math.floor(Math.random()*600)-1});
+            for(let i=0; i<250; i++) stars.push({ x: (Math.random()-0.5)*1200, y: (Math.random()-0.5)*1200, z: (Math.random()-0.5)*1200, s: Math.random()*1.5 });
+        }
+
+        function lerp(a, b, t) { return a + (b - a) * t; }
+        function lerpCol(a, b, t) { return `rgba(${a[0]+(b[0]-a[0])*t},${a[1]+(b[1]-a[1])*t},${a[2]+(b[2]-a[2])*t},${a[3]+(b[3]-a[3])*t})`; }
+
+        function render() {
+            ctx.clearRect(0, 0, width, height); 
+            ctx.globalCompositeOperation = 'screen';
+            
+            if (targetState === 1) {
+                tLotus += (1 - tLotus) * 0.05; if (tLotus > 0.5) tGold += (1 - tGold) * 0.05; 
+            } else if (targetState === 0) {
+                tGold += (0 - tGold) * 0.08; if (tGold < 0.5) tLotus += (0 - tLotus) * 0.05;
+            } else if (targetState === 2) {
+                tCollapse += (0 - tCollapse) * 0.015; 
+            }
+
+            if(!isDragging) { rotY -= 0.003; rotX += vY; rotY += vX; vX *= 0.95; vY *= 0.95; }
+            if (rotX > 1.2) rotX = 1.2; if (rotX < -1.2) rotX = -1.2;
+
+            const cx=width/2, cy=height/2+30, fov=350, sinX=Math.sin(rotX), cosX=Math.cos(rotX), sinY=Math.sin(rotY), cosY=Math.cos(rotY);
+            let proj = [];
+
+            function project(p, c, s, hasGlow, isAlaya) {
+                let wx = p.x, wy = p.y, wz = p.z;
+                if (!isAlaya && targetState === 2) { wx *= tCollapse; wy *= tCollapse; wz *= tCollapse; }
+                let x1=wx*cosY-wz*sinY, z1=wz*cosY+wx*sinY, y2=wy*cosX-z1*sinX, z2=z1*cosX+wy*sinX;
+                if(z2 < -fov+10) return null; let scale=fov/(fov+z2);
+                return {px:cx+x1*scale, py:cy+y2*scale, z:z2, sc:scale, c:c, s:s, glow:hasGlow, raw:p};
+            }
+
+            // 1. 星空
+            if (targetState === 2) {
+                let starAlpha = 1 - tCollapse;
+                stars.forEach(st => {
+                    let pr = project({x:st.x, y:st.y, z:st.z}, `rgba(255,255,255,${starAlpha * 0.8})`, st.s, false, true);
+                    if(pr) { ctx.beginPath(); ctx.arc(pr.px, pr.py, pr.s*pr.sc, 0, Math.PI*2); ctx.fillStyle=pr.c; ctx.fill(); }
+                });
+            }
+
+            // 2. 肉身光晕
+            if (targetState !== 2) {
+                let bodyAura = project({x:0, y:-25, z:0}, 'rgba(0,0,0,0)', 1, false, false);
+                if (bodyAura) {
+                    let aS = 80 * bodyAura.sc;
+                    let auraGrad = ctx.createRadialGradient(bodyAura.px, bodyAura.py, 0, bodyAura.px, bodyAura.py, aS);
+                    let aCol1 = lerpCol([139,168,156,0.15], [243,229,171,0.25], tGold);
+                    let aCol2 = `rgba(0,0,0,0)`;
+                    auraGrad.addColorStop(0, aCol1); auraGrad.addColorStop(1, aCol2);
+                    ctx.beginPath(); ctx.arc(bodyAura.px, bodyAura.py, aS, 0, Math.PI*2); ctx.fillStyle=auraGrad; ctx.fill();
+                }
+            }
+
+            particles.forEach((p, i) => {
+                if(p.type==='body') {
+                    let densityThreshold = 0.85 - (tGold * 0.8);
+                    if(p.rnd > densityThreshold) {
+                        let col = lerpCol([160,190,180,0.85], [255,223,100,1.0], tGold);
+                        let pr = project(p, col, 1.2+(tGold*0.6), tGold>0.5, false);
+                        if(pr){ pr.idx=i; proj.push(pr); }
+                    }
+                } 
+                else if(p.type==='manas') { let pr=project(p, `rgba(212,175,55,${0.5+tGold*0.4})`, 1.5, false, false); if(pr){ pr.idx=i; proj.push(pr); } }
+                else if(p.type==='alaya') { let pr=project(p, `rgba(139,168,156,${0.3+tGold*0.2})`, 1.5, false, true); if(pr){ pr.idx=i; proj.push(pr); } }
+            });
+
+            if(tLotus > 0.01) {
+                lotusParticles.forEach(lp => {
+                    let growY = lerp(50, lp.y, tLotus); let growX = lp.x * tLotus; let growZ = lp.z * tLotus;
+                    let pr=project({x:growX, y:growY, z:growZ}, `rgba(243,229,171,${tLotus*0.95})`, 1.2*tLotus, true, false);
+                    if(pr) proj.push(pr);
+                });
+            }
+
+            proj.sort((a,b) => b.z-a.z);
+            
+            ctx.lineWidth=1;
+            dataLinks.forEach(l => {
+                let p1 = proj.find(p=>p.idx===l.s), p2 = proj.find(p=>p.idx===l.e);
+                if(p1 && p2) {
+                    ctx.beginPath(); ctx.moveTo(p1.px, p1.py); ctx.lineTo(p2.px, p2.py);
+                    if(tGold < 0.5) ctx.strokeStyle=`rgba(139,168,156,0.4)`; 
+                    else ctx.strokeStyle=`rgba(243,229,171,${0.2 + tGold*0.5})`; 
+                    ctx.stroke();
+                }
+            });
+
+            proj.forEach(p => {
+                let dS = p.s*p.sc; if(dS<0.1) return;
+                ctx.beginPath(); ctx.arc(p.px, p.py, dS, 0, Math.PI*2); ctx.fillStyle=p.c; ctx.fill();
+                if(p.glow && p.raw.type === 'body') {
+                    ctx.beginPath(); ctx.arc(p.px, p.py, dS*0.4, 0, Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
+                }
+            });
+
+            if (targetState === 2) {
+                if(Math.random() > 0.4 && tCollapse > 0.1) sublimeDust.push({ x: (Math.random()-0.5)*150, y: (Math.random()-0.5)*150, z: (Math.random()-0.5)*150, life: 1.0 });
+                sublimeDust.forEach((sd, index) => {
+                    sd.y -= 1.5; sd.life -= 0.015;
+                    if(sd.life <= 0) sublimeDust.splice(index, 1);
+                    else {
+                        let pr = project({x:sd.x, y:sd.y, z:sd.z}, `rgba(243,229,171,${sd.life})`, 2, true, true);
+                        if(pr) { 
+                            let dsG = pr.s*pr.sc;
+                            ctx.drawImage(glowCanvas, pr.px - dsG*4, pr.py - dsG*4, dsG*8, dsG*8); 
+                            ctx.beginPath(); ctx.arc(pr.px, pr.py, dsG, 0, Math.PI*2); ctx.fillStyle=pr.c; ctx.fill(); 
+                        }
+                    }
+                });
+            }
+
+            if (targetState === 2 && tCollapse < 0.05) {
+                let pulse = 1 + Math.sin(Date.now() * 0.003) * 0.5;
+                ctx.drawImage(glowCanvas, cx - 20*pulse, cy - 20*pulse, 40*pulse, 40*pulse);
+                ctx.beginPath(); ctx.arc(cx, cy, 3 * pulse, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill();
+            }
+
+            requestAnimationFrame(render);
+        }
+
+        // ================= UI 与抽屉控制 =================
+        function toggleState() {
+            let btn = document.getElementById('toggle-btn'); let yBtn = document.getElementById('yizhen-btn'); let tBtn = document.getElementById('theory-btn');
+            let sTitle = document.getElementById('s-title'); let sDesc = document.getElementById('s-desc');
+            
+            if (targetState === 0) {
+                targetState = 1; btn.classList.add('pure-mode'); document.getElementById('btn-text').innerText = "返回娑婆观察";
+                document.getElementById('status-panel').style.borderLeftColor = 'var(--solid-gold)';
+                sTitle.style.color = 'var(--gold)'; sTitle.innerText = "极乐态 ． 实报庄严";
+                sDesc.innerHTML = "载体：无漏金身，拔除贪嗔痴。<br>传输：金光实线，上下载双向开放。<br>法座：九品金莲承托。";
+                
+                yBtn.style.display = 'flex'; tBtn.style.display = 'none';
+            } else {
+                targetState = 0; btn.classList.remove('pure-mode'); document.getElementById('btn-text').innerText = "切换极乐金身";
+                document.getElementById('status-panel').style.borderLeftColor = 'rgba(139,168,156,0.6)';
+                sTitle.style.color = 'var(--cyan)'; sTitle.innerText = "娑婆态 ． 凡圣同居";
+                sDesc.innerHTML = "载体：碳基半透明态，生灭无常。<br>传输：实线上传，但受限於硬体，下载微弱。<br>法座：空无。";
+                
+                yBtn.style.display = 'none'; tBtn.style.display = 'flex';
+            }
+        }
+
+        function openTheoryDrawer() { document.getElementById('theory-drawer').classList.add('open'); }
+        function closeTheoryDrawer() { document.getElementById('theory-drawer').classList.remove('open'); }
+
+        // ================= 结界与一真法界特效 =================
+        function checkAndTriggerImplosion() {
+            let points = db.points || 0;
+            let totalNian = db.totalNian || 0;
+            let currentDays = points / 100;
+            
+            // 条件：满 90 日 (十信位 = 9000点) 或 念佛 >= 10000声
+            if (currentDays >= 90 || totalNian >= 10000) {
+                triggerImplosion();
+            } else {
+                document.getElementById('lock-warning').classList.add('show');
+            }
+        }
+
+        function triggerImplosion() {
+            document.getElementById('toggle-btn').style.display = 'none';
+            document.getElementById('yizhen-btn').style.display = 'none';
+            document.getElementById('drag-hint').style.display = 'none';
+            document.getElementById('bg-light').style.opacity = '0';
+            
+            document.getElementById('status-panel').style.borderLeftColor = '#fff';
+            document.getElementById('s-title').style.color = '#fff';
+            document.getElementById('s-title').innerText = "一真法界 ． 菩提不灭";
+            document.getElementById('s-desc').innerHTML = "我执消融，载体坍缩。<br>万法归一，唯留大悲心跳动於星海之中。";
+            
+            targetState = 2; // 启动坍缩
+
+            // 🌟 坍缩 5.5 秒後，触发加法级「全版闪耀」 🌟
+            setTimeout(() => {
+                const flash = document.getElementById('golden-flash');
+                flash.style.transition = 'opacity 0.2s ease-out';
+                flash.style.opacity = '0.9'; // 极速增辉
+                
+                // 闪耀维持 0.25 秒後，缓慢退去
+                setTimeout(() => {
+                    flash.style.transition = 'opacity 3.5s ease-in';
+                    flash.style.opacity = '0';
+                    
+                    // 光芒退去时，浮现终章法语
+                    setTimeout(() => {
+                        document.getElementById('epilogue-overlay').style.opacity = '1';
+                    }, 1000);
+                }, 250);
+            }, 5500);
+        }
+
+        // ================= 360度互动 (加入阻尼滑动) =================
+        canvas.addEventListener('pointerdown', (e) => { 
+            // 如果点到 UI 就不转动
+            if(e.target.closest('#ui-layer') || e.target.closest('#theory-drawer')) return;
+            isDragging = true; startX = e.clientX || e.touches[0].clientX; startY = e.clientY || e.touches[0].clientY; vX = 0; vY = 0; 
+        });
+        canvas.addEventListener('pointermove', (e) => { 
+            if (!isDragging) return; 
+            let x = e.clientX || (e.touches ? e.touches[0].clientX : 0); let y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+            let dx = x - startX; let dy = y - startY;
+            rotY -= dx * 0.008; rotX -= dy * 0.008;
+            vX = -dx * 0.0005; vY = -dy * 0.0005; 
+            startX = x; startY = y;
+        });
+        canvas.addEventListener('pointerup', () => isDragging = false); canvas.addEventListener('pointercancel', () => isDragging = false);
+    // ================= 聆听法音 (TTS) =================
+    let isPlayingTheory = false;
+    let theoryUtterance = null;
+    let sysUtterances = []; 
+
+    function toggleTheoryAudio() {
+        if (!window.speechSynthesis) return alert("您的设备不支援语音");
+        const btnText = document.getElementById('tts-text');
+        const btnIcon = document.getElementById('tts-icon');
+        
+        if (isPlayingTheory) {
+            window.speechSynthesis.cancel(); isPlayingTheory = false;
+            btnText.innerText = "聆听法音";
+            btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+        } else {
+            // 通用抓取：自动抓取该页面抽屉内的所有标题与内文
+            let nodes = document.querySelectorAll('#theory-drawer .main-title, #theory-drawer .c-title, #theory-drawer .c-text');
+            let textToRead = Array.from(nodes).map(n => n.textContent.trim()).join('。');
+            textToRead = textToRead.replace(/一、/g, '第一章：').replace(/二、/g, '第二章：').replace(/三、/g, '第三章：').replace(/四、/g, '第四章：');
+            
+            theoryUtterance = new SpeechSynthesisUtterance(textToRead);
+            theoryUtterance.lang = 'zh-CN'; theoryUtterance.rate = 0.85;
+
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            if (isAndroid) {
+                sysUtterances.push(theoryUtterance);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    let zhVoice = voices.find(v => v.lang === 'zh-CN' && v.name.includes('Google')) || voices.find(v => v.lang.includes('zh'));
+                    if (zhVoice) theoryUtterance.voice = zhVoice;
+                }
+            }
+
+            theoryUtterance.onend = () => {
+                isPlayingTheory = false; btnText.innerText = "聆听法音";
+                btnIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                if(isAndroid) sysUtterances = sysUtterances.filter(u => u !== theoryUtterance);
+            };
+            
+            window.speechSynthesis.speak(theoryUtterance); isPlayingTheory = true;
+            btnText.innerText = "停止聆听"; btnIcon.innerHTML = '<rect x="6" y="6" width="12" height="12"></rect>';
+        }
+    }
+
+    // 覆写关闭抽屉，保证声音中断
+    if (typeof closeTheoryDrawer === "function") {
+        const originalCloseTheoryDrawer = closeTheoryDrawer;
+        closeTheoryDrawer = function() {
+            if (isPlayingTheory) toggleTheoryAudio();
+            originalCloseTheoryDrawer();
+        }
+    }
+
+        generateTopology(); render();
+    </script>
+</body>
+</html>

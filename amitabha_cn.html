@@ -1,0 +1,2828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <link rel="manifest" href="manifest_cn.json">
+            <meta name="theme-color" content="#010103">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>弥陀净土 ‧ 庄严琉璃金身与星空法界</title>
+    <style>
+        :root {
+            --bg-deep: #010103; 
+            --gold-light: #f3e5ab; 
+            --gold-solid: #d4af37; 
+            --cyan: #8ba89c; 
+        }
+        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; outline: none; }
+
+html { 
+    background-color: var(--bg-deep); 
+    width: 100%; 
+    height: 100%; 
+}
+
+body { 
+    background: radial-gradient(circle at 50% 50%, #16110a 0%, var(--bg-deep) 100%); 
+    font-family: "PingFang SC", "Microsoft YaHei", serif;
+    overflow: hidden; touch-action: none; width: 100vw; height: 100dvh;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; color: #fff;
+    transition: background 2s ease;
+}
+              /* 背景画布 */
+        canvas { position: absolute; inset: 0; }
+        #starCanvas { z-index: 1; pointer-events: none; transition: filter 2s ease; }
+        
+        /* 🌟 修改点：平时常态下，水波纹完全显现 */
+        #waterCanvas { 
+            z-index: 2; 
+            mix-blend-mode: screen; 
+            opacity: 0.6; 
+            pointer-events: none; 
+            transition: opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1); /* 优化过渡时间至 1.2 秒 */
+        }
+        
+        /* 🌟 新增：当顶礼（bowing-active）或烧香（incense-on）触发时，水波纹瞬间优雅淡出隐藏 */
+        body.bowing-active #waterCanvas,
+        body.incense-on #waterCanvas { 
+            opacity: 0 !important; 
+        }
+
+
+        /* ================= 顶部导航与资讯列 (彻底修复挤压跑版问题) ================= */
+        /* 1. 左上导航：移除 max-width，强制同行不换行，微调间距完美适配手机 */
+        .nav-top { position: absolute; top: max(20px, env(safe-area-inset-top)); left: 15px; z-index: 1000; display: flex; flex-wrap: nowrap; gap: 6px; }
+        
+        .nav-btn { 
+            color: var(--gold-light); display: flex; align-items: center; gap: 6px; 
+            cursor: pointer; background: rgba(0,0,0,0.3); padding: 6px 12px; 
+            border-radius: 20px; border: 1px solid rgba(212,175,55,0.2); 
+            backdrop-filter: blur(5px); font-size: 0.75rem; letter-spacing: 1px; 
+            transition: 0.4s; opacity: 0.7; white-space: nowrap; flex-shrink: 0; 
+        }
+        .nav-btn:hover { opacity: 1; border-color: var(--gold-solid); }
+
+        /* 2. 华藏月相专属：高清 SVG 参数与流光底层化 (确保不被遮挡、不变形) */
+        .lunar-icon { width: 26px; height: 26px; min-width: 26px; flex-shrink: 0; animation: slowSpin 20s linear infinite; filter: drop-shadow(0 0 6px rgba(243,229,171,0.6)); display: block; }
+        @keyframes slowSpin { 100% { transform: rotate(360deg); } }
+
+        .lunar-sweep-btn { position: relative; overflow: hidden; isolation: isolate; }
+        .lunar-sweep-btn::after {
+            content: ''; position: absolute; top: -50%; left: -150%; width: 50%; height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(243,229,171,0.4) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg); animation: sweep-light 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            z-index: -1; pointer-events: none;
+        }
+        @keyframes sweep-light { 0% { left: -100%; } 15% { left: 200%; } 100% { left: 200%; } }
+
+        /* 3. 右上资讯列：移除 max-width，保护修持天数不被切断 */
+        .info-top { position: absolute; top: max(20px, env(safe-area-inset-top)); right: 15px; z-index: 1000; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+        .info-row { display: flex; gap: 8px; align-items: center; }
+        
+        .streak-text { font-size: clamp(0.65rem, 2vw, 0.75rem); color: var(--gold-light); letter-spacing: 1px; opacity: 0.9; text-shadow: 0 0 5px rgba(212,175,55,0.5); white-space: nowrap; font-family: "PingFang SC", "Helvetica Neue", monospace; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+        .info-icon { cursor: pointer; opacity: 0.8; display: flex; align-items: center; transition: 0.3s; filter: drop-shadow(0 0 5px rgba(212,175,55,0.5)); flex-shrink: 0; }
+        .info-icon:hover { opacity: 1; filter: drop-shadow(0 0 10px var(--gold-solid)); }
+        /* ======================================================================= */
+
+                          
+                        
+               /* 佛尊主体层 */
+        #buddha-scene {
+            position: absolute; inset: 0; z-index: 10;
+            margin: 0 auto; /* 🌟 加上这一行，让 iPad 和大萤幕完美置中 */
+            display: flex; justify-content: center; align-items: center;
+            transform-origin: 50% 80%; 
+            transition: transform 4s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none;
+            width: 100%; max-width: 650px; 
+        }
+        #buddha-scene.bowing {
+            transform: scale(1.35) translateY(12%);
+        }
+
+            /* 万丈金光爆发层 */
+        #burst-container {
+            position: absolute; inset: 0; 
+            display: flex; justify-content: center; align-items: center;
+            z-index: 5; pointer-events: none;
+            /* 让整层爆发带有一点法界震动感 */
+            animation: space-shock 0.5s ease-out forwards;
+        }
+        @keyframes space-shock {
+            0% { transform: scale(1); }
+            10% { transform: scale(1.03) translate(2px, -2px); }
+            30% { transform: scale(0.98) translate(-1px, 1px); }
+            100% { transform: scale(1) translate(0, 0); }
+        }
+        .screen-flash {
+            position: absolute; inset: 0; 
+            background: radial-gradient(circle at 50% 50%, #fff 0%, #ffdf00 40%, transparent 80%);
+            opacity: 1; pointer-events: none; z-index: 100; mix-blend-mode: screen;
+            animation: flash-fade 2.5s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+        }
+        @keyframes flash-fade { 0% { opacity: 1; transform: scale(0.8); } 100% { opacity: 0; transform: scale(1.5); } }
+        /* 金光线条：数量不变，但加长、加大、动态不对称 */
+        .gold-ray {
+            position: absolute; 
+            width: 4px; /* 微幅加粗 */
+            height: 150vh; /* 加长，确保射穿萤幕 */
+            background: linear-gradient(to top, transparent, #FFD700, #FFFFFF, #FFD700, transparent);
+            /* 优化阴影范围，减轻 GPU 压力，但提高主色亮度 */
+            box-shadow: 0 0 15px #FFD700;
+            opacity: 0; 
+            transform-origin: center center;
+            will-change: transform, opacity;
+        }
+        @keyframes ray-burst { 
+            0% { transform: scaleY(0.05) rotate(var(--rot)); opacity: 0; } 
+            15% { opacity: 1; transform: scaleY(0.6) rotate(var(--rot)); } 
+            100% { transform: scaleY(2.5) rotate(var(--rot)); opacity: 0; } 
+        }
+/* ✨ 新增：不卡顿的法界粒子扩散（利用硬体加速） */
+.space-particle {
+    position: absolute;
+    width: 80px;
+    height: 50px;
+    background: #fff;
+    border-radius: 70%;
+    box-shadow: 0 0 12px #fff, 0 0 25px var(--gold-light);
+    opacity: 0;
+    pointer-events: none;
+    /* 启动 GPU 3D 渲染加速 */
+    will-change: transform, opacity;
+}
+
+@keyframes particle-explode {
+    0% {
+        transform: translate(0, 0) scale(0.5);
+        opacity: 1;
+    }
+    100% {
+        /* 利用 JS 传入随机角度与极大距离，像星空一样炸裂开来 */
+        transform: translate(var(--tx), var(--ty)) scale(3);
+        opacity: 0;
+    }
+}
+        
+        /* 佛尊优雅凌空飘浮层 */
+        .buddha-breathe {
+            width: 100%; height: auto;
+            animation: floating 8s ease-in-out infinite alternate;
+            position: relative; 
+        }
+        @keyframes floating {
+            0% { transform: translateY(0px); filter: drop-shadow(0 5px 15px rgba(243,229,171,0.2)); }
+            100% { transform: translateY(-20px); filter: drop-shadow(0 35px 50px rgba(243,229,171,0.6)); }
+        }
+
+        /* 光相呼吸与恒常发光 */
+        .halo-pulse { transform-origin: 500px 245px; animation: halo-anim 4s infinite alternate ease-in-out; }
+        @keyframes halo-anim { 0% { transform: scale(1); opacity: 0.6; stroke-width: 1.5; filter: drop-shadow(0 0 15px rgba(255,215,0,0.4)); } 100% { transform: scale(1.02); opacity: 1; stroke-width: 3.0; filter: drop-shadow(0 0 35px rgba(255,215,0,0.8)); } }
+        
+        /* ✨ 新增：顶光背後的彩色能量圈 (6秒不同步呼吸) */
+        .aura-pulse { transform-origin: 500px 245px; animation: aura-breathe 6s infinite alternate ease-in-out; }
+        @keyframes aura-breathe { 
+            0% { transform: scale(0.96); opacity: 0.6; } 
+            100% { transform: scale(1.07); opacity: 1; } 
+        }
+
+
+
+        /* 燃香点灯状态 */
+        body.incense-on #starCanvas { filter: brightness(2) drop-shadow(0 0 5px #fff); }
+        body.incense-on #waterCanvas { opacity: 0.9; }
+        body.incense-on #censer-group { opacity: 1; transform: translateY(0); }
+
+        #censer-group { opacity: 0; transform: translateY(20px); transition: all 1.5s cubic-bezier(0.25, 1, 0.5, 1); }
+        .incense-glow { animation: glow-pulse 1.5s infinite alternate ease-in-out; }
+        @keyframes glow-pulse { 0% { r: 3.5px; opacity: 0.8; filter: drop-shadow(0 0 6px #ff4500); } 100% { r: 5px; opacity: 1; filter: drop-shadow(0 0 15px #ffaa00); } }
+
+        /* 双层法界烟雾特效 */
+        #smoke-container { position: absolute; inset: 0; pointer-events: none; z-index: 15; overflow: hidden; }
+        .smoke-fine { position: absolute; width: 8px; height: 60px; background: linear-gradient(to top, rgba(200, 220, 240, 0.4), transparent); border-radius: 4px; filter: blur(4px); opacity: 0; animation: smoke-rise-fine 4s cubic-bezier(0.4, 0.1, 0.4, 1) forwards; }
+        @keyframes smoke-rise-fine { 0% { transform: translateY(0) scaleX(1); opacity: 0; } 20% { opacity: 0.7; } 100% { transform: translateY(-40vh) scaleX(2) translateX(var(--drift)); opacity: 0; } }
+        .smoke-diffused { position: absolute; width: 40px; height: 40px; background: radial-gradient(circle, rgba(180, 200, 220, 0.15) 0%, transparent 70%); border-radius: 50%; filter: blur(12px); opacity: 0; animation: smoke-rise-diffused 7s cubic-bezier(0.2, 0.1, 0.8, 1) forwards; }
+        @keyframes smoke-rise-diffused { 0% { transform: translateY(0) scale(1) translateX(0); opacity: 0; } 30% { opacity: 0.6; } 100% { transform: translateY(-60vh) scale(6) translateX(var(--drift)); opacity: 0; } }
+
+        /* ✨ 底部控制区 (法语浮现 + 玻璃金框按钮 + 常驻小字) */
+        .ritual-container { position: absolute; bottom: max(30px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; width: 100%; z-index: 100; }
+        
+        #blessing-text { height: 25px; margin-bottom: 20px; color: var(--gold-light); font-size: 1.1rem; letter-spacing: 8px; text-shadow: 0 0 20px rgba(243,229,171,0.9), 0 0 10px #fff; opacity: 0; pointer-events: none; white-space: nowrap; }
+        @keyframes float-blessing { 0% { opacity: 0; transform: translateY(15px); filter: brightness(1.5); } 20% { opacity: 1; transform: translateY(0); filter: brightness(1.5); } 80% { opacity: 1; transform: translateY(-5px); filter: brightness(1); } 100% { opacity: 0; transform: translateY(-15px); filter: brightness(1); } }
+
+        .ritual-panel { display: flex; gap: 40px; }
+        
+               /* ✨ 玻璃透明纤维淡金色框 (文字与边框提亮) */
+        .ritual-btn { color: var(--gold-light); font-size: 1rem; letter-spacing: 6px; cursor: pointer; transition: all 0.4s; padding: 12px 24px; background: rgba(255,255,255,0.05); border: 1px solid rgba(212,175,55,0.5); border-radius: 25px; backdrop-filter: blur(8px); box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-weight: bold; text-shadow: 0 0 8px rgba(243,229,171,0.6); }
+        .ritual-btn:hover, .ritual-btn.active { color: #fff; text-shadow: 0 0 15px var(--gold-light); border-color: rgba(212,175,55,0.9); background: rgba(212,175,55,0.2); box-shadow: 0 0 20px rgba(212,175,55,0.4); }
+
+        /* ✨ 常驻微小提示 (提亮为淡白色) */
+        .chant-hint { margin-top: 18px; font-size: 0.8rem; color: rgba(255,255,255,0.8); letter-spacing: 4px; pointer-events: none; text-shadow: 0 0 5px rgba(255,255,255,0.3); }
+
+        /* ✨ 说明与奖励模态框：修复动画与图层冲突版 */
+.modal-overlay { 
+    position: fixed; 
+    inset: 0; 
+    background: rgba(0,0,0,0.88); 
+    backdrop-filter: blur(12px); 
+    z-index: 10000; 
+    display: none; 
+    justify-content: center; 
+    align-items: center; 
+    opacity: 0; 
+    transition: opacity 0.5s ease; 
+    pointer-events: none; 
+}
+
+/* 当加上 .show 时，强制赋予最高显示权限与点击权限 */
+.modal-overlay.show { 
+    display: flex !important; 
+    opacity: 1 !important; 
+    pointer-events: auto !important; 
+}
+
+/* ✨ 说明与奖励模态框：修复动画与图层冲突版 */
+.modal-box { 
+    width: 85%; 
+    max-width: 340px; 
+    max-height: 80vh; /* 🛑 限制最大高度为萤幕的 80%，防止超出 */
+    overflow-y: auto; /* 🛑 开启垂直滚动 */
+    background: linear-gradient(135deg, #151515, #050505); 
+    border: 1px solid var(--gold-solid); 
+    border-radius: 20px; 
+    padding: 35px 25px; 
+    text-align: center; 
+    box-shadow: 0 0 50px rgba(212,175,55,0.3); 
+    transform: scale(0.9); 
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); 
+    
+    /* 自定义隐藏式极细金色滚动条 */
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold-solid) transparent;
+}
+
+/* Webkit 核心浏览器 (如 Chrome, Safari, iOS) 专用极细滚动条 */
+.modal-box::-webkit-scrollbar { width: 3px; }
+.modal-box::-webkit-scrollbar-thumb { background: var(--gold-solid); border-radius: 10px; }
+.modal-box::-webkit-scrollbar-track { background: transparent; }
+
+
+/* 弹框显示时，内容物优雅放大 */
+.modal-overlay.show .modal-box { 
+    transform: scale(1); 
+}
+
+.m-title { 
+    color: var(--gold-light); 
+    font-size: 1.2rem; 
+    letter-spacing: 5px; 
+    margin-bottom: 15px; 
+    text-shadow: 0 0 15px rgba(212,175,55,0.5); 
+    font-weight: bold;
+}
+
+.m-divider { 
+    width: 40px; 
+    height: 1px; 
+    background: var(--gold-solid); 
+    margin: 0 auto 20px; 
+    opacity: 0.5; 
+}
+
+.m-text { 
+    font-size: 0.95rem; 
+    line-height: 1.8; 
+    margin-bottom: 30px; 
+    letter-spacing: 2px; 
+    color: #e0e0e0; 
+    text-align: center; 
+}
+
+.m-btn-prime { 
+    background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); 
+    border: 1px solid var(--gold-solid); 
+    color: var(--gold-light); 
+    padding: 12px; 
+    border-radius: 20px; 
+    font-size: 0.95rem; 
+    cursor: pointer; 
+    transition: all 0.3s; 
+    letter-spacing: 3px; 
+    width: 100%; 
+    box-shadow: 0 0 15px rgba(212,175,55,0.1); 
+}
+
+.m-btn-prime:hover { 
+    background: rgba(212,175,55,0.2); 
+}
+
+/* 🕯️ 烛火微动态 */
+.candle-flicker {
+    transform-origin: center bottom;
+    animation: flicker-anim 3s ease-in-out infinite alternate;
+}
+@keyframes flicker-anim {
+    0% { transform: scale(0.95) rotate(-1.5deg); opacity: 0.85; }
+    50% { transform: scale(1.02) rotate(1deg); opacity: 1; }
+    100% { transform: scale(0.98) rotate(0deg); opacity: 0.9; }
+}
+
+
+   /* 曼陀罗静态呼吸感：心光中心极大化（外框，维持不变） */
+@keyframes mandala-divine-glow {
+    0% { opacity: 0.15; filter: drop-shadow(0 0 10px rgba(255,215,0,0.4)); }
+    100% { opacity: 0.8; filter: drop-shadow(0 0 35px rgba(255,215,0,0.8)); }
+}
+
+/* 花瓣呼吸波形：暗→停留数秒→缓慢转亮→顶峰→缓慢转暗→停留 */
+@keyframes mandala-petal-glow-gold {
+    0%   { opacity: 0.02; filter: drop-shadow(0 0 4px rgba(255,215,0,0.15)); }
+    15%  { opacity: 0.02; filter: drop-shadow(0 0 4px rgba(255,215,0,0.15)); }
+    50%  { opacity: 0.85; filter: drop-shadow(0 0 32px rgba(255,215,0,0.85)); }
+    85%  { opacity: 0.02; filter: drop-shadow(0 0 4px rgba(255,215,0,0.15)); }
+    100% { opacity: 0.02; filter: drop-shadow(0 0 4px rgba(255,215,0,0.15)); }
+}
+
+@keyframes mandala-petal-glow-glass {
+    0%   { opacity: 0.02; filter: drop-shadow(0 0 4px rgba(210,235,255,0.15)); }
+    15%  { opacity: 0.02; filter: drop-shadow(0 0 4px rgba(210,235,255,0.15)); }
+    50%  { opacity: 0.85; filter: drop-shadow(0 0 32px rgba(210,235,255,0.85)); }
+    85%  { opacity: 0.02; filter: drop-shadow(0 0 4px rgba(210,235,255,0.15)); }
+    100% { opacity: 0.02; filter: drop-shadow(0 0 4px rgba(210,235,255,0.15)); }
+}
+
+.mandala-static-container {
+    transform-origin: 500px 460px;
+}
+
+/* 整体外框、莲花座维持原本的固定呼吸感 */
+.mandala-glow-effect {
+    animation: mandala-divine-glow 4s ease-in-out infinite alternate;
+}
+
+/* 花瓣交替：同周期 10s，玻璃层错开半个周期(-5s)，两者永远互补不打架 */
+.mandala-petal-gold {
+    animation: mandala-petal-glow-gold 10s ease-in-out infinite;
+}
+.mandala-petal-glass {
+    animation: mandala-petal-glow-glass 10s ease-in-out infinite;
+    animation-delay: -5s;
+}
+
+
+
+        /* ================= ✨ 大乘五供与金粉专属样式 ================= */
+        /* 1. 主屏幕：莲花座下的五供（放大1.2倍，下沉-120px完美对齐） */
+        .altar {
+            position: absolute; bottom: 140px; left: 0; width: 100%; z-index: 25; 
+            display: none; opacity: 0; transition: opacity 3s ease-in-out; 
+            align-items: flex-end; justify-content: center; gap: 15px; padding: 0 20px; pointer-events: none; 
+        }
+        .altar .vessel-container { position: relative; display: flex; justify-content: center; align-items: flex-end; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.15)); }
+        .altar .water-cup { width: 75px; height: 110px; z-index: 5; }
+        .altar .fruit-plate { width: 110px; height: 160px; z-index: 10; }
+        .altar .center-vase { 
+            width: 280px; height: 420px; z-index: 20; margin: 0 -10px -120px -10px; 
+            transform: scale(1.2); transform-origin: center bottom; filter: drop-shadow(0 0 45px rgba(212, 175, 55, 0.35)); 
+        }
+
+        /* 2. 第二弹框：十日圆满观相法界（维持物理布局） */
+        #offerings-modal .modal-box {
+            width: 95%; max-width: 500px; max-height: 90vh;
+            background: linear-gradient(135deg, #0a0a0f, #020205); 
+            border: 1px solid var(--gold-solid); box-shadow: 0 0 60px rgba(212,175,55,0.25);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px 30px 20px;
+        }
+        .modal-altar-table {
+            display: flex; align-items: flex-end; justify-content: center; gap: 15px; width: 100%; height: 380px; margin-bottom: 25px; pointer-events: none;
+        }
+        .modal-altar-table .vessel-container { position: relative; display: flex; justify-content: center; align-items: flex-end; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.15)); }
+        .modal-altar-table .water-cup { width: 75px; height: 110px; z-index: 5; }
+        .modal-altar-table .fruit-plate { width: 110px; height: 160px; z-index: 10; }
+        .modal-altar-table .center-vase { 
+            width: 280px; height: 420px; z-index: 20; margin: 0 -10px -120px -10px; 
+            transform: scale(1.2); transform-origin: center bottom; filter: drop-shadow(0 0 45px rgba(212, 175, 55, 0.35)); 
+        }
+
+        @keyframes powder-fall {
+            0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+            10% { opacity: 1; }
+            80% { opacity: 0.9; }
+            100% { transform: translateY(100vh) translateX(var(--drift)) scale(0.4); opacity: 0; }
+        }
+        .svg-content { width: 100%; height: 100%; overflow: visible; }
+        /* ========================================================== */
+     
+        /* ✨ 宝幡专属动态 (摇曳、呼吸、琉璃光) */
+        .banner-breath { animation: b-pulse 6s ease-in-out infinite alternate; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.3)); }
+        @keyframes b-pulse { 0% { filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.3)); } 100% { filter: drop-shadow(0 0 35px rgba(255, 215, 0, 0.7)); } }
+        .sway-base { transform-origin: 150px 20px; animation: gentle-sway 8s ease-in-out infinite alternate; }
+        @keyframes gentle-sway { 0% { transform: rotate(-2.5deg); } 100% { transform: rotate(2.5deg); } }
+        .ribbon-left { transform-origin: top center; animation: flutter 5s ease-in-out infinite alternate; }
+        .ribbon-right { transform-origin: top center; animation: flutter 6s ease-in-out infinite alternate-reverse; }
+        .ribbon-inner { transform-origin: top center; animation: flutter-y 7s ease-in-out infinite alternate; }
+        @keyframes flutter { 0% { transform: skewX(-2deg) scaleY(0.98); } 100% { transform: skewX(2deg) scaleY(1.02); } }
+        @keyframes flutter-y { 0% { transform: scaleY(0.97); } 100% { transform: scaleY(1.03); } }
+        .glow-core { animation: core-pulse 4s ease-in-out infinite alternate; }
+        @keyframes core-pulse { 0% { opacity: 0.7; filter: drop-shadow(0 0 8px #d4af37); } 100% { opacity: 1; filter: drop-shadow(0 0 18px #FFF); } }
+        .glow-glass { animation: glass-pulse 5s ease-in-out infinite alternate; }
+        @keyframes glass-pulse { 0% { opacity: 0.6; } 100% { opacity: 1; } }
+        .glow-chakra { animation: chakra-pulse 5s ease-in-out infinite alternate; }
+        @keyframes chakra-pulse { 0% { opacity: 0.6; stroke-width: 0.8; filter: drop-shadow(0 0 5px #fff); } 100% { opacity: 1; stroke-width: 1.5; filter: drop-shadow(0 0 12px #f3e5ab); } }
+
+        /* 预设情况下：张开的眼睛隐藏，闭著的眼睛显示 */
+.buddha-eye-open {
+    display: none;
+}
+.buddha-eye-closed {
+    display: block;
+}
+
+/* 当点击顶礼，#buddha-scene 带有 bowing 类别时：自动对调显示状态 */
+.bowing .buddha-eye-open {
+    display: block;
+}
+.bowing .buddha-eye-closed {
+    display: none;
+}
+
+/* ==================== 佛尊动态手势：绝对互斥秒切控制 ==================== */
+/* 常态下：只看见合十，接引印强制彻底切除 */
+.buddha-hands-closed {
+    display: block !important;
+}
+.buddha-hands-open {
+    display: none !important;
+}
+
+/* 顶礼 bowing 时：合十强制切除，接引印一毫秒内精准呈现 */
+.bowing .buddha-hands-closed {
+    display: none !important;
+}
+.bowing .buddha-hands-open {
+    display: block !important;
+}
+        
+/* ✨ 卍字随手印切换的优雅过渡：无耗能，精准锁定系统的 .bowing 类别 */
+.buddha-swastika {
+    transform-origin: 500px 460px; /* 锁定卍字的几何中心点 */
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
+}
+
+/* 当外层 #buddha-scene 被赋予 .bowing 状态（接引手化现）时，卍字同步放大、亮起 */
+#buddha-scene.bowing .buddha-swastika {
+    transform: scale(1.6);
+    opacity: 1.4 !important; /* 强制提升至最亮 */
+}
+         /* ==================== 胁侍菩萨化现动态 ==================== */
+/* 1. 常态隐藏：微缩、下沉、透明 */
+.bodhisattva-group {
+    opacity: 0;
+    pointer-events: none;
+    transition: all 2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+#bodhisattva-left {
+    transform: translate(425px, 420px) scale(-0.25, 0.25);
+}
+#bodhisattva-right {
+    transform: translate(575px, 420px) scale(0.25);
+}
+
+/* 2. 顶礼时化现：精准归位、放大至 0.45、显现琉璃光 */
+#buddha-scene.bowing #bodhisattva-left {
+    opacity: 0.55;
+    transform: translate(500px, 320px) scale(-0.5, 0.5);
+}
+#buddha-scene.bowing #bodhisattva-right {
+    opacity: 0.55;
+    transform: translate(500px, 320px) scale(0.5);
+}
+/* 3. 顶礼或烧香时化现：精准归位、显现琉璃光 */
+#buddha-scene.bowing #bodhisattva-left,
+#buddha-scene.incense-active #bodhisattva-left {
+    opacity: 0.65;
+    transform: translate(500px, 280px) scale(-0.55, 0.55);
+}
+#buddha-scene.bowing #bodhisattva-right,
+#buddha-scene.incense-active #bodhisattva-right {
+    opacity: 0.65;
+    transform: translate(500px, 280px) scale(0.55);
+}
+/* ==================== Android 专属：单独放大两尊胁侍菩萨（庄严呈现） ==================== */
+/* 1. 眼睛对调 */
+#buddha-scene.bowing-android .buddha-eye-open { display: block !important; }
+#buddha-scene.bowing-android .buddha-eye-closed { display: none !important; }
+
+/* 2. 手印切换（合十 -> 接引印） */
+#buddha-scene.bowing-android .buddha-hands-closed { display: none !important; }
+#buddha-scene.bowing-android .buddha-hands-open { display: block !important; }
+
+/* 3. 卍字发亮 */
+#buddha-scene.bowing-android .buddha-swastika {
+    opacity: 1.4 !important;
+}
+
+/* 4. 观音与大势至菩萨化现：单独提升比例至 1.0，展现与阿弥陀佛相衬的庄严气势 */
+#buddha-scene.bowing-android #bodhisattva-left {
+    opacity: 0.85;
+    /* 将比例从原本小型的 scale(-0.5, 0.5) 放大到 scale(-0.55, 0.55），并微调平移位置 */
+    transform: translate(500px, 360px) scale(-0.55, 0.55);
+}
+#buddha-scene.bowing-android #bodhisattva-right {
+    opacity: 0.85;
+    /* 将比例从原本小型的 scale(0.5) 放大到 scale(0.55)，并微调平移位置 */
+    transform: translate(500px, 360px) scale(0.55);
+}
+/* ✨ Android 效能简化：关掉花瓣交替发光的滤镜动画，改成固定微亮，大幅降低持续合成负担 */
+html.android-lite .mandala-petal-gold,
+html.android-lite .mandala-petal-glass {
+    animation: none !important;
+    opacity: 0.35 !important;
+    filter: none !important;
+}
+
+/* ✨ Android 效能简化：曼陀罗外框呼吸感关闭 */
+html.android-lite .mandala-glow-effect {
+    animation: none !important;
+    opacity: 0.5 !important;
+}
+
+/* ✨ Android 效能简化：头顶佛光呼吸感也降载，改成固定值 */
+html.android-lite .halo-pulse,
+html.android-lite .aura-pulse {
+    animation: none !important;
+}
+
+
+
+
+    </style>
+</head>
+<body>
+        <div class="nav-top">
+        <div class="nav-btn" onclick="returnToMainHall()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> 返回道场
+        </div>
+        
+        <div class="nav-btn lunar-sweep-btn" onclick="location.href='lunar_cn.html'">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" class="lunar-icon">
+                <defs>
+                    <radialGradient id="iconGlowBeauty" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+                        <stop offset="30%" stop-color="#f3e5ab" stop-opacity="0.9"/>
+                        <stop offset="100%" stop-color="#d4af37" stop-opacity="0"/>
+                    </radialGradient>
+                </defs>
+                
+                <circle cx="32" cy="32" r="30" stroke="rgba(212,175,55,0.6)" stroke-width="2.5" fill="rgba(212,175,55,0.03)"/>
+                <circle cx="32" cy="32" r="26.5" stroke="rgba(212,175,55,0.3)" stroke-width="1.5" stroke-dasharray="2 2.5" fill="none"/>
+
+                <g stroke="#f3e5ab" stroke-width="2" fill="none" opacity="0.95">
+                    <polygon points="32,8 39,25 56,32 39,39 32,56 25,39 8,32 25,25" transform="rotate(0 32 32)" stroke-width="1.5"/>
+                    <polygon points="32,8 39,25 56,32 39,39 32,56 25,39 8,32 25,25" transform="rotate(45 32 32)" stroke-width="1.5"/>
+
+                    <path d="M 32 18 C 34 22, 38 22, 40 18 M 24 18 C 26 22, 30 22, 32 18" transform="rotate(0 32 32)"/>
+                    <path d="M 32 18 C 34 22, 38 22, 40 18 M 24 18 C 26 22, 30 22, 32 18" transform="rotate(90 32 32)"/>
+                    <path d="M 32 18 C 34 22, 38 22, 40 18 M 24 18 C 26 22, 30 22, 32 18" transform="rotate(180 32 32)"/>
+                    <path d="M 32 18 C 34 22, 38 22, 40 18 M 24 18 C 26 22, 30 22, 32 18" transform="rotate(270 32 32)"/>
+
+                    <circle cx="32" cy="18" r="1.5" fill="#fff" transform="rotate(0 32 32)" stroke="none"/>
+                    <circle cx="32" cy="18" r="1.5" fill="#fff" transform="rotate(60 32 32)" stroke="none"/>
+                    <circle cx="32" cy="18" r="1.5" fill="#fff" transform="rotate(120 32 32)" stroke="none"/>
+                    <circle cx="32" cy="18" r="1.5" fill="#fff" transform="rotate(180 32 32)" stroke="none"/>
+                    <circle cx="32" cy="18" r="1.5" fill="#fff" transform="rotate(240 32 32)" stroke="none"/>
+                    <circle cx="32" cy="18" r="1.5" fill="#fff" transform="rotate(300 32 32)" stroke="none"/>
+                </g>
+                
+                <circle cx="32" cy="32" r="12" fill="url(#iconGlowBeauty)"/>
+                <circle cx="32" cy="32" r="3.5" fill="#fff" stroke="#f3e5ab" stroke-width="1" style="filter: drop-shadow(0 0 4px #fff);"/>
+            </svg>
+            华藏月相
+        </div>
+
+    </div>
+
+
+
+       <div class="info-top">
+        <div class="info-row">
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+                <div id="streak-text" style="font-size: 0.75rem; color: var(--gold-light); letter-spacing: 2px; text-shadow: 0 0 5px rgba(212,175,55,0.5);">修持：第 1 日</div>
+                <div style="width: 80px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);">
+                    <div id="streak-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #d4af37, #f3e5ab); transition: width 1s cubic-bezier(0.2,0.8,0.2,1);"></div>
+                </div>
+            </div>
+            <div class="info-icon" onclick="showLawInfo()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--gold-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </div>
+        </div>
+    </div>
+
+
+    <canvas id="starCanvas"></canvas>
+    <canvas id="waterCanvas"></canvas>
+    <div id="burst-container"></div>
+    <div id="smoke-container"></div>
+
+
+    <svg style="width:0; height:0; position:absolute; pointer-events:none;">
+        <defs>
+            <linearGradient id="glass-glare" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(255,255,255,0.6)"/><stop offset="30%" stop-color="transparent"/><stop offset="100%" stop-color="rgba(0,0,0,0.4)"/></linearGradient>
+            <linearGradient id="water-grad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(0, 229, 255, 0.7)"/><stop offset="100%" stop-color="rgba(0, 77, 64, 0.9)"/></linearGradient>
+            <linearGradient id="water-light" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(224, 247, 250, 0.8)"/><stop offset="100%" stop-color="rgba(0, 131, 143, 0.4)"/></linearGradient>
+            <radialGradient id="fruit-yellow" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#fff9c4"/><stop offset="60%" stop-color="#fbc02d"/><stop offset="100%" stop-color="#f57f17"/></radialGradient>
+            <radialGradient id="fruit-pink" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#fce4ec"/><stop offset="60%" stop-color="#f06292"/><stop offset="100%" stop-color="#c2185b"/></radialGradient>
+            <radialGradient id="fruit-green" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#e8f5e9"/><stop offset="60%" stop-color="#81c784"/><stop offset="100%" stop-color="#388e3c"/></radialGradient>
+            <g id="water-cup-model">
+                <clipPath id="cup-clip"><path d="M15,40 C15,95 85,95 85,40 Z"/></clipPath>
+                <path d="M40,140 Q50,110 50,90 Q50,110 60,140 Z" fill="#d4af37" opacity="0.8"/>
+                <ellipse cx="50" cy="140" rx="25" ry="5" fill="#d4af37" /><ellipse cx="50" cy="90" rx="15" ry="3" fill="#d4af37" />
+                <g clip-path="url(#cup-clip)">
+                    <rect x="0" y="55" width="100" height="50" fill="url(#water-grad)" />
+                    <path fill="url(#water-light)" opacity="0.5"><animate attributeName="d" dur="3s" repeatCount="indefinite" values="M0,65 Q25,55 50,65 T100,65 L100,100 L0,100 Z; M0,65 Q25,75 50,65 T100,65 L100,100 L0,100 Z; M0,65 Q25,55 50,65 T100,65 L100,100 L0,100 Z" /></path>
+                    <path fill="url(#water-light)" opacity="0.7"><animate attributeName="d" dur="2.4s" repeatCount="indefinite" values="M0,70 Q25,80 50,70 T100,70 L100,100 L0,100 Z; M0,70 Q25,60 50,70 T100,70 L100,100 L0,100 Z; M0,70 Q25,80 50,70 T100,70 L100,100 L0,100 Z" /></path>
+                </g>
+                <path d="M15,40 C15,95 85,95 85,40 Z" fill="rgba(255,255,255,0.05)"/><path d="M15,40 C15,95 85,95 85,40 Z" fill="url(#glass-glare)"/>
+                <ellipse cx="50" cy="40" rx="35" ry="6" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><path d="M15,40 C15,95 85,95 85,40" fill="none" stroke="#d4af37" stroke-width="1.5"/>
+            </g>
+            <g id="fruit-plate-model">
+                <path d="M40,140 Q50,110 50,90 Q50,110 60,140 Z" fill="#d4af37" opacity="0.8"/><ellipse cx="50" cy="140" rx="30" ry="6" fill="#d4af37" />
+                <ellipse cx="50" cy="90" rx="45" ry="12" fill="rgba(255,255,255,0.1)" stroke="#d4af37" stroke-width="2"/><ellipse cx="50" cy="90" rx="45" ry="12" fill="url(#glass-glare)"/><ellipse cx="50" cy="90" rx="20" ry="4" fill="#d4af37" />
+                <circle cx="50" cy="65" r="22" fill="url(#fruit-green)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/><path d="M50,43 Q55,35 60,38" fill="none" stroke="#5a7a6c" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="32" cy="80" r="22" fill="url(#fruit-yellow)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/><circle cx="68" cy="80" r="22" fill="url(#fruit-pink)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+            </g>
+            <linearGradient id="petal-main" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="60%" stop-color="#fce4ec"/><stop offset="100%" stop-color="#c2185b"><animate attributeName="stop-color" values="#c2185b; #9c27b0; #f3e5ab; #d81b60; #c2185b" dur="15s" repeatCount="indefinite" /></stop></linearGradient>
+            <linearGradient id="petal-light" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#f3e5ab"><animate attributeName="stop-color" values="#f3e5ab; #ce93d8; #ffe082; #f48fb1; #f3e5ab" dur="15s" repeatCount="indefinite" /></stop></linearGradient>
+            <linearGradient id="leaf-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(212,175,55,0.8)"/><stop offset="100%" stop-color="rgba(139,168,156,0.3)"/></linearGradient>
+            <path id="petal" d="M 0,0 C 12,-15 12,-40 0,-60 C -12,-40 -12,-15 0,0 Z" stroke="rgba(255,255,255,0.5)" stroke-width="0.5"/><path id="petal-s" d="M 0,0 C 8,-10 8,-30 0,-45 C -8,-30 -8,-10 0,0 Z" stroke="rgba(255,255,255,0.5)" stroke-width="0.5"/>
+            <g id="lotus-bloom">
+                <use href="#petal" transform="rotate(-45) scale(0.9)" fill="url(#petal-main)" opacity="0.8"/><use href="#petal" transform="rotate(45) scale(0.9)" fill="url(#petal-main)" opacity="0.8"/>
+                <use href="#petal" transform="rotate(-25) scale(0.95)" fill="url(#petal-main)"/><use href="#petal" transform="rotate(25) scale(0.95)" fill="url(#petal-main)"/>
+                <use href="#petal" transform="rotate(-12)" fill="url(#petal-light)"/><use href="#petal" transform="rotate(12)" fill="url(#petal-light)"/><use href="#petal" transform="rotate(0) scale(1.05)" fill="#ffffff"/>
+                <path d="M0,0 L-5,-25 M0,0 L0,-28 M0,0 L5,-25" stroke="#d4af37" stroke-width="1.5" fill="none"/>
+                <circle cx="-5" cy="-25" r="2" fill="#f3e5ab"/><circle cx="0" cy="-28" r="2" fill="#f3e5ab"/><circle cx="5" cy="-25" r="2" fill="#f3e5ab"/>
+            </g>
+            <g id="lotus-bud"><use href="#petal-s" transform="rotate(-15)" fill="url(#petal-main)"/><use href="#petal-s" transform="rotate(15)" fill="url(#petal-main)"/><use href="#petal-s" transform="rotate(0) scale(1.1)" fill="url(#petal-light)"/></g>
+        </defs>
+    </svg>
+    <div id="buddha-scene">
+    <div class="buddha-breathe">
+        <svg viewBox="0 0 1000 1100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <radialGradient id="haloGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="80%" stop-color="#010103" stop-opacity="0"/>
+                    <stop offset="100%" stop-color="#FFD700" stop-opacity="1"/>
+                </radialGradient>
+                
+                <linearGradient id="goldBody" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+                    <stop offset="50%" style="stop-color:#B8860B;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#8B6508;stop-opacity:1" />
+                </linearGradient>
+                                  
+                    
+  <linearGradient id="lotusFill" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#FFDF00" stop-opacity="0.95"/> 
+        <stop offset="50%" stop-color="#D4AF37" stop-opacity="0.95"/> 
+        <stop offset="100%" stop-color="#995000" stop-opacity="1"/> 
+    </linearGradient>
+
+    <linearGradient id="lotusFillBottom" x1="0%" y1="100%" x2="0%" y2="0%">
+        <stop offset="0%" stop-color="#FFDF00" stop-opacity="0.95"/> 
+        <stop offset="50%" stop-color="#D4AF37" stop-opacity="0.95"/> 
+        <stop offset="100%" stop-color="#995000" stop-opacity="1"/> 
+    </linearGradient>
+
+    <linearGradient id="goldLotus" x1="50%" y1="0%" x2="50%" y2="100%">
+        <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+        <stop offset="50%" style="stop-color:#FFD700;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#D4AF37;stop-opacity:1" />
+    </linearGradient>
+
+    <radialGradient id="junctionGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#f3e5ab" stop-opacity="0.5"/>
+        <stop offset="100%" stop-color="#f3e5ab" stop-opacity="0"/>
+    </radialGradient>
+
+                <radialGradient id="haloFillDef" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#FFDF00" stop-opacity="0"/> 
+                    <stop offset="68%" stop-color="#FFDF00" stop-opacity="0"/> 
+                    <stop offset="74%" stop-color="#FFD700" stop-opacity="0.9"/> 
+                    <stop offset="90%" stop-color="#D4AF37" stop-opacity="0.8"/> 
+                    <stop offset="100%" stop-color="#D4AF37" stop-opacity="0"/> 
+                </radialGradient>
+                
+                                <radialGradient id="ringFadeMask" cx="50%" cy="50%" r="50%">
+                    <stop offset="60%" stop-color="black" /> <stop offset="75%" stop-color="white" />
+                    <stop offset="90%" stop-color="white" />
+                    <stop offset="100%" stop-color="black" />
+                </radialGradient>
+                <mask id="color-ring-mask">
+                    <circle cx="500" cy="245" r="225" fill="url(#ringFadeMask)" />
+                </mask>
+
+                <linearGradient id="colorMix1" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#f3e5ab" /> 
+                    <stop offset="50%" stop-color="#ffffff" /> 
+                    <stop offset="100%" stop-color="#8ba89c" /> 
+                </linearGradient>
+                <linearGradient id="colorMix2" x1="100%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#ffffff" /> 
+                    <stop offset="50%" stop-color="transparent" /> 
+                    <stop offset="100%" stop-color="#d4af37" /> 
+                </linearGradient>
+                <linearGradient id="colorMix3" x1="50%" y1="0%" x2="50%" y2="100%">
+                    <stop offset="0%" stop-color="#ffb6c1" /> 
+                    <stop offset="50%" stop-color="transparent" /> 
+                    <stop offset="100%" stop-color="#f3e5ab" /> 
+                </linearGradient>
+
+                
+                <linearGradient id="bodyFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#f3e5ab" stop-opacity="0.25"/>
+                    <stop offset="40%" stop-color="#f3e5ab" stop-opacity="0.12"/>
+                    <stop offset="90%" stop-color="#010103" stop-opacity="0"/> 
+                </linearGradient>
+                                  
+                <linearGradient id="bodyFillPink" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#f3c2c4" stop-opacity="0"/> 
+                    <stop offset="45%" stop-color="#f3c2c4" stop-opacity="0"/> 
+                    <stop offset="100%" stop-color="#f3c2c4" stop-opacity="0.35"/> 
+                </linearGradient>
+               
+            
+                
+                <linearGradient id="glass-base-mini" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="rgba(243, 229, 171, 0.5)"/>
+                    <stop offset="50%" stop-color="rgba(212, 175, 55, 0.3)"/>
+                    <stop offset="100%" stop-color="rgba(212, 175, 55, 0.1)"/>
+                </linearGradient>
+                <radialGradient id="flame-glow" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+    <stop offset="25%" stop-color="#FFD700" stop-opacity="0.8"/>
+    <stop offset="70%" stop-color="#FF8C00" stop-opacity="0.2"/>
+    <stop offset="100%" stop-color="#FF8C00" stop-opacity="0"/>
+</radialGradient>
+
+                <radialGradient id="pureGoldGradient" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#FFFFFF" />
+                    <stop offset="40%" stop-color="#FFDF00" />
+                    <stop offset="100%" stop-color="#FFD700" />
+                </radialGradient>
+                <radialGradient id="deepGoldGradient" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#FFDF00" />
+                    <stop offset="60%" stop-color="#D4AF37" />
+                    <stop offset="100%" stop-color="#B8860B" />
+                </radialGradient>
+                <radialGradient id="whiteGoldGradient" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#FFFFFF" />
+                    <stop offset="60%" stop-color="#FFFAF0" />
+                    <stop offset="100%" stop-color="#FFD700" stop-opacity="0.95"/>
+                </radialGradient>
+                <radialGradient id="mandalaInnerFill" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8" />
+    <stop offset="35%" stop-color="#FFD700" stop-opacity="0.5" />
+    <stop offset="70%" stop-color="#FFB6C1" stop-opacity="0.2" />
+    <stop offset="100%" stop-color="#B8860B" stop-opacity="0" />
+</radialGradient>
+                <filter id="halo-soft-blur" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="25" />
+                    </filter>
+                
+                
+                <mask id="halo-mask">
+                    <rect x="0" y="0" width="1000" height="1100" fill="white" />
+                    <path d="M 500 108 C 506 108, 508 114, 508 118 C 522 118, 524 145, 510 155 C 550 155, 565 170, 565 220 C 565 250, 565 280, 560 310 C 555 320, 550 325, 550 330 C 540 330, 540 350, 550 370 C 610 370, 650 400, 670 480 C 690 560, 680 660, 650 700 C 720 680, 800 700, 830 750 C 860 800, 830 840, 770 840 L 230 840 C 170 840, 140 800, 170 750 C 200 700, 280 680, 350 700 C 320 660, 310 560, 330 480 C 350 400, 390 370, 450 370 C 460 350, 460 330, 450 330 C 450 325, 445 320, 440 310 C 435 280, 435 250, 435 220 C 435 170, 450 155, 490 155 C 476 145, 478 118, 492 118 C 492 114, 494 108, 500 108 Z" fill="black" />
+                </mask>
+                <mask id="mandala-total-mask">
+    <rect x="-500" y="-500" width="2000" height="2000" fill="white" />
+    <path d="M 500 108 C 506 108, 508 114, 508 118 C 522 118, 524 145, 510 155 C 550 155, 565 170, 565 220 C 565 250, 565 280, 560 310 C 555 320, 550 325, 550 330 C 540 330, 540 350, 550 370 C 610 370, 650 400, 670 480 C 690 560, 680 660, 650 700 C 720 680, 800 700, 830 750 C 860 800, 830 840, 770 840 L 230 840 C 170 840, 140 800, 170 750 C 200 700, 280 680, 350 700 C 320 660, 310 560, 330 480 C 350 400, 390 370, 450 370 C 460 350, 460 330, 450 330 C 450 325, 445 320, 440 310 C 435 280, 435 250, 435 220 C 435 170, 450 155, 490 155 C 476 145, 478 118, 492 118 C 492 114, 494 108, 500 108 Z" fill="black" />
+    <circle cx="500" cy="245" r="215" fill="black" />
+</mask>
+            
+                
+                <g id="pure-petal">
+                    <path d="M 500 840 Q 460 830, 440 780 C 440 710, 500 690, 500 690 C 500 690, 560 710, 560 780 Q 540 830, 500 840 Z" />
+                    <path d="M 500 815 Q 475 805, 465 780 C 465 730, 500 715, 500 715 C 500 715, 535 730, 535 780 Q 525 805, 500 815 Z" fill="none" />
+                </g>
+                
+
+           
+ <!-- 菩萨圣像模板：颜色 -->
+   <radialGradient id="bead-gold-grad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+       <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+       <stop offset="60%" style="stop-color:#FFD700;stop-opacity:1" />
+       <stop offset="100%" style="stop-color:#C09A0A;stop-opacity:1" />
+   </radialGradient>
+   <radialGradient id="bead-pearl-grad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+       <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+       <stop offset="80%" style="stop-color:#FFFAF0;stop-opacity:1" />
+       <stop offset="100%" style="stop-color:#E0D0C0;stop-opacity:1" />
+   </radialGradient>
+   
+   <radialGradient id="bead-ruby-grad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+       <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+       <stop offset="70%" style="stop-color:#E30000;stop-opacity:1" />
+       <stop offset="100%" style="stop-color:#800000;stop-opacity:1" />
+   </radialGradient>
+   <radialGradient id="bead-sapphire-grad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+       <stop offset="0%" style="stop-color:#A0C8FF;stop-opacity:1" />
+       <stop offset="70%" style="stop-color:#0047AB;stop-opacity:1" />
+       <stop offset="100%" style="stop-color:#002166;stop-opacity:1" />
+   </radialGradient>
+   <radialGradient id="bead-emerald-grad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+       <stop offset="0%" style="stop-color:#A0FFB4;stop-opacity:1" />
+       <stop offset="70%" style="stop-color:#00C83C;stop-opacity:1" />
+       <stop offset="100%" style="stop-color:#006621;stop-opacity:1" />
+   </radialGradient>
+   <radialGradient id="bead-amber-grad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+       <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+       <stop offset="70%" style="stop-color:#FFBF00;stop-opacity:1" />
+       <stop offset="100%" style="stop-color:#B38F00;stop-opacity:1" />
+   </radialGradient>
+
+
+     <!-- ==================== 右尊：观音菩萨（深金框线与烫金系） ==================== -->
+   <!-- 观音主线条：古铜深金线（足够暗，在白底上极清晰） -->
+   <linearGradient id="guanyinGold" x1="0%" y1="0%" x2="100%" y2="100%">
+       <stop offset="0%" style="stop-color:#4A3700;stop-opacity:1" /> <!-- 深琥珀暗金 -->
+       <stop offset="50%" style="stop-color:#B78A1B;stop-opacity:1" /> <!-- 古铜金 -->
+       <stop offset="100%" style="stop-color:#785B07;stop-opacity:1" /> <!-- 沉稳赤金 -->
+   </linearGradient>
+
+   <!-- 观音身色与高光：纯净实心白底 -->
+   <linearGradient id="guanyin-milky-fill" x1="0%" y1="0%" x2="0%" y2="100%">
+       <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+       <stop offset="100%" stop-color="#FFFFFF" stop-opacity="1"/>
+   </linearGradient>
+   <linearGradient id="guanyin-milky-highlight" x1="0%" y1="0%" x2="0%" y2="100%">
+       <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+       <stop offset="100%" stop-color="#FFFFFF" stop-opacity="1"/>
+   </linearGradient>
+
+
+<!-- 观音：头顶菱形宝珠（温润鹅黄白金） -->
+<linearGradient id="guanyinCrownJewel" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />   <!-- 顶部纯白高光 -->
+    <stop offset="30%" style="stop-color:#FFFDF0;stop-opacity:1" />  <!-- 柔和的黄白色 -->
+    <stop offset="60%" style="stop-color:#FFF8DC;stop-opacity:1" />  <!-- 淡淡的清透鹅黄 -->
+    <stop offset="85%" style="stop-color:#F5ECBF;stop-opacity:1" />  <!-- 内敛的微金反光 -->
+    <stop offset="100%" style="stop-color:#D0C695;stop-opacity:1" /> <!-- 底部沉稳的鹅黄白金暗影 -->
+</linearGradient>
+
+
+
+   <!-- ==================== 左尊：大势至菩萨（静谧深蓝框线系） ==================== -->
+   <!-- 大势至主线条：庄严深蓝框线 -->
+   <linearGradient id="shizhiGoldBrightened" x1="0%" y1="0%" x2="100%" y2="100%">
+       <stop offset="0%" style="stop-color:#0F172A;stop-opacity:1" /> <!-- 黛蓝黑 -->
+       <stop offset="50%" style="stop-color:#1E3A8A;stop-opacity:1" /> <!-- 深绀蓝 -->
+       <stop offset="100%" style="stop-color:#172554;stop-opacity:1" /> <!-- 静谧深蓝 -->
+   </linearGradient>
+
+   <!-- 大势至身色与高光：纯净实心白底 -->
+   <linearGradient id="shizhi-luminous-fill" x1="0%" y1="0%" x2="0%" y2="100%">
+       <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+       <stop offset="100%" stop-color="#FFFFFF" stop-opacity="1"/>
+   </linearGradient>
+   <linearGradient id="shizhi-luminous-highlight" x1="0%" y1="0%" x2="0%" y2="100%">
+       <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+       <stop offset="100%" stop-color="#FFFFFF" stop-opacity="1"/>
+   </linearGradient>
+
+   <!-- 大势至：头顶菱形宝珠（深蓝发光） -->
+   <linearGradient id="shizhiCrownJewel" x1="0%" y1="0%" x2="100%" y2="100%">
+       <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" /> 
+       <stop offset="30%" style="stop-color:#93C5FD;stop-opacity:1" /> 
+       <stop offset="70%" style="stop-color:#2563EB;stop-opacity:1" /> 
+       <stop offset="100%" style="stop-color:#0F172A;stop-opacity:1" /> 
+   </linearGradient>
+
+   <circle id="bead-gold-colored" cx="0" cy="0" r="5" stroke-width="1.2" fill="url(#bead-gold-grad)" />
+   <circle id="large-bead-colored" cx="0" cy="0" r="6" stroke-width="1.3" fill="url(#bead-pearl-grad)" />
+   <circle id="small-bead-colored" cx="0" cy="0" r="4" stroke-width="1.2" fill="url(#bead-sapphire-grad)" />
+
+        <!-- ================================================================== -->
+    <!-- 1. 双尊菩萨独立白毫渐层定义 -->
+    <!-- ================================================================== -->
+                 <!-- 菩萨专属：圣洁温润的金银白光晕（底色衬托） -->
+    <radialGradient id="bodhi-aura-pure" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#FFFDF0" stop-opacity="0.6" />
+        <stop offset="60%" stop-color="#D4AF37" stop-opacity="0.5" />
+        <stop offset="100%" stop-color="#FFF9D0" stop-opacity="0.6" />
+    </radialGradient>
+
+    <!-- 菩萨专属：细光圈专用的柔和金丝线条 -->
+    <linearGradient id="bodhi-line-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#D4AF37" />
+        <stop offset="50%" stop-color="#D4AF37" />
+        <stop offset="100%" stop-color="#D4AF37" />
+    </linearGradient>
+    <!-- 大势至菩萨专属：智慧绀青白毫（带有深蓝/白金渐层） -->
+    <radialGradient id="shizhi-urna-glow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#FFFFFF" />
+        <stop offset="70%" stop-color="#4F46E5" stop-opacity="0.9" />
+        <stop offset="100%" stop-color="#1E3A8A" stop-opacity="0.5" />
+    </radialGradient>
+
+    <!-- 观音菩萨专属：慈悲真金朱红白毫（带有金红渐层） -->
+    <radialGradient id="guanyin-urna-glow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#FFFDF0" />
+        <stop offset="60%" stop-color="#FFD700" stop-opacity="0.9" />
+        <stop offset="100%" stop-color="#B78A1B" stop-opacity="0.5" />
+    </radialGradient>
+
+    <!-- ================================================================== -->
+    <!-- 2. 大势至菩萨专用：莫兰迪蓝至粉蓝莲花填色渐层 (寂静智慧) -->
+    <!-- ================================================================== -->
+    <linearGradient id="shizhiLotusFill" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#F0F8FF" stop-opacity="0.95"/> <!-- 顶部轻盈粉蓝 -->
+        <stop offset="50%" stop-color="#B0C4DE" stop-opacity="0.9"/> <!-- 中段莫兰迪雾蓝 -->
+        <stop offset="100%" stop-color="#708090" stop-opacity="0.75"/> <!-- 底部雅致灰蓝 -->
+    </linearGradient>
+
+    <linearGradient id="shizhiLotusFillBottom" x1="0%" y1="100%" x2="0%" y2="0%">
+        <stop offset="0%" stop-color="#F0F8FF" stop-opacity="0.95"/>
+        <stop offset="50%" stop-color="#B0C4DE" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#708090" stop-opacity="0.75"/>
+    </linearGradient>
+
+    <!-- ================================================================== -->
+    <!-- 3. 观音菩萨专用：深红至粉红莲花填色渐层 (高雅慈悲) -->
+    <!-- ================================================================== -->
+    <linearGradient id="guanyinLotusFill" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#FFF5F5" stop-opacity="0.95"/> <!-- 顶部微桃色 -->
+        <stop offset="50%" stop-color="#FFB6C1" stop-opacity="0.9"/> <!-- 中段柔和粉红 -->
+        <stop offset="100%" stop-color="#C71585" stop-opacity="0.7"/> <!-- 底部沈稳深红 -->
+    </linearGradient>
+
+    <linearGradient id="guanyinLotusFillBottom" x1="0%" y1="100%" x2="0%" y2="0%">
+        <stop offset="0%" stop-color="#FFF5F5" stop-opacity="0.95"/>
+        <stop offset="50%" stop-color="#FFB6C1" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#C71585" stop-opacity="0.7"/>
+    </linearGradient>
+
+    <!-- ================================================================== -->
+    <!-- 4. 大势至菩萨：前後分层莲花座 (采用独立莫兰迪蓝渐层、大势至金线) -->
+    <!-- ================================================================== -->
+    <!-- 大势至：後方背景花瓣 -->
+    <g id="shizhi-lotus-bottom" stroke="url(#shizhiGoldBrightened)" stroke-width="1.5" stroke-linejoin="round" fill="url(#shizhiLotusFillBottom)">
+        <g transform="scale(0.85, -0.75)" transform-origin="500 840">
+            <use href="#pure-petal" transform="translate(-205, -10) rotate(-30, 500, 840)" />
+            <use href="#pure-petal" transform="translate(205, -10) rotate(30, 500, 840)" />
+            <use href="#pure-petal" transform="translate(-145, -20) rotate(-18, 500, 840)" />
+            <use href="#pure-petal" transform="translate(145, -20) rotate(18, 500, 840)" />
+            <use href="#pure-petal" transform="translate(-75, -30) rotate(-7, 500, 840)" />
+            <use href="#pure-petal" transform="translate(75, -30) rotate(7, 500, 840)" />
+            <use href="#pure-petal" transform="translate(0, -45) rotate(0, 500, 840)" />
+        </g>
+    </g>
+    <!-- 大势至：前方包腿花瓣 -->
+    <g id="shizhi-lotus-top" stroke="url(#shizhiGoldBrightened)" stroke-width="1.5" stroke-linejoin="round" fill="url(#shizhiLotusFill)">
+        <g transform="translate(0, 115)">
+            <use href="#pure-petal" transform="translate(-250, -110) rotate(-40, 500, 840)" />
+            <use href="#pure-petal" transform="translate(250, -110) rotate(40, 500, 840)" />
+            <use href="#pure-petal" transform="translate(-205, -65) rotate(-35, 500, 840)" />
+            <use href="#pure-petal" transform="translate(205, -65) rotate(35, 500, 840)" />
+            <use href="#pure-petal" transform="translate(-145, -30) rotate(-20, 500, 840)" />
+            <use href="#pure-petal" transform="translate(145, -30) rotate(20, 500, 840)" />
+            <use href="#pure-petal" transform="translate(-75, -23) rotate(-8, 500, 840)" />
+            <use href="#pure-petal" transform="translate(75, -23) rotate(8, 500, 840)" />
+            <use href="#pure-petal" transform="translate(0, -23)" />
+        </g>
+    </g>
+
+    <!-- ================================================================== -->
+    <!-- 5. 观音菩萨：前後分层莲花座 (采用独立慈悲红渐层、观音金线) -->
+    <!-- ================================================================== -->
+    <!-- 观音：後方背景花瓣 -->
+    <g id="guanyin-lotus-bottom" stroke="url(#guanyinGold)" stroke-width="1.5" stroke-linejoin="round" fill="url(#guanyinLotusFillBottom)">
+        <g transform="scale(0.85, -0.75)" transform-origin="500 840">
+            <use href="#pure-petal" transform="translate(-205, -10) rotate(-30, 500, 840)" />
+            <use href="#pure-petal" transform="translate(205, -10) rotate(30, 500, 840)" />
+            <use href="#pure-petal" transform="translate(-145, -20) rotate(-18, 500, 840)" />
+            <use href="#pure-petal" transform="translate(145, -20) rotate(18, 500, 840)" />
+            <use href="#pure-petal" transform="translate(-75, -30) rotate(-7, 500, 840)" />
+            <use href="#pure-petal" transform="translate(75, -30) rotate(7, 500, 840)" />
+            <use href="#pure-petal" transform="translate(0, -45) rotate(0, 500, 840)" />
+        </g>
+    </g>
+    <!-- 观音：前方包腿花瓣 -->
+    <g id="guanyin-lotus-top" stroke="url(#guanyinGold)" stroke-width="1.5" stroke-linejoin="round" fill="url(#guanyinLotusFill)">
+        <g transform="translate(0, 115)">
+            <use href="#pure-petal" transform="translate(-250, -110) rotate(-40, 500, 840)" />
+            <use href="#pure-petal" transform="translate(250, -110) rotate(40, 500, 840)" />
+            <use href="#pure-petal" transform="translate(-205, -65) rotate(-35, 500, 840)" />
+            <use href="#pure-petal" transform="translate(205, -65) rotate(35, 500, 840)" />
+            <use href="#pure-petal" transform="translate(-145, -30) rotate(-20, 500, 840)" />
+            <use href="#pure-petal" transform="translate(145, -30) rotate(20, 500, 840)" />
+            <use href="#pure-petal" transform="translate(-75, -23) rotate(-8, 500, 840)" />
+            <use href="#pure-petal" transform="translate(75, -23) rotate(8, 500, 840)" />
+            <use href="#pure-petal" transform="translate(0, -23)" />
+        </g>
+    </g>
+
+   <g id="bodhisattva-entity">
+
+       <g id="garment-ribbon-lines">
+                   <!-- 【完美闭合】头顶肉髻：将原本左右两条 Q 线条的端点(470,128)与(530,128)连接闭合 -->
+        <path id="top-heavenly-garment-solid" 
+              d="M 470 128 Q 450 90, 500 75 Q 550 90, 530 128 Q 500 135, 470 128 Z" 
+              stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        
+        <!-- 【完美闭合】菱形宝珠：原本就是闭合的，这里移除写死的 fill -->
+        <path id="crown-jewel-fill" 
+              d="M 500 108 L 516 135 L 500 162 L 484 135 Z" 
+              stroke-width="1.2" stroke-linejoin="round" />
+
+           <path d="M 500 108 L 516 135 L 500 162 L 484 135 Z" stroke-width="1.2" />
+           <g id="headscarf">
+               <path d="M 500 108 Q 470 120, 445 165" stroke-width="1.8" stroke-linecap="round" />
+               <path d="M 500 108 Q 530 120, 555 165" stroke-width="1.8" stroke-linecap="round" />
+           </g>
+           <path d="M 500 118 C 445 125, 400 200, 412 280 C 416 310, 414 345, 412 370" stroke-width="1.2" stroke-linecap="round" />
+           <path d="M 500 118 C 555 125, 600 200, 588 280 C 584 310, 586 345, 588 370" stroke-width="1.2" stroke-linecap="round" />
+           <path d="M 500 133 C 455 140, 415 205, 426 280 C 429 310, 427 348, 427 377" stroke-width="1.2" stroke-linecap="round" />
+           <path d="M 500 133 C 545 140, 585 205, 574 280 C 571 310, 573 348, 573 377" stroke-width="1.2" stroke-linecap="round" />
+       </g>
+
+       <path id="shoulder-drape-left-fill"
+             d="M 435 370 C 415 390, 385 410, 350 430 Q 385 435, 420 420 C 450 405, 420 385, 442 375 Z" stroke="none" />
+       <path id="shoulder-drape-right-fill"
+             d="M 565 370 C 585 390, 615 410, 650 430 Q 615 435, 580 420 C 550 405, 580 385, 558 375 Z" stroke="none" />
+       
+       <path id="bodhisattva-robe-outline" d="M 500 108 C 506 108, 508 114, 508 118 C 522 118, 524 145, 510 155 C 550 155, 565 170, 565 220 C 565 250, 563 275, 558 295 C 553 312, 549 324, 544 330 C 542 336, 544 352, 550 370 C 610 370, 650 400, 670 480 C 690 560, 680 660, 650 700 C 720 680, 800 700, 830 750 C 860 800, 830 840, 770 840 L 230 840 C 170 840, 140 800, 170 750 C 200 700, 280 680, 350 700 C 320 660, 310 560, 330 480 C 350 400, 390 370, 450 370 C 456 352, 458 336, 456 330 C 451 324, 447 312, 442 295 C 437 275, 435 250, 435 220 C 435 170, 450 155, 490 155 C 476 145, 478 118, 492 118 C 492 114, 494 108, 500 108 Z" stroke-width="2.1" />
+
+       <path id="ear-left-fill" d="M 435 220 Q 427 205 426 220 Q 418 270 434 320 Q 428 380 454 330 Q 442 295 435 220 Z" stroke="none" />
+       <path id="ear-right-fill" d="M 565 220 Q 573 205 574 220 Q 582 270 566 320 Q 572 380 546 330 Q 558 295 565 220 Z" stroke="none" />
+       <path d="M 435 220 Q 427 205 426 220 Q 418 270 434 320 Q 428 380 454 330" fill="none" />
+       <path d="M 565 220 Q 573 205 574 220 Q 582 270 566 320 Q 572 380 546 330" fill="none" />
+       <path d="M 435 240 Q 425 275 437 305" stroke-width="1.5" fill="none" />
+       <path d="M 565 240 Q 575 275 563 305" stroke-width="1.5" fill="none" />
+
+       <g id="ribbon-fill-blocks">
+           <path id="shoulder-streamer-fill" d="M 470 128 Q 450 90, 500 75 Q 550 90, 530 128 Z" stroke="none" />
+           <path id="headscarf-fill" d="M 445 165 Q 470 120, 500 108 Q 530 120, 555 165 Z" stroke="none" />
+           <path id="left-sash-fill" d="M 500 118 C 445 125, 400 200, 412 280 C 416 310, 414 345, 412 370 L 427 377 C 427 348, 429 310, 426 280 C 415 205, 455 140, 500 133 Z" stroke="none" />
+           <path id="right-sash-fill" d="M 500 118 C 555 125, 600 200, 588 280 C 584 310, 586 345, 588 370 L 573 377 C 573 348, 571 310, 574 280 C 585 205, 545 140, 500 133 Z" stroke="none" />
+       </g>
+
+       <g id="ordered-shoulder-garments" stroke-width="1.6" stroke-linecap="round">
+           <path d="M 435 370 C 415 390, 385 410, 350 430" />
+           <path d="M 442 375 C 420 385, 450 405, 420 420" stroke-width="1.2" />
+           <path d="M 420 420 Q 385 435, 350 430" stroke-width="1.2" opacity="0.85" />
+           <path d="M 565 370 C 585 390, 615 410, 650 430" />
+           <path d="M 558 375 C 580 385, 550 405, 580 420" stroke-width="1.2" />
+           <path d="M 580 420 Q 615 435, 650 430" stroke-width="1.2" opacity="0.85" />
+       </g>
+
+       <g id="neck-beads-row-1-colored">
+           <use href="#bead-gold-colored" fill="url(#bead-gold-grad)" x="452" y="360" /> <use href="#bead-gold-colored" fill="url(#bead-ruby-grad)" x="457" y="368" /> <use href="#bead-gold-colored" fill="url(#bead-sapphire-grad)" x="463" y="375" /> <use href="#bead-gold-colored" fill="url(#bead-emerald-grad)" x="470" y="381" /> <use href="#bead-gold-colored" fill="url(#bead-gold-grad)" x="478" y="386" /> <use href="#bead-gold-colored" fill="url(#bead-ruby-grad)" x="486" y="389" /> <use href="#bead-gold-colored" fill="url(#bead-sapphire-grad)" x="494" y="391" /> <use href="#bead-gold-colored" fill="url(#bead-emerald-grad)" x="502" y="391" /> <use href="#bead-gold-colored" fill="url(#bead-gold-grad)" x="510" y="391" /> <use href="#bead-gold-colored" fill="url(#bead-ruby-grad)" x="518" y="389" /> <use href="#bead-gold-colored" fill="url(#bead-sapphire-grad)" x="526" y="386" /> <use href="#bead-gold-colored" fill="url(#bead-emerald-grad)" x="534" y="381" /> <use href="#bead-gold-colored" fill="url(#bead-gold-grad)" x="541" y="375" /> <use href="#bead-gold-colored" fill="url(#bead-ruby-grad)" x="547" y="368" /> <use href="#bead-gold-colored" fill="url(#bead-sapphire-grad)" x="552" y="360" /> </g>
+       
+       <g id="neck-beads-row-2-colored">
+           <use href="#bead-gold-colored" fill="url(#bead-pearl-grad)" x="447" y="367" /> <use href="#bead-gold-colored" fill="url(#bead-amber-grad)" x="452" y="377" /> <use href="#bead-gold-colored" fill="url(#bead-pearl-grad)" x="459" y="386" /> <use href="#bead-gold-colored" fill="url(#bead-sapphire-grad)" x="467" y="394" /> <use href="#bead-gold-colored" fill="url(#bead-pearl-grad)" x="476" y="401" /> <use href="#bead-gold-colored" fill="url(#bead-ruby-grad)" x="486" y="405" /> <use href="#bead-gold-colored" fill="url(#bead-pearl-grad)" x="496" y="407" /> <use href="#bead-gold-colored" fill="url(#bead-emerald-grad)" x="506" y="407" /> <use href="#bead-gold-colored" fill="url(#bead-pearl-grad)" x="516" y="405" /> <use href="#bead-gold-colored" fill="url(#bead-amber-grad)" x="526" y="401" /> <use href="#bead-gold-colored" fill="url(#bead-pearl-grad)" x="535" y="394" /> <use href="#bead-gold-colored" fill="url(#bead-sapphire-grad)" x="543" y="386" /> <use href="#bead-gold-colored" fill="url(#bead-pearl-grad)" x="550" y="377" /> <use href="#bead-gold-colored" fill="url(#bead-amber-grad)" x="555" y="367" /> </g>
+       
+       <g id="row2-center-gem-colored">
+           <ellipse cx="500" cy="424" rx="4" ry="15" stroke-width="1.3" fill="url(#bead-ruby-grad)" />
+           <ellipse cx="500" cy="454" rx="4" ry="15" stroke-width="1.3" fill="url(#bead-sapphire-grad)" />
+           <ellipse cx="500" cy="484" rx="4" ry="15" stroke-width="1.3" fill="url(#bead-emerald-grad)" />
+           <ellipse cx="490" cy="424" rx="3" ry="7.5" stroke-width="1.2" fill="url(#bead-pearl-grad)" />
+           <ellipse cx="510" cy="424" rx="3" ry="7.5" stroke-width="1.2" fill="url(#bead-pearl-grad)" />
+       </g>
+       
+       <path d="M 440 376 C 440 425, 560 425, 560 376" stroke-width="1.5" stroke-linecap="round" fill="none" />
+       <path d="M 432 388 C 432 450, 568 450, 568 388" stroke-width="1.5" stroke-linecap="round" fill="none" />
+       
+       <g id="neck-beads-row-3-long-colored">
+           <use href="#large-bead-colored" fill="url(#bead-gold-grad)" x="440" y="428" /> <use href="#large-bead-colored" fill="url(#bead-ruby-grad)" x="444" y="442" /> <use href="#large-bead-colored" fill="url(#bead-sapphire-grad)" x="449" y="456" /> <use href="#large-bead-colored" fill="url(#bead-emerald-grad)" x="455" y="470" /> <use href="#large-bead-colored" fill="url(#bead-amber-grad)" x="462" y="484" /> <use href="#large-bead-colored" fill="url(#bead-ruby-grad)" x="470" y="497" /> <use href="#large-bead-colored" fill="url(#bead-gold-grad)" x="479" y="508" /> <use href="#large-bead-colored" fill="url(#bead-ruby-grad)" x="489" y="516" /> <use href="#large-bead-colored" fill="url(#bead-sapphire-grad)" x="500" y="519" /> <use href="#large-bead-colored" fill="url(#bead-emerald-grad)" x="511" y="516" /> <use href="#large-bead-colored" fill="url(#bead-amber-grad)" x="521" y="508" /> <use href="#large-bead-colored" fill="url(#bead-ruby-grad)" x="530" y="497" /> <use href="#large-bead-colored" fill="url(#bead-sapphire-grad)" x="538" y="484" /> <use href="#large-bead-colored" fill="url(#bead-emerald-grad)" x="545" y="470" /> <use href="#large-bead-colored" fill="url(#bead-amber-grad)" x="551" y="456" /> <use href="#large-bead-colored" fill="url(#bead-ruby-grad)" x="556" y="442" /> <use href="#large-bead-colored" fill="url(#bead-gold-grad)" x="560" y="428" /> </g>
+       
+       <path d="M 430 435 C 450 575, 550 575, 570 435" stroke-width="1.5" stroke-linecap="round" fill="none" />
+       <path d="M 425 442 C 450 585, 550 585, 575 442" stroke-width="1.5" stroke-linecap="round" fill="none" />
+       
+       <g id="neck-beads-row-4-longest-colored">
+           <use href="#small-bead-colored" fill="url(#bead-gold-grad)" x="420" y="454" />
+           <use href="#small-bead-colored" fill="url(#bead-ruby-grad)" x="421.5" y="465" />
+           <use href="#small-bead-colored" fill="url(#bead-sapphire-grad)" x="423.5" y="476" />
+           <use href="#small-bead-colored" fill="url(#bead-emerald-grad)" x="426" y="487" />
+           <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="429" y="498" />
+           <use href="#small-bead-colored" fill="url(#bead-amber-grad)" x="432.5" y="509" />
+           <use href="#small-bead-colored" fill="url(#bead-gold-grad)" x="436.5" y="520" />
+           <use href="#small-bead-colored" fill="url(#bead-ruby-grad)" x="441" y="531" />
+           <use href="#small-bead-colored" fill="url(#bead-sapphire-grad)" x="446" y="542" />
+           <use href="#small-bead-colored" fill="url(#bead-emerald-grad)" x="451.5" y="553" />
+           <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="457.5" y="564" />
+           <use href="#small-bead-colored" fill="url(#bead-amber-grad)" x="464" y="575" />
+           <use href="#small-bead-colored" fill="url(#bead-ruby-grad)" x="471" y="586" /> <use href="#small-bead-colored" fill="url(#bead-sapphire-grad)" x="479" y="595" /> <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="488" y="602" /> <use href="#small-bead-colored" fill="url(#bead-emerald-grad)" x="500" y="606" /> <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="500" y="598" />
+           <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="500" y="590" />
+           <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="500" y="582" />
+           <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="500" y="574" />
+           <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="500" y="566" />
+           <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="500" y="558" />
+           <use href="#small-bead-colored" fill="url(#bead-gold-grad)" x="512" y="602" />
+           <use href="#small-bead-colored" fill="url(#bead-ruby-grad)" x="521" y="595" />
+           <use href="#small-bead-colored" fill="url(#bead-sapphire-grad)" x="529" y="586" />
+           <use href="#small-bead-colored" fill="url(#bead-emerald-grad)" x="536" y="575" />
+           <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="542.5" y="564" />
+           <use href="#small-bead-colored" fill="url(#bead-amber-grad)" x="548.5" y="553" />
+           <use href="#small-bead-colored" fill="url(#bead-gold-grad)" x="554" y="542" />
+           <use href="#small-bead-colored" fill="url(#bead-ruby-grad)" x="559" y="531" />
+           <use href="#small-bead-colored" fill="url(#bead-sapphire-grad)" x="563.5" y="520" />
+           <use href="#small-bead-colored" fill="url(#bead-emerald-grad)" x="567.5" y="509" />
+           <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="571" y="498" />
+           <use href="#small-bead-colored" fill="url(#bead-amber-grad)" x="574" y="487" />
+           <use href="#small-bead-colored" fill="url(#bead-gold-grad)" x="576.5" y="476" />
+           <use href="#small-bead-colored" fill="url(#bead-ruby-grad)" x="578.5" y="465" />
+           <use href="#small-bead-colored" fill="url(#bead-sapphire-grad)" x="580" y="454" />
+       </g>
+       
+       <g id="guanyin-hands-pendant-colored" opacity="0.95">
+           <polygon points="500,604 505,612 500,620 495,612" fill="url(#crownJewelGradient)" stroke-width="1.5" stroke-linejoin="round" />
+           <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="490" y="612" /> <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="490" y="622" />
+           <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="490" y="632" />
+           <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="490" y="642" />
+           <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="510" y="612" /> <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="510" y="622" />
+           <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="510" y="632" />
+           <use href="#small-bead-colored" fill="url(#bead-pearl-grad)" x="510" y="642" />
+           <use href="#small-bead-colored" fill="url(#bead-amber-grad)" x="479" y="605" /> <use href="#small-bead-colored" fill="url(#bead-amber-grad)" x="479" y="615" />
+           <use href="#small-bead-colored" fill="url(#bead-amber-grad)" x="479" y="625" />
+           <use href="#small-bead-colored" fill="url(#bead-amber-grad)" x="521" y="605" /> <use href="#small-bead-colored" fill="url(#bead-amber-grad)" x="521" y="615" />
+           <use href="#small-bead-colored" fill="url(#bead-amber-grad)" x="521" y="625" />
+           <use href="#small-bead-colored" fill="url(#bead-gold-grad)" x="468" y="596" /> <use href="#small-bead-colored" fill="url(#bead-gold-grad)" x="468" y="606" />
+           <use href="#small-bead-colored" fill="url(#bead-gold-grad)" x="532" y="596" /> <use href="#small-bead-colored" fill="url(#bead-gold-grad)" x="532" y="606" />
+       </g>
+
+       <g id="buddha-face-features" transform="translate(0, 10)">
+           <path d="M 500 175 Q 470 160, 451 185 Q 442 195, 435 220" stroke-width="1.5" stroke-linecap="round" />
+           <path d="M 500 175 Q 530 160, 549 185 Q 558 195, 565 220" stroke-width="1.5" stroke-linecap="round" />
+           <path d="M 440 210 Q 465 195 494 210 L 494 262" stroke-width="1.5" />
+           <path d="M 560 210 Q 535 195 506 210 L 506 262" stroke-width="1.5" />
+           <path d="M 493 266 Q 500 276 507 266" stroke-width="1.5" />
+           <path d="M 460 325 Q 500 360 540 325" stroke-width="1" fill="none" />
+           <path d="M 465 345 Q 500 360 535 345" stroke-width="1" fill="none" />
+           <path d="M 470 351.5 Q 500 365 530 351.5" stroke-width="1" fill="none" />
+           <path d="M 475 358 Q 500 370 525 358" stroke-width="1" fill="none" />
+           <path d="M 443 228 Q 461 224 479 228" stroke-width="1.8" stroke-linecap="round" />
+           <path d="M 557 228 Q 539 224 521 228" stroke-width="1.8" stroke-linecap="round" />
+           <g class="buddhas-eye-closed">
+               <path d="M 444 234.5 Q 462 239 478 237.5 Q 479 239 478.5 240.5" stroke-width="1.8" stroke-linecap="round" />
+               <path d="M 444 234.5 Q 462 245 478.5 240.5" stroke-width="1.8" stroke-linecap="round" />
+               <path d="M 556 234.5 Q 538 239 522 237.5 Q 521 239 521.5 240.5" stroke-width="1.8" stroke-linecap="round" />
+               <path d="M 556 234.5 Q 538 245 521.5 240.5" stroke-width="1.8" stroke-linecap="round" />
+           </g>
+               <!-- 左右脸颊腮红 -->
+    <ellipse cx="455" cy="272" rx="12" ry="25" fill="#FFA6FF" opacity="0.12" />
+    <ellipse cx="545" cy="272" rx="12" ry="25" fill="#FFA6FF" opacity="0.12" />
+
+              <!-- 嘴唇（红色线条） -->
+      <path d="M 482 283.5 Q 483 284.5 484 285 Q 492 281 500 286 Q 508 281 516 285 Q 517 284.5 518 283.5" stroke="#FFD0FF" stroke-width="5.6" />
+      <path d="M 480 283.5 Q 481 284.5 482 285 Q 500 289 518 285 Q 519 284.5 520 283.5" stroke="#FFA6FF" stroke-width="5" />
+      <path d="M 486 289 Q 500 293 514 289" stroke="#FFA6FF" stroke-width="5" />   <path d="M 486 312 Q 500 306 514 312" stroke-width="1.2" />
+       </g>
+       
+       <path d="M 491 265 Q 488.5 268.5 491 271" stroke-width="1" fill="none" />
+       <path d="M 509 265 Q 511.5 268.5 509 271" stroke-width="1" fill="none" />
+       <path d="M 420 474 Q 370 540, 415 630" stroke-width="2" fill="none" />
+       <path d="M 368 520 Q 368 620 415 660" stroke-width="2" fill="none" />
+       <path d="M 354 575 Q 368 620 415 660" stroke-width="2" fill="none" />
+       <path d="M 354 600 Q 368 630 415 660" stroke-width="2" fill="none" />
+       <path d="M 415 660 Q 430 710 465 715" stroke-width="2.2" fill="none" />
+       <path d="M 415 660 Q 430 710 465 720" stroke-width="2.2" fill="none" />
+       <path d="M 580 474 Q 630 540, 585 630" stroke-width="2" fill="none" />
+       <path d="M 632 520 Q 632 620 585 660" stroke-width="2" fill="none" />
+       <path d="M 646 575 Q 632 620 585 660" stroke-width="2" fill="none" />
+       <path d="M 646 600 Q 632 630 585 660" stroke-width="2" fill="none" />
+       <path d="M 585 660 Q 570 710 535 715" stroke-width="2.2" fill="none" />
+       <path d="M 585 660 Q 570 710 535 720" stroke-width="2.2" fill="none" />
+             <!-- 菩萨尊足 (右侧) - 已同步弥陀琉璃色块与观音主框金线 -->
+       <g transform="translate(520, 735) scale(0.7) rotate(84) translate(-100, -225)" style="filter: drop-shadow(0 0 15px rgba(218, 165, 32, 0.5));">
+           <!-- 🌟 借用弥陀的玻璃底色块 -->
+           <path d="M 100 25 C 103 18, 107 20, 108 30 L 138 165 C 145 190, 160 230, 190 245 L 178 260 Q 172 263 168 265 L 115 235 Q 103 232 100 225 L 100 25 Z" fill="url(#glass-base-mini)" />
+           <!-- 🌟 线条全面换成观音古铜深金线 -->
+           <path d="M 100 25 C 103 18, 107 20, 108 30 L 138 165 C 145 190, 160 230, 190 245 L 178 260 Q 172 263 168 265" fill="none" stroke="url(#guanyinGold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+           <path d="M 138 165 C 145 190, 160 230, 190 245" fill="none" stroke="url(#guanyinGold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+           <path d="M 104 23 C 102 25, 102 32, 106 34" fill="none" stroke="url(#guanyinGold)" stroke-width="1" />
+           <path d="M 100 25 L 100 225 Q 103 232 115 235" fill="none" stroke="url(#guanyinGold)" stroke-width="1.5" stroke-linecap="round" />
+       </g>
+       
+       <!-- 菩萨尊足 (左侧) - 已同步弥陀琉璃色块与观音主框金线 -->
+       <g transform="translate(480, 735) scale(-0.7, 0.7) rotate(84) translate(-100, -225)" style="filter: drop-shadow(0 0 15px rgba(218, 165, 32, 0.5));">
+           <!-- 🌟 借用弥陀的玻璃底色块 -->
+           <path d="M 100 25 C 103 18, 107 20, 108 30 L 111 60 C 112 70, 115 80, 120 90 L 112 235 Q 103 232 100 225 L 100 25 Z" fill="url(#glass-base-mini)" />
+           <!-- 🌟 线条全面换成观音古铜深金线 -->
+           <path d="M 100 25 C 103 18, 107 20, 108 30 L 111 60" fill="none" stroke="url(#guanyinGold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+           <path d="M 111 60 C 112 70, 115 80, 120 90" fill="none" stroke="url(#guanyinGold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+           <path d="M 104 23 C 102 25, 102 32, 106 34" fill="none" stroke="url(#guanyinGold)" stroke-width="1" />
+           <path d="M 100 25 L 100 225 Q 103 232 112 235" fill="none" stroke="url(#guanyinGold)" stroke-width="1.5" stroke-linecap="round" />
+       </g>
+
+       <path d="M 283 710 Q 293 725 318 733 Q 360 738 400 741 L 468 744 L 512 746 C 516 765, 508 785, 490 820" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+       <path d="M 717 710 Q 707 725 682 733 Q 645 738 619 741" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+       <path d="M 283 717 Q 293 732 318 740 Q 360 745 400 748 L 468 751 L 512 753 C 516 772, 508 792, 490 827" stroke-width="2" />
+       <path d="M 717 717 Q 707 732 682 740 Q 645 745 619 748" stroke-width="2" />
+       <g transform="translate(500, 610) scale(0.7) translate(-100, -155)">
+           <g id="left-hand">
+               <path d="M -4.0 243 C 2.0 250, 10.0 253, 16.3 255" stroke-width="2.5" />
+               <path d="M -1.0 278 C 5.0 286, 26.0 289, 45.3 290" stroke-width="2.5" />
+               <path d="M 7.0 245 C 4.0 259, 4.0 273, 7.0 287" stroke-width="1.5" />
+               <circle cx="6.0" cy="250" r="4.0" fill="#333333" stroke="none" />
+               <circle cx="4.5" cy="259" r="4.0" fill="#333333" stroke="none" />
+               <circle cx="4.5" cy="269" r="4.0" fill="#333333" stroke="none" />
+               <circle cx="6.0" cy="278" r="4.0" fill="#333333" stroke="none" />
+               <path d="M 16.3 255 C 20.0 236.0, 55.0 225.0, 96.0 225.0 C 98.5 229.0, 91.5 241.0, 86.3 243.0 L 66.3 246.0 C 40.0 250.0, 50.0 285.0, 112.0 278.0" stroke-width="2.5" />
+               <path d="M 92.5 226.0 C 96.0 227.0, 96.0 230.0, 91.5 231.0 C 87.5 228.0, 84.0 225.1, 82.0 225.1" stroke-width="2.0" />
+               <path d="M 26.3 265 C 26.3 280, 59.3 295, 100.7 295" stroke-width="2.5" />
+           </g>
+           <g id="right-hand">
+               <path d="M 183.7 255 C 190.0 253, 198.0 250, 204.0 243" stroke-width="2.5" />
+               <path d="M 154.7 290 C 174.0 289, 195.0 286, 203.0 278" stroke-width="2.5" />
+               <path d="M 193.0 245 C 196.0 259, 196.0 273, 193.0 287" stroke-width="1.5" />
+               <circle cx="194.0" cy="250" r="4.0" fill="#333333" stroke="none" />
+               <circle cx="195.5" cy="259" r="4.0" fill="#333333" stroke="none" />
+               <circle cx="195.5" cy="269" r="4.0" fill="#333333" stroke="none" />
+               <circle cx="194.0" cy="278" r="4.0" fill="#333333" stroke="none" />
+               <path d="M 183.7 255 C 180.0 236.0, 145.0 225.0, 104.0 225.0 C 101.5 229.0, 108.5 241.0, 113.7 243.0 L 133.7 246.0 C 160.0 255.0, 125.0 285.0, 80.0 283.0 C 78.0 290.0, 80.0 294.0, 83.0 294.0" stroke-width="2.5" />
+               <path d="M 107.5 226.0 C 104.0 227.0, 104.0 230.0, 108.5 231.0 C 112.5 228.0, 116.0 226.0, 118.0 225.1" stroke-width="2.0" />
+               <path d="M 173.7 265 C 173.7 280, 140.7 295, 99.3 295" stroke-width="2.5" />
+           </g>
+       </g>
+       <g id="widows-peak-lines" stroke-width="1.6" stroke-linecap="round">
+           <path d="M 500 185 L 500 142" /> <path d="M 486 180 L 485 146" />
+           <path d="M 473 180 L 471 154" /> <path d="M 461 185 L 458 165" />
+           <path d="M 451 195 L 446 179" /> <path d="M 514 180 L 515 146" />
+           <path d="M 527 180 L 529 154" /> <path d="M 539 185 L 542 165" />
+           <path d="M 549 195 L 554 179" />
+       </g>
+         <!-- 1. 封闭的实心天衣 (完美缝合内外侧曲线) -->
+    <path id="heavenly-garment-left-solid" 
+          d="M 500 118 C 445 125, 400 200, 412 280 C 416 310, 414 345, 412 370 L 427 377 C 427 348, 429 310, 426 280 C 415 205, 455 140, 500 133 Z" />
+    <path id="heavenly-garment-right-solid" 
+          d="M 500 118 C 555 125, 600 200, 588 280 C 584 310, 586 345, 588 370 L 573 377 C 573 348, 571 310, 574 280 C 585 205, 545 140, 500 133 Z" />
+
+    <!-- 2. 封闭的头顶肉髻 (顶部的包) -->
+    <path id="hair-bun-solid" 
+          d="M 470 128 Q 450 90, 500 75 Q 550 90, 530 128 Q 500 140, 470 128 Z" />
+
+    <!-- 3. 封闭的发际线底层 (完美包覆美人尖的头皮区域) -->
+    <path id="hair-scalp-solid" 
+          d="M 446 195 Q 473 175, 500 185 Q 527 175, 554 195 Q 555 140, 500 135 Q 445 140, 446 195 Z" />
+
+   </g>
+                  
+<g id="celestial-ribbon-drapes">
+    
+    <!-- (一) 原本的「粗」主缎带 (外侧，包覆莲座缺口，Y=820) -->
+    <!-- 1. 左侧主缎带 -->
+    <path id="cape-left-main-fill" 
+          d="M 414 345 
+             C 390 365, 355 410, 340 470 
+             C 325 540, 310 630, 280 690 
+             C 240 730, 180 760, 140 820 
+             C 175 835, 245 810, 290 750 
+             C 320 700, 310 550, 325 450 
+             C 340 410, 380 375, 412 370 Z" />
+
+    <!-- 2. 右侧主缎带 -->
+    <path id="cape-right-main-fill" 
+          d="M 586 345 
+             C 610 365, 645 410, 660 470 
+             C 675 540, 690 630, 720 690 
+             C 760 730, 820 760, 860 820 
+             C 825 835, 755 810, 710 750 
+             C 680 700, 690 550, 675 450 
+             C 660 410, 620 375, 588 370 Z" />
+
+    <path id="cape-left-sub-fill" 
+          d="M 414 345 
+             C 415 365, 385 410, 373 470 
+             C 360 700, 347 630, 320 690 
+             C 285 730, 220 760, 175 820 
+             C 197 830, 245 810, 290 750 
+             C 317 700, 335 550, 347 450 
+             C 359 410, 390 375, 412 370 Z" />
+
+    <!-- 2. 右侧细缎带 (ID: cape-right-sub-fill，所有 X 座标向左 -15) -->
+    <path id="cape-right-sub-fill" 
+          d="M 586 345 
+             C 585 365, 615 410, 627 470 
+             C 640 700, 653 630, 680 690 
+             C 715 730, 780 760, 825 820 
+             C 803 830, 755 810, 710 750 
+             C 683 700, 665 550, 653 450 
+             C 641 410, 610 375, 588 370 Z" />
+
+</g>
+
+
+   </defs>
+     <!-- 
+======================================================================
+  第三步：左大势至菩萨图层 (补充完善版：层级顺序校正，逼出白色头包)
+======================================================================
+-->
+<g id="bodhisattva-left" class="bodhisattva-group">
+     <!-- 圆心与半径完全独立，呈现乾净、不被遮罩扣亮度的圣洁感 -->
+    <circle cx="500" cy="250" r="180" fill="url(#bodhi-aura-pure)" />
+
+    <!-- ================= 2. 独立中层：极细双环金丝光圈 ================= -->
+    <!-- 外细圈：调细至 0.8 -->
+    <circle cx="500" cy="250" r="180" fill="none" stroke="url(#bodhi-line-gold)" stroke-width="2" opacity="0.9" />
+    <!-- 内细圈：调细至 0.5，形成精细的层次感 -->
+    <circle cx="500" cy="250" r="130" fill="none" stroke="url(#bodhi-line-gold)" stroke-width="2.5" opacity="1" />
+
+    <!-- 1. 最底层实心白色：大身白底、肩披、耳朵 -->
+    <use href="#bodhisattva-robe-outline" fill="url(#shizhi-luminous-fill)" stroke="none" /> 
+    <use href="#shoulder-drape-right-fill" fill="#C5DCF5" />
+    <use href="#shoulder-drape-left-fill" fill="#C5DCF5" />
+    <use href="#ear-left-fill" fill="url(#shizhi-luminous-fill)" stroke="none" /> 
+    <use href="#ear-right-fill" fill="url(#shizhi-luminous-fill)" stroke="none" /> 
+
+    <!-- 2. 中间填充层：头发与发际线墨黑底色 (先於头包，防止黑色溢出边界) -->
+    <use href="#hair-bun-solid" fill="#111111" stroke="none" />
+    <use href="#hair-scalp-solid" fill="#111111" stroke="none" />
+
+    <!-- 3. 【全新完善】形状与天衣层：大势至实心白色头包与头巾 (完美覆盖黑发交界处) -->
+    <use href="#top-heavenly-garment-solid" fill="#C5DCF5" stroke="url(#shizhiGoldBrightened)" stroke-width="1.5" />
+    <use href="#headscarf-solid" fill="#FFFFFF" stroke="url(#shizhiGoldBrightened)" stroke-width="1.8" />
+    <use href="#heavenly-garment-left-solid" fill="#FFFFFF" stroke="url(#shizhiGoldBrightened)" stroke-width="1.2" stroke-linecap="round" />
+    <use href="#heavenly-garment-right-solid" fill="#FFFFFF" stroke="url(#shizhiGoldBrightened)" stroke-width="1.2" stroke-linecap="round" />
+
+      <!-- 菩萨图层呼叫代码 (大势至菩萨) -->
+<g id="shizhi-cape-group">
+    <!-- 外层大主缎带 -->
+    <use href="#cape-left-main-fill" fill="url(#shizhiLotusFill)" stroke="url(#shizhiGoldBrightened)" stroke-width="1.5" opacity="0.95" />
+    <use href="#cape-right-main-fill" fill="url(#shizhiLotusFill)" stroke="url(#shizhiGoldBrightened)" stroke-width="1.5" opacity="0.95" />
+
+    <!-- 内缩 15 单位的内层细缎带 -->
+    <use href="#cape-left-sub-fill" fill="url(#shizhiLotusFill)" stroke="url(#shizhiGoldBrightened)" stroke-width="0.8" opacity="0.85" />
+    <use href="#cape-right-sub-fill" fill="url(#shizhiLotusFill)" stroke="url(#shizhiGoldBrightened)" stroke-width="0.8" opacity="0.85" />
+    </g>
+
+    <!-- 4. 宝石与细节框线层：注入大势至专属发光蓝宝珠，以及头发外圈蓝线 -->
+    <use href="#crown-jewel-fill" fill="url(#shizhiCrownJewel)" stroke="url(#shizhiGoldBrightened)" stroke-width="1.2" />
+    <use href="#hair-bun-solid" fill="none" stroke="url(#guanyinGold)" stroke-width="1.5" />
+
+    <!-- 5. 最上层主框线：深蓝框线，外加淡蓝佛光 (fill 设为 none 确保绝不洗掉下层的白底) -->
+    <use href="#bodhisattva-entity" stroke="url(#shizhiGoldBrightened)" fill="none" style="filter: drop-shadow(0 0 15px rgba(100, 149, 237, 0.6));" />
+    <use href="#garment-ribbon-lines" stroke="#1E3A8A" fill="none" stroke-width="1.5" /> 
+    <use href="#shizhi-lotus-top" />
+
+      <!-- 注入大势至专属白毫 -->
+    <circle cx="500" cy="200" r="5.5" fill="url(#shizhi-urna-glow)" style="filter: drop-shadow(0 0 4px rgba(100, 149, 237, 0.8));" />
+    
+</g>
+
+
+<!-- 
+======================================================================
+  第四步：右观音菩萨图层 (补充完善版：层级顺序校正，逼出白色头包)
+======================================================================
+-->
+<g id="bodhisattva-right" class="bodhisattva-group">
+ <!-- 圆心与半径完全独立，呈现乾净、不被遮罩扣亮度的圣洁感 -->
+    <circle cx="500" cy="250" r="180" fill="url(#bodhi-aura-pure)" />
+
+    <!-- ================= 2. 独立中层：极细双环金丝光圈 ================= -->
+    <!-- 外细圈：调细至 0.8 -->
+    <circle cx="500" cy="250" r="180" fill="none" stroke="url(#bodhi-line-gold)" stroke-width="2" opacity="0.9" />
+    <!-- 内细圈：调细至 0.5，形成精细的层次感 -->
+    <circle cx="500" cy="250" r="130" fill="none" stroke="url(#bodhi-line-gold)" stroke-width="2.5" opacity="1" />
+
+
+    <!-- 莲花座 -->
+    <use href="#guanyin-lotus-bottom" />
+
+    <!-- 1. 最底层实心白色：大身白底、肩披、耳朵 -->
+    <use href="#bodhisattva-robe-outline" fill="url(#guanyin-milky-fill)" stroke="none" />
+    <use href="#shoulder-drape-right-fill" fill="#FEF08A" />
+    <use href="#shoulder-drape-left-fill" fill="#FEF08A" />
+    <use href="#ear-left-fill" fill="url(#guanyin-milky-fill)" stroke="none" />
+    <use href="#ear-right-fill" fill="url(#guanyin-milky-fill)" stroke="none" />
+    
+    <!-- 2. 中间填充层：头发与发际线墨黑底色 -->
+    <use href="#hair-bun-solid" fill="#111111" stroke="none" />
+    <use href="#hair-scalp-solid" fill="#111111" stroke="none" />
+
+    <!-- 3. 【全新完善】形状与天衣层：观音实心白色头包与头巾 -->
+    <use href="#top-heavenly-garment-solid" fill="#FFFFFF" stroke="url(#guanyinGold)" stroke-width="1.5" />
+    <use href="#headscarf-solid" fill="#FFFFFF" stroke="url(#guanyinGold)" stroke-width="1.8" />
+    <use href="#heavenly-garment-left-solid" fill="#FFFFFF" stroke="url(#guanyinGold)" stroke-width="1.2" stroke-linecap="round" />
+    <use href="#heavenly-garment-right-solid" fill="#FFFFFF" stroke="url(#guanyinGold)" stroke-width="1.2" stroke-linecap="round" />
+
+        <g id="guanyin-cape-group">
+        <!-- 外侧大主缎带 (粗，覆盖莲座缺口) -->
+        <use href="#cape-left-main-fill" fill="url(#bodhi-aura-pure)" stroke="url(#guanyinGold)" stroke-width="1.5" opacity="0.95" />
+        <use href="#cape-right-main-fill" fill="url(#bodhi-aura-pure)" stroke="url(#guanyinGold)" stroke-width="1.5" opacity="0.95" />
+        
+        <!-- 内侧精细副缎带 (内缩 15 单位，线条更细致) -->
+        <use href="#cape-left-sub-fill" fill="url(#bead-amber-grad)" stroke="url(#guanyinGold)" stroke-width="0.8" opacity="0.85" />
+        <use href="#cape-right-sub-fill" fill="url(#bead-amber-grad)" stroke="url(#guanyinGold)" stroke-width="0.8" opacity="0.85" />
+             </g>
+    
+    <!-- 4. 宝石与细节框线层：注入观音专属璀璨烫金/红宝珠，以及头发外圈金线 -->
+    <use href="#crown-jewel-fill" fill="url(#guanyinCrownJewel)" stroke="url(#guanyinGold)" stroke-width="1.2" />
+    <use href="#hair-bun-solid" fill="none" stroke="url(#guanyinGold)" stroke-width="1.5" />
+    
+    <!-- 5. 最上层主框线：古铜深金线，外加金光佛光 -->
+    <use href="#bodhisattva-entity" stroke="url(#guanyinGold)" fill="none" style="filter: drop-shadow(0 0 15px rgba(218, 165, 32, 0.5));" />
+    <use href="#garment-ribbon-lines" stroke="#B78A1B" fill="none" stroke-width="1.5" />
+    <use href="#guanyin-lotus-top" />
+           <!-- 注入观音专属白毫 -->
+    <circle cx="500" cy="200" r="5.5" fill="url(#guanyin-urna-glow)" style="filter: drop-shadow(0 0 4px rgba(218, 165, 32, 0.8));" />
+</g>
+<!-- 观音势至菩萨尾 -->
+         <g class="mandala-static-container" mask="url(#mandala-total-mask)" style="mix-blend-mode: screen;">
+    <g class="mandala-glow-effect">
+        
+        <g stroke="#FFD700" stroke-width="2" fill="url(#mandalaInnerFill)">
+            <!-- 原始多角形结构，完全保留，固定金色不参与交替 -->
+            <path d="M500 10 L764.5 95.9 L928 320.9 L928 599.1 L764.5 824.1 L500 910 L235.5 824.1 L72 599.1 L72 320.9 L235.5 95.9 Z" opacity="0.6" />
+            <path d="M500 10 L928 320.9 L764.5 824.1 L235.5 824.1 L72 320.9 L500 10" opacity="0.6" />
+            <path d="M764.5 95.9 L928 599.1 L500 910 L72 599.1 L235.5 95.9" fill="none" opacity="0.6" />
+            <path d="M500 10 L928 599.1 L235.5 824.1 M235.5 95.9 L928 320.9 L500 910 L72 320.9 L764.5 95.9" fill="none" opacity="0.4" stroke-width="1" />
+            <path d="M764.5 824.1 L72 599.1 L500 10 M928 599.1 L72 320.9 M928 320.9 L72 599.1" fill="none" opacity="0.4" stroke-width="1" />
+
+            <!-- 中央同心圆，固定不变 -->
+            <circle cx="500" cy="460" r="150" fill="none" stroke="#FFD700" stroke-width="1" opacity="0.45" />
+
+            <!-- 十朵花瓣：金色版本，交替发光层之一 -->
+            <g id="mandala-lotus-outer" class="mandala-petal-gold" opacity="0.55">
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(0,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(36,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(72,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(108,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(144,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(180,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(216,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(252,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(288,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(324,500,460)" />
+            </g>
+
+            <!-- 十朵花瓣：玻璃版本，叠在同位置，交替发光层之二 -->
+            <g id="mandala-lotus-outer-alt" class="mandala-petal-glass" opacity="0.55" fill="url(#glass-base-mini)">
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(0,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(36,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(72,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(108,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(144,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(180,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(216,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(252,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(288,500,460)" />
+                <path d="M500,460 C350,390 340,190 500,10 C660,190 650,390 500,460 Z" transform="rotate(324,500,460)" />
+            </g>
+
+            <!-- 顶点小莲花座装饰，固定金色不参与交替 -->
+            <defs>
+                <g id="mandala-lotus-seat">
+                    <g transform="scale(0.6)">
+                        <path d="M-16,4 C-16,-2 16,-2 16,4 C10,10 -10,10 -16,4 Z" 
+                              fill="url(#mandalaInnerFill)" stroke="#FFD700" stroke-width="1" opacity="0.85" />
+                        <path d="M-3,4 C-5,-8 -3,-22 0,-30 C3,-22 5,-8 3,4 Z" 
+                              fill="url(#mandalaInnerFill)" stroke="#FFD700" stroke-width="1.3" opacity="0.95" />
+                        <path d="M-3,4 C-10,-6 -12,-16 -9,-23 C-6,-15 -4,-6 -3,4 Z" 
+                              fill="url(#mandalaInnerFill)" stroke="#FFD700" stroke-width="1.1" opacity="0.85" />
+                        <path d="M3,4 C10,-6 12,-16 9,-23 C6,-15 4,-6 3,4 Z" 
+                              fill="url(#mandalaInnerFill)" stroke="#FFD700" stroke-width="1.1" opacity="0.85" />
+                        <circle cx="0" cy="-10" r="2" fill="#FFD700" opacity="0.9" />
+                    </g>
+                </g>
+            </defs>
+
+            <g id="mandala-gourd-perimeter">
+                <use href="#mandala-lotus-seat" transform="translate(500, 10)" />
+                <use href="#mandala-lotus-seat" transform="rotate(36, 500, 460) translate(500, 10)" />
+                <use href="#mandala-lotus-seat" transform="rotate(72, 500, 460) translate(500, 10)" />
+                <use href="#mandala-lotus-seat" transform="rotate(108, 500, 460) translate(500, 10)" />
+                <use href="#mandala-lotus-seat" transform="rotate(144, 500, 460) translate(500, 10)" />
+                <use href="#mandala-lotus-seat" transform="rotate(180, 500, 460) translate(500, 10)" />
+                <use href="#mandala-lotus-seat" transform="rotate(216, 500, 460) translate(500, 10)" />
+                <use href="#mandala-lotus-seat" transform="rotate(252, 500, 460) translate(500, 10)" />
+                <use href="#mandala-lotus-seat" transform="rotate(288, 500, 460) translate(500, 10)" />
+                <use href="#mandala-lotus-seat" transform="rotate(324, 500, 460) translate(500, 10)" />
+            </g>
+
+            <animateTransform 
+                attributeName="transform" 
+                type="rotate" 
+                from="0 500 460" 
+                to="360 500 460" 
+                dur="180s" 
+                repeatCount="indefinite" />
+        </g>
+    </g>
+</g>
+        <circle cx="500" cy="460" r="450" fill="none" stroke="#FFD700" stroke-width="2" opacity="0.8" />
+        <circle cx="500" cy="460" r="462" fill="none" stroke="#FFD700" stroke-width="1" opacity="0.3" />
+        
+    </g>
+</g>
+    <g style="isolation: isolate;">
+    <circle cx="300" cy="820" r="150" fill="url(#junctionGlow)" style="mix-blend-mode: screen;" />
+    <circle cx="700" cy="820" r="150" fill="url(#junctionGlow)" style="mix-blend-mode: screen;" />
+    <circle cx="500" cy="800" r="250" fill="url(#junctionGlow)" filter="url(#halo-soft-blur)" style="mix-blend-mode: screen;" />
+</g>
+
+
+
+
+            <g class="aura-pulse" mask="url(#halo-mask)">
+                <g mask="url(#color-ring-mask)">
+                    <circle cx="500" cy="245" r="225" fill="url(#colorMix1)" />
+                    <circle cx="500" cy="245" r="225" fill="url(#colorMix2)" opacity="0.8" />
+                    <circle cx="500" cy="245" r="225" fill="url(#colorMix3)" opacity="0.7" />
+                </g>
+            </g>
+            
+            <circle class="halo-pulse" cx="500" cy="245" r="215" fill="url(#haloFillDef)" stroke="url(#haloGlow)" stroke-width="2" opacity="0.8" mask="url(#halo-mask)" />
+            <circle class="halo-pulse" cx="500" cy="245" r="160" fill="none" stroke="url(#haloGlow)" stroke-width="2" mask="url(#halo-mask)" />
+
+                      <g>
+                <path d="M 500 108 C 506 108, 508 114, 508 118 C 522 118, 524 145, 510 155 C 550 155, 565 170, 565 220 C 565 250, 563 275, 558 295 C 553 312, 549 324, 544 330 C 542 336, 544 352, 550 370 C 610 370, 650 400, 670 480 C 690 560, 680 660, 650 700 C 720 680, 800 700, 830 750 C 860 800, 830 840, 770 840 L 230 840 C 170 840, 140 800, 170 750 C 200 700, 280 680, 350 700 C 320 660, 310 560, 330 480 C 350 400, 390 370, 450 370 C 456 352, 458 336, 456 330 C 451 324, 447 312, 442 295 C 437 275, 435 250, 435 220 C 435 170, 450 155, 490 155 C 476 145, 478 118, 492 118 C 492 114, 494 108, 500 108 Z" fill="rgba(1, 1, 3, 0.15)" />
+                        <path d="M 500 108 C 506 108, 508 114, 508 118 C 522 118, 524 145, 510 155 C 550 155, 565 170, 565 220 C 565 250, 563 275, 558 295 C 553 312, 549 324, 544 330 C 542 336, 544 352, 550 370 C 610 370, 650 400, 670 480 C 690 560, 680 660, 650 700 C 720 680, 800 700, 830 750 C 860 800, 830 840, 770 840 L 230 840 C 170 840, 140 800, 170 750 C 200 700, 280 680, 350 700 C 320 660, 310 560, 330 480 C 350 400, 390 370, 450 370 C 456 352, 458 336, 456 330 C 451 324, 447 312, 442 295 C 437 275, 435 250, 435 220 C 435 170, 450 155, 490 155 C 476 145, 478 118, 492 118 C 492 114, 494 108, 500 108 Z" fill="url(#bodyFill)" />
+                        <path d="M 500 108 C 506 108, 508 114, 508 118 C 522 118, 524 145, 510 155 C 550 155, 565 170, 565 220 C 565 250, 563 275, 558 295 C 553 312, 549 324, 544 330 C 542 336, 544 352, 550 370 C 610 370, 650 400, 670 480 C 690 560, 680 660, 650 700 C 720 680, 800 700, 830 750 C 860 800, 830 840, 770 840 L 230 840 C 170 840, 140 800, 170 750 C 200 700, 280 680, 350 700 C 320 660, 310 560, 330 480 C 350 400, 390 370, 450 370 C 456 352, 458 336, 456 330 C 451 324, 447 312, 442 295 C 437 275, 435 250, 435 220 C 435 170, 450 155, 490 155 C 476 145, 478 118, 492 118 C 492 114, 494 108, 500 108 Z" fill="url(#bodyFillPink)" style="mix-blend-mode: screen;" />
+                
+<g fill="none" stroke="url(#goldBody)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke-miterlimit="1">
+    <path d="M 500 108 C 506 108, 508 114, 508 118 C 522 118, 524 145, 510 155 C 550 155, 565 170, 565 220 C 565 250, 563 275, 558 295 C 553 312, 549 324, 544 330 C 542 336, 544 352, 550 370 C 610 370, 650 400, 670 480 C 690 560, 680 660, 650 700 C 720 680, 800 700, 830 750 C 860 800, 830 840, 770 840 L 230 840 C 170 840, 140 800, 170 750 C 200 700, 280 680, 350 700 C 320 660, 310 560, 330 480 C 350 400, 390 370, 450 370 C 456 352, 458 336, 456 330 C 451 324, 447 312, 442 295 C 437 275, 435 250, 435 220 C 435 170, 450 155, 490 155 C 476 145, 478 118, 492 118 C 492 114, 494 108, 500 108 Z" stroke-width="2.1" />
+
+
+                 <g stroke="#8B6508" stroke-width="2.5" fill="url(#goldBody)">
+                        <circle cx="570" cy="200" r="6" />
+                        <circle cx="568" cy="187" r="6" />
+                        <circle cx="563" cy="174" r="6" />
+                        <circle cx="554" cy="162" r="7" />     
+                        <circle cx="543" cy="151" r="8.5" />   
+                        <circle cx="526" cy="144" r="10" />    
+                        <circle cx="430" cy="200" r="6" />
+                        <circle cx="432" cy="187" r="6" />
+                        <circle cx="437" cy="174" r="6" />
+                        <circle cx="446" cy="162" r="7" />     
+                        <circle cx="457" cy="151" r="8.5" />   
+                        <circle cx="474" cy="144" r="10" />    
+                        
+                        <circle cx="514" cy="175" r="7" />
+                        <circle cx="528" cy="179" r="8" />
+                        <circle cx="541" cy="184" r="8" />
+                        <circle cx="553" cy="189" r="8" />
+                        <circle cx="486" cy="175" r="7" />
+                        <circle cx="472" cy="179" r="8" />
+                        <circle cx="459" cy="184" r="8" />
+                        <circle cx="445" cy="189" r="8" />
+                        
+                        <circle cx="513" cy="164" r="7" />
+                        <circle cx="526" cy="168" r="6.5" />
+                        <circle cx="538" cy="174" r="6" />
+                        <circle cx="549" cy="182" r="6" />
+                        <circle cx="489" cy="164" r="7" />
+                        <circle cx="474" cy="168" r="6.5" />
+                        <circle cx="462" cy="174" r="6" />
+                        <circle cx="451" r="6" cy="182" />
+                        <circle cx="511" cy="155" r="7" />
+                        <circle cx="523" cy="155" r="6" />
+                        <circle cx="534" cy="161" r="6" />
+                        <circle cx="544" cy="169" r="6" />
+                        <circle cx="489" cy="155" r="7" />
+                        <circle cx="477" cy="155" r="6" />
+                        <circle cx="466" cy="161" r="6" />
+                        <circle cx="456" cy="169" r="6" />
+                        <circle cx="558" cy="185" r="6" /> 
+                        <circle cx="553" cy="172" r="6" /> 
+                        <circle cx="442" cy="185" r="6" /> 
+                        <circle cx="447" cy="172" r="6" /> 
+                        <circle cx="500" cy="135" r="17.5" fill="url(#deepGoldGradient)" stroke="#8B6508" stroke-width="3.5" />
+                        <circle cx="500" cy="155" r="8" />
+                        <circle cx="500" cy="164" r="7" />
+                        <circle cx="500" cy="175" r="7" />
+                         <circle cx="500" cy="184" r="4.1" />
+                        <circle cx="510" cy="182" r="4.3" />
+                        <circle cx="490" cy="182" r="4.3" />
+                        
+                        <circle cx="436" cy="199" r="5.8" />
+                        <circle cx="560" cy="199" r="5.8" />
+                        <circle cx="433" cy="207" r="3" />
+                        <circle cx="565" cy="207" r="3" />
+                         <circle cx="433" cy="212" r="2.7" />
+                        <circle cx="565" cy="212" r="2.7" />
+
+                    </g>
+                
+ 
+
+
+<g class="buddha-foot-line-right" transform="translate(520, 735) scale(0.7) rotate(84) translate(-100, -225)" style="filter: drop-shadow(0 0 20px rgba(212,175,55,0.6));">
+    <path d="M 100 25 C 103 18, 107 20, 108 30 L 138 165 C 145 190, 160 230, 190 245 L 178 260 Q 172 263 168 265 L 115 235 Q 103 232 100 225 L 100 25 Z" fill="url(#glass-base-mini)" />
+    <path d="M 100 25 C 103 18, 107 20, 108 30 L 138 165 C 145 190, 160 230, 190 245 L 178 260 Q 172 263 168 265" fill="none" stroke="var(--gold-solid)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 138 165 C 145 190, 160 230, 190 245" fill="none" stroke="var(--gold-solid)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 104 23 C 102 25, 102 32, 106 34" stroke="var(--gold-solid)" stroke-width="1" fill="none" />
+    <path d="M 100 25 L 100 225 Q 103 232 115 235" stroke="var(--gold-solid)" stroke-width="1.5" stroke-linecap="round" fill="none" />
+</g>
+
+<g class="buddha-foot-line-left" transform="translate(480, 735) scale(-0.7, 0.7) rotate(84) translate(-100, -225)" style="filter: drop-shadow(0 0 20px rgba(212,175,55,0.6));">
+    <path d="M 100 25 C 103 18, 107 20, 108 30 L 111 60 C 112 70, 115 80, 120 90 L 112 235 Q 103 232 100 225 L 100 25 Z" fill="url(#glass-base-mini)" />
+    <path d="M 100 25 C 103 18, 107 20, 108 30 L 111 60" fill="none" stroke="var(--gold-solid)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 111 60 C 112 70, 115 80, 120 90" fill="none" stroke="var(--gold-solid)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 104 23 C 102 25, 102 32, 106 34" stroke="var(--gold-solid)" stroke-width="1" fill="none" />
+    <path d="M 100 25 L 100 225 Q 103 232 112 235" stroke="var(--gold-solid)" stroke-width="1.5" stroke-linecap="round" fill="none" />
+</g>
+
+
+
+
+<path d="M 283 710 Q 293 725 318 733 Q 360 738 400 741 L 468 744 L 512 746 C 516 765, 508 785, 490 820" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+
+<path d="M 717 710 Q 707 725 682 733 Q 645 738 619 741" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+    
+    <path d="M 283 717 Q 293 732 318 740 Q 360 745 400 748 L 468 751 L 512 753 C 516 772, 508 792, 490 827" />
+
+
+    <path d="M 717 717 Q 707 732 682 740 Q 645 745 619 748" />
+
+
+
+
+
+
+
+<path d="M 435 220 Q 427 205 426 220 Q 418 270 434 320 Q 428 380 454 330 Q 442 295 435 220 Z" fill="rgba(1, 1, 3, 0.15)" stroke="none" />
+<path d="M 435 220 Q 427 205 426 220 Q 418 270 434 320 Q 428 380 454 330 Q 442 295 435 220 Z" fill="url(#bodyFill)" stroke="none" />
+<path d="M 435 220 Q 427 205 426 220 Q 418 270 434 320 Q 428 380 454 330 Q 442 295 435 220 Z" fill="url(#bodyFillPink)" style="mix-blend-mode: screen;" stroke="none" />
+<path d="M 435 220 Q 427 205 426 220 Q 418 270 434 320 Q 428 380 454 330" fill="none" />
+
+<path d="M 565 220 Q 573 205 574 220 Q 582 270 566 320 Q 572 380 546 330 Q 558 295 565 220 Z" fill="rgba(1, 1, 3, 0.15)" stroke="none" />
+<path d="M 565 220 Q 573 205 574 220 Q 582 270 566 320 Q 572 380 546 330 Q 558 295 565 220 Z" fill="url(#bodyFill)" stroke="none" />
+<path d="M 565 220 Q 573 205 574 220 Q 582 270 566 320 Q 572 380 546 330 Q 558 295 565 220 Z" fill="url(#bodyFillPink)" style="mix-blend-mode: screen;" stroke="none" />
+<path d="M 565 220 Q 573 205 574 220 Q 582 270 566 320 Q 572 380 546 330" fill="none" />
+
+<path d="M 435 240 Q 425 275 437 305" stroke-width="1.5" fill="none" />
+<path d="M 565 240 Q 575 275 563 305" stroke-width="1.5" fill="none" />
+
+
+<path d="M 410 410 C 410 600, 590 600, 590 410" />
+<path d="M 410 400 C 410 590, 590 590, 590 400" />
+<path d="M 410 390 C 410 580, 590 580, 590 390" />
+<path d="M 410 380 C 410 570, 590 570, 590 380" />
+<path d="M 390 385 C 390 670, 610 670, 610 385" fill="none" stroke-width="1.5" stroke-linecap="round" />
+
+
+<g opacity="0.85">
+
+    <path d="M 368 520 Q 368 620 415 660" stroke-width="2" />
+    <path d="M 354 575 Q 368 620 415 660" stroke-width="2" />
+    <path d="M 354 600 Q 368 630 415 660" stroke-width="2" />
+
+
+
+    <path d="M 632 520 Q 632 620 585 660" stroke-width="3" />
+    <path d="M 646 575 Q 632 620 585 660" stroke-width="2" />
+    <path d="M 646 600 Q 632 630 585 660" stroke-width="2" />
+    
+    <path d="M 415 660 Q 430 710 465 715" stroke-width="2.2" />
+    <path d="M 415 660 Q 430 710 465 720" stroke-width="2.2" />
+    <path d="M 585 660 Q 570 710 535 715" stroke-width="2.2" />
+    <path d="M 585 660 Q 570 710 535 720" stroke-width="2.2" />
+</g>
+ 
+
+<g class="buddha-hands-closed" transform="translate(500, 630) scale(0.7) translate(-100, -155)" style="filter: drop-shadow(0 0 20px rgba(212,175,55,0.6));">
+    <path d="M 100 25 C 97 18, 93 20, 92 30 L 62 165 C 55 190, 40 230, 10 245 L 30 275 C 65 265, 85 245, 100 225 C 115 245, 135 265, 170 275 L 190 245 C 160 230, 145 190, 138 165 L 108 30 C 107 20, 103 18, 100 25 Z" fill="url(#glass-base-mini)" />
+    <path d="M 138 165 L 108 30 C 107 20, 103 18, 100 25 C 97 18, 93 20, 92 30 L 62 165 M 30 275 C 65 265, 85 245, 100 225 C 115 245, 135 265, 170 275" fill="none" stroke="var(--gold-solid)" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M 62 165 C 55 190, 40 230, 10 245" fill="none" stroke="var(--gold-solid)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 138 165 C 145 190, 160 230, 190 245" fill="none" stroke="var(--gold-solid)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 0 240 Q 37.5 265, 75 240" fill="none" stroke="var(--gold-solid)" stroke-width="3" stroke-linecap="round" transform="rotate(40, 37.5, 240)"/>
+    <path d="M 5 232 Q 41.5 257, 78 232" fill="none" stroke="var(--gold-solid)" stroke-width="3" stroke-linecap="round" transform="rotate(40, 37.5, 240)"/>
+    <path d="M 200 240 Q 162.5 265, 125 240" fill="none" stroke="var(--gold-solid)" stroke-width="3" stroke-linecap="round" transform="rotate(-40, 162.5, 240)"/>
+    <path d="M 195 232 Q 158.5 257, 122 232" fill="none" stroke="var(--gold-solid)" stroke-width="3" stroke-linecap="round" transform="rotate(-40, 162.5, 240)"/>
+    <path d="M 96 23 C 98 25, 98 32, 94 34" stroke="var(--gold-solid)" stroke-width="1" fill="none" />
+    <path d="M 104 23 C 102 25, 102 32, 106 34" stroke="var(--gold-solid)" stroke-width="1" fill="none" />
+    <path d="M 100 25 L 100 225" stroke="var(--gold-solid)" stroke-width="1.5" stroke-linecap="round" fill="none" />
+</g>
+<g class="buddha-hands-open" transform="translate(500, 610) scale(0.7) translate(-100, -155)" style="filter: drop-shadow(0 0 20px rgba(212,175,55,0.6));">
+    
+    <path d="M 16.3 255 C 20.0 236.0, 55.0 225.0, 96.0 225.0 C 98.5 229.0, 91.5 241.0, 86.3 243.0 C 100.7 265, 100.7 275, 96.3 295 L 45.3 290 C 26.0 289, 5.0 286, -1.0 278 C 10.0 253, 16.3 255, 16.3 255 Z
+             M 54.3 260 C 54.3 251, 69.3 245, 86.3 245 C 90.3 253.0, 90.3 267.0, 86.3 275 C 69.3 275, 54.3 269, 54.3 260 Z" 
+          fill="url(#glass-base-mini)" fill-opacity="0.3" stroke="none" fill-rule="evenodd" />
+          
+    <path d="M 183.7 255 C 180.0 236.0, 145.0 225.0, 104.0 225.0 C 101.5 229.0, 108.5 241.0, 113.7 243.0 C 99.3 265, 99.3 275, 103.7 295 L 154.7 290 C 174.0 289, 195.0 286, 203.0 278 C 198.0 250, 183.7 255, 183.7 255 Z
+             M 145.7 260 C 145.7 251, 130.7 245, 113.7 245 C 109.7 253.0, 109.7 267.0, 113.7 275 C 130.7 275, 145.7 269, 145.7 260 Z" 
+          fill="url(#glass-base-mini)" fill-opacity="0.3" stroke="none" fill-rule="evenodd" />
+
+    <g transform="translate(-0.7, 0)">
+        <path d="M -4.0 243 C 2.0 250, 10.0 253, 16.3 255" fill="none" stroke="var(--gold-solid)" stroke-width="2.5" stroke-linecap="round"/>
+        
+        <path d="M -1.0 278 C 5.0 286, 26.0 289, 45.3 290" fill="none" stroke="var(--gold-solid)" stroke-width="2.5" stroke-linecap="round"/>
+
+        <path d="M 16.3 255 C 20.0 236.0, 55.0 225.0, 96.0 225.0 C 98.5 229.0, 91.5 241.0, 86.3 243.0" fill="none" stroke="var(--gold-solid)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        
+        <path d="M 26.3 265 C 26.3 280, 59.3 295, 96.3 295" fill="none" stroke="var(--gold-solid)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 100.7 265 C 100.7 268.0, 100.7 272.0, 100.7 275 C 99.0 282.0, 97.5 289.0, 96.3 295" fill="none" stroke="var(--gold-solid)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 100.7 265 C 102.0 256.0, 94.0 248.0, 86.3 245" fill="none" stroke="var(--gold-solid)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        
+        <path d="M 54.3 260 C 54.3 251, 69.3 245, 86.3 245 C 90.3 253.0, 90.3 267.0, 86.3 275 C 69.3 275, 54.3 269, 54.3 260 Z" fill="none" stroke="var(--gold-solid)" stroke-width="2" stroke-linejoin="round"/>
+    </g>
+
+    <g transform="translate(0.7, 0)">
+        <path d="M 183.7 255 C 190.0 253, 198.0 250, 204.0 243" fill="none" stroke="var(--gold-solid)" stroke-width="2.5" stroke-linecap="round"/>
+        
+        <path d="M 154.7 290 C 174.0 289, 195.0 286, 203.0 278" fill="none" stroke="var(--gold-solid)" stroke-width="2.5" stroke-linecap="round"/>
+
+        <path d="M 183.7 255 C 180.0 236.0, 145.0 225.0, 104.0 225.0 C 101.5 229.0, 108.5 241.0, 113.7 243.0" fill="none" stroke="var(--gold-solid)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        
+        <path d="M 173.7 265 C 173.7 280, 140.7 295, 103.7 295" fill="none" stroke="var(--gold-solid)" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M 99.3 265 C 99.3 268.0, 99.3 272.0, 99.3 275 C 101.0 282.0, 102.5 289.0, 103.7 295" fill="none" stroke="var(--gold-solid)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 99.3 265 C 98.0 256.0, 106.0 248.0, 113.7 245" fill="none" stroke="var(--gold-solid)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        
+        <path d="M 145.7 260 C 145.7 251, 130.7 245, 113.7 245 C 109.7 253.0, 109.7 267.0, 113.7 275 C 130.7 275, 145.7 269, 145.7 260 Z" fill="none" stroke="var(--gold-solid)" stroke-width="2" stroke-linejoin="round"/>
+    </g>
+
+</g>
+
+
+        
+<path class="buddha-swastika" 
+      d="M 500 460 L 500 440 L 480 440 
+         M 500 460 L 520 460 L 520 440 
+         M 500 460 L 500 480 L 520 480 
+         M 500 460 L 480 460 L 480 480" 
+      fill="none" 
+      stroke="url(#goldBody)" 
+      stroke-width="3" 
+      stroke-linejoin="miter" 
+      stroke-linecap="square">
+    
+    <animate 
+        attributeName="opacity" 
+        values="0.5; 0.8; 0.5" 
+        dur="5s" 
+        repeatCount="indefinite" />
+</path>
+
+
+                         <!-- 眉心白毫与眼睛（闭眼） -->
+<g class="buddha-eye-closed">
+    <circle cx="500" cy="202" r="5" fill="url(#pureGoldGradient)" stroke="none" class="glow-core" />
+    <!-- 左眼弧线 -->
+    <path d="M 439 234.5 Q 462 239 478 237.5 Q 479 239 478.5 240.5" stroke="url(#goldBody)" stroke-width="2.0" stroke-linecap="round" fill="none" />
+    <path d="M 439 234.5 Q 462 245 478.5 240.5" stroke="url(#goldBody)" stroke-width="2.0" stroke-linecap="round" fill="none" />
+    <!-- 右眼弧线 (对称) -->
+    <path d="M 561 234.5 Q 538 239 522 237.5 Q 521 239 521.5 240.5" stroke="url(#goldBody)" stroke-width="2.0" stroke-linecap="round" fill="none" />
+    <path d="M 561 234.5 Q 538 245 521.5 240.5" stroke="url(#goldBody)" stroke-width="2.0" stroke-linecap="round" fill="none" />
+</g>
+
+<!-- 眉心白毫与眼睛（张眼：由闭眼线条衍生，稍微大一点点，精准对称） -->
+<g class="buddha-eye-open">
+    <circle cx="500" cy="202" r="8" fill="url(#pureGoldGradient)" stroke="none" class="glow-core" />
+    
+    <!-- 左眼 (长度微增至 39 单位) -->
+    <path d="M 441 234 Q 462 239.5 480 238 Q 479 239.5 478.5 241" stroke="url(#goldBody)" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 441 234 Q 462 246 480 241" stroke="url(#goldBody)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    
+    <!-- 右眼 (对称，x = 1000 - 左眼x) -->
+    <path d="M 559 234 Q 538 239.5 520 238 Q 521 239.5 521.5 241" stroke="url(#goldBody)" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 559 234 Q 538 246 520 241" stroke="url(#goldBody)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+</g>
+
+
+
+<!-- 鼻梁後半段骨架（左 495 / 右 505）依然连贯 -->
+<path d="M 440 222 Q 462 209 493 219 C 494.5 230, 495 248, 493 274.5" fill="none" stroke-width="3.5" />
+<path d="M 560 222 Q 538 209 507 219 C 505.5 230, 505 248, 507 274.5" fill="none" stroke-width="3.5" />
+<path d="M 488 268 C 488 270 488 276 495 278 L 500 285 L 505 278 C 512 276 512 270 512 268" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+
+
+/* 嘴三层次线 */
+<path d="M 482 293.5 Q 483 294.5 484 295 Q 492 291 500 296 Q 508 291 516 295 Q 517 294.5 518 293.5" stroke-width="2" fill="none" />
+<path d="M 480 293.5 Q 481 294.5 482 295 Q 500 299 518 295 Q 519 294.5 520 293.5" stroke-width="1.2" fill="none" stroke-opacity="0.8" />
+<path d="M 486 299 Q 500 303 514 299" stroke-width="1.5" fill="none" />
+<path d="M 486 322 Q 500 316 514 322" stroke-width="1.2" />
+
+<!-- 脖子线 -->
+<path d="M 460 325 Q 500 360 540 325" fill="none" stroke-width="1" />
+<path d="M 465 345 Q 500 360 535 345" fill="none" />
+<path d="M 470 351.5 Q 500 365 530 351.5" fill="none" />
+<path d="M 475 358 Q 500 370 525 358" fill="none" />
+<path d="M 485 364.5 Q 500 369.5 515 364.5" fill="none" stroke-width="0.7" />
+
+                </g>
+            </g>
+  <ellipse cx="500" cy="780" rx="150" ry="40" fill="url(#junctionGlow)" style="mix-blend-mode: screen;" />
+
+                <g stroke="url(#goldLotus)" stroke-width="1.5" stroke-linejoin="round">
+
+                                    <g transform="scale(0.85, -0.75)" transform-origin="500 840" fill="url(#lotusFillBottom)">
+                        
+                        <use href="#pure-petal" transform="translate(-205, -10) rotate(-30, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(205, -10) rotate(30, 500, 840)" />
+                        
+                        <use href="#pure-petal" transform="translate(-145, -20) rotate(-18, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(145, -20) rotate(18, 500, 840)" />
+                        
+                        <use href="#pure-petal" transform="translate(-75, -30) rotate(-7, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(75, -30) rotate(7, 500, 840)" />
+                        
+                        <use href="#pure-petal" transform="translate(0, -45) rotate(0, 500, 840)" />
+                        
+                    </g>
+
+
+                    <g transform="translate(0, 115)" fill="url(#lotusFill)">
+                        
+                        <use href="#pure-petal" transform="translate(-250, -110) rotate(-40, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(250, -110) rotate(40, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(-205, -65) rotate(-35, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(205, -65) rotate(35, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(-145, -30) rotate(-20, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(145, -30) rotate(20, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(-75, -23) rotate(-8, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(75, -23) rotate(8, 500, 840)" />
+                        <use href="#pure-petal" transform="translate(0, -23)" />
+
+                    </g>
+                    
+                </g>
+
+
+                <g id="orb-layer" style="opacity: 0; pointer-events: none;">
+                    <path id="beam-left-glow" fill="none" stroke="#FFD700" stroke-width="15" stroke-linecap="round" style="filter: blur(8px); opacity: 0.3;" />
+                    <path id="beam-left-core" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" style="filter: drop-shadow(0 0 10px #FFD700); opacity: 0.9;" />
+                    
+                    <path id="beam-center-glow" fill="none" stroke="#FFD700" stroke-width="15" stroke-linecap="round" style="filter: blur(8px); opacity: 0.3;" />
+                    <path id="beam-center-core" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" style="filter: drop-shadow(0 0 10px #FFD700); opacity: 0.9;" />
+                    
+                    <path id="beam-right-glow" fill="none" stroke="#FFD700" stroke-width="15" stroke-linecap="round" style="filter: blur(8px); opacity: 0.3;" />
+                    <path id="beam-right-core" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" style="filter: drop-shadow(0 0 10px #FFD700); opacity: 0.9;" />
+                </g>
+                               <g id="censer-group">
+                    <line id="stick-left" x1="475" y1="890" x2="480" y2="1020" stroke="#4a2e1b" stroke-width="6" stroke-linecap="round"/>
+                    <line id="stick-center" x1="500" y1="875" x2="500" y2="1020" stroke="#4a2e1b" stroke-width="6" stroke-linecap="round"/>
+                    <line id="stick-right" x1="525" y1="890" x2="520" y2="1020" stroke="#4a2e1b" stroke-width="6" stroke-linecap="round"/>
+                    <circle id="glow-left" cx="475" cy="890" r="4" fill="#ff4500" class="incense-glow" />
+                    <circle id="glow-center" cx="500" cy="875" r="4" fill="#ff4500" class="incense-glow" />
+                    <circle id="glow-right" cx="525" cy="890" r="4" fill="#ff4500" class="incense-glow" />
+                    <path d="M 455 1025 C 430 1000, 435 1050, 460 1045" fill="none" stroke="url(#goldBody)" stroke-width="4" stroke-linecap="round" />
+                    <path d="M 545 1025 C 570 1000, 565 1050, 540 1045" fill="none" stroke="url(#goldBody)" stroke-width="4" stroke-linecap="round" />
+                    <path d="M 455 1020 C 455 1070, 545 1070, 545 1020 Z" fill="url(#bodyFillPink)" stroke="url(#goldBody)" stroke-width="2" />
+                    <ellipse cx="500" cy="1020" rx="45" ry="12" fill="#0b080a" stroke="url(#goldBody)" stroke-width="2" />
+                    <g id="ash-layer">
+                        <ellipse cx="500" cy="1020" rx="35" ry="7" fill="#333" />
+                    </g>
+                    <path d="M 475 1055 L 470 1075" stroke="url(#goldBody)" stroke-width="5" stroke-linecap="round" />
+                    <path d="M 525 1055 L 530 1075" stroke="url(#goldBody)" stroke-width="5" stroke-linecap="round" />
+                    <path d="M 500 1060 L 500 1080" stroke="url(#goldBody)" stroke-width="5" stroke-linecap="round" />
+                    
+                    <g id="candle-left-group">
+                        <path d="M 416 1030 C 416 1045, 408 1052, 408 1055 L 432 1055 C 432 1052, 424 1045, 424 1030 Z" fill="url(#goldBody)" stroke="rgba(212,175,55,0.5)" stroke-width="1"/>
+                        <ellipse cx="420" cy="1030" rx="6" ry="1.5" fill="url(#goldBody)"/>
+                        <ellipse cx="420" cy="1055" rx="12" ry="3" fill="#0b080a" stroke="rgba(212,175,55,0.8)" stroke-width="1.5"/>
+                        <rect id="candle-body-left" x="415" y="970" width="10" height="60" rx="3" fill="url(#goldBody)" stroke="rgba(212,175,55,0.5)" stroke-width="1.5" opacity="0.85"/>
+                        <line id="candle-wick-left" x1="420" y1="965" x2="420" y2="975" stroke="#4a2e1b" stroke-width="2"/>
+                        
+                        <g id="flame-move-left">
+                            <g id="flame-group-left" class="candle-flicker" style="transform-origin: 420px 965px;">
+                                <circle cx="420" cy="955" r="18" fill="url(#flame-glow)" style="mix-blend-mode: screen;"/>
+                                <path d="M 420 942 Q 425 960 420 965 Q 415 960 420 942 Z" fill="#FFFFFF" style="filter: drop-shadow(0 0 4px #FFD700);"/>
+                            </g>
+                        </g>
+                    </g>
+
+                    <g id="candle-right-group">
+                        <path d="M 576 1030 C 576 1045, 568 1052, 568 1055 L 592 1055 C 592 1052, 584 1045, 584 1030 Z" fill="url(#goldBody)" stroke="rgba(212,175,55,0.5)" stroke-width="1"/>
+                        <ellipse cx="580" cy="1030" rx="6" ry="1.5" fill="url(#goldBody)"/>
+                        <ellipse cx="580" cy="1055" rx="12" ry="3" fill="#0b080a" stroke="rgba(212,175,55,0.8)" stroke-width="1.5"/>
+                        <rect id="candle-body-right" x="575" y="970" width="10" height="60" rx="3" fill="url(#goldBody)" stroke="rgba(212,175,55,0.5)" stroke-width="1.5" opacity="0.85"/>
+                        <line id="candle-wick-right" x1="580" y1="965" x2="580" y2="975" stroke="#4a2e1b" stroke-width="2"/>
+                        
+                        <g id="flame-move-right">
+                            <g id="flame-group-right" class="candle-flicker" style="transform-origin: 580px 965px;">
+                                <circle cx="580" cy="955" r="18" fill="url(#flame-glow)" style="mix-blend-mode: screen;"/>
+                                <path d="M 580 942 Q 585 960 580 965 Q 575 960 580 942 Z" fill="#FFFFFF" style="filter: drop-shadow(0 0 4px #FFD700);"/>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+
+
+            </svg>
+        </div>
+    </div>
+<div class="altar" id="altar-offerings">
+        <div class="vessel-container water-cup"><svg class="svg-content" viewBox="0 0 100 150"><use href="#water-cup-model" /></svg></div>
+        <div class="vessel-container fruit-plate"><svg class="svg-content" viewBox="0 0 100 150"><use href="#fruit-plate-model" /></svg></div>
+        
+        <div class="vessel-container center-vase">
+            <svg class="svg-content" viewBox="0 -80 200 380" style="overflow: visible;">
+                <defs><clipPath id="vase-clip"><path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" /></clipPath></defs>
+                <g transform="translate(50, 100)"><g clip-path="url(#vase-clip)">
+                    <rect x="0" y="70" width="100" height="90" fill="url(#water-grad)" />
+                    <path fill="url(#water-light)" opacity="0.4"><animate attributeName="d" dur="3.5s" repeatCount="indefinite" values="M-20,85 C10,75 40,95 70,85 C100,75 130,95 160,85 L160,150 L-20,150 Z; M-50,85 C-20,95 10,75 40,85 C70,95 100,75 130,85 L130,150 L-50,150 Z; M-20,85 C10,75 40,95 70,85 C100,75 130,95 160,85 L160,150 L-20,150 Z" /></path>
+                    <path fill="url(#water-light)" opacity="0.6"><animate attributeName="d" dur="2.8s" repeatCount="indefinite" values="M-50,92 C-20,102 10,82 40,92 C70,102 100,82 130,92 L130,150 L-50,150 Z; M-20,92 C10,82 40,102 70,92 C100,82 130,102 160,92 L160,150 L-20,150 Z; M-50,92 C-20,102 10,82 40,92 C70,102 100,82 130,92 L130,150 L-50,150 Z" /></path>
+                    <g stroke="#5a7a6c" stroke-width="2" fill="none" opacity="0.6"><path d="M50,25 Q45,70 50,110" /><path d="M50,25 Q55,60 45,105" stroke-width="1.5" /><path d="M50,25 Q40,50 55,100" stroke-width="1.5" /><path d="M50,25 Q60,40 50,85" stroke-width="1.5" /></g>
+                </g></g>
+                <g transform="translate(50, 100)">
+                    <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="rgba(255,255,255,0.02)" /><path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="url(#glass-glare)" pointer-events="none"/>
+                    <ellipse cx="50" cy="95" rx="22" ry="6" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8" pointer-events="none"/><path d="M45,25 L55,25 L58,50 L72,95 L60,125 L40,125 L28,95 L42,50 Z" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.2" stroke-linejoin="round" pointer-events="none"/><path d="M40,125 Q50,135 60,125" fill="none" stroke="#d4af37" stroke-width="2.5" stroke-linecap="round" pointer-events="none"/>
+                </g>
+                <g opacity="0"><animate attributeName="opacity" values="0; 1" dur="0.5s" begin="5s" fill="freeze" />
+                    <path d="M100,125 Q80,70 65,35" stroke="#8ba89c" stroke-width="1.5" fill="none" stroke-dasharray="120" stroke-dashoffset="120"><animate attributeName="stroke-dashoffset" values="120; 0" dur="2s" begin="5s" fill="freeze" /></path>
+                    <g transform="translate(65, 35) rotate(-35)"><g transform="scale(0)"><animateTransform attributeName="transform" type="scale" values="0; 1" dur="1.5s" begin="6.5s" fill="freeze" /><g><animateTransform attributeName="transform" type="rotate" values="0; 4; 0; -4; 0" dur="5s" begin="8s" repeatCount="indefinite" /><use href="#lotus-bud"/></g></g></g>
+                </g>
+                <g opacity="0"><animate attributeName="opacity" values="0; 1" dur="0.5s" begin="6s" fill="freeze" />
+                    <path d="M100,125 Q125,95 135,75" stroke="#8ba89c" stroke-width="1.5" fill="none" stroke-dasharray="100" stroke-dashoffset="100"><animate attributeName="stroke-dashoffset" values="100; 0" dur="2s" begin="6s" fill="freeze" /></path>
+                    <g transform="translate(135, 75) rotate(45)"><g transform="scale(0)"><animateTransform attributeName="transform" type="scale" values="0; 0.8" dur="1.5s" begin="7.5s" fill="freeze" /><g><animateTransform attributeName="transform" type="rotate" values="0; -3; 0; 3; 0" dur="4s" begin="9s" repeatCount="indefinite" /><use href="#lotus-bud"/></g></g></g>
+                </g>
+                <g stroke="#8ba89c" stroke-width="2" fill="none"><path d="M100,125 Q90,90 100,50"/> <path d="M100,125 Q130,90 145,60"/> <path d="M100,125 Q70,95 55,75"/> <path d="M100,125 Q95,100 115,85" stroke-width="1.5"/> </g>
+                <g fill="url(#leaf-grad)" stroke="rgba(212,175,55,0.5)" stroke-width="0.5"><path d="M100,110 Q140,115 160,80 Q130,85 100,110 Z"/><path d="M98,115 Q60,120 40,90 Q70,95 98,115 Z"/><path d="M102,90 Q135,70 140,30 Q120,55 102,90 Z" opacity="0.7"/><path d="M95,85 Q65,65 55,35 Q75,55 95,85 Z" opacity="0.7"/></g>
+                <g transform="translate(55, 75) scale(0.8)"><g><animateTransform attributeName="transform" type="rotate" values="-20; -15; -20; -25; -20" dur="5s" repeatCount="indefinite" /><use href="#lotus-bud"/></g></g>
+                <g transform="translate(145, 60) scale(0.85)"><g><animateTransform attributeName="transform" type="rotate" values="15; 18; 15; 12; 15" dur="7s" repeatCount="indefinite" /><use href="#lotus-bloom"/></g></g>
+                <g transform="translate(115, 85) scale(0.65)"><g><animateTransform attributeName="transform" type="rotate" values="35; 38; 35; 32; 35" dur="4.5s" repeatCount="indefinite" /><use href="#lotus-bud"/></g></g>
+                <g transform="translate(100, 50) scale(1.1)"><g><animateTransform attributeName="transform" type="rotate" values="0; 3; 0; -3; 0" dur="6s" repeatCount="indefinite" /><use href="#lotus-bloom"/></g></g>
+            </svg>
+        </div>
+        
+        <div class="vessel-container fruit-plate"><svg class="svg-content" viewBox="0 0 100 150"><use href="#fruit-plate-model" /></svg></div>
+        <div class="vessel-container water-cup"><svg class="svg-content" viewBox="0 0 100 150"><use href="#water-cup-model" /></svg></div>
+    </div>
+    <div class="ritual-container">
+        <div id="blessing-text"></div>
+        
+        <div class="ritual-panel">
+            <div class="ritual-btn" id="btn-bow" onclick="toggleAction('bow')">顶礼弥陀</div>
+            <div class="ritual-btn" id="btn-incense" onclick="toggleIncense()">燃灯烧香</div>
+        </div>
+        
+        <div class="chant-hint">请默念佛号</div>
+    </div>
+       <div class="modal-overlay" id="milestone-modal">
+        <div class="modal-box" id="milestone-box" style="padding: 30px 25px;">
+            <div id="milestone-title" style="color: var(--gold-light); font-size: 1.2rem; letter-spacing: 5px; margin-bottom: 15px; font-weight: bold; text-shadow: 0 0 15px rgba(212,175,55,0.8);"></div>
+            
+                       <div style="display: flex; justify-content: center; margin-bottom: 15px; height: 220px;">
+                <svg class="banner-breath" viewBox="0 0 300 600" style="height: 100%;" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ffffff" />
+                            <stop offset="40%" stop-color="#f3e5ab" />
+                            <stop offset="100%" stop-color="#d4af37" />
+                        </linearGradient>
+                        <linearGradient id="banner-fill" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="rgba(212, 175, 55, 0.15)" />
+                            <stop offset="100%" stop-color="rgba(212, 175, 55, 0.05)" />
+                        </linearGradient>
+                        
+                        <linearGradient id="glass-red-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="rgba(255, 70, 80, 0.1)" />
+                            <stop offset="100%" stop-color="rgba(255, 70, 80, 0.6)" />
+                        </linearGradient>
+                        <linearGradient id="glass-blue-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="rgba(60, 150, 255, 0.1)" />
+                            <stop offset="100%" stop-color="rgba(60, 150, 255, 0.6)" />
+                        </linearGradient>
+                        <linearGradient id="glass-gold-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="rgba(243, 229, 171, 0.1)" />
+                            <stop offset="100%" stop-color="rgba(243, 229, 171, 0.6)" />
+                        </linearGradient>
+
+                        <pattern id="mandala-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                            <path d="M10,0 L20,10 L10,20 L0,10 Z" fill="none" stroke="rgba(212, 175, 55, 0.2)" stroke-width="0.5"/>
+                            <circle cx="10" cy="10" r="1.5" fill="rgba(212, 175, 55, 0.3)"/>
+                        </pattern>
+                    </defs>
+
+                    <g class="sway-base">
+                        <line x1="150" y1="0" x2="150" y2="35" stroke="url(#gold-grad)" stroke-width="1.2" />
+                        <circle cx="150" cy="35" r="10" fill="none" stroke="url(#gold-grad)" stroke-width="1.5" class="glow-core"/>
+                        <circle cx="150" cy="35" r="6" fill="url(#gold-grad)" opacity="0.8"/>
+                        <circle cx="150" cy="35" r="2" fill="#fff" class="glow-core"/>
+
+                        <g>
+                            <path d="M 150,45 Q 185,55 220,75 Q 185,100 150,110 Q 115,100 80,75 Q 115,55 150,45 Z" fill="rgba(212, 175, 55, 0.05)" stroke="url(#gold-grad)" stroke-width="1.2" stroke-linejoin="round"/>
+                            
+                            <g class="glow-glass">
+                                <path d="M 150,45 L 125,78 L 150,78 Z" fill="rgba(255, 70, 80, 0.55)" />
+                                <path d="M 150,45 L 175,78 L 150,78 Z" fill="rgba(60, 150, 255, 0.55)" />
+                                <path d="M 150,78 L 100,91 L 150,110 Z" fill="rgba(60, 150, 255, 0.5)" />
+                                <path d="M 150,78 L 200,91 L 150,110 Z" fill="rgba(255, 70, 80, 0.55)" />
+                                <path d="M 125,78 L 80,75 L 100,91 Z" fill="rgba(243, 229, 171, 0.5)" />
+                                <path d="M 175,78 L 220,75 L 200,91 Z" fill="rgba(243, 229, 171, 0.5)" />
+                            </g>
+
+                            <g stroke="#d4af37" stroke-width="0.8" opacity="0.9">
+                                <line x1="150" y1="45" x2="150" y2="65" /><line x1="150" y1="65" x2="150" y2="78" /><line x1="150" y1="78" x2="150" y2="91" />
+                                <line x1="80" y1="75" x2="125" y2="78" /><line x1="125" y1="78" x2="150" y2="78" /><line x1="150" y1="78" x2="175" y2="78" /><line x1="175" y1="78" x2="220" y2="75" />
+                                <line x1="100" y1="91" x2="125" y2="91" /><line x1="125" y1="91" x2="150" y2="91" /><line x1="150" y1="91" x2="175" y2="91" /><line x1="175" y1="91" x2="200" y2="91" />
+                            </g>
+                            <g stroke="#d4af37" stroke-width="1.2" class="glow-core">
+                                <circle cx="150" cy="65" r="3" fill="#c1272d" /><circle cx="150" cy="78" r="3" fill="#c1272d" /><circle cx="150" cy="91" r="3" fill="#c1272d" />
+                                <circle cx="125" cy="78" r="3" fill="#1d3557" /><circle cx="175" cy="78" r="3" fill="#1d3557" />
+                                <circle cx="100" cy="91" r="3" fill="#c1272d" /><circle cx="125" cy="91" r="3" fill="#1d3557" /><circle cx="175" cy="91" r="3" fill="#1d3557" /><circle cx="200" cy="91" r="3" fill="#c1272d" />
+                            </g>
+                            <g fill="#d4af37">
+                                <circle cx="150" cy="45" r="2" /> <circle cx="80" cy="75" r="2" />
+                                <circle cx="115" cy="100" r="2" opacity="0.7"/><circle cx="150" cy="110" r="2.5" fill="#fff" class="glow-core"/><circle cx="185" cy="100" r="2" opacity="0.7"/>
+                                <circle cx="220" cy="75" r="2" />
+                            </g>
+                        </g>
+
+                        <g class="ribbon-left">
+                            <path d="M 85,77 L 75,190 L 80,190 L 92,80 Z" fill="url(#glass-red-grad)" stroke="rgba(255, 70, 80, 0.4)" stroke-width="0.5" />
+                            <polygon points="75,190 80,190 80,210" fill="rgba(255, 70, 80, 0.8)" opacity="0.9"/>
+                            <path d="M 95,85 L 85,260 L 90,260 L 102,88 Z" fill="url(#glass-blue-grad)" stroke="rgba(60, 150, 255, 0.4)" stroke-width="0.5" />
+                            <polygon points="85,260 90,260 90,280" fill="rgba(60, 150, 255, 0.8)" opacity="0.9"/>
+                        </g>
+
+                        <g class="ribbon-right">
+                            <path d="M 215,77 L 225,190 L 220,190 L 208,80 Z" fill="url(#glass-red-grad)" stroke="rgba(255, 70, 80, 0.4)" stroke-width="0.5" />
+                            <polygon points="225,190 220,190 220,210" fill="rgba(255, 70, 80, 0.8)" opacity="0.9"/>
+                            <path d="M 205,85 L 215,260 L 210,260 L 198,88 Z" fill="url(#glass-blue-grad)" stroke="rgba(60, 150, 255, 0.4)" stroke-width="0.5" />
+                            <polygon points="215,260 210,260 210,280" fill="rgba(60, 150, 255, 0.8)" opacity="0.9"/>
+                        </g>
+
+                        <g class="ribbon-inner">
+                            <path d="M 103,94 L 90,330 L 102,330 L 115,98 Z" fill="url(#glass-gold-grad)" stroke="rgba(243, 229, 171, 0.4)" stroke-width="0.6" />
+                            <polygon points="90,330 102,330 102,378" fill="rgba(243, 229, 171, 0.9)" opacity="0.9"/>
+
+                            <path d="M 197,94 L 210,330 L 198,330 L 185,98 Z" fill="url(#glass-gold-grad)" stroke="rgba(243, 229, 171, 0.4)" stroke-width="0.6" />
+                            <polygon points="210,330 198,330 198,378" fill="rgba(243, 229, 171, 0.9)" opacity="0.9"/>
+                        </g>
+
+                        <g transform="translate(0, 110)">
+                            <polygon points="120,0 180,0 180,260 150,300 120,260" fill="url(#banner-fill)" stroke="url(#gold-grad)" stroke-width="1.5" stroke-linejoin="round"/>
+                            <polygon points="120,0 180,0 180,260 150,300 120,260" fill="url(#mandala-pattern)" />
+                            
+                            <line x1="125" y1="5" x2="175" y2="5" stroke="#d4af37" stroke-width="0.8"/>
+                            <line x1="125" y1="255" x2="175" y2="255" stroke="#d4af37" stroke-width="0.8"/>
+                            
+                            <path d="M 150,30 L 165,50 L 150,70 L 135,50 Z" fill="none" stroke="#f3e5ab" stroke-width="1"/>
+                            <path d="M 150,35 L 160,50 L 150,65 L 140,50 Z" fill="rgba(243,229,171,0.2)" stroke="#f3e5ab" stroke-width="0.5"/>
+                            
+                            <circle cx="150" cy="130" r="22" fill="none" stroke="#d4af37" stroke-width="1.2"/>
+                            <circle cx="150" cy="130" r="18" fill="rgba(212,175,55,0.1)" stroke="#d4af37" stroke-dasharray="2 2"/>
+                            <g stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="glow-chakra">
+                                <path d="M 140,120 L 150,120 L 150,140 L 160,140" />
+                                <path d="M 160,120 L 160,130 L 140,130 L 140,140" />
+                            </g>
+
+                            <path d="M 150,190 L 165,210 L 150,230 L 135,210 Z" fill="none" stroke="#f3e5ab" stroke-width="1"/>
+                            <path d="M 150,195 L 160,210 L 150,225 L 140,210 Z" fill="rgba(243,229,171,0.2)" stroke="#f3e5ab" stroke-width="0.5"/>
+                        </g>
+                        
+                    </g>
+                </svg>
+            </div>
+
+            <div id="milestone-name-display" style="color: var(--gold-solid); font-size: 1.1rem; letter-spacing: 4px; margin-bottom: 15px;">行 者</div>
+            <div id="milestone-text" style="color: #ccc; font-size: 0.85rem; line-height: 1.8; letter-spacing: 2px; margin-bottom: 25px;"></div>
+            <button class="m-btn-prime" onclick="closeMilestone()">合十收摄</button>
+        </div>
+    </div>
+
+
+    <div class="modal-overlay" id="offerings-modal">
+        <div class="modal-box">
+            <div style="color: var(--gold-light); font-size: 1.1rem; letter-spacing: 4px; margin-bottom: 25px; text-shadow: 0 0 15px rgba(212,175,55,0.6); font-weight: bold;">
+                【 十日圆满 ‧ 广修供养 】
+            </div>
+            <div class="modal-altar-table">
+                <div class="vessel-container water-cup"><svg class="svg-content" viewBox="0 0 100 150"><use href="#water-cup-model" /></svg></div>
+                <div class="vessel-container fruit-plate"><svg class="svg-content" viewBox="0 0 100 150"><use href="#fruit-plate-model" /></svg></div>
+                <div class="vessel-container center-vase">
+                    <svg class="svg-content" viewBox="0 -80 200 380" style="overflow: visible;">
+                        <defs><clipPath id="vase-clip-modal"><path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" /></clipPath></defs>
+                        <g transform="translate(50, 100)"><g clip-path="url(#vase-clip-modal)">
+                            <rect x="0" y="70" width="100" height="90" fill="url(#water-grad)" />
+                            <path fill="url(#water-light)" opacity="0.4"><animate attributeName="d" dur="3.5s" repeatCount="indefinite" values="M-20,85 C10,75 40,95 70,85 C100,75 130,95 160,85 L160,150 L-20,150 Z; M-50,85 C-20,95 10,75 40,85 C70,95 100,75 130,85 L130,150 L-50,150 Z; M-20,85 C10,75 40,95 70,85 C100,75 130,95 160,85 L160,150 L-20,150 Z" /></path>
+                            <path fill="url(#water-light)" opacity="0.6"><animate attributeName="d" dur="2.8s" repeatCount="indefinite" values="M-50,92 C-20,102 10,82 40,92 C70,102 100,82 130,92 L130,150 L-50,150 Z; M-20,92 C10,82 40,102 70,92 C100,82 130,102 160,92 L160,150 L-20,150 Z; M-50,92 C-20,102 10,82 40,92 C70,102 100,82 130,92 L130,150 L-50,150 Z" /></path>
+                            <g stroke="#5a7a6c" stroke-width="2" fill="none" opacity="0.6"><path d="M50,25 Q45,70 50,110" /><path d="M50,25 Q55,60 45,105" stroke-width="1.5" /></g>
+                        </g></g>
+                        <g transform="translate(50, 100)">
+                            <path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="rgba(255,255,255,0.02)" /><path d="M45,25 L55,25 L58,50 L72,95 L60,125 Q50,135 40,125 L28,95 L42,50 Z" fill="url(#glass-glare)" pointer-events="none"/>
+                            <ellipse cx="50" cy="95" rx="22" ry="6" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/><path d="M45,25 L55,25 L58,50 L72,95 L60,125 L40,125 L28,95 L42,50 Z" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.2" stroke-linejoin="round"/><path d="M40,125 Q50,135 60,125" fill="none" stroke="#d4af37" stroke-width="2.5" stroke-linecap="round"/>
+                        </g>
+                        <g opacity="1">
+                            <path d="M100,125 Q80,70 65,35" stroke="#8ba89c" stroke-width="1.5" fill="none"/>
+                            <g transform="translate(65, 35) rotate(-35)"><g transform="scale(1)"><g><animateTransform attributeName="transform" type="rotate" values="0; 4; 0; -4; 0" dur="5s" repeatCount="indefinite" /><use href="#lotus-bud"/></g></g></g>
+                        </g>
+                        <g opacity="1">
+                            <path d="M100,125 Q125,95 135,75" stroke="#8ba89c" stroke-width="1.5" fill="none"/>
+                            <g transform="translate(135, 75) rotate(45)"><g transform="scale(0.8)"><g><animateTransform attributeName="transform" type="rotate" values="0; -3; 0; 3; 0" dur="4s" repeatCount="indefinite" /><use href="#lotus-bud"/></g></g></g>
+                        </g>
+                        <g stroke="#8ba89c" stroke-width="2" fill="none"><path d="M100,125 Q90,90 100,50"/> <path d="M100,125 Q130,90 145,60"/> <path d="M100,125 Q70,95 55,75"/> <path d="M100,125 Q95,100 115,85" stroke-width="1.5"/> </g>
+                        <g fill="url(#leaf-grad)" stroke="rgba(212,175,55,0.5)" stroke-width="0.5"><path d="M100,110 Q140,115 160,80 Q130,85 100,110 Z"/><path d="M98,115 Q60,120 40,90 Q70,95 98,115 Z"/><path d="M102,90 Q135,70 140,30 Q120,55 102,90 Z" opacity="0.7"/><path d="M95,85 Q65,65 55,35 Q75,55 95,85 Z" opacity="0.7"/></g>
+                        <g transform="translate(55, 75) scale(0.8)"><g><animateTransform attributeName="transform" type="rotate" values="-20; -15; -20; -25; -20" dur="5s" repeatCount="indefinite" /><use href="#lotus-bud"/></g></g>
+                        <g transform="translate(145, 60) scale(0.85)"><g><animateTransform attributeName="transform" type="rotate" values="15; 18; 15; 12; 15" dur="7s" repeatCount="indefinite" /><use href="#lotus-bloom"/></g></g>
+                        <g transform="translate(115, 85) scale(0.65)"><g><animateTransform attributeName="transform" type="rotate" values="35; 38; 35; 32; 35" dur="4.5s" repeatCount="indefinite" /><use href="#lotus-bud"/></g></g>
+                        <g transform="translate(100, 50) scale(1.1)"><g><animateTransform attributeName="transform" type="rotate" values="0; 3; 0; -3; 0" dur="6s" repeatCount="indefinite" /><use href="#lotus-bloom"/></g></g>
+                    </svg>
+                </div>
+                <div class="vessel-container fruit-plate"><svg class="svg-content" viewBox="0 0 100 150"><use href="#fruit-plate-model" /></svg></div>
+                <div class="vessel-container water-cup"><svg class="svg-content" viewBox="0 0 100 150"><use href="#water-cup-model" /></svg></div>
+            </div>
+            <div style="color: #a0a0a0; font-size: 0.85rem; line-height: 1.6; letter-spacing: 1px; margin-bottom: 25px; text-align: center;">愿以此清净供养资粮，回向法界众生，<br>同生安乐国，得不退转。</div>
+            <button class="m-btn-prime" onclick="closeOfferingsModal()">合十收摄</button>
+        </div>
+    </div>
+    <div class="modal-overlay" id="modal">
+        <div class="modal-box" id="modal-box">
+            <div class="m-title" id="m-title"></div>
+            <div class="m-divider" id="m-div"></div>
+            <div class="m-text" id="m-text"></div>
+            <button class="m-btn-prime" id="m-btn" onclick="closeModal()">合十收摄</button>
+        </div>
+    </div>
+
+<script>
+    const isAndroidDevice = /Android/i.test(navigator.userAgent);
+if (isAndroidDevice) {
+    document.documentElement.classList.add('android-lite');
+    // 直接移除最耗资源的 180 秒曼陀罗自转动画节点
+    document.querySelectorAll('.mandala-static-container animateTransform').forEach(el => el.remove());
+}
+
+
+    // 🌟 1. 写死中文版专属资料库真金钥匙，拒绝任何误判风险 🌟
+    const STORAGE_KEY = 'PX_CN_V15.0'; // 🛑 中文版专属金钥
+    
+    let db = null;
+    try {
+        db = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (!db || typeof db !== 'object') db = null;
+        
+        // 旧行者无损防护：自动为旧资料补齐 V15 的新抽屉
+        if (db && !db.dailyTasks) db.dailyTasks = [];
+        if (db && !db.visitedRealms) db.visitedRealms = [];
+        if (db && !db.treasures) db.treasures = { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 };
+        if (db && !db.bodhiRecords) db.bodhiRecords = [];
+        if (db && !db.bowData) db.bowData = { streakCount: 0, lastLoginDate: "", lastRewardStreak: 0 }; // ✨ 补齐旧行者的顶礼抽屉
+    } catch(e) { 
+        db = null; 
+    }
+
+    if (!db) {
+        // 新行者创世预设值
+        db = { 
+            name: "", totalNian: 0, points: 0, dailyTasks: [], todayCount: 0, lastDate: new Date().toLocaleDateString(), 
+            currentRank: "", streakDays: 0, lastNianDate: "",
+            treasures: { sword: 0, vase: 0, jewel: 0, lotus_lamp: 0, dharma_wheel: 0, white_lotus: 0, indra_net: 0 },
+            bodhiRecords: [], visitedRealms: [],
+            // ✨ 新行者的顶礼抽屉
+            bowData: { streakCount: 0, lastLoginDate: "", lastRewardStreak: 0 }
+        };
+    }     
+        
+        
+    function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
+
+    // 🌟 1. 关闭第一弹框，唤醒第二观相弹框
+    function closeMilestone() {
+        const modal = document.getElementById('milestone-modal');
+        if (!modal) return;
+        modal.classList.remove('show');
+        
+        setTimeout(() => { 
+            modal.style.display = 'none'; 
+            const bar = document.getElementById('streak-bar');
+            if (bar) bar.style.width = '0%';
+            
+            triggerOfferingsModal(); 
+        }, 500);
+    }
+
+    // 🌟 2. 开启第二弹框 (静态观相)
+    function triggerOfferingsModal() {
+        const offeringsModal = document.getElementById('offerings-modal');
+        if (!offeringsModal) return;
+        offeringsModal.style.display = 'flex';
+        void offeringsModal.offsetWidth; 
+        offeringsModal.classList.add('show');
+    }
+
+    // 🌟 3. 关闭第二弹框，触发主屏幕莲花座下的真实供养
+    function closeOfferingsModal() {
+        const offeringsModal = document.getElementById('offerings-modal');
+        if (!offeringsModal) return;
+        offeringsModal.classList.remove('show');
+        
+        setTimeout(() => { 
+            offeringsModal.style.display = 'none'; 
+            startMainAltarOffering();
+        }, 500);
+    }
+
+    // 🌟 4. 主屏幕：降下金粉，且五供伴随 5 秒动画生长，驻留 60 秒
+    function startMainAltarOffering() {
+        if (typeof spawnFlowerRain === 'function') spawnFlowerRain(250); 
+        
+        const altar = document.getElementById('altar-offerings');
+        if (altar) {
+            altar.style.display = 'flex'; 
+            
+            // 将时间切换放入 50 毫秒缓冲区，确保渲染完成不当机
+            setTimeout(() => { 
+                altar.style.opacity = '1'; 
+                const altarSvg = document.querySelector('#altar-offerings .center-vase svg');
+                if(altarSvg && typeof altarSvg.setCurrentTime === 'function') {
+                    altarSvg.setCurrentTime(5); // 跳至第 5 秒完美接续生长动画
+                }
+            }, 50);
+            
+            // 驻留 60 秒後收摄
+            setTimeout(() => {
+                altar.style.opacity = '0';
+                setTimeout(() => { altar.style.display = 'none'; }, 3000); 
+            }, 60000); 
+        }
+    }
+
+
+    // ✨ 海量金粉引擎 (纯 CSS，极度轻量自动销毁)
+    function spawnFlowerRain(totalFlowers = 250) {
+        let container = document.getElementById('gold-powder-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'gold-powder-container';
+            container.style.cssText = 'position:fixed; inset:0; pointer-events:none; z-index:50; overflow:hidden;';
+            document.body.appendChild(container);
+        }
+
+        for (let i = 0; i < totalFlowers; i++) {
+            const powder = document.createElement('div');
+            const size = Math.random() * 3 + 1.5; 
+            const startX = Math.random() * window.innerWidth;
+            const drift = (Math.random() - 0.5) * 250; 
+            const dur = Math.random() * 5 + 4; 
+            const delay = Math.random() * 2.5; 
+
+            powder.style.cssText = `
+                position: absolute; top: -10px; width: ${size}px; height: ${size}px; left: ${startX}px;
+                background: radial-gradient(circle, #fff 0%, #d4af37 50%, transparent 100%);
+                border-radius: 50%; box-shadow: 0 0 10px #d4af37, 0 0 3px #fff; opacity: 0;
+                animation: powder-fall ${dur}s linear ${delay}s forwards;
+            `;
+            powder.style.setProperty('--drift', drift + 'px');
+
+            container.appendChild(powder);
+
+            // 动画结束自动拔除节点，不留痕迹
+            setTimeout(() => {
+                if (powder.parentNode) powder.remove();
+            }, (dur + delay) * 1000);
+        }
+    }
+
+
+    // ✨ 修持逻辑：精准对接 bowData 专属抽屉，解决资料遗失 Bug
+    function handleStreak() {
+        const now = new Date();
+        const todayStr = now.toDateString(); 
+        
+        // 🛑 防护：确保 bowData 存在
+        if (!db.bowData) db.bowData = { streakCount: 0, lastLoginDate: "", lastRewardStreak: 0 };
+
+        // 判断是否为「新的一天」
+        if (db.bowData.lastLoginDate !== todayStr) {
+            db.bowData.streakCount++; 
+            db.bowData.lastLoginDate = todayStr;
+            
+            // 触发里程碑判定 (10, 20, 30...) 且 该里程碑尚未领取奖励
+            if (db.bowData.streakCount % 10 === 0 && db.bowData.lastRewardStreak !== db.bowData.streakCount) {
+                db.points += 100;
+                db.bowData.lastRewardStreak = db.bowData.streakCount; 
+                
+                let title = "十日 ‧ 初发心";
+                if (db.bowData.streakCount >= 100000) title = "无量 ‧ 尽未来际";
+                else if (db.bowData.streakCount >= 10000) title = "万日 ‧ 不退转";
+                else if (db.bowData.streakCount >= 1000) title = "千日 ‧ 得三昧";
+                else if (db.bowData.streakCount >= 100) title = "百日 ‧ 恒常念";
+                
+                // 🌟 新增：纯净抓取行者名号逻辑
+let currentName = "行 者";
+if (db.name && db.name.trim() !== "") {
+    currentName = db.name;
+}
+document.getElementById('milestone-name-display').innerText = currentName;
+// 🌟 新增结束
+                
+                // 动态美学：先让能量棒冲满，再跳弹框
+                setTimeout(() => {
+                    const bar = document.getElementById('streak-bar');
+                    if (bar) bar.style.width = '100%';
+                    
+                    setTimeout(() => {
+                        document.getElementById('milestone-title').innerText = `【 ${title} 】`;
+                        document.getElementById('milestone-text').innerHTML = `<span style="color:var(--gold-light); font-size: 0.95rem;">「悬缯然灯，散华烧香」</span><br>圆满 ${db.bowData.streakCount} 日清净观相，悬挂庄严宝幡。<br>获 <b style='color:var(--gold-solid)'>+100</b> 资粮汇入主系统。`;
+
+                        
+                        const modal = document.getElementById('milestone-modal');
+                        modal.style.display = 'flex';
+                        void modal.offsetWidth; // 确保浏览器反应
+                        modal.classList.add('show');
+                    }, 800);
+                }, 500);
+                
+                saveDB();
+                document.getElementById('streak-text').innerText = `修持：第 ${db.bowData.streakCount} 日`;
+                return; // 里程碑日由上面的动画接手，不执行下方一般更新
+            }
+            saveDB();
+        }
+                // --- 一般日（或当日重复开启）的 UI 更新 ---
+        document.getElementById('streak-text').innerText = `修持：第 ${db.bowData.streakCount || 1} 日`;
+        const bar = document.getElementById('streak-bar');
+        if (bar) {
+            // 如果当前天数是 10 的倍数（且已领过），能量棒保持 100% 直到关闭弹框或下一天
+            if (db.bowData.streakCount % 10 === 0 && db.bowData.streakCount > 0) {
+                bar.style.width = '100%';
+                
+                // 🌟 当天重复进入道场：直接触发第二个观相弹框！
+                setTimeout(() => {
+                    triggerOfferingsModal();
+                }, 600);
+                
+            } else {
+                bar.style.width = ((db.bowData.streakCount % 10) * 10) + '%';
+            }
+        }
+    }
+
+
+    // 模态框操作函数
+    function showModal(title, text, btnText, callback) {
+        document.getElementById('m-title').innerHTML = title; 
+        document.getElementById('m-text').innerHTML = text;
+        const btn = document.getElementById('m-btn');
+        btn.innerHTML = btnText;
+        btn.onclick = callback || closeModal;
+        document.getElementById('modal').classList.add('show');
+    }
+    
+    function closeModal() { document.getElementById('modal').classList.remove('show'); }
+    
+            function showLawInfo() {
+    const infoHtml = `
+        <div style="text-align: left; font-size: 0.85rem; line-height: 1.7; color: #ccc;">
+            <b style="color:var(--gold-light)">【三身如来 ‧ 体相用】</b><br>
+            在《华严经》的架构下：<br>
+            ‧ <span style="color:var(--gold-light)">毗卢遮那如来 (法身)</span>：诸法实相，如虚空般无处不在，乃万物之本体。<br>
+            ‧ <span style="color:var(--gold-light)">阿弥陀如来 (报身)</span>：功德圆满，於极乐世界现庄严金身，为度众生之胜相。<br>
+            ‧ <span style="color:var(--gold-light)">释迦牟尼如来 (应化身)</span>：大悲化现，於娑婆世界教导众生，为修行之导师。<br><br>
+            
+            <b style="color:var(--gold-light)">【常寂光 ‧ 终极归宿】</b><br>
+            「常」而不迁，「寂」而无垢，「光」而照世。此乃心性彻底清净後，不生不灭的究竟境界。<br><br>
+            
+            <b style="color:var(--gold-light)">【顶礼弥陀 ‧ 燃灯烧香】</b><br>
+            ‧ <span style="color:#fff">顶礼弥陀</span>：<br>
+            《无量寿经》云：三辈往生者「当发无上菩提之心，一向专念无量寿佛。」顶礼之时，将身心归命弥陀，以此回向愿生极乐。<br><br>
+            ‧ <span style="color:#fff">燃灯烧香</span>：<br>
+            《无量寿经》云：三辈往生者「悬缯然灯，散华烧香。以此至诚供养，点亮自性光明，以此回向愿生极乐。<br><br>
+
+            <b style="color:var(--gold-light)">【无相之相 ‧ 纯净金身】</b><br>
+            弥陀、观音菩萨、大势至菩萨的庄严琉璃金身与莲座，并非世俗常见的任何图档，而是完全由「纯净的数学座标」交织而成（SVG 向量图形）。<br>
+            舍弃便捷的绘图，是为了达到这座数位道场的「绝对纯净无量」——零外部图档依赖、彻底断绝版权争议，且就算无限放大，琉璃金身皆是完美无瑕，绝不失真。<br><br>
+
+            然而，这是一条不容易的开创之路。佛身与菩萨身的每一道金光渐层、每一片莲瓣的舒展、每一个手印的悲智弧度，都无法使用画笔挥洒，必须将庄严的法相，化作一行行却绝对精准的数字与贝兹曲线（Bézier curve）。一个座标的微小偏移、一数点的增减，都会牵动整体的庄严。<br><br>
+
+            不论是弥陀与佛菩萨们的琉璃金身或是整座净土，是经过无数次的土法炼钢，在无数次的尝试错误中，一步步推算座标、一次次测试光影所淬炼而出。这不仅是美学的雕琢，这份反覆试错、对纯粹几近苛求的坚持。行者每日发菩提心顶礼【西方三圣与诸佛菩萨 ‧ 燃灯烧香】内观自性，即是对法界最至诚的供养。
+        </div>
+    `;
+    showModal("法界观想导引", infoHtml, "合十收摄");
+}
+
+
+
+
+    // 星空与水波纹背景
+    const canvas = document.getElementById('starCanvas'); 
+    const ctx = canvas.getContext('2d'); 
+    let width, height, stars = [], warpSpeed = 0.5, starScale = 1; 
+
+    function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; } 
+    window.addEventListener('resize', resize); resize(); 
+
+    const STAR_COLORS = ['#8ba89c', '#53FF53', '#f3e5ab', '#ff9a9e', '#b2dfdb', '#C9A0DC', '#ffeb3b']; 
+    for (let i = 0; i < 350; i++) { 
+        stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)], s: Math.random() * 2.5 + 0.5 }); 
+    } 
+
+    function renderStars() { 
+        ctx.fillStyle = 'rgba(1, 1, 3, 0.4)'; 
+        ctx.fillRect(0, 0, width, height); 
+        ctx.globalCompositeOperation = 'screen'; 
+        stars.forEach(s => { 
+            s.z -= warpSpeed; 
+            if (s.z <= 0) { s.z = 2000; s.x = (Math.random() - 0.5) * 2000; s.y = (Math.random() - 0.5) * 2000; } 
+            let sc = 400 / (400 + s.z); 
+            let drawY = (height / 2) + s.y * sc; 
+            if (drawY > height * 0.75) return; 
+            ctx.beginPath(); 
+            ctx.arc((width / 2) + s.x * sc, drawY, s.s * sc * starScale, 0, Math.PI * 2); 
+            ctx.fillStyle = s.color; 
+            ctx.globalAlpha = Math.min(1, sc * 2.5); 
+            ctx.fill(); 
+            ctx.globalAlpha = 1; 
+        }); 
+        ctx.globalCompositeOperation = 'source-over'; 
+        requestAnimationFrame(renderStars); 
+    } 
+    renderStars();
+
+    const wCvs = document.getElementById('waterCanvas'), wCtx = wCvs.getContext('2d'); 
+    let ww, wh, wTime=0; 
+    function resW() { ww=wCvs.width=window.innerWidth; wh=wCvs.height=window.innerHeight; } 
+    window.addEventListener('resize', resW); resW(); 
+    const waterThemes = [ { h: 126, s: 12, l: 22 }, { h: 238, s: 121, l: 2 }, { h: 44,  s: 99, l: 50 } ]; 
+    
+    function drawW() { 
+        wCtx.clearRect(0,0,ww,wh); wTime += 0.002; 
+        for (let i = 0; i < 3; i++) { 
+            wCtx.beginPath(); let shift = i * 1; 
+            let grad = wCtx.createLinearGradient(0, wh*0.5, 0, wh); 
+            let t = waterThemes[i]; 
+            grad.addColorStop(0, `hsla(${t.h}, ${t.s}%, ${t.l}%, 0.1)`); 
+            grad.addColorStop(0.5, `hsla(${t.h}, ${t.s}%, ${t.l}%, 0.3)`); 
+            grad.addColorStop(1, `hsla(${t.h}, ${t.s}%, ${t.l}%, 0.6)`); 
+            wCtx.fillStyle = grad; 
+            for (let x = 0; x <= ww; x += 5) { 
+                let y = Math.sin(x * 5 + wTime + shift) * 16 + Math.sin(x * 166- wTime * 19) * 2 + (wh * 0.99) + Math.cos(wTime + i) * 30; 
+                if (x === 0) wCtx.moveTo(x, y); else wCtx.lineTo(x, y); 
+            } 
+            wCtx.lineTo(ww, wh); wCtx.lineTo(0, wh); wCtx.fill(); 
+        } 
+        requestAnimationFrame(drawW); 
+    } 
+    drawW();
+
+
+        function triggerGoldenBurst() {
+        const container = document.getElementById('burst-container');
+        if(!container) return;
+        container.innerHTML = '';
+        
+        // 1. 原有的全萤幕闪光
+        const flash = document.createElement('div');
+        flash.className = 'screen-flash';
+        container.appendChild(flash);
+        
+        // 2. 产生 54 条金光与不延迟的法界扩散粒子
+        for(let i=0; i<54; i++) {
+            const angle = i * 6.66; // 均匀分散 360 度
+            
+            // 原有的金光
+            const ray = document.createElement('div');
+            ray.className = 'gold-ray';
+            ray.style.setProperty('--rot', `${angle}deg`);
+            ray.style.animation = `ray-burst 2.5s cubic-bezier(0.1, 0.9, 0.2, 1) forwards`;
+            ray.style.animationDelay = `${Math.random() * 0.3}s`;
+            container.appendChild(ray);
+            
+            // ✨ 新增：向外高速弹射的星芒粒子（不卡顿）
+            const particle = document.createElement('div');
+            particle.className = 'space-particle';
+            
+            // 计算喷射半径（向外扩散 80 到 120 萤幕视窗距离）
+            const distance = 80 + Math.random() * 40; 
+            const rad = (angle * Math.PI) / 180;
+            const tx = Math.cos(rad) * distance + "vw";
+            const ty = Math.sin(rad) * distance + "vh";
+            
+            particle.style.setProperty('--tx', tx);
+            particle.style.setProperty('--ty', ty);
+            
+            // 动态给予 1.5 秒到 2.5 秒的随机爆炸速度
+            particle.style.animation = `particle-explode ${1.5 + Math.random() * 1}s cubic-bezier(0.1, 0.8, 0.3, 1) forwards`;
+            particle.style.animationDelay = `${Math.random() * 0.4}s`;
+            
+            container.appendChild(particle);
+        }
+    }
+
+
+    function speakWords(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'zh-CN'; msg.rate = 0.8; msg.pitch = 0.9;
+        window.speechSynthesis.speak(msg);
+    }
+
+    // ✨ 专属法语浮现函数 (防重叠)
+    function showBlessing(text) {
+        const el = document.getElementById('blessing-text');
+        if(!el) return;
+        el.innerText = text;
+        el.style.animation = 'none'; // 拔除旧动画
+        void el.offsetWidth; // 强制重绘
+        el.style.animation = 'float-blessing 3.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards'; // 赋予新动画
+    }
+
+      function toggleAction(action) {
+    const btn = document.getElementById(`btn-${action}`);
+    if(!btn) return;
+
+    // 判断是否为 Android 设备
+    const isAndroid = /Android/i.test(navigator.userAgent);
+
+    if (action === 'bow') {
+        if (btn.classList.contains('active')) return; 
+        btn.classList.add('active');
+        
+        if (isAndroid) {
+            // ─── Android 专属：无任何画面放大与金光粒子，仅纯粹位置移动与菩萨浮现 ───
+            document.getElementById('buddha-scene').classList.add('bowing-android');
+        } else {
+            // ─── 苹果 (iOS)：100% 原汁原味，位移 + 画面放大 + 万丈金光 + 菩萨化现 ───
+            document.body.classList.add('bowing-active');
+            document.getElementById('buddha-scene').classList.add('bowing');
+            triggerGoldenBurst();
+        }
+        
+        speakWords("无量光护佑安康");
+        showBlessing("无量光 ‧ 护佑安康");
+        
+        setTimeout(() => { 
+            if (isAndroid) {
+                document.getElementById('buddha-scene').classList.remove('bowing-android');
+            } else {
+                document.getElementById('buddha-scene').classList.remove('bowing');
+                document.body.classList.remove('bowing-active');
+            }
+            btn.classList.remove('active'); 
+        }, 5500);
+    } 
+}
+
+    let incenseTimer, smokeTimer, ashTimer;
+    let incenseProgress = 0;
+
+       function toggleIncense() {
+        const btn = document.getElementById('btn-incense');
+        const isActive = document.body.classList.contains('incense-on');
+        const scene = document.getElementById('buddha-scene'); // ✨ 获取场景节点
+        
+        if (!isActive) {
+            document.body.classList.add('incense-on');
+            if(scene) scene.classList.add('incense-active'); // ✨ 烧香时让场景进入化现状态
+            btn.classList.add('active');
+            
+            speakWords("无量寿，愿生极乐");
+            showBlessing("无量寿 ‧ 愿生极乐");
+            
+            incenseProgress = 0;
+            createDualSmoke();
+            createAshDrop();
+            
+            let startTime = Date.now();
+            
+            function burn() {
+                let elapsed = (Date.now() - startTime) / 1000;
+                incenseProgress = Math.min(elapsed / 60, 1); 
+                
+                let cyCenter = 875 + (135 * incenseProgress);
+                document.getElementById('stick-center').setAttribute('y1', cyCenter);
+                document.getElementById('glow-center').setAttribute('cy', cyCenter);
+                
+                let cxLeft = 475 + (5 * incenseProgress);
+                let cyLeft = 890 + (120 * incenseProgress);
+                document.getElementById('stick-left').setAttribute('x1', cxLeft);
+                document.getElementById('stick-left').setAttribute('y1', cyLeft);
+                document.getElementById('glow-left').setAttribute('cx', cxLeft);
+                document.getElementById('glow-left').setAttribute('cy', cyLeft);
+                
+                let cxRight = 525 - (5 * incenseProgress);
+                let cyRight = 890 + (120 * incenseProgress);
+                document.getElementById('stick-right').setAttribute('x1', cxRight);
+                document.getElementById('stick-right').setAttribute('y1', cyRight);
+                document.getElementById('glow-right').setAttribute('cx', cxRight);
+                document.getElementById('glow-right').setAttribute('cy', cyRight);
+                
+                // 🕯️ 蜡烛随时间融化下降 
+                let meltAmount = 50 * incenseProgress;
+
+                ['left', 'right'].forEach(side => {
+                    document.getElementById(`candle-body-${side}`).setAttribute('y', 970 + meltAmount);
+                    document.getElementById(`candle-body-${side}`).setAttribute('height', 60 - meltAmount);
+                    document.getElementById(`candle-wick-${side}`).setAttribute('y1', 965 + meltAmount);
+                    document.getElementById(`candle-wick-${side}`).setAttribute('y2', 975 + meltAmount);
+                    
+                    document.getElementById(`flame-move-${side}`).style.transform = `translateY(${meltAmount}px)`;
+                });
+                
+                if (incenseProgress < 1 && document.body.classList.contains('incense-on')) {
+                    incenseTimer = requestAnimationFrame(burn);
+                } else if (incenseProgress >= 1 && document.body.classList.contains('incense-on')) {
+                    finishIncenseRitual();
+                }
+            }
+            incenseTimer = requestAnimationFrame(burn);
+        } else {
+            resetIncense();
+        }
+    }
+
+    function resetIncense() {
+        cancelAnimationFrame(incenseTimer);
+        clearTimeout(smokeTimer);
+        clearTimeout(ashTimer);
+        document.body.classList.remove('incense-on');
+        
+        // ✨ 取消烧香时，同步移除场景的化现状态
+        const scene = document.getElementById('buddha-scene');
+        if(scene) scene.classList.remove('incense-active');
+        
+        const btn = document.getElementById('btn-incense');
+        btn.classList.remove('active');
+        setTimeout(restoreIncensePosition, 1500);
+    }
+
+    function finishIncenseRitual() {
+        cancelAnimationFrame(incenseTimer);
+        clearTimeout(smokeTimer);
+        clearTimeout(ashTimer);
+        
+        // ✨ 仪式完成、香火燃尽时，也移除化现类别
+        const scene = document.getElementById('buddha-scene');
+        if(scene) scene.classList.remove('incense-active');
+
+        document.getElementById('stick-left').setAttribute('y1', '1020');
+        document.getElementById('stick-center').setAttribute('y1', '1020');
+        document.getElementById('stick-right').setAttribute('y1', '1020');
+        document.getElementById('glow-left').setAttribute('r', '0');
+        document.getElementById('glow-center').setAttribute('r', '0');
+        document.getElementById('glow-right').setAttribute('r', '0');
+    
+        const beamGroup = document.getElementById('orb-layer');
+        if(!beamGroup) return;
+        beamGroup.style.opacity = '1';
+
+        const targetX = 500, targetY = 460;
+        const curves = [
+            { x: 475, y: 1010, cpX: 300, cpY: 600, id: 'left' },  
+            { x: 500, y: 1010, cpX: 500, cpY: 650, id: 'center' }, 
+            { x: 525, y: 1010, cpX: 700, cpY: 600, id: 'right' }  
+        ];
+
+        function getQBezier(t, p0, p1, p2) { return (1-t)*(1-t)*p0 + 2*(1-t)*t*p1 + t*t*p2; }
+
+        let animStart = Date.now();
+        const duration = 1200; 
+
+        function animateBeams() {
+            let elapsed = Date.now() - animStart;
+            let progress = Math.min(elapsed / duration, 1); 
+            
+            curves.forEach((p) => {
+                let headT = progress;
+                let tailT = Math.max(0, progress - 0.2); 
+                
+                let headX = getQBezier(headT, p.x, p.cpX, targetX);
+                let headY = getQBezier(headT, p.y, p.cpY, targetY);
+                let tailX = getQBezier(tailT, p.x, p.cpX, targetX);
+                let tailY = getQBezier(tailT, p.y, p.cpY, targetY);
+                
+                let d = `M ${tailX} ${tailY}`;
+                for(let t = tailT; t <= headT; t += 0.05) {
+                    d += ` L ${getQBezier(t, p.x, p.cpX, targetX)} ${getQBezier(t, p.y, p.cpY, targetY)}`;
+                }
+                d += ` L ${headX} ${headY}`;
+                
+                let glowEl = document.getElementById(`beam-${p.id}-glow`);
+                let coreEl = document.getElementById(`beam-${p.id}-core`);
+                
+                if (glowEl && coreEl) {
+                    glowEl.setAttribute('d', d);
+                    coreEl.setAttribute('d', d);
+                    
+                    glowEl.setAttribute('stroke-width', 15 * (1 - progress * 0.4));
+                    coreEl.setAttribute('stroke-width', 6 * (1 - progress * 0.4));
+                    
+                    let opacityGlow = (1 - Math.pow(progress, 3)) * 0.3; 
+                    let opacityCore = (1 - Math.pow(progress, 2.5)) * 0.9; 
+                    
+                    glowEl.style.opacity = opacityGlow;
+                    coreEl.style.opacity = opacityCore;
+                }
+            });
+
+            if (progress < 1) {
+                requestAnimationFrame(animateBeams);
+            } else {
+                beamGroup.style.opacity = '0';
+                curves.forEach((p) => {
+                    document.getElementById(`beam-${p.id}-glow`).setAttribute('d', '');
+                    document.getElementById(`beam-${p.id}-core`).setAttribute('d', '');
+                });
+
+                document.body.classList.remove('incense-on');
+                const btn = document.getElementById('btn-incense');
+                btn.classList.remove('active');
+                
+                setTimeout(restoreIncensePosition, 1500);
+            }
+        }
+        animateBeams();
+    }
+
+
+    function restoreIncensePosition() {
+        if(!document.body.classList.contains('incense-on')) {
+            document.getElementById('stick-center').setAttribute('y1', '875');
+            document.getElementById('glow-center').setAttribute('cy', '875');
+            document.getElementById('glow-center').setAttribute('r', '4');
+            document.getElementById('stick-left').setAttribute('x1', '475');
+            document.getElementById('stick-left').setAttribute('y1', '890');
+            document.getElementById('glow-left').setAttribute('cx', '475');
+            document.getElementById('glow-left').setAttribute('cy', '890');
+            document.getElementById('glow-left').setAttribute('r', '4');
+            document.getElementById('stick-right').setAttribute('x1', '525');
+            document.getElementById('stick-right').setAttribute('y1', '890');
+            document.getElementById('glow-right').setAttribute('cx', '525');
+            document.getElementById('glow-right').setAttribute('cy', '890');
+            document.getElementById('glow-right').setAttribute('r', '4');
+            ['left', 'right'].forEach(side => {
+    document.getElementById(`candle-body-${side}`).setAttribute('y', '970');
+    document.getElementById(`candle-body-${side}`).setAttribute('height', '60');
+    document.getElementById(`candle-wick-${side}`).setAttribute('y1', '965');
+    document.getElementById(`candle-wick-${side}`).setAttribute('y2', '975');
+    
+    // ✨ 修改这里为 flame-move
+    document.getElementById(`flame-move-${side}`).style.transform = `translateY(0px)`;
+});
+
+
+        }
+    }
+    function createDualSmoke() {
+        if (!document.body.classList.contains('incense-on') || incenseProgress >= 1) return;
+        const container = document.getElementById('smoke-container');
+        
+        const glows = [
+            document.getElementById('glow-left'),
+            document.getElementById('glow-center'),
+            document.getElementById('glow-right')
+        ];
+
+        glows.forEach(glow => {
+            if (Math.random() > 0.4) return; 
+            const rect = glow.getBoundingClientRect(); 
+            
+            const puff = document.createElement('div');
+            puff.className = 'smoke-fine';
+            puff.style.setProperty('--drift', `${(Math.random() - 0.5) * 40}px`);
+            puff.style.left = `${rect.left + rect.width / 2 - 4}px`; 
+            puff.style.top = `${rect.top - 60}px`; 
+            container.appendChild(puff);
+            setTimeout(() => { if(puff.parentNode) puff.remove() }, 4000);
+        });
+
+        if (Math.random() > 0.6) {
+            const centerRect = glows[1].getBoundingClientRect();
+            const fog = document.createElement('div');
+            fog.className = 'smoke-diffused';
+            fog.style.setProperty('--drift', `${(Math.random() - 0.5) * 150}px`);
+            fog.style.left = `${centerRect.left + (Math.random() - 0.5) * 30 - 15}px`;
+            fog.style.top = `${centerRect.top - 40}px`;
+            container.appendChild(fog);
+            setTimeout(() => { if(fog.parentNode) fog.remove() }, 7000);
+        }
+        
+        smokeTimer = setTimeout(createDualSmoke, 300 + Math.random() * 200);
+    }
+
+    function createAshDrop() {
+        if (!document.body.classList.contains('incense-on') || incenseProgress >= 1) return;
+        
+        const layer = document.getElementById('ash-layer');
+        const glows = ['glow-left', 'glow-center', 'glow-right'];
+        const activeGlow = document.getElementById(glows[Math.floor(Math.random() * glows.length)]);
+        
+        const cx = parseFloat(activeGlow.getAttribute('cx'));
+        const cy = parseFloat(activeGlow.getAttribute('cy'));
+        
+        const ash = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        ash.setAttribute('cx', cx);
+        ash.setAttribute('cy', cy);
+        ash.setAttribute('r', '1.5');
+        ash.setAttribute('fill', '#e0e0e0');
+        ash.style.transition = 'all 1.5s cubic-bezier(0.5, 0, 1, 1)';
+        layer.appendChild(ash);
+        
+        setTimeout(() => {
+            ash.setAttribute('cy', cy + 30 + Math.random() * 20); 
+            ash.setAttribute('cx', cx + (Math.random() - 0.5) * 10); 
+            ash.style.opacity = '0';
+        }, 50);
+
+        setTimeout(() => { if(ash.parentNode) ash.remove() }, 1600);
+        
+        ashTimer = setTimeout(createAshDrop, 500 + Math.random() * 1000);
+    }
+
+    function returnToMainHall() {
+        window.location.href = 'index_cn.html?screen=3';
+    }
+
+    // 初始化启动
+    handleStreak();
+
+</script>
+
+</body>
+</html>

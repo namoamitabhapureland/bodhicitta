@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+         <link rel="manifest" href="manifest_cn.json">
+            <meta name="theme-color" content="#010103">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>净土自誓 ． 双轨戒坛</title>
+    <style>
+        :root { --bg-deep: #020203; --gold: #f3e5ab; --solid-gold: #d4af37; --cyan: #8ba89c; }
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; }
+html { 
+    width: 100%; 
+    height: 100%; 
+    overscroll-behavior: none; /* 封印滑动回弹 */
+}
+
+body {
+    /* 1. 【关键修复】强制极深底色，阻止 Safari 顶部边界补上系统预设白底 */
+    background-color: #020203 !important;
+    background: radial-gradient(circle at 50% 50%, #15111a 0%, var(--bg-deep) 100%); 
+    
+    /* 2. 【关键修复】隔离渲染图层，阻止毛玻璃与混色效应渗透至 iOS 状态列 */
+    isolation: isolate;
+
+    /* --- 以下为你原本的 CSS，完全保持原样 --- */
+    color: #fff; 
+    font-family: "Songti SC", "SimSun", "Noto Serif SC", serif; 
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    overscroll-behavior: none; 
+}
+
+        /* 画布与转场 */
+        #page-transition-curtain { position: fixed; inset: 0; background: #000; z-index: 999999; opacity: 0; pointer-events: none; transition: 0.8s ease-in-out; }
+        canvas { position: absolute; inset: 0; }
+        #starCanvas { z-index: 1; pointer-events: none; }
+        #waterCanvas { z-index: 2; mix-blend-mode: screen; opacity: 0.85; pointer-events: none; }
+        #rainCanvas { z-index: 9998; pointer-events: none; opacity: 0; transition: 1.5s; mix-blend-mode: screen; }
+        #flash-overlay { position: fixed; inset: 0; background: radial-gradient(circle, #fff 0%, #e0f7fa 50%, transparent 100%); opacity: 0; z-index: 9999; pointer-events: none; transition: 0.8s; mix-blend-mode: screen; }
+
+        /* ================= PAGE 1 ================= */
+        #page-1 { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 100%; cursor: pointer; }
+        .p1-title { color: var(--gold); font-size: 1.6rem; letter-spacing: 12px; font-weight: bold; text-shadow: 0 0 25px rgba(212,175,55,0.8); margin-bottom: 20px; transition: 0.5s; z-index: 20; }
+        .p1-sub { color: #888; font-size: 0.9rem; letter-spacing: 5px; animation: breath 2s infinite alternate; transition: 0.5s; z-index: 20; }
+        @keyframes breath { from { opacity: 0.2; } to { opacity: 1; } }
+        #water-surface { position: absolute; inset: 0; z-index: 10; display: flex; justify-content: center; align-items: center; pointer-events: none; }
+        .ripple { position: absolute; border-radius: 50%; border: 2px solid rgba(243,229,171,0.8); box-shadow: 0 0 30px rgba(243,229,171,0.6), inset 0 0 20px rgba(243,229,171,0.4); transform: scale(0); opacity: 1; animation: ripple-expand 2.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; pointer-events: none; }
+        @keyframes ripple-expand { 0% { transform: scale(0); opacity: 1; border-width: 4px; } 100% { transform: scale(25); opacity: 0; border-width: 0px; } }
+        .warp-sink { animation: sink-drive 1.5s cubic-bezier(0.6, 0.05, 0.1, 1) forwards; }
+        @keyframes sink-drive { 0% { transform: scale(1) translateY(0); filter: blur(0px); opacity: 1; } 100% { transform: scale(4) translateY(-20%); filter: blur(10px); opacity: 0; } }
+
+         /* ================= PAGE 2 ================= */
+#page-2 { 
+    position: absolute; 
+    inset: 0; 
+    z-index: 20; 
+    display: none; 
+}
+
+.nav-top { 
+    position: absolute; 
+
+    top: calc(env(safe-area-inset-top) + 30px); 
+    
+    left: 20px; 
+    right: 20px; 
+    display: flex; 
+    justify-content: space-between; 
+    z-index: 99999; 
+}
+
+.nav-btn { 
+    color: var(--gold) !important; 
+    display: flex; 
+    align-items: center; 
+    gap: 6px; 
+    cursor: pointer; 
+    
+    /* 1. 关键：废除 Alpha 半透明与毛玻璃 blur，防止 iOS App 模式下二次混合黑罩 */
+    background: #141721 !important; 
+    -webkit-backdrop-filter: none !important; 
+    backdrop-filter: none !important; 
+    
+    padding: 8px 12px; 
+    border-radius: 20px; 
+    border: 1px solid rgba(212, 175, 55, 0.45) !important; 
+    
+    /* 2. 强制字体开启向量抗锯齿，防止 App 换页时被点阵化模糊 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    
+    font-size: 0.75rem; 
+    letter-spacing: 1px; 
+    transition: 0.3s; 
+
+    /* 3. 强制独立渲染图层，阻止 App 模式下的 opacity 传播 Bug */
+    isolation: isolate;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+}
+
+/* 确保 SVG 图示在 App 模式下维持原尺寸与锐利度 */
+.nav-btn svg {
+    flex-shrink: 0;
+    shape-rendering: geometricPrecision;
+}
+.nav-btn:active { transform: scale(0.95); }
+  /* 改金塔 */
+        #meditator-layer { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: none; transition: transform 1s; }
+        .meditator-container { width: 320px; height: 320px; cursor: pointer; pointer-events: auto; margin-top: 20px; animation: breathe-scale 5s ease-in-out infinite alternate; transition: all 1s; }
+        .meditator-svg { width: 100%; height: 100%; }
+        .meditator-container:active { transform: scale(0.95) !important; animation: none; filter: brightness(1.5); }
+        @keyframes breathe-scale { 0% { transform: translateY(0px) scale(0.95); filter: drop-shadow(0 0 15px rgba(243,229,171,0.3)); } 100% { transform: translateY(-15px) scale(1.03); filter: drop-shadow(0 0 35px rgba(243,229,171,0.8)); } }
+        .hint-text { margin-top: 15px; color: var(--gold); font-size: 0.85rem; letter-spacing: 5px; opacity: 0.7; animation: breath 2s infinite alternate; pointer-events: none; transition: 0.5s; }
+                /* ✨ 新增：云雾漂浮与显色动画 */
+        @keyframes stupaCloudDrift {
+            0% { transform: translateX(-3px) translateY(0px); opacity: 0.7; }
+            50% { transform: translateX(3px) translateY(-3px); opacity: 0.95; }
+            100% { transform: translateX(-3px) translateY(0px); opacity: 0.7; }
+        }
+        .stupa-cloud {
+            animation: stupaCloudDrift 8s ease-in-out infinite;
+        }
+
+
+        /* 护持中 标题 */
+        #action-track-name { display: none; margin-top: 15px; color: var(--cyan); font-size: 1.1rem; letter-spacing: 6px; font-weight: bold; text-shadow: 0 0 15px rgba(139,168,156,0.6); pointer-events: none; }
+
+        /* ================= 菩提心发光按钮 (置底) ================= */
+        #action-zone { position: absolute; bottom: max(5%, env(safe-area-inset-bottom)); width: 100%; z-index: 40; display: none; flex-direction: column; align-items: center; pointer-events: none; }
+        .seal-btn { position: relative; width: 100px; height: 100px; border-radius: 50%; cursor: pointer; pointer-events: auto; margin-bottom: 35px; }
+        .seal-bg { position: absolute; inset: 0; border: 1px dashed rgba(212,175,55,0.5); border-radius: 50%; animation: slow-spin 10s linear infinite; }
+        .seal-progress { position: absolute; top: -4px; left: -4px; width: 108px; height: 108px; transform: rotate(-90deg); pointer-events: none; }
+        .seal-text { position: absolute; bottom: -35px; left: 50%; transform: translateX(-50%); color: var(--gold); font-size: 0.8rem; letter-spacing: 4px; white-space: nowrap; animation: breath 2s infinite alternate; }
+        #p2-bodhi-seed { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); width: 45px; height: 45px; border-radius: 50%; background: radial-gradient(circle, #fff 10%, #ffe 30%, var(--gold) 60%, var(--solid-gold) 100%); box-shadow: 0 0 15px var(--solid-gold); transition: all 0.3s; pointer-events: none; }
+        .seal-btn:active #p2-bodhi-seed { transform: translate(-50%, -50%) scale(0.85); box-shadow: 0 0 35px #fff; }
+        .seed-heartbeat { animation: hb-pulse 1.5s infinite cubic-bezier(0.2, 0.8, 0.4, 1); }
+        @keyframes slow-spin { 100% { transform: rotate(360deg); } }
+        @keyframes hb-pulse { 0% { box-shadow: 0 0 var(--seed-glow) var(--gold); transform: translate(-50%, -50%) scale(1); } 50% { box-shadow: 0 0 calc(var(--seed-glow)*2) var(--gold), 0 0 calc(var(--seed-glow)*3) #fff; transform: translate(-50%, -50%) scale(1.15); } 100% { box-shadow: 0 0 var(--seed-glow) var(--gold); transform: translate(-50%, -50%) scale(1); } }
+        .drop-btn { color: #666; font-size: 0.75rem; letter-spacing: 2px; border-bottom: 1px dashed #444; pointer-events: auto; cursor: pointer; padding-bottom: 2px; transition: 0.3s; }
+        .drop-btn:active { color: #fff; border-color: #fff; }
+
+        /* ================= 各式弹框样式 ================= */
+        .glass-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 9999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.5s; }
+        .glass-modal.show { opacity: 1; pointer-events: auto; }
+        .glass-content { width: 90%; max-width: 420px; max-height: 85vh; background: linear-gradient(135deg, rgba(20,25,30,0.95), rgba(5,10,15,0.98)); border: 1px solid rgba(212,175,55,0.5); border-radius: 20px; padding: 30px 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 20px 50px rgba(0,0,0,0.9); position: relative; }
+        
+        .modal-header { text-align: center; color: var(--gold); font-size: 1.2rem; letter-spacing: 4px; font-weight: bold; margin-bottom: 20px; border-bottom: 1px dashed rgba(212,175,55,0.3); padding-bottom: 15px; display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; }
+        .close-btn { position: absolute; top: 15px; right: 15px; color: #888; font-size: 1.5rem; cursor: pointer; z-index: 10; }
+        
+        .tts-icon { width: 22px; height: 22px; fill: var(--cyan); cursor: pointer; transition: 0.3s; filter: drop-shadow(0 0 5px rgba(139,168,156,0.5)); }
+        .tts-icon:active { transform: scale(1.2); fill: #fff; }
+
+        .track-btn { background: rgba(0,0,0,0.5); border: 1px solid rgba(212,175,55,0.4); border-radius: 15px; padding: 20px; margin-bottom: 15px; text-align: center; cursor: pointer; transition: 0.3s; width: 100%; }
+        .track-btn:active { transform: scale(0.96); background: rgba(212,175,55,0.15); border-color: var(--solid-gold); }
+        .track-title { color: var(--gold); font-size: 1.1rem; letter-spacing: 3px; font-weight: bold; margin-bottom: 8px; }
+        .track-desc { color: #aaa; font-size: 0.8rem; letter-spacing: 1px; line-height: 1.5; }
+
+        .step-container { overflow-y: auto; padding: 10px; flex-grow: 1; margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; width: 100%; }
+        .step-text { color: #ddd; font-size: 0.95rem; line-height: 1.8; text-align: justify; letter-spacing: 1px; width: 100%; }
+        
+        /* 按钮宽度配合字幕 */
+        .agree-btn, .cert-btn { 
+            -webkit-appearance: none; appearance: none;
+            background: linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(10,10,10,0.9) 100%); 
+            border: 1px solid rgba(212,175,55,0.5); color: var(--gold); padding: 12px 35px; 
+            border-radius: 30px; text-align: center; font-weight: bold; letter-spacing: 4px; 
+            cursor: pointer; transition: 0.3s; box-shadow: inset 0 0 10px rgba(212,175,55,0.05), 0 5px 15px rgba(0,0,0,0.5); 
+            font-family: inherit; width: auto; min-width: 180px; display: inline-block;
+        }
+        .agree-btn:active, .cert-btn:active { transform: scale(0.96); background: rgba(212,175,55,0.3); border-color: var(--solid-gold); }
+
+        /* ================= 历史收藏室 ================= */
+.data-card { position: relative; width: 92%; max-width: 420px; border: 1px solid rgba(212,175,55,0.4); border-radius: 20px; padding: 30px 20px; box-shadow: 0 10px 55px rgba(0,0,0,0.9); background: linear-gradient(180deg, rgba(20,20,20,0.95) 0%, rgba(5,5,5,0.98) 100%); display: flex; flex-direction: column; align-items: center; max-height: 85vh; overflow-y: auto; }
+        .shelf { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; width: 100%; padding: 15px 0; border-top: 1px dashed rgba(212,175,55,0.3); margin-top: 15px; }
+        .shelf-item { background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(0,0,0,0.4)); border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 30%; aspect-ratio: 1; cursor: pointer; transition: 0.3s; box-shadow: inset 0 0 10px rgba(255,255,255,0.01), 0 5px 15px rgba(0,0,0,0.3); }
+        .shelf-item:active { transform: scale(0.92); border-color: var(--solid-gold); box-shadow: inset 0 0 15px rgba(212,175,55,0.2); }
+        .shelf-label { font-size: 0.65rem; color: #888; margin-top: 6px; letter-spacing: 1px; text-align: center; }
+        .stat-row { display: flex; justify-content: space-between; width: 100%; padding: 10px 15px; background: rgba(255,255,255,0.03); border-radius: 10px; margin-bottom: 10px; font-size: 0.85rem; letter-spacing: 1px; }
+
+        /* ================= 契印与证书 ================= */
+        .seal-svg { width: 55px; height: 55px; filter: grayscale(100%) opacity(0.15); transition: 0.5s; overflow: visible; }
+                /* 金刚杵本体：强烈呼吸与多层次法光叠加 */
+        .seal-active { 
+            filter: drop-shadow(0 0 15px var(--glow)) grayscale(0%) opacity(1); 
+            animation: seal-breath 2.5s cubic-bezier(0.4, 0.0, 0.2, 1) infinite alternate; 
+        }
+        @keyframes seal-breath { 
+            0% { transform: scale(0.95); filter: drop-shadow(0 0 10px var(--glow)) brightness(1); } 
+            100% { transform: scale(1.1); filter: drop-shadow(0 0 20px var(--glow)) drop-shadow(0 0 45px var(--glow)) brightness(1.4); } 
+        }
+
+        
+        .cert-box { background: linear-gradient(180deg, rgba(20,20,20,0.95) 0%, rgba(5,5,5,0.98) 100%); border: 1px solid rgba(212,175,55,0.5); border-radius: 20px; width: 85%; max-width: 360px; padding: 40px 25px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.9), inset 0 0 30px var(--cert-glow, rgba(212,175,55,0.1)); transform: translateY(20px) scale(0.95); transition: 0.4s; display: flex; flex-direction: column; align-items: center; }
+        .glass-modal.show .cert-box { transform: translateY(0) scale(1); }
+        .cert-icon-wrap { position: relative; width: 100px; height: 100px; margin: 0 auto 20px auto; display: flex; justify-content: center; align-items: center; animation: cert-float 3s infinite alternate; }
+        @keyframes cert-float { 0% { transform: translateY(0); } 100% { transform: translateY(-10px); } }
+        
+        .cert-name { color: var(--gold-solid); font-size: 1.4rem; font-weight: bold; letter-spacing: 5px; margin: 15px 0; }
+        .cert-desc { color: #ddd; font-size: 0.85rem; line-height: 1.8; letter-spacing: 1.5px; margin-bottom: 25px; }
+
+        /* 金刚色彩库 */
+        .seal-1 { --c1:#fff8dc; --c2:#f3e5ab; --c3:rgba(243,229,171,0.2); --glow:rgba(255,248,220,0.6); } 
+        .seal-6 { --c1:#8ba89c; --c2:#b2dfdb; --c3:rgba(139,168,156,0.3); --glow:rgba(139,168,156,0.6); } 
+        .seal-60 { --c1:#f3e5ab; --c2:#d4af37; --c3:rgba(212,175,55,0.3); --glow:rgba(212,175,55,0.8); } 
+        .seal-600 { --c1:#e5989b; --c2:#c1121f; --c3:rgba(181,101,118,0.3); --glow:rgba(229,152,155,0.8); } 
+        .seal-6000 { --c1:#c9a0dc; --c2:#7b2cbf; --c3:rgba(138,43,226,0.3); --glow:rgba(201,160,220,0.8); } 
+        .seal-inf { --c1:#ffffff; --c2:#fdf5d3; --c3:rgba(255,255,255,0.8); --glow:#ffffff; } 
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div id="page-transition-curtain"></div>
+        <!-- 🌟 舍戒专属确认弹框 (取代系统丑框) 🌟 -->
+    <div id="drop-confirm-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 10000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s;">
+        <div id="drop-confirm-box" style="background: linear-gradient(135deg, rgba(20,20,20,0.95), rgba(5,5,5,0.98)); border: 1px solid rgba(212,175,55,0.4); border-radius: 20px; padding: 35px 25px; width: 85%; max-width: 340px; text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.9), inset 0 0 15px rgba(212,175,55,0.1); transform: scale(0.95); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; align-items: center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#e5989b" stroke-width="1.2" style="width: 36px; height: 36px; margin-bottom: 15px; filter: drop-shadow(0 0 8px rgba(229,152,155,0.5));">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <div style="color: #e5989b; font-size: 1.15rem; letter-spacing: 4px; margin-bottom: 15px; font-weight: bold; text-shadow: 0 0 10px rgba(229,152,155,0.3);">确认舍戒</div>
+            <div style="color: #bbb; font-size: 0.9rem; line-height: 1.8; letter-spacing: 1px; margin-bottom: 25px;">确定中断今日修持？<br>请以自身健康与因缘为重。</div>
+            <div style="display: flex; gap: 12px; width: 100%;">
+                <button onclick="closeDropConfirm()" style="flex: 1; background: transparent; color: var(--gold); border: 1px solid rgba(212,175,55,0.5); padding: 12px 0; border-radius: 30px; letter-spacing: 2px; font-size: 0.85rem; cursor: pointer; transition: 0.3s; font-family: inherit;">继续护持</button>
+                <button onclick="executeDropPrecepts()" style="flex: 1; background: rgba(229,152,155,0.1); color: #e5989b; border: 1px solid rgba(229,152,155,0.4); padding: 12px 0; border-radius: 30px; letter-spacing: 2px; font-size: 0.85rem; cursor: pointer; transition: 0.3s; font-family: inherit;">确认舍戒</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 满额显化框 -->
+    <div id="vow-alert-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 10000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s;">
+        <div id="vow-alert-box" style="background: linear-gradient(135deg, rgba(20,20,20,0.95), rgba(5,5,5,0.98)); border: 1px solid rgba(212,175,55,0.4); border-radius: 20px; padding: 35px 25px; width: 85%; max-width: 340px; text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.9), inset 0 0 15px rgba(212,175,55,0.1); transform: scale(0.95); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; align-items: center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.2" style="width: 36px; height: 36px; margin-bottom: 15px; filter: drop-shadow(0 0 8px rgba(212,175,55,0.6));">
+                <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+            </svg>
+            <div style="color: var(--gold); font-size: 1.15rem; letter-spacing: 4px; margin-bottom: 15px; font-weight: bold; text-shadow: 0 0 10px rgba(212,175,55,0.3);">法界显化</div>
+            <div id="vow-alert-msg" style="color: #bbb; font-size: 0.95rem; line-height: 1.8; letter-spacing: 1px; margin-bottom: 25px;"></div>
+            <button onclick="closeVowAlert()" class="agree-btn">合十收摄</button>
+        </div>
+    </div>
+
+    <canvas id="starCanvas"></canvas>
+    <canvas id="waterCanvas"></canvas>
+    <canvas id="rainCanvas"></canvas>
+    <div id="flash-overlay"></div>
+
+    <!-- PAGE 1 -->
+    <div id="page-1" onclick="executeEntryWarp(event)">
+        <div id="water-surface"></div>
+        <div class="p1-title" id="p1-t1">净土戒坛</div>
+        <div class="p1-sub" id="p1-t2">轻触八功德水 ． 洗心入阵</div>
+    </div>
+
+    <!-- PAGE 2 -->
+    <div id="page-2">
+        <!-- 导航列，加入统计直方图 -->
+        <div class="nav-top">
+            <div class="nav-btn" onclick="returnToMainHall()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> 返回道场</div>
+            <div class="nav-btn" onclick="openInfoModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> 法门说明</div>
+            <div class="nav-btn" onclick="openHistory()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> 
+                历史轨迹
+            </div>
+        </div>
+
+                <!-- 法门说明弹框 (优化排版) -->
+        <div id="info-modal" class="glass-modal">
+            <div class="glass-content" style="width: 90%;">
+                <div class="close-btn" onclick="closeInfoModal()">×</div>
+                <div class="modal-header">法门说明</div>
+                
+                <div class="step-container" style="text-align: left; width: 100%; margin-bottom: 20px; padding: 0 5px;">
+                    
+                    <!-- 区块一：双轨并行 -->
+                    <div style="background: rgba(255,255,255,0.03); border-left: 2px solid var(--gold); padding: 15px; border-radius: 0 12px 12px 0; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(255,255,255,0.01);">
+                        <div style="color: var(--gold); font-weight: bold; letter-spacing: 2px; margin-bottom: 8px; font-size: 0.95rem;">【 双轨戒坛 ． 随机施教 】</div>
+                        <div style="color: #ccc; font-size: 0.85rem; line-height: 1.8; letter-spacing: 1px; text-align: justify;">
+                            行者可依自身因缘与健康，择一受持。无论是断食出离之<span style="color:var(--gold);">八关斋戒</span>，或修心防非之<span style="color:var(--gold);">瑜伽菩萨戒</span>，功德皆可导归极乐。
+                        </div>
+                    </div>
+
+                    <!-- 区块二：次数与资粮 -->
+                    <div style="background: rgba(255,255,255,0.03); border-left: 2px solid var(--cyan); padding: 15px; border-radius: 0 12px 12px 0; box-shadow: inset 0 0 10px rgba(255,255,255,0.01);">
+                        <div style="color: var(--cyan); font-weight: bold; letter-spacing: 2px; margin-bottom: 8px; font-size: 0.95rem;">【 护持资粮 ． 每月六次 】</div>
+                        <div style="color: #ccc; font-size: 0.85rem; line-height: 1.8; letter-spacing: 1px; text-align: justify;">
+                            依「六斋日」之法理，为免执著，本道场每月设有 <span style="color:var(--cyan);">六次受持上限</span>。若本月已达圆满，请静候次月轮转。<br><br>
+                            一日一夜戒期圆满後，系统将结算 <span style="color:var(--gold); font-weight:bold;">500 点</span> 菩提资粮，汇入主系统。
+                        </div>
+                    </div>
+
+                </div>
+                <button class="agree-btn" onclick="closeInfoModal()">我已了知</button>
+            </div>
+        </div>
+
+    <div id="meditator-layer">
+    <div class="meditator-container" id="meditator-btn" onclick="triggerRainAndSelect()">
+        <svg viewBox="0 0 200 220" class="meditator-svg">
+            <defs>
+                <!-- 金属金框渐层 -->
+                <linearGradient id="tibetanGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#A87C1E"/>
+                    <stop offset="30%" stop-color="#F3E17D"/>
+                    <stop offset="50%" stop-color="#FFFFFF"/>
+                    <stop offset="70%" stop-color="#F3E17D"/>
+                    <stop offset="100%" stop-color="#A87C1E"/>
+                </linearGradient>
+
+                <!-- 象牙白主体渐层 -->
+                <linearGradient id="ivoryWhite" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#FFFFFF"/>
+                    <stop offset="70%" stop-color="#F8F5EE"/>
+                    <stop offset="100%" stop-color="#ECE6D8"/>
+                </linearGradient>
+
+                <filter id="stupaGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="1.2" result="blur" />
+                    <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
+
+                <!-- === 依据妙依指示：瞳孔斜向11点、2点方向 === -->
+                <g id="nepalese-buddha-eyes" transform="translate(100, 93)" stroke-linejoin="round">
+                    <!-- 1. 眼睛主体与深蓝色瞳孔 (修正斜向重心) -->
+                    <g stroke="none">
+                        <!-- 左眼：瞳孔整体往左上方（11点方向）平移 -->
+                        <path d="M -9.5 0 C -7 1.5 -3.5 1.5 -1 0 C -3.5 -1.5 -7 -1.5 -9.5 0 Z" fill="#FFFFFF"/>
+                        <!-- 深蓝瞳孔重心：由 -5.25,0 移至 -6.0, -0.4 -->
+                        <ellipse cx="-6.0" cy="-0.4" rx="1.8" ry="0.7" fill="#1E3A8A"/> 
+                        <ellipse cx="-6.0" cy="-0.4" rx="0.7" ry="0.3" fill="#020203"/>
+
+                        <!-- 右眼：瞳孔整体往右上方（2点方向）平移 -->
+                        <path d="M 1 0 C 3.5 1.5 7 1.5 9.5 0 C 7 -1.5 3.5 -1.5 1 0 Z" fill="#FFFFFF"/>
+                        <!-- 深蓝瞳孔重心：由 5.25,0 移至 6.0, -0.4 -->
+                        <ellipse cx="6.0" cy="-0.4" rx="1.8" ry="0.7" fill="#1E3A8A"/> 
+                        <ellipse cx="6.0" cy="-0.4" rx="0.7" ry="0.3" fill="#020203"/>
+                    </g>
+                    
+                    <!-- 2. 红色与黄色的眼眶彩绘 (修正弧线重心) -->
+                    <g fill="none" stroke-width="0.3">
+                        <!-- 红色眼眶：左眼重心偏左、右眼重心偏右 -->
+                        <path d="M -9.3 0.2 C -7.1 1.6 -3.9 1.6 -1.2 0.2" stroke="#B22222"/>
+                        <path d="M 1.2 0.2 C 3.9 1.6 7.1 1.6 9.3 0.2" stroke="#B22222"/>
+                        
+                        <!-- 黄色眼眶：调整上眼睑重心以配合瞳孔 -->
+                        <path d="M -9.7 -0.2 C -7.3 -1.8 -3.8 -1.7 -1 -0.2" stroke="#FFD700"/>
+                        <path d="M 1 -0.2 C 3.8 -1.7 7.3 -1.8 9.7 -0.2" stroke="#FFD700"/>
+                    </g>
+                    
+                    <!-- 3. 上方的螺旋 (保持稳定) -->
+                    <path d="M 0 -0.8 L 0 -1.5" stroke="#FFFFFF" stroke-width="0.3" stroke-linecap="round"/>
+                    <g transform="translate(0, -3.5)">
+                        <path d="M 0 0 C 1 1, 2 2.5, 0 4.5 C -2 2.5, -1 1, 0 0 Z" fill="#B22222" stroke="#FFD700" stroke-width="0.3"/>
+                        <path d="M 0 1 C 0.5 1.5, 1 2.2, 0 3.2 L 0 1 Z" fill="#FFD700"/>
+                    </g>
+
+                    <!-- 4. 中间的螺旋鼻 (尼泊尔数字1) (保持稳定) -->
+                    <path d="M 0 0.8 L 0 1.5" stroke="#FFFFFF" stroke-width="0.3" stroke-linecap="round"/>
+                    <path d="M 0 1.5 C -1.2 2.5, -1.8 3.8, -1.2 5.2 C -0.8 6.2, 0 7, 0 8 M 0 1.5 C 1.2 2.5, 1.8 3.8, 1.2 5.2 C 0.8 6.2, 0 7, 0 8" 
+                          fill="none" stroke="#FFD700" stroke-width="0.5"/>
+                    <path d="M -1 3.5 C -1.5 4.5, -1 5.5, 0 6.5 M 1 3.5 C 1.5 4.5, 1 5.5, 0 6.5" 
+                          fill="none" stroke="#B22222" stroke-width="0.3"/>
+                </g>
+
+                <!-- === 菩提塔模组 === -->
+                <g id="pure-bodhi-stupa">
+                    <!-- 底座阶梯 -->
+                    <polygon points="28,212 18,220 182,220 172,212" fill="url(#tibetanGold)" stroke="#5C4010" stroke-width="0.8"/>
+                    <polygon points="34,204 28,212 172,212 166,204" fill="url(#tibetanGold)" stroke="#5C4010" stroke-width="0.8"/>
+                    <rect x="28" y="210" width="144" height="2" fill="#1E3A8A"/>
+
+                    <!-- 主基座 -->
+                    <rect x="34" y="186" width="132" height="18" fill="url(#tibetanGold)" stroke="#5C4010" stroke-width="0.8"/>
+                    <rect x="34" y="198" width="132" height="3" fill="#B22222"/>
+                    <rect x="34" y="201" width="132" height="1.5" fill="#0D9488"/>
+
+                    <!-- 楼梯阶梯 -->
+                    <rect x="42" y="179" width="116" height="7" fill="url(#tibetanGold)" stroke="#5C4010" stroke-width="0.8"/>
+                    <rect x="48" y="172" width="104" height="7" fill="url(#tibetanGold)" stroke="#5C4010" stroke-width="0.8"/>
+                    <rect x="54" y="165" width="92" height="7" fill="url(#tibetanGold)" stroke="#5C4010" stroke-width="0.8"/>
+                    <rect x="60" y="158" width="80" height="7" fill="url(#tibetanGold)" stroke="#5C4010" stroke-width="0.8"/>
+
+                    <!-- 阶梯折线 -->
+                    <g stroke="#4A3105" stroke-width="1.5" fill="none" stroke-linejoin="round" stroke-linecap="round">
+                        <path d="M 88 158 L 82 158 L 82 165 L 76 165 L 76 172 L 70 172 L 70 179 L 64 179 L 64 186" />
+                        <path d="M 112 158 L 118 158 L 118 165 L 124 165 L 124 172 L 130 172 L 130 179 L 136 179 L 136 186" />
+                    </g>
+
+                    <!-- 塔身六边形 -->
+                    <polygon points="66,158 56,124 74,98 126,98 144,124 134,158" 
+                             fill="url(#ivoryWhite)" stroke="url(#tibetanGold)" stroke-width="1.2" stroke-linejoin="round"/>
+
+                    <!-- 造型外门框 -->
+                    <path d="M 82 158 L 82 126 C 82 118 86 112 88 108 C 92 104 96 100 100 96 C 104 100 108 104 112 108 C 114 112 118 118 118 126 L 118 158 Z" 
+                          fill="url(#ivoryWhite)" stroke="url(#tibetanGold)" stroke-width="1.2" stroke-linejoin="round"/>
+                    <path d="M 84 158 L 84 127 C 84 120 87 115 89 111 C 93 107 97 103 100 100 C 103 103 107 107 111 111 C 113 115 116 120 116 127 L 116 158 Z" 
+                          fill="none" stroke="#B22222" stroke-width="0.6"/>
+
+                    <!-- 拱形龛门 -->
+                    <path d="M 88 158 L 88 130 Q 100 114 112 130 L 112 158 Z" fill="#0D1B2A" stroke="url(#tibetanGold)" stroke-width="1.2"/>
+                    <path d="M 90 158 L 90 131 Q 100 117 110 131 L 110 158 Z" fill="none" stroke="#B22222" stroke-width="0.6"/>
+
+                    <!-- 小塔脖 Harmika -->
+                    <rect x="88" y="88" width="24" height="10" fill="url(#tibetanGold)" stroke="#5C4010" stroke-width="0.8"/>
+                    <rect x="88" y="88" width="24" height="2" fill="#B22222"/>
+                    
+                    <!-- 调用斜向佛眼组件，置於 Harmika 中心位置 -->
+                    <use href="#nepalese-buddha-eyes"/>
+
+                    <!-- 十三天相轮 -->
+                    <g fill="url(#tibetanGold)" stroke="#5C4010" stroke-width="0.5">
+                        <rect x="90.0" y="84.0" width="20.0" height="3.2" rx="0.3" />
+                        <rect x="90.45" y="80.5" width="19.1" height="3.2" rx="0.3" />
+                        <rect x="90.9" y="77.0" width="18.2" height="3.2" rx="0.3" />
+                        <rect x="91.35" y="73.5" width="17.3" height="3.2" rx="0.3" />
+                        <rect x="91.8" y="70.0" width="16.4" height="3.2" rx="0.3" />
+                        <rect x="92.25" y="66.5" width="15.5" height="3.2" rx="0.3" />
+                        <rect x="92.7" y="63.0" width="14.6" height="3.2" rx="0.3" />
+                        <rect x="93.15" y="59.5" width="13.7" height="3.2" rx="0.3" />
+                        <rect x="93.6" y="56.0" width="12.8" height="3.2" rx="0.3" />
+                        <rect x="94.05" y="52.5" width="11.9" height="3.2" rx="0.3" />
+                        <rect x="94.5" y="49.0" width="11.0" height="3.2" rx="0.3" />
+                        <rect x="94.95" y="45.5" width="10.1" height="3.2" rx="0.3" />
+                        <rect x="95.4" y="42.0" width="9.2" height="3.2" rx="0.3" />
+                    </g>
+
+                    <!-- 华盖 -->
+                    <path d="M 91 40 L 88 35 Q 100 31 112 35 L 109 40 Z" fill="url(#tibetanGold)" stroke="#A87C1E" stroke-width="0.8"/>
+                    <line x1="89" y1="37" x2="111" y2="37" stroke="#B22222" stroke-width="0.6"/>
+
+                    <!-- 塔顶日月宝珠 -->
+                    <path d="M 95 31 C 95 34, 105 34, 105 31 C 102 33, 98 33, 95 31 Z" fill="#1E3A8A" stroke="url(#tibetanGold)" stroke-width="0.5"/>
+                    <circle cx="100" cy="28" r="2.2" fill="#B22222" stroke="url(#tibetanGold)" stroke-width="0.5"/>
+                    <path d="M 100 18 C 97 21, 98 25, 100 26 C 102 25, 103 21, 100 18 Z" fill="#FFD700" stroke="#A87C1E" stroke-width="0.5" style="filter: drop-shadow(0 0 3px #FFD700);"/>
+                </g>
+            </defs>
+            <!-- 背景金光 -->
+            <ellipse cx="100" cy="125" rx="65" ry="60" fill="url(#tibetanGold)" opacity="0.1" style="filter: blur(12px);" />
+
+            <!-- 後方左右两座小塔 (自动缩放，佛眼重心同步调整) -->
+            <use href="#pure-bodhi-stupa" transform="translate(-52, 8) scale(0.60)" transform-origin="100 200" opacity="0.8" />
+            <use href="#pure-bodhi-stupa" transform="translate(52, 8) scale(0.60)" transform-origin="100 200" opacity="0.8" />
+
+            <!-- 前方主塔 (加上斜向佛眼) -->
+            <use href="#pure-bodhi-stupa" transform="translate(0, 0) scale(1)" filter="url(#stupaGlow)"/>
+        </svg>
+    </div>
+    <div class="hint-text" id="meditator-hint">点击宝塔 ． 洗心入阵</div>
+</div>
+
+            
+
+        <div id="select-modal" class="glass-modal">
+            <div class="glass-content" style="width: 90%;">
+                <div class="close-btn" onclick="closeSelect()">×</div>
+                <div class="modal-header">选择今日誓愿</div>
+                <div class="track-btn" onclick="startTrack('A')">
+                    <div class="track-title">【 出离 】 八关斋戒</div>
+                    <div class="track-desc">清净梵行，过午不食。<br>适合环境许可、体力尚佳时受持。</div>
+                </div>
+                <div class="track-btn" onclick="startTrack('B')">
+                    <div class="track-title">【 菩提 】 瑜伽菩萨戒</div>
+                    <div class="track-desc">四重四十三轻，观照起心动念。<br>无断食门槛，侧重利他防非。</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="rules-modal" class="glass-modal">
+            <div class="glass-content">
+                <div class="close-btn" onclick="closeRules()">×</div>
+                <div class="modal-header">
+                    <span id="step-title">标题</span>
+                    <svg class="tts-icon" onclick="playTTS()" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                </div>
+                <div class="step-container" id="step-content"></div>
+                <button class="agree-btn" id="step-btn" onclick="nextStep()">下一步</button>
+            </div>
+        </div>
+
+        <div id="history-modal" class="glass-modal" onclick="closeHistory()">
+            <div class="data-card" onclick="event.stopPropagation()">
+                <div class="close-btn" onclick="closeHistory()">×</div>
+                <div class="modal-header" style="margin-bottom:10px; border:none;">十方结缘 ． 历史轨迹</div>
+                <div style="font-size:0.75rem; color:#888; margin-bottom: 15px;">点击契印卡片，观想清净功德</div>
+                
+                <div class="stat-row">
+                    <span style="color:var(--cyan);">八关斋戒 次数</span>
+                    <span style="color:var(--gold); font-weight:bold;" id="stat-A">0</span>
+                </div>
+                <div class="stat-row">
+                    <span style="color:var(--cyan);">瑜伽菩萨戒 次数</span>
+                    <span style="color:var(--gold); font-weight:bold;" id="stat-B">0</span>
+                </div>
+                
+                <div class="shelf" id="history-shelf"></div>
+            </div>
+        </div>
+
+                <!-- 🌟 重新组装：带有强制隐藏装甲的置底发光按钮区块 🌟 -->
+        <div id="action-zone" style="position: absolute; bottom: 8%; width: 100%; z-index: 50; display: none; flex-direction: column; align-items: center; pointer-events: none;">
+            
+            <div id="action-track-name" style="color: var(--cyan); font-size: 1.1rem; letter-spacing: 6px; font-weight: bold; text-shadow: 0 0 15px rgba(139,168,156,0.6); margin-bottom: 10px; display: none;"></div>
+            
+            <!-- 静态圆满时间提示 -->
+            <div id="completion-time-hint" style="color: #888; font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 25px; text-align: center; display: none;"></div>
+            
+            <!-- 注意：这里已经帮您挂上 tryComplete() 防呆锁 -->
+            <div class="seal-btn" id="seal-btn" onclick="tryComplete()" style="margin-bottom: 30px;">
+                <div class="seal-bg"></div>
+                <svg class="seal-progress" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                    <circle cx="50" cy="50" r="46" fill="none" stroke="var(--gold)" stroke-width="4" stroke-dasharray="289" stroke-dashoffset="0" stroke-linecap="round"/>
+                </svg>
+                <div id="p2-bodhi-seed" class="seed-heartbeat" style="--seed-glow: 15px;"></div>
+                <div class="seal-text">点击菩提 ． 圆满戒期</div>
+            </div>
+            
+            <div class="drop-btn" onclick="dropPrecepts()">舍戒 (中断修持)</div>
+        </div>
+
+
+    <div class="glass-modal" id="cert-modal">
+        <div class="cert-box" id="cert-box-glow">
+            <div class="cert-header" id="cert-tier-title">✦ 菩提契印 ✦</div>
+            <div class="cert-icon-wrap" id="cert-icon-wrap"></div>
+            <div class="cert-label" style="color: #aaa; font-size: 0.8rem; letter-spacing: 3px;">行 者</div>
+            <div class="cert-name" id="cert-display-name">行者</div>
+            <div class="cert-reward" id="cert-reward-label" style="color: #aaa; font-size: 0.8rem; letter-spacing: 3px; margin-bottom:15px;">回 向 功 德</div>
+            <div class="cert-desc" id="cert-desc">一日一夜清净梵行，功德不可思议。<br>「愿以此功德，庄严佛净土。」</div>
+            <button class="cert-btn" id="cert-action-btn" onclick="completeAndReturn()">结算 500 资粮</button>
+        </div>
+    </div>
+
+<script>
+    function showVowAlert(msg) {
+        const overlay = document.getElementById('vow-alert-overlay');
+        document.getElementById('vow-alert-msg').innerHTML = msg;
+        overlay.style.display = 'flex';
+        void overlay.offsetWidth; 
+        overlay.style.opacity = '1';
+        document.getElementById('vow-alert-box').style.transform = 'scale(1)';
+    }
+
+    function closeVowAlert() {
+        const overlay = document.getElementById('vow-alert-overlay');
+        overlay.style.opacity = '0';
+        document.getElementById('vow-alert-box').style.transform = 'scale(0.95)';
+        setTimeout(() => overlay.style.display = 'none', 400);
+    }
+
+    const DB_KEY = 'PX_CN_V15.0';
+    let mainDb = JSON.parse(localStorage.getItem(DB_KEY));
+    if (!mainDb) mainDb = { points: 0, name: '' };
+    if (!mainDb.preceptsData) {
+        mainDb.preceptsData = { active: false, track: null, startTime: null, countA: 0, countB: 0, cycleStart: null, cycleCount: 0 };
+    }
+    
+    let userName = (mainDb && mainDb.name) ? mainDb.name : '行者';
+    let currentTrack = null;
+
+        function checkCycle() {
+        const now = new Date();
+        // 产出 "2026-5" 这种绝对月份标签，跨月自动变更
+        const currentMonthTag = now.getFullYear() + "-" + (now.getMonth() + 1); 
+        
+        // 若标签不同（包含第一次使用或跨月），则自动重置为 0
+        if (mainDb.preceptsData.cycleStart !== currentMonthTag) {
+            mainDb.preceptsData.cycleStart = currentMonthTag;
+            mainDb.preceptsData.cycleCount = 0;
+            localStorage.setItem(DB_KEY, JSON.stringify(mainDb));
+        }
+    }
+
+
+    function playDharmaSound() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, ctx.currentTime); 
+            gain.gain.setValueAtTime(0.5, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 2.5);
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(); osc.stop(ctx.currentTime + 2.5);
+
+            const bufferSize = ctx.sampleRate * 2.5; 
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) { data[i] = (Math.random() * 2 - 1) * 0.15; }
+            const noise = ctx.createBufferSource(); noise.buffer = buffer;
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass'; filter.frequency.value = 600;
+            const noiseGain = ctx.createGain();
+            noiseGain.gain.setValueAtTime(0.8, ctx.currentTime);
+            noiseGain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 2.5);
+            noise.connect(filter); filter.connect(noiseGain); noiseGain.connect(ctx.destination);
+            noise.start();
+        } catch(e) {}
+    }
+
+        function getVajraSVG(className) {
+        return `
+        <svg class="cert-icon seal-svg seal-active ${className}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g> <!-- 已经移除所有旋转，绝对摆正 -->
+                <!-- 中心宝珠 -->
+                <circle cx="50" cy="50" r="8" fill="var(--c3)" stroke="var(--c1)" stroke-width="1.5"/>
+                <circle cx="50" cy="50" r="4" fill="var(--c2)"/>
+
+                <!-- 上半部莲座 -->
+                <path d="M42,42 L58,42 L55,32 L45,32 Z" fill="var(--c3)" stroke="var(--c1)" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M44,32 L56,32 L53,28 L47,28 Z" fill="var(--c2)" stroke="var(--c1)" stroke-width="1.5" stroke-linejoin="round"/>
+
+                <!-- 下半部莲座 -->
+                <path d="M42,58 L58,58 L55,68 L45,68 Z" fill="var(--c3)" stroke="var(--c1)" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M44,68 L56,68 L53,72 L47,72 Z" fill="var(--c2)" stroke="var(--c1)" stroke-width="1.5" stroke-linejoin="round"/>
+
+                <!-- 上方中央主股 (剑刃感) -->
+                <path d="M48,28 L50,4 L52,28 Z" fill="var(--c2)" stroke="var(--c1)" stroke-width="1.5" stroke-linejoin="round"/>
+
+                <!-- 上方外侧双股 (向内收拢的标准法器曲线) -->
+                <path d="M38,32 C25,20 40,8 49,5" fill="none" stroke="var(--c1)" stroke-width="2" stroke-linecap="round"/>
+                <path d="M62,32 C75,20 60,8 51,5" fill="none" stroke="var(--c1)" stroke-width="2" stroke-linecap="round"/>
+
+                <!-- 下方中央主股 (剑刃感) -->
+                <path d="M48,72 L50,96 L52,72 Z" fill="var(--c2)" stroke="var(--c1)" stroke-width="1.5" stroke-linejoin="round"/>
+
+                <!-- 下方外侧双股 (向内收拢的标准法器曲线) -->
+                <path d="M38,68 C25,80 40,92 49,95" fill="none" stroke="var(--c1)" stroke-width="2" stroke-linecap="round"/>
+                <path d="M62,68 C75,80 60,92 51,95" fill="none" stroke="var(--c1)" stroke-width="2" stroke-linecap="round"/>
+
+                <!-- 核心白光点 -->
+                <circle cx="50" cy="50" r="2.5" fill="#fff" filter="drop-shadow(0 0 5px #fff)"/>
+            </g>
+        </svg>`;
+    }
+
+
+    const CERT_DATA = {
+        1: { title: "✦ 初发心 ． 白银契印 ✦", cls: "seal-1", boxGlow: "rgba(255,255,255,0.15)" },
+        6: { title: "✦ 坚固心 ． 琉璃契印 ✦", cls: "seal-6", boxGlow: "rgba(139,168,156,0.2)" },
+        60: { title: "✦ 不退转 ． 真金契印 ✦", cls: "seal-60", boxGlow: "rgba(212,175,55,0.25)" },
+        600: { title: "✦ 菩提印 ． 赤金契印 ✦", cls: "seal-600", boxGlow: "rgba(229,152,155,0.2)" },
+        6000: { title: "✦ 圆满相 ． 紫金契印 ✦", cls: "seal-6000", boxGlow: "rgba(201,160,220,0.2)" },
+        9999999: { title: "✦ 尽未来际 ． 真如契印 ✦", cls: "seal-inf", boxGlow: "rgba(255,255,255,0.3)" }
+    };
+
+        const TRACK_A_STEPS = [
+        { title: "八关斋戒 ． 缘起", content: `此为在家居士种出世善根之方便法门。以一日一夜为期，关闭恶道之门，受持清净梵行。<br><br>散见於《阿含经》等诸部律仪。藉由断食与出离，清净身心，回向极乐。`, btn: "我已了知 ． 发心受持" },
+        { title: "第一 ． 忏悔清净", content: `法水洗心，须先涤除宿垢。请於心中至诚默念：<br><br>「弟子 <span style="color:var(--gold); font-weight:bold;">${userName}</span>，随顺世尊教诲。若我无始以来，於身口意三业，所造一切恶，今日至心发露忏悔。愿罪垢消除，身心清净。」`, btn: "至诚忏悔 ． 进入三皈" },
+        { title: "第二 ． 三皈得体", content: `戒体源於三宝加持。请至心宣读，从此刻起至明日此时，归命三宝。<br><br>「弟子 <span style="color:var(--gold); font-weight:bold;">${userName}</span>，乃至明日日出。<br>至心归依佛，两足胜尊。<br>至心归依法，离欲胜尊。<br>至心归依僧，调伏胜尊。」`, btn: "归命三宝 ． 宣示戒相" },
+        { title: "第三 ． 宣示戒相 (上)", content: `如诸佛菩萨尽形寿受持清净戒，我今日一日一夜，亦如是受持：<br><br>
+            <div style="text-align:left; font-size:0.85rem; line-height:1.8;">
+            1. <b>不杀生：</b>护念有情，不存伤害之念。<br>
+            2. <b>不偷盗：</b>不取非份之物。<br>
+            3. <b>不淫：</b>断绝一切性行为。<br>
+            4. <b>不妄语：</b>诚实柔和，不说谎恶口。
+            </div>`, btn: "誓愿遵守 ． 下一页" },
+        { title: "第三 ． 宣示戒相 (下)", content: `
+            <div style="text-align:left; font-size:0.85rem; line-height:1.8;">
+            5. <b>不饮酒：</b>不饮麻醉神智之物。<br>
+            6. <b>不著香华鬘：</b>不涂香水化妆。<br>
+            7. <b>不歌舞观听：</b>不观世俗娱乐。<br>
+            8. <b>不坐高广大床：</b>不贪图安逸卧具。<br>
+            9. <b style="color:var(--gold);">不非时食 (持斋)：</b>过午之後不再进食，仅饮清水或无渣流质。
+            </div>`, btn: "誓愿遵守 ． 进入自誓" },
+        { title: "第四 ． 自誓受持", content: `请至心默念：<br><br>「弟子 <span style="color:var(--gold); font-weight:bold;">${userName}</span>，今於数位道场，至心发愿。<br><br>一日一夜中，愿断一切恶，愿修一切善。成就净戒，导归极乐。」`, btn: "誓愿受持 ． 启动戒期" }
+    ];
+
+    const TRACK_B_STEPS = [
+        { title: "菩萨戒 ． 缘起", content: `本戒出自《瑜伽师地论 ． 菩萨地》，为弥勒菩萨所说。不限出家在家皆可受持。<br><br>以「摄律仪戒」断一切恶，以「摄善法戒」修一切善，以「饶益有情戒」度一切众生。`, btn: "我已了知 ． 发心受持" },
+        { title: "第一 ． 忏悔清净", content: `请於心中至诚默念：<br><br>「弟子 <span style="color:var(--gold); font-weight:bold;">${userName}</span>，随顺世尊教诲。若我无始以来，於身口意三业，所造一切恶，今日至心发露忏悔。愿罪垢消除，身心清净。」`, btn: "至诚忏悔 ． 进入戒相" },
+        { title: "第二 ． 宣示四重戒", content: `四重戒为菩萨根本，若犯则失戒体。<br><br>弟子 <span style="color:var(--gold); font-weight:bold;">${userName}</span>，今日一日一夜，<br>
+            <span style="color:var(--solid-gold); font-size:1.4rem; font-weight:bold; letter-spacing:8px; text-shadow:0 0 15px rgba(212,175,55,1); display:block; text-align:center; margin:15px 0;">绝对不犯</span>
+            <div style="text-align:left; font-size:0.9rem; line-height:1.8;">
+            1. <b>赞自毁他：</b>不贪求名利而毁谤他人。<br>
+            2. <b>悭吝财法：</b>不对求法求财之苦难者悭吝。<br>
+            3. <b>嗔不受悔：</b>不嗔心打骂，且接受他人道歉。<br>
+            4. <b>谤毁大乘：</b>不谤大乘，不宣说假法。
+            </div>`, btn: "绝对不犯 ． 宣示轻戒" },
+        { title: "第三 ． 四十三轻 (一)", content: `依六度观照微细心念。今日誓愿防非止恶：<br><br>
+            <div style="text-align:left; font-size:0.85rem; line-height:1.8; color:#ddd;">
+            <b>【布施防非】</b><br>
+            不供养三宝、贪求名利、不敬同法、不受他人布施、不施他人法。<br>
+            <b>【持戒防非】</b><br>
+            忽视他人重罪、护己不纠恶、不随顺众生之善机、不降伏恶人。
+            </div>`, btn: "谨记在心 ． 下一页" },
+        { title: "第三 ． 四十三轻 (二)", content: `
+            <div style="text-align:left; font-size:0.85rem; line-height:1.8; color:#ddd;">
+            <b>【忍辱防非】</b><br>
+            遭骂报骂、怀恨在心、拒绝他人道歉、不舍怨结。<br>
+            <b>【精进防非】</b><br>
+            贪图名利供养、懒惰睡眠、虚度时光、谈论世俗语不休。
+            </div>`, btn: "谨记在心 ． 下一页" },
+        { title: "第三 ． 四十三轻 (三)", content: `
+            <div style="text-align:left; font-size:0.85rem; line-height:1.8; color:#ddd;">
+            <b>【禅定防非】</b><br>
+            不求教禅定、舍弃静虑、贪著禅味。<br>
+            <b>【般若防非】</b><br>
+            谤声闻乘、舍大乘学小乘、沉迷外道典籍、不信深法、执著己见。
+            </div>`, btn: "谨记在心 ． 下一页" },
+        { title: "第三 ． 四十三轻 (四)", content: `
+            <div style="text-align:left; font-size:0.85rem; line-height:1.8; color:#ddd;">
+            <b>【饶益有情防非】</b><br>
+            见人有求不助、见病苦不瞻视、不报他人恩、不慰问忧恼者、不劝人向善。<br>
+            不随顺众生正当需求、不称扬他人善、不折服作恶众生、不以神通(方便法)度人。
+            </div>`, btn: "谨记在心 ． 进入自誓" },
+        { title: "第四 ． 自誓受持", content: `请至心默念：<br><br>「弟子 <span style="color:var(--gold); font-weight:bold;">${userName}</span>，今於数位道场，至心发愿。以诸佛菩萨为师，自誓受持四重四十三轻戒。<br><br>一日一夜中，愿断一切恶，修一切善，度一切众生。导归极乐。」`, btn: "誓愿受持 ． 启动戒期" }
+    ];
+
+
+    let currentStep = 0; let activeSteps = [];
+
+    function openInfoModal() { document.getElementById('info-modal').classList.add('show'); }
+    function closeInfoModal() { document.getElementById('info-modal').classList.remove('show'); }
+
+    function stopTTS() { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); }
+    function playTTS() {
+        if (!('speechSynthesis' in window)) return showVowAlert("法界回馈：您的设备不支援语音。");
+        stopTTS();
+        const step = activeSteps[currentStep];
+        const cleanText = step.content.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ');
+        const utterance = new SpeechSynthesisUtterance(step.title + "。" + cleanText);
+        utterance.lang = 'zh-CN'; utterance.rate = 0.85;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    const rCvs = document.getElementById('rainCanvas'), rCtx = rCvs.getContext('2d');
+    let rw, rh, drops = [], raining = false;
+    function initRain() { rw = window.innerWidth; rh = window.innerHeight; rCvs.width = rw; rCvs.height = rh; drops = []; for(let i=0; i<600; i++) drops.push({x: Math.random()*rw, y: Math.random()*rh, v: Math.random()*15+15, l: Math.random()*25+15}); }
+    window.addEventListener('resize', () => { if(raining) initRain(); });
+    function drawRain() { if(!raining) return; rCtx.clearRect(0,0,rw,rh); rCtx.strokeStyle = 'rgba(255,255,255,0.35)'; rCtx.lineWidth = 1.5; rCtx.beginPath(); drops.forEach(d => { rCtx.moveTo(d.x, d.y); rCtx.lineTo(d.x - d.v*0.1, d.y + d.v); d.y += d.v; d.x -= d.v*0.1; if(d.y > rh) { d.y = -d.l; d.x = Math.random()*rw; } }); rCtx.stroke(); requestAnimationFrame(drawRain); }
+
+    function triggerRainAndSelect() {
+        if(mainDb.preceptsData.cycleCount >= 6) {
+            showVowAlert("【 戒期圆满 】<br><br>您本期六斋日已圆满。<br>为免执著功德，请静候下期。");
+            return;
+        }
+
+        playDharmaSound();
+        document.getElementById('meditator-btn').style.pointerEvents = 'none';
+        raining = true; initRain(); drawRain(); document.getElementById('rainCanvas').style.opacity = '1';
+        
+        setTimeout(() => {
+            document.getElementById('rainCanvas').style.opacity = '0';
+            setTimeout(() => { raining = false; }, 1500);
+            document.getElementById('select-modal').classList.add('show');
+            document.getElementById('meditator-btn').style.pointerEvents = 'auto';
+        }, 3000);
+    }
+
+    function closeSelect() { document.getElementById('select-modal').classList.remove('show'); }
+    function closeRules() { stopTTS(); document.getElementById('rules-modal').classList.remove('show'); }
+
+    function startTrack(trackType) {
+        currentTrack = trackType; activeSteps = (trackType === 'A') ? TRACK_A_STEPS : TRACK_B_STEPS; currentStep = 0;
+        closeSelect(); renderStep();
+        setTimeout(() => { document.getElementById('rules-modal').classList.add('show'); }, 400);
+    }
+
+    function renderStep() {
+        stopTTS();
+        const step = activeSteps[currentStep];
+        document.getElementById('step-title').innerText = step.title;
+        document.getElementById('step-content').innerHTML = `<div class="step-text">${step.content}</div>`;
+        document.getElementById('step-btn').innerText = step.btn;
+    }
+
+    function nextStep() {
+        if (currentStep < activeSteps.length - 1) { currentStep++; renderStep(); } 
+        else { startPrecepts(); }
+    }
+
+    function startPrecepts() {
+        closeRules();
+        mainDb.preceptsData.active = true; mainDb.preceptsData.track = currentTrack; mainDb.preceptsData.startTime = Date.now();
+        localStorage.setItem(DB_KEY, JSON.stringify(mainDb));
+        applyActiveUI(); 
+    }
+
+        function applyActiveUI() {
+        document.getElementById('meditator-hint').style.display = 'none';
+        const med = document.querySelector('.meditator-container');
+        med.style.transform = 'scale(0.5) translateY(-220px)'; 
+        med.style.opacity = '0.3'; med.style.pointerEvents = 'none'; med.style.animation = 'none';
+        
+        const trackNameEl = document.getElementById('action-track-name');
+        trackNameEl.innerText = (currentTrack === 'A') ? "八关斋戒 ． 护持中" : "菩萨戒 ． 护持中";
+        trackNameEl.style.display = 'block';
+
+        // 新增：精准计算并印出圆满时间
+        if (mainDb.preceptsData.startTime) {
+            const startD = new Date(mainDb.preceptsData.startTime);
+            const sHour = String(startD.getHours()).padStart(2, '0');
+            const sMin = String(startD.getMinutes()).padStart(2, '0');
+            const timeHintEl = document.getElementById('completion-time-hint');
+            timeHintEl.innerHTML = `启动於 ${sHour}:${sMin}<br><span style="color:var(--gold);">明日 ${sHour}:${sMin} 圆满</span>`;
+            timeHintEl.style.display = 'block';
+        }
+
+        document.getElementById('action-zone').style.display = 'flex';
+        setTimeout(() => { document.getElementById('action-zone').style.pointerEvents = 'auto'; }, 100);
+    }
+    function tryComplete() {
+        // 设定戒期长度：24 小时 (毫秒)
+        // 💡 妙依工程师提示：若您想先测试，可将这行改为 const REQUIRE_MS = 10 * 1000; (也就是10秒)
+        const REQUIRE_MS = 24 * 60 * 60 * 1000; 
+        
+        // 绝对时间相减：现在时间 - 启动时间
+        const elapsed = Date.now() - mainDb.preceptsData.startTime;
+        
+        if (elapsed < REQUIRE_MS) {
+            // 时间未满，呼叫您写好的完美黑金弹框阻挡
+            showVowAlert("【 戒期未满 】<br><br>一日一夜之期尚未圆满。<br>请坚固道心，於预定时间後再行结算。");
+        } else {
+            // 时间已满 24 小时，进入圆满证书画面
+            showSuccess();
+        }
+    }
+
+
+        // ================= 舍戒专属 UI 控制 =================
+    function dropPrecepts() {
+        // 呼叫我们自己写的精美弹框，不再使用系统丑框
+        const overlay = document.getElementById('drop-confirm-overlay');
+        overlay.style.display = 'flex';
+        void overlay.offsetWidth; 
+        overlay.style.opacity = '1';
+        document.getElementById('drop-confirm-box').style.transform = 'scale(1)';
+    }
+
+    function closeDropConfirm() {
+        const overlay = document.getElementById('drop-confirm-overlay');
+        overlay.style.opacity = '0';
+        document.getElementById('drop-confirm-box').style.transform = 'scale(0.95)';
+        setTimeout(() => overlay.style.display = 'none', 400);
+    }
+
+    function executeDropPrecepts() {
+        // 真正执行中断的逻辑
+        mainDb.preceptsData.active = false; mainDb.preceptsData.startTime = null;
+        localStorage.setItem(DB_KEY, JSON.stringify(mainDb)); 
+        location.reload();
+    }
+
+
+         function showSuccess() {
+        document.getElementById('action-zone').style.display = 'none';
+        document.getElementById('action-track-name').style.display = 'none';
+
+        // 🌟 关键修复：结算前，再次从主系统抓取最新名号，确保不印错
+        let latestDb = JSON.parse(localStorage.getItem(DB_KEY));
+        if (latestDb && latestDb.name && latestDb.name.trim() !== "") {
+            userName = latestDb.name;
+        }
+
+        if (currentTrack === 'A') mainDb.preceptsData.countA = (mainDb.preceptsData.countA || 0) + 1;
+        if (currentTrack === 'B') mainDb.preceptsData.countB = (mainDb.preceptsData.countB || 0) + 1;
+        
+        mainDb.preceptsData.cycleCount++;
+
+        let totalCount = (mainDb.preceptsData.countA || 0) + (mainDb.preceptsData.countB || 0);
+
+        let sealTier = 1;
+        if (totalCount >= 9999999) sealTier = 9999999;
+        else if (totalCount >= 6000) sealTier = 6000;
+        else if (totalCount >= 600) sealTier = 600;
+        else if (totalCount >= 60) sealTier = 60;
+        else if (totalCount >= 6) sealTier = 6;
+
+        const data = CERT_DATA[sealTier];
+        document.getElementById('cert-tier-title').innerText = data.title;
+        document.getElementById('cert-icon-wrap').innerHTML = getVajraSVG(data.cls); 
+        document.getElementById('cert-box-glow').style.setProperty('--cert-glow', data.boxGlow);
+        document.getElementById('cert-display-name').innerText = userName;
+        document.getElementById('cert-desc').innerHTML = `圆满 ${totalCount} 次。<br><br>「愿以此功德，庄严佛净土。<br>命欲终时，蒙佛接引，生极乐国。」`;
+        
+        document.getElementById('cert-modal').classList.add('show');
+        genDust();
+    }
+
+    function completeAndReturn() {
+        mainDb.points = (mainDb.points || 0) + 500;
+        mainDb.preceptsData.active = false; mainDb.preceptsData.startTime = null;
+        localStorage.setItem(DB_KEY, JSON.stringify(mainDb));
+        stopTTS();
+        document.getElementById('page-transition-curtain').style.opacity = '1';
+        setTimeout(() => { window.location.href = 'index_cn.html?screen=3'; }, 800);
+    }
+
+    function openHistory() {
+        document.getElementById('stat-A').innerText = mainDb.preceptsData.countA || 0;
+        document.getElementById('stat-B').innerText = mainDb.preceptsData.countB || 0;
+        let totalCount = (mainDb.preceptsData.countA || 0) + (mainDb.preceptsData.countB || 0);
+
+        const shelfData = [ {t: 1, l: "初发心<br>(1圆满)"}, {t: 6, l: "坚固心<br>(6圆满)"}, {t: 60, l: "不退转<br>(60圆满)"}, {t: 600, l: "菩提印<br>(600圆满)"}, {t: 6000, l: "圆满相<br>(6千圆满)"}, {t: 9999999, l: "真如<br>(无量劫)"} ];
+        
+        let shelfHtml = "";
+        shelfData.forEach(d => {
+            let isActive = totalCount >= d.t;
+            let svgClass = isActive ? CERT_DATA[d.t].cls : 'seal-1'; 
+            let opacityStyle = isActive ? '' : 'style="filter:grayscale(100%) opacity(0.15);"';
+            
+            shelfHtml += `
+            <div class="shelf-item" onclick="openCertFromHistory(${d.t})">
+                <div ${opacityStyle}>${getVajraSVG(svgClass)}</div>
+                <div class="shelf-label">${d.l}</div>
+            </div>`;
+        });
+        document.getElementById('history-shelf').innerHTML = shelfHtml;
+        document.getElementById('history-modal').classList.add('show');
+    }
+    
+    function closeHistory() { document.getElementById('history-modal').classList.remove('show'); }
+
+    function openCertFromHistory(tier) {
+        let totalCount = (mainDb.preceptsData.countA || 0) + (mainDb.preceptsData.countB || 0);
+        if (totalCount < tier) return; 
+        
+        const data = CERT_DATA[tier];
+        document.getElementById('cert-tier-title').innerText = data.title;
+        document.getElementById('cert-icon-wrap').innerHTML = getVajraSVG(data.cls);
+        document.getElementById('cert-box-glow').style.setProperty('--cert-glow', data.boxGlow);
+        document.getElementById('cert-display-name').innerText = userName;
+        document.getElementById('cert-reward-label').innerText = "契 印 记 录";
+        
+        let tierText = "";
+        if(tier===1) tierText = "一念发心，超越三千大千世界。<br>白银金刚破除无明。";
+        else if(tier===6) tierText = "六度齐修，如青琉璃般坚固明澈。<br>不为八风所动。";
+        else if(tier===60) tierText = "六十次圆满，入不退转地。<br>真金百炼，光耀法界。";
+        else if(tier===600) tierText = "六百次行愿，菩提赤诚如火。<br>三界火宅，化为红莲。";
+        else if(tier===6000) tierText = "六千次受持，功德庄严圆满。<br>紫金光聚，普照十方。";
+        else tierText = "无量劫来，与佛同体。<br>纯白金光，法界一如。";
+        document.getElementById('cert-desc').innerHTML = tierText;
+        
+        document.getElementById('cert-action-btn').innerText = "合十收摄";
+        document.getElementById('cert-action-btn').onclick = () => { 
+            document.getElementById('cert-modal').classList.remove('show'); 
+            setTimeout(() => { document.getElementById('cert-action-btn').onclick = completeAndReturn; }, 500);
+        };
+        document.getElementById('cert-modal').classList.add('show');
+    }
+
+    function returnToMainHall() {
+        stopTTS(); document.getElementById('page-transition-curtain').style.opacity = '1';
+        setTimeout(() => { window.location.href = 'index_cn.html?screen=3'; }, 800);
+    }
+
+    function genDust() {
+        for(let i=0; i<80; i++) {
+            let d = document.createElement('div'); d.className = 'dust'; d.style.position = 'fixed';
+            d.style.left = (window.innerWidth/2) + (Math.random()-0.5)*300 + 'px'; d.style.top = (window.innerHeight/2) + (Math.random()-0.5)*300 + 'px';
+            let s = Math.random()*8 + 2; d.style.width = s+'px'; d.style.height = s+'px';
+            const DUST_CLRS = ['#f3e5ab', '#ffffff', '#89CFF0', '#ff9a9e'];
+            d.style.background = DUST_CLRS[Math.floor(Math.random()*4)]; d.style.boxShadow = `0 0 15px ${d.style.background}`; d.style.zIndex = 10001; d.style.borderRadius = '50%';
+            document.body.appendChild(d);
+            d.animate([{opacity: 1, transform: 'translate(0,0) scale(1)'}, {opacity: 0, transform: `translate(${(Math.random()-0.5)*300}px, -500px) scale(0)`}], {duration: 3000 + Math.random()*1500, easing: 'ease-out', fill: 'forwards'});
+            setTimeout(() => d.remove(), 4600);
+        }
+    }
+
+    window.addEventListener('load', () => { 
+    checkCycle(); 
+    if(mainDb.preceptsData && mainDb.preceptsData.active) { 
+        // 🌟 关键修复：从记忆体中恢复他选的戒别！
+        currentTrack = mainDb.preceptsData.track; 
+        
+        document.getElementById('page-1').style.display='none'; 
+        document.getElementById('page-2').style.display='block'; 
+        applyActiveUI(); 
+    } 
+});
+
+
+    const canvas = document.getElementById('starCanvas'); const ctx = canvas.getContext('2d'); let width, height, stars = [], warpSpeed = 0.5, starScale = 1; function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; } window.addEventListener('resize', resize); resize(); const STAR_COLORS = ['#8ba89c', '#ffffff', '#f3e5ab', '#ff9a9e', '#b2dfdb', '#C9A0DC', '#ffeb3b']; for (let i = 0; i < 250; i++) { stars.push({ x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, z: Math.random() * 2000, color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)], s: Math.random() * 2.5 + 0.5 }); } function renderStars() { ctx.fillStyle = 'rgba(2, 2, 4, 0.4)'; ctx.fillRect(0, 0, width, height); ctx.globalCompositeOperation = 'screen'; stars.forEach(s => { s.z -= warpSpeed; if (s.z <= 0) { s.z = 2000; s.x = (Math.random() - 0.5) * 2000; s.y = (Math.random() - 0.5) * 2000; } let sc = 400 / (400 + s.z); let drawY = (height / 2) + s.y * sc; if (drawY > height * 0.55) return; ctx.beginPath(); ctx.arc((width / 2) + s.x * sc, drawY, s.s * sc * starScale, 0, Math.PI * 2); ctx.fillStyle = s.color; ctx.globalAlpha = Math.min(1, sc * 2.5); ctx.fill(); ctx.globalAlpha = 1; }); ctx.globalCompositeOperation = 'source-over'; requestAnimationFrame(renderStars); } renderStars();
+    const wCvs = document.getElementById('waterCanvas'), wCtx = wCvs.getContext('2d'); let ww, wh, wTime=0; function resW() { ww=wCvs.width=window.innerWidth; wh=wCvs.height=window.innerHeight; } window.addEventListener('resize', resW); resW(); const waterThemes = [ { h: 195, s: 80, l: 65 }, { h: 340, s: 80, l: 70 }, { h: 45,  s: 90, l: 65 } ]; function drawW() { wCtx.clearRect(0,0,ww,wh); wTime += 0.005; for (let i = 0; i < 3; i++) { wCtx.beginPath(); let shift = i * 2; let grad = wCtx.createLinearGradient(0, wh*0.3, 0, wh); let t = waterThemes[i]; grad.addColorStop(0, `hsla(${t.h}, ${t.s}%, ${t.l}%, 0.15)`); grad.addColorStop(0.5, `hsla(${t.h}, ${t.s}%, ${t.l}%, 0.45)`); grad.addColorStop(1, `hsla(${t.h}, ${t.s}%, ${t.l}%, 0.8)`); wCtx.fillStyle = grad; for (let x = 0; x <= ww; x += 5) { let y = Math.sin(x * 0.005 + wTime + shift) * 40 + Math.sin(x * 0.01 - wTime * 2) * 20 + (wh * 0.6) + Math.cos(wTime + i) * 30; if (x === 0) wCtx.moveTo(x, y); else wCtx.lineTo(x, y); } wCtx.lineTo(ww, wh); wCtx.lineTo(0, wh); wCtx.fill(); } wCtx.globalCompositeOperation = 'screen'; wCtx.fillStyle = 'rgba(255,255,255,0.08)'; wCtx.beginPath(); wCtx.ellipse(ww/2, wh*0.5, ww*0.8, wh*0.2, 0, 0, Math.PI*2); wCtx.fill(); wCtx.globalCompositeOperation = 'source-over'; requestAnimationFrame(drawW); } drawW();
+    
+    let hasEntered = false; 
+    function executeEntryWarp(e) { 
+        if(hasEntered) return; hasEntered = true; 
+        let ripple = document.createElement('div'); ripple.className = 'ripple'; ripple.style.left = e.clientX + 'px'; ripple.style.top = e.clientY + 'px'; 
+        document.getElementById('water-surface').appendChild(ripple); 
+        document.getElementById('p1-t1').style.opacity = '0'; document.getElementById('p1-t2').style.opacity = '0'; 
+        document.getElementById('page-1').classList.add('warp-sink'); warpSpeed = 15; starScale = 3; 
+        
+        setTimeout(() => { 
+            document.getElementById('flash-overlay').style.opacity = '1'; 
+            setTimeout(() => { 
+                document.getElementById('flash-overlay').style.opacity = '0'; 
+                document.getElementById('page-1').style.display = 'none'; 
+                document.getElementById('page-2').style.display = 'block'; 
+                if(mainDb.preceptsData && mainDb.preceptsData.active) applyActiveUI(); 
+                
+                let calmInterval = setInterval(() => { 
+                    warpSpeed += (0.5 - warpSpeed) * 0.05; starScale += (1 - starScale) * 0.05; 
+                    if (Math.abs(warpSpeed - 0.5) < 0.1) { warpSpeed = 0.5; starScale = 1; clearInterval(calmInterval); } 
+                }, 30); 
+            }, 800); 
+        }, 800); 
+    }
+</script>
+</body>
+</html>

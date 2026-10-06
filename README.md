@@ -26,6 +26,9 @@
 - **教理基礎**：依《無量壽經》第二十二願，強調「十念必生」的信願與「廣修萬行」的普賢大德。
 - **核心精神**：百分之百仰賴彌陀願力，透過每日累積資糧，在心中化生七寶池蓮花。
 - **美學哲學**：採用極簡向量圖形設計，排除一切多餘視覺干擾，呈現「真空妙有」的法界莊嚴。
+## 宗旨與原則 | Principles | 宗旨
+- **四不依**: 不隸屬於任何世俗機構、宗教組織、團體或個人。依法不依人、依義不依語、依智不依識、依了義經不依不了義經。 / Independent from any secular or religious institutions; relying on the Dharma, meaning, wisdom, and explicit teachings. / いかなる世俗機関・宗教組織にも従属せず、法・義・智・了義に依る。
+- **拒盈利**: 無開通會員、無內建廣告，拒絕任何形式之贊助、募款或隨喜捐助。 / No membership, no ads; refuses all forms of sponsorship, fundraising, or donations. / 会員登録・広告なし。一切のスポンサーシップ、募金、寄付を辞退。
 
 ---
 
@@ -193,12 +196,12 @@ Developed with the principle of “absolute purity”:
 - Commercial use, advertising, or any form of monetization is strictly prohibited.
   
 **Developed with reverence by**  
-**Chief Engineer: Sherman Huang**
+**Chief Engineer: Miaoyi Jushi**
 
 ---
 ## 關於作者 (About the Author)
 
-**妙依居士 (Sherman Huang)**
+**妙依居士 (Miaoyi Jushi)**
 
 畢業於美國華盛頓大學法學院，中年後深刻體悟世間無常，轉而深入經藏，潛心修學佛法。
 
